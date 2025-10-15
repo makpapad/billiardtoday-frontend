@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useCallback, useMemo, useState } from 'react'
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import clsx from 'clsx'
 import type { EventApiResponse, NormalizedEventStage, StageMatchGroup } from './types'
@@ -22,10 +22,8 @@ import {
 } from './utils'
 import GroupStandingsTable from './GroupStandingsTable'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337'
-
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
-    const url = `${API_BASE_URL}/api/events/${eventId}?populate[event_stages][populate][groups][populate][player1]=*&populate[event_stages][populate][groups][populate][player2]=*&populate[event_stages][populate][results][populate][player]=*`
+    const url = `/api/events/${eventId}`
     const response = await fetch(url, { cache: 'no-store' })
     if (!response.ok) {
         const text = await response.text()
@@ -34,7 +32,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
     return response.json()
 }
 
-export default function TournamentEventsPage() {
+function TournamentEventsContent() {
     const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({})
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
@@ -43,7 +41,7 @@ export default function TournamentEventsPage() {
     const eventId = searchParams?.get('eventId') ?? null
 
     // Fetch event data
-    useMemo(() => {
+    useEffect(() => {
         if (!eventId) {
             setEventData(null)
             setError(null)
@@ -367,5 +365,13 @@ export default function TournamentEventsPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function TournamentEventsPage() {
+    return (
+        <Suspense fallback={<div className="container mx-auto px-4 py-8">Φόρτωση...</div>}>
+            <TournamentEventsContent />
+        </Suspense>
     )
 }
