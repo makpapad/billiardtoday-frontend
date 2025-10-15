@@ -33,7 +33,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 }
 
 function TournamentEventsContent() {
-    const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({})
+    const [activeStageId, setActiveStageId] = useState<string | null>(null)
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -136,9 +136,12 @@ function TournamentEventsContent() {
         [eventStages]
     )
 
-    const toggleStage = useCallback((stageId: string) => {
-        setExpandedStages((prev) => ({ ...prev, [stageId]: !prev[stageId] }))
-    }, [])
+    // Set first stage as active when stages load
+    useEffect(() => {
+        if (eventStages.length > 0 && !activeStageId) {
+            setActiveStageId(eventStages[0].id)
+        }
+    }, [eventStages, activeStageId])
 
     const eventInfo = useMemo(() => {
         if (!eventData?.data) return null
@@ -182,58 +185,54 @@ function TournamentEventsContent() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    {eventStages.map((stage: NormalizedEventStage) => {
-                                        const stageDateRange = formatDateRange(stage.startDate, stage.endDate)
-                                        const displayTitle =
-                                            stage.title || (stage.order !== null ? `Stage #${stage.order}` : 'Untitled stage')
-                                        const isExpanded = expandedStages[stage.id] ?? false
+                                {/* Tabs */}
+                                <div className="border-b border-gray-200 dark:border-gray-700">
+                                    <nav className="flex gap-2 overflow-x-auto" aria-label="Tabs">
+                                        {eventStages.map((stage: NormalizedEventStage) => {
+                                            const displayTitle =
+                                                stage.title || (stage.order !== null ? `Stage #${stage.order}` : 'Untitled stage')
+                                            const isActive = activeStageId === stage.id
 
-                                        return (
-                                            <div
-                                                key={stage.id}
-                                                className={clsx(
-                                                    'rounded-lg border p-3 transition-colors',
-                                                    'border-gray-100 dark:border-gray-800',
-                                                    isExpanded
-                                                        ? 'bg-blue-50 dark:bg-blue-900/20'
-                                                        : 'bg-gray-50 dark:bg-gray-800/60'
-                                                )}
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                        {displayTitle}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                                        {stage.order !== null && <span>#{stage.order}</span>}
+                                            return (
+                                                <button
+                                                    key={stage.id}
+                                                    onClick={() => setActiveStageId(stage.id)}
+                                                    className={clsx(
+                                                        'px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                                        isActive
+                                                            ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{displayTitle}</span>
                                                         {stage.isFinal && (
-                                                            <span className="font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                                                            <span className="text-xs font-semibold uppercase tracking-wide">
                                                                 Final
                                                             </span>
                                                         )}
                                                     </div>
-                                                </div>
+                                                </button>
+                                            )
+                                        })}
+                                    </nav>
+                                </div>
+                                {/* Tab Content */}
+                                <div className="mt-4">
+                                    {eventStages.map((stage: NormalizedEventStage) => {
+                                        if (activeStageId !== stage.id) return null
+                                        
+                                        const stageDateRange = formatDateRange(stage.startDate, stage.endDate)
+
+                                        return (
+                                            <div key={stage.id} className="flex flex-col gap-4">
                                                 {stageDateRange && (
-                                                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {stageDateRange}
                                                     </div>
                                                 )}
-                                                <div className="mt-3 flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleStage(stage.id)}
-                                                        className={clsx(
-                                                            'inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                                                            isExpanded
-                                                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                                : 'bg-white text-blue-600 hover:bg-blue-50 dark:bg-gray-900 dark:text-blue-400'
-                                                        )}
-                                                    >
-                                                        {isExpanded ? 'Απόκρυψη' : 'Εμφάνιση'}
-                                                    </button>
-                                                </div>
-                                                {isExpanded && (
-                                                    <div className="mt-4 flex flex-col gap-6">
+                                                <div className="flex flex-col gap-6">
+                                                    <div className="flex flex-col gap-3">
                                                         <div className="flex flex-col gap-3">
                                                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                                                 Αγώνες - {stage.title || stage.order || ''}
@@ -357,7 +356,7 @@ function TournamentEventsContent() {
                                                             )}
                                                         </div>
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         )
                                     })}
