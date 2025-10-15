@@ -1,6 +1,13 @@
 const nextConfig = {
-  basePath: '/tournaments',
   reactStrictMode: true,
-  images: { domains: ['app.billiardtoday.com'] }
+  images: { domains: ['app.billiardtoday.com'] },
+  async rewrites() {
+    return [
+      {
+        source: '/:path*',
+        destination: '/:path*',
+      },
+    ]
+  },
 };
 module.exports = nextConfig;
