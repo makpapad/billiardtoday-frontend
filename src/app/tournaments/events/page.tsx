@@ -48,15 +48,18 @@ function TournamentEventsContent() {
             return
         }
 
+        console.log('[TournamentEvents] Fetching event:', eventId)
         setIsLoading(true)
         setError(null)
 
         fetchEvent(eventId)
             .then((data) => {
+                console.log('[TournamentEvents] Event data received:', data)
                 setEventData(data)
                 setIsLoading(false)
             })
             .catch((err) => {
+                console.error('[TournamentEvents] Error fetching event:', err)
                 setError(err instanceof Error ? err.message : 'Failed to fetch event')
                 setIsLoading(false)
             })
