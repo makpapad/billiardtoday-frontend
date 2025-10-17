@@ -27,7 +27,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
         // Build Strapi query to get all events where player participated
         const params = new URLSearchParams()
         
-        // Populate only essential fields for performance
+        // Minimal fields for event
+        params.set('fields[0]', 'documentId')
+        params.set('fields[1]', 'title')
+        params.set('fields[2]', 'season')
+        params.set('fields[3]', 'start_date')
+        params.set('fields[4]', 'end_date')
+        
+        // Populate only essential nested data
         params.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'documentId')
         params.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'full_name')
         params.set('populate[event_stages][populate][groups][populate][player2][fields][0]', 'documentId')
@@ -35,7 +42,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         params.set('populate[results_final][populate][player][fields][0]', 'documentId')
         params.set('populate[tournament][fields][0]', 'title')
         
-        // Exclude unnecessary fields from event_stages
+        // Minimal event_stages fields
         params.set('populate[event_stages][fields][0]', 'title')
         params.set('populate[event_stages][fields][1]', 'order')
         params.set('populate[event_stages][fields][2]', 'is_final')
