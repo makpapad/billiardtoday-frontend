@@ -63,7 +63,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         } else if (year) {
             params.set('pagination[pageSize]', '20')
         } else {
-            params.set('pagination[pageSize]', '5') // Ultra-minimal for instant load
+            params.set('pagination[pageSize]', '3') // Absolute minimum for instant load
         }
 
         const url = `${STRAPI_URL}/api/bt-events?${params.toString()}`
