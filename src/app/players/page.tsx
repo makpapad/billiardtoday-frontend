@@ -17,6 +17,7 @@ export default function PlayersPage() {
     const [search, setSearch] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -35,7 +36,7 @@ export default function PlayersPage() {
                     params.set('filters[$or][1][country][$containsi]', search)
                 }
 
-                const response = await fetch(`/api/admin/tournament/players?${params.toString()}`)
+                const response = await fetch(`${basePath}/api/admin/tournament/players?${params.toString()}`)
                 if (response.ok) {
                     const data = await response.json()
                     setPlayers(data.data || [])
