@@ -57,13 +57,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
         
         // Sort by season descending
         params.set('sort[0]', 'season:desc')
-        // Dynamic pagination based on limit parameter - reduced for faster initial load
+        // Dynamic pagination based on limit parameter - minimal for instant load
         if (limit) {
-            params.set('pagination[pageSize]', Math.min(limit, 30).toString())
+            params.set('pagination[pageSize]', Math.min(limit, 10).toString())
         } else if (year) {
-            params.set('pagination[pageSize]', '50')
+            params.set('pagination[pageSize]', '20')
         } else {
-            params.set('pagination[pageSize]', '30') // Reduced from 200 to 30 for faster load
+            params.set('pagination[pageSize]', '5') // Ultra-minimal for instant load
         }
 
         const url = `${STRAPI_URL}/api/bt-events?${params.toString()}`

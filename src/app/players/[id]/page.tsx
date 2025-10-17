@@ -90,8 +90,8 @@ export default function PlayerProfilePage() {
                     // Don't limit - fetch all events for the year (usually 5-20)
                     // We'll paginate on frontend
                 } else {
-                    // Fetch limited events for initial load - reduced for faster response
-                    historyParams.set('limit', '10') // Start with just 10 most recent tournaments
+                    // Fetch limited events for initial load - ultra-minimal for instant response
+                    historyParams.set('limit', '5') // Start with just 5 most recent tournaments
                 }
                 
                 if (historyParams.toString()) {
