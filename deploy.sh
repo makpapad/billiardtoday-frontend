@@ -8,7 +8,7 @@ set -e
 
 ENVIRONMENT=${1:-production}
 APP_NAME="billiardtoday-frontend"
-SERVER_PATH="/var/www/vhosts/billiardtoday.com/billiardtoday-frontend"
+$SERVER_PATH = "/var/www/vhosts/billiardtoday.com/tournaments-app"
 
 echo "🚀 Deploying $APP_NAME to $ENVIRONMENT..."
 

@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "billiardtoday-frontend"
-$SERVER_PATH = "/var/www/vhosts/billiardtoday.com/billiardtoday-frontend"
+$SERVER_PATH = "/var/www/vhosts/billiardtoday.com/tournaments-app"
 
 Write-Host "🚀 Deploying $APP_NAME to $Environment..." -ForegroundColor Cyan
 Write-Host ""
@@ -111,6 +111,6 @@ Write-Host "3. Extract: unzip -o $packageName"
 Write-Host "4. Install dependencies: npm ci --production"
 Write-Host "5. Restart: pm2 restart $APP_NAME"
 Write-Host ""
-Write-Host "Ή ενεργοποιήστε το automatic deployment στο script." -ForegroundColor Yellow
+Write-Host "Tip: you can enable automatic deployment steps inside this script if you want." -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Package location: $(Get-Location)\$packageName" -ForegroundColor Gray
+Write-Host ('Package location: ' + (Get-Location) + '\' + $packageName) -ForegroundColor Gray

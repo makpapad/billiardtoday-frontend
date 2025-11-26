@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'billiardtoday-frontend',
       script: 'server.js',
-      cwd: '/var/www/vhosts/billiardtoday.com/billiardtoday-frontend',
+      cwd: '/var/www/vhosts/billiardtoday.com/tournaments-app',
       instances: 1,
       exec_mode: 'cluster',
       env: {
