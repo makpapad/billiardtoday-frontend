@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath } from "@/lib/countryFlags"
 import { getGameTypeLabel, type GameType } from "@/lib/gameTypes"
+import { t } from "@/lib/i18n"
 import {
     LineChart,
     Line,
@@ -229,10 +230,10 @@ export default function PlayerProfilePage() {
 
                         setIsLoading(false) // Show player info immediately
                     } else {
-                        setError('Ο παίκτης δεν βρέθηκε')
+                        setError(t('players.profile.error.notFound'))
                     }
                 } else {
-                    setError('Αποτυχία φόρτωσης δεδομένων')
+                    setError(t('players.profile.error.generic'))
                 }
 
                 // Process filtered history data (new format: { data, availableYears, availableGameTypes })
@@ -285,7 +286,7 @@ export default function PlayerProfilePage() {
 
                 setIsLoadingHistory(false)
             } catch (err) {
-                setError('Σφάλμα σύνδεσης')
+                setError(t('players.profile.error.generic'))
                 console.error('Failed to fetch player data:', err)
             } finally {
                 setIsLoading(false)
@@ -296,15 +297,15 @@ export default function PlayerProfilePage() {
         fetchPlayerData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [playerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow])
-    
+
     const loadMoreYears = () => {
         setYearsToShow(prev => prev + 3) // Load 3 more years
     }
-    
+
     const loadMoreTournaments = () => {
         setTournamentsToShow(prev => prev + 3) // Load 3 more tournaments
     }
-    
+
     // Reset tournament pagination when year changes
     const handleYearChange = (year: string) => {
         setSelectedYear(year)
@@ -323,7 +324,7 @@ export default function PlayerProfilePage() {
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin h-16 w-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-300">Φόρτωση...</p>
+                    <p className="text-gray-600 dark:text-gray-300">{t('players.profile.loading')}</p>
                 </div>
             </div>
         )
@@ -333,12 +334,12 @@ export default function PlayerProfilePage() {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-red-600 dark:text-red-400 text-xl mb-4">{error || 'Παίκτης δεν βρέθηκε'}</div>
+                    <div className="text-red-600 dark:text-red-400 text-xl mb-4">{error || t('players.profile.error.notFound')}</div>
                     <button
                         onClick={() => router.push('/players')}
                         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        Επιστροφή στους Παίκτες
+                        {t('players.profile.back')}
                     </button>
                 </div>
             </div>
@@ -590,6 +591,18 @@ export default function PlayerProfilePage() {
                       .sort((a, b) => a.year - b.year)
               })()
 
+    const slugNameFromPath =
+        typeof pathParam === 'string'
+            ? pathParam
+                  .split('-')
+                  .slice(1)
+                  .join(' ')
+                  .trim()
+            : ''
+    const primaryName =
+        (slugNameFromPath || player.full_name || '').trim()
+    const nativeName = (player.full_name || '').trim()
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
             <div className="max-w-6xl mx-auto">
@@ -601,7 +614,7 @@ export default function PlayerProfilePage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Επιστροφή
+                    {t('players.profile.back')}
                 </button>
 
                 {/* Player Header */}
@@ -614,12 +627,12 @@ export default function PlayerProfilePage() {
                                 return photoUrl ? (
                                     <img
                                         src={photoUrl}
-                                        alt={player.full_name}
+                                        alt={primaryName}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-bold">
-                                        {player.full_name.charAt(0).toUpperCase()}
+                                        {primaryName.charAt(0).toUpperCase()}
                                     </div>
                                 )
                             })()}
@@ -627,9 +640,16 @@ export default function PlayerProfilePage() {
 
                         {/* Player Info */}
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 md:mb-4 truncate">
-                                {player.full_name}
-                            </h1>
+                            <div className="mb-2 md:mb-4">
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                                    {primaryName}
+                                </h1>
+                                {nativeName && nativeName !== primaryName && (
+                                    <div className="text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">
+                                        {nativeName}
+                                    </div>
+                                )}
+                            </div>
                             {player.country && (
                                 <div className="flex items-center gap-2 text-sm sm:text-base text-gray-600 dark:text-gray-300">
                                     {(() => {
@@ -679,7 +699,7 @@ export default function PlayerProfilePage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-2 sm:gap-2 md:gap-3">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Events
+                                {t('players.profile.stats.events')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {overallEvents}
@@ -687,7 +707,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Αγώνες
+                                {t('players.profile.stats.matches')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {careerStats ? (
@@ -699,7 +719,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Νίκες
+                                {t('players.profile.stats.wins')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
                                 {careerStats ? (
@@ -711,7 +731,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Ισοπαλίες
+                                {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                                 {careerStats ? (
@@ -723,7 +743,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Ήττες
+                                {t('players.profile.stats.losses')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">
                                 {careerStats ? (
@@ -735,7 +755,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                Win %
+                                {t('players.profile.stats.winPct')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                                 {careerStats ? (
@@ -747,7 +767,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                AVG
+                                {t('players.profile.stats.avg')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {careerStats ? (
@@ -759,7 +779,7 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                H.R.
+                                {t('players.profile.stats.highRunShort')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 {careerStats ? (
@@ -776,7 +796,7 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
-                            The History
+                            {t('players.profile.history.title')}
                             {isLoadingHistory && (
                                 <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                             )}
@@ -794,7 +814,7 @@ export default function PlayerProfilePage() {
                                     disabled={isLoadingHistory}
                                     className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <option value="all">Όλα τα παιχνίδια</option>
+                                    <option value="all">{t('players.profile.history.filter.gameType.all')}</option>
                                     {availableGameTypes.map((gameType) => (
                                         <option key={gameType} value={gameType}>
                                             {getGameTypeLabel(gameType)}
@@ -814,7 +834,7 @@ export default function PlayerProfilePage() {
                                         disabled={isLoadingHistory}
                                         className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <option value="all">Όλες οι χρονιές</option>
+                                        <option value="all">{t('players.profile.history.filter.year.all')}</option>
                                         {filteredAvailableYears.map((year) => (
                                             <option key={year} value={year}>
                                                 {year}
@@ -827,7 +847,7 @@ export default function PlayerProfilePage() {
                                 <div className="relative">
                                     <input
                                         type="text"
-                                        placeholder="Head-to-Head: Search Opponent"
+                                        placeholder={t('players.profile.h2h.searchPlaceholder')}
                                         value={opponentQuery}
                                         onFocus={() => setIsOpponentOpen(true)}
                                         onChange={(e) => {
@@ -950,8 +970,7 @@ export default function PlayerProfilePage() {
                                                     ))}
                                                 {filteredOpponents.length > 20 && (
                                                     <div className="px-3 py-2 text-xs text-gray-500">
-                                                        Showing first 20 results…
-                                                        refine your search
+                                                        {t('players.profile.h2h.moreResults')}
                                                     </div>
                                                 )}
                                             </div>
@@ -967,16 +986,16 @@ export default function PlayerProfilePage() {
                         h2hStats && (
                             <div className="mb-6">
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                                    Head-to-Head vs{' '}
+                                    {t('players.profile.h2h.title')}{' '}
                                     {opponentMap.get(selectedOpponentId)}{' '}
                                     {selectedYear === 'all'
-                                        ? '(All years)'
-                                        : `(Year ${selectedYear})`}
+                                        ? `(${t('players.profile.h2h.title.yearAll')})`
+                                        : `(${t('players.profile.h2h.title.yearSpecific').replace('{year}', selectedYear)})`}
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            Matches
+                                            {t('players.profile.h2h.matches')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold">
                                             {h2hStats.totalMatches}
@@ -984,7 +1003,7 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            Wins
+                                            {t('players.profile.h2h.wins')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
                                             {h2hStats.wins}
@@ -992,7 +1011,7 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            Losses
+                                            {t('players.profile.h2h.losses')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-red-600 dark:text-red-400">
                                             {h2hStats.losses}
@@ -1000,7 +1019,7 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            Win %
+                                            {t('players.profile.h2h.winPct')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">
                                             {h2hStats.winPercentage}%
@@ -1008,7 +1027,7 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            AVG
+                                            {t('players.profile.h2h.avg')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400">
                                             {h2hStats.avgPerInning
@@ -1018,7 +1037,7 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            H.R.
+                                            {t('players.profile.h2h.highRunShort')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-orange-600 dark:text-orange-400">
                                             {h2hStats.highestRun}
@@ -1034,7 +1053,7 @@ export default function PlayerProfilePage() {
                         h2hMatches.length > 0 && (
                             <div className="mb-8">
                                 <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                                    Head-to-Head Matches
+                                    {t('players.profile.h2h.listTitle')}
                                 </h4>
                                 <div className="space-y-3">
                                     {[...h2hMatches]
@@ -1058,24 +1077,22 @@ export default function PlayerProfilePage() {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
-                                                            <span
-                                                                className={`text-xs font-bold px-2 py-1 rounded ${
-                                                                    match.result ===
-                                                                    'win'
-                                                                        ? 'bg-green-600 text-white'
-                                                                        : match.scoreFor ===
-                                                                              match.scoreAgainst
-                                                                          ? 'bg-yellow-600 text-white'
-                                                                          : 'bg-red-600 text-white'
-                                                                }`}
-                                                            >
-                                                                {match.result ===
+                                                            <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                                                match.result ===
                                                                 'win'
-                                                                    ? 'WIN'
+                                                                    ? 'bg-green-600 text-white'
                                                                     : match.scoreFor ===
                                                                           match.scoreAgainst
-                                                                      ? 'DRAW'
-                                                                      : 'LOSS'}
+                                                                      ? 'bg-yellow-600 text-white'
+                                                                      : 'bg-red-600 text-white'
+                                                            }`}>
+                                                                {match.result ===
+                                                                'win'
+                                                                    ? t('players.profile.modal.badge.win')
+                                                                    : match.scoreFor ===
+                                                                          match.scoreAgainst
+                                                                      ? t('players.profile.modal.badge.draw')
+                                                                      : t('players.profile.modal.badge.loss')}
                                                             </span>
                                                             <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {match.stage}
@@ -1089,12 +1106,17 @@ export default function PlayerProfilePage() {
                                                             </span>
                                                         </div>
                                                         <div className="text-base font-semibold">
-                                                            vs{' '}
-                                                            <span className="text-gray-900 dark:text-white">
-                                                                {opponentMap.get(
-                                                                    selectedOpponentId,
-                                                                ) || 'Opponent'}
-                                                            </span>
+                                                            vs {match.opponentId ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => router.push(`/players/${match.opponentId}`)}
+                                                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                                    >
+                                                                        {match.opponent}
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-gray-900 dark:text-white">{match.opponent}</span>
+                                                                )}
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
@@ -1109,44 +1131,36 @@ export default function PlayerProfilePage() {
                                                             {match.scoreFor} -{' '}
                                                             {match.scoreAgainst}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 space-x-2">
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400 space-x-2 mt-1">
                                                             <span>
-                                                                Innings:{' '}
-                                                                {match.innings}
+                                                                {t('players.profile.h2h.innings').replace('{innings}', String(match.innings))}
                                                             </span>
                                                             <span>
-                                                                AVG:{' '}
-                                                                {(
-                                                                    match.scoreFor /
-                                                                    (match.innings ||
-                                                                        1)
-                                                                )
-                                                                    .toFixed(3)
-                                                                    .replace(
-                                                                        '.',
-                                                                        ',',
-                                                                    )}
+                                                                {t('players.profile.h2h.avgValue').replace(
+                                                                    '{avg}',
+                                                                    (
+                                                                        match.scoreFor /
+                                                                        (match.innings || 1)
+                                                                    )
+                                                                        .toFixed(3)
+                                                                        .replace('.', ','),
+                                                                )}
                                                             </span>
-                                                            {typeof match.highRun ===
-                                                                'number' && (
+                                                            {typeof match.highRun === 'number' && (
                                                                 <span>
-                                                                    H.R.:{' '}
-                                                                    {
-                                                                        match.highRun
-                                                                    }
+                                                                    {t('players.profile.h2h.highRun').replace('{value}', String(match.highRun))}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            {match.tournament} •{' '}
-                                                            {match.year}
+                                                            {match.tournament} • {match.year}
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => setSelectedMatch(match)}
                                                             className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                         >
-                                                            View details
+                                                            {t('players.profile.h2h.viewDetails')}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1161,7 +1175,7 @@ export default function PlayerProfilePage() {
                         performanceData.length > 0 && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-gray-200 dark:border-gray-700 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Performance Over Time
+                                    {t('players.profile.performance.title')}
                                 </h3>
                                 <ResponsiveContainer width="100%" height={400}>
                                     <LineChart
@@ -1179,18 +1193,18 @@ export default function PlayerProfilePage() {
                                         <YAxis yAxisId="right" orientation="right" />
                                         <Tooltip
                                             formatter={(value: number, name: string) => {
-                                                if (name === 'Average per Inning') {
+                                                if (name === t('players.profile.performance.avgPerInning')) {
                                                     return value.toLocaleString('en-US', {
                                                         minimumFractionDigits: 3,
                                                         maximumFractionDigits: 3,
                                                     })
                                                 }
-                                                if (name === 'Win %') {
+                                                if (name === t('players.profile.performance.winPct')) {
                                                     return `${value.toFixed(1)}%`
                                                 }
                                                 return value
                                             }}
-                                            labelFormatter={(label) => `Year: ${label}`}
+                                            labelFormatter={(label) => `${t('players.profile.performance.yearLabel')} ${label}`}
                                         />
                                         <Legend />
                                         <Line
@@ -1199,7 +1213,7 @@ export default function PlayerProfilePage() {
                                             dataKey="avg"
                                             stroke="#3b82f6"
                                             strokeWidth={2}
-                                            name="Average per Inning"
+                                            name={t('players.profile.performance.avgPerInning')}
                                             dot={{ fill: '#3b82f6', r: 4 }}
                                             activeDot={{ r: 6 }}
                                         />
@@ -1209,7 +1223,7 @@ export default function PlayerProfilePage() {
                                             dataKey="winPct"
                                             stroke="#10b981"
                                             strokeWidth={2}
-                                            name="Win %"
+                                            name={t('players.profile.performance.winPct')}
                                             dot={{ fill: '#10b981', r: 4 }}
                                             activeDot={{ r: 6 }}
                                         />
@@ -1219,7 +1233,7 @@ export default function PlayerProfilePage() {
                                             dataKey="wins"
                                             stroke="#f59e0b"
                                             strokeWidth={2}
-                                            name="Wins"
+                                            name={t('players.profile.performance.wins')}
                                             dot={{ fill: '#f59e0b', r: 4 }}
                                             activeDot={{ r: 6 }}
                                         />
@@ -1231,11 +1245,11 @@ export default function PlayerProfilePage() {
                     {isLoadingHistory && participations.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                            <p className="text-gray-600 dark:text-gray-300">Φόρτωση ιστορικού...</p>
+                            <p className="text-gray-600 dark:text-gray-300">{t('players.profile.history.loading')}</p>
                         </div>
                     ) : participations.length === 0 ? (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                            Δεν υπάρχουν συμμετοχές σε τουρνουά
+                            {t('players.profile.history.empty')}
                         </div>
                     ) : (
                         <div className="space-y-6">
@@ -1257,7 +1271,7 @@ export default function PlayerProfilePage() {
                                                 <div className="text-3xl font-bold">
                                                     {participation.position}
                                                 </div>
-                                                <div className="text-sm text-blue-100">Τελική Θέση</div>
+                                                <div className="text-sm text-blue-100">{t('players.profile.history.tournament.positionLabel')}</div>
                                             </div>
                                         </div>
 
@@ -1265,23 +1279,23 @@ export default function PlayerProfilePage() {
                                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center bg-white/10 rounded-lg p-4">
                                             <div>
                                                 <div className="text-2xl font-bold">{participation.totalMatches}</div>
-                                                <div className="text-xs text-blue-100">Αγώνες</div>
+                                                <div className="text-xs text-blue-100">{t('players.profile.stats.matches')}</div>
                                             </div>
                                             <div>
                                                 <div className="text-2xl font-bold text-green-300">{participation.wins}</div>
-                                                <div className="text-xs text-blue-100">Νίκες</div>
+                                                <div className="text-xs text-blue-100">{t('players.profile.stats.wins')}</div>
                                             </div>
                                             <div>
                                                 <div className="text-2xl font-bold text-red-300">{participation.losses}</div>
-                                                <div className="text-xs text-blue-100">Ήττες</div>
+                                                <div className="text-xs text-blue-100">{t('players.profile.stats.losses')}</div>
                                             </div>
                                             <div>
                                                 <div className="text-2xl font-bold text-yellow-300">{participation.avgPerInning.toFixed(3)}</div>
-                                                <div className="text-xs text-blue-100">AVG</div>
+                                                <div className="text-xs text-blue-100">{t('players.profile.stats.avg')}</div>
                                             </div>
                                             <div>
                                                 <div className="text-2xl font-bold text-orange-300">{participation.highestRun}</div>
-                                                <div className="text-xs text-blue-100">H.R.</div>
+                                                <div className="text-xs text-blue-100">{t('players.profile.stats.highRunShort')}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1289,7 +1303,7 @@ export default function PlayerProfilePage() {
                                     {/* Matches List */}
                                     <div className="p-6 bg-white dark:bg-gray-800">
                                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                            Αναλυτικά Αποτελέσματα ({participation.matches.length} αγώνες)
+                                            {t('players.profile.history.tournament.detailsTitle').replace('{count}', String(participation.matches.length))}
                                         </h4>
                                         <div className="space-y-3">
                                             {participation.matches.map((match) => (
@@ -1313,7 +1327,11 @@ export default function PlayerProfilePage() {
                                                                         ? 'bg-yellow-600 text-white'
                                                                         : 'bg-red-600 text-white'
                                                                 }`}>
-                                                                    {match.result === 'win' ? 'ΝΙΚΗ' : match.scoreFor === match.scoreAgainst ? 'ΙΣΟΠΑΛΙΑ' : 'ΗΤΤΑ'}
+                                                                    {match.result === 'win'
+                                                                        ? t('players.profile.modal.badge.win')
+                                                                        : match.scoreFor === match.scoreAgainst
+                                                                        ? t('players.profile.modal.badge.draw')
+                                                                        : t('players.profile.modal.badge.loss')}
                                                                 </span>
                                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                     {match.stage}
@@ -1339,8 +1357,7 @@ export default function PlayerProfilePage() {
                                                         <div className="text-right">
                                                             <div
                                                                 className={`text-2xl font-bold ${
-                                                                    match.scoreFor ===
-                                                                    match.scoreAgainst
+                                                                    match.scoreFor === match.scoreAgainst
                                                                         ? 'text-yellow-600 dark:text-yellow-400'
                                                                         : 'text-gray-900 dark:text-white'
                                                                 }`}
@@ -1401,7 +1418,7 @@ export default function PlayerProfilePage() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
                                         </svg>
-                                        Φόρτωση Προηγούμενων Ετών
+                                        {t('players.profile.loadMoreYears')}
                                     </button>
                                 </div>
                             )}
@@ -1417,7 +1434,7 @@ export default function PlayerProfilePage() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
                                         </svg>
-                                        Φόρτωση Περισσότερων Τουρνουά ({selectedYear})
+                                        {t('players.profile.loadMoreTournaments').replace('{year}', selectedYear)}
                                     </button>
                                 </div>
                             )}
@@ -1427,7 +1444,7 @@ export default function PlayerProfilePage() {
 
                 {/* Note about data */}
                 <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                    <p>💡 Τα δεδομένα τουρνουά ενημερώνονται αυτόματα από τη βάση</p>
+                    <p>{t('players.profile.note.data')}</p>
                 </div>
             </div>
 
@@ -1450,11 +1467,11 @@ export default function PlayerProfilePage() {
                                     Match #{selectedMatch.id.replace('M', '')}
                                 </h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {new Date(selectedMatch.date).toLocaleDateString('el-GR', { 
-                                        weekday: 'long', 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
+                                    {new Date(selectedMatch.date).toLocaleDateString('en-GB', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
                                     })}
                                 </p>
                             </div>
@@ -1477,7 +1494,11 @@ export default function PlayerProfilePage() {
                                 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                                 : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                         }`}>
-                            {selectedMatch.result === 'win' ? '🏆 ΝΙΚΗ' : selectedMatch.scoreFor === selectedMatch.scoreAgainst ? '⚖️ ΙΣΟΠΑΛΙΑ' : '❌ ΗΤΤΑ'}
+                            {selectedMatch.result === 'win'
+                                ? t('players.profile.modal.badge.win')
+                                : selectedMatch.scoreFor === selectedMatch.scoreAgainst
+                                ? t('players.profile.modal.badge.draw')
+                                : t('players.profile.modal.badge.loss')}
                         </div>
 
                         {/* Stage Info */}
@@ -1497,7 +1518,7 @@ export default function PlayerProfilePage() {
                                     <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                                         {selectedMatch.scoreFor}
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">AVG</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('players.profile.modal.avgLabel')}</div>
                                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                         {(selectedMatch.scoreFor / selectedMatch.innings).toFixed(3).replace('.', ',')}
                                     </div>
@@ -1508,7 +1529,7 @@ export default function PlayerProfilePage() {
                                 <div className="text-2xl font-bold text-gray-400 dark:text-gray-500 mb-2">
                                     VS
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Στέκιες</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{t('players.profile.modal.inningsLabel')}</div>
                                 <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                     {selectedMatch.innings}
                                 </div>
@@ -1559,7 +1580,7 @@ export default function PlayerProfilePage() {
                                 onClick={() => setSelectedMatch(null)}
                                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                             >
-                                Κλείσιμο
+                                {t('players.profile.modal.close')}
                             </button>
                         </div>
                     </div>
