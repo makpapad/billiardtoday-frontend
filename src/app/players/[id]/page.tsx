@@ -604,8 +604,20 @@ export default function PlayerProfilePage() {
                   .join(' ')
                   .trim()
             : ''
-    const primaryName =
-        (slugNameFromPath || player.full_name || '').trim()
+
+    const decodedSlugName = (() => {
+        if (!slugNameFromPath) return ''
+        try {
+            // Αν το slug είναι URL-encoded (περιέχει %), κάνε decode, αλλιώς άφησέ το ως έχει
+            return slugNameFromPath.includes('%')
+                ? decodeURIComponent(slugNameFromPath)
+                : slugNameFromPath
+        } catch {
+            return slugNameFromPath
+        }
+    })()
+
+    const primaryName = (decodedSlugName || player.full_name || '').trim()
     const nativeName = (player.full_name || '').trim()
 
     return (
