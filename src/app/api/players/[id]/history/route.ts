@@ -11,243 +11,130 @@ export async function GET(req: NextRequest, context: RouteContext) {
     try {
         const { id: playerId } = await context.params
         if (!playerId) {
-            return NextResponse.json({ error: 'Player ID is required' }, { status: 400 })
+            return NextResponse.json(
+                { error: 'Player ID is required' },
+                { status: 400 },
+            )
         }
 
         if (!STRAPI_API_TOKEN) {
-            console.error('[frontend.api.players.history][GET] missing STRAPI_API_TOKEN env')
-            return NextResponse.json({ error: 'STRAPI_API_TOKEN is missing' }, { status: 500 })
+            console.error(
+                '[frontend.api.players.history][GET] missing STRAPI_API_TOKEN env',
+            )
+            return NextResponse.json(
+                { error: 'STRAPI_API_TOKEN is missing' },
+                { status: 500 },
+            )
         }
 
-        // Get query params
         const searchParams = req.nextUrl.searchParams
         const year = searchParams.get('year')
-        const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : null
+        const gameType = searchParams.get('gameType')
 
-        // Build Strapi query to get all events where player participated
-        const params = new URLSearchParams()
-        
-        // Minimal fields for event
-        params.set('fields[0]', 'documentId')
-        params.set('fields[1]', 'title')
-        params.set('fields[2]', 'season')
-        params.set('fields[3]', 'start_date')
-        params.set('fields[4]', 'end_date')
-        
-        // Populate only essential nested data
-        params.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'documentId')
-        params.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'full_name')
-        params.set('populate[event_stages][populate][groups][populate][player2][fields][0]', 'documentId')
-        params.set('populate[event_stages][populate][groups][populate][player2][fields][1]', 'full_name')
-        params.set('populate[results_final][populate][player][fields][0]', 'documentId')
-        params.set('populate[tournament][fields][0]', 'title')
-        
-        // Minimal event_stages fields
-        params.set('populate[event_stages][fields][0]', 'title')
-        params.set('populate[event_stages][fields][1]', 'order')
-        params.set('populate[event_stages][fields][2]', 'is_final')
-        
-        // Filter by player participation to reduce data transfer
-        params.set('filters[results_final][player][documentId][$eq]', playerId)
-        
-        // Filter by season/year if provided
-        if (year) {
-            params.set('filters[season][$eq]', year)
-        }
-        
-        // Sort by season descending
-        params.set('sort[0]', 'season:desc')
-        // Dynamic pagination based on limit parameter - minimal for instant load
-        if (limit) {
-            params.set('pagination[pageSize]', Math.min(limit, 10).toString())
-        } else if (year) {
-            params.set('pagination[pageSize]', '20')
-        } else {
-            params.set('pagination[pageSize]', '3') // Absolute minimum for instant load
-        }
+        const strapiUrl = new URL(
+            `${STRAPI_URL}/api/bt-players/participations-by`,
+        )
+        strapiUrl.searchParams.set('id', playerId)
+        if (year) strapiUrl.searchParams.set('year', year)
+        if (gameType) strapiUrl.searchParams.set('gameType', gameType)
 
-        const url = `${STRAPI_URL}/api/bt-events?${params.toString()}`
-
-        const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${STRAPI_API_TOKEN}` },
-            next: { revalidate: 600 }, // Cache for 10 minutes
+        const strapiResponse = await fetch(strapiUrl.toString(), {
+            headers: {
+                Authorization: `Bearer ${STRAPI_API_TOKEN}`,
+            },
         })
 
-        if (!res.ok) {
-            const text = await res.text()
-            console.error('[frontend.api.players.history][GET]', res.status, text)
-            return NextResponse.json({ error: text }, { status: res.status })
+        if (!strapiResponse.ok) {
+            const errorPayload = await strapiResponse.json().catch(() => ({}))
+            return NextResponse.json(
+                errorPayload || { error: 'Failed to fetch player history' },
+                {
+                    status: strapiResponse.status,
+                },
+            )
         }
 
-        const data = await res.json()
-        
-        // Process and filter events where player participated
-        const playerHistory = processPlayerHistory(data.data, playerId)
-
-        return NextResponse.json(playerHistory, { status: 200 })
+        const payload = await strapiResponse.json()
+        const rawItems = Array.isArray(payload?.data) ? payload.data : []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items = rawItems.map((it: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const matches = Array.isArray(it?.matches)
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  it.matches.map((m: any) => ({
+                      ...m,
+                      scoreFor: Number(m?.scoreFor) || 0,
+                      scoreAgainst: Number(m?.scoreAgainst) || 0,
+                      innings: Number(m?.innings) || 0,
+                      highRun: Number(m?.highRun) || 0,
+                  }))
+                : []
+            const totalMatches = matches.length
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const wins = matches.filter((m: any) => m.result === 'win').length
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const losses = matches.filter((m: any) => m.result === 'loss').length
+            const highestRun = matches.length
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  Math.max(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      ...matches.map((m: any) => Number(m.highRun) || 0),
+                  )
+                : 0
+            let totalPoints = 0
+            let totalInnings = 0
+            for (const m of matches) {
+                totalPoints += m.scoreFor
+                totalInnings += m.innings
+            }
+            const avgPerInningNum =
+                totalInnings > 0
+                    ? Number((totalPoints / totalInnings).toFixed(3))
+                    : (() => {
+                          const raw = it?.avgPerInning
+                          if (typeof raw === 'string') {
+                              const parsed = Number(raw.replace(',', '.'))
+                              return Number.isFinite(parsed) ? parsed : 0
+                          }
+                          const n = Number(raw)
+                          return Number.isFinite(n) ? n : 0
+                      })()
+            return {
+                id: it?.id ?? '',
+                tournament: it?.tournament ?? null,
+                year: typeof it?.year === 'number' ? it.year : null,
+                gameType:
+                    typeof it?.gameType === 'string' ? it.gameType : null,
+                position: it?.position ?? 'Participant',
+                finals: Array.isArray(it?.finals) ? it.finals : [],
+                stageResults: Array.isArray(it?.stageResults)
+                    ? it.stageResults
+                    : [],
+                matches,
+                totalMatches: Number(it?.totalMatches) || totalMatches,
+                wins: Number(it?.wins) || wins,
+                losses: Number(it?.losses) || losses,
+                highestRun: Number(it?.highestRun) || highestRun,
+                avgPerInning: avgPerInningNum,
+            }
+        })
+        const normalized = {
+            data: items,
+            availableYears: Array.isArray(payload?.meta?.availableYears)
+                ? payload.meta.availableYears
+                : [],
+            availableGameTypes: Array.isArray(
+                payload?.meta?.availableGameTypes,
+            )
+                ? payload.meta.availableGameTypes
+                : [],
+        }
+        return NextResponse.json(normalized, { status: 200 })
     } catch (error) {
         console.error('[frontend.api.players.history][GET]', error)
-        return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
-    }
-}
-
-type StrapiEvent = {
-    id: number
-    documentId: string
-    title: string
-    season: number
-    start_date: string
-    end_date: string
-    tournament?: {
-        title: string
-    }
-    event_stages?: Array<{
-        id: number
-        title: string
-        order: number
-        is_final: boolean
-        groups?: Array<{
-            id: number
-            number: number
-            date_time: string
-            player1?: { id: number; documentId: string; full_name: string }
-            player2?: { id: number; documentId: string; full_name: string }
-            player1_points: number
-            player2_points: number
-            player1_innings: number
-            player2_innings: number
-            player1_high_run: number
-            player2_high_run: number
-        }>
-        results?: Array<{
-            id: number
-            player?: { id: number; documentId: string; full_name: string }
-            group_position: number
-            final_position: number
-            best_average: number
-            points: number
-            innings: number
-            high_run: number
-        }>
-    }>
-    results_final?: Array<{
-        id: number
-        player?: { id: number; documentId: string; full_name: string }
-        position: number
-        best_average: number
-        caroms: number
-        points: number
-        innings: number
-        high_run: number
-    }>
-}
-
-type PlayerMatch = {
-    id: string
-    opponent: string
-    opponentId: string | null
-    result: 'win' | 'loss'
-    scoreFor: number
-    scoreAgainst: number
-    date: string
-    stage: string
-    innings: number
-}
-
-type PlayerHistory = {
-    id: string
-    tournament: string
-    year: number
-    position: string
-    totalMatches: number
-    wins: number
-    losses: number
-    totalPoints: number
-    avgPerInning: number
-    highestRun: number
-    matches: PlayerMatch[]
-}
-
-function processPlayerHistory(events: StrapiEvent[], playerId: string): PlayerHistory[] {
-    const history: PlayerHistory[] = []
-
-    events.forEach((event) => {
-        // Find player's final position
-        const finalResult = event.results_final?.find(
-            (r) => r.player?.documentId === playerId
+        return NextResponse.json(
+            { error: 'Something went wrong' },
+            { status: 500 },
         )
-
-        if (!finalResult) {
-            // Player didn't participate in this event
-            return
-        }
-
-        // Collect all matches for this player
-        const matches: PlayerMatch[] = []
-        let totalPoints = 0
-        let totalInnings = 0
-        let highestRun = 0
-
-        event.event_stages?.forEach((stage) => {
-            stage.groups?.forEach((group) => {
-                const isPlayer1 = group.player1?.documentId === playerId
-                const isPlayer2 = group.player2?.documentId === playerId
-
-                if (isPlayer1 || isPlayer2) {
-                    const scoreFor = isPlayer1 ? group.player1_points : group.player2_points
-                    const scoreAgainst = isPlayer1 ? group.player2_points : group.player1_points
-                    const opponent = isPlayer1 ? group.player2?.full_name : group.player1?.full_name
-                    const playerHighRun = isPlayer1 ? group.player1_high_run : group.player2_high_run
-                    const playerInnings = isPlayer1 ? group.player1_innings : group.player2_innings
-
-                    const opponentPlayer = isPlayer1 ? group.player2 : group.player1
-                    
-                    matches.push({
-                        id: `M${group.id}`,
-                        opponent: opponent || 'Unknown',
-                        opponentId: opponentPlayer?.documentId || null,
-                        result: scoreFor > scoreAgainst ? 'win' : 'loss',
-                        scoreFor,
-                        scoreAgainst,
-                        date: group.date_time || '',
-                        stage: stage.title || `Stage ${stage.order}`,
-                        innings: playerInnings || (scoreFor + scoreAgainst),
-                    })
-
-                    totalPoints += scoreFor
-                    totalInnings += playerInnings || (scoreFor + scoreAgainst)
-                    if (playerHighRun > highestRun) {
-                        highestRun = playerHighRun
-                    }
-                }
-            })
-        })
-
-        const wins = matches.filter((m) => m.result === 'win').length
-        const losses = matches.filter((m) => m.result === 'loss').length
-        const avgPerInning = totalInnings > 0 ? totalPoints / totalInnings : 0
-
-        history.push({
-            id: event.documentId,
-            tournament: event.tournament?.title || event.title,
-            year: event.season,
-            position: getPositionLabel(finalResult.position),
-            totalMatches: matches.length,
-            wins,
-            losses,
-            totalPoints,
-            avgPerInning,
-            highestRun,
-            matches: matches.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-        })
-    })
-
-    return history
-}
-
-function getPositionLabel(position: number): string {
-    if (position === 1) return '1st'
-    if (position === 2) return '2nd'
-    if (position === 3) return '3rd'
-    return `${position}th`
+    }
 }

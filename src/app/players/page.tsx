@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { getCountryFlagPath } from '@/lib/countryFlags'
 
 type Player = {
     id: number
@@ -9,6 +10,45 @@ type Player = {
     full_name: string
     country: string | null
     city: string | null
+    photo_main?:
+        | {
+              url: string
+          }
+        | {
+              data: {
+                  attributes: {
+                      url: string
+                  }
+              }
+          }
+        | null
+}
+
+// Helper function to get photo URL from different Strapi structures
+const getPhotoUrl = (photo: Player['photo_main']): string | null => {
+    if (!photo) return null
+
+    let url: string | null = null
+
+    // Check if it's the direct structure with url
+    if ('url' in photo && typeof photo.url === 'string') {
+        url = photo.url
+    }
+    // Check if it's the Strapi v4 structure with data.attributes
+    else if ('data' in photo && photo.data?.attributes?.url) {
+        url = photo.data.attributes.url
+    }
+
+    if (!url) return null
+
+    // If URL is relative (starts with /uploads), prepend Strapi base URL
+    if (url.startsWith('/uploads')) {
+        const strapiBase =
+            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
+        return `${strapiBase}${url}`
+    }
+
+    return url
 }
 
 export default function PlayersPage() {
@@ -30,13 +70,20 @@ export default function PlayersPage() {
                 params.set('fields[0]', 'full_name')
                 params.set('fields[1]', 'country')
                 params.set('fields[2]', 'city')
-                
+                params.set('populate[photo_main][fields][0]', 'url')
+
                 if (search.trim()) {
                     params.set('filters[$or][0][full_name][$containsi]', search)
-                    params.set('filters[$or][1][country][$containsi]', search)
+                    params.set(
+                        'filters[$or][1][full_name_en][$containsi]',
+                        search,
+                    )
+                    params.set('filters[$or][2][country][$containsi]', search)
                 }
 
-                const response = await fetch(`${basePath}/api/admin/tournament/players?${params.toString()}`)
+                const response = await fetch(
+                    `${basePath}/api/admin/tournament/players?${params.toString()}`,
+                )
                 if (response.ok) {
                     const data = await response.json()
                     setPlayers(data.data || [])
@@ -53,10 +100,16 @@ export default function PlayersPage() {
 
         const timer = setTimeout(fetchPlayers, 300)
         return () => clearTimeout(timer)
-    }, [search])
+    }, [search, basePath])
 
-    const handlePlayerClick = (documentId: string) => {
-        router.push(`/players/${documentId}`)
+    const handlePlayerClick = (player: Player) => {
+        const pathId = String(player.id)
+        const slugName = player.full_name
+            .trim()
+            .replace(/\s+/g, '-')
+        const slug = slugName ? `${pathId}-${slugName}` : pathId
+        const url = `/players/${slug}`
+        router.push(url)
     }
 
     return (
@@ -93,7 +146,9 @@ export default function PlayersPage() {
                 {/* Error State */}
                 {error && (
                     <div className="text-center py-12">
-                        <div className="text-red-600 dark:text-red-400 text-lg">{error}</div>
+                        <div className="text-red-600 dark:text-red-400 text-lg">
+                            {error}
+                        </div>
                     </div>
                 )}
 
@@ -103,15 +158,32 @@ export default function PlayersPage() {
                         {players.map((player) => (
                             <button
                                 key={player.documentId}
-                                onClick={() => handlePlayerClick(player.documentId)}
+                                onClick={() => handlePlayerClick(player)}
                                 className="group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-transparent hover:border-blue-500 text-left"
                             >
                                 <div className="flex items-center gap-4">
-                                    {/* Avatar Placeholder */}
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                                        {player.full_name.charAt(0).toUpperCase()}
+                                    {/* Player Photo */}
+                                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
+                                        {(() => {
+                                            const photoUrl = getPhotoUrl(
+                                                player.photo_main,
+                                            )
+                                            return photoUrl ? (
+                                                <img
+                                                    src={photoUrl}
+                                                    alt={player.full_name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
+                                                    {player.full_name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
-                                    
+
                                     {/* Player Info */}
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
@@ -119,14 +191,29 @@ export default function PlayersPage() {
                                         </h3>
                                         <div className="flex flex-col gap-1 mt-1">
                                             {player.country && (
-                                                <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                                    <span>🌍</span>
-                                                    <span>{player.country}</span>
-                                                </div>
-                                            )}
-                                            {player.city && (
-                                                <div className="text-sm text-gray-500 dark:text-gray-500">
-                                                    {player.city}
+                                                <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                                                    {(() => {
+                                                        const flagPath =
+                                                            getCountryFlagPath(
+                                                                player.country,
+                                                            )
+                                                        return flagPath ? (
+                                                            <img
+                                                                src={flagPath}
+                                                                alt={
+                                                                    player.country
+                                                                }
+                                                                width={24}
+                                                                height={18}
+                                                                className="rounded shadow-sm"
+                                                            />
+                                                        ) : (
+                                                            <span>🌍</span>
+                                                        )
+                                                    })()}
+                                                    <span>
+                                                        {player.country}
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
@@ -134,8 +221,18 @@ export default function PlayersPage() {
 
                                     {/* Arrow Icon */}
                                     <div className="text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        <svg
+                                            className="w-6 h-6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M9 5l7 7-7 7"
+                                            />
                                         </svg>
                                     </div>
                                 </div>
@@ -148,7 +245,9 @@ export default function PlayersPage() {
                 {!isLoading && !error && players.length === 0 && (
                     <div className="text-center py-12">
                         <div className="text-gray-500 dark:text-gray-400 text-lg">
-                            {search ? 'Δεν βρέθηκαν παίκτες' : 'Δεν υπάρχουν παίκτες στη βάση'}
+                            {search
+                                ? 'Δεν βρέθηκαν παίκτες'
+                                : 'Δεν υπάρχουν παίκτες στη βάση'}
                         </div>
                     </div>
                 )}
