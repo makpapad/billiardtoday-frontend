@@ -1,6 +1,7 @@
 export const t = (key: string): string => {
     const dictionary: Record<string, string> = {
         // Player profile page
+        'players.profile.logoAlt': 'BilliardToday logo',
         'players.profile.back': 'Back',
         'players.profile.loading': 'Loading player profile...',
         'players.profile.error.generic': 'Failed to load player',
