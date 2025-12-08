@@ -8,6 +8,7 @@ type Player = {
     id: number
     documentId: string
     full_name: string
+    full_name_en?: string | null
     country: string | null
     city: string | null
     photo_main?:
@@ -51,6 +52,19 @@ const getPhotoUrl = (photo: Player['photo_main']): string | null => {
     return url
 }
 
+const getPlayerDisplayName = (player: Player): string => {
+    const nameEn = typeof player.full_name_en === 'string' ? player.full_name_en.trim() : ''
+    const native = player.full_name.trim()
+    return nameEn || native
+}
+
+const getPlayerNativeName = (player: Player): string | null => {
+    const native = player.full_name.trim()
+    const preferred = getPlayerDisplayName(player)
+    if (!native || native === preferred) return null
+    return native
+}
+
 export default function PlayersPage() {
     const router = useRouter()
     const [players, setPlayers] = useState<Player[]>([])
@@ -70,6 +84,7 @@ export default function PlayersPage() {
                 params.set('fields[0]', 'full_name')
                 params.set('fields[1]', 'country')
                 params.set('fields[2]', 'city')
+                params.set('fields[3]', 'full_name_en')
                 params.set('populate[photo_main][fields][0]', 'url')
 
                 if (search.trim()) {
@@ -88,10 +103,10 @@ export default function PlayersPage() {
                     const data = await response.json()
                     setPlayers(data.data || [])
                 } else {
-                    setError('Αποτυχία φόρτωσης παικτών')
+                    setError('Failed to load players')
                 }
             } catch (err) {
-                setError('Σφάλμα σύνδεσης')
+                setError('Connection error')
                 console.error('Failed to fetch players:', err)
             } finally {
                 setIsLoading(false)
@@ -104,9 +119,8 @@ export default function PlayersPage() {
 
     const handlePlayerClick = (player: Player) => {
         const pathId = String(player.id)
-        const slugName = player.full_name
-            .trim()
-            .replace(/\s+/g, '-')
+        const baseName = getPlayerDisplayName(player)
+        const slugName = baseName.replace(/\s+/g, '-')
         const slug = slugName ? `${pathId}-${slugName}` : pathId
         const url = `/players/${slug}`
         router.push(url)
@@ -118,10 +132,10 @@ export default function PlayersPage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        Κατάλογος Παικτών
+                        Players Directory
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300">
-                        Αναζητήστε και δείτε το ιστορικό των αθλητών
+                        Browse and view player profiles and history
                     </p>
                 </div>
 
@@ -132,7 +146,7 @@ export default function PlayersPage() {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Αναζήτηση παίκτη (όνομα ή χώρα)..."
+                            placeholder="Search player (name or country)..."
                             className="w-full px-6 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-lg"
                         />
                         {isLoading && (
@@ -171,12 +185,12 @@ export default function PlayersPage() {
                                             return photoUrl ? (
                                                 <img
                                                     src={photoUrl}
-                                                    alt={player.full_name}
+                                                    alt={getPlayerDisplayName(player)}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
-                                                    {player.full_name
+                                                    {getPlayerDisplayName(player)
                                                         .charAt(0)
                                                         .toUpperCase()}
                                                 </div>
@@ -186,9 +200,17 @@ export default function PlayersPage() {
 
                                     {/* Player Info */}
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                            {player.full_name}
-                                        </h3>
+                                        <div className="flex flex-col">
+                                            <span className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                {getPlayerDisplayName(player)}
+                                            </span>
+                                            {getPlayerNativeName(player) && (
+                                                <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                                    {getPlayerNativeName(player)}
+                                                </span>
+                                            )}
+                                        </div>
+
                                         <div className="flex flex-col gap-1 mt-1">
                                             {player.country && (
                                                 <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
@@ -246,8 +268,8 @@ export default function PlayersPage() {
                     <div className="text-center py-12">
                         <div className="text-gray-500 dark:text-gray-400 text-lg">
                             {search
-                                ? 'Δεν βρέθηκαν παίκτες'
-                                : 'Δεν υπάρχουν παίκτες στη βάση'}
+                                ? 'No players found for this search.'
+                                : 'There are no players in the database yet.'}
                         </div>
                     </div>
                 )}
@@ -255,7 +277,7 @@ export default function PlayersPage() {
                 {/* Footer Info */}
                 <div className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     {!isLoading && players.length > 0 && (
-                        <p>Εμφανίζονται {players.length} παίκτες</p>
+                        <p>Showing {players.length} players</p>
                     )}
                 </div>
             </div>

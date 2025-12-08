@@ -69,7 +69,12 @@ export type NormalizedEventStage = {
 }
 
 export type NormalizedGroupPlayer = {
+    // numeric Strapi id
+    id: number | null
+    // display name with preference (full_name_en if available, otherwise full_name)
     name: string
+    // native/localized name (usually full_name), may be same as name if no translation
+    nativeName: string | null
     documentId: string | null
     points: number | null
     matchPoints: number | null
@@ -90,6 +95,7 @@ export type NormalizedGroupMatch = {
 export type NormalizedStageResult = {
     id: string
     documentId: string
+    // display name with preference (full_name_en if available, otherwise full_name)
     playerName: string
     matchPoints: number | null
     points: number | null
@@ -125,7 +131,9 @@ export type PlayerRecord = {
 
 export type GroupStanding = {
     key: string
+    playerId: number | null
     playerName: string
+    playerNativeName: string | null
     record: PlayerRecord
     totalMatchPoints: number
     totalPoints: number

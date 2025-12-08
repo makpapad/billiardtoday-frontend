@@ -38,8 +38,10 @@ export async function GET(
 
         queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'full_name')
         queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')
+        queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][2]', 'full_name_en')
         queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][0]', 'full_name')
         queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][1]', 'documentId')
+        queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][2]', 'full_name_en')
 
         queryParams.set('populate[event_stages][populate][results][sort][0]', 'group_number:asc')
         queryParams.set('populate[event_stages][populate][results][sort][1]', 'final_position:asc')
@@ -54,6 +56,7 @@ export async function GET(
 
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][0]', 'full_name')
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][1]', 'documentId')
+        queryParams.set('populate[event_stages][populate][results][populate][player][fields][2]', 'full_name_en')
 
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 

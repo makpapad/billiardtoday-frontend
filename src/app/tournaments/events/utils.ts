@@ -53,16 +53,39 @@ export const normalizeEntity = <T extends Record<string, unknown>>(
     } as T & { id: string; documentId: string }
 }
 
-export const normalizePlayer = (player: unknown, fallbackId: string): { name: string; documentId: string | null } => {
+export const normalizePlayer = (
+    player: unknown,
+    fallbackId: string,
+): { id: number | null; name: string; nativeName: string | null; documentId: string | null } => {
     const source = player && typeof player === 'object' && (player as { data?: unknown }).data
         ? (player as { data?: unknown }).data
         : player
+    const normalized = normalizeEntity<{
+        id?: unknown
+        full_name?: unknown
+        full_name_en?: unknown
+    }>(source, fallbackId)
 
-    const normalized = normalizeEntity<{ full_name?: unknown }>(source, fallbackId)
-    const name = typeof normalized.full_name === 'string' ? normalized.full_name : ''
+    const nameEn =
+        typeof normalized.full_name_en === 'string'
+            ? normalized.full_name_en.trim()
+            : ''
+    const nativeName =
+        typeof normalized.full_name === 'string'
+            ? normalized.full_name.trim()
+            : ''
+    const name = nameEn || nativeName
+    
+    // Extract numeric id from the source
+    const rawId = (source && typeof source === 'object' && 'id' in source) 
+        ? (source as { id?: unknown }).id 
+        : null
+    const numericId = typeof rawId === 'number' ? rawId : (typeof rawId === 'string' ? parseInt(rawId, 10) : null)
 
     return {
+        id: numericId && !Number.isNaN(numericId) ? numericId : null,
         name,
+        nativeName: nativeName || null,
         documentId: normalized.documentId ?? null,
     }
 }
@@ -79,7 +102,9 @@ export const normalizeGroup = (group: unknown, fallbackId: string): NormalizedGr
         number: toNumber(normalized.number),
         dateTime: typeof normalized.date_time === 'string' ? normalized.date_time : null,
         player1: {
+            id: player1.id,
             name: player1.name,
+            nativeName: player1.nativeName,
             documentId: player1.documentId,
             points: toNumber(normalized.player1_points),
             matchPoints: toNumber(normalized.player1_match_points),
@@ -88,7 +113,9 @@ export const normalizeGroup = (group: unknown, fallbackId: string): NormalizedGr
             highRun2: toNumber(normalized.player1_high_run_2),
         },
         player2: {
+            id: player2.id,
             name: player2.name,
+            nativeName: player2.nativeName,
             documentId: player2.documentId,
             points: toNumber(normalized.player2_points),
             matchPoints: toNumber(normalized.player2_match_points),
@@ -242,11 +269,13 @@ export const aggregateRecord = (record: PlayerRecord, outcome: 'W' | 'L' | 'D' |
 export const buildGroupStandings = (matches: StageMatchGroup['matches']): GroupStanding[] => {
     const players = matches.reduce<Record<string, GroupStanding>>((acc, match) => {
         const applyEntry = (entry: typeof match.top, position: 'top' | 'bottom') => {
-            const id = entry.player.documentId ?? `${entry.player.name}-${position}`
-            if (!acc[id]) {
-                acc[id] = {
-                    key: id,
+            const key = entry.player.documentId ?? `${entry.player.name}-${position}`
+            if (!acc[key]) {
+                acc[key] = {
+                    key,
+                    playerId: entry.player.id,
                     playerName: entry.player.name,
+                    playerNativeName: entry.player.nativeName ?? null,
                     record: { wins: 0, draws: 0, losses: 0 },
                     totalMatchPoints: 0,
                     totalPoints: 0,
@@ -258,8 +287,8 @@ export const buildGroupStandings = (matches: StageMatchGroup['matches']): GroupS
                 }
             }
 
-            const current = acc[id]
-            acc[id] = {
+            const current = acc[key]
+            acc[key] = {
                 ...current,
                 record: aggregateRecord(current.record, entry.outcome),
                 totalMatchPoints: current.totalMatchPoints + (entry.player.matchPoints ?? 0),

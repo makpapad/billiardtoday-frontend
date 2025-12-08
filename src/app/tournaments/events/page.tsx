@@ -2,6 +2,7 @@
 
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import clsx from 'clsx'
 import type { EventApiResponse, NormalizedEventStage, StageMatchGroup } from './types'
 import {
@@ -159,16 +160,16 @@ function TournamentEventsContent() {
             <div className="flex flex-col gap-4">
                 <h1 className="text-2xl font-semibold">Tournament Events</h1>
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-                    {isLoading && <div className="text-sm text-gray-500 dark:text-gray-400">Φόρτωση...</div>}
+                    {isLoading && <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>}
                     {error && <div className="text-sm text-red-500 dark:text-red-400">{error}</div>}
                     {!isLoading && !error && !eventId && (
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Επιλέξτε ένα event από τη λίστα για να δείτε τα στάδια.
+                            Select a tournament event from the list to view its stages.
                         </div>
                     )}
                     {!isLoading && !error && eventId && eventStages.length === 0 && (
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Δεν βρέθηκαν stages για αυτό το event.
+                            No stages found for this event.
                         </div>
                     )}
                     {eventInfo && eventStages.length > 0 && (
@@ -235,11 +236,11 @@ function TournamentEventsContent() {
                                                     <div className="flex flex-col gap-3">
                                                         <div className="flex flex-col gap-3">
                                                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                                                Αγώνες - {stage.title || stage.order || ''}
+                                                                Matches - {stage.title || stage.order || ''}
                                                             </div>
                                                             {(stageMatchGroups[stage.id] ?? []).length === 0 ? (
                                                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                                    Δεν υπάρχουν αγώνες
+                                                                    No matches
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex flex-col gap-6">
@@ -254,15 +255,15 @@ function TournamentEventsContent() {
                                                                                 <table className="min-w-full text-xs">
                                                                                     <thead className="bg-blue-600 text-white">
                                                                                         <tr>
-                                                                                            <th className="px-4 py-2 font-medium">Παίκτης</th>
-                                                                                            <th className="px-4 py-2 font-medium">Ημερομηνία</th>
-                                                                                            <th className="px-4 py-2 font-medium">Νικητής</th>
-                                                                                            <th className="px-4 py-2 font-medium">Πόντοι</th>
+                                                                                            <th className="px-4 py-2 font-medium">Player</th>
+                                                                                            <th className="px-4 py-2 font-medium">Date</th>
+                                                                                            <th className="px-4 py-2 font-medium">Result</th>
+                                                                                            <th className="px-4 py-2 font-medium">Points</th>
                                                                                             <th className="px-4 py-2 font-medium">Innings</th>
-                                                                                            <th className="px-4 py-2 font-medium">Μέσος</th>
+                                                                                            <th className="px-4 py-2 font-medium">Average</th>
                                                                                             <th className="px-4 py-2 font-medium">High Run</th>
                                                                                             <th className="px-4 py-2 font-medium">High Run 2</th>
-                                                                                            <th className="px-4 py-2 font-medium">Βαθμοί</th>
+                                                                                            <th className="px-4 py-2 font-medium">Match Points</th>
                                                                                         </tr>
                                                                                     </thead>
                                                                                     <tbody>
@@ -275,7 +276,32 @@ function TournamentEventsContent() {
                                                                                                     )}
                                                                                                 >
                                                                                                     <td className="px-4 py-2 font-medium">
-                                                                                                        {match.top.player.name || 'Άγνωστος'}
+                                                                                                        {match.top.player.id ? (
+                                                                                                            <Link
+                                                                                                                href={`/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, '-')}`}
+                                                                                                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                                                                                                            >
+                                                                                                                <div className="flex flex-col leading-tight">
+                                                                                                                    <span>{match.top.player.name || 'Unknown'}</span>
+                                                                                                                    {match.top.player.nativeName &&
+                                                                                                                        match.top.player.nativeName.trim() !== match.top.player.name.trim() && (
+                                                                                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                                                                                                {match.top.player.nativeName}
+                                                                                                                            </span>
+                                                                                                                        )}
+                                                                                                                </div>
+                                                                                                            </Link>
+                                                                                                        ) : (
+                                                                                                            <div className="flex flex-col leading-tight">
+                                                                                                                <span>{match.top.player.name || 'Unknown'}</span>
+                                                                                                                {match.top.player.nativeName &&
+                                                                                                                    match.top.player.nativeName.trim() !== match.top.player.name.trim() && (
+                                                                                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                                                                                            {match.top.player.nativeName}
+                                                                                                                        </span>
+                                                                                                                    )}
+                                                                                                            </div>
+                                                                                                        )}
                                                                                                     </td>
                                                                                                     <td
                                                                                                         className={clsx('px-4 py-2', getDateCellClass())}
@@ -315,7 +341,32 @@ function TournamentEventsContent() {
                                                                                                     )}
                                                                                                 >
                                                                                                     <td className="px-4 py-2 font-medium">
-                                                                                                        {match.bottom.player.name || 'Άγνωστος'}
+                                                                                                        {match.bottom.player.id ? (
+                                                                                                            <Link
+                                                                                                                href={`/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, '-')}`}
+                                                                                                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                                                                                                            >
+                                                                                                                <div className="flex flex-col leading-tight">
+                                                                                                                    <span>{match.bottom.player.name || 'Unknown'}</span>
+                                                                                                                    {match.bottom.player.nativeName &&
+                                                                                                                        match.bottom.player.nativeName.trim() !== match.bottom.player.name.trim() && (
+                                                                                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                                                                                                {match.bottom.player.nativeName}
+                                                                                                                            </span>
+                                                                                                                        )}
+                                                                                                                </div>
+                                                                                                            </Link>
+                                                                                                        ) : (
+                                                                                                            <div className="flex flex-col leading-tight">
+                                                                                                                <span>{match.bottom.player.name || 'Unknown'}</span>
+                                                                                                                {match.bottom.player.nativeName &&
+                                                                                                                    match.bottom.player.nativeName.trim() !== match.bottom.player.name.trim() && (
+                                                                                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                                                                                            {match.bottom.player.nativeName}
+                                                                                                                        </span>
+                                                                                                                    )}
+                                                                                                            </div>
+                                                                                                        )}
                                                                                                     </td>
                                                                                                     <td className="px-4 py-2 text-center font-semibold">
                                                                                                         {formatOutcomeLabel(match.bottom.outcome)}
