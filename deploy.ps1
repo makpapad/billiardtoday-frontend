@@ -9,7 +9,6 @@ param(
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "billiardtoday-frontend"
-$SERVER_PATH = "/var/www/vhosts/billiardtoday.com/tournaments-app"
 
 Write-Host "Deploying $APP_NAME to $Environment..." -ForegroundColor Cyan
 Write-Host ""
@@ -78,7 +77,6 @@ Write-Host "Package created: $packageName" -ForegroundColor Green
 # 3. Upload to server via SFTP (WinSCP)
 $SERVER_HOST = "billiardtoday.com"
 $SERVER_USER = "root"
-$SERVER_PASSWORD = 'Q7@!XiP2+h'
 $REMOTE_PATH = "/var/www/vhosts/billiardtoday.com/tournaments-app"
 
 Write-Host ""
@@ -89,12 +87,14 @@ if (Test-Path 'C:\Program Files\WinSCP\WinSCP.com') {
     $winScpPath = 'C:\Program Files\WinSCP\WinSCP.com'
 } elseif (Test-Path 'C:\Program Files (x86)\WinSCP\WinSCP.com') {
     $winScpPath = 'C:\Program Files (x86)\WinSCP\WinSCP.com'
+} elseif (Test-Path 'C:\Users\MobileRepairs\AppData\Local\Programs\WinSCP\WinSCP.com') {
+    $winScpPath = 'C:\Users\MobileRepairs\AppData\Local\Programs\WinSCP\WinSCP.com'
 }
 
 if (-not $winScpPath) {
     Write-Host "WinSCP.com not found. Skipping automatic upload." -ForegroundColor Yellow
 } else {
-    $privateKey = 'C:\Users\Makis\.ssh\priv4.ppk'
+    $privateKey = 'D:\.ssh\priv1.ppk'
     $openCmd = 'open sftp://' + $SERVER_USER + '@' + $SERVER_HOST + '/ -privatekey="' + $privateKey + '" -hostkey=*'
     $putCmd = 'put ' + $packageName + ' ' + $REMOTE_PATH + '/'
     $exitCmd = 'exit'

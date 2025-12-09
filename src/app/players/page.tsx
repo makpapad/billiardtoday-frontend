@@ -23,6 +23,32 @@ type Player = {
               }
           }
         | null
+    photo_alt?:
+        | {
+              url: string
+          }
+        | {
+              data: {
+                  attributes: {
+                      url: string
+                  }
+              }
+          }
+        | null
+}
+
+// Helper function to get Strapi base URL
+const getStrapiBaseUrl = (): string => {
+    // In production on billiardtoday.com, always use the public Strapi URL
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname
+        if (host === 'billiardtoday.com' || host === 'www.billiardtoday.com') {
+            return 'https://app.billiardtoday.com'
+        }
+    }
+
+    // Fallback to configured env or localhost for local development
+    return process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
 }
 
 // Helper function to get photo URL from different Strapi structures
@@ -44,8 +70,7 @@ const getPhotoUrl = (photo: Player['photo_main']): string | null => {
 
     // If URL is relative (starts with /uploads), prepend Strapi base URL
     if (url.startsWith('/uploads')) {
-        const strapiBase =
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
+        const strapiBase = getStrapiBaseUrl()
         return `${strapiBase}${url}`
     }
 
@@ -180,7 +205,9 @@ export default function PlayersPage() {
                                     <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
                                         {(() => {
                                             const photoUrl = getPhotoUrl(
-                                                player.photo_main,
+                                                player.photo_main ??
+                                                    player.photo_alt ??
+                                                    null,
                                             )
                                             return photoUrl ? (
                                                 <img

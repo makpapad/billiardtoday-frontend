@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { getCountryFlagPath } from "@/lib/countryFlags"
 import { getGameTypeLabel, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
@@ -37,6 +37,32 @@ type Player = {
               }
           }
         | null
+    photo_alt?:
+        | {
+              url: string
+          }
+        | {
+              data: {
+                  attributes: {
+                      url: string
+                  }
+              }
+          }
+        | null
+}
+
+// Helper function to get Strapi base URL
+const getStrapiBaseUrl = (): string => {
+    // In production on billiardtoday.com, always use the public Strapi URL
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname
+        if (host === 'billiardtoday.com' || host === 'www.billiardtoday.com') {
+            return 'https://app.billiardtoday.com'
+        }
+    }
+
+    // Fallback to configured env or localhost for local development
+    return process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
 }
 
 // Helper function to get photo URL from different Strapi structures
@@ -58,8 +84,7 @@ const getPhotoUrl = (photo: Player['photo_main']): string | null => {
 
     // If URL is relative (starts with /uploads), prepend Strapi base URL
     if (url.startsWith('/uploads')) {
-        const strapiBase =
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
+        const strapiBase = getStrapiBaseUrl()
         return `${strapiBase}${url}`
     }
 
@@ -123,11 +148,9 @@ const buildPlayerSlug = (id: string, name: string): string => {
 
 export default function PlayerProfilePage() {
     const params = useParams()
-    const searchParams = useSearchParams()
     const router = useRouter()
-    const pathParam = params?.id as string
-    const queryId = searchParams.get('id')
-    const playerId = (queryId ?? (pathParam ? pathParam.split('-')[0] : '')) as string
+    const rawId = params?.id as string
+    const playerId = (rawId ? rawId.split('-')[0] : '') as string
 
     const [player, setPlayer] = useState<Player | null>(null)
     const [participations, setParticipations] = useState<TournamentParticipation[]>([])
@@ -160,6 +183,45 @@ export default function PlayerProfilePage() {
     const [opponentHighlight, setOpponentHighlight] = useState<number>(0)
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
+
+    const navigateToPlayer = async (opponentId: string, displayName: string) => {
+        const trimmedId = opponentId?.trim()
+        if (!trimmedId) return
+
+        // Αν μοιάζει ήδη με numeric id, πήγαινε κατευθείαν
+        if (/^\d+$/.test(trimmedId)) {
+            router.push(`/players/${buildPlayerSlug(trimmedId, displayName)}`)
+            return
+        }
+
+        try {
+            const params = new URLSearchParams()
+            params.set('filters[documentId][$eq]', trimmedId)
+            params.set('pagination[pageSize]', '1')
+
+            const response = await fetch(
+                buildApiUrl(`/api/admin/tournament/players?${params.toString()}`),
+            )
+
+            if (!response.ok) {
+                throw new Error('Failed to resolve opponent by documentId')
+            }
+
+            const payload = await response.json()
+            const first =
+                Array.isArray(payload?.data) && payload.data.length > 0
+                    ? payload.data[0]
+                    : null
+
+            const numericId = first?.id ? String(first.id) : trimmedId
+            const nameFromApi = first?.full_name || displayName
+
+            router.push(`/players/${buildPlayerSlug(numericId, nameFromApi)}`)
+        } catch {
+            // Fallback: χρησιμοποίησε όπως είναι το opponentId αν κάτι πάει στραβά
+            router.push(`/players/${buildPlayerSlug(trimmedId, displayName)}`)
+        }
+    }
 
     useEffect(() => {
         const fetchPlayerData = async () => {
@@ -624,8 +686,8 @@ export default function PlayerProfilePage() {
               })()
 
     const slugNameFromPath =
-        typeof pathParam === 'string'
-            ? pathParam
+        typeof rawId === 'string'
+            ? rawId
                   .split('-')
                   .slice(1)
                   .join(' ')
@@ -667,7 +729,11 @@ export default function PlayerProfilePage() {
                         {/* Player Photo */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
                             {(() => {
-                                const photoUrl = getPhotoUrl(player.photo_main)
+                                const photoUrl = getPhotoUrl(
+                                    player.photo_main ??
+                                        player.photo_alt ??
+                                        null,
+                                )
                                 return photoUrl ? (
                                     <img
                                         src={photoUrl}
@@ -1156,7 +1222,7 @@ export default function PlayerProfilePage() {
                                                                         onClick={() => {
                                                                             const opponentId = match.opponentId
                                                                             if (!opponentId) return
-                                                                            router.push(`/players/${buildPlayerSlug(opponentId, match.opponent)}`)
+                                                                            void navigateToPlayer(opponentId, match.opponent)
                                                                         }}
                                                                         className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                                     >
@@ -1395,7 +1461,7 @@ export default function PlayerProfilePage() {
                                                                         onClick={() => {
                                                                             const opponentId = match.opponentId
                                                                             if (!opponentId) return
-                                                                            router.push(`/players/${buildPlayerSlug(opponentId, match.opponent)}`)
+                                                                            void navigateToPlayer(opponentId, match.opponent)
                                                                         }}
                                                                         className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                                     >
@@ -1596,7 +1662,7 @@ export default function PlayerProfilePage() {
                                                 const opponentId = selectedMatch.opponentId
                                                 if (!opponentId) return
                                                 setSelectedMatch(null)
-                                                router.push(`/players/${buildPlayerSlug(opponentId, selectedMatch.opponent)}`)
+                                                void navigateToPlayer(opponentId, selectedMatch.opponent)
                                             }}
                                             className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                         >
