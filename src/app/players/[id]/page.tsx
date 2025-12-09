@@ -94,6 +94,26 @@ type TournamentParticipation = {
     highestRun: number
 }
 
+// Helper function to get gradient colors based on position
+const getPositionGradient = (position: string): string => {
+    const pos = position.toLowerCase().trim()
+
+    // 1st place - Gold
+    if (pos === "1" || pos === "1st" || pos === "1η" || pos === "1η θέση") {
+        return "from-yellow-500 to-amber-600"
+    }
+    // 2nd place - Silver
+    if (pos === "2" || pos === "2nd" || pos === "2η" || pos === "2η θέση") {
+        return "from-gray-300 to-gray-500"
+    }
+    // 3rd place - Bronze
+    if (pos === "3" || pos === "3rd" || pos === "3η" || pos === "3η θέση") {
+        return "from-orange-500 to-amber-700"
+    }
+    // Default - Blue gradient
+    return "from-blue-600 to-indigo-600"
+}
+
 export default function PlayerProfilePage() {
     const params = useParams()
     const searchParams = useSearchParams()
@@ -1276,7 +1296,7 @@ export default function PlayerProfilePage() {
                                     className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                                 >
                                     {/* Tournament Header */}
-                                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                                    <div className={`bg-gradient-to-r ${getPositionGradient(participation.position)} p-6 text-white`}>
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
                                                 <h3 className="text-2xl font-bold">
