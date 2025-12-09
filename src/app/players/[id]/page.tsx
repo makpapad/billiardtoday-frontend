@@ -114,6 +114,13 @@ const getPositionGradient = (position: string): string => {
     return "from-blue-600 to-indigo-600"
 }
 
+const buildPlayerSlug = (id: string, name: string): string => {
+    const trimmedId = id.trim()
+    const baseName = name.trim()
+    const slugName = baseName ? baseName.replace(/\s+/g, "-") : ""
+    return slugName ? `${trimmedId}-${slugName}` : trimmedId
+}
+
 export default function PlayerProfilePage() {
     const params = useParams()
     const searchParams = useSearchParams()
@@ -1146,7 +1153,11 @@ export default function PlayerProfilePage() {
                                                             vs {match.opponentId ? (
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => router.push(`/players/${match.opponentId}`)}
+                                                                        onClick={() => {
+                                                                            const opponentId = match.opponentId
+                                                                            if (!opponentId) return
+                                                                            router.push(`/players/${buildPlayerSlug(opponentId, match.opponent)}`)
+                                                                        }}
                                                                         className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                                     >
                                                                         {match.opponent}
@@ -1381,7 +1392,11 @@ export default function PlayerProfilePage() {
                                                                 vs {match.opponentId ? (
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => router.push(`/players/${match.opponentId}`)}
+                                                                        onClick={() => {
+                                                                            const opponentId = match.opponentId
+                                                                            if (!opponentId) return
+                                                                            router.push(`/players/${buildPlayerSlug(opponentId, match.opponent)}`)
+                                                                        }}
                                                                         className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                                     >
                                                                         {match.opponent}
@@ -1578,8 +1593,10 @@ export default function PlayerProfilePage() {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                const opponentId = selectedMatch.opponentId
+                                                if (!opponentId) return
                                                 setSelectedMatch(null)
-                                                router.push(`/players/${selectedMatch.opponentId}`)
+                                                router.push(`/players/${buildPlayerSlug(opponentId, selectedMatch.opponent)}`)
                                             }}
                                             className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                         >
