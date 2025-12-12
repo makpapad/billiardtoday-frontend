@@ -40,3 +40,6 @@ next-env.d.ts
  
 # template projects
 Dynamic_Sports_Landing_Page/
+
+# theme files
+theme/
