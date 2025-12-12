@@ -1,8 +1,26 @@
+import { Navigation } from "./components/landing/Navigation";
+import { Hero } from "./components/landing/Hero";
+import { Stats } from "./components/landing/Stats";
+import { Features } from "./components/landing/Features";
+import { HowItWorks } from "./components/landing/HowItWorks";
+import { Audience } from "./components/landing/Audience";
+import { FinalCTA } from "./components/landing/FinalCTA";
+import { Footer } from "./components/landing/Footer";
+import { LandingI18nProvider } from "./components/landing/i18n";
+
 export default function HomePage() {
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-4">Billiard Today</h1>
-            <p className="text-gray-600 dark:text-gray-400">Welcome to Billiard Today - Tournament Results</p>
-        </div>
-    )
+  return (
+    <LandingI18nProvider>
+      <Navigation />
+      <main>
+        <Hero />
+        <Stats />
+        <Features />
+        <HowItWorks />
+        <Audience />
+        <FinalCTA />
+      </main>
+      <Footer />
+    </LandingI18nProvider>
+  );
 }
