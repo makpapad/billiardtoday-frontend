@@ -34,6 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
+ 
 # zip files
 *.zip
+ 
+# template projects
+Dynamic_Sports_Landing_Page/
