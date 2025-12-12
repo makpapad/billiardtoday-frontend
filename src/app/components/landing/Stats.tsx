@@ -22,7 +22,7 @@ export function Stats() {
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-300">
                 {item.label}
               </p>
-              <p className="mt-3 text-3xl font-extrabold leading-tight text-[#8ef3c2] sm:text-4xl">
+              <p className="mt-3 text-3xl font-semibold leading-tight text-[#8ef3c2] sm:text-4xl">
                 {item.value}
               </p>
             </article>

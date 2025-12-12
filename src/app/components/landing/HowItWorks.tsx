@@ -39,7 +39,9 @@ export function HowItWorks() {
             <span className="uppercase tracking-wider text-[#00d9ff]">{t('howItWorks.badge')}</span>
           </div>
 
-          <h2 className="mb-4 text-3xl font-extrabold leading-tight md:text-4xl">{t('howItWorks.title')}</h2>
+          <h2 className="mb-4 text-3xl font-semibold leading-tight text-white md:text-4xl">
+            {t('howItWorks.title')}
+          </h2>
 
           <p className="mx-auto max-w-2xl text-[#94a3b8]">
             {t('howItWorks.description')}
@@ -70,7 +72,9 @@ export function HowItWorks() {
                   <step.icon className="h-7 w-7" style={{ color: step.color }} />
                 </div>
 
-                <h3 className="mb-3 text-lg font-semibold">{step.title}</h3>
+                <h3 className="mb-3 text-lg font-semibold text-white">
+                  {step.title}
+                </h3>
 
                 <p className="text-[#94a3b8]">{step.description}</p>
               </div>

@@ -4,6 +4,16 @@ import { useState } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { useLandingT } from "./i18n";
 
+const smoothScroll = (targetId: string) => {
+  const element = document.getElementById(targetId);
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+};
+
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const { t, locale, setLocale } = useLandingT();
@@ -19,15 +29,24 @@ export function Navigation() {
         </div>
 
         <div className="hidden items-center gap-8 md:flex">
-          <a href="#features" className="text-[#94a3b8] transition-colors hover:text-white">
+          <button 
+            onClick={() => smoothScroll("features")}
+            className="text-[#94a3b8] transition-colors hover:text-white"
+          >
             {t("nav.features")}
-          </a>
-          <a href="#how-it-works" className="text-[#94a3b8] transition-colors hover:text-white">
+          </button>
+          <button 
+            onClick={() => smoothScroll("how-it-works")}
+            className="text-[#94a3b8] transition-colors hover:text-white"
+          >
             {t("nav.howItWorks")}
-          </a>
-          <a href="#for-you" className="text-[#94a3b8] transition-colors hover:text-white">
+          </button>
+          <button 
+            onClick={() => smoothScroll("for-you")}
+            className="text-[#94a3b8] transition-colors hover:text-white"
+          >
             {t("nav.forYou")}
-          </a>
+          </button>
           
           {/* Language Switcher */}
           <div className="relative group">
@@ -79,15 +98,24 @@ export function Navigation() {
       {isOpen && (
         <div className="border-t border-[#1e293b] bg-[#0a0e1a] px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            <a href="#features" className="text-[#94a3b8] transition-colors hover:text-white">
+            <button 
+              onClick={() => smoothScroll("features")}
+              className="text-[#94a3b8] transition-colors hover:text-white text-left"
+            >
               {t("nav.features")}
-            </a>
-            <a href="#how-it-works" className="text-[#94a3b8] transition-colors hover:text-white">
+            </button>
+            <button 
+              onClick={() => smoothScroll("how-it-works")}
+              className="text-[#94a3b8] transition-colors hover:text-white text-left"
+            >
               {t("nav.howItWorks")}
-            </a>
-            <a href="#for-you" className="text-[#94a3b8] transition-colors hover:text-white">
+            </button>
+            <button 
+              onClick={() => smoothScroll("for-you")}
+              className="text-[#94a3b8] transition-colors hover:text-white text-left"
+            >
               {t("nav.forYou")}
-            </a>
+            </button>
             
             {/* Mobile Language Switcher */}
             <div className="border-t border-[#1e293b] pt-4">

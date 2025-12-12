@@ -52,7 +52,7 @@ export function Features() {
             <span className="uppercase tracking-wider text-[#00ff88]">{t('features.badge')}</span>
           </div>
 
-          <h2 className="mb-4 text-3xl font-extrabold leading-tight md:text-4xl">
+          <h2 className="mb-4 text-3xl font-semibold leading-tight md:text-4xl">
             {t('features.title')}
           </h2>
 

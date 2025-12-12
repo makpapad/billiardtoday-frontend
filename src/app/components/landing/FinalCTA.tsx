@@ -18,7 +18,7 @@ export function FinalCTA() {
           <span className="uppercase tracking-wider text-[#00ff88]">{t('finalCTA.badge')}</span>
         </div>
 
-        <h2 className="mb-6 text-3xl font-extrabold leading-tight md:text-4xl">
+        <h2 className="mb-6 text-3xl font-semibold leading-tight md:text-4xl">
           {t('finalCTA.title')}
           <br />
           {t('finalCTA.subtitle')}

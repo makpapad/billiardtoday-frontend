@@ -52,7 +52,7 @@ export function Audience() {
             <span className="uppercase tracking-wider text-[#ff3366]">{t('audience.badge')}</span>
           </div>
 
-          <h2 className="mb-4 text-3xl font-extrabold leading-tight md:text-4xl">{t('audience.title')}</h2>
+          <h2 className="mb-4 text-3xl font-semibold leading-tight md:text-4xl">{t('audience.title')}</h2>
 
           <p className="mx-auto max-w-2xl text-[#94a3b8]">
             {t('audience.description')}

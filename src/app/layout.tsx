@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://billiardtoday.com/tournaments'),
@@ -48,7 +49,11 @@ export default function RootLayout({
 }) {
     return (
         <html lang="el">
-            <body>{children}</body>
+            <body>
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
+            </body>
         </html>
     )
 }

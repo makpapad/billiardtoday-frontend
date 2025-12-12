@@ -11,7 +11,7 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "nav.forYou": "Για Εσάς",
     "nav.login": "Σύνδεση",
 
-    "hero.livePlatform": "Ζωντανή Πλατφόρμα Τουρνουά",
+    "hero.livePlatform": "Live Πλατφόρμα Τουρνουά",
     "hero.title": "Διοργάνωσε & Παρακολούθησε",
     "hero.subtitle": "Τουρνουά Μπιλιάρδου",
     "hero.description": "Η ολοκληρωμένη πλατφόρμα για λέσχες, διοργανωτές και παίκτες. Δημιούργησε επαγγελματικά τουρνουά, παρακολούθησε live scores, κατατάξεις και αποτελέσματα σε πραγματικό χρόνο.",
