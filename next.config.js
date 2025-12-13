@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/tournaments',
-  assetPrefix: '/tournaments',
+  // Conditional basePath: only in production
+  basePath: process.env.NODE_ENV === 'production' ? '/tournaments' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/tournaments' : '',
   reactStrictMode: true,
   
   // Image optimization
