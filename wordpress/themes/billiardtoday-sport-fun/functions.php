@@ -219,7 +219,7 @@ function billiardtoday_sport_fun_ajax_switch_theme() {
     
     wp_send_json_error('Invalid theme');
 }
-add_action('wp_ajax_switch_theme', 'billiardtoday_sport_fun_ajax_switch_theme');
+add_action('wp_ajax_billiardtoday_sport_fun_ajax_switch_theme', 'billiardtoday_sport_fun_ajax_switch_theme');
 
 // Add theme switcher to admin bar
 function billiardtoday_sport_fun_admin_bar_switcher($wp_admin_bar) {
@@ -340,14 +340,20 @@ function billiardtoday_sport_fun_switcher_script() {
                     url: billiardtoday_sport_fun.ajax_url,
                     type: 'POST',
                     data: {
-                        action: 'switch_theme',
+                        action: 'billiardtoday_sport_fun_ajax_switch_theme',
                         theme: theme,
                         nonce: billiardtoday_sport_fun.nonce
                     },
                     success: function(response) {
                         if (response.success) {
                             location.reload();
+                        } else {
+                            alert('Theme switch failed: ' + (response.data || 'Unknown error'));
                         }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('AJAX Error: ' + error + ' Status: ' + status);
+                        console.log('AJAX Error:', xhr.responseText);
                     }
                 });
             });
