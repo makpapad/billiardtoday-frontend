@@ -98,17 +98,11 @@ function billiardtoday_original_widgets_init() {
 }
 add_action('widgets_init', 'billiardtoday_original_widgets_init');
 
-// Customizer additions
-require get_template_directory() . '/inc/customizer.php';
-
 // Custom template tags for this theme
 require get_template_directory() . '/inc/template-tags.php';
 
 // Functions which enhance the theme by hooking into WordPress
 require get_template_directory() . '/inc/template-functions.php';
-
-// Customizer additions
-require get_template_directory() . '/inc/customizer.php';
 
 // Load Jetpack compatibility file
 if (defined('JETPACK__VERSION')) {
