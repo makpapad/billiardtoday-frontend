@@ -585,21 +585,6 @@ function billiardtoday_sport_fun_performance_optimizations() {
 add_action('init', 'billiardtoday_sport_fun_performance_optimizations');
 
 /**
- * Add fun mode admin styles
+ * Add fun mode admin styles - Function is already declared in functions.php
  */
-function billiardtoday_sport_fun_admin_styles() {
-    ?>
-    <style>
-        .admin-color-sport-fun {
-            --primary: #ff6b35;
-            --secondary: #ff8c42;
-            --background: #ffffff;
-            --surface: #fafafa;
-            --text: #171717;
-            --text-muted: #404040;
-        }
-    </style>
-    <?php
-}
-add_action('admin_head', 'billiardtoday_sport_fun_admin_styles');
 ?>
