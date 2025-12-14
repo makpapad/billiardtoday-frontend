@@ -121,52 +121,7 @@ export function LandingSwitcher() {
   return (
     <div className="min-h-screen">
       {/* Switcher Panel */}
-      <div className="fixed top-20 right-6 z-50 bg-white/90 backdrop-blur-lg rounded-xl p-4 border border-gray-200 shadow-xl">
-        <div className="space-y-3">
-          <div className="text-center">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Landing Page</span>
-          </div>
-          
-          {/* Version Buttons */}
-          <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-            {Object.entries(versions).map(([key, config]) => {
-              const Icon = config.icon;
-              const isActive = version === key;
-              
-              return (
-                <button
-                  key={key}
-                  onClick={() => setVersion(key as LandingVersion)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-gray-900 text-white shadow-lg' 
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium">{config.name}</span>
-                </button>
-              );
-            })}
-          </div>
-          
-          {/* Current Version Label */}
-          <div className="text-center pt-2 border-t border-gray-200">
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              version === 'original' ? 'bg-blue-100 text-blue-700' :
-              version === 'original-light' ? 'bg-yellow-100 text-yellow-700' :
-              version === 'new' ? 'bg-purple-100 text-purple-700' :
-              version === 'light' ? 'bg-cyan-100 text-cyan-700' :
-              version === 'minimal' ? 'bg-gray-100 text-gray-700' :
-              version === 'dark-modern' ? 'bg-purple-100 text-purple-700' :
-              version === 'corporate' ? 'bg-blue-100 text-blue-700' :
-              'bg-orange-100 text-orange-700'
-            }`}>
-              {currentVersion.label}
-            </span>
-          </div>
-        </div>
-      </div>
+      {null}
 
       {/* Render Selected Landing Page */}
       {version === 'original' && (

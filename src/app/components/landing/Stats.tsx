@@ -1,14 +1,25 @@
 "use client";
 
 import { useLandingT } from "./i18n";
+import { useWordpressLanding } from "./wordpressLanding";
 
 export function Stats() {
   const { t } = useLandingT();
+  const wordpressLanding = useWordpressLanding();
   
   const stats = [
-    { label: t('stats.activeTournaments'), value: "240+" },
-    { label: t('stats.players'), value: "3.5k" },
-    { label: t('stats.registeredMatches'), value: "12k" },
+    {
+      label: t('stats.activeTournaments'),
+      value: wordpressLanding?.statsActiveTournamentsValue ?? "240+",
+    },
+    {
+      label: t('stats.players'),
+      value: wordpressLanding?.statsRegisteredPlayersValue ?? "3.5k",
+    },
+    {
+      label: t('stats.registeredMatches'),
+      value: wordpressLanding?.statsCompletedMatchesValue ?? "12k",
+    },
   ];
   return (
     <section className="bg-gradient-to-b from-[#060910] via-[#0b1020] to-[#0c1224] text-white">
