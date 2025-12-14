@@ -169,19 +169,18 @@ This requires:
 ---
 
 ## Next TODO
-1. **Local run confirmation**
-   - Confirmed WP → Next data flow for:
-     - Landing hero/stats via ACF home page.
-     - WP pages rendering via `/[...slug]`.
-     - Navigation menu via ACF Options endpoint (`/wp-json/billiardtoday/v1/options`).
+- [x] **Local run confirmation**
+  - [x] Landing hero/stats via ACF home page.
+  - [x] WP pages rendering via `/[...slug]`.
+  - [x] Navigation menu via ACF Options endpoint (`/wp-json/billiardtoday/v1/options`).
 
-2. **Production routing**
-   - Confirm hosting stack (Vercel vs VPS, Nginx vs Apache/cPanel).
-   - Apply `basePath` + proxy rules.
+- [ ] **Production routing**
+  - [ ] Confirm hosting stack (Vercel vs VPS, Nginx vs Apache/cPanel).
+  - [ ] Apply `basePath` + proxy rules.
 
-3. **Blog/News routes (WP REST)**
-   - Implement `/blog`, `/blog/[slug]`, `/news`, `/news/[slug]`.
-   - Add revalidation endpoint / webhook.
+- [ ] **Blog/News routes (WP REST)**
+  - [ ] Implement `/blog`, `/blog/[slug]`, `/news`, `/news/[slug]`.
+  - [ ] Add revalidation endpoint / webhook.
 
-4. **Cleanup (optional)**
-   - Ensure there are no duplicate ACF fields on Options Page (avoid extra root keys like `acf.href`, `acf.label_key`, `acf.new_tab`).
+- [ ] **Cleanup (optional)**
+  - [ ] Ensure there are no duplicate ACF fields on Options Page (avoid extra root keys like `acf.href`, `acf.label_key`, `acf.new_tab`).
