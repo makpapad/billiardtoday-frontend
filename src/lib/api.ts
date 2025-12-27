@@ -1,6 +1,6 @@
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'https://app.billiardtoday.com'
 const SCOREBOARD_URL = process.env.NEXT_PUBLIC_SCOREBOARD_URL || 'https://scoreboard.billiardtoday.com'
-const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.billiardtoday.com'
+const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3022'
 
 export interface Tournament {
   id: number
@@ -155,4 +155,47 @@ export function getStatusLabel(status: Tournament['status']): string {
     default:
       return status
   }
+}
+
+/**
+ * Fetch live screens for tournaments
+ */
+export async function getLiveScreens(): Promise<any> {
+  const url = `/api/admin/tournament/live-screens`
+  
+  const res = await fetch(url, {
+    next: { revalidate: 5 } // Revalidate every 5 seconds για real-time data
+  })
+  
+  if (!res.ok) {
+    throw new Error(`Failed to fetch live screens: ${res.status}`)
+  }
+  
+  return res.json()
+}
+
+/**
+ * Update live screen status
+ */
+export async function updateLiveScreen(screenData: {
+  tournamentId: string
+  screenId: string
+  screenName: string
+  isActive: boolean
+}): Promise<any> {
+  const url = `/api/admin/tournament/live-screens`
+  
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(screenData)
+  })
+  
+  if (!res.ok) {
+    throw new Error(`Failed to update live screen: ${res.status}`)
+  }
+  
+  return res.json()
 }
