@@ -42,6 +42,7 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 # Copy files
 Copy-Item -Path ".next" -Destination "$tempDir\.next" -Recurse -Force
 Copy-Item -Path "public" -Destination "$tempDir\public" -Recurse -Force
+Copy-Item -Path "src" -Destination "$tempDir\src" -Recurse -Force
 Copy-Item -Path "package.json" -Destination "$tempDir\" -Force
 Copy-Item -Path "package-lock.json" -Destination "$tempDir\" -Force
 Copy-Item -Path "next.config.js" -Destination "$tempDir\" -Force

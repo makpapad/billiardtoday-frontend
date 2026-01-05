@@ -1,6 +1,25 @@
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
+// Ensure fetch/Request/Response exist on Node runtime
+try {
+  // Polyfill Web Streams needed by undici
+  const { ReadableStream, WritableStream, TransformStream } = require('node:stream/web')
+  globalThis.ReadableStream = ReadableStream
+  globalThis.WritableStream = WritableStream
+  globalThis.TransformStream = TransformStream
+
+  const { fetch, Request, Response, Headers, FormData, File, Blob } = require('undici')
+  globalThis.fetch = fetch
+  globalThis.Request = Request
+  globalThis.Response = Response
+  globalThis.Headers = Headers
+  globalThis.FormData = FormData
+  globalThis.File = File
+  globalThis.Blob = Blob
+} catch (err) {
+  console.warn('Could not polyfill fetch globals:', err)
+}
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = process.env.HOSTNAME || 'localhost'
