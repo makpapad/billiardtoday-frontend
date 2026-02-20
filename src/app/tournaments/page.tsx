@@ -56,7 +56,8 @@ function TournamentsContent() {
 
                 const response = await fetch(`/api/tournaments?${params.toString()}`)
                 if (!response.ok) {
-                    throw new Error('Failed to fetch tournaments')
+                    const errorText = await response.text().catch(() => '')
+                    throw new Error(errorText || 'Failed to fetch tournaments')
                 }
 
                 const data: TournamentsResponse = await response.json()

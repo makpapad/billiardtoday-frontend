@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
 
 export async function GET(
     req: NextRequest,
@@ -20,6 +21,7 @@ export async function GET(
         queryParams.set('populate[event_stages][fields][3]', 'order')
         queryParams.set('populate[event_stages][fields][4]', 'is_final')
         queryParams.set('populate[event_stages][fields][5]', 'documentId')
+        queryParams.set('populate[event_stages][fields][6]', 'stage_type')
 
         queryParams.set('populate[event_stages][populate][groups][sort][0]', 'number:asc')
         queryParams.set('populate[event_stages][populate][groups][fields][0]', 'number')
@@ -60,8 +62,14 @@ export async function GET(
 
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 
+        const headers: HeadersInit = {}
+        if (STRAPI_API_TOKEN) {
+            headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`
+        }
+
         const res = await fetch(url, {
             cache: 'no-store',
+            headers,
         })
 
         const text = await res.text()

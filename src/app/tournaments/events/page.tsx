@@ -22,6 +22,7 @@ import {
     buildGroupStandings,
 } from './utils'
 import GroupStandingsTable from './GroupStandingsTable'
+import SingleElimBracket, { type BracketRoundView } from './SingleElimBracket'
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
     const url = `/api/events/${eventId}`
@@ -38,6 +39,8 @@ function TournamentEventsContent() {
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [brMatchesByStage, setBrMatchesByStage] = useState<Record<string, unknown[]>>({})
+    const [brLoadingByStage, setBrLoadingByStage] = useState<Record<string, boolean>>({})
     const searchParams = useSearchParams()
     const eventId = searchParams?.get('eventId') ?? null
 
@@ -80,6 +83,10 @@ function TournamentEventsContent() {
                 const endDate = typeof normalizedStage.end_date === 'string' ? normalizedStage.end_date : null
                 const order = toNumber(normalizedStage.order)
                 const isFinal = Boolean(normalizedStage.is_final)
+                const stageType =
+                    typeof normalizedStage.stage_type === 'string'
+                        ? normalizedStage.stage_type.trim()
+                        : null
 
                 const groupsRaw = toRelationArray(normalizedStage.groups)
                 const resultsRaw = toRelationArray(normalizedStage.results)
@@ -116,6 +123,7 @@ function TournamentEventsContent() {
                     endDate,
                     order,
                     isFinal,
+                    stageType,
                     groups,
                     results,
                 }
@@ -143,6 +151,157 @@ function TournamentEventsContent() {
             setActiveStageId(eventStages[0].id)
         }
     }, [eventStages, activeStageId])
+
+    const activeStage = useMemo(
+        () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
+        [eventStages, activeStageId],
+    )
+
+    const normalizeBracketPlayer = useCallback((player: unknown): { name: string } => {
+        try {
+            const src =
+                player && typeof player === 'object' && 'data' in (player as Record<string, unknown>)
+                    ? ((player as { data?: unknown }).data ?? player)
+                    : player
+            const attr =
+                src && typeof src === 'object' && 'attributes' in (src as Record<string, unknown>)
+                    ? ((src as { attributes?: Record<string, unknown> }).attributes ?? src)
+                    : src
+
+            if (!attr || typeof attr !== 'object') return { name: '' }
+            const fullName = (attr as Record<string, unknown>).full_name
+            return { name: typeof fullName === 'string' ? fullName : '' }
+        } catch {
+            return { name: '' }
+        }
+    }, [])
+
+    const fetchBracketMatches = useCallback(async (stageDocumentId: string) => {
+        if (!stageDocumentId) return
+        setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: true }))
+        try {
+            const res = await fetch(`/api/event-stages/${encodeURIComponent(stageDocumentId)}/matches`, {
+                cache: 'no-store',
+            })
+            const text = await res.text()
+            if (!res.ok) throw new Error(text || 'Failed to load bracket matches')
+            const json = JSON.parse(text)
+            const arr = Array.isArray(json?.matches) ? (json.matches as unknown[]) : []
+            setBrMatchesByStage((prev) => ({ ...prev, [stageDocumentId]: arr }))
+        } catch (e) {
+            console.warn('[TournamentEvents] Failed to fetch bracket matches:', e)
+            setBrMatchesByStage((prev) => ({ ...prev, [stageDocumentId]: [] }))
+        } finally {
+            setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: false }))
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!activeStage || activeStage.stageType !== 'brackets') return
+        if (brMatchesByStage[activeStage.documentId]) return
+        void fetchBracketMatches(activeStage.documentId)
+    }, [activeStage, brMatchesByStage, fetchBracketMatches])
+
+    const activeBracketRounds = useMemo<BracketRoundView[]>(() => {
+        if (!activeStage || activeStage.stageType !== 'brackets') return []
+        const sourceRaw = brMatchesByStage[activeStage.documentId]
+        const source = Array.isArray(sourceRaw) ? sourceRaw : []
+        if (source.length === 0) return []
+
+        const canonicalizeRound = (raw: string): string => {
+            const upper = (raw || '').toUpperCase().trim()
+            if (!upper) return ''
+            if (upper === 'R32' || upper.includes('ROUND OF 32')) return 'R32'
+            if (upper === 'R16' || upper.includes('ROUND OF 16') || upper.includes('LAST 16')) return 'R16'
+            if (upper === 'R8' || upper.includes('QUARTER')) return 'QF'
+            if (upper === 'R4' || upper.includes('SEMI')) return 'SF'
+            if (upper === 'R2' || upper === 'F' || upper.includes('FINAL')) return 'F'
+            const m = upper.match(/^R(\d+)$/)
+            if (m) {
+                const n = Number(m[1])
+                if (n === 8) return 'QF'
+                if (n === 4) return 'SF'
+                if (n === 2) return 'F'
+                return `R${n}`
+            }
+            return upper
+        }
+
+        const byRound = new Map<string, unknown[]>()
+        source.forEach((m) => {
+            const bracket = typeof (m as { bracket_type?: unknown }).bracket_type === 'string'
+                ? (m as { bracket_type: string }).bracket_type
+                : 'winners'
+            if (bracket !== 'winners') return
+            const rawRound = typeof (m as { round?: unknown }).round === 'string' ? (m as { round: string }).round : ''
+            const label = canonicalizeRound(rawRound)
+            if (!label) return
+            const arr = byRound.get(label) ?? []
+            arr.push(m)
+            byRound.set(label, arr)
+        })
+
+        const roundPriority: Record<string, number> = { R32: 0, R16: 1, QF: 2, SF: 3, F: 4 }
+        const orderedLabels = Array.from(byRound.keys()).sort((a, b) => {
+            const pa = roundPriority[a] ?? 100
+            const pb = roundPriority[b] ?? 100
+            if (pa !== pb) return pa - pb
+            return (byRound.get(b)?.length ?? 0) - (byRound.get(a)?.length ?? 0)
+        })
+
+        const idByRoundAndNumber = new Map<string, Map<number, string>>()
+        orderedLabels.forEach((label) => {
+            const inner = new Map<number, string>()
+            const arr = (byRound.get(label) ?? [])
+                .slice()
+                .sort((a, b) => (toNumber((a as { match_number?: unknown }).match_number) ?? 0) - (toNumber((b as { match_number?: unknown }).match_number) ?? 0))
+            arr.forEach((m) => {
+                const num = toNumber((m as { match_number?: unknown }).match_number) ?? 0
+                const id = (m as { id?: unknown }).id
+                if (num > 0 && id !== undefined && id !== null) inner.set(num, String(id))
+            })
+            idByRoundAndNumber.set(label, inner)
+        })
+
+        return orderedLabels.map((label, idx) => {
+            const nextLabel = orderedLabels[idx + 1] || null
+            const nextMap = nextLabel ? idByRoundAndNumber.get(nextLabel) : undefined
+            const arr = (byRound.get(label) ?? [])
+                .slice()
+                .sort((a, b) => (toNumber((a as { match_number?: unknown }).match_number) ?? 0) - (toNumber((b as { match_number?: unknown }).match_number) ?? 0))
+
+            return {
+                label,
+                matches: arr.map((m) => {
+                    const matchNumber = toNumber((m as { match_number?: unknown }).match_number) ?? 0
+                    const sourceTag = (m as { source?: unknown }).source
+                    const p1 = normalizeBracketPlayer((m as { player1?: unknown }).player1)
+                    const p2 = normalizeBracketPlayer((m as { player2?: unknown }).player2)
+                    return {
+                        id: String((m as { id?: unknown }).id ?? ''),
+                        player1: p1.name || '',
+                        player2: p2.name || '',
+                        score1: toNumber((m as { player1_points?: unknown; player1_match_points?: unknown }).player1_points)
+                            ?? toNumber((m as { player1_match_points?: unknown }).player1_match_points),
+                        score2: toNumber((m as { player2_points?: unknown; player2_match_points?: unknown }).player2_points)
+                            ?? toNumber((m as { player2_match_points?: unknown }).player2_match_points),
+                        innings1: toNumber((m as { player1_innings?: unknown }).player1_innings),
+                        innings2: toNumber((m as { player2_innings?: unknown }).player2_innings),
+                        tieBreak1: toNumber((m as { player1_tie_break?: unknown }).player1_tie_break),
+                        tieBreak2: toNumber((m as { player2_tie_break?: unknown }).player2_tie_break),
+                        date: typeof (m as { date_time?: unknown }).date_time === 'string'
+                            ? ((m as { date_time: string }).date_time)
+                            : null,
+                        nextMatchId: nextMap && matchNumber > 0 ? nextMap.get(Math.ceil(matchNumber / 2)) : undefined,
+                        byeTop: sourceTag === 'bye-1',
+                        byeBottom: sourceTag === 'bye-2',
+                        ffTop: sourceTag === 'ff-1' || sourceTag === 'double-ff',
+                        ffBottom: sourceTag === 'ff-2' || sourceTag === 'double-ff',
+                    }
+                }),
+            }
+        })
+    }, [activeStage, brMatchesByStage, normalizeBracketPlayer])
 
     const eventInfo = useMemo(() => {
         if (!eventData?.data) return null
@@ -238,7 +397,19 @@ function TournamentEventsContent() {
                                                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                                                 Matches - {stage.title || stage.order || ''}
                                                             </div>
-                                                            {(stageMatchGroups[stage.id] ?? []).length === 0 ? (
+                                                            {stage.stageType === 'brackets' ? (
+                                                                brLoadingByStage[stage.documentId] ? (
+                                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                        Loading bracket...
+                                                                    </div>
+                                                                ) : activeBracketRounds.length > 0 ? (
+                                                                    <SingleElimBracket rounds={activeBracketRounds} />
+                                                                ) : (
+                                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                        No bracket matches
+                                                                    </div>
+                                                                )
+                                                            ) : (stageMatchGroups[stage.id] ?? []).length === 0 ? (
                                                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                     No matches
                                                                 </div>

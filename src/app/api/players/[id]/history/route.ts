@@ -17,16 +17,6 @@ export async function GET(req: NextRequest, context: RouteContext) {
             )
         }
 
-        if (!STRAPI_API_TOKEN) {
-            console.error(
-                '[frontend.api.players.history][GET] missing STRAPI_API_TOKEN env',
-            )
-            return NextResponse.json(
-                { error: 'STRAPI_API_TOKEN is missing' },
-                { status: 500 },
-            )
-        }
-
         const searchParams = req.nextUrl.searchParams
         const year = searchParams.get('year')
         const gameType = searchParams.get('gameType')
@@ -38,20 +28,40 @@ export async function GET(req: NextRequest, context: RouteContext) {
         if (year) strapiUrl.searchParams.set('year', year)
         if (gameType) strapiUrl.searchParams.set('gameType', gameType)
 
-        const strapiResponse = await fetch(strapiUrl.toString(), {
-            headers: {
-                Authorization: `Bearer ${STRAPI_API_TOKEN}`,
-            },
-        })
+        const fetchFromStrapi = async (useAuth: boolean) =>
+            fetch(strapiUrl.toString(), {
+                headers:
+                    useAuth && STRAPI_API_TOKEN
+                        ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+                        : undefined,
+                cache: 'no-store',
+            })
+
+        let strapiResponse = await fetchFromStrapi(Boolean(STRAPI_API_TOKEN))
 
         if (!strapiResponse.ok) {
-            const errorPayload = await strapiResponse.json().catch(() => ({}))
-            return NextResponse.json(
-                errorPayload || { error: 'Failed to fetch player history' },
-                {
-                    status: strapiResponse.status,
-                },
-            )
+            // Some deployments have restricted API tokens but allow public read.
+            if (
+                STRAPI_API_TOKEN &&
+                (strapiResponse.status === 401 || strapiResponse.status === 403)
+            ) {
+                const retry = await fetchFromStrapi(false)
+                if (retry.ok) {
+                    strapiResponse = retry
+                } else {
+                    const retryText = await retry.text().catch(() => '')
+                    return NextResponse.json(
+                        { error: retryText || 'Failed to fetch player history' },
+                        { status: retry.status },
+                    )
+                }
+            } else {
+                const errorText = await strapiResponse.text().catch(() => '')
+                return NextResponse.json(
+                    { error: errorText || 'Failed to fetch player history' },
+                    { status: strapiResponse.status },
+                )
+            }
         }
 
         const payload = await strapiResponse.json()

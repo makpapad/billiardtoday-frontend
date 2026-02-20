@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
+const configuredBasePath =
+  process.env.NEXT_PUBLIC_BASE_PATH ||
+  (process.env.NODE_ENV === 'production' ? '/tournaments' : '')
+
 const nextConfig = {
-  // Conditional basePath: only in production
-  basePath: process.env.NODE_ENV === 'production' ? '/tournaments' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/tournaments' : '',
+  // Base path can be enabled in local too (e.g. when proxied by WordPress)
+  basePath: configuredBasePath,
+  assetPrefix: configuredBasePath,
   reactStrictMode: true,
   
   // Image optimization
@@ -26,11 +30,12 @@ const nextConfig = {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://billiardtoday.com',
     NEXT_PUBLIC_SCOREBOARD_URL: process.env.NEXT_PUBLIC_SCOREBOARD_URL || 'https://scoreboard.billiardtoday.com',
     NEXT_PUBLIC_ADMIN_URL: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.billiardtoday.com',
-    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH || '/tournaments',
+    NEXT_PUBLIC_BASE_PATH: configuredBasePath,
   },
   
   // Headers για SEO και security
   async headers() {
+    const isDev = process.env.NODE_ENV !== 'production'
     return [
       {
         source: '/:path*',
@@ -39,10 +44,20 @@ const nextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
+          ...(isDev
+            ? [
+                {
+                  key: 'Content-Security-Policy',
+                  value:
+                    "frame-ancestors 'self' http://localhost:* http://127.0.0.1:*",
+                },
+              ]
+            : [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]),
         ],
       },
     ]

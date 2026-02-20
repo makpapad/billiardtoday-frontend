@@ -65,19 +65,34 @@ export async function GET(req: NextRequest) {
         const params = copySearchParams(req.nextUrl.searchParams)
         const url = `${STRAPI_URL}/api/bt-players?${params.toString()}`
 
-        if (!STRAPI_API_TOKEN) {
-            console.error('[frontend.api.admin.tournament.players][GET] missing STRAPI_API_TOKEN env')
-            return NextResponse.json({ error: 'STRAPI_API_TOKEN is missing' }, { status: 500 })
+        const fetchWithOptionalAuth = async (useAuth: boolean) =>
+            fetch(url, {
+                headers:
+                    useAuth && STRAPI_API_TOKEN
+                        ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+                        : undefined,
+                next: { revalidate: 300 },
+            })
+
+        let res = await fetchWithOptionalAuth(Boolean(STRAPI_API_TOKEN))
+        let text = await res.text()
+
+        // Some environments have restricted API tokens but allow public read.
+        if (!res.ok && (res.status === 401 || res.status === 403)) {
+            const retryRes = await fetchWithOptionalAuth(false)
+            const retryText = await retryRes.text()
+            if (retryRes.ok) {
+                return new NextResponse(retryText, {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                })
+            }
+            // Keep the original error context if retry also fails.
+            if (retryRes.status >= res.status) {
+                res = retryRes
+                text = retryText
+            }
         }
-
-        const res = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${STRAPI_API_TOKEN}`,
-            },
-            next: { revalidate: 300 },
-        })
-
-        const text = await res.text()
 
         if (!res.ok) {
             console.error('[frontend.api.admin.tournament.players][GET]', res.status, text)

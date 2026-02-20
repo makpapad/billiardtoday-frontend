@@ -6,6 +6,7 @@ export type StrapiEventStage = {
     end_date?: string | null
     order?: number | null
     is_final?: boolean | null
+    stage_type?: string | null
     groups?: unknown
     results?: unknown
 }
@@ -64,6 +65,7 @@ export type NormalizedEventStage = {
     endDate: string | null
     order: number | null
     isFinal: boolean
+    stageType: string | null
     groups: NormalizedGroupMatch[]
     results: NormalizedStageResult[]
 }

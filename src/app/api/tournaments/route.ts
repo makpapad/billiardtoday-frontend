@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
 
 export async function GET(req: NextRequest) {
     try {
@@ -27,8 +28,14 @@ export async function GET(req: NextRequest) {
 
         const url = `${STRAPI_URL}/api/bt-events?${queryParams.toString()}`
 
+        const headers: HeadersInit = {}
+        if (STRAPI_API_TOKEN) {
+            headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`
+        }
+
         const res = await fetch(url, {
             cache: 'no-store',
+            headers,
         })
 
         const text = await res.text()

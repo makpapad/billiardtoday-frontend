@@ -322,7 +322,10 @@ export default function PlayerProfilePage() {
                         setError(t('players.profile.error.notFound'))
                     }
                 } else {
-                    setError(t('players.profile.error.generic'))
+                    const errorText = await playerResponse
+                        .text()
+                        .catch(() => '')
+                    setError(errorText || t('players.profile.error.generic'))
                 }
 
                 // Process filtered history data (new format: { data, availableYears, availableGameTypes })
@@ -355,7 +358,13 @@ export default function PlayerProfilePage() {
                         setHasMoreYears(false)
                     }
                 } else {
-                    console.error('Failed to fetch history')
+                    const historyErrorText = await historyResponse
+                        .text()
+                        .catch(() => '')
+                    console.warn(
+                        'Failed to fetch history:',
+                        historyErrorText || historyResponse.status,
+                    )
                     setParticipations([])
                 }
 
@@ -376,7 +385,7 @@ export default function PlayerProfilePage() {
                 setIsLoadingHistory(false)
             } catch (err) {
                 setError(t('players.profile.error.generic'))
-                console.error('Failed to fetch player data:', err)
+                console.warn('Failed to fetch player data:', err)
             } finally {
                 setIsLoading(false)
                 setIsLoadingHistory(false)
