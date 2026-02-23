@@ -1,23 +1,26 @@
-import { Navigation } from "./components/Navigation";
-import { Hero } from "./components/Hero";
-import { About } from "./components/About";
-import { Features } from "./components/Features";
-import { HowItWorks } from "./components/HowItWorks";
-import { ForYou } from "./components/ForYou";
-import { CTA } from "./components/CTA";
-import { Footer } from "./components/Footer";
+import { useMemo } from "react";
+import { CmsPreviewPage } from "./pages/CmsPreviewPage";
+import { StaticLandingPage } from "./pages/StaticLandingPage";
+
+function resolveRouteFromLocation(): { type: "cms" | "static"; slug: string } {
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get("slug")?.trim();
+  if (fromQuery) return { type: "cms", slug: fromQuery };
+
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, "");
+  const parts = path.split("/").filter(Boolean);
+  if (parts[0] === "cms" && parts[1]) return { type: "cms", slug: parts[1] };
+  if (parts.length === 1 && parts[0]) return { type: "cms", slug: parts[0] };
+
+  return { type: "static", slug: "home" };
+}
 
 export default function App() {
-  return (
-    <div className="min-h-screen">
-      <Navigation />
-      <Hero />
-      <About />
-      <Features />
-      <HowItWorks />
-      <ForYou />
-      <CTA />
-      <Footer />
-    </div>
-  );
+  const route = useMemo(() => resolveRouteFromLocation(), []);
+
+  if (route.type === "cms") {
+    return <CmsPreviewPage slug={route.slug} />;
+  }
+
+  return <StaticLandingPage />;
 }

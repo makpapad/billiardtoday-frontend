@@ -3,7 +3,14 @@ import { fetchWordpressHomeLanding } from "@/lib/wordpress";
 import { WordpressLandingProvider } from "./components/landing/wordpressLanding";
 
 export default async function HomePage() {
-  const wordpressLanding = await fetchWordpressHomeLanding();
+  let wordpressLanding = {};
+
+  try {
+    wordpressLanding = await fetchWordpressHomeLanding();
+  } catch (error) {
+    console.error("Failed to load WordPress home landing data:", error);
+  }
+
   return (
     <WordpressLandingProvider value={wordpressLanding}>
       <LandingSwitcher />

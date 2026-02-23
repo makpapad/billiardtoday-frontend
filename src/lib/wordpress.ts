@@ -33,6 +33,14 @@ export interface WordpressLandingData {
   statsCompletedMatchesValue?: string;
 }
 
+function getWordpressBaseUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_WORDPRESS_URL;
+  if (!raw) return null;
+
+  const normalized = raw.trim().replace(/\/$/, "");
+  return normalized.length > 0 ? normalized : null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -118,34 +126,37 @@ export function mapLandingAcfToData(acf: unknown): WordpressLandingData {
 }
 
 export async function fetchWordpressHomeLanding(): Promise<WordpressLandingData> {
-  const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? "http://billiardtoday.test";
-  const url = `${baseUrl.replace(/\/$/, "")}/wp-json/wp/v2/pages?slug=home`;
+  const baseUrl = getWordpressBaseUrl();
+  if (!baseUrl) return {};
 
-  const res = await fetch(url, {
-    next: { revalidate: 60 },
-  });
+  try {
+    const url = `${baseUrl}/wp-json/wp/v2/pages?slug=home`;
+    const res = await fetch(url, {
+      next: { revalidate: 60 },
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch WordPress home landing: ${res.status}`);
+    if (!res.ok) return {};
+
+    const data: unknown = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) return {};
+    const first = data[0];
+    if (!isRecord(first)) return {};
+
+    const acf = first["acf"];
+    return mapLandingAcfToData(acf);
+  } catch {
+    return {};
   }
-
-  const data: unknown = await res.json();
-
-  if (!Array.isArray(data) || data.length === 0) return {};
-  const first = data[0];
-  if (!isRecord(first)) return {};
-
-  const acf = first["acf"];
-  return mapLandingAcfToData(acf);
 }
 
 export async function fetchWordpressNavMenu(): Promise<WordpressNavMenuItem[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? "http://billiardtoday.test";
-  const normalizedBase = baseUrl.replace(/\/$/, "");
+  const baseUrl = getWordpressBaseUrl();
+  if (!baseUrl) return [];
 
   // 1) Preferred: Custom endpoint exposing ACF Options (MU plugin)
   try {
-    const optionsUrl = `${normalizedBase}/wp-json/billiardtoday/v1/options`;
+    const optionsUrl = `${baseUrl}/wp-json/billiardtoday/v1/options`;
     const optionsRes = await fetch(optionsUrl, { next: { revalidate: 60 } });
     if (optionsRes.ok) {
       const optionsJson: unknown = await optionsRes.json();
@@ -162,62 +173,69 @@ export async function fetchWordpressNavMenu(): Promise<WordpressNavMenuItem[]> {
   }
 
   // 2) Fallback: Home page ACF repeater (if you prefer keeping it there)
-  const homeUrl = `${normalizedBase}/wp-json/wp/v2/pages?slug=home`;
-  const homeRes = await fetch(homeUrl, { next: { revalidate: 60 } });
-  if (!homeRes.ok) return [];
+  try {
+    const homeUrl = `${baseUrl}/wp-json/wp/v2/pages?slug=home`;
+    const homeRes = await fetch(homeUrl, { next: { revalidate: 60 } });
+    if (!homeRes.ok) return [];
 
-  const homeData: unknown = await homeRes.json();
-  if (!Array.isArray(homeData) || homeData.length === 0) return [];
+    const homeData: unknown = await homeRes.json();
+    if (!Array.isArray(homeData) || homeData.length === 0) return [];
 
-  const first = homeData[0];
-  if (!isRecord(first)) return [];
+    const first = homeData[0];
+    if (!isRecord(first)) return [];
 
-  const homeAcf = first["acf"];
+    const homeAcf = first["acf"];
 
-  const homeRepeaterItems = readRepeaterNavMenuFromAcf(homeAcf);
-  if (homeRepeaterItems.length > 0) return homeRepeaterItems;
+    const homeRepeaterItems = readRepeaterNavMenuFromAcf(homeAcf);
+    if (homeRepeaterItems.length > 0) return homeRepeaterItems;
 
-  // 3) Last fallback: legacy fixed slots menu_item_1_* ... menu_item_8_*
-  return readNavMenuItemsFromAcf(homeAcf);
+    // 3) Last fallback: legacy fixed slots menu_item_1_* ... menu_item_8_*
+    return readNavMenuItemsFromAcf(homeAcf);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchWordpressPageBySlug(slug: string): Promise<WordpressPageData | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? "http://billiardtoday.test";
-  const url = `${baseUrl.replace(/\/$/, "")}/wp-json/wp/v2/pages?slug=${encodeURIComponent(slug)}`;
+  const baseUrl = getWordpressBaseUrl();
+  if (!baseUrl) return null;
 
-  const res = await fetch(url, {
-    next: { revalidate: 60 },
-  });
+  try {
+    const url = `${baseUrl}/wp-json/wp/v2/pages?slug=${encodeURIComponent(slug)}`;
+    const res = await fetch(url, {
+      next: { revalidate: 60 },
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch WordPress page (${slug}): ${res.status}`);
+    if (!res.ok) return null;
+
+    const data: unknown = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    const first = data[0];
+    if (!isRecord(first)) return null;
+
+    const id = first["id"];
+    const wpSlug = first["slug"];
+    const link = first["link"];
+    const titleObj = first["title"];
+    const contentObj = first["content"];
+
+    if (typeof id !== "number" || typeof wpSlug !== "string" || typeof link !== "string") return null;
+
+    const title = isRecord(titleObj) ? readOptionalString(titleObj, "rendered") ?? "" : "";
+    const contentHtml = isRecord(contentObj) ? readOptionalString(contentObj, "rendered") ?? "" : "";
+
+    const acf = first["acf"];
+
+    return {
+      id,
+      slug: wpSlug,
+      link,
+      title,
+      contentHtml,
+      acf,
+    };
+  } catch {
+    return null;
   }
-
-  const data: unknown = await res.json();
-  if (!Array.isArray(data) || data.length === 0) return null;
-
-  const first = data[0];
-  if (!isRecord(first)) return null;
-
-  const id = first["id"];
-  const wpSlug = first["slug"];
-  const link = first["link"];
-  const titleObj = first["title"];
-  const contentObj = first["content"];
-
-  if (typeof id !== "number" || typeof wpSlug !== "string" || typeof link !== "string") return null;
-
-  const title = isRecord(titleObj) ? readOptionalString(titleObj, "rendered") ?? "" : "";
-  const contentHtml = isRecord(contentObj) ? readOptionalString(contentObj, "rendered") ?? "" : "";
-
-  const acf = first["acf"];
-
-  return {
-    id,
-    slug: wpSlug,
-    link,
-    title,
-    contentHtml,
-    acf,
-  };
 }

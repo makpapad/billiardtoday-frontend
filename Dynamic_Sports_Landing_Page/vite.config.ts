@@ -56,5 +56,11 @@
     server: {
       port: 3000,
       open: true,
+      proxy: {
+        '/api/public': {
+          target: process.env.VITE_CMS_ADMIN_URL || 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      },
     },
   });
