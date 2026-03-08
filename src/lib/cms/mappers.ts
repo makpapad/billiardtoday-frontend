@@ -158,6 +158,20 @@ const mapMenus = (value: unknown): CmsMenuDefinition[] =>
         .filter((item) => item.key)
     : [];
 
+const decodeLayoutStorageValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(decodeLayoutStorageValue);
+  const source = asRecord(value);
+  if (!Object.keys(source).length) return value;
+
+  return Object.fromEntries(
+    Object.entries(source).map(([key, entry]) => {
+      if (key === "media") return ["image", decodeLayoutStorageValue(entry)];
+      if (key === "backgroundMedia") return ["backgroundImage", decodeLayoutStorageValue(entry)];
+      return [key, decodeLayoutStorageValue(entry)];
+    }),
+  );
+};
+
 const mapLayoutNodes = (value: unknown): CmsLayoutNode[] =>
   Array.isArray(value)
     ? value
@@ -167,7 +181,7 @@ const mapLayoutNodes = (value: unknown): CmsLayoutNode[] =>
           if (!type) return null;
           return {
             type,
-            props: asRecord(item.props),
+            props: asRecord(decodeLayoutStorageValue(item.props)),
             children: mapLayoutNodes(item.children),
           };
         })
@@ -511,6 +525,7 @@ export const mapCmsPage = (value: unknown, strapiBaseUrl: string): CmsPage | nul
         : readString(source.pageType) === "legal"
           ? "legal"
           : "standard",
+    layoutTree: mapLayoutNodes(source.layoutTree),
     sections: Array.isArray(source.sections)
       ? source.sections
           .map((section) => mapSection(section, strapiBaseUrl))

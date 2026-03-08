@@ -271,3 +271,43 @@ Dynamic header/footer blocks.
 
 Αυτό είναι το θεμέλιο.  
 Αν αυτό γίνει σωστά, μετά όλα τα υπόλοιπα μπαίνουν πάνω του καθαρά.
+
+---
+
+## Τρέχουσα πρόοδος
+
+Έχουν ήδη υλοποιηθεί τα παρακάτω:
+
+- νέα πεδία JSON για `layoutTree`, `headerLayout`, `footerLayout`
+- πρώτο `Layout Section` block με:
+  - preset layouts
+  - `Grid Columns`
+  - `Grid Rows`
+  - `Custom Columns Template`
+- dynamic layout blocks:
+  - `Logo`
+  - `Menu`
+  - `Button Group`
+  - `Social Links`
+  - `Contact Info`
+- visual `Header / Footer` editor πάνω σε `Puck`
+- public frontend renderer που διαβάζει:
+  - `layoutTree`
+  - `headerLayout`
+  - `footerLayout`
+- το `layoutTree` είναι πλέον το canonical persistence path για τις νέες pages που σώζονται από τον νέο editor
+
+Τι μένει στα επόμενα βήματα:
+
+- περισσότερα polished starter layouts για pages / header / footer
+- σταδιακή απόσυρση του παλιού canvas model από το υπόλοιπο editor code
+- ενοποίηση της ίδιας layout λογικής σε όλα τα CMS authoring flows
+## Update 2026-03-08
+
+- Προστέθηκε νέο dynamic block `Button Group` για use cases σε pages, header και footer.
+- Προστέθηκαν νέα starter patterns στον page editor:
+  - `Starter Page`
+  - `Contact Page`
+  - `About Page`
+  - `Feature Landing`
+- Τα νέα patterns χτίζονται πάνω στο `Layout Section` και όχι στο παλιό canvas-only path.

@@ -213,6 +213,7 @@ export type CmsPage = {
   summary?: string | null;
   coverImage?: CmsMedia | null;
   pageType: "landing" | "standard" | "legal";
+  layoutTree: CmsLayoutNode[];
   sections: CmsSection[];
   seo?: CmsSeo | null;
   updatedAt?: string | null;

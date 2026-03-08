@@ -9,6 +9,7 @@ const buildFallbackHomePage = () => ({
   slug: "home",
   summary: "The Strapi home page is not published yet.",
   pageType: "landing" as const,
+  layoutTree: [],
   sections: [
     {
       __component: "cms.hero-section" as const,

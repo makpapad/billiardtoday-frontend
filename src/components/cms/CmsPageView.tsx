@@ -1,4 +1,4 @@
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
+import { CmsLayoutRenderer, CmsPageShell } from "@/components/cms/CmsPageShell";
 import { CmsSectionRenderer } from "@/components/cms/CmsSectionRenderer";
 import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
 
@@ -21,9 +21,22 @@ export function CmsPageView({ page, settings, appearance }: Props) {
             },
           ]
         : [];
+  const hasLayoutTree = page.layoutTree.length > 0;
 
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
+      {hasLayoutTree ? (
+        <div className="px-4 py-8 sm:px-6 sm:py-10">
+          <div className="mx-auto max-w-7xl">
+            <CmsLayoutRenderer
+              nodes={page.layoutTree}
+              settings={settings}
+              appearance={appearance}
+              region="page"
+            />
+          </div>
+        </div>
+      ) : null}
       {sections.map((section, index) => (
         <CmsSectionRenderer
           key={`${page.id}-${section.__component}-${index}`}
