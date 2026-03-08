@@ -1,59 +1,57 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+import type { Metadata } from "next";
+import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://billiardtoday.com/tournaments'),
-    title: {
-        default: 'Tournaments | Billiard Today',
-        template: '%s | Billiard Today'
-    },
-    description: 'Αποτελέσματα και πληροφορίες για τουρνουά μπιλιάρδου στην Ελλάδα',
-    keywords: ['billiard', 'tournaments', 'μπιλιάρδο', 'τουρνουά', 'αποτελέσματα'],
-    authors: [{ name: 'Billiard Today' }],
-    creator: 'Billiard Today',
-    publisher: 'Billiard Today',
-    alternates: {
-        canonical: '/',
-    },
-    openGraph: {
-        type: 'website',
-        locale: 'el_GR',
-        url: 'https://billiardtoday.com/tournaments',
-        siteName: 'Billiard Today',
-        title: 'Tournaments | Billiard Today',
-        description: 'Αποτελέσματα και πληροφορίες για τουρνουά μπιλιάρδου στην Ελλάδα',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Tournaments | Billiard Today',
-        description: 'Αποτελέσματα και πληροφορίες για τουρνουά μπιλιάρδου στην Ελλάδα',
-    },
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-        },
-    },
-}
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"),
+  title: {
+    default: "Billiard Today",
+    template: "%s | Billiard Today",
+  },
+  description:
+    "Billiard tournaments, results, rankings, clubs, players, and structured CMS content for the Greek billiard community.",
+  keywords: [
+    "billiard",
+    "tournaments",
+    "results",
+    "rankings",
+    "players",
+    "clubs",
+    "billiard today",
+  ],
+  authors: [{ name: "Billiard Today" }],
+  creator: "Billiard Today",
+  publisher: "Billiard Today",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "el_GR",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com",
+    siteName: "Billiard Today",
+    title: "Billiard Today",
+    description:
+      "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Billiard Today",
+    description:
+      "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+  },
+};
 
 export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode
-}) {
-    return (
-        <html lang="el">
-            <body>
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
-            </body>
-        </html>
-    )
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="el">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+    </html>
+  );
 }

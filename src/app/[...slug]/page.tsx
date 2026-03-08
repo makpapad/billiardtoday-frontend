@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { fetchWordpressNavMenu, fetchWordpressPageBySlug } from "@/lib/wordpress";
-import { WpPageTemplate } from "@/app/components/wp/WpPageTemplate";
+import { notFound } from "next/navigation";
+import { CmsPageView } from "@/components/cms/CmsPageView";
+import { buildCmsMetadata } from "@/lib/cms/metadata";
+import { getCmsAppearance, getCmsPageBySlug, getCmsSiteSettings } from "@/lib/cms/strapi";
 
 type Params = {
   slug: string[];
@@ -16,15 +17,21 @@ export async function generateMetadata({
   const slugParts = awaitedParams.slug;
   if (slugParts.length !== 1) return {};
 
-  const page = await fetchWordpressPageBySlug(slugParts[0]);
+  const [settings, page] = await Promise.all([
+    getCmsSiteSettings().catch(() => null),
+    getCmsPageBySlug(slugParts[0]).catch(() => null),
+  ]);
+
   if (!page) return {};
 
-  return {
-    title: page.title,
-  };
+  return buildCmsMetadata({
+    page,
+    settings,
+    path: `/${slugParts[0]}`,
+  });
 }
 
-export default async function WordpressCatchAllPage({
+export default async function CmsCatchAllPage({
   params,
 }: {
   params: Promise<Params>;
@@ -32,22 +39,19 @@ export default async function WordpressCatchAllPage({
   const awaitedParams = await params;
   const slugParts = awaitedParams.slug;
 
-  // Only support single-segment pages like /about, /pricing.
-  // Multi-segment routes belong to the Next app.
   if (slugParts.length !== 1) {
     notFound();
   }
 
-  const page = await fetchWordpressPageBySlug(slugParts[0]);
+  const [settings, appearance, page] = await Promise.all([
+    getCmsSiteSettings(),
+    getCmsAppearance(),
+    getCmsPageBySlug(slugParts[0]),
+  ]);
+
   if (!page) {
     notFound();
   }
 
-  const navItems = await fetchWordpressNavMenu();
-
-  return (
-    <WpPageTemplate title={page.title} navItems={navItems}>
-      <article dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
-    </WpPageTemplate>
-  );
+  return <CmsPageView page={page} settings={settings} appearance={appearance} />;
 }

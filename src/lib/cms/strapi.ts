@@ -1,0 +1,154 @@
+import { mapCmsAppearance, mapCmsPage, mapCmsSiteSettings } from "@/lib/cms/mappers";
+import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
+
+const STRAPI_URL =
+  process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
+const CMS_ADMIN_URL =
+  process.env.CMS_ADMIN_URL ||
+  process.env.NEXT_PUBLIC_CMS_ADMIN_URL ||
+  "http://localhost:3000";
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
+
+const buildHeaders = (): HeadersInit => {
+  if (!STRAPI_API_TOKEN) return {};
+  return {
+    Authorization: `Bearer ${STRAPI_API_TOKEN}`,
+  };
+};
+
+const fetchJson = async (path: string, revalidate = 60) => {
+  const url = `${STRAPI_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, {
+    headers: buildHeaders(),
+    cache: IS_DEVELOPMENT ? "no-store" : undefined,
+    next: IS_DEVELOPMENT ? undefined : { revalidate },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Strapi request failed: ${res.status} ${path}`);
+  }
+
+  return res.json();
+};
+
+const fetchCmsAdminJson = async (path: string, revalidate = 60) => {
+  const url = `${CMS_ADMIN_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, {
+    cache: IS_DEVELOPMENT ? "no-store" : undefined,
+    next: IS_DEVELOPMENT ? undefined : { revalidate },
+  });
+
+  if (!res.ok) {
+    throw new Error(`CMS admin request failed: ${res.status} ${path}`);
+  }
+
+  return res.json();
+};
+
+const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
+  siteName: "Billiard Today",
+  siteTagline: "Greek billiard tournaments, rankings, results, and CMS-managed pages.",
+  logo: null,
+  contactEmail: null,
+  menus: [
+    {
+      key: "primary-navigation",
+      name: "Primary Navigation",
+      orientation: "horizontal",
+      items: [
+        { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+        { label: "Players", url: "/players", openInNewTab: false, children: [] },
+        { label: "Clubs", url: "/clubs", openInNewTab: false, children: [] },
+      ],
+    },
+    {
+      key: "footer-navigation",
+      name: "Footer Navigation",
+      orientation: "horizontal",
+      items: [
+        { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+        { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
+        { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
+      ],
+    },
+  ],
+  activeHeaderMenuKey: "primary-navigation",
+  activeFooterMenuKey: "footer-navigation",
+  stickyHeader: true,
+  headerAppearance: {
+    variant: "glass",
+    navStyle: "pills",
+    showSiteTagline: true,
+  },
+  footerAppearance: {
+    variant: "dark",
+    showSiteTagline: true,
+    showContactEmail: true,
+    showSocialLinks: true,
+  },
+  headerLayout: [],
+  footerLayout: [],
+  headerLinks: [
+    { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+    { label: "Players", url: "/players", openInNewTab: false, children: [] },
+    { label: "Clubs", url: "/clubs", openInNewTab: false, children: [] },
+  ],
+  footerLinks: [
+    { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+    { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
+    { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
+  ],
+  socialLinks: [],
+  defaultSeo: {
+    metaTitle: "Billiard Today",
+    metaDescription:
+      "Billiard tournaments, results, rankings, clubs, players, and CMS-managed content.",
+    canonicalUrl: "/",
+    noIndex: false,
+    ogImage: null,
+  },
+};
+
+export const getCmsAppearance = async (): Promise<CmsAppearance> =>
+  {
+    try {
+      const json = await fetchCmsAdminJson("/api/cms/theme", 60);
+      return mapCmsAppearance(json.data ?? json);
+    } catch (error) {
+      console.warn("Falling back to default CMS appearance.", error);
+      return mapCmsAppearance();
+    }
+  };
+
+export const getCmsSiteSettings = async (): Promise<CmsSiteSettings> => {
+  try {
+    const params = new URLSearchParams();
+    params.set("publicationState", "live");
+    params.set("populate", "*");
+
+    const json = await fetchJson(`/api/site-setting?${params.toString()}`, 60);
+    return mapCmsSiteSettings(json.data ?? json, STRAPI_URL);
+  } catch (error) {
+    console.warn("Falling back to default CMS site settings.", error);
+    return DEFAULT_SITE_SETTINGS;
+  }
+};
+
+export const getCmsPageBySlug = async (slug: string): Promise<CmsPage | null> => {
+  const cleanSlug = String(slug || "").trim().replace(/^\/+/, "");
+  if (!cleanSlug) return null;
+
+  const params = new URLSearchParams();
+  params.set("publicationState", "live");
+  params.set("filters[slug][$eq]", cleanSlug);
+  params.set("pagination[page]", "1");
+  params.set("pagination[pageSize]", "1");
+  params.set("populate[sections][populate]", "*");
+  params.set("populate[seo][populate]", "*");
+  params.set("populate[coverImage][populate]", "*");
+
+  const json = await fetchJson(`/api/pages?${params.toString()}`, 60);
+  const row = Array.isArray(json?.data) ? json.data[0] : null;
+  return row ? mapCmsPage(row, STRAPI_URL) : null;
+};
