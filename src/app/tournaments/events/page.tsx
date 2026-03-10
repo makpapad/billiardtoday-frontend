@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 import type { EventApiResponse, NormalizedEventStage, StageMatchGroup } from './types'
@@ -41,8 +41,12 @@ function TournamentEventsContent() {
     const [error, setError] = useState<string | null>(null)
     const [brMatchesByStage, setBrMatchesByStage] = useState<Record<string, unknown[]>>({})
     const [brLoadingByStage, setBrLoadingByStage] = useState<Record<string, boolean>>({})
+    const pathname = usePathname()
     const searchParams = useSearchParams()
     const eventId = searchParams?.get('eventId') ?? null
+    const embedded = pathname?.startsWith('/embed/') ?? false
+    const playerProfileHref = (playerId: string | number, playerName: string) =>
+        `${embedded ? '/embed' : ''}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, '-')}`
 
     // Fetch event data
     useEffect(() => {
@@ -315,7 +319,7 @@ function TournamentEventsContent() {
     }, [eventData])
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: 'var(--bt-page-width, 1280px)' }}>
             <div className="flex flex-col gap-4">
                 <h1 className="text-2xl font-semibold">Tournament Events</h1>
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
@@ -449,7 +453,7 @@ function TournamentEventsContent() {
                                                                                                     <td className="px-4 py-2 font-medium">
                                                                                                         {match.top.player.id ? (
                                                                                                             <Link
-                                                                                                                href={`/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, '-')}`}
+                                                                                                                href={playerProfileHref(match.top.player.id, match.top.player.name)}
                                                                                                                 className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                                                             >
                                                                                                                 <div className="flex flex-col leading-tight">
@@ -514,7 +518,7 @@ function TournamentEventsContent() {
                                                                                                     <td className="px-4 py-2 font-medium">
                                                                                                         {match.bottom.player.id ? (
                                                                                                             <Link
-                                                                                                                href={`/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, '-')}`}
+                                                                                                                href={playerProfileHref(match.bottom.player.id, match.bottom.player.name)}
                                                                                                                 className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                                                             >
                                                                                                                 <div className="flex flex-col leading-tight">
@@ -571,6 +575,7 @@ function TournamentEventsContent() {
                                                                             </div>
                                                                             <GroupStandingsTable
                                                                                 standings={buildGroupStandings(group.matches)}
+                                                                                embedded={embedded}
                                                                             />
                                                                         </div>
                                                                     ))}

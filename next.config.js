@@ -2,6 +2,8 @@
 const configuredBasePath =
   process.env.NEXT_PUBLIC_BASE_PATH ||
   (process.env.NODE_ENV === 'production' ? '/tournaments' : '')
+const embedFrameAncestors =
+  process.env.EMBED_ALLOWED_ORIGINS || "*"
 
 const nextConfig = {
   // Base path can be enabled in local too (e.g. when proxied by WordPress)
@@ -38,7 +40,16 @@ const nextConfig = {
     const isDev = process.env.NODE_ENV !== 'production'
     return [
       {
-        source: '/:path*',
+        source: '/embed/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `frame-ancestors ${embedFrameAncestors};`,
+          },
+        ],
+      },
+      {
+        source: '/:path((?!embed/).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',

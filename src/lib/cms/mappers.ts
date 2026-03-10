@@ -7,6 +7,7 @@ import type {
   CmsFaqSection,
   CmsFeatureGridSection,
   CmsFeatureItem,
+  CmsTournamentListSection,
   CmsGallerySection,
   CmsHeaderAppearance,
   CmsHeroSection,
@@ -33,6 +34,7 @@ import { sanitizeCmsHtml } from "@/lib/cms/sanitize";
 const DEFAULT_APPEARANCE: CmsAppearance = {
   id: "strapi-default",
   name: "BilliardToday Default",
+  colorMode: "light",
   tokens: {
     primary: "#0f766e",
     accent: "#f59e0b",
@@ -42,6 +44,7 @@ const DEFAULT_APPEARANCE: CmsAppearance = {
     radius: "24px",
     headingFont: '"Space Grotesk", sans-serif',
     bodyFont: '"Manrope", sans-serif',
+    pageWidth: "1280px",
   },
 };
 
@@ -53,6 +56,12 @@ const readString = (value: unknown) => String(value || "").trim();
 const readNullableString = (value: unknown) => readString(value) || null;
 
 const readBoolean = (value: unknown) => Boolean(value);
+const readSectionVisibility = (value: unknown) =>
+  readString(value) === "page-only"
+    ? "page-only"
+    : readString(value) === "embed-only"
+      ? "embed-only"
+      : "all";
 
 const toAbsoluteUrl = (value: string | null, strapiBaseUrl: string) => {
   if (!value) return "";
@@ -334,6 +343,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       secondaryCtaLabel: readNullableString(source.secondaryCtaLabel),
       secondaryCtaUrl: readNullableString(source.secondaryCtaUrl),
       backgroundImage: mapMedia(source.backgroundImage, strapiBaseUrl),
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.title ? section : null;
   }
@@ -349,6 +359,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       buttonLabel: readNullableString(source.buttonLabel),
       buttonUrl: readNullableString(source.buttonUrl),
       theme: readString(source.theme) === "highlight" ? "highlight" : "default",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.title ? section : null;
   }
@@ -361,6 +372,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
         ? (readString(source.columns) as "2" | "3" | "4")
         : "3",
       gap: readString(source.gap) === "wide" ? "wide" : "normal",
+      visibility: readSectionVisibility(source.visibility),
       cells: mapGridCells(source.cells, strapiBaseUrl),
     };
     return section;
@@ -389,6 +401,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
             ? "center"
             : "stretch",
       gap: readString(source.gap) === "wide" ? "wide" : "normal",
+      visibility: readSectionVisibility(source.visibility),
       cells: mapFlexCells(source.cells, strapiBaseUrl),
     };
     return section;
@@ -398,6 +411,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
     const section: CmsSpacerSection = {
       __component: "cms.spacer-section",
       size: ["sm", "md", "lg", "xl"].includes(readString(source.size)) ? (readString(source.size) as "sm" | "md" | "lg" | "xl") : "md",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section;
   }
@@ -407,6 +421,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       __component: "cms.rich-text-section",
       title: readNullableString(source.title),
       content: sanitizeCmsHtml(readString(source.content)),
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.content ? section : null;
   }
@@ -418,6 +433,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       alt: readNullableString(source.alt),
       caption: readNullableString(source.caption),
       layout: readString(source.layout) === "full" ? "full" : "contained",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.image ? section : null;
   }
@@ -429,6 +445,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       layout: readString(source.layout) === "mosaic" ? "mosaic" : "grid",
+      visibility: readSectionVisibility(source.visibility),
       items: items
         .map((item) => {
           const row = asRecord(item);
@@ -451,6 +468,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       embedUrl: readString(source.embedUrl),
       caption: readNullableString(source.caption),
       layout: readString(source.layout) === "wide" ? "wide" : "contained",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.embedUrl ? section : null;
   }
@@ -466,6 +484,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       buttonLabel: readNullableString(source.buttonLabel),
       buttonUrl: readNullableString(source.buttonUrl),
       imagePosition: readString(source.imagePosition) === "left" ? "left" : "right",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.title && section.content ? section : null;
   }
@@ -475,9 +494,32 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       __component: "cms.feature-grid-section",
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
+      visibility: readSectionVisibility(source.visibility),
       items: mapFeatureItems(source.items),
     };
     return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.tournament-list-section") {
+    const rawItemsPerPage = Number(source.itemsPerPage);
+    const section: CmsTournamentListSection = {
+      __component: "cms.tournament-list-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      layout: readString(source.layout) === "cards" ? "cards" : "table",
+      visibility: readSectionVisibility(source.visibility),
+      itemsPerPage:
+        Number.isFinite(rawItemsPerPage) && rawItemsPerPage > 0
+          ? rawItemsPerPage
+          : 10,
+      showSeasonFilter: source.showSeasonFilter !== false,
+      showDate: source.showDate !== false,
+      showStatus: source.showStatus !== false,
+      showResultsLink: source.showResultsLink !== false,
+      emptyStateText:
+        readNullableString(source.emptyStateText) || "No tournaments found.",
+    };
+    return section;
   }
 
   if (component === "cms.cta-banner") {
@@ -489,6 +531,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       buttonUrl: readNullableString(source.buttonUrl),
       theme:
         readString(source.theme) === "secondary" ? "secondary" : "primary",
+      visibility: readSectionVisibility(source.visibility),
     };
     return section.title ? section : null;
   }
@@ -497,6 +540,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
     const section: CmsFaqSection = {
       __component: "cms.faq-section",
       title: readNullableString(source.title),
+      visibility: readSectionVisibility(source.visibility),
       items: mapFaqItems(source.items),
     };
     return section.items.length > 0 || section.title ? section : null;
@@ -587,6 +631,12 @@ export const mapCmsAppearance = (value?: unknown): CmsAppearance => {
   return {
     id: readString(source.id) || DEFAULT_APPEARANCE.id,
     name: readString(source.name) || DEFAULT_APPEARANCE.name,
+    colorMode:
+      readString(source.colorMode) === "dark"
+        ? "dark"
+        : readString(source.colorMode) === "system"
+          ? "system"
+          : DEFAULT_APPEARANCE.colorMode,
     tokens: {
       primary: readString(tokens.primary) || DEFAULT_APPEARANCE.tokens.primary,
       accent: readString(tokens.accent) || DEFAULT_APPEARANCE.tokens.accent,
@@ -596,6 +646,7 @@ export const mapCmsAppearance = (value?: unknown): CmsAppearance => {
       radius: readString(tokens.radius) || DEFAULT_APPEARANCE.tokens.radius,
       headingFont: readString(tokens.headingFont) || DEFAULT_APPEARANCE.tokens.headingFont,
       bodyFont: readString(tokens.bodyFont) || DEFAULT_APPEARANCE.tokens.bodyFont,
+      pageWidth: readString(tokens.pageWidth) || DEFAULT_APPEARANCE.tokens.pageWidth,
     },
   };
 };

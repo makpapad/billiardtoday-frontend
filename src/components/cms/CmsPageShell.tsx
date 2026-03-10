@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { CmsAppearance, CmsSection, CmsSiteSettings } from "@/lib/cms/types";
 import { CmsSectionRenderer } from "@/components/cms/CmsSectionRenderer";
+import { getCmsContainerStyle, getCmsPageWidth } from "@/lib/cms/layout";
 
 type Props = {
   appearance: CmsAppearance;
   settings: CmsSiteSettings;
   children: ReactNode;
+  showChrome?: boolean;
 };
 
 const getSocialLabel = (platform: string) => {
@@ -49,11 +51,13 @@ export function CmsLayoutRenderer({
   settings,
   appearance,
   region,
+  embedded = false,
 }: {
   nodes: CmsSiteSettings["headerLayout"];
   settings: CmsSiteSettings;
   appearance: CmsAppearance;
   region: "header" | "footer" | "page";
+  embedded?: boolean;
 }) {
   const { tokens } = appearance;
   const headerMenu =
@@ -86,6 +90,7 @@ export function CmsLayoutRenderer({
         "cms.image-text-split-section",
         "cms.rich-text-section",
         "cms.feature-grid-section",
+        "cms.tournament-list-section",
         "cms.cta-banner",
         "cms.faq-section",
       ].includes(node.type)
@@ -110,6 +115,7 @@ export function CmsLayoutRenderer({
           section={mappedSection}
           appearance={appearance}
           index={Number(key.split("-").pop() || 0)}
+          embedded={embedded}
         />
       );
     }
@@ -302,7 +308,7 @@ export function CmsLayoutRenderer({
   return <>{nodes.map((node, index) => renderNode(node, `${region}-${index}`))}</>;
 }
 
-export function CmsPageShell({ appearance, settings, children }: Props) {
+export function CmsPageShell({ appearance, settings, children, showChrome = true }: Props) {
   const { tokens } = appearance;
   const headerMenu =
     settings.menus.find((menu) => menu.key === settings.activeHeaderMenuKey) || null;
@@ -346,16 +352,18 @@ export function CmsPageShell({ appearance, settings, children }: Props) {
       className="min-h-screen"
       style={
         {
+          ["--bt-page-width" as string]: getCmsPageWidth(appearance),
           background: `radial-gradient(circle at top, ${tokens.accent}22, transparent 28%), linear-gradient(180deg, ${tokens.background}, #ffffff 80%)`,
           color: tokens.text,
           fontFamily: tokens.bodyFont,
         } as React.CSSProperties
       }
     >
+      {showChrome ? (
       <header
         className={`${settings.stickyHeader ? "sticky top-0" : ""} ${headerClass} z-20`}
       >
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        <div className="mx-auto px-4 py-4 sm:px-6" style={getCmsContainerStyle(appearance, "page")}>
           {hasHeaderLayout ? (
             <CmsLayoutRenderer
               nodes={settings.headerLayout}
@@ -429,11 +437,13 @@ export function CmsPageShell({ appearance, settings, children }: Props) {
           )}
         </div>
       </header>
+      ) : null}
 
       <main>{children}</main>
 
+      {showChrome ? (
       <footer className={footerClass}>
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div className="mx-auto px-4 py-12 sm:px-6" style={getCmsContainerStyle(appearance, "page")}>
           {hasFooterLayout ? (
             <CmsLayoutRenderer
               nodes={settings.footerLayout}
@@ -518,6 +528,7 @@ export function CmsPageShell({ appearance, settings, children }: Props) {
           )}
         </div>
       </footer>
+      ) : null}
     </div>
   );
 }

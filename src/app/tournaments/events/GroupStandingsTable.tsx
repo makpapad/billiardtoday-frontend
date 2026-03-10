@@ -4,9 +4,10 @@ import { formatNumberValue, formatAverage, formatRecord } from './utils'
 
 type GroupStandingsTableProps = {
     standings: GroupStanding[]
+    embedded?: boolean
 }
 
-export default function GroupStandingsTable({ standings }: GroupStandingsTableProps) {
+export default function GroupStandingsTable({ standings, embedded = false }: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
     }
@@ -36,7 +37,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                             <td className="px-3 py-2 font-medium truncate">
                                 {player.playerId ? (
                                     <Link
-                                        href={`/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, '-')}`}
+                                        href={`${embedded ? '/embed' : ''}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, '-')}`}
                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                     >
                                         <div className="flex flex-col leading-tight">

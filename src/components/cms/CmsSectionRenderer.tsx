@@ -1,14 +1,27 @@
 import Link from "next/link";
 import type { CmsAppearance, CmsSection } from "@/lib/cms/types";
+import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
+import { getCmsContainerStyle } from "@/lib/cms/layout";
+
+const shouldRenderSection = (section: CmsSection, embedded: boolean) => {
+  if (section.visibility === "embed-only") return embedded;
+  if (section.visibility === "page-only") return !embedded;
+  return true;
+};
 
 type Props = {
   section: CmsSection;
   appearance: CmsAppearance;
   index: number;
+  embedded?: boolean;
 };
 
-export function CmsSectionRenderer({ section, appearance, index }: Props) {
+export function CmsSectionRenderer({ section, appearance, index, embedded = false }: Props) {
   const { tokens } = appearance;
+
+  if (!shouldRenderSection(section, embedded)) {
+    return null;
+  }
 
   if (section.__component === "cms.layout-grid-canvas-section") {
     const gridClass =
@@ -23,7 +36,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
 
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? (
             <h2
               className="mb-6 text-3xl font-semibold tracking-tight sm:text-4xl"
@@ -42,6 +55,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
                       section={child}
                       appearance={appearance}
                       index={childIndex}
+                      embedded={embedded}
                     />
                   ))
                 ) : (
@@ -114,8 +128,9 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
     return (
       <section className="px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-14">
         <div
-          className="mx-auto grid max-w-7xl gap-10 overflow-hidden border border-black/5 px-6 py-10 shadow-[0_24px_90px_rgba(15,23,42,0.12)] sm:px-10 sm:py-14 lg:grid-cols-[1.15fr_0.85fr]"
+          className="mx-auto grid gap-10 overflow-hidden border border-black/5 px-6 py-10 shadow-[0_24px_90px_rgba(15,23,42,0.12)] sm:px-10 sm:py-14 lg:grid-cols-[1.15fr_0.85fr]"
           style={{
+            ...getCmsContainerStyle(appearance, "page"),
             borderRadius: tokens.radius,
             background: `linear-gradient(135deg, ${tokens.surface}, #ffffff)`,
           }}
@@ -215,7 +230,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
 
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? (
             <h2
               className="mb-6 text-3xl font-semibold tracking-tight sm:text-4xl"
@@ -234,6 +249,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
                       section={child}
                       appearance={appearance}
                       index={childIndex}
+                      embedded={embedded}
                     />
                   ))
                 ) : (
@@ -257,7 +273,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
   if (section.__component === "cms.rich-text-section") {
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "text")}>
           {section.title ? (
             <h2
               className="mb-6 text-3xl font-semibold tracking-tight sm:text-4xl"
@@ -285,7 +301,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
 
     return (
       <section className={isFull ? "py-8 sm:py-10" : "px-4 py-8 sm:px-6 sm:py-10"}>
-        <div className={isFull ? "" : "mx-auto max-w-6xl"}>
+        <div className={isFull ? "" : "mx-auto"} style={isFull ? undefined : getCmsContainerStyle(appearance, "content")}>
           <figure className="overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.08)]">
             <div className="bg-slate-100">
               <img
@@ -309,7 +325,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
     const isMosaic = section.layout === "mosaic";
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? (
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>
               {section.title}
@@ -343,7 +359,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
     const isWide = section.layout === "wide";
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className={isWide ? "mx-auto max-w-7xl" : "mx-auto max-w-5xl"}>
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, isWide ? "page" : "content")}>
           {section.title ? (
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>
               {section.title}
@@ -373,7 +389,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
     const imageFirst = section.imagePosition === "left";
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:items-center">
+        <div className="mx-auto grid gap-8 lg:grid-cols-2 lg:items-center" style={getCmsContainerStyle(appearance, "page")}>
           <div className={imageFirst ? "lg:order-1" : "lg:order-2"}>
             <div className="overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.08)]">
               {section.image?.url ? (
@@ -415,7 +431,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
   if (section.__component === "cms.feature-grid-section") {
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? (
             <h2
               className="text-3xl font-semibold tracking-tight sm:text-4xl"
@@ -458,13 +474,24 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
     );
   }
 
+  if (section.__component === "cms.tournament-list-section") {
+    return (
+      <TournamentListSection
+        section={section}
+        appearance={appearance}
+        embedded={embedded}
+      />
+    );
+  }
+
   if (section.__component === "cms.cta-banner") {
     const isSecondary = section.theme === "secondary";
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
         <div
-          className="mx-auto max-w-7xl rounded-[28px] px-6 py-8 sm:px-10 sm:py-10"
+          className="mx-auto rounded-[28px] px-6 py-8 sm:px-10 sm:py-10"
           style={{
+            ...getCmsContainerStyle(appearance, "page"),
             background: isSecondary
               ? `linear-gradient(135deg, ${tokens.surface}, #ffffff)`
               : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})`,
@@ -504,7 +531,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
   if (section.__component === "cms.faq-section") {
     return (
       <section className="px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto" style={getCmsContainerStyle(appearance, "text")}>
           {section.title ? (
             <h2
               className="mb-8 text-3xl font-semibold tracking-tight sm:text-4xl"
@@ -536,7 +563,7 @@ export function CmsSectionRenderer({ section, appearance, index }: Props) {
 
   return (
     <section className="px-4 py-8 sm:px-6 sm:py-10" data-section-index={index}>
-      <div className="mx-auto max-w-4xl rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-6 text-sm text-slate-500">
+      <div className="mx-auto rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-6 text-sm text-slate-500" style={getCmsContainerStyle(appearance, "text")}>
         Unsupported CMS section.
       </div>
     </section>

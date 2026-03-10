@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"),
@@ -42,14 +44,42 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appearance = await getCmsAppearance().catch(() => null);
+  const colorMode = appearance?.colorMode || "light";
+  const htmlClassName = colorMode === "dark" ? "dark" : undefined;
+  const bodyStyle =
+    colorMode === "system"
+      ? undefined
+      : ({
+          colorScheme: colorMode,
+        } as CSSProperties);
+  const colorModeScript =
+    colorMode === "system"
+      ? `(() => {
+  const root = document.documentElement;
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const apply = () => {
+    root.classList.toggle('dark', media.matches);
+    root.style.colorScheme = media.matches ? 'dark' : 'light';
+  };
+  apply();
+  if (media.addEventListener) media.addEventListener('change', apply);
+})();`
+      : `(() => {
+  const root = document.documentElement;
+  root.classList.toggle('dark', ${colorMode === "dark" ? "true" : "false"});
+  root.style.colorScheme = '${colorMode}';
+})();`;
+
   return (
-    <html lang="el">
-      <body>
+    <html lang="el" className={htmlClassName} suppressHydrationWarning>
+      <body style={bodyStyle}>
+        <script dangerouslySetInnerHTML={{ __html: colorModeScript }} />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
