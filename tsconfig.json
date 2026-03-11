@@ -35,7 +35,6 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "Dynamic_Sports_Landing_Page"
+    "node_modules"
   ]
 }
