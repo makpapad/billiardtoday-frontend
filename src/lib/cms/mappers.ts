@@ -7,6 +7,15 @@ import type {
   CmsFaqSection,
   CmsFeatureGridSection,
   CmsFeatureItem,
+  CmsLogoStripSection,
+  CmsPostsListSection,
+  CmsPostListItem,
+  CmsServiceCardItem,
+  CmsServiceCardsSection,
+  CmsStatsItem,
+  CmsStatsSection,
+  CmsTestimonialItem,
+  CmsTestimonialsSection,
   CmsTournamentListSection,
   CmsGallerySection,
   CmsHeaderAppearance,
@@ -259,6 +268,81 @@ const mapFeatureItems = (value: unknown): CmsFeatureItem[] =>
         .filter((item) => item.title)
     : [];
 
+const mapStatsItems = (value: unknown): CmsStatsItem[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          const source = asRecord(item);
+          return {
+            value: readString(source.value),
+            label: readNullableString(source.label),
+            description: readNullableString(source.description),
+          };
+        })
+        .filter((item) => item.value)
+    : [];
+
+const mapServiceCardItems = (value: unknown): CmsServiceCardItem[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          const source = asRecord(item);
+          return {
+            title: readString(source.title),
+            description: readNullableString(source.description),
+            iconName: readNullableString(source.iconName),
+            linkLabel: readNullableString(source.linkLabel),
+            linkUrl: readNullableString(source.linkUrl),
+          };
+        })
+        .filter((item) => item.title)
+    : [];
+
+const mapLogoStripItems = (value: unknown, strapiBaseUrl: string) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          const source = asRecord(item);
+          return {
+            image: mapMedia(source.image, strapiBaseUrl),
+            name: readNullableString(source.name),
+            url: readNullableString(source.url),
+          };
+        })
+        .filter((item) => item.image || item.name)
+    : [];
+
+const mapTestimonialItems = (value: unknown): CmsTestimonialItem[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          const source = asRecord(item);
+          return {
+            quote: readString(source.quote),
+            name: readNullableString(source.name),
+            role: readNullableString(source.role),
+            company: readNullableString(source.company),
+          };
+        })
+        .filter((item) => item.quote)
+    : [];
+
+const mapPostListItems = (value: unknown, strapiBaseUrl: string): CmsPostListItem[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          const source = asRecord(item);
+          return {
+            image: mapMedia(source.image, strapiBaseUrl),
+            tag: readNullableString(source.tag),
+            title: readString(source.title),
+            excerpt: readNullableString(source.excerpt),
+            url: readNullableString(source.url),
+          };
+        })
+        .filter((item) => item.title)
+    : [];
+
 const mapFaqItems = (value: unknown): CmsFaqItem[] =>
   Array.isArray(value)
     ? value
@@ -496,6 +580,65 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       subtitle: readNullableString(source.subtitle),
       visibility: readSectionVisibility(source.visibility),
       items: mapFeatureItems(source.items),
+    };
+    return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.stats-section") {
+    const section: CmsStatsSection = {
+      __component: "cms.stats-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      layout: readString(source.layout) === "band" ? "band" : "grid",
+      visibility: readSectionVisibility(source.visibility),
+      items: mapStatsItems(source.items),
+    };
+    return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.service-cards-section") {
+    const section: CmsServiceCardsSection = {
+      __component: "cms.service-cards-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      visibility: readSectionVisibility(source.visibility),
+      items: mapServiceCardItems(source.items),
+    };
+    return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.logo-strip-section") {
+    const section: CmsLogoStripSection = {
+      __component: "cms.logo-strip-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      style: readString(source.style) === "pills" ? "pills" : "grid",
+      visibility: readSectionVisibility(source.visibility),
+      items: mapLogoStripItems(source.items, strapiBaseUrl),
+    };
+    return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.testimonials-section") {
+    const section: CmsTestimonialsSection = {
+      __component: "cms.testimonials-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      layout: readString(source.layout) === "featured" ? "featured" : "cards",
+      visibility: readSectionVisibility(source.visibility),
+      items: mapTestimonialItems(source.items),
+    };
+    return section.items.length > 0 || section.title ? section : null;
+  }
+
+  if (component === "cms.posts-list-section") {
+    const section: CmsPostsListSection = {
+      __component: "cms.posts-list-section",
+      title: readNullableString(source.title),
+      subtitle: readNullableString(source.subtitle),
+      columns: readString(source.columns) === "2" ? "2" : "3",
+      visibility: readSectionVisibility(source.visibility),
+      items: mapPostListItems(source.items, strapiBaseUrl),
     };
     return section.items.length > 0 || section.title ? section : null;
   }

@@ -1,4 +1,9 @@
 import Link from "next/link";
+import { LogoStripSection } from "@/components/marketing/LogoStripSection";
+import { PostsListSection } from "@/components/marketing/PostsListSection";
+import { ServiceCardsSection } from "@/components/marketing/ServiceCardsSection";
+import { StatsSection } from "@/components/marketing/StatsSection";
+import { TestimonialsSection } from "@/components/marketing/TestimonialsSection";
 import type { CmsAppearance, CmsSection } from "@/lib/cms/types";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
@@ -472,6 +477,26 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
         </div>
       </section>
     );
+  }
+
+  if (section.__component === "cms.stats-section") {
+    return <StatsSection section={section} appearance={appearance} />;
+  }
+
+  if (section.__component === "cms.service-cards-section") {
+    return <ServiceCardsSection section={section} appearance={appearance} />;
+  }
+
+  if (section.__component === "cms.logo-strip-section") {
+    return <LogoStripSection section={section} appearance={appearance} />;
+  }
+
+  if (section.__component === "cms.testimonials-section") {
+    return <TestimonialsSection section={section} appearance={appearance} />;
+  }
+
+  if (section.__component === "cms.posts-list-section") {
+    return <PostsListSection section={section} appearance={appearance} />;
   }
 
   if (section.__component === "cms.tournament-list-section") {

@@ -177,6 +177,80 @@ export type CmsFeatureGridSection = CmsSectionVisibilityField & {
   items: CmsFeatureItem[];
 };
 
+export type CmsStatsItem = {
+  value: string;
+  label?: string | null;
+  description?: string | null;
+};
+
+export type CmsStatsSection = CmsSectionVisibilityField & {
+  __component: "cms.stats-section";
+  title?: string | null;
+  subtitle?: string | null;
+  layout?: "grid" | "band" | null;
+  items: CmsStatsItem[];
+};
+
+export type CmsServiceCardItem = {
+  title: string;
+  description?: string | null;
+  iconName?: string | null;
+  linkLabel?: string | null;
+  linkUrl?: string | null;
+};
+
+export type CmsServiceCardsSection = CmsSectionVisibilityField & {
+  __component: "cms.service-cards-section";
+  title?: string | null;
+  subtitle?: string | null;
+  items: CmsServiceCardItem[];
+};
+
+export type CmsLogoStripItem = {
+  image?: CmsMedia | null;
+  name?: string | null;
+  url?: string | null;
+};
+
+export type CmsLogoStripSection = CmsSectionVisibilityField & {
+  __component: "cms.logo-strip-section";
+  title?: string | null;
+  subtitle?: string | null;
+  style?: "grid" | "pills" | null;
+  items: CmsLogoStripItem[];
+};
+
+export type CmsTestimonialItem = {
+  quote: string;
+  name?: string | null;
+  role?: string | null;
+  company?: string | null;
+};
+
+export type CmsTestimonialsSection = CmsSectionVisibilityField & {
+  __component: "cms.testimonials-section";
+  title?: string | null;
+  subtitle?: string | null;
+  layout?: "cards" | "featured" | null;
+  items: CmsTestimonialItem[];
+};
+
+export type CmsPostListItem = {
+  image?: CmsMedia | null;
+  tag?: string | null;
+  title: string;
+  excerpt?: string | null;
+  url?: string | null;
+};
+
+export type CmsPostsListSection = CmsSectionVisibilityField & {
+  __component: "cms.posts-list-section";
+  title?: string | null;
+  subtitle?: string | null;
+  columns?: "2" | "3" | null;
+  items: CmsPostListItem[];
+};
+
 export type CmsTournamentListSection = CmsSectionVisibilityField & {
   __component: "cms.tournament-list-section";
   title?: string | null;
@@ -222,6 +296,11 @@ export type CmsSection =
   | CmsImageTextSplitSection
   | CmsRichTextSection
   | CmsFeatureGridSection
+  | CmsStatsSection
+  | CmsServiceCardsSection
+  | CmsLogoStripSection
+  | CmsTestimonialsSection
+  | CmsPostsListSection
   | CmsTournamentListSection
   | CmsCtaBannerSection
   | CmsFaqSection;
