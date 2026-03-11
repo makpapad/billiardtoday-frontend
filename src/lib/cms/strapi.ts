@@ -6,9 +6,10 @@ const STRAPI_URL =
 const CMS_ADMIN_URL =
   process.env.CMS_ADMIN_URL ||
   process.env.NEXT_PUBLIC_CMS_ADMIN_URL ||
-  "http://localhost:3000";
+  (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "");
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
+const CMS_FETCH_TIMEOUT_MS = Number(process.env.CMS_FETCH_TIMEOUT_MS || 5000);
 
 const buildHeaders = (): HeadersInit => {
   if (!STRAPI_API_TOKEN) return {};
@@ -23,6 +24,7 @@ const fetchJson = async (path: string, revalidate = 60) => {
     headers: buildHeaders(),
     cache: IS_DEVELOPMENT ? "no-store" : undefined,
     next: IS_DEVELOPMENT ? undefined : { revalidate },
+    signal: AbortSignal.timeout(CMS_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -33,10 +35,15 @@ const fetchJson = async (path: string, revalidate = 60) => {
 };
 
 const fetchCmsAdminJson = async (path: string, revalidate = 60) => {
+  if (!CMS_ADMIN_URL) {
+    throw new Error("CMS admin URL is not configured");
+  }
+
   const url = `${CMS_ADMIN_URL}${path.startsWith("/") ? path : `/${path}`}`;
   const res = await fetch(url, {
     cache: IS_DEVELOPMENT ? "no-store" : undefined,
     next: IS_DEVELOPMENT ? undefined : { revalidate },
+    signal: AbortSignal.timeout(CMS_FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -112,6 +119,10 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
 
 export const getCmsAppearance = async (): Promise<CmsAppearance> =>
   {
+    if (!CMS_ADMIN_URL) {
+      return mapCmsAppearance();
+    }
+
     try {
       const json = await fetchCmsAdminJson("/api/cms/theme", 60);
       return mapCmsAppearance(json.data ?? json);
@@ -148,7 +159,12 @@ export const getCmsPageBySlug = async (slug: string): Promise<CmsPage | null> =>
   params.set("populate[seo][populate]", "*");
   params.set("populate[coverImage][populate]", "*");
 
-  const json = await fetchJson(`/api/pages?${params.toString()}`, 60);
-  const row = Array.isArray(json?.data) ? json.data[0] : null;
-  return row ? mapCmsPage(row, STRAPI_URL) : null;
+  try {
+    const json = await fetchJson(`/api/pages?${params.toString()}`, 60);
+    const row = Array.isArray(json?.data) ? json.data[0] : null;
+    return row ? mapCmsPage(row, STRAPI_URL) : null;
+  } catch (error) {
+    console.warn(`Falling back to null CMS page for slug '${cleanSlug}'.`, error);
+    return null;
+  }
 };

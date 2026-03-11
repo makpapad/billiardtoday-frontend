@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const configuredBasePath =
-  process.env.NEXT_PUBLIC_BASE_PATH ||
-  (process.env.NODE_ENV === 'production' ? '/tournaments' : '')
+  process.env.NEXT_PUBLIC_BASE_PATH !== undefined
+    ? process.env.NEXT_PUBLIC_BASE_PATH
+    : process.env.NODE_ENV === 'production'
+      ? '/tournaments'
+      : ''
 const embedFrameAncestors =
   process.env.EMBED_ALLOWED_ORIGINS || "*"
 
