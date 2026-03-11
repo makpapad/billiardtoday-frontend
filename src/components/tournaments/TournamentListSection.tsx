@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { CmsAppearance, CmsTournamentListSection } from '@/lib/cms/types'
 import { getCmsContainerStyle } from '@/lib/cms/layout'
+import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from '@/lib/cms/sectionStyles'
 
 type Tournament = {
     id: string
@@ -158,7 +159,7 @@ export function TournamentListSection({
 
     const wrapperClass = embedded
         ? 'px-0 py-0'
-        : 'px-4 py-8 sm:px-6 sm:py-10'
+        : `px-4 ${getCmsSectionPaddingClass(section.paddingY)} sm:px-6`
 
     const panelClass = embedded
         ? 'rounded-[24px] border border-black/5 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]'
@@ -175,7 +176,7 @@ export function TournamentListSection({
     )
 
     return (
-        <section className={wrapperClass}>
+        <section className={wrapperClass} style={getCmsSectionSurfaceStyle(section, appearance)}>
             <div
                 className="mx-auto"
                 style={embedded ? { width: '100%', maxWidth: '100%' } : getCmsContainerStyle(appearance, 'page')}

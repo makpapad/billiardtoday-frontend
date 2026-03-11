@@ -5,7 +5,7 @@ export type CmsContainerVariant = "page" | "content" | "text" | "full";
 
 const FALLBACK_PAGE_WIDTH = "1280px";
 
-const getResolvedWidth = (pageWidth: string, variant: CmsContainerVariant) => {
+export const getResolvedWidth = (pageWidth: string, variant: CmsContainerVariant) => {
   if (variant === "full") return "100%";
   if (variant === "text") return `min(${pageWidth}, 56rem)`;
   if (variant === "content") return `min(${pageWidth}, 64rem)`;
@@ -22,3 +22,8 @@ export const getCmsContainerStyle = (
   width: "100%",
   maxWidth: getResolvedWidth(getCmsPageWidth(appearance), variant),
 });
+
+export const getCmsContainerMaxWidth = (
+  appearance: CmsAppearance,
+  variant: CmsContainerVariant = "page",
+) => getResolvedWidth(getCmsPageWidth(appearance), variant);

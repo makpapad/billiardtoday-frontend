@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CmsAppearance, CmsServiceCardsSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
+import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from "@/lib/cms/sectionStyles";
 
 export function ServiceCardsSection({
   section,
@@ -10,9 +11,10 @@ export function ServiceCardsSection({
   appearance: CmsAppearance;
 }) {
   const { tokens } = appearance;
+  const paddingClass = getCmsSectionPaddingClass(section.paddingY);
 
   return (
-    <section className="px-4 py-8 sm:px-6 sm:py-10">
+    <section className={`px-4 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
       <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
         {section.title ? (
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>

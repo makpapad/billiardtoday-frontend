@@ -33,6 +33,9 @@ export type CmsHeaderAppearance = {
   variant: "glass" | "solid" | "minimal";
   navStyle: "pills" | "text" | "underline";
   showSiteTagline: boolean;
+  backgroundColor?: string | null;
+  textColor?: string | null;
+  mutedTextColor?: string | null;
 };
 
 export type CmsFooterAppearance = {
@@ -40,6 +43,9 @@ export type CmsFooterAppearance = {
   showSiteTagline: boolean;
   showContactEmail: boolean;
   showSocialLinks: boolean;
+  backgroundColor?: string | null;
+  textColor?: string | null;
+  mutedTextColor?: string | null;
 };
 
 export type CmsLayoutNode = {
@@ -68,7 +74,40 @@ type CmsSectionVisibilityField = {
   visibility?: CmsSectionVisibility | null;
 };
 
-export type CmsHeroSection = CmsSectionVisibilityField & {
+export type CmsSectionBackgroundStyle =
+  | "transparent"
+  | "surface"
+  | "primary"
+  | "accent"
+  | "image"
+  | "custom";
+
+type CmsSectionAppearanceField = {
+  backgroundStyle?: CmsSectionBackgroundStyle | null;
+  backgroundColor?: string | null;
+  textColor?: string | null;
+  backgroundImage?: CmsMedia | null;
+  paddingY?: "sm" | "md" | "lg" | "xl" | null;
+  marginTop?: "none" | "sm" | "md" | "lg" | "xl" | null;
+  marginBottom?: "none" | "sm" | "md" | "lg" | "xl" | null;
+  borderColor?: string | null;
+  radius?: string | null;
+  shadow?: "none" | "soft" | "medium" | "strong" | null;
+  overlayStrength?: "none" | "light" | "medium" | "strong" | null;
+};
+
+type CmsMarketingLayoutField = {
+  contentAlign?: "left" | "center" | null;
+  contentWidth?: "narrow" | "standard" | "wide" | null;
+  titleSize?: "md" | "lg" | "xl" | null;
+  bodySize?: "sm" | "md" | "lg" | null;
+  mobileContentAlign?: "left" | "center" | null;
+  mobileContentWidth?: "narrow" | "standard" | "wide" | null;
+  mobileTitleSize?: "md" | "lg" | "xl" | null;
+  mobileBodySize?: "sm" | "md" | "lg" | null;
+};
+
+export type CmsHeroSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.hero-section";
   eyebrow?: string | null;
   title: string;
@@ -80,7 +119,7 @@ export type CmsHeroSection = CmsSectionVisibilityField & {
   backgroundImage?: CmsMedia | null;
 };
 
-export type CmsCardSection = CmsSectionVisibilityField & {
+export type CmsCardSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.card-section";
   image?: CmsMedia | null;
   alt?: string | null;
@@ -92,7 +131,7 @@ export type CmsCardSection = CmsSectionVisibilityField & {
   theme?: "default" | "highlight" | null;
 };
 
-export type CmsLayoutGridCanvasSection = CmsSectionVisibilityField & {
+export type CmsLayoutGridCanvasSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.layout-grid-canvas-section";
   title?: string | null;
   columns?: "2" | "3" | "4" | null;
@@ -100,7 +139,7 @@ export type CmsLayoutGridCanvasSection = CmsSectionVisibilityField & {
   cells: CmsSection[][];
 };
 
-export type CmsLayoutFlexCanvasSection = CmsSectionVisibilityField & {
+export type CmsLayoutFlexCanvasSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.layout-flex-canvas-section";
   title?: string | null;
   direction?: "row" | "row-reverse" | "column" | null;
@@ -110,17 +149,17 @@ export type CmsLayoutFlexCanvasSection = CmsSectionVisibilityField & {
   cells: CmsSection[][];
 };
 
-export type CmsSpacerSection = CmsSectionVisibilityField & {
+export type CmsSpacerSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.spacer-section";
   size?: "sm" | "md" | "lg" | "xl" | null;
 };
 
-export type CmsImageSection = CmsSectionVisibilityField & {
+export type CmsImageSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.image-section";
   image?: CmsMedia | null;
   alt?: string | null;
   caption?: string | null;
-  layout?: "full" | "contained" | null;
+  layout?: "full" | "contained" | "full-bleed" | null;
 };
 
 export type CmsGalleryItem = {
@@ -129,7 +168,7 @@ export type CmsGalleryItem = {
   caption?: string | null;
 };
 
-export type CmsGallerySection = CmsSectionVisibilityField & {
+export type CmsGallerySection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.gallery-section";
   title?: string | null;
   subtitle?: string | null;
@@ -137,7 +176,7 @@ export type CmsGallerySection = CmsSectionVisibilityField & {
   items: CmsGalleryItem[];
 };
 
-export type CmsVideoEmbedSection = CmsSectionVisibilityField & {
+export type CmsVideoEmbedSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.video-embed-section";
   title?: string | null;
   subtitle?: string | null;
@@ -146,7 +185,7 @@ export type CmsVideoEmbedSection = CmsSectionVisibilityField & {
   layout?: "contained" | "wide" | null;
 };
 
-export type CmsImageTextSplitSection = CmsSectionVisibilityField & {
+export type CmsImageTextSplitSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.image-text-split-section";
   eyebrow?: string | null;
   title: string;
@@ -158,7 +197,7 @@ export type CmsImageTextSplitSection = CmsSectionVisibilityField & {
   imagePosition?: "left" | "right" | null;
 };
 
-export type CmsRichTextSection = CmsSectionVisibilityField & {
+export type CmsRichTextSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.rich-text-section";
   title?: string | null;
   content: string;
@@ -170,7 +209,7 @@ export type CmsFeatureItem = {
   iconName?: string | null;
 };
 
-export type CmsFeatureGridSection = CmsSectionVisibilityField & {
+export type CmsFeatureGridSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.feature-grid-section";
   title?: string | null;
   subtitle?: string | null;
@@ -183,7 +222,7 @@ export type CmsStatsItem = {
   description?: string | null;
 };
 
-export type CmsStatsSection = CmsSectionVisibilityField & {
+export type CmsStatsSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.stats-section";
   title?: string | null;
   subtitle?: string | null;
@@ -199,7 +238,7 @@ export type CmsServiceCardItem = {
   linkUrl?: string | null;
 };
 
-export type CmsServiceCardsSection = CmsSectionVisibilityField & {
+export type CmsServiceCardsSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.service-cards-section";
   title?: string | null;
   subtitle?: string | null;
@@ -212,7 +251,7 @@ export type CmsLogoStripItem = {
   url?: string | null;
 };
 
-export type CmsLogoStripSection = CmsSectionVisibilityField & {
+export type CmsLogoStripSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.logo-strip-section";
   title?: string | null;
   subtitle?: string | null;
@@ -227,7 +266,7 @@ export type CmsTestimonialItem = {
   company?: string | null;
 };
 
-export type CmsTestimonialsSection = CmsSectionVisibilityField & {
+export type CmsTestimonialsSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.testimonials-section";
   title?: string | null;
   subtitle?: string | null;
@@ -243,7 +282,7 @@ export type CmsPostListItem = {
   url?: string | null;
 };
 
-export type CmsPostsListSection = CmsSectionVisibilityField & {
+export type CmsPostsListSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.posts-list-section";
   title?: string | null;
   subtitle?: string | null;
@@ -251,7 +290,7 @@ export type CmsPostsListSection = CmsSectionVisibilityField & {
   items: CmsPostListItem[];
 };
 
-export type CmsTournamentListSection = CmsSectionVisibilityField & {
+export type CmsTournamentListSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.tournament-list-section";
   title?: string | null;
   subtitle?: string | null;
@@ -264,7 +303,7 @@ export type CmsTournamentListSection = CmsSectionVisibilityField & {
   emptyStateText?: string | null;
 };
 
-export type CmsCtaBannerSection = CmsSectionVisibilityField & {
+export type CmsCtaBannerSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.cta-banner";
   title: string;
   description?: string | null;
@@ -278,7 +317,7 @@ export type CmsFaqItem = {
   answer: string;
 };
 
-export type CmsFaqSection = CmsSectionVisibilityField & {
+export type CmsFaqSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.faq-section";
   title?: string | null;
   items: CmsFaqItem[];

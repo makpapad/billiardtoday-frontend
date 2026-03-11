@@ -1,5 +1,6 @@
 import type { CmsAppearance, CmsStatsSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
+import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from "@/lib/cms/sectionStyles";
 
 export function StatsSection({
   section,
@@ -10,9 +11,10 @@ export function StatsSection({
 }) {
   const { tokens } = appearance;
   const isBand = section.layout === "band";
+  const paddingClass = getCmsSectionPaddingClass(section.paddingY);
 
   return (
-    <section className="px-4 py-8 sm:px-6 sm:py-10">
+    <section className={`px-4 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
       <div
         className={`mx-auto ${isBand ? "rounded-[30px] px-6 py-8 sm:px-10" : ""}`}
         style={{

@@ -1,5 +1,6 @@
 import type { CmsAppearance, CmsTestimonialsSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
+import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from "@/lib/cms/sectionStyles";
 
 export function TestimonialsSection({
   section,
@@ -11,9 +12,10 @@ export function TestimonialsSection({
   const { tokens } = appearance;
   const featured = section.layout === "featured";
   const [first, ...rest] = section.items;
+  const paddingClass = getCmsSectionPaddingClass(section.paddingY);
 
   return (
-    <section className="px-4 py-8 sm:px-6 sm:py-10">
+    <section className={`px-4 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
       <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
         {section.title ? (
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>
