@@ -148,3 +148,13 @@ pm2 list
 - Μην κάνεις deploy με σκέτο `git pull` μέσα στα `httpdocs`.
 - Μην πειράζεις τα production env files από τα repos.
 - Το `bt-sync` κρατάει τον server-side production config χωριστά από το source code.
+
+
+## Για αρχείο host
+138.201.29.162 billiardtoday.com
+138.201.29.162 app.billiardtoday.com
+138.201.29.162 admin.billiardtoday.com
+138.201.29.162 scoreboard.billiardtoday.com
+138.201.29.162 ws.billiardtoday.com
+138.201.29.162 updates.billiardtoday.com
+138.201.29.162 pgadmin.billiardtoday.com
