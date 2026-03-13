@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { CmsAppearance, CmsTournamentListSection } from '@/lib/cms/types'
 import { getCmsContainerStyle } from '@/lib/cms/layout'
 import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from '@/lib/cms/sectionStyles'
+import { buildTournamentHref } from '@/lib/tournaments'
 
 type Tournament = {
     id: string
@@ -130,10 +131,8 @@ export function TournamentListSection({
     }, [currentPage, currentSeason, itemsPerPage])
 
     const basePath = pathname || '/tournaments'
-    const tournamentEventHref = (eventDocumentId: string) =>
-        embedded
-            ? `/embed/tournaments/events?eventId=${encodeURIComponent(eventDocumentId)}`
-            : `/tournaments/events?eventId=${encodeURIComponent(eventDocumentId)}`
+    const tournamentEventHref = (eventDocumentId: string, title: string) =>
+        buildTournamentHref(eventDocumentId, title, embedded)
 
     const updateQuery = (nextPage: number, nextSeason: string) => {
         const params = new URLSearchParams(searchParams.toString())
@@ -296,7 +295,7 @@ export function TournamentListSection({
                                     {section.showResultsLink ? (
                                         <div className="mt-5">
                                             <Link
-                                                href={tournamentEventHref(item.documentId)}
+                                                href={tournamentEventHref(item.documentId, item.title)}
                                                 className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                             >
                                                 View tournament
@@ -372,7 +371,7 @@ export function TournamentListSection({
                                                 {section.showResultsLink ? (
                                                     <td className="px-6 py-4 text-sm">
                                                         <Link
-                                                            href={tournamentEventHref(item.documentId)}
+                                                            href={tournamentEventHref(item.documentId, item.title)}
                                                             className="font-semibold text-sky-700 transition hover:text-sky-900"
                                                         >
                                                             View tournament

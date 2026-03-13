@@ -24,6 +24,14 @@ import {
 import GroupStandingsTable from './GroupStandingsTable'
 import SingleElimBracket, { type BracketRoundView } from './SingleElimBracket'
 
+type TournamentEventsContentProps = {
+    eventIdOverride?: string | null
+    embeddedOverride?: boolean
+    showStandaloneTitle?: boolean
+    showEventHeader?: boolean
+    emptyStateMessage?: string
+}
+
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
     const url = `/api/events/${eventId}`
     const response = await fetch(url, { cache: 'no-store' })
@@ -34,7 +42,13 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
     return response.json()
 }
 
-function TournamentEventsContent() {
+export function TournamentEventsContent({
+    eventIdOverride = null,
+    embeddedOverride,
+    showStandaloneTitle = true,
+    showEventHeader = true,
+    emptyStateMessage = 'Select a tournament event from the list to view its stages.',
+}: TournamentEventsContentProps = {}) {
     const [activeStageId, setActiveStageId] = useState<string | null>(null)
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
@@ -43,8 +57,8 @@ function TournamentEventsContent() {
     const [brLoadingByStage, setBrLoadingByStage] = useState<Record<string, boolean>>({})
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const eventId = searchParams?.get('eventId') ?? null
-    const embedded = pathname?.startsWith('/embed/') ?? false
+    const eventId = eventIdOverride ?? searchParams?.get('eventId') ?? null
+    const embedded = embeddedOverride ?? (pathname?.startsWith('/embed/') ?? false)
     const playerProfileHref = (playerId: string | number, playerName: string) =>
         `${embedded ? '/embed' : ''}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, '-')}`
 
@@ -321,13 +335,13 @@ function TournamentEventsContent() {
     return (
         <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: 'var(--bt-page-width, 1280px)' }}>
             <div className="flex flex-col gap-4">
-                <h1 className="text-2xl font-semibold">Tournament Events</h1>
+                {showStandaloneTitle ? <h1 className="text-2xl font-semibold">Tournament Events</h1> : null}
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
                     {isLoading && <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>}
                     {error && <div className="text-sm text-red-500 dark:text-red-400">{error}</div>}
                     {!isLoading && !error && !eventId && (
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Select a tournament event from the list to view its stages.
+                            {emptyStateMessage}
                         </div>
                     )}
                     {!isLoading && !error && eventId && eventStages.length === 0 && (
@@ -338,17 +352,19 @@ function TournamentEventsContent() {
                     {eventInfo && eventStages.length > 0 && (
                         <div className="flex flex-col gap-4">
                             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-                                <div className="flex flex-col gap-1 mb-4">
-                                    <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                        {eventInfo.title}
+                                {showEventHeader ? (
+                                    <div className="mb-4 flex flex-col gap-1">
+                                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                                            {eventInfo.title}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                            {eventInfo.season && <span>Season {eventInfo.season}</span>}
+                                            {formatDateRange(eventInfo.startDate, eventInfo.endDate) && (
+                                                <span>{formatDateRange(eventInfo.startDate, eventInfo.endDate)}</span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                                        {eventInfo.season && <span>Season {eventInfo.season}</span>}
-                                        {formatDateRange(eventInfo.startDate, eventInfo.endDate) && (
-                                            <span>{formatDateRange(eventInfo.startDate, eventInfo.endDate)}</span>
-                                        )}
-                                    </div>
-                                </div>
+                                ) : null}
                                 {/* Tabs */}
                                 <div className="border-b border-gray-200 dark:border-gray-700">
                                     <nav className="flex gap-2 overflow-x-auto" aria-label="Tabs">

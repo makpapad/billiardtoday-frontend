@@ -146,6 +146,33 @@ const buildPlayerSlug = (id: string, name: string): string => {
     return slugName ? `${trimmedId}-${slugName}` : trimmedId
 }
 
+const formatSafeDecimal = (value: number | null | undefined, digits = 3): string => {
+    const numericValue =
+        typeof value === 'number' && Number.isFinite(value) ? value : null
+    if (numericValue === null) {
+        return digits === 1 ? '0.0' : '0.000'
+    }
+    return numericValue.toFixed(digits).replace('.', ',')
+}
+
+const formatSafeAverage = (
+    score: number | null | undefined,
+    innings: number | null | undefined,
+): string => {
+    const validScore =
+        typeof score === 'number' && Number.isFinite(score) ? score : null
+    const validInnings =
+        typeof innings === 'number' && Number.isFinite(innings) && innings > 0
+            ? innings
+            : null
+
+    if (validScore === null || validInnings === null) {
+        return '0,000'
+    }
+
+    return formatSafeDecimal(validScore / validInnings, 3)
+}
+
 export default function PlayerProfilePage() {
     const params = useParams()
     const router = useRouter()
@@ -1149,9 +1176,7 @@ export default function PlayerProfilePage() {
                                             {t('players.profile.h2h.avg')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400">
-                                            {h2hStats.avgPerInning
-                                                .toString()
-                                                .replace('.', ',')}
+                                            {formatSafeDecimal(Number(h2hStats.avgPerInning), 3)}
                                         </div>
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
@@ -1261,12 +1286,10 @@ export default function PlayerProfilePage() {
                                                             <span>
                                                                 {t('players.profile.h2h.avgValue').replace(
                                                                     '{avg}',
-                                                                    (
-                                                                        match.scoreFor /
-                                                                        (match.innings || 1)
-                                                                    )
-                                                                        .toFixed(3)
-                                                                        .replace('.', ','),
+                                                                    formatSafeAverage(
+                                                                        match.scoreFor,
+                                                                        match.innings,
+                                                                    ),
                                                                 )}
                                                             </span>
                                                             {typeof match.highRun === 'number' && (
@@ -1323,7 +1346,7 @@ export default function PlayerProfilePage() {
                                                     })
                                                 }
                                                 if (name === t('players.profile.performance.winPct')) {
-                                                    return `${value.toFixed(1)}%`
+                                                    return `${formatSafeDecimal(value, 1)}%`
                                                 }
                                                 return value
                                             }}
@@ -1413,7 +1436,7 @@ export default function PlayerProfilePage() {
                                                 <div className="text-xs text-blue-100">{t('players.profile.stats.losses')}</div>
                                             </div>
                                             <div>
-                                                <div className="text-2xl font-bold text-yellow-300">{participation.avgPerInning.toFixed(3)}</div>
+                                                <div className="text-2xl font-bold text-yellow-300">{formatSafeDecimal(participation.avgPerInning, 3)}</div>
                                                 <div className="text-xs text-blue-100">{t('players.profile.stats.avg')}</div>
                                             </div>
                                             <div>
@@ -1497,12 +1520,10 @@ export default function PlayerProfilePage() {
                                                                 </span>
                                                                 <span>
                                                                     AVG:{' '}
-                                                                    {(
-                                                                        match.scoreFor /
-                                                                        (match.innings || 1)
-                                                                    )
-                                                                        .toFixed(3)
-                                                                        .replace('.', ',')}
+                                                                    {formatSafeAverage(
+                                                                        match.scoreFor,
+                                                                        match.innings,
+                                                                    )}
                                                                 </span>
                                                                 {typeof match.highRun === 'number' && (
                                                                     <span>
@@ -1647,7 +1668,10 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('players.profile.modal.avgLabel')}</div>
                                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                        {(selectedMatch.scoreFor / selectedMatch.innings).toFixed(3).replace('.', ',')}
+                                        {formatSafeAverage(
+                                            selectedMatch.scoreFor,
+                                            selectedMatch.innings,
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1695,7 +1719,10 @@ export default function PlayerProfilePage() {
                                             ? 'text-yellow-600 dark:text-yellow-400'
                                             : 'text-gray-600 dark:text-gray-400'
                                     }`}>
-                                        {(selectedMatch.scoreAgainst / selectedMatch.innings).toFixed(3).replace('.', ',')}
+                                        {formatSafeAverage(
+                                            selectedMatch.scoreAgainst,
+                                            selectedMatch.innings,
+                                        )}
                                     </div>
                                 </div>
                             </div>

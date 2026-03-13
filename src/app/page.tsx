@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { CmsPageShell } from "@/components/cms/CmsPageShell";
+import { HomeFallbackPage } from "@/components/public/HomeFallbackPage";
 import { CmsPageView } from "@/components/cms/CmsPageView";
 import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsAppearance, getCmsPageBySlug, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { listClubs, listFeaturedPlayers, listFederations, listTournamentEvents } from "@/lib/publicSiteData";
 
 const buildFallbackHomePage = () => ({
   id: "cms-home-fallback",
@@ -43,17 +46,28 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [settings, appearance, page] = await Promise.all([
+  const [settings, appearance, page, tournaments, players, clubs, federations] = await Promise.all([
     getCmsSiteSettings(),
     getCmsAppearance(),
     getCmsPageBySlug("home"),
+    listTournamentEvents(6),
+    listFeaturedPlayers(6),
+    listClubs(6),
+    listFederations(4),
   ]);
 
-  return (
-    <CmsPageView
-      page={page || buildFallbackHomePage()}
-      settings={settings}
-      appearance={appearance}
-    />
-  );
+  if (!page) {
+    return (
+      <CmsPageShell settings={settings} appearance={appearance}>
+        <HomeFallbackPage
+          tournaments={tournaments}
+          players={players}
+          clubs={clubs}
+          federations={federations}
+        />
+      </CmsPageShell>
+    );
+  }
+
+  return <CmsPageView page={page || buildFallbackHomePage()} settings={settings} appearance={appearance} />;
 }

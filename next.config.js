@@ -2,16 +2,17 @@
 const configuredBasePath =
   process.env.NEXT_PUBLIC_BASE_PATH !== undefined
     ? process.env.NEXT_PUBLIC_BASE_PATH
-    : process.env.NODE_ENV === 'production'
-      ? '/tournaments'
-      : ''
+    : ''
+const normalizedBasePath =
+  configuredBasePath && configuredBasePath !== '/'
+    ? configuredBasePath.replace(/\/+$/, '')
+    : ''
 const embedFrameAncestors =
   process.env.EMBED_ALLOWED_ORIGINS || "*"
 
 const nextConfig = {
-  // Base path can be enabled in local too (e.g. when proxied by WordPress)
-  basePath: configuredBasePath,
-  assetPrefix: configuredBasePath,
+  // Root public site by default. Set NEXT_PUBLIC_BASE_PATH explicitly only if reverse-proxied.
+  ...(normalizedBasePath ? { basePath: normalizedBasePath, assetPrefix: normalizedBasePath } : {}),
   reactStrictMode: true,
   
   // Image optimization
@@ -35,7 +36,7 @@ const nextConfig = {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://billiardtoday.com',
     NEXT_PUBLIC_SCOREBOARD_URL: process.env.NEXT_PUBLIC_SCOREBOARD_URL || 'https://scoreboard.billiardtoday.com',
     NEXT_PUBLIC_ADMIN_URL: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.billiardtoday.com',
-    NEXT_PUBLIC_BASE_PATH: configuredBasePath,
+    NEXT_PUBLIC_BASE_PATH: normalizedBasePath,
   },
   
   // Headers για SEO και security

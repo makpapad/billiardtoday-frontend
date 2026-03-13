@@ -1,0 +1,144 @@
+export type TournamentEventStageSummary = {
+  documentId: string;
+  title: string;
+  order: number | null;
+  isFinal: boolean;
+};
+
+export type TournamentEventSummary = {
+  documentId: string;
+  title: string;
+  season: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  gameType: string | null;
+  tournamentTitle: string | null;
+  stages: TournamentEventStageSummary[];
+};
+
+const STRAPI_URL =
+  process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
+
+const buildHeaders = (): HeadersInit => {
+  if (!STRAPI_API_TOKEN) return {};
+  return {
+    Authorization: `Bearer ${STRAPI_API_TOKEN}`,
+  };
+};
+
+const toNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const readString = (value: unknown): string | null => {
+  const cleaned = String(value || "").trim();
+  return cleaned || null;
+};
+
+const slugify = (value: string) =>
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+const normalizeStage = (value: unknown, index: number): TournamentEventStageSummary => {
+  const source =
+    value && typeof value === "object" && "attributes" in (value as Record<string, unknown>)
+      ? ((value as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((value as Record<string, unknown>) ?? {});
+  const raw = {
+    ...source,
+    ...(value && typeof value === "object" ? (value as Record<string, unknown>) : {}),
+  };
+
+  return {
+    documentId: readString(raw.documentId) || `stage-${index + 1}`,
+    title: readString(raw.title) || `Stage ${index + 1}`,
+    order: toNumber(raw.order),
+    isFinal: Boolean(raw.is_final),
+  };
+};
+
+export const buildTournamentSlug = (documentId: string, title: string) => {
+  const safeDocumentId = String(documentId || "").trim();
+  const safeTitle = slugify(String(title || "").trim()) || "event";
+  return `${safeDocumentId}--${safeTitle}`;
+};
+
+export const buildTournamentHref = (
+  documentId: string,
+  title: string,
+  embedded = false,
+) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(documentId, title)}`;
+
+export const extractTournamentDocumentId = (slug: string) =>
+  String(slug || "").split("--")[0]?.trim() || "";
+
+export const getTournamentEventSummary = async (
+  documentId: string,
+): Promise<TournamentEventSummary | null> => {
+  const cleanId = String(documentId || "").trim();
+  if (!cleanId) return null;
+
+  const params = new URLSearchParams();
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "season");
+  params.set("fields[2]", "start_date");
+  params.set("fields[3]", "end_date");
+  params.set("fields[4]", "game_type");
+  params.set("fields[5]", "documentId");
+  params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[event_stages][sort][0]", "order:asc");
+  params.set("populate[event_stages][fields][0]", "title");
+  params.set("populate[event_stages][fields][1]", "order");
+  params.set("populate[event_stages][fields][2]", "is_final");
+  params.set("populate[event_stages][fields][3]", "documentId");
+
+  const response = await fetch(`${STRAPI_URL}/api/bt-events/${cleanId}?${params.toString()}`, {
+    headers: buildHeaders(),
+    cache: IS_DEVELOPMENT ? "no-store" : undefined,
+    next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
+  }).catch(() => null);
+
+  if (!response?.ok) return null;
+
+  const json = await response.json().catch(() => null);
+  const source =
+    json?.data && typeof json.data === "object" && json.data.attributes
+      ? { ...json.data.attributes, ...json.data }
+      : json?.data;
+
+  if (!source || typeof source !== "object") return null;
+
+  const event = source as Record<string, unknown>;
+  const tournamentSource =
+    event.tournament && typeof event.tournament === "object" && "attributes" in (event.tournament as Record<string, unknown>)
+      ? ((event.tournament as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((event.tournament as Record<string, unknown>) ?? {});
+  const stagesRaw = Array.isArray(event.event_stages)
+    ? event.event_stages
+    : Array.isArray((event.event_stages as { data?: unknown[] } | undefined)?.data)
+      ? (event.event_stages as { data?: unknown[] }).data ?? []
+      : [];
+
+  return {
+    documentId: readString(event.documentId) || cleanId,
+    title: readString(event.title) || "Tournament Event",
+    season: toNumber(event.season),
+    startDate: readString(event.start_date),
+    endDate: readString(event.end_date),
+    gameType: readString(event.game_type),
+    tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
+    stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
+  };
+};

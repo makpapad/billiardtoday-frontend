@@ -6,10 +6,24 @@ const STRAPI_URL =
 const CMS_ADMIN_URL =
   process.env.CMS_ADMIN_URL ||
   process.env.NEXT_PUBLIC_CMS_ADMIN_URL ||
-  (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "");
+  "";
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 const CMS_FETCH_TIMEOUT_MS = Number(process.env.CMS_FETCH_TIMEOUT_MS || 5000);
+
+const isConnectionRefusedError = (error: unknown) => {
+  const cause =
+    error && typeof error === "object" && "cause" in error
+      ? (error as { cause?: unknown }).cause
+      : null;
+
+  const code =
+    cause && typeof cause === "object" && "code" in (cause as Record<string, unknown>)
+      ? (cause as { code?: unknown }).code
+      : null;
+
+  return code === "ECONNREFUSED";
+};
 
 const buildHeaders = (): HeadersInit => {
   if (!STRAPI_API_TOKEN) return {};
@@ -67,6 +81,7 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
         { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
         { label: "Players", url: "/players", openInNewTab: false, children: [] },
         { label: "Clubs", url: "/clubs", openInNewTab: false, children: [] },
+        { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
       ],
     },
     {
@@ -75,6 +90,7 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
       orientation: "horizontal",
       items: [
         { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+        { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
         { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
         { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
       ],
@@ -100,9 +116,11 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
     { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
     { label: "Players", url: "/players", openInNewTab: false, children: [] },
     { label: "Clubs", url: "/clubs", openInNewTab: false, children: [] },
+    { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
   ],
   footerLinks: [
     { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+    { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
     { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
     { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
   ],
@@ -127,6 +145,9 @@ export const getCmsAppearance = async (): Promise<CmsAppearance> =>
       const json = await fetchCmsAdminJson("/api/cms/theme", 60);
       return mapCmsAppearance(json.data ?? json);
     } catch (error) {
+      if (IS_DEVELOPMENT && isConnectionRefusedError(error)) {
+        return mapCmsAppearance();
+      }
       console.warn("Falling back to default CMS appearance.", error);
       return mapCmsAppearance();
     }

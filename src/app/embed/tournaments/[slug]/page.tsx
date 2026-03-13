@@ -14,27 +14,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const documentId = extractTournamentDocumentId(slug);
   const summary = await getTournamentEventSummary(documentId);
 
-  if (!summary) {
-    return {
-      title: "Tournament not found",
-    };
-  }
-
-  const seasonLabel = summary.season ? ` ${summary.season}` : "";
-
   return {
-    title: `${summary.title}${seasonLabel}`,
-    description:
-      summary.tournamentTitle
-        ? `${summary.tournamentTitle} ${seasonLabel} tournament page with stages, standings, and results.`
-        : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`,
-    alternates: {
-      canonical: `/tournaments/${slug}`,
+    title: summary ? `${summary.title} Embed` : "Tournament Embed",
+    robots: {
+      index: false,
+      follow: false,
     },
   };
 }
 
-export default async function TournamentPage({ params }: Props) {
+export default async function EmbedTournamentPage({ params }: Props) {
   const { slug } = await params;
   const documentId = extractTournamentDocumentId(slug);
   const [summary, settings, appearance] = await Promise.all([
@@ -48,8 +37,8 @@ export default async function TournamentPage({ params }: Props) {
   }
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance}>
-      <TournamentDetailPage summary={summary} />
+    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+      <TournamentDetailPage summary={summary} embedded />
     </CmsPageShell>
   );
 }

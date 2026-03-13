@@ -12,14 +12,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const club = await getClubBySlug(slug);
 
   return {
-    title: club ? club.name : "Club",
-    description: club
-      ? `${club.name} club page with player cards and tournament links.`
-      : "Club public page.",
+    title: club ? `${club.name} Embed` : "Club Embed",
+    robots: { index: false, follow: false },
   };
 }
 
-export default async function ClubPage({ params }: Props) {
+export default async function EmbedClubPage({ params }: Props) {
   const { slug } = await params;
   const club = await getClubBySlug(slug);
 
@@ -27,5 +25,5 @@ export default async function ClubPage({ params }: Props) {
     notFound();
   }
 
-  return <ClubDetailContent club={club} />;
+  return <ClubDetailContent club={club} embedded />;
 }
