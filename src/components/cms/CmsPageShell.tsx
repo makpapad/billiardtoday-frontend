@@ -2,6 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { CmsAppearance, CmsSection, CmsSiteSettings } from "@/lib/cms/types";
 import { CmsSectionRenderer } from "@/components/cms/CmsSectionRenderer";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import {
+  SITE_HEADER_NAV_ITEMS,
+  SITE_HEADER_PRIMARY_CTA,
+  SITE_HEADER_SECONDARY_CTA,
+} from "@/components/site/siteHeaderConfig";
 import { getCmsContainerStyle, getCmsPageWidth } from "@/lib/cms/layout";
 
 type Props = {
@@ -10,6 +16,8 @@ type Props = {
   children: ReactNode;
   showChrome?: boolean;
 };
+
+const DEFAULT_MARKETING_LOGO_SRC = "/img/billiard-today-logo.png";
 
 const getSocialLabel = (platform: string) => {
   const clean = platform.trim().toLowerCase();
@@ -149,8 +157,8 @@ export function CmsLayoutRenderer({
       const customLogo = asRecord(props.image);
       const customLogoUrl = readString(customLogo.url);
       const customLogoAlt = readString(customLogo.alternativeText) || settings.siteName;
-      const showWordmark = readBoolean(props.showWordmark, true);
-      const showTagline = readBoolean(props.showTagline, false);
+      const showWordmark = false;
+      const showTagline = false;
       const align = readString(props.align) || "left";
       const size = readString(props.size) || "md";
       const customWidth = readString(props.customWidth);
@@ -173,9 +181,12 @@ export function CmsLayoutRenderer({
             ) : settings.logo?.url ? (
               <img src={settings.logo.url} alt={settings.logo.alternativeText || settings.siteName} className="shrink-0 object-contain" style={logoImageStyle} />
             ) : (
-              <div className={`flex ${badgeSize} shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white`} style={{ background: tokens.primary }}>
-                BT
-              </div>
+              <img
+                src={DEFAULT_MARKETING_LOGO_SRC}
+                alt={settings.siteName}
+                className="shrink-0 object-contain"
+                style={logoImageStyle}
+              />
             )}
             {showWordmark ? (
               <div>
@@ -245,7 +256,7 @@ export function CmsLayoutRenderer({
       const orientation = readString(props.orientation) === "vertical" ? "vertical" : "horizontal";
       const align = readString(props.align) || "left";
       const items = Array.isArray(props.items)
-        ? props.items.map((item) => asRecord(item))
+        ? props.items.map((item: unknown) => asRecord(item))
         : [];
       const wrapperClass =
         orientation === "vertical"
@@ -438,28 +449,12 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
     settings.menus.find((menu) => menu.key === settings.activeHeaderMenuKey) || null;
   const footerMenu =
     settings.menus.find((menu) => menu.key === settings.activeFooterMenuKey) || null;
-  const headerClass =
-    settings.headerAppearance.variant === "solid"
-      ? "border-b border-black/10 bg-slate-950 text-white"
-      : settings.headerAppearance.variant === "minimal"
-        ? "border-b border-transparent bg-transparent"
-        : "border-b border-black/5 bg-white/75 backdrop-blur-xl";
   const footerClass =
     settings.footerAppearance.variant === "soft"
       ? "border-t border-black/5 bg-[#f5efe6] text-slate-800"
       : settings.footerAppearance.variant === "minimal"
         ? "border-t border-black/5 bg-transparent text-slate-700"
-        : "border-t border-black/5 bg-slate-950 text-slate-100";
-  const headerLinkClass =
-    settings.headerAppearance.navStyle === "text"
-      ? "text-sm font-medium"
-      : settings.headerAppearance.navStyle === "underline"
-        ? "border-b-2 border-transparent pb-1 text-sm font-medium hover:border-current"
-        : "rounded-full border border-black/10 px-4 py-2 text-sm font-medium";
-  const headerTextClass =
-    settings.headerAppearance.textColor || (settings.headerAppearance.variant === "solid" ? "text-white" : "text-slate-900");
-  const headerMutedClass =
-    settings.headerAppearance.mutedTextColor || (settings.headerAppearance.variant === "solid" ? "text-white/70" : "text-slate-500");
+        : "border-t border-white/10 bg-slate-950 text-slate-100";
   const footerMutedClass =
     settings.footerAppearance.textColor || (settings.footerAppearance.variant === "dark" ? "text-slate-300" : "text-slate-600");
   const footerLabelClass =
@@ -468,7 +463,6 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
     settings.footerAppearance.variant === "dark"
       ? "rounded-full border border-white/10 px-4 py-2 text-sm text-slate-200 transition hover:border-white/30 hover:text-white"
       : "rounded-full border border-black/10 px-4 py-2 text-sm text-slate-700 transition hover:border-black/20 hover:text-slate-950";
-  const hasHeaderLayout = settings.headerLayout.length > 0;
   const hasFooterLayout = settings.footerLayout.length > 0;
 
   return (
@@ -477,94 +471,20 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
       style={
         {
           ["--bt-page-width" as string]: getCmsPageWidth(appearance),
-          background: `radial-gradient(circle at top, ${tokens.accent}22, transparent 28%), linear-gradient(180deg, ${tokens.background}, #ffffff 80%)`,
+          background: "#ffffff",
           color: tokens.text,
           fontFamily: tokens.bodyFont,
         } as React.CSSProperties
       }
     >
       {showChrome ? (
-      <header
-        className={`${settings.stickyHeader ? "sticky top-0" : ""} ${headerClass} z-20`}
-        style={{
-          background: settings.headerAppearance.backgroundColor || undefined,
-          color: settings.headerAppearance.textColor || undefined,
-        }}
-      >
-        <div className="mx-auto px-4 py-4 sm:px-6" style={getCmsContainerStyle(appearance, "page")}>
-          {hasHeaderLayout ? (
-            <CmsLayoutRenderer
-              nodes={settings.headerLayout}
-              settings={settings}
-              appearance={appearance}
-              region="header"
-            />
-          ) : (
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <Link href="/" className="flex items-center gap-3">
-                <div
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-bold"
-                  style={{ background: tokens.primary, color: "#ffffff" }}
-                >
-                  BT
-                </div>
-                <div>
-                  <div
-                    className={`text-lg font-semibold tracking-tight ${headerTextClass}`}
-                    style={{ fontFamily: tokens.headingFont }}
-                  >
-                    {settings.siteName}
-                  </div>
-                  {settings.headerAppearance.showSiteTagline && settings.siteTagline ? (
-                    <div className={`text-xs ${headerMutedClass}`}>{settings.siteTagline}</div>
-                  ) : null}
-                </div>
-              </Link>
-
-              <nav
-                className={`flex ${
-                  headerMenu?.orientation === "vertical"
-                    ? "flex-col items-end gap-2"
-                    : "flex-wrap items-center gap-3 sm:gap-5"
-                }`}
-              >
-                {settings.headerLinks.map((link) => (
-                  <div key={`${link.label}-${link.url}`} className="group relative">
-                    <Link
-                      href={link.url || "#"}
-                      target={link.openInNewTab ? "_blank" : undefined}
-                      rel={link.openInNewTab ? "noreferrer" : undefined}
-                      className={`${headerLinkClass} ${settings.headerAppearance.variant === "solid" ? "text-white hover:text-white/85" : "text-slate-700 hover:text-slate-950"} transition ${settings.headerAppearance.navStyle === "pills" ? "hover:border-black/20" : ""}`}
-                    >
-                      {link.label}
-                    </Link>
-                    {link.children.length > 0 ? (
-                      <div className="pointer-events-none absolute left-0 top-full hidden min-w-56 pt-3 group-hover:block">
-                        <div
-                          className="pointer-events-auto rounded-3xl border border-black/5 bg-white p-3 shadow-[0_18px_60px_rgba(15,23,42,0.12)]"
-                          style={{ borderRadius: tokens.radius }}
-                        >
-                          {link.children.map((child) => (
-                            <Link
-                              key={`${child.label}-${child.url}`}
-                              href={child.url || "#"}
-                              target={child.openInNewTab ? "_blank" : undefined}
-                              rel={child.openInNewTab ? "noreferrer" : undefined}
-                              className="block rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
+      <SiteHeader
+        siteName={settings.siteName}
+        navItems={SITE_HEADER_NAV_ITEMS}
+        primaryCta={SITE_HEADER_PRIMARY_CTA}
+        secondaryCta={SITE_HEADER_SECONDARY_CTA}
+        sticky={settings.stickyHeader}
+      />
       ) : null}
 
       <main>{children}</main>
@@ -588,12 +508,19 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
           ) : (
             <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
               <div className="space-y-4">
-                <div
-                  className="text-2xl font-semibold tracking-tight"
-                  style={{ fontFamily: tokens.headingFont }}
-                >
-                  {settings.siteName}
-                </div>
+                {settings.logo?.url ? (
+                  <img
+                    src={settings.logo.url}
+                    alt={settings.logo.alternativeText || settings.siteName}
+                    className="h-11 w-auto object-contain"
+                  />
+                ) : (
+                  <img
+                    src={DEFAULT_MARKETING_LOGO_SRC}
+                    alt={settings.siteName}
+                    className="h-11 w-auto object-contain"
+                  />
+                )}
                 {settings.footerAppearance.showSiteTagline && settings.siteTagline ? (
                   <p className={`max-w-xl text-sm ${footerMutedClass}`}>{settings.siteTagline}</p>
                 ) : null}

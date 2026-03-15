@@ -1,6 +1,7 @@
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'https://app.billiardtoday.com'
 const SCOREBOARD_URL = process.env.NEXT_PUBLIC_SCOREBOARD_URL || 'https://scoreboard.billiardtoday.com'
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3022'
+export const API_URL = STRAPI_URL.replace(/\/$/, '')
 
 export interface Tournament {
   id: number

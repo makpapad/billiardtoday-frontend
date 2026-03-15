@@ -33,6 +33,8 @@ type Props = {
     section: CmsTournamentListSection
     appearance: CmsAppearance
     embedded?: boolean
+    clubSlug?: string
+    federationId?: string
 }
 
 const EMPTY_PAGINATION = {
@@ -67,6 +69,8 @@ export function TournamentListSection({
     section,
     appearance,
     embedded = false,
+    clubSlug,
+    federationId,
 }: Props) {
     const router = useRouter()
     const pathname = usePathname()
@@ -99,6 +103,8 @@ export function TournamentListSection({
                 params.set('page', String(currentPage))
                 params.set('pageSize', String(itemsPerPage))
                 if (currentSeason) params.set('season', currentSeason)
+                if (clubSlug) params.set('clubSlug', clubSlug)
+                if (federationId) params.set('federationId', federationId)
 
                 const response = await fetch(`/api/tournaments?${params.toString()}`, {
                     cache: 'no-store',
@@ -128,7 +134,7 @@ export function TournamentListSection({
         return () => {
             mounted = false
         }
-    }, [currentPage, currentSeason, itemsPerPage])
+    }, [currentPage, currentSeason, itemsPerPage, clubSlug, federationId])
 
     const basePath = pathname || '/tournaments'
     const tournamentEventHref = (eventDocumentId: string, title: string) =>

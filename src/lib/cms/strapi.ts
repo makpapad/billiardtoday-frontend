@@ -11,18 +11,18 @@ const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 const CMS_FETCH_TIMEOUT_MS = Number(process.env.CMS_FETCH_TIMEOUT_MS || 5000);
 
-const isConnectionRefusedError = (error: unknown) => {
-  const cause =
-    error && typeof error === "object" && "cause" in error
-      ? (error as { cause?: unknown }).cause
-      : null;
+const isLocalCmsAdminUrl = (url: string) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url.trim());
 
-  const code =
-    cause && typeof cause === "object" && "code" in (cause as Record<string, unknown>)
-      ? (cause as { code?: unknown }).code
-      : null;
-
-  return code === "ECONNREFUSED";
+const isOptionalCmsAdminFailure = (error: unknown) => {
+  if (!error || typeof error !== "object") return false;
+  const cause = (error as { cause?: { code?: string } }).cause;
+  const message = String((error as { message?: string }).message || "");
+  return (
+    cause?.code === "ECONNREFUSED" ||
+    cause?.code === "UND_ERR_CONNECT_TIMEOUT" ||
+    message.toLowerCase().includes("fetch failed")
+  );
 };
 
 const buildHeaders = (): HeadersInit => {
@@ -135,23 +135,21 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
   },
 };
 
-export const getCmsAppearance = async (): Promise<CmsAppearance> =>
-  {
-    if (!CMS_ADMIN_URL) {
-      return mapCmsAppearance();
-    }
+export const getCmsAppearance = async (): Promise<CmsAppearance> => {
+  if (!CMS_ADMIN_URL) {
+    return mapCmsAppearance();
+  }
 
-    try {
-      const json = await fetchCmsAdminJson("/api/cms/theme", 60);
-      return mapCmsAppearance(json.data ?? json);
-    } catch (error) {
-      if (IS_DEVELOPMENT && isConnectionRefusedError(error)) {
-        return mapCmsAppearance();
-      }
+  try {
+    const json = await fetchCmsAdminJson("/api/cms/theme", 60);
+    return mapCmsAppearance(json.data ?? json);
+  } catch (error) {
+    if (!(isLocalCmsAdminUrl(CMS_ADMIN_URL) && isOptionalCmsAdminFailure(error))) {
       console.warn("Falling back to default CMS appearance.", error);
-      return mapCmsAppearance();
     }
-  };
+    return mapCmsAppearance();
+  }
+};
 
 export const getCmsSiteSettings = async (): Promise<CmsSiteSettings> => {
   try {

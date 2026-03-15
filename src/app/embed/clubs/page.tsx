@@ -3,7 +3,7 @@ import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getClubs } from "@/lib/directory";
 
-export default async function ClubsPage() {
+export default async function EmbedClubsPage() {
   const [settings, appearance, clubs] = await Promise.all([
     getCmsSiteSettings(),
     getCmsAppearance(),
@@ -11,20 +11,19 @@ export default async function ClubsPage() {
   ]);
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance}>
-      <section className="px-4 py-12 sm:px-6 sm:py-16">
+    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+      <section className="px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               Clubs
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              Browse registered billiard clubs and open their dedicated pages to view related
-              tournaments.
+              Embedded directory of clubs with access to their related tournaments.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {clubs.map((club) => (
               <article
                 key={club.documentId}
@@ -34,20 +33,13 @@ export default async function ClubsPage() {
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
                   {club.federation?.name ? <div>Federation: {club.federation.name}</div> : null}
                   {club.city ? <div>City: {club.city}</div> : null}
-                  {club.contactEmail ? <div>Email: {club.contactEmail}</div> : null}
                 </div>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-5">
                   <Link
-                    href={`/clubs/${club.slug}`}
+                    href={`/embed/clubs/${club.slug}`}
                     className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
                     View club
-                  </Link>
-                  <Link
-                    href={`/live/${club.documentId}`}
-                    className="inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    Live
                   </Link>
                 </div>
               </article>

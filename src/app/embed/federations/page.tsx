@@ -3,7 +3,7 @@ import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getFederations } from "@/lib/directory";
 
-export default async function FederationsPage() {
+export default async function EmbedFederationsPage() {
   const [settings, appearance, federations] = await Promise.all([
     getCmsSiteSettings(),
     getCmsAppearance(),
@@ -11,19 +11,19 @@ export default async function FederationsPage() {
   ]);
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance}>
-      <section className="px-4 py-12 sm:px-6 sm:py-16">
+    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+      <section className="px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               Federations
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              Browse federations and open their pages to see affiliated clubs and related tournaments.
+              Embedded directory of federations, affiliated clubs and related tournaments.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {federations.map((federation) => (
               <article
                 key={federation.documentId}
@@ -38,7 +38,7 @@ export default async function FederationsPage() {
                 </div>
                 <div className="mt-5">
                   <Link
-                    href={`/federations/${federation.documentId}`}
+                    href={`/embed/federations/${federation.documentId}`}
                     className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
                     View federation

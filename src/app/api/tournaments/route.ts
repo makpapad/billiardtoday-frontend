@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
         const page = toPositiveInt(searchParams.get('page'), 1)
         const pageSize = toPositiveInt(searchParams.get('pageSize'), 10)
         const season = searchParams.get('season')
+        const clubSlug = searchParams.get('clubSlug')
+        const federationId = searchParams.get('federationId')
 
         const queryParams = new URLSearchParams()
         queryParams.set('pagination[page]', page.toString())
@@ -43,6 +45,12 @@ export async function GET(req: NextRequest) {
 
         if (season) {
             queryParams.set('filters[season][$eq]', season)
+        }
+        if (clubSlug) {
+            queryParams.set('filters[tournament][club][slug][$eq]', clubSlug)
+        }
+        if (federationId) {
+            queryParams.set('filters[tournament][club][federation][documentId][$eq]', federationId)
         }
 
         const url = `${STRAPI_URL}/api/bt-events?${queryParams.toString()}`
