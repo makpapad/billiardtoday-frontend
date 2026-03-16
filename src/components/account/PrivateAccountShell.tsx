@@ -67,21 +67,29 @@ export function AccountAccessCard({
   const [error, setError] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [playerDocumentId, setPlayerDocumentId] = React.useState("");
-  const [enrollmentRequestId, setEnrollmentRequestId] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     try {
+      if (mode === "register") {
+        if (password.length < 8) {
+          setError("Password must be at least 8 characters.");
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords do not match.");
+          return;
+        }
+      }
+
       const next =
         mode === "login"
           ? await playerAccountAuth.login(email, password)
           : await playerAccountAuth.register({
               email,
               password,
-              playerDocumentId: playerDocumentId || null,
-              enrollmentRequestId: enrollmentRequestId || null,
             });
       await onAuthenticated(next);
     } catch (err) {
@@ -95,7 +103,7 @@ export function AccountAccessCard({
         <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Account Access</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Sign in with your player account or create one linked to a player or enrollment request.
+          Sign in with your player account or create one using the same email you used on the scoreboard.
         </p>
 
         <div className="mt-6 flex gap-2">
@@ -132,17 +140,15 @@ export function AccountAccessCard({
           {mode === "register" ? (
             <>
               <input
-                value={playerDocumentId}
-                onChange={(e) => setPlayerDocumentId(e.target.value)}
-                placeholder="Player documentId"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm password"
+                type="password"
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
               />
-              <input
-                value={enrollmentRequestId}
-                onChange={(e) => setEnrollmentRequestId(e.target.value)}
-                placeholder="Enrollment request documentId"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
-              />
+              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                If you already enrolled from a scoreboard, use the same email address here and your account will be linked automatically.
+              </div>
             </>
           ) : null}
           {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
