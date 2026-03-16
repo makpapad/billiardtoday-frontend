@@ -100,7 +100,7 @@ class PlayerAccountAuth {
     playerDocumentId?: string | null;
     enrollmentRequestId?: string | null;
   }) {
-    const res = await fetch("/api/player-account/register", {
+    const res = await fetch("/api/player-account/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -161,7 +161,7 @@ class PlayerAccountAuth {
 
   async verifyEmail(token: string) {
     const params = new URLSearchParams({ token });
-    const res = await fetch(`/api/player-account/email-verification?${params.toString()}`, {
+    const res = await fetch(`/api/player-account/email-check?${params.toString()}`, {
       cache: "no-store",
     });
     const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
@@ -181,7 +181,7 @@ class PlayerAccountAuth {
       headers.Authorization = `Bearer ${this.jwt}`;
     }
 
-    const res = await fetch("/api/player-account/email-verification/resend", {
+    const res = await fetch("/api/player-account/email-check/resend", {
       method: "POST",
       headers,
       body: JSON.stringify({ email: input?.email || null }),
