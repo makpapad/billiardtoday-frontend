@@ -80,7 +80,7 @@ export default async function RootLayout({
 
   return (
     <html lang="el" className={htmlClassName} suppressHydrationWarning>
-      <body style={bodyStyle}>
+      <body className="min-h-screen flex flex-col" style={bodyStyle}>
         <script dangerouslySetInnerHTML={{ __html: colorModeScript }} />
         <AuthProvider>{children}</AuthProvider>
       </body>

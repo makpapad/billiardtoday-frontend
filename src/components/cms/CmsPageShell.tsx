@@ -467,7 +467,7 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen flex flex-1 flex-col"
       style={
         {
           ["--bt-page-width" as string]: getCmsPageWidth(appearance),
@@ -487,7 +487,7 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
       />
       ) : null}
 
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
 
       {showChrome ? (
       <footer

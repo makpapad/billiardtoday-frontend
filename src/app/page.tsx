@@ -34,9 +34,9 @@ export default async function HomePage() {
   const content = buildLandingPageContent(settings, page);
 
   return (
-    <div className="bg-white text-slate-950">
+    <div className="flex min-h-screen flex-1 flex-col bg-white text-slate-950">
       <Header content={content.header} />
-      <main>
+      <main className="flex-1">
         <Hero content={content.hero} />
         <TrustedClubs content={content.trustedClubs} />
         <Features content={content.features} />
