@@ -170,6 +170,14 @@ type TournamentsEnvelope = {
   error?: string;
 };
 
+function extractErrorMessage(json: any, fallback: string) {
+  const direct = typeof json?.error === "string" ? json.error : null;
+  if (direct) return direct;
+  const nested = typeof json?.error?.message === "string" ? json.error.message : null;
+  if (nested) return nested;
+  return fallback;
+}
+
 const TOKEN_KEY = "player_account_jwt";
 const ACCOUNT_KEY = "player_account_summary";
 
@@ -207,7 +215,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as AuthEnvelope | null;
     if (!res.ok || !json?.data || !json?.meta?.jwt) {
-      throw new Error(json?.error || "Login failed");
+      throw new Error(extractErrorMessage(json, "Login failed"));
     }
     this.jwt = json.meta.jwt;
     this.account = json.data;
@@ -228,7 +236,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as AuthEnvelope | null;
     if (!res.ok || !json?.data || !json?.meta?.jwt) {
-      throw new Error(json?.error || "Registration failed");
+      throw new Error(extractErrorMessage(json, "Registration failed"));
     }
     this.jwt = json.meta.jwt;
     this.account = json.data;
@@ -259,7 +267,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as ClaimEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Claim lookup failed");
+      throw new Error(extractErrorMessage(json, "Claim lookup failed"));
     }
     return json.data;
   }
@@ -272,7 +280,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as AuthEnvelope | null;
     if (!res.ok || !json?.data || !json?.meta?.jwt) {
-      throw new Error(json?.error || "Claim completion failed");
+      throw new Error(extractErrorMessage(json, "Claim completion failed"));
     }
     this.jwt = json.meta.jwt;
     this.account = json.data;
@@ -287,7 +295,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Email verification failed");
+      throw new Error(extractErrorMessage(json, "Email verification failed"));
     }
     if (this.account && this.account.id === json.data.id) {
       this.account = json.data;
@@ -309,7 +317,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as { data?: { sent?: boolean }; error?: string } | null;
     if (!res.ok || !json?.data?.sent) {
-      throw new Error(json?.error || "Verification email resend failed");
+      throw new Error(extractErrorMessage(json, "Verification email resend failed"));
     }
     return true;
   }
@@ -322,7 +330,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as DashboardEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Dashboard request failed");
+      throw new Error(extractErrorMessage(json, "Dashboard request failed"));
     }
     return json.data;
   }
@@ -335,7 +343,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as DevicesEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Devices request failed");
+      throw new Error(extractErrorMessage(json, "Devices request failed"));
     }
     return json.data;
   }
@@ -352,7 +360,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as DeviceEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Device revoke failed");
+      throw new Error(extractErrorMessage(json, "Device revoke failed"));
     }
     return json.data;
   }
@@ -365,7 +373,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as FriendlyMatchesEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Friendly matches request failed");
+      throw new Error(extractErrorMessage(json, "Friendly matches request failed"));
     }
     return json.data;
   }
@@ -386,7 +394,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as FriendlyMatchEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Friendly match update failed");
+      throw new Error(extractErrorMessage(json, "Friendly match update failed"));
     }
     return json.data;
   }
@@ -399,7 +407,7 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as TournamentsEnvelope | null;
     if (!res.ok || !json?.data) {
-      throw new Error(json?.error || "Tournament request failed");
+      throw new Error(extractErrorMessage(json, "Tournament request failed"));
     }
     return json.data;
   }
