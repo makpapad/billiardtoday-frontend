@@ -122,6 +122,13 @@ export type PlayerAccountTournamentParticipation = {
   avgPerInning: number;
 };
 
+export type PlayerAccountDeviceLinkRequest = {
+  linkToken: string;
+  linkUrl: string;
+  expiresAt: string | null;
+  status: "pending" | "completed" | "expired" | "cancelled" | null;
+};
+
 type AuthEnvelope = {
   data?: PlayerAccountSummary;
   meta?: {
@@ -167,6 +174,11 @@ type FriendlyMatchEnvelope = {
 
 type TournamentsEnvelope = {
   data?: PlayerAccountTournamentParticipation[];
+  error?: string;
+};
+
+type DeviceLinkEnvelope = {
+  data?: PlayerAccountDeviceLinkRequest | PlayerAccountSummary;
   error?: string;
 };
 
@@ -432,6 +444,38 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as TournamentsEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(extractErrorMessage(json, "Tournament request failed"));
+    }
+    return json.data;
+  }
+
+  async startDeviceLink() {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/device-link/start", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as DeviceLinkEnvelope | null;
+    if (!res.ok || !json?.data || !("linkToken" in json.data)) {
+      throw new Error(extractErrorMessage(json, "Device link request failed"));
+    }
+    return json.data;
+  }
+
+  async completeDeviceLink(input: { linkToken: string; deviceToken: string }) {
+    const res = await fetch("/account-access/device-link/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as DeviceLinkEnvelope | null;
+    if (!res.ok || !json?.data || !("id" in json.data)) {
+      throw new Error(extractErrorMessage(json, "Device link completion failed"));
     }
     return json.data;
   }

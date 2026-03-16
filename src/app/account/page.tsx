@@ -25,6 +25,8 @@ export default function AccountPage() {
   const [tournaments, setTournaments] = React.useState<PlayerAccountTournamentParticipation[]>([]);
   const [isRefreshingData, setIsRefreshingData] = React.useState(false);
   const [dataError, setDataError] = React.useState<string | null>(null);
+  const [deviceLink, setDeviceLink] = React.useState<{ linkUrl: string; expiresAt: string | null } | null>(null);
+  const [isPreparingDeviceLink, setIsPreparingDeviceLink] = React.useState(false);
 
   const loadPrivateData = React.useCallback(async () => {
     setIsRefreshingData(true);
@@ -51,6 +53,27 @@ export default function AccountPage() {
     if (!account) return;
     void loadPrivateData();
   }, [account, loadPrivateData]);
+
+  React.useEffect(() => {
+    if (!account || account.player?.documentId) {
+      setDeviceLink(null);
+      return;
+    }
+
+    const run = async () => {
+      setIsPreparingDeviceLink(true);
+      try {
+        const data = await playerAccountAuth.startDeviceLink();
+        setDeviceLink({ linkUrl: data.linkUrl, expiresAt: data.expiresAt });
+      } catch {
+        setDeviceLink(null);
+      } finally {
+        setIsPreparingDeviceLink(false);
+      }
+    };
+
+    void run();
+  }, [account]);
 
   const summaryStats = dashboard?.stats || {
     friendlyMatches: friendlyMatches.length,
@@ -177,6 +200,69 @@ export default function AccountPage() {
           </div>
         </article>
       </section>
+
+      {!account.player?.documentId ? (
+        <section className="mt-8 rounded-3xl border border-cyan-200 bg-cyan-50/70 p-5">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Scoreboard pairing</div>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight">Link your enrolled phone</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            If you already enrolled from a scoreboard on your phone, scan this QR with that same phone to link the account automatically.
+          </p>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
+            <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-cyan-100 bg-white p-4">
+              {deviceLink?.linkUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(deviceLink.linkUrl)}`}
+                  alt="Pair your enrolled phone with this account"
+                  className="h-[220px] w-[220px] rounded-2xl"
+                />
+              ) : (
+                <div className="px-4 text-center text-sm text-slate-500">
+                  {isPreparingDeviceLink ? "Preparing QR..." : "QR is not available right now."}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">
+                1. Open the camera on the phone that you already used on the scoreboard.
+                <br />
+                2. Scan this QR.
+                <br />
+                3. If that phone is already enrolled, the account will be linked automatically.
+              </div>
+              {deviceLink?.linkUrl ? (
+                <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">
+                  <div className="font-medium text-slate-950">Pairing link</div>
+                  <div className="mt-2 break-all text-slate-600">{deviceLink.linkUrl}</div>
+                  {deviceLink.expiresAt ? (
+                    <div className="mt-3 text-xs text-slate-500">Expires: {formatDateTime(deviceLink.expiresAt)}</div>
+                  ) : null}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsPreparingDeviceLink(true);
+                  try {
+                    const data = await playerAccountAuth.startDeviceLink();
+                    setDeviceLink({ linkUrl: data.linkUrl, expiresAt: data.expiresAt });
+                  } catch (err) {
+                    setDataError(err instanceof Error ? err.message : "Pairing link could not be created.");
+                  } finally {
+                    setIsPreparingDeviceLink(false);
+                  }
+                }}
+                className="rounded-full border border-cyan-200 bg-white px-4 py-2 text-sm font-medium text-cyan-900"
+              >
+                {isPreparingDeviceLink ? "Refreshing QR..." : "Refresh QR"}
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-10 grid gap-4 lg:grid-cols-3">
         <Link href="/account/tournaments" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
