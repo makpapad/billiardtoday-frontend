@@ -27,15 +27,19 @@ export function formatDateTime(value?: string | null) {
 }
 
 export function usePlayerAccountSession() {
-  const [account, setAccount] = React.useState<PlayerAccountSummary | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [account, setAccount] = React.useState<PlayerAccountSummary | null>(() => playerAccountAuth.getAccount());
+  const [isLoading, setIsLoading] = React.useState(() => !playerAccountAuth.getAccount());
 
   React.useEffect(() => {
     const run = async () => {
-      setIsLoading(true);
+      setIsLoading(!playerAccountAuth.getAccount());
       try {
         const current = await playerAccountAuth.me();
-        setAccount(current);
+        if (current) {
+          setAccount(current);
+        } else if (!playerAccountAuth.getAccount()) {
+          setAccount(null);
+        }
       } finally {
         setIsLoading(false);
       }
