@@ -79,7 +79,7 @@ class PlayerAccountAuth {
   }
 
   async login(email: string, password: string) {
-    const res = await fetch("/api/player-account/login", {
+    const res = await fetch("/api/account-access/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -100,7 +100,7 @@ class PlayerAccountAuth {
     playerDocumentId?: string | null;
     enrollmentRequestId?: string | null;
   }) {
-    const res = await fetch("/api/player-account/create", {
+    const res = await fetch("/api/account-access/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -117,7 +117,7 @@ class PlayerAccountAuth {
 
   async me() {
     if (!this.jwt) return null;
-    const res = await fetch("/api/player-account/me", {
+    const res = await fetch("/api/account-access/me", {
       headers: { Authorization: `Bearer ${this.jwt}` },
       cache: "no-store",
     });
@@ -133,7 +133,7 @@ class PlayerAccountAuth {
 
   async getClaimInfo(claimToken: string) {
     const params = new URLSearchParams({ token: claimToken });
-    const res = await fetch(`/api/player-account/claim?${params.toString()}`, {
+    const res = await fetch(`/api/account-access/claim?${params.toString()}`, {
       cache: "no-store",
     });
     const json = (await res.json().catch(() => null)) as ClaimEnvelope | null;
@@ -144,7 +144,7 @@ class PlayerAccountAuth {
   }
 
   async completeClaim(input: { claimToken: string; email: string; password: string }) {
-    const res = await fetch("/api/player-account/claim/complete", {
+    const res = await fetch("/api/account-access/claim/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -161,7 +161,7 @@ class PlayerAccountAuth {
 
   async verifyEmail(token: string) {
     const params = new URLSearchParams({ token });
-    const res = await fetch(`/api/player-account/email-check?${params.toString()}`, {
+    const res = await fetch(`/api/account-access/email-check?${params.toString()}`, {
       cache: "no-store",
     });
     const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
@@ -181,7 +181,7 @@ class PlayerAccountAuth {
       headers.Authorization = `Bearer ${this.jwt}`;
     }
 
-    const res = await fetch("/api/player-account/email-check/resend", {
+    const res = await fetch("/api/account-access/email-check/resend", {
       method: "POST",
       headers,
       body: JSON.stringify({ email: input?.email || null }),
