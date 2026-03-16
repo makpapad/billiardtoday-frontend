@@ -13,6 +13,10 @@ export default function AccountFriendlyPage() {
   const { account, setAccount, isLoading } = usePlayerAccountSession();
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [draftNotes, setDraftNotes] = React.useState("");
+  const [draftTags, setDraftTags] = React.useState("");
+  const [notice, setNotice] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const loadFriendlyMatches = React.useCallback(async () => {
@@ -32,6 +36,36 @@ export default function AccountFriendlyPage() {
     if (!account) return;
     void loadFriendlyMatches();
   }, [account, loadFriendlyMatches]);
+
+  const startEditing = (match: PlayerAccountFriendlyMatch) => {
+    setEditingId(String(match.id));
+    setDraftNotes(match.notes || "");
+    setDraftTags(match.tags.join(", "));
+    setNotice(null);
+    setError(null);
+  };
+
+  const saveMetadata = async (matchId: number | string) => {
+    setError(null);
+    setNotice(null);
+    try {
+      const updated = await playerAccountAuth.updateFriendlyMatch({
+        matchId,
+        notes: draftNotes,
+        tags: draftTags
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      });
+      setFriendlyMatches((prev) =>
+        prev.map((match) => (String(match.id) === String(updated.id) ? { ...match, ...updated } : match)),
+      );
+      setEditingId(null);
+      setNotice("Friendly match notes updated.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Friendly match update failed.");
+    }
+  };
 
   if (isLoading) {
     return <main className="min-h-screen px-4 py-8">Loading account...</main>;
@@ -58,6 +92,7 @@ export default function AccountFriendlyPage() {
       </div>
 
       {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+      {notice ? <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
 
       <div className="mt-6 space-y-4">
         {friendlyMatches.length === 0 ? (
@@ -103,7 +138,55 @@ export default function AccountFriendlyPage() {
                     ))
                   : null}
               </div>
-              {match.notes ? <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600">{match.notes}</div> : null}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    editingId === String(match.id) ? setEditingId(null) : startEditing(match)
+                  }
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
+                >
+                  {editingId === String(match.id) ? "Cancel" : "Edit notes"}
+                </button>
+              </div>
+
+              {editingId === String(match.id) ? (
+                <div className="mt-4 rounded-2xl bg-white p-4">
+                  <label className="block text-sm font-medium text-slate-700">Notes</label>
+                  <textarea
+                    value={draftNotes}
+                    onChange={(e) => setDraftNotes(e.target.value)}
+                    rows={4}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    placeholder="Add private notes for this match"
+                  />
+                  <label className="mt-4 block text-sm font-medium text-slate-700">Tags</label>
+                  <input
+                    value={draftTags}
+                    onChange={(e) => setDraftTags(e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    placeholder="practice, warmup, race-to-30"
+                  />
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void saveMetadata(String(match.id ?? ""))}
+                      className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(null)}
+                      className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : match.notes ? (
+                <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600">{match.notes}</div>
+              ) : null}
             </article>
           ))
         )}

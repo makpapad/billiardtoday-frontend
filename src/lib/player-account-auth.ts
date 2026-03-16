@@ -160,6 +160,11 @@ type FriendlyMatchesEnvelope = {
   error?: string;
 };
 
+type FriendlyMatchEnvelope = {
+  data?: PlayerAccountFriendlyMatch;
+  error?: string;
+};
+
 type TournamentsEnvelope = {
   data?: PlayerAccountTournamentParticipation[];
   error?: string;
@@ -361,6 +366,27 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as FriendlyMatchesEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(json?.error || "Friendly matches request failed");
+    }
+    return json.data;
+  }
+
+  async updateFriendlyMatch(input: {
+    matchId: number | string;
+    notes?: string | null;
+    tags?: string[];
+  }) {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-matches/update", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyMatchEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Friendly match update failed");
     }
     return json.data;
   }
