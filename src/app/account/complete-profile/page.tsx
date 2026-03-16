@@ -24,6 +24,7 @@ export default function CompleteProfilePage() {
   const [claimInfo, setClaimInfo] = React.useState<PlayerAccountClaimInfo | null>(null);
   const [account, setAccount] = React.useState<PlayerAccountSummary | null>(null);
   const [email, setEmail] = React.useState("");
+  const [fullName, setFullName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -44,6 +45,7 @@ export default function CompleteProfilePage() {
         const next = await playerAccountAuth.getClaimInfo(claimToken);
         setClaimInfo(next);
         setEmail(next.email || "");
+        setFullName(next.fullName || "");
       } catch (err) {
         setClaimInfo(null);
         setError(err instanceof Error ? err.message : "Claim lookup failed");
@@ -65,7 +67,7 @@ export default function CompleteProfilePage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const next = await playerAccountAuth.completeClaim({ claimToken, email, password });
+      const next = await playerAccountAuth.completeClaim({ claimToken, email, password, fullName });
       setAccount(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Account creation failed");
@@ -153,6 +155,12 @@ export default function CompleteProfilePage() {
         ) : null}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <input
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            placeholder="Full name"
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
+          />
           <input
             value={email}
             onChange={(event) => setEmail(event.target.value)}

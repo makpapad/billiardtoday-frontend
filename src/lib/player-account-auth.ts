@@ -2,6 +2,7 @@ export type PlayerAccountSummary = {
   id: number;
   documentId: string | null;
   email: string | null;
+  fullName: string | null;
   status: "active" | "pending_verification" | "disabled" | null;
   emailVerifiedAt: string | null;
   player: {
@@ -20,6 +21,18 @@ export type PlayerAccountSummary = {
 };
 
 export type PlayerAccountClaimInfo = {
+  enrollmentRequestId: string | null;
+  fullName: string | null;
+  email: string | null;
+  mobile: string | null;
+  country: string | null;
+  clubName: string | null;
+  status: string | null;
+  accountCompletionStatus: string | null;
+  linkedPlayerDocumentId: string | null;
+};
+
+export type PlayerAccountEnrollmentPreview = {
   enrollmentRequestId: string | null;
   fullName: string | null;
   email: string | null;
@@ -142,6 +155,11 @@ type ClaimEnvelope = {
   error?: string;
 };
 
+type EnrollmentPreviewEnvelope = {
+  data?: PlayerAccountEnrollmentPreview | null;
+  error?: string;
+};
+
 type VerifyEnvelope = {
   data?: PlayerAccountSummary;
   error?: string;
@@ -247,6 +265,7 @@ class PlayerAccountAuth {
   async register(input: {
     email: string;
     password: string;
+    fullName?: string | null;
     playerDocumentId?: string | null;
     enrollmentRequestId?: string | null;
   }) {
@@ -299,7 +318,22 @@ class PlayerAccountAuth {
     return json.data;
   }
 
-  async completeClaim(input: { claimToken: string; email: string; password: string }) {
+  async getEnrollmentPreview(email: string) {
+    this.hydrateFromStorage();
+    const normalized = email.trim();
+    if (!normalized) return null;
+    const params = new URLSearchParams({ email: normalized });
+    const res = await fetch(`/account-access/enrollment-preview?${params.toString()}`, {
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as EnrollmentPreviewEnvelope | null;
+    if (!res.ok) {
+      throw new Error(extractErrorMessage(json, "Enrollment preview lookup failed"));
+    }
+    return json?.data || null;
+  }
+
+  async completeClaim(input: { claimToken: string; email: string; password: string; fullName?: string | null }) {
     this.hydrateFromStorage();
     const res = await fetch("/account-access/claim/complete", {
       method: "POST",

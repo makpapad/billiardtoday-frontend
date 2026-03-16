@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import React from "react";
-import { playerAccountAuth, type PlayerAccountSummary } from "@/lib/player-account-auth";
+import {
+  playerAccountAuth,
+  type PlayerAccountEnrollmentPreview,
+  type PlayerAccountSummary,
+} from "@/lib/player-account-auth";
 
 export function statusLabel(status: PlayerAccountSummary["status"]) {
   if (status === "active") return "Active";
@@ -66,8 +70,39 @@ export function AccountAccessCard({
   const [mode, setMode] = React.useState<"login" | "register">("login");
   const [error, setError] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState("");
+  const [fullName, setFullName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [enrollmentPreview, setEnrollmentPreview] = React.useState<PlayerAccountEnrollmentPreview | null>(null);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = React.useState(false);
+  const [hasEditedFullName, setHasEditedFullName] = React.useState(false);
+
+  React.useEffect(() => {
+    if (mode !== "register") return;
+    const normalized = email.trim();
+    if (!normalized) {
+      setEnrollmentPreview(null);
+      if (!hasEditedFullName) setFullName("");
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      setIsCheckingEnrollment(true);
+      try {
+        const preview = await playerAccountAuth.getEnrollmentPreview(normalized);
+        setEnrollmentPreview(preview);
+        if (!hasEditedFullName) {
+          setFullName(preview?.fullName || "");
+        }
+      } catch {
+        setEnrollmentPreview(null);
+      } finally {
+        setIsCheckingEnrollment(false);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [email, hasEditedFullName, mode]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,6 +124,7 @@ export function AccountAccessCard({
           ? await playerAccountAuth.login(email, password)
           : await playerAccountAuth.register({
               email,
+              fullName,
               password,
             });
       await onAuthenticated(next);
@@ -140,6 +176,15 @@ export function AccountAccessCard({
           {mode === "register" ? (
             <>
               <input
+                value={fullName}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  setHasEditedFullName(true);
+                }}
+                placeholder="Full name"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
+              />
+              <input
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm password"
@@ -148,7 +193,13 @@ export function AccountAccessCard({
               />
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
                 If you already enrolled from a scoreboard, use the same email address here and your account will be linked automatically.
+                {isCheckingEnrollment ? " Checking enrollment..." : ""}
               </div>
+              {enrollmentPreview?.fullName ? (
+                <div className="rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+                  Enrollment found for <span className="font-semibold">{enrollmentPreview.fullName}</span>. You can keep this name or edit it before creating the account.
+                </div>
+              ) : null}
             </>
           ) : null}
           {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
