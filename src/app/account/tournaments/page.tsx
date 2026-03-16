@@ -9,6 +9,9 @@ export default function AccountTournamentsPage() {
   const [tournaments, setTournaments] = React.useState<PlayerAccountTournamentParticipation[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState("");
+  const [yearFilter, setYearFilter] = React.useState("all");
+  const [gameTypeFilter, setGameTypeFilter] = React.useState("all");
 
   const loadTournaments = React.useCallback(async () => {
     setIsRefreshing(true);
@@ -27,6 +30,48 @@ export default function AccountTournamentsPage() {
     if (!account) return;
     void loadTournaments();
   }, [account, loadTournaments]);
+
+  const yearOptions = React.useMemo(
+    () =>
+      Array.from(new Set(tournaments.map((row) => String(row.year ?? "")).filter(Boolean))).sort((a, b) =>
+        Number(b) - Number(a),
+      ),
+    [tournaments],
+  );
+
+  const gameTypeOptions = React.useMemo(
+    () => Array.from(new Set(tournaments.map((row) => row.gameType?.trim()).filter(Boolean) as string[])).sort(),
+    [tournaments],
+  );
+
+  const filteredTournaments = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return tournaments.filter((row) => {
+      if (yearFilter !== "all" && String(row.year ?? "") !== yearFilter) return false;
+      if (gameTypeFilter !== "all" && (row.gameType || "") !== gameTypeFilter) return false;
+      if (!q) return true;
+
+      const haystack = [
+        row.tournament,
+        row.gameType,
+        row.position,
+        ...row.stageResults.map((stage) => stage.stageTitle),
+        ...row.matches.map((match) => match.opponent),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [gameTypeFilter, search, tournaments, yearFilter]);
+
+  const emptyStateMessage =
+    tournaments.length === 0
+      ? account?.player?.documentId
+        ? "No tournament participations were found for this player yet."
+        : "Tournament history will appear here after your account is linked to a verified player profile."
+      : "No tournaments match the current filters.";
 
   if (isLoading) {
     return <main className="min-h-screen px-4 py-8">Loading account...</main>;
@@ -56,15 +101,44 @@ export default function AccountTournamentsPage() {
 
       {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
+      <div className="mt-6 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-[minmax(0,1.4fr)_0.8fr_0.8fr]">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search tournament, opponent or stage"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+        />
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+        >
+          <option value="all">All years</option>
+          {yearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+        <select
+          value={gameTypeFilter}
+          onChange={(e) => setGameTypeFilter(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+        >
+          <option value="all">All game types</option>
+          {gameTypeOptions.map((gameType) => (
+            <option key={gameType} value={gameType}>
+              {gameType}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="mt-6 space-y-4">
-        {tournaments.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-            {account.player?.documentId
-              ? "No tournament participations were found for this player yet."
-              : "Tournament history will appear here after your account is linked to a verified player profile."}
-          </div>
+        {filteredTournaments.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">{emptyStateMessage}</div>
         ) : (
-          tournaments.map((participation) => (
+          filteredTournaments.map((participation) => (
             <article key={participation.id} className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
