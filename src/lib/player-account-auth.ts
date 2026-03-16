@@ -31,6 +31,53 @@ export type PlayerAccountClaimInfo = {
   linkedPlayerDocumentId: string | null;
 };
 
+export type PlayerAccountDevice = {
+  id: number | null;
+  documentId: string | null;
+  deviceLabel: string | null;
+  platform: string | null;
+  browser: string | null;
+  appVersion: string | null;
+  lastUsedAt: string | null;
+  isActive: boolean;
+  deviceTokenLast4: string | null;
+};
+
+export type PlayerAccountFriendlyMatch = {
+  id: number | null;
+  documentId: string | null;
+  screenIdentifier: string | null;
+  clubName: string | null;
+  player1Name: string | null;
+  player2Name: string | null;
+  player1_points: number | null;
+  player2_points: number | null;
+  player1_high_run: number | null;
+  player2_high_run: number | null;
+  targetPoints: number | null;
+  maxInnings: number | null;
+  reportedAt: string | null;
+  winner: string | null;
+};
+
+export type PlayerAccountDashboard = {
+  account: PlayerAccountSummary | null;
+  stats: {
+    friendlyMatches: number;
+    activeDevices: number;
+    totalDevices: number;
+    wins: number;
+  };
+  latestFriendlyMatches: PlayerAccountFriendlyMatch[];
+  devices: PlayerAccountDevice[];
+  playerCard: {
+    documentId: string | null;
+    fullName: string | null;
+    country: string | null;
+    photoUrl: string | null;
+  } | null;
+};
+
 type AuthEnvelope = {
   data?: PlayerAccountSummary;
   meta?: {
@@ -46,6 +93,21 @@ type ClaimEnvelope = {
 
 type VerifyEnvelope = {
   data?: PlayerAccountSummary;
+  error?: string;
+};
+
+type DashboardEnvelope = {
+  data?: PlayerAccountDashboard;
+  error?: string;
+};
+
+type DevicesEnvelope = {
+  data?: PlayerAccountDevice[];
+  error?: string;
+};
+
+type FriendlyMatchesEnvelope = {
+  data?: PlayerAccountFriendlyMatch[];
   error?: string;
 };
 
@@ -191,6 +253,45 @@ class PlayerAccountAuth {
       throw new Error(json?.error || "Verification email resend failed");
     }
     return true;
+  }
+
+  async dashboard() {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/dashboard", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as DashboardEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Dashboard request failed");
+    }
+    return json.data;
+  }
+
+  async devices() {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/devices", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as DevicesEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Devices request failed");
+    }
+    return json.data;
+  }
+
+  async friendlyMatches() {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-matches", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyMatchesEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Friendly matches request failed");
+    }
+    return json.data;
   }
 
   logout() {
