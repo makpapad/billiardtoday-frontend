@@ -1,41 +1,48 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import React from "react";
-import { playerAccountAuth, type PlayerAccountSummary } from "@/lib/player-account-auth";
 
-export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token")?.trim() || "";
+type VerifyResult = {
+  data?: {
+    email?: string | null;
+  } | null;
+  error?: {
+    message?: string;
+  } | null;
+};
 
-  const [account, setAccount] = React.useState<PlayerAccountSummary | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+function getStrapiUrl() {
+  return (process.env.STRAPI_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337").replace(
+    /\/$/,
+    "",
+  );
+}
 
-  React.useEffect(() => {
-    const run = async () => {
-      setIsLoading(true);
-      setError(null);
+export default async function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = (await searchParams) || {};
+  const rawToken = params.token;
+  const token = Array.isArray(rawToken) ? rawToken[0] || "" : rawToken || "";
 
-      if (!token) {
-        setError("Missing verification token.");
-        setIsLoading(false);
-        return;
-      }
+  let isSuccess = false;
+  let message = "Missing verification token.";
+  let verifiedEmail: string | null = null;
 
-      try {
-        const next = await playerAccountAuth.verifyEmail(token);
-        setAccount(next);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Email verification failed");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  if (token) {
+    const query = new URLSearchParams({ token });
+    const res = await fetch(`${getStrapiUrl()}/api/player-accounts/verify-email?${query.toString()}`, {
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as VerifyResult | null;
 
-    void run();
-  }, [token]);
+    if (res.ok) {
+      isSuccess = true;
+      verifiedEmail = json?.data?.email || null;
+    } else {
+      message = json?.error?.message || "Email verification failed.";
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe_0%,#eff6ff_38%,#f8fafc_72%,#ffffff_100%)] px-4 py-8 text-slate-950">
@@ -43,12 +50,10 @@ export default function VerifyEmailPage() {
         <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Email verification</h1>
 
-        {isLoading ? <p className="mt-4 text-sm text-slate-600">Verifying your email...</p> : null}
-
-        {!isLoading && account ? (
+        {isSuccess ? (
           <>
             <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Your email is now verified for <span className="font-semibold">{account.email}</span>.
+              Your email is now verified{verifiedEmail ? ` for ${verifiedEmail}` : ""}.
             </div>
             <div className="mt-6">
               <Link
@@ -59,11 +64,9 @@ export default function VerifyEmailPage() {
               </Link>
             </div>
           </>
-        ) : null}
-
-        {!isLoading && !account && error ? (
-          <div className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
-        ) : null}
+        ) : (
+          <div className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{message}</div>
+        )}
       </div>
     </main>
   );
