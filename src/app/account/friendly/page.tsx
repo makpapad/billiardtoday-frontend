@@ -80,15 +80,30 @@ export default function AccountFriendlyPage() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
                 <span className="rounded-full bg-white px-3 py-1">Club: {match.clubName || "Unknown"}</span>
+                {match.venueName ? <span className="rounded-full bg-white px-3 py-1">Venue: {match.venueName}</span> : null}
+                {match.tableLabel ? <span className="rounded-full bg-white px-3 py-1">Table: {match.tableLabel}</span> : null}
                 <span className="rounded-full bg-white px-3 py-1">Screen: {match.screenIdentifier || "Unknown"}</span>
                 <span className="rounded-full bg-white px-3 py-1">Target {match.targetPoints ?? 0}</span>
                 <span className="rounded-full bg-white px-3 py-1">Max innings {match.maxInnings ?? 0}</span>
+                <span className="rounded-full bg-white px-3 py-1">P1 innings {match.player1_innings ?? 0}</span>
+                <span className="rounded-full bg-white px-3 py-1">P2 innings {match.player2_innings ?? 0}</span>
                 <span className="rounded-full bg-white px-3 py-1">P1 HR {match.player1_high_run ?? 0}</span>
                 <span className="rounded-full bg-white px-3 py-1">P2 HR {match.player2_high_run ?? 0}</span>
                 {match.winner ? (
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Winner: {match.winner}</span>
                 ) : null}
+                {match.matchDateTime ? (
+                  <span className="rounded-full bg-white px-3 py-1">Scheduled: {formatDateTime(match.matchDateTime)}</span>
+                ) : null}
+                {match.tags.length > 0
+                  ? match.tags.map((tag) => (
+                      <span key={`${match.id}-${tag}`} className="rounded-full bg-cyan-50 px-3 py-1 text-cyan-900">
+                        #{tag}
+                      </span>
+                    ))
+                  : null}
               </div>
+              {match.notes ? <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600">{match.notes}</div> : null}
             </article>
           ))
         )}

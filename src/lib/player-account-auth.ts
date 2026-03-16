@@ -48,16 +48,24 @@ export type PlayerAccountFriendlyMatch = {
   documentId: string | null;
   screenIdentifier: string | null;
   clubName: string | null;
+  venueName: string | null;
+  tableLabel: string | null;
   player1Name: string | null;
   player2Name: string | null;
   player1_points: number | null;
   player2_points: number | null;
+  player1_innings: number | null;
+  player2_innings: number | null;
   player1_high_run: number | null;
   player2_high_run: number | null;
   targetPoints: number | null;
   maxInnings: number | null;
+  matchDateTime: string | null;
   reportedAt: string | null;
   winner: string | null;
+  winnerSide: string | null;
+  notes: string | null;
+  tags: string[];
 };
 
 export type PlayerAccountDashboard = {

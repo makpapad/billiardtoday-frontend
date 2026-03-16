@@ -263,6 +263,7 @@ export default function AccountPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
                   <span className="rounded-full bg-white px-3 py-1">Club: {match.clubName || "Unknown"}</span>
+                  {match.tableLabel ? <span className="rounded-full bg-white px-3 py-1">Table: {match.tableLabel}</span> : null}
                   <span className="rounded-full bg-white px-3 py-1">Screen: {match.screenIdentifier || "Unknown"}</span>
                   <span className="rounded-full bg-white px-3 py-1">P1 HR {match.player1_high_run ?? 0}</span>
                   <span className="rounded-full bg-white px-3 py-1">P2 HR {match.player2_high_run ?? 0}</span>
