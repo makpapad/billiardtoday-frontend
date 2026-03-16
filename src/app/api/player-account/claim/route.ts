@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { API_URL } from "@/lib/api";
+import { SERVER_API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   const token = searchParams.get("token") || "";
   const query = new URLSearchParams({ token });
 
-  const res = await fetch(`${API_URL}/api/player-accounts/claim?${query.toString()}`, {
+  const res = await fetch(`${SERVER_API_URL}/api/player-accounts/claim?${query.toString()}`, {
     method: "GET",
     cache: "no-store",
   });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { API_URL } from "@/lib/api";
+import { SERVER_API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {}
 
-  const res = await fetch(`${API_URL}/api/player-accounts/register`, {
+  const res = await fetch(`${SERVER_API_URL}/api/player-accounts/register`, {
     method: "POST",
     cache: "no-store",
     headers: { "Content-Type": "application/json" },

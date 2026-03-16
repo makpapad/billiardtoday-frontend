@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { API_URL } from "@/lib/api";
+import { SERVER_API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing authorization header" }, { status: 401 });
   }
 
-  const res = await fetch(`${API_URL}/api/player-accounts/me`, {
+  const res = await fetch(`${SERVER_API_URL}/api/player-accounts/me`, {
     cache: "no-store",
     headers: { Authorization: auth },
   });

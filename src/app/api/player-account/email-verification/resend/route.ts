@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { API_URL } from "@/lib/api";
+import { SERVER_API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     headers.Authorization = auth;
   }
 
-  const res = await fetch(`${API_URL}/api/player-accounts/verify-email/resend`, {
+  const res = await fetch(`${SERVER_API_URL}/api/player-accounts/verify-email/resend`, {
     method: "POST",
     cache: "no-store",
     headers,
