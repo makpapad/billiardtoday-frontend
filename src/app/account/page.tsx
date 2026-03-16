@@ -6,6 +6,7 @@ import {
   type PlayerAccountDashboard,
   type PlayerAccountDevice,
   type PlayerAccountFriendlyMatch,
+  type PlayerAccountTournamentParticipation,
   type PlayerAccountSummary,
 } from "@/lib/player-account-auth";
 
@@ -36,6 +37,7 @@ export default function AccountPage() {
   const [dashboard, setDashboard] = React.useState<PlayerAccountDashboard | null>(null);
   const [devices, setDevices] = React.useState<PlayerAccountDevice[]>([]);
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
+  const [tournaments, setTournaments] = React.useState<PlayerAccountTournamentParticipation[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshingData, setIsRefreshingData] = React.useState(false);
   const [isResendingVerification, setIsResendingVerification] = React.useState(false);
@@ -52,14 +54,16 @@ export default function AccountPage() {
     setIsRefreshingData(true);
     setDataError(null);
     try {
-      const [dashboardData, devicesData, friendlyMatchesData] = await Promise.all([
+      const [dashboardData, devicesData, friendlyMatchesData, tournamentsData] = await Promise.all([
         playerAccountAuth.dashboard(),
         playerAccountAuth.devices(),
         playerAccountAuth.friendlyMatches(),
+        playerAccountAuth.tournaments(),
       ]);
       setDashboard(dashboardData);
       setDevices(devicesData);
       setFriendlyMatches(friendlyMatchesData);
+      setTournaments(tournamentsData);
     } catch (err) {
       setDataError(err instanceof Error ? err.message : "Private account data could not be loaded.");
     } finally {
@@ -106,6 +110,7 @@ export default function AccountPage() {
 
   const summaryStats = dashboard?.stats || {
     friendlyMatches: friendlyMatches.length,
+    tournaments: tournaments.length,
     activeDevices: devices.filter((device) => device.isActive).length,
     totalDevices: devices.length,
     wins: 0,
@@ -215,6 +220,7 @@ export default function AccountPage() {
               setDashboard(null);
               setDevices([]);
               setFriendlyMatches([]);
+              setTournaments([]);
             }}
             className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
           >
@@ -285,6 +291,10 @@ export default function AccountPage() {
             <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.wins}</div>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Tournaments</div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.tournaments}</div>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Trusted devices</div>
             <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.totalDevices}</div>
           </div>
@@ -350,6 +360,45 @@ export default function AccountPage() {
               </div>
             </div>
           </article>
+        </section>
+
+        <section className="mt-10">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="text-xl font-semibold">Tournaments</h2>
+            <p className="text-sm text-slate-500">Private tournament view for the player linked to this account.</p>
+          </div>
+          <div className="mt-4 space-y-3">
+            {tournaments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
+                {account.player?.documentId
+                  ? "No tournament participations were found for this player yet."
+                  : "Tournament history will appear here after your account is linked to a verified player profile."}
+              </div>
+            ) : (
+              tournaments.map((participation) => (
+                <article key={participation.id} className="rounded-3xl border border-slate-200 bg-white px-5 py-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-base font-medium text-slate-950">
+                        {participation.tournament || "Tournament"}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {[participation.year, participation.gameType, participation.position].filter(Boolean).join(" · ")}
+                      </div>
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      {participation.totalMatches} matches · {participation.wins} wins · {participation.losses} losses
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                    <span className="rounded-full bg-slate-50 px-3 py-1">AVG {participation.avgPerInning.toFixed(3)}</span>
+                    <span className="rounded-full bg-slate-50 px-3 py-1">H.R. {participation.highestRun}</span>
+                    <span className="rounded-full bg-slate-50 px-3 py-1">Position {participation.position}</span>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
         </section>
 
         <section className="mt-10">

@@ -64,11 +64,13 @@ export type PlayerAccountDashboard = {
   account: PlayerAccountSummary | null;
   stats: {
     friendlyMatches: number;
+    tournaments: number;
     activeDevices: number;
     totalDevices: number;
     wins: number;
   };
   latestFriendlyMatches: PlayerAccountFriendlyMatch[];
+  latestTournaments: PlayerAccountTournamentParticipation[];
   devices: PlayerAccountDevice[];
   playerCard: {
     documentId: string | null;
@@ -76,6 +78,40 @@ export type PlayerAccountDashboard = {
     country: string | null;
     photoUrl: string | null;
   } | null;
+};
+
+export type PlayerAccountTournamentMatch = {
+  id: string;
+  num: number | null;
+  date: string | null;
+  opponent: string | null;
+  opponentId: string | null;
+  stage: string | null;
+  result: "win" | "loss" | "draw";
+  scoreFor: number | null;
+  scoreAgainst: number | null;
+  innings: number | null;
+  highRun: number | null;
+};
+
+export type PlayerAccountTournamentParticipation = {
+  id: string;
+  tournament: string | null;
+  year: number | null;
+  gameType: string | null;
+  position: string;
+  finals: Array<{ position: number | null }>;
+  stageResults: Array<{
+    stageTitle: string | null;
+    finalPosition: number | null;
+    groupPosition: number | null;
+  }>;
+  matches: PlayerAccountTournamentMatch[];
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  highestRun: number;
+  avgPerInning: number;
 };
 
 type AuthEnvelope = {
@@ -108,6 +144,11 @@ type DevicesEnvelope = {
 
 type FriendlyMatchesEnvelope = {
   data?: PlayerAccountFriendlyMatch[];
+  error?: string;
+};
+
+type TournamentsEnvelope = {
+  data?: PlayerAccountTournamentParticipation[];
   error?: string;
 };
 
@@ -290,6 +331,19 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as FriendlyMatchesEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(json?.error || "Friendly matches request failed");
+    }
+    return json.data;
+  }
+
+  async tournaments() {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/tournaments", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as TournamentsEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Tournament request failed");
     }
     return json.data;
   }
