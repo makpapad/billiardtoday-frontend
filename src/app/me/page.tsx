@@ -51,7 +51,7 @@ export default function MePage() {
     const cachedPlayer = getTrustedDevicePlayer();
     if (cachedPlayer) setPlayer(cachedPlayer);
     if (!token) {
-      setStatus("Δεν υπάρχει trusted device token σε αυτή τη συσκευή.");
+      setStatus("There is no trusted device token on this device.");
       return;
     }
 
@@ -97,7 +97,7 @@ export default function MePage() {
     });
 
     if (!res.ok) {
-      setStatus("Η απενεργοποίηση της συσκευής απέτυχε.");
+      setStatus("Device revocation failed.");
       return;
     }
 
@@ -112,7 +112,7 @@ export default function MePage() {
         String(device.id) === String(deviceId) ? { ...device, isActive: false } : device,
       ),
     );
-    setStatus("Η συσκευή απενεργοποιήθηκε.");
+    setStatus("The device was revoked.");
   };
 
   const activeDevices = devices.filter((device) => device.isActive).length;
@@ -145,7 +145,7 @@ export default function MePage() {
               }}
               className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-medium sm:w-auto sm:rounded-full sm:px-5 sm:py-2"
             >
-              Αποσύνδεση συσκευής
+              Unlink device
             </button>
           </div>
 
@@ -170,8 +170,8 @@ export default function MePage() {
 
           {player?.isTemporary ? (
             <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Τα στοιχεία σου έχουν καταχωρηθεί προσωρινά. Μπορείς να παίξεις κανονικά, αλλά ο admin πρέπει να
-              εγκρίνει και να συνδέσει το προφίλ σου με κανονικό BT Player.
+              Your details were saved as temporary. You can play normally, but an admin must approve and connect your
+              profile to a regular BT Player.
             </div>
           ) : null}
 
@@ -184,7 +184,7 @@ export default function MePage() {
             <div className="mt-4 space-y-3">
               {matches.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-                  Δεν υπάρχουν ακόμη φιλικά παιχνίδια για αυτή τη συσκευή.
+                  There are no friendly matches for this device yet.
                 </div>
               ) : (
                 matches.map((match) => (
@@ -225,7 +225,7 @@ export default function MePage() {
             <div className="mt-4 space-y-3">
               {devices.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-                  Δεν υπάρχουν άλλες καταχωρημένες συσκευές.
+                  There are no other registered devices.
                 </div>
               ) : (
                 devices.map((device) => (

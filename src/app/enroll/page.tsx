@@ -83,7 +83,7 @@ export default function EnrollPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.data?.deviceToken) {
-        setStatus("Η σύνδεση συσκευής απέτυχε.");
+        setStatus("Device linking failed.");
         return;
       }
       setTrustedDeviceToken(data.data.deviceToken);
@@ -91,7 +91,7 @@ export default function EnrollPage() {
         setTrustedDevicePlayer(data.data.player);
         setTrustedPlayerName(data.data.player.fullName ?? null);
       }
-      setStatus("Η συσκευή συνδέθηκε επιτυχώς.");
+      setStatus("The device was linked successfully.");
       setTimeout(finish, 600);
     } finally {
       setBusy(false);
@@ -115,7 +115,7 @@ export default function EnrollPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.data?.deviceToken) {
-        setStatus("Η προσωρινή εγγραφή απέτυχε.");
+        setStatus("Temporary enrollment failed.");
         return;
       }
       setTrustedDeviceToken(data.data.deviceToken);
@@ -123,7 +123,7 @@ export default function EnrollPage() {
         setTrustedDevicePlayer(data.data.player);
         setTrustedPlayerName(data.data.player.fullName ?? null);
       }
-      setStatus("Η προσωρινή εγγραφή καταχωρήθηκε και μπορείς να παίξεις άμεσα.");
+      setStatus("Temporary enrollment was submitted and you can play now.");
       setTimeout(finish, 700);
     } finally {
       setBusy(false);
@@ -134,14 +134,14 @@ export default function EnrollPage() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#0f172a,#020617_60%)] px-5 py-8 text-white">
       <div className="mx-auto max-w-xl rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur">
         <div className="text-xs uppercase tracking-[0.24em] text-amber-300">Trusted Device Enrollment</div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Σύνδεση συσκευής</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Device Enrollment</h1>
         <p className="mt-3 text-sm text-white/70">
-          Επίλεξε τον σωστό BT Player μία φορά. Από το επόμενο scan η συσκευή θα κάνει instant claim.
+          Select the correct BT Player once. From the next scan, this device will claim instantly.
         </p>
 
         {trustedPlayerName ? (
           <div className="mt-5 rounded-2xl bg-emerald-500/15 px-4 py-3 text-sm">
-            Τρέχουσα σύνδεση: <span className="font-semibold">{trustedPlayerName}</span>
+            Current link: <span className="font-semibold">{trustedPlayerName}</span>
           </div>
         ) : null}
 
@@ -151,7 +151,7 @@ export default function EnrollPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Αναζήτηση BT Player"
+            placeholder="Search BT Player"
             className="flex-1 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 outline-none"
           />
           <button
@@ -159,7 +159,7 @@ export default function EnrollPage() {
             onClick={() => {
               clearTrustedDeviceToken();
               setTrustedPlayerName(null);
-              setStatus("Η συσκευή αποσυνδέθηκε.");
+              setStatus("The device was unlinked.");
             }}
             className="rounded-2xl border border-white/10 px-4 py-3 text-sm"
           >
@@ -188,7 +188,7 @@ export default function EnrollPage() {
             onClick={() => setShowRequestForm((prev) => !prev)}
             className="text-sm text-cyan-300 underline underline-offset-4"
           >
-            Δεν βρίσκω τον παίκτη μου
+            I can&apos;t find my player
           </button>
 
           {showRequestForm ? (
@@ -236,7 +236,7 @@ export default function EnrollPage() {
                 onClick={() => void submitEnrollmentRequest()}
                 className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-medium text-slate-950 disabled:opacity-50"
               >
-                Προσωρινή εγγραφή και play now
+                Temporary enrollment and play now
               </button>
             </div>
           ) : null}
