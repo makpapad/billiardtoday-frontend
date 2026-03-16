@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
+import { useAccountSession } from "@/components/account/AccountSessionProvider";
 import {
   AccountAccessCard,
   PrivateAccountShell,
   formatDateTime,
-  usePlayerAccountSession,
 } from "@/components/account/PrivateAccountShell";
 import { playerAccountAuth, type PlayerAccountFriendlyMatch } from "@/lib/player-account-auth";
 
 export default function AccountFriendlyPage() {
-  const { account, setAccount, isLoading } = usePlayerAccountSession();
+  const { account, setAccount, isLoading } = useAccountSession();
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);

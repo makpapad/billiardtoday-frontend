@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
+import { useAccountSession } from "@/components/account/AccountSessionProvider";
 import {
   AccountAccessCard,
   PrivateAccountShell,
   formatDateTime,
-  usePlayerAccountSession,
 } from "@/components/account/PrivateAccountShell";
 import { playerAccountAuth, type PlayerAccountDevice } from "@/lib/player-account-auth";
 
 export default function AccountDevicesPage() {
-  const { account, setAccount, isLoading } = usePlayerAccountSession();
+  const { account, setAccount, isLoading } = useAccountSession();
   const [devices, setDevices] = React.useState<PlayerAccountDevice[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [revokingId, setRevokingId] = React.useState<string | null>(null);

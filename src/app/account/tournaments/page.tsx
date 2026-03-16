@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { AccountAccessCard, PrivateAccountShell, usePlayerAccountSession } from "@/components/account/PrivateAccountShell";
+import { useAccountSession } from "@/components/account/AccountSessionProvider";
+import { AccountAccessCard, PrivateAccountShell } from "@/components/account/PrivateAccountShell";
 import { playerAccountAuth, type PlayerAccountTournamentParticipation } from "@/lib/player-account-auth";
 
 export default function AccountTournamentsPage() {
-  const { account, setAccount, isLoading } = usePlayerAccountSession();
+  const { account, setAccount, isLoading } = useAccountSession();
   const [tournaments, setTournaments] = React.useState<PlayerAccountTournamentParticipation[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

@@ -56,6 +56,8 @@ export function usePlayerAccountSession() {
   return { account, setAccount, isLoading };
 }
 
+export type PlayerAccountSessionState = ReturnType<typeof usePlayerAccountSession>;
+
 export function AccountAccessCard({
   onAuthenticated,
 }: {

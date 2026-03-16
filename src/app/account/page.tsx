@@ -7,8 +7,8 @@ import {
   PrivateAccountShell,
   formatDateTime,
   statusLabel,
-  usePlayerAccountSession,
 } from "@/components/account/PrivateAccountShell";
+import { useAccountSession } from "@/components/account/AccountSessionProvider";
 import {
   playerAccountAuth,
   type PlayerAccountDashboard,
@@ -18,7 +18,7 @@ import {
 } from "@/lib/player-account-auth";
 
 export default function AccountPage() {
-  const { account, setAccount, isLoading } = usePlayerAccountSession();
+  const { account, setAccount, isLoading } = useAccountSession();
   const [dashboard, setDashboard] = React.useState<PlayerAccountDashboard | null>(null);
   const [devices, setDevices] = React.useState<PlayerAccountDevice[]>([]);
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
