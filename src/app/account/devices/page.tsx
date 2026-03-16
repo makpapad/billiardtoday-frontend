@@ -13,6 +13,8 @@ export default function AccountDevicesPage() {
   const { account, setAccount, isLoading } = usePlayerAccountSession();
   const [devices, setDevices] = React.useState<PlayerAccountDevice[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [revokingId, setRevokingId] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const loadDevices = React.useCallback(async () => {
@@ -32,6 +34,24 @@ export default function AccountDevicesPage() {
     if (!account) return;
     void loadDevices();
   }, [account, loadDevices]);
+
+  const revokeDevice = async (deviceId: number | string) => {
+    const key = String(deviceId);
+    setRevokingId(key);
+    setError(null);
+    setNotice(null);
+    try {
+      const updated = await playerAccountAuth.revokeDevice(deviceId);
+      setDevices((prev) =>
+        prev.map((device) => (String(device.id) === String(updated.id) ? { ...device, ...updated } : device)),
+      );
+      setNotice("The device was revoked.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Device revoke failed.");
+    } finally {
+      setRevokingId(null);
+    }
+  };
 
   if (isLoading) {
     return <main className="min-h-screen px-4 py-8">Loading account...</main>;
@@ -58,6 +78,7 @@ export default function AccountDevicesPage() {
       </div>
 
       {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+      {notice ? <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
 
       <div className="mt-6 space-y-4">
         {devices.length === 0 ? (
@@ -76,13 +97,24 @@ export default function AccountDevicesPage() {
                     {[device.platform, device.browser].filter(Boolean).join(" · ") || "No platform details yet"}
                   </div>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs ${
-                    device.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {device.isActive ? "Active" : "Inactive"}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs ${
+                      device.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {device.isActive ? "Active" : "Inactive"}
+                  </span>
+                  {device.isActive ? (
+                    <button
+                      type="button"
+                      onClick={() => void revokeDevice(String(device.id ?? ""))}
+                      className="rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                    >
+                      {revokingId === String(device.id) ? "Revoking..." : "Revoke"}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
                 <span className="rounded-full bg-slate-50 px-3 py-1">token ****{device.deviceTokenLast4 || "----"}</span>

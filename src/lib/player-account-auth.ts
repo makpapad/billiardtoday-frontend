@@ -142,6 +142,11 @@ type DevicesEnvelope = {
   error?: string;
 };
 
+type DeviceEnvelope = {
+  data?: PlayerAccountDevice;
+  error?: string;
+};
+
 type FriendlyMatchesEnvelope = {
   data?: PlayerAccountFriendlyMatch[];
   error?: string;
@@ -318,6 +323,23 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as DevicesEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(json?.error || "Devices request failed");
+    }
+    return json.data;
+  }
+
+  async revokeDevice(deviceId: number | string) {
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/devices/revoke", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ deviceId }),
+    });
+    const json = (await res.json().catch(() => null)) as DeviceEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(json?.error || "Device revoke failed");
     }
     return json.data;
   }
