@@ -263,7 +263,10 @@ class PlayerAccountAuth {
     });
     const json = (await res.json().catch(() => null)) as AuthEnvelope | null;
     if (!res.ok || !json?.data) {
-      this.logout();
+      if (res.status === 401 || res.status === 403) {
+        this.logout();
+        return null;
+      }
       return null;
     }
     this.account = json.data;
