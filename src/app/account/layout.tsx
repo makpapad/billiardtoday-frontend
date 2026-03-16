@@ -1,5 +1,10 @@
+import { AppSiteShell } from "@/components/site/AppSiteShell";
 import { AccountSessionProvider } from "@/components/account/AccountSessionProvider";
 
-export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  return <AccountSessionProvider>{children}</AccountSessionProvider>;
+export default async function AccountLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AppSiteShell>
+      <AccountSessionProvider>{children}</AccountSessionProvider>
+    </AppSiteShell>
+  );
 }
