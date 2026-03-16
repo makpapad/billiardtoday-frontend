@@ -161,7 +161,7 @@ class PlayerAccountAuth {
 
   async verifyEmail(token: string) {
     const params = new URLSearchParams({ token });
-    const res = await fetch(`/api/player-account/verify-email?${params.toString()}`, {
+    const res = await fetch(`/api/player-account/email-verification?${params.toString()}`, {
       cache: "no-store",
     });
     const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
@@ -181,7 +181,7 @@ class PlayerAccountAuth {
       headers.Authorization = `Bearer ${this.jwt}`;
     }
 
-    const res = await fetch("/api/player-account/verify-email/resend", {
+    const res = await fetch("/api/player-account/email-verification/resend", {
       method: "POST",
       headers,
       body: JSON.stringify({ email: input?.email || null }),
