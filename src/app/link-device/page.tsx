@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getTrustedDevicePlayer, getTrustedDeviceToken } from "@/lib/trusted-device";
 import { playerAccountAuth } from "@/lib/player-account-auth";
 
-export default function AccountLinkDevicePage() {
+export default function LinkDevicePage() {
   const params = useSearchParams();
   const router = useRouter();
   const linkToken = params.get("token") || "";
@@ -29,7 +29,7 @@ export default function AccountLinkDevicePage() {
 
       const deviceToken = getTrustedDeviceToken();
       if (!deviceToken) {
-        const next = `/account/link-device?token=${encodeURIComponent(linkToken)}`;
+        const next = `/link-device?token=${encodeURIComponent(linkToken)}`;
         router.replace(`/enroll?next=${encodeURIComponent(next)}`);
         return;
       }
