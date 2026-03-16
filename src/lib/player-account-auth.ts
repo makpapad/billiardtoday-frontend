@@ -184,9 +184,16 @@ const ACCOUNT_KEY = "player_account_summary";
 class PlayerAccountAuth {
   private jwt: string | null = null;
   private account: PlayerAccountSummary | null = null;
+  private hydrated = false;
 
   constructor() {
+    this.hydrateFromStorage();
+  }
+
+  private hydrateFromStorage() {
+    if (this.hydrated) return;
     if (typeof window === "undefined") return;
+
     this.jwt = localStorage.getItem(TOKEN_KEY);
     const raw = localStorage.getItem(ACCOUNT_KEY);
     if (raw) {
@@ -196,6 +203,7 @@ class PlayerAccountAuth {
         this.account = null;
       }
     }
+    this.hydrated = true;
   }
 
   private persist() {
@@ -208,6 +216,7 @@ class PlayerAccountAuth {
   }
 
   async login(email: string, password: string) {
+    this.hydrateFromStorage();
     const res = await fetch("/account-access/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -229,6 +238,7 @@ class PlayerAccountAuth {
     playerDocumentId?: string | null;
     enrollmentRequestId?: string | null;
   }) {
+    this.hydrateFromStorage();
     const res = await fetch("/account-access/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -245,6 +255,7 @@ class PlayerAccountAuth {
   }
 
   async me() {
+    this.hydrateFromStorage();
     if (!this.jwt) return null;
     const res = await fetch("/account-access/me", {
       headers: { Authorization: `Bearer ${this.jwt}` },
@@ -261,6 +272,7 @@ class PlayerAccountAuth {
   }
 
   async getClaimInfo(claimToken: string) {
+    this.hydrateFromStorage();
     const params = new URLSearchParams({ token: claimToken });
     const res = await fetch(`/account-access/claim?${params.toString()}`, {
       cache: "no-store",
@@ -273,6 +285,7 @@ class PlayerAccountAuth {
   }
 
   async completeClaim(input: { claimToken: string; email: string; password: string }) {
+    this.hydrateFromStorage();
     const res = await fetch("/account-access/claim/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -289,6 +302,7 @@ class PlayerAccountAuth {
   }
 
   async verifyEmail(token: string) {
+    this.hydrateFromStorage();
     const params = new URLSearchParams({ token });
     const res = await fetch(`/account-access/email-check?${params.toString()}`, {
       cache: "no-store",
@@ -305,6 +319,7 @@ class PlayerAccountAuth {
   }
 
   async resendVerificationEmail(input?: { email?: string | null }) {
+    this.hydrateFromStorage();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (this.jwt) {
       headers.Authorization = `Bearer ${this.jwt}`;
@@ -323,6 +338,7 @@ class PlayerAccountAuth {
   }
 
   async dashboard() {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/dashboard", {
       headers: { Authorization: `Bearer ${this.jwt}` },
@@ -336,6 +352,7 @@ class PlayerAccountAuth {
   }
 
   async devices() {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/devices", {
       headers: { Authorization: `Bearer ${this.jwt}` },
@@ -349,6 +366,7 @@ class PlayerAccountAuth {
   }
 
   async revokeDevice(deviceId: number | string) {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/devices/revoke", {
       method: "POST",
@@ -366,6 +384,7 @@ class PlayerAccountAuth {
   }
 
   async friendlyMatches() {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/friendly-matches", {
       headers: { Authorization: `Bearer ${this.jwt}` },
@@ -383,6 +402,7 @@ class PlayerAccountAuth {
     notes?: string | null;
     tags?: string[];
   }) {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/friendly-matches/update", {
       method: "POST",
@@ -400,6 +420,7 @@ class PlayerAccountAuth {
   }
 
   async tournaments() {
+    this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
     const res = await fetch("/account-access/tournaments", {
       headers: { Authorization: `Bearer ${this.jwt}` },
@@ -413,20 +434,24 @@ class PlayerAccountAuth {
   }
 
   logout() {
+    this.hydrateFromStorage();
     this.jwt = null;
     this.account = null;
     this.persist();
   }
 
   isAuthenticated() {
+    this.hydrateFromStorage();
     return Boolean(this.jwt && this.account);
   }
 
   getJwt() {
+    this.hydrateFromStorage();
     return this.jwt;
   }
 
   getAccount() {
+    this.hydrateFromStorage();
     return this.account;
   }
 }
