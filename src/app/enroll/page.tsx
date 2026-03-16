@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   clearTrustedDeviceToken,
   getTrustedDevicePlayer,
@@ -16,7 +16,6 @@ type PlayerRow = {
 };
 
 export default function EnrollPage() {
-  const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/me";
   const nonce = params.get("nonce") || "";
@@ -60,12 +59,15 @@ export default function EnrollPage() {
   }, [query]);
 
   const finish = React.useCallback(() => {
+    if (typeof window === "undefined") return;
     if (nonce && slot && screenId) {
-      router.push(`/claim?nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`);
+      window.location.assign(
+        `/claim?nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`,
+      );
       return;
     }
-    router.push(next);
-  }, [next, nonce, router, screenId, slot]);
+    window.location.assign(next);
+  }, [next, nonce, screenId, slot]);
 
   const registerDevice = async (playerDocumentId: string) => {
     setBusy(true);
@@ -93,6 +95,8 @@ export default function EnrollPage() {
       }
       setStatus("The device was linked successfully.");
       setTimeout(finish, 600);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Device linking failed.");
     } finally {
       setBusy(false);
     }
@@ -125,6 +129,8 @@ export default function EnrollPage() {
       }
       setStatus("Temporary enrollment was submitted and you can play now.");
       setTimeout(finish, 700);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Temporary enrollment failed.");
     } finally {
       setBusy(false);
     }

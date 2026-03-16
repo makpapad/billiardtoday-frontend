@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   getTrustedDevicePlayer,
   getTrustedDeviceToken,
@@ -9,7 +9,6 @@ import {
 
 export default function ClaimPage() {
   const params = useSearchParams();
-  const router = useRouter();
   const nonce = params.get("nonce") || "";
   const slot = params.get("slot") || "p1";
   const screenId = params.get("screenId") || "";
@@ -37,24 +36,35 @@ export default function ClaimPage() {
         return;
       }
       setStatus("The scoreboard link was completed.");
-      setTimeout(() => router.push("/me"), 700);
+      if (typeof window !== "undefined") {
+        window.setTimeout(() => {
+          window.location.assign("/me");
+        }, 700);
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Claim failed.");
     } finally {
       setBusy(false);
     }
-  }, [nonce, router, screenId]);
+  }, [nonce, screenId]);
 
   React.useEffect(() => {
-    const deviceToken = getTrustedDeviceToken();
-    if (nonce && screenId) {
-      if (deviceToken) {
-        void claimWithToken(deviceToken);
-      } else {
-        const next = `/claim?nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`;
-        router.replace(`/enroll?next=${encodeURIComponent("/me")}&nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`);
-        void next;
+    try {
+      const deviceToken = getTrustedDeviceToken();
+      if (nonce && screenId) {
+        if (deviceToken) {
+          void claimWithToken(deviceToken);
+        } else if (typeof window !== "undefined") {
+          window.location.replace(
+            `/enroll?next=${encodeURIComponent("/me")}&nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`,
+          );
+        }
       }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Claim flow failed.");
+      setBusy(false);
     }
-  }, [claimWithToken, nonce, router, screenId, slot]);
+  }, [claimWithToken, nonce, screenId, slot]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1e293b,#020617_60%)] px-5 py-8 text-white">

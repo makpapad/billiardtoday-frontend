@@ -2,13 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { getTrustedDevicePlayer, getTrustedDeviceToken } from "@/lib/trusted-device";
 import { playerAccountAuth } from "@/lib/player-account-auth";
 
 export default function LinkDevicePage() {
   const params = useSearchParams();
-  const router = useRouter();
   const linkToken = params.get("token") || "";
   const [status, setStatus] = React.useState<string>("Checking trusted device...");
   const [trustedName, setTrustedName] = React.useState<string | null>(null);
@@ -29,8 +28,10 @@ export default function LinkDevicePage() {
 
       const deviceToken = getTrustedDeviceToken();
       if (!deviceToken) {
-        const next = `/link-device?token=${encodeURIComponent(linkToken)}`;
-        router.replace(`/enroll?next=${encodeURIComponent(next)}`);
+        if (typeof window !== "undefined") {
+          const next = `/link-device?token=${encodeURIComponent(linkToken)}`;
+          window.location.replace(`/enroll?next=${encodeURIComponent(next)}`);
+        }
         return;
       }
 
@@ -45,7 +46,7 @@ export default function LinkDevicePage() {
     };
 
     void run();
-  }, [linkToken, router]);
+  }, [linkToken]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#0f172a,#020617_60%)] px-5 py-8 text-white">
