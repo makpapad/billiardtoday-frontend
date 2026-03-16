@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   clearTrustedDeviceToken,
   getTrustedDevicePlayer,
+  getTrustedDeviceToken,
   setTrustedDevicePlayer,
   setTrustedDeviceToken,
 } from "@/lib/trusted-device";
@@ -162,12 +163,29 @@ export default function EnrollPage() {
           />
           <button
             type="button"
-            onClick={() => {
-              clearTrustedDeviceToken();
-              setTrustedPlayerName(null);
-              setStatus("The device was unlinked.");
+            onClick={async () => {
+              setBusy(true);
+              setStatus(null);
+              try {
+                const deviceToken = getTrustedDeviceToken();
+                if (deviceToken) {
+                  await fetch("/api/player-devices/revoke-current", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ deviceToken }),
+                  });
+                }
+              } catch {
+                // Local reset still runs even if backend revoke fails.
+              } finally {
+                clearTrustedDeviceToken();
+                setTrustedPlayerName(null);
+                setStatus("The device was fully unlinked.");
+                setBusy(false);
+              }
             }}
-            className="rounded-2xl border border-white/10 px-4 py-3 text-sm"
+            disabled={busy}
+            className="rounded-2xl border border-white/10 px-4 py-3 text-sm disabled:opacity-60"
           >
             Reset
           </button>
