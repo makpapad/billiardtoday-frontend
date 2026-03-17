@@ -16,6 +16,23 @@ export default function ClaimPage() {
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
+  const presentClaimError = React.useCallback((message?: string | null) => {
+    const text = (message || "").trim();
+    if (!text) {
+      return "The scoreboard link could not be completed. Return to the scoreboard and scan a new QR code.";
+    }
+    if (/expired/i.test(text)) {
+      return "This scoreboard link expired. Return to the scoreboard and scan the new QR code.";
+    }
+    if (/not found/i.test(text) || /claim link/i.test(text)) {
+      return "This scoreboard link is no longer valid. Return to the scoreboard and scan a new QR code.";
+    }
+    if (/device not found/i.test(text)) {
+      return "This phone is not linked yet. Continue to enrollment and try again.";
+    }
+    return text;
+  }, []);
+
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.fullName ?? null);
@@ -32,7 +49,7 @@ export default function ClaimPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setStatus(data?.error || "Claim failed.");
+        setStatus(presentClaimError(data?.error || data?.message || "Claim failed."));
         return;
       }
       setStatus("The scoreboard link was completed.");
@@ -42,11 +59,11 @@ export default function ClaimPage() {
         }, 700);
       }
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Claim failed.");
+      setStatus(presentClaimError(err instanceof Error ? err.message : "Claim failed."));
     } finally {
       setBusy(false);
     }
-  }, [nonce, screenId]);
+  }, [nonce, presentClaimError, screenId]);
 
   React.useEffect(() => {
     try {
@@ -61,10 +78,10 @@ export default function ClaimPage() {
         }
       }
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Claim flow failed.");
+      setStatus(presentClaimError(err instanceof Error ? err.message : "Claim flow failed."));
       setBusy(false);
     }
-  }, [claimWithToken, nonce, screenId, slot]);
+  }, [claimWithToken, nonce, presentClaimError, screenId, slot]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1e293b,#020617_60%)] px-5 py-8 text-white">
@@ -90,6 +107,11 @@ export default function ClaimPage() {
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/75">
           {busy ? "Checking trusted device..." : "Waiting for automatic claim or redirect to enrollment."}
         </div>
+        {!busy && status && /scoreboard link|phone is not linked/i.test(status) ? (
+          <div className="mt-4 text-sm text-white/70">
+            If needed, return to the scoreboard, open a fresh QR and scan again.
+          </div>
+        ) : null}
       </div>
     </main>
   );
