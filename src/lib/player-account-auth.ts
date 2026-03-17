@@ -165,6 +165,11 @@ type VerifyEnvelope = {
   error?: string;
 };
 
+type SimpleSuccessEnvelope = {
+  data?: { sent?: boolean } | PlayerAccountSummary;
+  error?: string;
+};
+
 type DashboardEnvelope = {
   data?: PlayerAccountDashboard;
   error?: string;
@@ -384,6 +389,32 @@ class PlayerAccountAuth {
       throw new Error(extractErrorMessage(json, "Verification email resend failed"));
     }
     return true;
+  }
+
+  async forgotPassword(email: string) {
+    const res = await fetch("/account-access/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const json = (await res.json().catch(() => null)) as SimpleSuccessEnvelope | null;
+    if (!res.ok || !(json?.data as { sent?: boolean } | undefined)?.sent) {
+      throw new Error(extractErrorMessage(json, "Password reset request failed"));
+    }
+    return true;
+  }
+
+  async resetPassword(token: string, password: string) {
+    const res = await fetch("/account-access/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    const json = (await res.json().catch(() => null)) as { data?: PlayerAccountSummary; error?: string } | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Password reset failed"));
+    }
+    return json.data;
   }
 
   async dashboard() {

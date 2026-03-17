@@ -14,6 +14,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
       { label: "Clubs", href: "/clubs" },
       { label: "Federations", href: "/federations" },
       { label: "Players", href: "/players" },
+      { label: "Account", href: "/account" },
     ],
   },
 ];

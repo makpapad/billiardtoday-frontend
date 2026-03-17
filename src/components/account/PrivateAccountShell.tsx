@@ -76,6 +76,7 @@ export function AccountAccessCard({
   const [enrollmentPreview, setEnrollmentPreview] = React.useState<PlayerAccountEnrollmentPreview | null>(null);
   const [isCheckingEnrollment, setIsCheckingEnrollment] = React.useState(false);
   const [hasEditedFullName, setHasEditedFullName] = React.useState(false);
+  const [forgotPasswordNotice, setForgotPasswordNotice] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (mode !== "register") return;
@@ -107,6 +108,7 @@ export function AccountAccessCard({
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setForgotPasswordNotice(null);
     try {
       if (mode === "register") {
         if (password.length < 8) {
@@ -173,6 +175,13 @@ export function AccountAccessCard({
             type="password"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
           />
+          {mode === "login" ? (
+            <div className="flex items-center justify-end">
+              <Link href="/account/forgot-password" className="text-sm font-medium text-cyan-700 hover:text-cyan-800">
+                Forgot password?
+              </Link>
+            </div>
+          ) : null}
           {mode === "register" ? (
             <>
               <input
@@ -203,6 +212,9 @@ export function AccountAccessCard({
             </>
           ) : null}
           {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+          {forgotPasswordNotice ? (
+            <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{forgotPasswordNotice}</div>
+          ) : null}
           <button type="submit" className="rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950">
             {mode === "login" ? "Sign in" : "Create account"}
           </button>
