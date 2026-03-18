@@ -112,10 +112,25 @@ export type CmsHeroSection = CmsSectionVisibilityField & CmsSectionAppearanceFie
   eyebrow?: string | null;
   title: string;
   subtitle?: string | null;
+  showcaseLabel?: string | null;
+  showcaseTitle?: string | null;
+  showcaseStatus?: string | null;
+  liveScoreLabel?: string | null;
+  liveScoreValue?: string | null;
+  liveScoreStatus?: string | null;
+  playerALabel?: string | null;
+  playerAName?: string | null;
+  playerBLabel?: string | null;
+  playerBName?: string | null;
+  adTitle?: string | null;
+  adDescription?: string | null;
+  adMetric?: string | null;
   primaryCtaLabel?: string | null;
   primaryCtaUrl?: string | null;
   secondaryCtaLabel?: string | null;
   secondaryCtaUrl?: string | null;
+  stats?: CmsStatsItem[];
+  highlights?: CmsFeatureItem[];
   backgroundImage?: CmsMedia | null;
 };
 
@@ -211,6 +226,7 @@ export type CmsFeatureItem = {
 
 export type CmsFeatureGridSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.feature-grid-section";
+  eyebrow?: string | null;
   title?: string | null;
   subtitle?: string | null;
   items: CmsFeatureItem[];
@@ -224,6 +240,7 @@ export type CmsStatsItem = {
 
 export type CmsStatsSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.stats-section";
+  eyebrow?: string | null;
   title?: string | null;
   subtitle?: string | null;
   layout?: "grid" | "band" | null;
@@ -240,6 +257,7 @@ export type CmsServiceCardItem = {
 
 export type CmsServiceCardsSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.service-cards-section";
+  eyebrow?: string | null;
   title?: string | null;
   subtitle?: string | null;
   items: CmsServiceCardItem[];
@@ -253,6 +271,7 @@ export type CmsLogoStripItem = {
 
 export type CmsLogoStripSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.logo-strip-section";
+  eyebrow?: string | null;
   title?: string | null;
   subtitle?: string | null;
   style?: "grid" | "pills" | null;
@@ -284,6 +303,7 @@ export type CmsPostListItem = {
 
 export type CmsPostsListSection = CmsSectionVisibilityField & CmsSectionAppearanceField & {
   __component: "cms.posts-list-section";
+  eyebrow?: string | null;
   title?: string | null;
   subtitle?: string | null;
   columns?: "2" | "3" | null;
@@ -305,10 +325,13 @@ export type CmsTournamentListSection = CmsSectionVisibilityField & CmsSectionApp
 
 export type CmsCtaBannerSection = CmsSectionVisibilityField & CmsSectionAppearanceField & CmsMarketingLayoutField & {
   __component: "cms.cta-banner";
+  eyebrow?: string | null;
   title: string;
   description?: string | null;
   buttonLabel?: string | null;
   buttonUrl?: string | null;
+  secondaryButtonLabel?: string | null;
+  secondaryButtonUrl?: string | null;
   theme?: "primary" | "secondary" | null;
 };
 

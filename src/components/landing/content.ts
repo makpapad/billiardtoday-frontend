@@ -351,20 +351,43 @@ export const buildLandingPageContent = (
       eyebrow: asText(hero?.eyebrow, defaults.hero.eyebrow),
       title: asText(hero?.title, defaults.hero.title),
       subtitle: asText(hero?.subtitle, defaults.hero.subtitle),
+      showcaseLabel: asText(hero?.showcaseLabel, defaults.hero.showcaseLabel),
+      showcaseTitle: asText(hero?.showcaseTitle, defaults.hero.showcaseTitle),
+      showcaseStatus: asText(hero?.showcaseStatus, defaults.hero.showcaseStatus),
+      liveScoreLabel: asText(hero?.liveScoreLabel, defaults.hero.liveScoreLabel),
+      liveScoreValue: asText(hero?.liveScoreValue, defaults.hero.liveScoreValue),
+      liveScoreStatus: asText(hero?.liveScoreStatus, defaults.hero.liveScoreStatus),
+      playerALabel: asText(hero?.playerALabel, defaults.hero.playerALabel),
+      playerAName: asText(hero?.playerAName, defaults.hero.playerAName),
+      playerBLabel: asText(hero?.playerBLabel, defaults.hero.playerBLabel),
+      playerBName: asText(hero?.playerBName, defaults.hero.playerBName),
+      adTitle: asText(hero?.adTitle, defaults.hero.adTitle),
+      adDescription: asText(hero?.adDescription, defaults.hero.adDescription),
+      adMetric: asText(hero?.adMetric, defaults.hero.adMetric),
       primaryCtaLabel: asText(hero?.primaryCtaLabel, defaults.hero.primaryCtaLabel),
       primaryCtaUrl: asText(hero?.primaryCtaUrl, defaults.hero.primaryCtaUrl),
       secondaryCtaLabel: asText(hero?.secondaryCtaLabel, defaults.hero.secondaryCtaLabel),
       secondaryCtaUrl: asText(hero?.secondaryCtaUrl, defaults.hero.secondaryCtaUrl),
+      stats:
+        hero?.stats?.map((item) => ({
+          value: asText(item.value, ""),
+          label: asText(item.label, ""),
+        })).filter((item) => item.value || item.label) || defaults.hero.stats,
+      highlights:
+        hero?.highlights?.map((item) => ({
+          title: asText(item.title, ""),
+          description: asText(item.description, ""),
+        })).filter((item) => item.title || item.description) || defaults.hero.highlights,
     },
     trustedClubs: {
-      eyebrow: asText(clubs?.title, defaults.trustedClubs.eyebrow),
+      eyebrow: asText(clubs?.eyebrow || clubs?.title, defaults.trustedClubs.eyebrow),
       description: asText(clubs?.subtitle, defaults.trustedClubs.description),
       clubs:
         clubs?.items?.map((item) => asText(item.name, "")).filter(Boolean) ||
         defaults.trustedClubs.clubs,
     },
     features: {
-      eyebrow: defaults.features.eyebrow,
+      eyebrow: asText(features?.eyebrow, defaults.features.eyebrow),
       title: asText(features?.title, defaults.features.title),
       subtitle: asText(features?.subtitle, defaults.features.subtitle),
       items:
@@ -375,7 +398,7 @@ export const buildLandingPageContent = (
         })) || defaults.features.items,
     },
     howItWorks: {
-      eyebrow: defaults.howItWorks.eyebrow,
+      eyebrow: asText(howItWorks?.eyebrow, defaults.howItWorks.eyebrow),
       title: asText(howItWorks?.title, defaults.howItWorks.title),
       subtitle: asText(howItWorks?.subtitle, defaults.howItWorks.subtitle),
       steps:
@@ -386,7 +409,7 @@ export const buildLandingPageContent = (
         })) || defaults.howItWorks.steps,
     },
     screenshots: {
-      eyebrow: defaults.screenshots.eyebrow,
+      eyebrow: asText(screenshots?.eyebrow, defaults.screenshots.eyebrow),
       title: asText(screenshots?.title, defaults.screenshots.title),
       items:
         screenshots?.items?.map((item) => ({
@@ -396,7 +419,7 @@ export const buildLandingPageContent = (
         })) || defaults.screenshots.items,
     },
     benefits: {
-      eyebrow: defaults.benefits.eyebrow,
+      eyebrow: asText(benefits?.eyebrow, defaults.benefits.eyebrow),
       title: asText(benefits?.title, defaults.benefits.title),
       items:
         benefits?.items?.map((item) => ({
@@ -406,13 +429,13 @@ export const buildLandingPageContent = (
         })) || defaults.benefits.items,
     },
     cta: {
-      eyebrow: defaults.cta.eyebrow,
+      eyebrow: asText(cta?.eyebrow, defaults.cta.eyebrow),
       title: asText(cta?.title, defaults.cta.title),
       description: asText(cta?.description, defaults.cta.description),
       primaryCtaLabel: asText(cta?.buttonLabel, defaults.cta.primaryCtaLabel),
       primaryCtaUrl: asText(cta?.buttonUrl, defaults.cta.primaryCtaUrl),
-      secondaryCtaLabel: defaults.cta.secondaryCtaLabel,
-      secondaryCtaUrl: defaults.cta.secondaryCtaUrl,
+      secondaryCtaLabel: asText(cta?.secondaryButtonLabel, defaults.cta.secondaryCtaLabel),
+      secondaryCtaUrl: asText(cta?.secondaryButtonUrl, defaults.cta.secondaryCtaUrl),
     },
     footer: {
       siteName: settings.siteName || defaults.footer.siteName,

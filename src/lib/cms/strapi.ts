@@ -10,6 +10,10 @@ const CMS_ADMIN_URL =
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 const CMS_FETCH_TIMEOUT_MS = Number(process.env.CMS_FETCH_TIMEOUT_MS || 5000);
+const CMS_FETCH_REVALIDATE_SECONDS = Math.max(
+  0,
+  Number(process.env.CMS_FETCH_REVALIDATE_SECONDS || 5),
+);
 
 const isLocalCmsAdminUrl = (url: string) =>
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url.trim());
@@ -32,12 +36,19 @@ const buildHeaders = (): HeadersInit => {
   };
 };
 
-const fetchJson = async (path: string, revalidate = 60) => {
+const isHttpStatusError = (error: unknown, status: number) => {
+  if (!error || typeof error !== "object") return false;
+  const message = String((error as { message?: string }).message || "");
+  return message.includes(`Strapi request failed: ${status} `);
+};
+
+const fetchJson = async (path: string, revalidate = CMS_FETCH_REVALIDATE_SECONDS) => {
   const url = `${STRAPI_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const useNoStore = IS_DEVELOPMENT || revalidate === 0;
   const res = await fetch(url, {
     headers: buildHeaders(),
-    cache: IS_DEVELOPMENT ? "no-store" : undefined,
-    next: IS_DEVELOPMENT ? undefined : { revalidate },
+    cache: useNoStore ? "no-store" : undefined,
+    next: useNoStore ? undefined : { revalidate },
     signal: AbortSignal.timeout(CMS_FETCH_TIMEOUT_MS),
   });
 
@@ -154,12 +165,14 @@ export const getCmsAppearance = async (): Promise<CmsAppearance> => {
 export const getCmsSiteSettings = async (): Promise<CmsSiteSettings> => {
   try {
     const params = new URLSearchParams();
-    params.set("publicationState", "live");
     params.set("populate", "*");
 
-    const json = await fetchJson(`/api/site-setting?${params.toString()}`, 60);
+    const json = await fetchJson(`/api/site-setting?${params.toString()}`);
     return mapCmsSiteSettings(json.data ?? json, STRAPI_URL);
   } catch (error) {
+    if (isHttpStatusError(error, 404)) {
+      return DEFAULT_SITE_SETTINGS;
+    }
     console.warn("Falling back to default CMS site settings.", error);
     return DEFAULT_SITE_SETTINGS;
   }
@@ -170,7 +183,6 @@ export const getCmsPageBySlug = async (slug: string): Promise<CmsPage | null> =>
   if (!cleanSlug) return null;
 
   const params = new URLSearchParams();
-  params.set("publicationState", "live");
   params.set("filters[slug][$eq]", cleanSlug);
   params.set("pagination[page]", "1");
   params.set("pagination[pageSize]", "1");
@@ -179,7 +191,7 @@ export const getCmsPageBySlug = async (slug: string): Promise<CmsPage | null> =>
   params.set("populate[coverImage][populate]", "*");
 
   try {
-    const json = await fetchJson(`/api/pages?${params.toString()}`, 60);
+    const json = await fetchJson(`/api/pages?${params.toString()}`);
     const row = Array.isArray(json?.data) ? json.data[0] : null;
     return row ? mapCmsPage(row, STRAPI_URL) : null;
   } catch (error) {

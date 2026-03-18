@@ -520,10 +520,25 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       eyebrow: readNullableString(source.eyebrow),
       title: readString(source.title),
       subtitle: readNullableString(source.subtitle),
+      showcaseLabel: readNullableString(source.showcaseLabel),
+      showcaseTitle: readNullableString(source.showcaseTitle),
+      showcaseStatus: readNullableString(source.showcaseStatus),
+      liveScoreLabel: readNullableString(source.liveScoreLabel),
+      liveScoreValue: readNullableString(source.liveScoreValue),
+      liveScoreStatus: readNullableString(source.liveScoreStatus),
+      playerALabel: readNullableString(source.playerALabel),
+      playerAName: readNullableString(source.playerAName),
+      playerBLabel: readNullableString(source.playerBLabel),
+      playerBName: readNullableString(source.playerBName),
+      adTitle: readNullableString(source.adTitle),
+      adDescription: readNullableString(source.adDescription),
+      adMetric: readNullableString(source.adMetric),
       primaryCtaLabel: readNullableString(source.primaryCtaLabel),
       primaryCtaUrl: readNullableString(source.primaryCtaUrl),
       secondaryCtaLabel: readNullableString(source.secondaryCtaLabel),
       secondaryCtaUrl: readNullableString(source.secondaryCtaUrl),
+      stats: mapStatsItems(source.stats),
+      highlights: mapFeatureItems(source.highlights),
       ...mapMarketingLayout(source),
       ...sectionAppearance,
     };
@@ -676,6 +691,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.feature-grid-section") {
     const section: CmsFeatureGridSection = {
       __component: "cms.feature-grid-section",
+      eyebrow: readNullableString(source.eyebrow),
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       ...mapMarketingLayout(source),
@@ -688,6 +704,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.stats-section") {
     const section: CmsStatsSection = {
       __component: "cms.stats-section",
+      eyebrow: readNullableString(source.eyebrow),
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       layout: readString(source.layout) === "band" ? "band" : "grid",
@@ -700,6 +717,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.service-cards-section") {
     const section: CmsServiceCardsSection = {
       __component: "cms.service-cards-section",
+      eyebrow: readNullableString(source.eyebrow),
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       ...sectionAppearance,
@@ -711,6 +729,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.logo-strip-section") {
     const section: CmsLogoStripSection = {
       __component: "cms.logo-strip-section",
+      eyebrow: readNullableString(source.eyebrow),
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       style: readString(source.style) === "pills" ? "pills" : "grid",
@@ -735,6 +754,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.posts-list-section") {
     const section: CmsPostsListSection = {
       __component: "cms.posts-list-section",
+      eyebrow: readNullableString(source.eyebrow),
       title: readNullableString(source.title),
       subtitle: readNullableString(source.subtitle),
       columns: readString(source.columns) === "2" ? "2" : "3",
@@ -769,10 +789,13 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   if (component === "cms.cta-banner") {
     const section: CmsCtaBannerSection = {
       __component: "cms.cta-banner",
+      eyebrow: readNullableString(source.eyebrow),
       title: readString(source.title),
       description: readNullableString(source.description),
       buttonLabel: readNullableString(source.buttonLabel),
       buttonUrl: readNullableString(source.buttonUrl),
+      secondaryButtonLabel: readNullableString(source.secondaryButtonLabel),
+      secondaryButtonUrl: readNullableString(source.secondaryButtonUrl),
       theme:
         readString(source.theme) === "secondary" ? "secondary" : "primary",
       ...mapMarketingLayout(source),
