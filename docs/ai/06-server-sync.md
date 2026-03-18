@@ -2,7 +2,7 @@
 
 ## Στόχος
 
-Να τραβάς τις τελευταίες αλλαγές από το GitHub στον νέο server `138.201.29.162` και να γίνεται σωστό deploy χωρίς να πειράζεις χειροκίνητα τα production env files.
+Να τραβάμε τις τελευταίες αλλαγές από το GitHub στον production server `138.201.29.162` και να γίνεται σωστό deploy χωρίς να πειράζουμε χειροκίνητα τα production env files.
 
 ## SSH Στον Server
 
@@ -12,15 +12,31 @@
 plink -i D:\.ssh\priv.ppk root@138.201.29.162
 ```
 
-ή με κανονικό OpenSSH αν το χρησιμοποιείς:
+ή με OpenSSH:
 
 ```powershell
 ssh root@138.201.29.162
 ```
 
+## Σημερινή Παρατήρηση
+
+Τα Node apps δεν τρέχουν πλέον ως `root`.
+
+Τρέχουν μέσω PM2 του user:
+
+```text
+billiardtoday_srv
+```
+
+Άρα:
+
+- δεν κάνουμε manual deploy με root-owned PM2
+- δεν σηκώνουμε Node apps ως `root`
+- τα restarts γίνονται μέσω του PM2 environment του `billiardtoday_srv`
+
 ## Git Working Copies Στον Server
 
-Τα repos υπάρχουν εδώ:
+Τα server-side repos βρίσκονται εδώ:
 
 ```text
 /srv/git/billiardtoday/strapi
@@ -29,9 +45,21 @@ ssh root@138.201.29.162
 /srv/git/billiardtoday/scoreboard
 ```
 
-## Γρήγορος Τρόπος
+## Live Paths
 
-Ο σωστός τρόπος deploy είναι με το helper command:
+Τα production paths είναι:
+
+```text
+/var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
+/var/www/vhosts/billiardtoday.com/httpdocs
+/var/www/vhosts/billiardtoday.com/admin.billiardtoday.com/httpdocs
+/var/www/vhosts/billiardtoday.com/scoreboard.billiardtoday.com/httpdocs
+/var/www/vhosts/billiardtoday.com/ws.billiardtoday.com/httpdocs
+```
+
+## Ο Σωστός Τρόπος Deploy
+
+Ο βασικός τρόπος deploy παραμένει με το helper:
 
 ```bash
 bt-sync frontend
@@ -44,11 +72,11 @@ bt-sync all
 
 ## Τι Κάνει Το `bt-sync`
 
-- κάνει `git pull` από `origin/main`
+- κάνει `git pull` από `origin/main` στο σωστό server-side repo
 - περνάει τον κώδικα στο σωστό live path
-- τρέχει `npm ci`
+- τρέχει `npm ci` όπου χρειάζεται
 - κάνει build όπου χρειάζεται
-- κάνει `pm2 restart`
+- κάνει restart το αντίστοιχο PM2 app
 - κρατάει τα production `.env` του server
 
 ## Mapping
@@ -60,7 +88,7 @@ bt-sync all
 - `bt-sync ws` -> `ws.billiardtoday.com`
 - `bt-sync all` -> όλα μαζί
 
-## Συνήθης Ροή
+## Κανονική Ροή Deploy
 
 1. Κάνεις local αλλαγές.
 2. Κάνεις `commit` και `push` στο GitHub.
@@ -68,66 +96,71 @@ bt-sync all
 4. Τρέχεις το αντίστοιχο `bt-sync`.
 5. Κάνεις health check.
 
-Παράδειγμα για frontend:
+Παράδειγμα:
 
 ```bash
 bt-sync frontend
 curl -I http://127.0.0.1:3022/
-pm2 status billiardtoday-frontend --no-color
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status billiardtoday-frontend --no-color'
 ```
 
-Παράδειγμα για Strapi:
+## Health Checks Ανά Service
+
+### Frontend
+
+```bash
+bt-sync frontend
+curl -I http://127.0.0.1:3022/
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status billiardtoday-frontend --no-color'
+```
+
+### Strapi
 
 ```bash
 bt-sync app
 curl -I http://127.0.0.1:1337/admin/
-pm2 status strapi-prod --no-color
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status strapi-prod --no-color'
 ```
 
-Παράδειγμα για admin:
+### Admin
 
 ```bash
 bt-sync admin
 curl -I http://127.0.0.1:3002/
-pm2 status billiardtoday-admin --no-color
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status billiardtoday-admin --no-color'
 ```
 
-Παράδειγμα για scoreboard:
+### Scoreboard
 
 ```bash
 bt-sync scoreboard
-curl -I http://127.0.0.1:3001/
-pm2 status scoreboard --no-color
+curl -I http://127.0.0.1:3001/scoreboard
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status scoreboard --no-color'
 ```
 
-Παράδειγμα για ws:
+### WS
 
 ```bash
 bt-sync ws
 curl -I http://127.0.0.1:3010/presence
-pm2 status billiardtoday-ws --no-color
+su -s /bin/bash - billiardtoday_srv -c 'pm2 status billiardtoday-ws --no-color'
 ```
 
 ## Αν Θες Να Δεις Το Repo Πριν Το Deploy
 
-Παράδειγμα:
+Παράδειγμα για frontend:
 
 ```bash
 cd /srv/git/billiardtoday/frontend
 git status
 git log --oneline -5
 git pull origin main
-```
-
-Μετά πάλι κάνεις:
-
-```bash
 bt-sync frontend
 ```
 
 ## PM2 Processes
 
-Τα live processes είναι:
+Τα live PM2 apps είναι:
 
 ```text
 billiardtoday-frontend
@@ -140,21 +173,77 @@ billiardtoday-ws
 Γενικός έλεγχος:
 
 ```bash
-pm2 list
+su -s /bin/bash - billiardtoday_srv -c 'pm2 list'
+```
+
+## Manual Deploy Χωρίς `bt-sync`
+
+Μόνο αν χρειάζεται ειδικό fix.
+
+### Frontend
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/httpdocs
+npm run build
+su -s /bin/bash - billiardtoday_srv -c 'pm2 restart billiardtoday-frontend'
+```
+
+### Admin
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/admin.billiardtoday.com/httpdocs
+rm -rf .next .next-local
+su -s /bin/bash - billiardtoday_srv -c 'cd /var/www/vhosts/billiardtoday.com/admin.billiardtoday.com/httpdocs && npm run build && pm2 restart billiardtoday-admin'
+```
+
+### Strapi
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
+su -s /bin/bash - billiardtoday_srv -c 'pm2 restart strapi-prod'
+```
+
+### Scoreboard
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/scoreboard.billiardtoday.com/httpdocs
+su -s /bin/bash - billiardtoday_srv -c 'pm2 restart scoreboard'
+```
+
+### WS
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/ws.billiardtoday.com/httpdocs
+su -s /bin/bash - billiardtoday_srv -c 'pm2 restart billiardtoday-ws'
+```
+
+## CMS / Homepage Deploy Σημείωση
+
+Για αλλαγές που αφορούν homepage CMS flow, συνήθως αγγίζονται 3 repos:
+
+- `1-billiards-strapi`
+- `2-billiardtoday-admin`
+- `4-billiardtoday-frontend`
+
+Συνήθης σειρά:
+
+1. `commit` / `push` και στα 3 repos
+2. `bt-sync app`
+3. `bt-sync admin`
+4. `bt-sync frontend`
+5. αν χρειάζεται, run homepage seed στο Strapi
+
+Παράδειγμα homepage seed:
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
+node scripts/restore-cms-home.js
 ```
 
 ## Σημαντικό
 
-- Μην κάνεις deploy με σκέτο `git pull` μέσα στα `httpdocs`.
-- Μην πειράζεις τα production env files από τα repos.
-- Το `bt-sync` κρατάει τον server-side production config χωριστά από το source code.
-
-
-## Για αρχείο host
-138.201.29.162 billiardtoday.com
-138.201.29.162 app.billiardtoday.com
-138.201.29.162 admin.billiardtoday.com
-138.201.29.162 scoreboard.billiardtoday.com
-138.201.29.162 ws.billiardtoday.com
-138.201.29.162 updates.billiardtoday.com
-138.201.29.162 pgadmin.billiardtoday.com
+- Δεν κάνουμε deploy με σκέτο `git pull` μέσα στα `httpdocs`.
+- Δεν πειράζουμε production `.env` αρχεία από τα repos.
+- Δεν τρέχουμε Node apps ως `root`.
+- Για PM2 χρησιμοποιούμε τον user `billiardtoday_srv`.
+- Αν υπάρχει ύποπτο build cache στο admin, καθαρίζουμε πρώτα `.next` και `.next-local`.
