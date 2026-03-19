@@ -8,6 +8,17 @@ import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
+import type { EventApiResponse, GroupStanding, NormalizedEventStage, StageMatchGroup } from "@/app/tournaments/events/types";
+import {
+  buildGroupStandings,
+  buildStageMatchGroups,
+  normalizeEntity,
+  normalizeGroup,
+  normalizeResult,
+  toNumber,
+  toRelationArray,
+} from "@/app/tournaments/events/utils";
+import GroupStandingsTable from "@/app/tournaments/events/GroupStandingsTable";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -56,6 +67,11 @@ type WsTournamentPayload = {
     avgFormatted?: string | null;
     accPercent?: number | null;
   }>;
+};
+
+type GroupPopoverData = {
+  title: string;
+  standings: GroupStanding[];
 };
 
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
@@ -139,9 +155,38 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [liveError, setLiveError] = useState<string | null>(null);
   const [eventLiveSessions, setEventLiveSessions] = useState<EventLiveSession[]>([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
+  const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
+  const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchEventData = async () => {
+      try {
+        const response = await fetch(`/api/events/${encodeURIComponent(summary.documentId)}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("Failed to load event data.");
+        const payload = (await response.json().catch(() => null)) as EventApiResponse | null;
+        if (!cancelled) {
+          setEventData(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          setEventData(null);
+        }
+      }
+    };
+
+    void fetchEventData();
+    return () => {
+      cancelled = true;
+    };
+  }, [summary.documentId]);
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -429,6 +474,56 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     () => mergeLiveSessions(wsLiveSessions, eventLiveSessions),
     [eventLiveSessions, wsLiveSessions],
   );
+
+  const eventStages = useMemo<NormalizedEventStage[]>(() => {
+    if (!eventData?.data?.event_stages) return [];
+
+    const stagesArray = toRelationArray(eventData.data.event_stages);
+
+    return stagesArray
+      .map((stage, index) => {
+        const normalizedStage = normalizeEntity<any>(stage, `stage-${index}`);
+        const groupsRaw = toRelationArray(normalizedStage.groups);
+        const resultsRaw = toRelationArray(normalizedStage.results);
+
+        return {
+          id: normalizedStage.id,
+          documentId: normalizedStage.documentId,
+          title: typeof normalizedStage.title === "string" ? normalizedStage.title.trim() : "",
+          startDate: typeof normalizedStage.start_date === "string" ? normalizedStage.start_date : null,
+          endDate: typeof normalizedStage.end_date === "string" ? normalizedStage.end_date : null,
+          order: toNumber(normalizedStage.order),
+          isFinal: Boolean(normalizedStage.is_final),
+          stageType: typeof normalizedStage.stage_type === "string" ? normalizedStage.stage_type.trim() : null,
+          groups: groupsRaw
+            .map((group, groupIndex) => normalizeGroup(group, `${normalizedStage.id}-group-${groupIndex}`))
+            .sort((a, b) => {
+              if (a.number !== null && b.number !== null) return a.number - b.number;
+              if (a.number !== null) return -1;
+              if (b.number !== null) return 1;
+              return a.id.localeCompare(b.id);
+            }),
+          results: resultsRaw.map((result, resultIndex) =>
+            normalizeResult(result, `${normalizedStage.id}-result-${resultIndex}`),
+          ),
+        } satisfies NormalizedEventStage;
+      })
+      .sort((a, b) => {
+        if (a.order !== null && b.order !== null) return a.order - b.order;
+        if (a.order !== null) return -1;
+        if (b.order !== null) return 1;
+        return a.id.localeCompare(b.id);
+      });
+  }, [eventData]);
+
+  const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
+    () =>
+      eventStages.reduce<Record<string, StageMatchGroup[]>>((acc, stage) => {
+        acc[stage.documentId] = buildStageMatchGroups(stage.groups);
+        return acc;
+      }, {}),
+    [eventStages],
+  );
   const liveCards = useMemo(
     () =>
       mergedEventLiveSessions.filter(
@@ -439,6 +534,68 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       ),
     [mergedEventLiveSessions],
   );
+
+  const groupPopoverBySessionId = useMemo(() => {
+    const result = new Map<string, GroupPopoverData>();
+
+    const findByNames = (session: EventLiveSession) => {
+      const pairNameKey = [
+        normalizeNameForMatch(session.player1Name),
+        normalizeNameForMatch(session.player2Name),
+      ]
+        .filter(Boolean)
+        .sort()
+        .join("::");
+
+      for (const stage of eventStages) {
+        const groupedMatches = stageMatchGroups[stage.documentId] ?? [];
+        for (const group of groupedMatches) {
+          const hit = group.matches.find((match) => {
+            const key = [
+              normalizeNameForMatch(match.top.player.name || match.top.player.nativeName),
+              normalizeNameForMatch(match.bottom.player.name || match.bottom.player.nativeName),
+            ]
+              .filter(Boolean)
+              .sort()
+              .join("::");
+            return key && key === pairNameKey;
+          });
+          if (hit) {
+            return {
+              title: `Group ${group.number ?? group.key}`,
+              standings: buildGroupStandings(group.matches),
+            };
+          }
+        }
+      }
+
+      return null;
+    };
+
+    liveCards.forEach((session) => {
+      let popover: GroupPopoverData | null = null;
+      if (session.eventStageId && session.groupNumber != null) {
+        const groupedMatches = stageMatchGroups[session.eventStageId] ?? [];
+        const group = groupedMatches.find((entry) => entry.number === session.groupNumber) ?? null;
+        if (group) {
+          popover = {
+            title: `Group ${group.number ?? group.key}`,
+            standings: buildGroupStandings(group.matches),
+          };
+        }
+      }
+
+      if (!popover) {
+        popover = findByNames(session);
+      }
+
+      if (popover) {
+        result.set(session.sessionId, popover);
+      }
+    });
+
+    return result;
+  }, [eventStages, liveCards, stageMatchGroups]);
 
   useEffect(() => {
     const valid = new Set(liveCards.map((item) => item.sessionId));
@@ -493,6 +650,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     });
   };
 
+  const toggleGroupPopover = (sessionId: string) => {
+    setOpenGroupSessionId((prev) => (prev === sessionId ? null : sessionId));
+  };
+
   const mainContent = activeView === "tournament" ? (
     <TournamentEventsContent
       key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
@@ -532,7 +693,43 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               key={session.sessionId}
               id={`tournament-live-session-${session.sessionId}`}
               className={highlightedLiveSessionId === session.sessionId ? "rounded-[30px]" : undefined}
+              onMouseEnter={() => setHoveredGroupSessionId(session.sessionId)}
+              onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
             >
+              {groupPopoverBySessionId.has(session.sessionId) ? (
+                <div className="mb-2 flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroupPopover(session.sessionId)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                  >
+                    Group
+                  </button>
+                </div>
+              ) : null}
+              {groupPopoverBySessionId.has(session.sessionId) &&
+              (hoveredGroupSessionId === session.sessionId || openGroupSessionId === session.sessionId) ? (
+                <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_14px_40px_rgba(15,23,42,0.12)]">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">
+                      {groupPopoverBySessionId.get(session.sessionId)?.title}
+                    </div>
+                    {openGroupSessionId === session.sessionId ? (
+                      <button
+                        type="button"
+                        onClick={() => setOpenGroupSessionId(null)}
+                        className="text-xs font-medium text-slate-500 hover:text-slate-800"
+                      >
+                        Close
+                      </button>
+                    ) : null}
+                  </div>
+                  <GroupStandingsTable
+                    standings={groupPopoverBySessionId.get(session.sessionId)?.standings ?? []}
+                    embedded={embedded}
+                  />
+                </div>
+              ) : null}
               <LiveScoreBoardCard
                 sessionId={session.sessionId}
                 clubName={session.clubName}
