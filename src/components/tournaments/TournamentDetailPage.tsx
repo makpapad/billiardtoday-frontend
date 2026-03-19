@@ -286,6 +286,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
+  const lastModalCloseAtRef = useRef(0);
   const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
   const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
   const tournamentScrollYRef = useRef<number | null>(null);
@@ -795,6 +796,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   };
 
   const handleCardClick = (session: EventLiveSession) => {
+    if (Date.now() - lastModalCloseAtRef.current < 250) return;
     setHighlightItem({
       id: session.id,
       sessionId: session.sessionId,
@@ -810,6 +812,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const toggleGroupPopover = (sessionId: string) => {
     setOpenGroupSessionId((prev) => (prev === sessionId ? null : sessionId));
+  };
+
+  const handleHighlightClose = () => {
+    lastModalCloseAtRef.current = Date.now();
+    setHighlightItem(null);
   };
 
   const mainContent = activeView === "tournament" ? (
@@ -929,7 +936,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           )})}
         </div>
       )}
-      <LiveStatsHighlightModal item={highlightItem} onClose={() => setHighlightItem(null)} />
+      <LiveStatsHighlightModal item={highlightItem} onClose={handleHighlightClose} />
     </section>
   );
 
