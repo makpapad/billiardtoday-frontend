@@ -7,12 +7,15 @@ function loadEnvFile() {
   if (cachedEnv) return cachedEnv;
 
   const out: Record<string, string> = {};
-  const candidates = [
-    path.join(process.cwd(), ".env.production.local"),
-    path.join(process.cwd(), ".env.local"),
-    path.join(process.cwd(), ".env.production"),
-    path.join(process.cwd(), ".env"),
-  ];
+  const roots = Array.from(
+    new Set([process.cwd(), path.join(process.cwd(), "httpdocs")]),
+  );
+  const candidates = roots.flatMap((rootPath) => [
+    path.join(rootPath, ".env.production.local"),
+    path.join(rootPath, ".env.local"),
+    path.join(rootPath, ".env.production"),
+    path.join(rootPath, ".env"),
+  ]);
 
   for (const filePath of candidates) {
     if (!fs.existsSync(filePath)) continue;
@@ -47,4 +50,3 @@ export function getServerEnv(key: string): string | undefined {
   const fileValue = loadEnvFile()[key];
   return fileValue && fileValue.trim() ? fileValue.trim() : undefined;
 }
-
