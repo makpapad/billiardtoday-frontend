@@ -357,16 +357,31 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       requestAnimationFrame(restoreScroll);
     });
     const timeoutOne = window.setTimeout(restoreScroll, 80);
-    const timeoutTwo = window.setTimeout(() => {
+    const timeoutTwo = window.setTimeout(restoreScroll, 180);
+    const timeoutThree = window.setTimeout(restoreScroll, 320);
+    let attempts = 0;
+    const interval = window.setInterval(() => {
+      restoreScroll();
+      attempts += 1;
+      if (attempts >= 8) {
+        window.clearInterval(interval);
+        pendingTournamentRestoreYRef.current = null;
+      }
+    }, 120);
+    const timeoutFinal = window.setTimeout(() => {
       restoreScroll();
       pendingTournamentRestoreYRef.current = null;
-    }, 180);
+      window.clearInterval(interval);
+    }, 1000);
 
     return () => {
       cancelAnimationFrame(frameOne);
       cancelAnimationFrame(frameTwo);
       window.clearTimeout(timeoutOne);
       window.clearTimeout(timeoutTwo);
+      window.clearTimeout(timeoutThree);
+      window.clearTimeout(timeoutFinal);
+      window.clearInterval(interval);
     };
   }, [activeView, eventData, selectedStageDocumentId]);
 
@@ -905,6 +920,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   };
 
   const switchToTournament = () => {
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    if (tournamentScrollYRef.current !== null) {
+      pendingTournamentRestoreYRef.current = tournamentScrollYRef.current;
+    }
     setActiveView("tournament");
   };
 
