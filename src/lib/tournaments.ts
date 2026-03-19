@@ -197,6 +197,7 @@ const fetchTournamentEventSummaryBySlug = async (
   const params = new URLSearchParams();
   params.set("fields[0]", "title");
   params.set("fields[1]", "documentId");
+  params.set("fields[2]", "season");
   params.set("pagination[pageSize]", "500");
   params.set("sort[0]", "updatedAt:desc");
 
@@ -247,7 +248,10 @@ export const resolveTournamentEventSummary = async (
     return fetchTournamentEventSummaryById(extractTournamentDocumentId(cleanValue));
   }
 
-  return fetchTournamentEventSummaryBySlug(cleanValue);
+  const bySlug = await fetchTournamentEventSummaryBySlug(cleanValue);
+  if (bySlug) return bySlug;
+
+  return fetchTournamentEventSummaryById(cleanValue);
 };
 
 export const getTournamentEventSummary = async (
