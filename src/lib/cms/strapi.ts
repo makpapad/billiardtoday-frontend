@@ -1,18 +1,19 @@
 import { mapCmsAppearance, mapCmsPage, mapCmsSiteSettings } from "@/lib/cms/mappers";
 import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
+import { getServerEnv } from "@/lib/serverEnv";
 
 const STRAPI_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
+  getServerEnv("NEXT_PUBLIC_STRAPI_URL") || "https://app.billiardtoday.com";
 const CMS_ADMIN_URL =
-  process.env.CMS_ADMIN_URL ||
-  process.env.NEXT_PUBLIC_CMS_ADMIN_URL ||
+  getServerEnv("CMS_ADMIN_URL") ||
+  getServerEnv("NEXT_PUBLIC_CMS_ADMIN_URL") ||
   "";
-const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
-const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
-const CMS_FETCH_TIMEOUT_MS = Number(process.env.CMS_FETCH_TIMEOUT_MS || 5000);
+const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
+const IS_DEVELOPMENT = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) !== "production";
+const CMS_FETCH_TIMEOUT_MS = Number(getServerEnv("CMS_FETCH_TIMEOUT_MS") || 5000);
 const CMS_FETCH_REVALIDATE_SECONDS = Math.max(
   0,
-  Number(process.env.CMS_FETCH_REVALIDATE_SECONDS || 5),
+  Number(getServerEnv("CMS_FETCH_REVALIDATE_SECONDS") || 5),
 );
 
 const isLocalCmsAdminUrl = (url: string) =>

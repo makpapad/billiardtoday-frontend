@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import { getServerEnv } from "@/lib/serverEnv";
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+const STRAPI_URL = getServerEnv("NEXT_PUBLIC_STRAPI_URL") || "http://localhost:1337";
+const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
 
 type Club = {
   id: number;
