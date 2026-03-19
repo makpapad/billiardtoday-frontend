@@ -2,18 +2,17 @@ import { mapCmsAppearance, mapCmsPage, mapCmsSiteSettings } from "@/lib/cms/mapp
 import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
 import { getServerEnv } from "@/lib/serverEnv";
 
+const IS_PRODUCTION = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production";
 const STRAPI_URL =
   getServerEnv("STRAPI_API_URL") ||
-  getServerEnv("NEXT_PUBLIC_STRAPI_URL") ||
-  ((getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production"
-    ? "http://127.0.0.1:1337"
-    : "https://app.billiardtoday.com");
+  (IS_PRODUCTION ? "http://127.0.0.1:1337" : getServerEnv("NEXT_PUBLIC_STRAPI_URL")) ||
+  "https://app.billiardtoday.com";
 const CMS_ADMIN_URL =
   getServerEnv("CMS_ADMIN_URL") ||
   getServerEnv("NEXT_PUBLIC_CMS_ADMIN_URL") ||
   "";
 const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
-const IS_DEVELOPMENT = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) !== "production";
+const IS_DEVELOPMENT = !IS_PRODUCTION;
 const CMS_FETCH_TIMEOUT_MS = Number(getServerEnv("CMS_FETCH_TIMEOUT_MS") || 5000);
 const CMS_FETCH_REVALIDATE_SECONDS = Math.max(
   0,
