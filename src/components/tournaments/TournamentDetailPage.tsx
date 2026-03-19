@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import { LiveStatsHighlightModal, type LiveScoreItem } from "@/components/live/LiveClubView";
 import type { LiveSessionItem } from "@/components/live/types";
@@ -161,6 +161,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
   const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
   const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
+  const tournamentScrollYRef = useRef<number | null>(null);
+  const previousViewRef = useRef<"tournament" | "live">("tournament");
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +189,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       cancelled = true;
     };
   }, [summary.documentId]);
+
+  useEffect(() => {
+    if (previousViewRef.current === "tournament" && activeView === "live") {
+      tournamentScrollYRef.current = window.scrollY;
+    }
+
+    if (previousViewRef.current === "live" && activeView === "tournament" && tournamentScrollYRef.current !== null) {
+      const restoreY = tournamentScrollYRef.current;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: restoreY, behavior: "auto" });
+      });
+    }
+
+    previousViewRef.current = activeView;
+  }, [activeView]);
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -520,6 +537,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     () =>
       eventStages.reduce<Record<string, StageMatchGroup[]>>((acc, stage) => {
         acc[stage.documentId] = buildStageMatchGroups(stage.groups);
+        acc[stage.id] = acc[stage.documentId];
         return acc;
       }, {}),
     [eventStages],
@@ -538,27 +556,32 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const groupPopoverBySessionId = useMemo(() => {
     const result = new Map<string, GroupPopoverData>();
 
+    const buildNameKeys = (a: string | null | undefined, b: string | null | undefined) => {
+      const left = normalizeNameForMatch(a);
+      const right = normalizeNameForMatch(b);
+      if (!left || !right) return [];
+      return [[left, right].sort().join("::")];
+    };
+
     const findByNames = (session: EventLiveSession) => {
-      const pairNameKey = [
-        normalizeNameForMatch(session.player1Name),
-        normalizeNameForMatch(session.player2Name),
-      ]
-        .filter(Boolean)
-        .sort()
-        .join("::");
+      const pairNameKeys = new Set<string>([
+        ...buildNameKeys(session.player1Name, session.player2Name),
+        ...buildNameKeys(session.state?.playerAName, session.state?.playerBName),
+      ]);
 
       for (const stage of eventStages) {
         const groupedMatches = stageMatchGroups[stage.documentId] ?? [];
         for (const group of groupedMatches) {
           const hit = group.matches.find((match) => {
-            const key = [
-              normalizeNameForMatch(match.top.player.name || match.top.player.nativeName),
-              normalizeNameForMatch(match.bottom.player.name || match.bottom.player.nativeName),
-            ]
-              .filter(Boolean)
-              .sort()
-              .join("::");
-            return key && key === pairNameKey;
+            const candidateKeys = new Set<string>([
+              ...buildNameKeys(match.top.player.name, match.bottom.player.name),
+              ...buildNameKeys(match.top.player.nativeName, match.bottom.player.nativeName),
+              ...buildNameKeys(match.top.player.name || match.top.player.nativeName, match.bottom.player.name || match.bottom.player.nativeName),
+            ]);
+            for (const key of candidateKeys) {
+              if (pairNameKeys.has(key)) return true;
+            }
+            return false;
           });
           if (hit) {
             return {
