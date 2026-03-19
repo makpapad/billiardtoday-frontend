@@ -1,11 +1,33 @@
+'use client';
+
 import Link from "next/link";
-import { TournamentEventsContent } from "@/app/tournaments/events/page";
+import { useEffect, useMemo, useState } from "react";
+import LiveScoreDisplay from "@/components/LiveScoreDisplay";
+import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
 
 type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
+};
+
+type TournamentLiveScreen = {
+  screenId: string;
+  screenName: string;
+  isActive: boolean;
+  tournamentId: string;
+  lastUpdate?: string;
+};
+
+type TournamentLiveScreensResponse = {
+  success: boolean;
+  data: Array<{
+    tournamentId: string;
+    tournamentTitle: string;
+    liveScreens: TournamentLiveScreen[];
+  }>;
+  error?: string;
 };
 
 const formatDate = (value: string | null) => {
@@ -33,6 +55,64 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const embedPageHref = buildTournamentHref(summary.documentId, summary.title, true);
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
+  const [activeView, setActiveView] = useState<"tournament" | "live">("tournament");
+  const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<string | null>(
+    summary.stages[0]?.documentId ?? null,
+  );
+  const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
+  const [isLiveLoading, setIsLiveLoading] = useState(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeView !== "live") return;
+
+    let cancelled = false;
+
+    const fetchLiveScreens = async () => {
+      try {
+        setIsLiveLoading(true);
+        setLiveError(null);
+        const response = await fetch("/api/admin/tournament/live-screens", { cache: "no-store" });
+        const payload = (await response.json().catch(() => null)) as TournamentLiveScreensResponse | null;
+
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || "Failed to load live tournament screens.");
+        }
+
+        if (!cancelled) {
+          setLiveScreensData(Array.isArray(payload.data) ? payload.data : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLiveError(error instanceof Error ? error.message : "Failed to load live tournament screens.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLiveLoading(false);
+        }
+      }
+    };
+
+    void fetchLiveScreens();
+    const interval = window.setInterval(fetchLiveScreens, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [activeView]);
+
+  const tournamentLiveScreens = useMemo(
+    () =>
+      liveScreensData
+        .filter((item) => item.tournamentId === summary.documentId)
+        .flatMap((item) => item.liveScreens ?? []),
+    [liveScreensData, summary.documentId],
+  );
+  const activeLiveScreens = useMemo(
+    () => tournamentLiveScreens.filter((screen) => screen.isActive),
+    [tournamentLiveScreens],
+  );
 
   return (
     <div className="mx-auto w-full px-4 py-8 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
@@ -58,27 +138,43 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveView("live")}
+                className={
+                  activeView === "live"
+                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                }
+              >
+                Live
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("tournament")}
+                className={
+                  activeView === "tournament"
+                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                }
+              >
+                Tournament
+              </button>
               {!embedded ? (
                 <Link
                   href={embedPageHref}
-                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
                 >
-                  Open embed version
+                  Embed
                 </Link>
               ) : (
                 <Link
                   href={fullPageHref}
-                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
                 >
-                  Open full page
+                  Full page
                 </Link>
               )}
-              <Link
-                href={`${embedded ? "/embed" : ""}/tournaments/events?eventId=${encodeURIComponent(summary.documentId)}`}
-                className="inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-              >
-                Open results-only view
-              </Link>
             </div>
           </div>
 
@@ -99,12 +195,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               {summary.stages.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {summary.stages.map((stage) => (
-                    <span
+                    <button
                       key={stage.documentId}
-                      className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90"
+                      type="button"
+                      onClick={() => setSelectedStageDocumentId(stage.documentId)}
+                      className={
+                        selectedStageDocumentId === stage.documentId
+                          ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
+                          : "rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:border-white/25 hover:bg-white/15"
+                      }
+                      aria-pressed={selectedStageDocumentId === stage.documentId}
                     >
                       {stage.title}
-                    </span>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -116,13 +219,91 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       </section>
 
       <div className="mt-8">
-        <TournamentEventsContent
-          eventIdOverride={summary.documentId}
-          embeddedOverride={embedded}
-          showStandaloneTitle={false}
-          showEventHeader={false}
-          emptyStateMessage="This tournament page is missing event data."
-        />
+        {activeView === "tournament" ? (
+          <TournamentEventsContent
+            eventIdOverride={summary.documentId}
+            preferredStageDocumentId={selectedStageDocumentId}
+            embeddedOverride={embedded}
+            showStandaloneTitle={false}
+            showEventHeader={false}
+            emptyStateMessage="This tournament page is missing event data."
+          />
+        ) : (
+          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
+            <div className="flex flex-col gap-2">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">Live</div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-950">Tournament live screens</h2>
+              <p className="text-sm leading-7 text-slate-600">
+                Available live screens for this tournament without leaving the page.
+              </p>
+            </div>
+
+            {isLiveLoading ? (
+              <div className="mt-6 text-sm text-slate-500">Loading live screens...</div>
+            ) : liveError ? (
+              <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {liveError}
+              </div>
+            ) : tournamentLiveScreens.length === 0 ? (
+              <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                No live screens are currently available for this tournament.
+              </div>
+            ) : (
+              <div className="mt-6 space-y-6">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {tournamentLiveScreens.map((screen) => (
+                    <div
+                      key={screen.screenId}
+                      className={
+                        screen.isActive
+                          ? "rounded-[24px] border border-emerald-200 bg-emerald-50/60 p-5"
+                          : "rounded-[24px] border border-slate-200 bg-slate-50 p-5"
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-base font-semibold text-slate-950">{screen.screenName}</div>
+                          <div className="mt-1 text-xs text-slate-500">{screen.screenId}</div>
+                        </div>
+                        <div
+                          className={
+                            screen.isActive
+                              ? "rounded-full bg-emerald-600/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700"
+                              : "rounded-full bg-slate-900/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+                          }
+                        >
+                          {screen.isActive ? "Live" : "Offline"}
+                        </div>
+                      </div>
+                      {screen.lastUpdate ? (
+                        <div className="mt-4 text-xs text-slate-500">
+                          Last update {new Date(screen.lastUpdate).toLocaleString("el-GR")}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                {activeLiveScreens.length > 0 ? (
+                  <div className="grid gap-6 xl:grid-cols-2">
+                    {activeLiveScreens.map((screen) => (
+                      <LiveScoreDisplay
+                        key={screen.screenId}
+                        screenId={screen.screenId}
+                        screenName={screen.screenName}
+                        isActive={screen.isActive}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                    Live screens exist for this tournament, but none of them are currently active.
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );
