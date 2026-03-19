@@ -56,6 +56,8 @@ type WsTournamentPayload = {
   sessionId?: string | number | null;
   ended?: boolean;
   isRunning?: boolean;
+  activePlayer?: number | null;
+  current?: "A" | "B" | null;
   progress?: number;
   ts?: number;
   session?: Record<string, any>;
@@ -64,6 +66,7 @@ type WsTournamentPayload = {
     country?: string | null;
     points?: number | null;
     run?: number | null;
+    liveRun?: number | null;
     innings?: number | null;
     hr?: number | null;
     avgFormatted?: string | null;
@@ -541,6 +544,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         const playerB = players[1] ?? {};
         const sessionId = String(payload.sessionId ?? payload.screenId ?? "").trim();
         const screenId = String(payload.screenId ?? "").trim();
+        const current: "A" | "B" | undefined =
+          payload.current ??
+          (payload.activePlayer === 1 ? "A" : payload.activePlayer === 2 ? "B" : undefined);
         upsertLiveSession({
           id: sessionId || screenId || "unknown-session",
           documentId: sessionId || screenId || "unknown-session",
@@ -565,6 +571,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             scoreB: Number(playerB.points ?? 0) || 0,
             runA: Number(playerA.run ?? 0) || 0,
             runB: Number(playerB.run ?? 0) || 0,
+            liveRunA: Number(playerA.liveRun ?? playerA.run ?? 0) || 0,
+            liveRunB: Number(playerB.liveRun ?? playerB.run ?? 0) || 0,
             inningsA: Number(playerA.innings ?? 0) || 0,
             inningsB: Number(playerB.innings ?? 0) || 0,
             inningsCount: Math.max(Number(playerA.innings ?? 0) || 0, Number(playerB.innings ?? 0) || 0),
@@ -581,6 +589,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             progress: Number(payload.progress ?? 0) || 0,
             totalBlocks: 40,
             isRunning: Boolean(payload.isRunning),
+            current,
           },
         });
       } catch {
