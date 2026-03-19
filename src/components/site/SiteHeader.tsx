@@ -30,7 +30,7 @@ export function SiteHeader({
           <img
             src="/logo-billiardtoday.png"
             alt={`${siteName} logo`}
-            className="h-11 w-auto object-contain"
+            className="h-14 w-auto object-contain sm:h-16"
           />
         </Link>
 

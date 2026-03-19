@@ -9,7 +9,7 @@ export function Footer({ content }: { content: LandingFooterContent }) {
           <img
             src="/logo-billiardtoday.png"
             alt={`${content.siteName} logo`}
-            className="h-11 w-auto object-contain"
+            className="h-14 w-auto object-contain sm:h-16"
           />
           <p className="mt-3 max-w-xl text-sm leading-7 text-slate-400">{content.description}</p>
         </div>

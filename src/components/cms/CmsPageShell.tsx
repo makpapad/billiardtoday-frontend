@@ -166,10 +166,10 @@ export function CmsLayoutRenderer({
       const badgeSize = size === "sm" ? "h-8 w-8" : size === "lg" ? "h-24 w-24" : "h-16 w-16";
       const logoImageStyle =
         size === "sm"
-          ? { width: resolvePixelValue(customWidth, 96), maxHeight: "32px" }
+          ? { width: resolvePixelValue(customWidth, 128), maxHeight: "40px" }
           : size === "lg"
-            ? { width: resolvePixelValue(customWidth, 240), maxHeight: "96px" }
-            : { width: resolvePixelValue(customWidth, 160), maxHeight: "64px" };
+            ? { width: resolvePixelValue(customWidth, 320), maxHeight: "110px" }
+            : { width: resolvePixelValue(customWidth, 220), maxHeight: "76px" };
       const alignClass =
         align === "center" ? "items-center text-center" : align === "right" ? "items-end text-right" : "items-start text-left";
 
@@ -509,7 +509,7 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
                 <img
                   src={DEFAULT_MARKETING_LOGO_SRC}
                   alt={settings.siteName}
-                  className="h-11 w-auto object-contain"
+                  className="h-14 w-auto object-contain sm:h-16"
                 />
                 {settings.footerAppearance.showSiteTagline && settings.siteTagline ? (
                   <p className={`max-w-xl text-sm ${footerMutedClass}`}>{settings.siteTagline}</p>
