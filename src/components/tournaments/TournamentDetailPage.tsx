@@ -12,13 +12,15 @@ import type { EventApiResponse, GroupStanding, NormalizedEventStage, StageMatchG
 import {
   buildGroupStandings,
   buildStageMatchGroups,
+  formatAverage,
+  formatNumberValue,
+  formatRecord,
   normalizeEntity,
   normalizeGroup,
   normalizeResult,
   toNumber,
   toRelationArray,
 } from "@/app/tournaments/events/utils";
-import GroupStandingsTable from "@/app/tournaments/events/GroupStandingsTable";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -72,7 +74,129 @@ type WsTournamentPayload = {
 type GroupPopoverData = {
   title: string;
   standings: GroupStanding[];
+  matches: StageMatchGroup["matches"];
 };
+
+function GroupTooltip({
+  data,
+  embedded,
+}: {
+  data: GroupPopoverData;
+  embedded: boolean;
+}) {
+  return (
+    <div className="absolute left-0 top-[-12px] z-30 w-[min(760px,calc(100vw-2rem))] -translate-y-full rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="text-sm font-semibold">{data.title}</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Live group view</div>
+      </div>
+
+      <div className="mb-3 overflow-hidden rounded-xl border border-slate-200">
+        <table className="min-w-full text-[11px]">
+          <thead className="bg-slate-100 text-slate-700">
+            <tr>
+              <th className="px-2 py-1.5 text-left font-semibold">Player</th>
+              <th className="px-2 py-1.5 text-left font-semibold">Date</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Res</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
+              <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
+              <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
+              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.matches.map((match) => (
+              <>
+                <tr key={`${match.key}-top`} className="border-t border-slate-200 bg-emerald-50/80">
+                  <td className="px-2 py-1.5 font-medium">
+                    <Link
+                      href={`${embedded ? "/embed" : ""}/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, "-")}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {match.top.player.name}
+                    </Link>
+                  </td>
+                  <td className="px-2 py-1.5 text-xs text-slate-600">{match.dateTime ? new Date(match.dateTime).toLocaleDateString("el-GR") : "-"}</td>
+                  <td className="px-2 py-1.5 text-center font-semibold">{match.top.outcome ?? "-"}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.points)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.innings)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatAverage(match.top.player.points, match.top.player.innings)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.highRun)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.highRun2)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.matchPoints)}</td>
+                </tr>
+                <tr key={`${match.key}-bottom`} className="border-t border-slate-200 bg-rose-50/80">
+                  <td className="px-2 py-1.5 font-medium">
+                    <Link
+                      href={`${embedded ? "/embed" : ""}/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, "-")}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {match.bottom.player.name}
+                    </Link>
+                  </td>
+                  <td className="px-2 py-1.5 text-xs text-slate-600">{match.dateTime ? new Date(match.dateTime).toLocaleDateString("el-GR") : "-"}</td>
+                  <td className="px-2 py-1.5 text-center font-semibold">{match.bottom.outcome ?? "-"}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.points)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.innings)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatAverage(match.bottom.player.points, match.bottom.player.innings)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.highRun)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.highRun2)}</td>
+                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.matchPoints)}</td>
+                </tr>
+              </>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-slate-200">
+        <table className="min-w-full text-[11px]">
+          <thead className="bg-emerald-700 text-white">
+            <tr>
+              <th className="px-2 py-1.5 text-left font-semibold">Player</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Rec</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
+              <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
+              <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
+              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.standings.map((player) => (
+              <tr key={player.key} className="border-t border-slate-200 bg-white text-slate-700">
+                <td className="px-2 py-1.5 font-medium">
+                  {player.playerId ? (
+                    <Link
+                      href={`${embedded ? "/embed" : ""}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, "-")}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {player.playerName}
+                    </Link>
+                  ) : (
+                    player.playerName
+                  )}
+                </td>
+                <td className="px-2 py-1.5 text-center font-semibold">{player.place}</td>
+                <td className="px-2 py-1.5 text-center">{formatRecord(player.record)}</td>
+                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalPoints)}</td>
+                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalInnings)}</td>
+                <td className="px-2 py-1.5 text-center">{formatAverage(player.totalPoints, player.totalInnings)}</td>
+                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.highRun)}</td>
+                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.highRun2)}</td>
+                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
@@ -587,6 +711,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             return {
               title: `Group ${group.number ?? group.key}`,
               standings: buildGroupStandings(group.matches),
+              matches: group.matches,
             };
           }
         }
@@ -604,6 +729,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           popover = {
             title: `Group ${group.number ?? group.key}`,
             standings: buildGroupStandings(group.matches),
+            matches: group.matches,
           };
         }
       }
@@ -715,16 +841,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             <div
               key={session.sessionId}
               id={`tournament-live-session-${session.sessionId}`}
-              className={highlightedLiveSessionId === session.sessionId ? "rounded-[30px]" : undefined}
+              className={highlightedLiveSessionId === session.sessionId ? "relative rounded-[30px]" : "relative"}
               onMouseEnter={() => setHoveredGroupSessionId(session.sessionId)}
               onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
             >
               {groupPopoverBySessionId.has(session.sessionId) ? (
-                <div className="mb-2 flex items-center justify-end">
+                <div className="absolute left-2 top-2 z-20">
                   <button
                     type="button"
                     onClick={() => toggleGroupPopover(session.sessionId)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                    className="rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
                   >
                     Group
                   </button>
@@ -732,26 +858,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               ) : null}
               {groupPopoverBySessionId.has(session.sessionId) &&
               (hoveredGroupSessionId === session.sessionId || openGroupSessionId === session.sessionId) ? (
-                <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_14px_40px_rgba(15,23,42,0.12)]">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">
-                      {groupPopoverBySessionId.get(session.sessionId)?.title}
-                    </div>
-                    {openGroupSessionId === session.sessionId ? (
-                      <button
-                        type="button"
-                        onClick={() => setOpenGroupSessionId(null)}
-                        className="text-xs font-medium text-slate-500 hover:text-slate-800"
-                      >
-                        Close
-                      </button>
-                    ) : null}
-                  </div>
-                  <GroupStandingsTable
-                    standings={groupPopoverBySessionId.get(session.sessionId)?.standings ?? []}
-                    embedded={embedded}
-                  />
-                </div>
+                <GroupTooltip
+                  data={groupPopoverBySessionId.get(session.sessionId)!}
+                  embedded={embedded}
+                />
               ) : null}
               <LiveScoreBoardCard
                 sessionId={session.sessionId}
