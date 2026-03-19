@@ -43,6 +43,7 @@ interface LiveScoreBoardCardProps {
   gameDurationSeconds?: number;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean, sessionId: string) => void;
+  topLeftControl?: ReactNode;
 }
 
 export function LiveScoreBoardCard({
@@ -62,6 +63,7 @@ export function LiveScoreBoardCard({
   gameDurationSeconds,
   expanded,
   onExpandedChange,
+  topLeftControl,
 }: LiveScoreBoardCardProps) {
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
@@ -618,6 +620,11 @@ export function LiveScoreBoardCard({
           >
             Close
           </button>
+          {topLeftControl ? (
+            <div className="absolute left-2 top-2 z-20">
+              {topLeftControl}
+            </div>
+          ) : null}
 
       <div className="relative z-10 sm:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">

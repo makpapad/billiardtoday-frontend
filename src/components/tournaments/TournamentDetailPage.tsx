@@ -992,13 +992,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 onNavigate={() => handleCardClick(session)}
                 expanded={expandedSessions.has(session.sessionId)}
                 onExpandedChange={handleExpandedChange}
-              />
-              </div>
-              <div className="pointer-events-none absolute inset-0 z-20">
-                <div className="pointer-events-auto absolute left-3 top-3">
+                topLeftControl={
                   <button
                     type="button"
-                    onClick={() => toggleGroupPopover(session.sessionId)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      toggleGroupPopover(session.sessionId);
+                    }}
                     className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
                       groupPopoverBySessionId.has(session.sessionId)
                         ? "border-white/30 bg-slate-900/50"
@@ -1007,7 +1008,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   >
                     Group
                   </button>
-                </div>
+                }
+              />
               </div>
             </div>
           )})}
