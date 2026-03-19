@@ -286,6 +286,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
+  const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
   const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
   const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
@@ -797,6 +798,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const handleCardClick = (session: EventLiveSession) => {
     if (Date.now() - lastModalCloseAtRef.current < 250) return;
+    setHoveredGroupSessionId(null);
+    setOpenGroupSessionId(null);
     setHighlightItem({
       id: session.id,
       sessionId: session.sessionId,
@@ -816,7 +819,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const handleHighlightClose = () => {
     lastModalCloseAtRef.current = Date.now();
+    setHoveredGroupSessionId(null);
+    setOpenGroupSessionId(null);
+    setSuppressLiveGridClicks(true);
     setHighlightItem(null);
+    window.setTimeout(() => {
+      setSuppressLiveGridClicks(false);
+    }, 400);
   };
 
   const mainContent = activeView === "tournament" ? (
@@ -850,7 +859,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           Waiting for live scores...
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 ${highlightItem || suppressLiveGridClicks ? "pointer-events-none" : ""}`}>
           {liveCards.map((session) => {
             const state = (session.state ?? {}) as any;
             return (
@@ -861,7 +870,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               onMouseEnter={() => setHoveredGroupSessionId(session.sessionId)}
               onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
             >
-              {groupPopoverBySessionId.has(session.sessionId) &&
+              {!highlightItem && groupPopoverBySessionId.has(session.sessionId) &&
               (hoveredGroupSessionId === session.sessionId || openGroupSessionId === session.sessionId) ? (
                 <GroupTooltip
                   data={groupPopoverBySessionId.get(session.sessionId)!}
