@@ -95,8 +95,8 @@ export function TournamentEventsContent({
         }`
 
     const liveBadgeAnimation = `@keyframes btLivePulse {
-        0%, 100% { opacity: 0.88; transform: scale(0.985); filter: saturate(0.96); }
-        50% { opacity: 1; transform: scale(1); filter: saturate(1.08); }
+        0%, 100% { opacity: 0.72; background-color: #ffd21c; box-shadow: inset 0 0 0 0 rgba(255,255,255,0.0); }
+        50% { opacity: 1; background-color: #ffea72; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.28); }
     }`
 
     // Fetch event data
@@ -684,9 +684,9 @@ export function TournamentEventsContent({
                                                                                                                 <button
                                                                                                                     type="button"
                                                                                                                     onClick={() => onLiveMatchOpen?.(liveSessionId)}
-                                                                                                                    className="absolute inset-0 flex h-full w-full items-center justify-center bg-[linear-gradient(90deg,#ffd21c_0%,#ffd21c_84%,#1d4ed8_84%,#1d4ed8_100%)] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950"
+                                                                                                                    className="absolute inset-0 flex h-full w-full items-center justify-center bg-[#ffd21c] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950"
                                                                                                                     aria-label="Open live match"
-                                                                                                                    style={{ animation: 'btLivePulse 1.15s ease-in-out infinite' }}
+                                                                                                                    style={{ animation: 'btLivePulse 0.95s ease-in-out infinite' }}
                                                                                                                 >
                                                                                                                     LIVE
                                                                                                                 </button>
