@@ -44,11 +44,9 @@ export async function GET(
 
   try {
     const params = new URLSearchParams();
-    params.set("filters[eventId][$eq]", eventId);
-    params.set("filters[sessionStatus][$in][0]", "pending");
-    params.set("filters[sessionStatus][$in][1]", "in_progress");
-    params.set("pagination[pageSize]", "100");
-    params.set("sort[0]", "updatedAt:desc");
+    params.set("eventId", eventId);
+    params.set("status", "pending,in_progress");
+    params.set("pageSize", "100");
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     const token = getScoreboardApiToken();
@@ -58,6 +56,10 @@ export async function GET(
       cache: "no-store",
       headers,
     });
+
+    if (response.status === 404) {
+      return NextResponse.json({ data: [] });
+    }
 
     if (!response.ok) {
       const text = await response.text();
