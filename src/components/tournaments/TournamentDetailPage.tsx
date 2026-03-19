@@ -877,15 +877,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           Waiting for live scores...
         </div>
       ) : (
-        <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 ${highlightItem || suppressLiveGridClicks ? "pointer-events-none" : ""}`}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {liveCards.map((session) => {
             const state = (session.state ?? {}) as any;
+            const boardInteractionDisabled = Boolean(highlightItem || suppressLiveGridClicks);
             return (
             <div
               key={session.sessionId}
               id={`tournament-live-session-${session.sessionId}`}
               className={highlightedLiveSessionId === session.sessionId ? "relative rounded-[30px]" : "relative"}
-              onMouseEnter={() => setHoveredGroupSessionId(session.sessionId)}
+              onMouseEnter={() => {
+                if (!boardInteractionDisabled) setHoveredGroupSessionId(session.sessionId);
+              }}
               onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
             >
               {!highlightItem && groupPopoverBySessionId.has(session.sessionId) &&
@@ -895,6 +898,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   embedded={embedded}
                 />
               ) : null}
+              <div className={boardInteractionDisabled ? "pointer-events-none" : ""}>
               <LiveScoreBoardCard
                 sessionId={session.sessionId}
                 clubName={session.clubName}
@@ -946,6 +950,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 expanded={expandedSessions.has(session.sessionId)}
                 onExpandedChange={handleExpandedChange}
               />
+              </div>
               {groupPopoverBySessionId.has(session.sessionId) ? (
                 <div className="pointer-events-none absolute inset-0 z-20">
                   <div className="pointer-events-auto absolute left-3 top-3">
