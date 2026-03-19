@@ -95,8 +95,8 @@ export function TournamentEventsContent({
         }`
 
     const liveBadgeAnimation = `@keyframes btLivePulse {
-        0%, 100% { opacity: 0.88; }
-        50% { opacity: 1; }
+        0%, 100% { opacity: 0.88; transform: scale(0.985); filter: saturate(0.96); }
+        50% { opacity: 1; transform: scale(1); filter: saturate(1.08); }
     }`
 
     // Fetch event data
@@ -672,16 +672,21 @@ export function TournamentEventsContent({
                                                                                                         )}
                                                                                                     </td>
                                                                                                     <td
-                                                                                                        className={clsx('px-4 py-2 relative overflow-hidden', getDateCellClass())}
+                                                                                                        className={clsx(
+                                                                                                            'relative overflow-hidden',
+                                                                                                            liveSessionId ? 'p-0 align-stretch' : 'px-4 py-2',
+                                                                                                            getDateCellClass()
+                                                                                                        )}
                                                                                                         rowSpan={2}
                                                                                                     >
-                                                                                                        <div className="flex min-h-[72px] items-center justify-center">
+                                                                                                        <div className={clsx('flex items-center justify-center', liveSessionId ? 'h-full min-h-[86px] w-full' : 'min-h-[72px]')}>
                                                                                                             {liveSessionId ? (
                                                                                                                 <button
                                                                                                                     type="button"
                                                                                                                     onClick={() => onLiveMatchOpen?.(liveSessionId)}
-                                                                                                                    className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(90deg,#facc15_0%,#facc15_82%,#1d4ed8_82%,#1d4ed8_100%)] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950 transition-opacity duration-300 ease-in-out animate-[btLivePulse_1.6s_ease-in-out_infinite]"
+                                                                                                                    className="absolute inset-0 flex h-full w-full items-center justify-center bg-[linear-gradient(90deg,#ffd21c_0%,#ffd21c_84%,#1d4ed8_84%,#1d4ed8_100%)] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950"
                                                                                                                     aria-label="Open live match"
+                                                                                                                    style={{ animation: 'btLivePulse 1.15s ease-in-out infinite' }}
                                                                                                                 >
                                                                                                                     LIVE
                                                                                                                 </button>

@@ -530,11 +530,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             <div
               key={session.sessionId}
               id={`tournament-live-session-${session.sessionId}`}
-              className={
-                highlightedLiveSessionId === session.sessionId
-                  ? "rounded-[30px] ring-2 ring-cyan-300 ring-offset-4 ring-offset-white"
-                  : undefined
-              }
+              className={highlightedLiveSessionId === session.sessionId ? "rounded-[30px]" : undefined}
             >
               <LiveScoreBoardCard
                 sessionId={session.sessionId}
