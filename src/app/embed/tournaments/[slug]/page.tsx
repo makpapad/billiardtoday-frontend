@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
-import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { getCmsPageWidth } from "@/lib/cms/layout";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 import { extractTournamentDocumentId, getTournamentEventSummary } from "@/lib/tournaments";
 
 type Props = {
@@ -26,9 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EmbedTournamentPage({ params }: Props) {
   const { slug } = await params;
   const documentId = extractTournamentDocumentId(slug);
-  const [summary, settings, appearance] = await Promise.all([
+  const [summary, appearance] = await Promise.all([
     getTournamentEventSummary(documentId),
-    getCmsSiteSettings(),
     getCmsAppearance(),
   ]);
 
@@ -37,8 +37,18 @@ export default async function EmbedTournamentPage({ params }: Props) {
   }
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+    <div
+      className="min-h-screen"
+      style={
+        {
+          ["--bt-page-width" as string]: getCmsPageWidth(appearance),
+          background: "#ffffff",
+          color: appearance.tokens.text,
+          fontFamily: appearance.tokens.bodyFont,
+        } as CSSProperties
+      }
+    >
       <TournamentDetailPage summary={summary} embedded />
-    </CmsPageShell>
+    </div>
   );
 }
