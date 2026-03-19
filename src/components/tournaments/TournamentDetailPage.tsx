@@ -30,24 +30,6 @@ type TournamentLiveScreensResponse = {
   error?: string;
 };
 
-const sponsorRailSlots = [
-  {
-    label: "Sponsor slot",
-    title: "Primary partner",
-    description: "Reserved area for tournament partner branding, campaign art, or a sponsor callout.",
-  },
-  {
-    label: "Sponsor slot",
-    title: "Club support",
-    description: "Ideal for club sponsors, local venue support, or featured product placements.",
-  },
-  {
-    label: "Sponsor slot",
-    title: "Media partner",
-    description: "Use this area for media support, federation partners, or event promotion blocks.",
-  },
-] as const;
-
 const formatDate = (value: string | null) => {
   if (!value) return null;
   const parsed = new Date(value);
@@ -322,61 +304,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         </div>
       </section>
 
-      <div className={embedded ? "mt-8" : "mt-8 xl:grid xl:grid-cols-[220px_minmax(0,1fr)_220px] xl:gap-6"}>
-        {!embedded ? (
-          <aside className="hidden xl:block">
-            <div className="space-y-5">
-              {sponsorRailSlots.map((slot, index) => (
-                <div
-                  key={`left-${slot.title}`}
-                  className={
-                    index === 0
-                      ? "rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#eff6ff_0%,#ffffff_100%)] p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]"
-                      : "rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-5"
-                  }
-                >
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-                    {slot.label}
-                  </div>
-                  <div className="mt-3 text-lg font-semibold tracking-tight text-slate-950">{slot.title}</div>
-                  <div className="mt-3 text-sm leading-6 text-slate-600">{slot.description}</div>
-                  <div className="mt-5 rounded-2xl border border-slate-200 bg-white/80 px-4 py-8 text-center text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                    160 x 600
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
-        ) : null}
-
-        <div className="min-w-0">{mainContent}</div>
-
-        {!embedded ? (
-          <aside className="hidden xl:block">
-            <div className="space-y-5">
-              {sponsorRailSlots.map((slot, index) => (
-                <div
-                  key={`right-${slot.title}`}
-                  className={
-                    index === 1
-                      ? "rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ecfeff_0%,#ffffff_100%)] p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]"
-                      : "rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-5"
-                  }
-                >
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-                    {slot.label}
-                  </div>
-                  <div className="mt-3 text-lg font-semibold tracking-tight text-slate-950">{slot.title}</div>
-                  <div className="mt-3 text-sm leading-6 text-slate-600">{slot.description}</div>
-                  <div className="mt-5 rounded-2xl border border-slate-200 bg-white/80 px-4 py-8 text-center text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                    160 x 600
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
-        ) : null}
-      </div>
+      <div className="mt-8">{mainContent}</div>
     </div>
   );
 }
