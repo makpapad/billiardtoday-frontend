@@ -25,6 +25,24 @@ import {
 import GroupStandingsTable from './GroupStandingsTable'
 import SingleElimBracket, { type BracketRoundView } from './SingleElimBracket'
 
+type TournamentLiveScreen = {
+    screenId: string
+    screenName: string
+    isActive: boolean
+    tournamentId: string
+    lastUpdate?: string
+}
+
+type TournamentLiveScreensResponse = {
+    success: boolean
+    data: Array<{
+        tournamentId: string
+        tournamentTitle: string
+        liveScreens: TournamentLiveScreen[]
+    }>
+    error?: string
+}
+
 type TournamentEventsContentProps = {
     eventIdOverride?: string | null
     preferredStageDocumentId?: string | null
@@ -56,6 +74,7 @@ export function TournamentEventsContent({
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse['data']>([])
     const [brMatchesByStage, setBrMatchesByStage] = useState<Record<string, unknown[]>>({})
     const [brLoadingByStage, setBrLoadingByStage] = useState<Record<string, boolean>>({})
     const pathname = usePathname()
@@ -98,6 +117,40 @@ export function TournamentEventsContent({
                 setError(err instanceof Error ? err.message : 'Failed to fetch event')
                 setIsLoading(false)
             })
+    }, [eventId])
+
+    useEffect(() => {
+        if (!eventId) {
+            setLiveScreensData([])
+            return
+        }
+
+        let cancelled = false
+
+        const fetchLiveScreens = async () => {
+            try {
+                const response = await fetch('/api/admin/tournament/live-screens', { cache: 'no-store' })
+                const payload = (await response.json().catch(() => null)) as TournamentLiveScreensResponse | null
+                if (!response.ok || !payload?.success) {
+                    throw new Error(payload?.error || 'Failed to load tournament live screens')
+                }
+                if (!cancelled) {
+                    setLiveScreensData(Array.isArray(payload.data) ? payload.data : [])
+                }
+            } catch {
+                if (!cancelled) {
+                    setLiveScreensData([])
+                }
+            }
+        }
+
+        void fetchLiveScreens()
+        const interval = window.setInterval(fetchLiveScreens, 15000)
+
+        return () => {
+            cancelled = true
+            window.clearInterval(interval)
+        }
     }, [eventId])
 
     const eventStages = useMemo<NormalizedEventStage[]>(() => {
@@ -197,6 +250,17 @@ export function TournamentEventsContent({
     const activeStage = useMemo(
         () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
         [eventStages, activeStageId],
+    )
+    const tournamentLiveScreens = useMemo(
+        () =>
+            liveScreensData
+                .filter((item) => item.tournamentId === eventId)
+                .flatMap((item) => item.liveScreens ?? []),
+        [eventId, liveScreensData],
+    )
+    const activeLiveCount = useMemo(
+        () => tournamentLiveScreens.filter((screen) => screen.isActive).length,
+        [tournamentLiveScreens],
     )
 
     const normalizeBracketPlayer = useCallback((player: unknown): { name: string } => {
@@ -430,9 +494,14 @@ export function TournamentEventsContent({
 
                                         return (
                                             <div key={stage.id} className="flex flex-col gap-4">
-                                                {stageDateRange && (
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {stageDateRange}
+                                                {(activeLiveCount > 0 || stageDateRange) && (
+                                                    <div className="flex flex-col items-start gap-1 text-sm text-gray-500 dark:text-gray-400">
+                                                        {activeLiveCount > 0 && (
+                                                            <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600 dark:bg-red-500/15 dark:text-red-300">
+                                                                {activeLiveCount} live τώρα
+                                                            </span>
+                                                        )}
+                                                        {stageDateRange && <span>{stageDateRange}</span>}
                                                     </div>
                                                 )}
                                                 <div className="flex flex-col gap-6">
