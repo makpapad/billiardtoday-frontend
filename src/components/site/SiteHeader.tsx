@@ -28,7 +28,7 @@ export function SiteHeader({
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
           <img
-            src="/img/billiard-today-logo.png"
+            src="/logo-billiardtoday.png"
             alt={`${siteName} logo`}
             className="h-11 w-auto object-contain"
           />

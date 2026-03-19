@@ -17,7 +17,7 @@ type Props = {
   showChrome?: boolean;
 };
 
-const DEFAULT_MARKETING_LOGO_SRC = "/img/billiard-today-logo.png";
+const DEFAULT_MARKETING_LOGO_SRC = "/logo-billiardtoday.png";
 
 const getSocialLabel = (platform: string) => {
   const clean = platform.trim().toLowerCase();
@@ -178,8 +178,6 @@ export function CmsLayoutRenderer({
           <Link href="/" className="flex items-center gap-3">
             {customLogoUrl ? (
               <img src={customLogoUrl} alt={customLogoAlt} className="shrink-0 object-contain" style={logoImageStyle} />
-            ) : settings.logo?.url ? (
-              <img src={settings.logo.url} alt={settings.logo.alternativeText || settings.siteName} className="shrink-0 object-contain" style={logoImageStyle} />
             ) : (
               <img
                 src={DEFAULT_MARKETING_LOGO_SRC}
@@ -508,19 +506,11 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
           ) : (
             <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
               <div className="space-y-4">
-                {settings.logo?.url ? (
-                  <img
-                    src={settings.logo.url}
-                    alt={settings.logo.alternativeText || settings.siteName}
-                    className="h-11 w-auto object-contain"
-                  />
-                ) : (
-                  <img
-                    src={DEFAULT_MARKETING_LOGO_SRC}
-                    alt={settings.siteName}
-                    className="h-11 w-auto object-contain"
-                  />
-                )}
+                <img
+                  src={DEFAULT_MARKETING_LOGO_SRC}
+                  alt={settings.siteName}
+                  className="h-11 w-auto object-contain"
+                />
                 {settings.footerAppearance.showSiteTagline && settings.siteTagline ? (
                   <p className={`max-w-xl text-sm ${footerMutedClass}`}>{settings.siteTagline}</p>
                 ) : null}

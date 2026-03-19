@@ -7,7 +7,7 @@ export function Footer({ content }: { content: LandingFooterContent }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
         <div>
           <img
-            src="/img/billiard-today-logo.png"
+            src="/logo-billiardtoday.png"
             alt={`${content.siteName} logo`}
             className="h-11 w-auto object-contain"
           />
