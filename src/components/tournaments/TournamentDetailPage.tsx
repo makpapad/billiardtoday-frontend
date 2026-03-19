@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import LiveScoreDisplay from "@/components/LiveScoreDisplay";
 import { LiveScoreBoardCard } from "@/components/live/LiveScoreBoardCard";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
@@ -454,95 +453,34 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       }}
     />
   ) : (
-    <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
-      <div className="flex flex-col gap-2">
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">Live</div>
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-950">Tournament live screens</h2>
-        <p className="text-sm leading-7 text-slate-600">
-          Available live screens for this tournament without leaving the page.
-        </p>
-      </div>
-
-      {isLiveLoading ? (
-        <div className="mt-6 text-sm text-slate-500">Loading live screens...</div>
-      ) : liveError ? (
-        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <section className="space-y-6">
+      {isLiveLoading && liveCards.length === 0 ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          Loading live scores...
+        </div>
+      ) : liveError && liveCards.length === 0 ? (
+        <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-6 text-sm text-red-700 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
           {liveError}
         </div>
-      ) : liveCards.length > 0 ? (
-        <div className="mt-6 space-y-6">
-          <div className="grid gap-6 xl:grid-cols-2">
-            {liveCards.map((session) => (
-              <div
-                key={session.sessionId}
-                id={`tournament-live-session-${session.sessionId}`}
-                className={
-                  highlightedLiveSessionId === session.sessionId
-                    ? "rounded-[30px] ring-2 ring-cyan-300 ring-offset-4 ring-offset-white"
-                    : undefined
-                }
-              >
-                <LiveScoreBoardCard item={session} />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : tournamentLiveScreens.length === 0 ? (
-        <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
-          No live screens are currently available for this tournament.
+      ) : liveCards.length === 0 ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          Waiting for live scores...
         </div>
       ) : (
-        <div className="mt-6 space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {tournamentLiveScreens.map((screen) => (
-              <div
-                key={screen.screenId}
-                className={
-                  screen.isActive
-                    ? "rounded-[24px] border border-emerald-200 bg-emerald-50/60 p-5"
-                    : "rounded-[24px] border border-slate-200 bg-slate-50 p-5"
-                }
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-base font-semibold text-slate-950">{screen.screenName}</div>
-                    <div className="mt-1 text-xs text-slate-500">{screen.screenId}</div>
-                  </div>
-                  <div
-                    className={
-                      screen.isActive
-                        ? "rounded-full bg-emerald-600/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700"
-                        : "rounded-full bg-slate-900/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
-                    }
-                  >
-                    {screen.isActive ? "Live" : "Offline"}
-                  </div>
-                </div>
-                {screen.lastUpdate ? (
-                  <div className="mt-4 text-xs text-slate-500">
-                    Last update {new Date(screen.lastUpdate).toLocaleString("el-GR")}
-                  </div>
-                ) : null}
-              </div>
-            ))}
-          </div>
-
-          {activeLiveScreens.length > 0 ? (
-            <div className="grid gap-6 xl:grid-cols-2">
-              {activeLiveScreens.map((screen) => (
-                <LiveScoreDisplay
-                  key={screen.screenId}
-                  screenId={screen.screenId}
-                  screenName={screen.screenName}
-                  isActive={screen.isActive}
-                />
-              ))}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {liveCards.map((session) => (
+            <div
+              key={session.sessionId}
+              id={`tournament-live-session-${session.sessionId}`}
+              className={
+                highlightedLiveSessionId === session.sessionId
+                  ? "rounded-[30px] ring-2 ring-cyan-300 ring-offset-4 ring-offset-white"
+                  : undefined
+              }
+            >
+              <LiveScoreBoardCard item={session} />
             </div>
-          ) : (
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
-              Live screens exist for this tournament, but none of them are currently active.
-            </div>
-          )}
+          ))}
         </div>
       )}
     </section>
