@@ -16,7 +16,7 @@ const loadEnvFile = (filename) => {
     if (separatorIndex <= 0) continue
 
     const key = trimmed.slice(0, separatorIndex).trim()
-    if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) continue
+    if (!key) continue
 
     let value = trimmed.slice(separatorIndex + 1).trim()
     if (
