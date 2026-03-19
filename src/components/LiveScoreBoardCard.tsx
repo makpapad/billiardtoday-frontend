@@ -20,7 +20,8 @@ interface Player {
   targetPoints?: number | null;
 }
 
-const SCORE_BOX_WIDTH = 72;
+const SCORE_BOX_WIDTH = 88;
+const AVATAR_COLUMN_WIDTH = 70;
 
 interface LiveScoreBoardCardProps {
   player1: Player;
@@ -675,7 +676,7 @@ export function LiveScoreBoardCard({
       <div
         className="relative z-10 hidden sm:grid gap-1"
         style={{
-          gridTemplateColumns: `74px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
+          gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
         }}
       >
         <div className="flex flex-col h-full justify-center gap-4 items-center py-1 pl-3">
