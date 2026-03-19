@@ -410,7 +410,7 @@ type LiveScorePayload = {
   sheet?: unknown;
 };
 
-export function LiveClubView({ club }: Props) {
+export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
   const [expandedSessions, setExpandedSessions] = React.useState<Set<string>>(new Set());
@@ -1242,36 +1242,65 @@ export function LiveClubView({ club }: Props) {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] px-4 py-8 sm:px-8">
+    <main
+      className={`bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] px-4 ${embedded ? "py-4 sm:px-6 sm:py-5" : "py-8 sm:px-8 min-h-screen"}`}
+    >
       <div className="max-w-6xl mx-auto">
-        <header className="mb-8 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-white/60 mb-2">Live Feed</p>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{club.name}</h1>
-            <p className="text-sm text-white/60 mt-1">
-              Παρακολούθησε ενεργά scoreboards με real-time ενημέρωση.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:items-end">
-            <label className="text-[10px] uppercase tracking-[0.25em] text-white/60">Tournament</label>
-            <select
-              value={selectedTournament}
-              onChange={(e) => setSelectedTournament(e.target.value)}
-              className="h-10 min-w-[240px] max-w-[320px] rounded-xl border border-cyan-200/30 bg-slate-900/70 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-300/50"
-            >
-              <option value="all">All tournaments</option>
-              {tournamentOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <div className="flex items-center gap-2 text-sm text-white/70">
-              <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-              Live updates connected
+        {embedded ? (
+          <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-black tracking-tight text-white sm:text-2xl">{club.name}</p>
+              <div className="mt-1 flex items-center gap-2 text-xs text-white/70">
+                <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                Live updates connected
+              </div>
+            </div>
+            <div className="min-w-0 sm:min-w-[240px] sm:max-w-[320px]">
+              <label className="mb-1 block text-[10px] uppercase tracking-[0.25em] text-white/60">Tournament</label>
+              <select
+                value={selectedTournament}
+                onChange={(e) => setSelectedTournament(e.target.value)}
+                className="h-10 w-full rounded-xl border border-cyan-200/30 bg-slate-900/70 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-300/50"
+              >
+                <option value="all">All tournaments</option>
+                {tournamentOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </header>
+        ) : (
+          <header className="mb-8 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-white/60 mb-2">Live Feed</p>
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{club.name}</h1>
+              <p className="text-sm text-white/60 mt-1">
+                Παρακολούθησε ενεργά scoreboards με real-time ενημέρωση.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:items-end">
+              <label className="text-[10px] uppercase tracking-[0.25em] text-white/60">Tournament</label>
+              <select
+                value={selectedTournament}
+                onChange={(e) => setSelectedTournament(e.target.value)}
+                className="h-10 min-w-[240px] max-w-[320px] rounded-xl border border-cyan-200/30 bg-slate-900/70 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-300/50"
+              >
+                <option value="all">All tournaments</option>
+                {tournamentOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                Live updates connected
+              </div>
+            </div>
+          </header>
+        )}
 
         {filteredItems.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/5 text-white/70 p-6 text-center">
