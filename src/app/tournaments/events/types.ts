@@ -113,6 +113,7 @@ export type StageMatchGroup = {
     number: number | null
     matches: {
         key: string
+        matchDocumentId: string | null
         dateTime: string | null
         top: {
             player: NormalizedGroupPlayer

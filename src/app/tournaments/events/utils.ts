@@ -220,6 +220,7 @@ export const buildStageMatchGroups = (groups: NormalizedGroupMatch[]): StageMatc
 
         grouped[key].matches.push({
             key: match.id ?? `${key}-match-${index}`,
+            matchDocumentId: match.documentId ?? null,
             dateTime: match.dateTime,
             top: {
                 player: match.player1,

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import LiveScoreDisplay from "@/components/LiveScoreDisplay";
+import { LiveScoreBoardCard } from "@/components/live/LiveScoreBoardCard";
+import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
@@ -18,6 +20,18 @@ type TournamentLiveScreen = {
   isActive: boolean;
   tournamentId: string;
   lastUpdate?: string;
+};
+
+type EventLiveSession = LiveSessionItem & {
+  documentId: string;
+  eventId: string | null;
+  eventStageId: string | null;
+  groupNumber: number | null;
+  player1DocumentId: string | null;
+  player2DocumentId: string | null;
+  player1Name: string | null;
+  player2Name: string | null;
+  sessionStatus: string | null;
 };
 
 type TournamentLiveScreensResponse = {
@@ -62,6 +76,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
+  const [eventLiveSessions, setEventLiveSessions] = useState<EventLiveSession[]>([]);
+  const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -102,6 +118,43 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     };
   }, [activeView]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchEventLiveSessions = async () => {
+      try {
+        const response = await fetch(`/api/tournaments/${encodeURIComponent(summary.documentId)}/live-sessions`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json().catch(() => ({ data: [] }))) as { data?: EventLiveSession[] };
+        if (!response.ok) {
+          throw new Error("Failed to load event live sessions.");
+        }
+        if (!cancelled) {
+          setEventLiveSessions(Array.isArray(payload.data) ? payload.data : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setEventLiveSessions([]);
+        }
+      }
+    };
+
+    void fetchEventLiveSessions();
+    const interval = window.setInterval(fetchEventLiveSessions, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [summary.documentId]);
+
+  useEffect(() => {
+    if (activeView !== "live" || !highlightedLiveSessionId) return;
+    const target = document.getElementById(`tournament-live-session-${highlightedLiveSessionId}`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [activeView, highlightedLiveSessionId, eventLiveSessions]);
+
   const tournamentLiveScreens = useMemo(
     () =>
       liveScreensData
@@ -113,6 +166,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     () => tournamentLiveScreens.filter((screen) => screen.isActive),
     [tournamentLiveScreens],
   );
+  const liveCards = useMemo(
+    () => eventLiveSessions.filter((session) => session.state?.isRunning || session.sessionStatus === "in_progress" || session.sessionStatus === "pending"),
+    [eventLiveSessions],
+  );
+
   const mainContent = activeView === "tournament" ? (
     <TournamentEventsContent
       key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
@@ -122,6 +180,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       showStandaloneTitle={false}
       showEventHeader={false}
       emptyStateMessage="This tournament page is missing event data."
+      onLiveMatchOpen={(sessionId) => {
+        setHighlightedLiveSessionId(sessionId);
+        setActiveView("live");
+      }}
     />
   ) : (
     <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
@@ -138,6 +200,24 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       ) : liveError ? (
         <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {liveError}
+        </div>
+      ) : liveCards.length > 0 ? (
+        <div className="mt-6 space-y-6">
+          <div className="grid gap-6 xl:grid-cols-2">
+            {liveCards.map((session) => (
+              <div
+                key={session.sessionId}
+                id={`tournament-live-session-${session.sessionId}`}
+                className={
+                  highlightedLiveSessionId === session.sessionId
+                    ? "rounded-[30px] ring-2 ring-cyan-300 ring-offset-4 ring-offset-white"
+                    : undefined
+                }
+              >
+                <LiveScoreBoardCard item={session} />
+              </div>
+            ))}
+          </div>
         </div>
       ) : tournamentLiveScreens.length === 0 ? (
         <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">

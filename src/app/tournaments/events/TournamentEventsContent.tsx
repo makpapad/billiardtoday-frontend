@@ -32,6 +32,21 @@ type TournamentEventsContentProps = {
     showStandaloneTitle?: boolean
     showEventHeader?: boolean
     emptyStateMessage?: string
+    onLiveMatchOpen?: (sessionId: string) => void
+}
+
+type EventLiveSession = {
+    id: string
+    documentId: string
+    eventId: string | null
+    eventStageId: string | null
+    groupNumber: number | null
+    screenIdentifier: string | null
+    player1DocumentId: string | null
+    player2DocumentId: string | null
+    player1Name: string | null
+    player2Name: string | null
+    sessionStatus: string | null
 }
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
@@ -51,11 +66,13 @@ export function TournamentEventsContent({
     showStandaloneTitle = true,
     showEventHeader = true,
     emptyStateMessage = 'Select a tournament event from the list to view its stages.',
+    onLiveMatchOpen,
 }: TournamentEventsContentProps = {}) {
     const [activeStageId, setActiveStageId] = useState<string | null>(null)
     const [eventData, setEventData] = useState<EventApiResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [liveSessions, setLiveSessions] = useState<EventLiveSession[]>([])
     const [brMatchesByStage, setBrMatchesByStage] = useState<Record<string, unknown[]>>({})
     const [brLoadingByStage, setBrLoadingByStage] = useState<Record<string, boolean>>({})
     const pathname = usePathname()
@@ -98,6 +115,44 @@ export function TournamentEventsContent({
                 setError(err instanceof Error ? err.message : 'Failed to fetch event')
                 setIsLoading(false)
             })
+    }, [eventId])
+
+    useEffect(() => {
+        if (!eventId) {
+            setLiveSessions([])
+            return
+        }
+
+        let cancelled = false
+
+        const fetchLiveSessions = async () => {
+            try {
+                const response = await fetch(`/api/tournaments/${encodeURIComponent(eventId)}/live-sessions`, {
+                    cache: 'no-store',
+                })
+                const payload = (await response.json().catch(() => ({ data: [] }))) as {
+                    data?: EventLiveSession[]
+                }
+                if (!response.ok) {
+                    throw new Error('Failed to fetch live sessions')
+                }
+                if (!cancelled) {
+                    setLiveSessions(Array.isArray(payload.data) ? payload.data : [])
+                }
+            } catch {
+                if (!cancelled) {
+                    setLiveSessions([])
+                }
+            }
+        }
+
+        void fetchLiveSessions()
+        const interval = window.setInterval(fetchLiveSessions, 15000)
+
+        return () => {
+            cancelled = true
+            window.clearInterval(interval)
+        }
     }, [eventId])
 
     const eventStages = useMemo<NormalizedEventStage[]>(() => {
@@ -198,6 +253,21 @@ export function TournamentEventsContent({
         () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
         [eventStages, activeStageId],
     )
+    const liveSessionByMatchKey = useMemo(() => {
+        const map = new Map<string, EventLiveSession>()
+        liveSessions.forEach((session) => {
+            if (!session.eventStageId || session.groupNumber == null) return
+            const playerIds = [session.player1DocumentId, session.player2DocumentId]
+                .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+                .sort()
+            if (playerIds.length !== 2) return
+            const key = `${session.eventStageId}::${session.groupNumber}::${playerIds.join('::')}`
+            if (!map.has(key)) {
+                map.set(key, session)
+            }
+        })
+        return map
+    }, [liveSessions])
     const normalizeBracketPlayer = useCallback((player: unknown): { name: string } => {
         try {
             const src =
@@ -483,6 +553,23 @@ export function TournamentEventsContent({
                                                                                     <tbody>
                                                                                         {group.matches.map((match) => (
                                                                                             <Fragment key={match.key}>
+                                                                                                {(() => {
+                                                                                                    const playerIds = [
+                                                                                                        match.top.player.documentId,
+                                                                                                        match.bottom.player.documentId,
+                                                                                                    ]
+                                                                                                        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+                                                                                                        .sort()
+                                                                                                    const matchLiveKey =
+                                                                                                        playerIds.length === 2 && stage.documentId && group.number != null
+                                                                                                            ? `${stage.documentId}::${group.number}::${playerIds.join('::')}`
+                                                                                                            : null
+                                                                                                    const liveSession =
+                                                                                                        matchLiveKey ? liveSessionByMatchKey.get(matchLiveKey) ?? null : null
+                                                                                                    const liveSessionId = liveSession?.documentId || liveSession?.id || null
+
+                                                                                                    return (
+                                                                                                        <>
                                                                                                 <tr
                                                                                                     className={clsx(
                                                                                                         'border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200',
@@ -521,7 +608,18 @@ export function TournamentEventsContent({
                                                                                                         className={clsx('px-4 py-2', getDateCellClass())}
                                                                                                         rowSpan={2}
                                                                                                     >
-                                                                                                        {formatDateForTable(match.dateTime)}
+                                                                                                        <div className="flex flex-col items-center gap-1">
+                                                                                                            {liveSessionId ? (
+                                                                                                                <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={() => onLiveMatchOpen?.(liveSessionId)}
+                                                                                                                    className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600 hover:bg-red-100 dark:bg-red-500/15 dark:text-red-300"
+                                                                                                                >
+                                                                                                                    Live
+                                                                                                                </button>
+                                                                                                            ) : null}
+                                                                                                            <span>{formatDateForTable(match.dateTime)}</span>
+                                                                                                        </div>
                                                                                                     </td>
                                                                                                     <td className="px-4 py-2 text-center font-semibold">
                                                                                                         {formatOutcomeLabel(match.top.outcome)}
@@ -607,6 +705,9 @@ export function TournamentEventsContent({
                                                                                                         {formatNumberValue(match.bottom.player.matchPoints)}
                                                                                                     </td>
                                                                                                 </tr>
+                                                                                                        </>
+                                                                                                    )
+                                                                                                })()}
                                                                                             </Fragment>
                                                                                         ))}
                                                                                     </tbody>
