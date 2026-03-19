@@ -211,6 +211,15 @@ export default function PlayerProfilePage() {
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
 
+    const handleBack = () => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back()
+            return
+        }
+
+        router.push('/players')
+    }
+
     const navigateToPlayer = async (opponentId: string, displayName: string) => {
         const trimmedId = opponentId?.trim()
         if (!trimmedId) return
@@ -466,7 +475,7 @@ export default function PlayerProfilePage() {
                 <div className="text-center">
                     <div className="text-red-600 dark:text-red-400 text-xl mb-4">{error || t('players.profile.error.notFound')}</div>
                     <button
-                        onClick={() => router.push('/players')}
+                        onClick={handleBack}
                         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         {t('players.profile.back')}
@@ -750,7 +759,7 @@ export default function PlayerProfilePage() {
             <div className="max-w-6xl mx-auto">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.push('/players')}
+                    onClick={handleBack}
                     className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
