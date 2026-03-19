@@ -44,9 +44,12 @@ function loadEnvFile() {
 }
 
 export function getServerEnv(key: string): string | undefined {
+  const isProduction = (process.env.NODE_ENV || "").trim() === "production";
+  const fileValue = loadEnvFile()[key];
+  if (isProduction && fileValue && fileValue.trim()) return fileValue.trim();
+
   const runtimeValue = process.env[key];
   if (runtimeValue && runtimeValue.trim()) return runtimeValue.trim();
 
-  const fileValue = loadEnvFile()[key];
   return fileValue && fileValue.trim() ? fileValue.trim() : undefined;
 }
