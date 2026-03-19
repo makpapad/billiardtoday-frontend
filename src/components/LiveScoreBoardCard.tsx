@@ -359,12 +359,12 @@ export function LiveScoreBoardCard({
       }`}
     >
       {!compact ? <div className="flex items-center justify-center">{flag}</div> : null}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 text-center">
         <div
-          className={`${compact ? "text-[13px]" : "text-sm"} truncate font-semibold`}
+          className={`${compact ? "text-[13px] sm:text-[14px]" : "text-[15px] sm:text-[17px]"} truncate font-semibold leading-tight`}
           title={name || ""}
         >
-          {compact ? compactDisplayName(name, 14) : (name || "")}
+          {compact ? compactDisplayName(name, 16) : (name || "")}
         </div>
       </div>
       {isActive ? (
