@@ -216,6 +216,12 @@ const normalizeNameForMatch = (value: string | null | undefined) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const buildNameFragments = (value: string | null | undefined) =>
+  normalizeNameForMatch(value)
+    .split(" ")
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 3);
+
 const mergeLiveSessions = (primary: EventLiveSession[], secondary: EventLiveSession[]) => {
   const merged = new Map<string, EventLiveSession>();
   for (const session of [...secondary, ...primary]) {
@@ -722,6 +728,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         ...buildNameKeys(session.player1Name, session.player2Name),
         ...buildNameKeys(session.state?.playerAName, session.state?.playerBName),
       ]);
+      const sessionFragments = new Set<string>([
+        ...buildNameFragments(session.player1Name),
+        ...buildNameFragments(session.player2Name),
+        ...buildNameFragments(session.state?.playerAName),
+        ...buildNameFragments(session.state?.playerBName),
+      ]);
 
       for (const stage of eventStages) {
         const groupedMatches = stageMatchGroups[stage.documentId] ?? [];
@@ -734,6 +746,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ]);
             for (const key of candidateKeys) {
               if (pairNameKeys.has(key)) return true;
+            }
+            if (sessionFragments.size > 0) {
+              const candidateFragments = new Set<string>([
+                ...buildNameFragments(match.top.player.name),
+                ...buildNameFragments(match.bottom.player.name),
+                ...buildNameFragments(match.top.player.nativeName),
+                ...buildNameFragments(match.bottom.player.nativeName),
+              ]);
+              let overlap = 0;
+              for (const fragment of candidateFragments) {
+                if (sessionFragments.has(fragment)) overlap += 1;
+              }
+              if (overlap >= 2) return true;
             }
             return false;
           });
@@ -969,19 +994,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 onExpandedChange={handleExpandedChange}
               />
               </div>
-              {groupPopoverBySessionId.has(session.sessionId) ? (
-                <div className="pointer-events-none absolute inset-0 z-20">
-                  <div className="pointer-events-auto absolute left-3 top-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleGroupPopover(session.sessionId)}
-                      className="rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
-                    >
-                      Group
-                    </button>
-                  </div>
+              <div className="pointer-events-none absolute inset-0 z-20">
+                <div className="pointer-events-auto absolute left-3 top-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroupPopover(session.sessionId)}
+                    className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
+                      groupPopoverBySessionId.has(session.sessionId)
+                        ? "border-white/30 bg-slate-900/50"
+                        : "border-white/15 bg-slate-900/30 opacity-70"
+                    }`}
+                  >
+                    Group
+                  </button>
                 </div>
-              ) : null}
+              </div>
             </div>
           )})}
         </div>
