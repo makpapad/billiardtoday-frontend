@@ -32,6 +32,7 @@ type TournamentEventsContentProps = {
     showStandaloneTitle?: boolean
     showEventHeader?: boolean
     emptyStateMessage?: string
+    liveSessionsOverride?: EventLiveSession[] | null
     onLiveMatchOpen?: (sessionId: string) => void
 }
 
@@ -66,6 +67,7 @@ export function TournamentEventsContent({
     showStandaloneTitle = true,
     showEventHeader = true,
     emptyStateMessage = 'Select a tournament event from the list to view its stages.',
+    liveSessionsOverride = null,
     onLiveMatchOpen,
 }: TournamentEventsContentProps = {}) {
     const [activeStageId, setActiveStageId] = useState<string | null>(null)
@@ -253,9 +255,18 @@ export function TournamentEventsContent({
         () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
         [eventStages, activeStageId],
     )
+    const effectiveLiveSessions = liveSessionsOverride ?? liveSessions
+    const normalizeLiveName = useCallback((value: string | null | undefined) => {
+        return String(value || '')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim()
+    }, [])
     const liveSessionByMatchKey = useMemo(() => {
         const map = new Map<string, EventLiveSession>()
-        liveSessions.forEach((session) => {
+        effectiveLiveSessions.forEach((session) => {
             if (!session.eventStageId || session.groupNumber == null) return
             const playerIds = [session.player1DocumentId, session.player2DocumentId]
                 .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
@@ -267,7 +278,22 @@ export function TournamentEventsContent({
             }
         })
         return map
-    }, [liveSessions])
+    }, [effectiveLiveSessions])
+    const liveSessionByPlayerNames = useMemo(() => {
+        const map = new Map<string, EventLiveSession>()
+        effectiveLiveSessions.forEach((session) => {
+            const playerNames = [session.player1Name, session.player2Name]
+                .map((value) => normalizeLiveName(value))
+                .filter((value): value is string => value.length > 0)
+                .sort()
+            if (playerNames.length !== 2) return
+            const key = playerNames.join('::')
+            if (!map.has(key)) {
+                map.set(key, session)
+            }
+        })
+        return map
+    }, [effectiveLiveSessions, normalizeLiveName])
     const normalizeBracketPlayer = useCallback((player: unknown): { name: string } => {
         try {
             const src =
@@ -565,7 +591,42 @@ export function TournamentEventsContent({
                                                                                                             ? `${stage.documentId}::${group.number}::${playerIds.join('::')}`
                                                                                                             : null
                                                                                                     const liveSession =
-                                                                                                        matchLiveKey ? liveSessionByMatchKey.get(matchLiveKey) ?? null : null
+                                                                                                        (() => {
+                                                                                                            if (matchLiveKey) {
+                                                                                                                const directMatch = liveSessionByMatchKey.get(matchLiveKey) ?? null
+                                                                                                                if (directMatch) return directMatch
+                                                                                                            }
+                                                                                                            const pairNameKey = [
+                                                                                                                normalizeLiveName(match.top.player.name || match.top.player.nativeName),
+                                                                                                                normalizeLiveName(match.bottom.player.name || match.bottom.player.nativeName),
+                                                                                                            ]
+                                                                                                                .filter((value): value is string => value.length > 0)
+                                                                                                                .sort()
+                                                                                                                .join('::')
+
+                                                                                                            if (pairNameKey) {
+                                                                                                                const exactNameMatch = liveSessionByPlayerNames.get(pairNameKey) ?? null
+                                                                                                                if (exactNameMatch) return exactNameMatch
+                                                                                                            }
+
+                                                                                                            const expandedKeys = new Set<string>()
+                                                                                                            const topCandidates = [match.top.player.name, match.top.player.nativeName]
+                                                                                                                .map((value) => normalizeLiveName(value))
+                                                                                                                .filter((value): value is string => value.length > 0)
+                                                                                                            const bottomCandidates = [match.bottom.player.name, match.bottom.player.nativeName]
+                                                                                                                .map((value) => normalizeLiveName(value))
+                                                                                                                .filter((value): value is string => value.length > 0)
+                                                                                                            topCandidates.forEach((topName) => {
+                                                                                                                bottomCandidates.forEach((bottomName) => {
+                                                                                                                    expandedKeys.add([topName, bottomName].sort().join('::'))
+                                                                                                                })
+                                                                                                            })
+                                                                                                            for (const candidateKey of expandedKeys) {
+                                                                                                                const candidate = liveSessionByPlayerNames.get(candidateKey)
+                                                                                                                if (candidate) return candidate
+                                                                                                            }
+                                                                                                            return null
+                                                                                                        })()
                                                                                                     const liveSessionId = liveSession?.documentId || liveSession?.id || null
 
                                                                                                     return (

@@ -13,6 +13,7 @@ export type TournamentEventSummary = {
   endDate: string | null;
   gameType: string | null;
   tournamentTitle: string | null;
+  clubDocumentId: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -143,6 +144,7 @@ const fetchTournamentEventSummaryById = async (
   params.set("fields[4]", "game_type");
   params.set("fields[5]", "documentId");
   params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[tournament][populate][club][fields][0]", "documentId");
   params.set("populate[event_stages][sort][0]", "order:asc");
   params.set("populate[event_stages][fields][0]", "title");
   params.set("populate[event_stages][fields][1]", "order");
@@ -170,6 +172,13 @@ const fetchTournamentEventSummaryById = async (
     event.tournament && typeof event.tournament === "object" && "attributes" in (event.tournament as Record<string, unknown>)
       ? ((event.tournament as { attributes?: Record<string, unknown> }).attributes ?? {})
       : ((event.tournament as Record<string, unknown>) ?? {});
+  const tournamentClubSource =
+    tournamentSource &&
+    typeof tournamentSource.club === "object" &&
+    tournamentSource.club &&
+    "attributes" in (tournamentSource.club as Record<string, unknown>)
+      ? ((tournamentSource.club as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((tournamentSource.club as Record<string, unknown>) ?? {});
   const stagesRaw = Array.isArray(event.event_stages)
     ? event.event_stages
     : Array.isArray((event.event_stages as { data?: unknown[] } | undefined)?.data)
@@ -184,6 +193,7 @@ const fetchTournamentEventSummaryById = async (
     endDate: readString(event.end_date),
     gameType: readString(event.game_type),
     tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
+    clubDocumentId: readString((tournamentClubSource as Record<string, unknown>).documentId),
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };

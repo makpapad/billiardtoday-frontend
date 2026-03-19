@@ -27,11 +27,72 @@ type EventLiveSession = LiveSessionItem & {
   eventId: string | null;
   eventStageId: string | null;
   groupNumber: number | null;
+  screenIdentifier: string | null;
   player1DocumentId: string | null;
   player2DocumentId: string | null;
   player1Name: string | null;
   player2Name: string | null;
   sessionStatus: string | null;
+};
+
+type WsTournamentPayload = {
+  type?: string;
+  clubId?: string | null;
+  screenId?: string;
+  screenIdentifier?: string | null;
+  sessionId?: string | number | null;
+  ended?: boolean;
+  isRunning?: boolean;
+  progress?: number;
+  ts?: number;
+  session?: Record<string, any>;
+  players?: Array<{
+    name?: string | null;
+    country?: string | null;
+    points?: number | null;
+    run?: number | null;
+    innings?: number | null;
+    hr?: number | null;
+    avgFormatted?: string | null;
+    accPercent?: number | null;
+  }>;
+};
+
+const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
+
+const normalizeNameForMatch = (value: string | null | undefined) =>
+  String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+const mergeLiveSessions = (primary: EventLiveSession[], secondary: EventLiveSession[]) => {
+  const merged = new Map<string, EventLiveSession>();
+  for (const session of [...primary, ...secondary]) {
+    const key =
+      session.documentId ||
+      session.sessionId ||
+      session.screenIdentifier ||
+      session.screenId ||
+      session.id;
+    if (!key) continue;
+    const existing = merged.get(key);
+    if (!existing) {
+      merged.set(key, session);
+      continue;
+    }
+    merged.set(key, {
+      ...existing,
+      ...session,
+      state: {
+        ...existing.state,
+        ...session.state,
+      },
+    });
+  }
+  return Array.from(merged.values());
 };
 
 type TournamentLiveScreensResponse = {
@@ -77,6 +138,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [eventLiveSessions, setEventLiveSessions] = useState<EventLiveSession[]>([]);
+  const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -149,6 +211,201 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [summary.documentId]);
 
   useEffect(() => {
+    if (!summary.clubDocumentId) {
+      setWsLiveSessions([]);
+      return;
+    }
+
+    const wsUrl =
+      process.env.NEXT_PUBLIC_WS_ENDPOINT ||
+      process.env.NEXT_PUBLIC_WS_URL ||
+      "wss://ws.billiardtoday.com";
+    const params = new URLSearchParams();
+    if (WS_TOKEN) params.set("token", WS_TOKEN);
+
+    const socket = new WebSocket(`${wsUrl}?${params.toString()}`);
+
+    const upsertLiveSession = (item: EventLiveSession) => {
+      setWsLiveSessions((prev) => {
+        const next = mergeLiveSessions([item], prev);
+        return next.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      });
+    };
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: "subscribe:club",
+          clubId: summary.clubDocumentId,
+        }),
+      );
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(String(event.data || "{}")) as WsTournamentPayload;
+        const payloadClubId = String(payload.clubId ?? payload.session?.clubId ?? "");
+        if (payloadClubId !== String(summary.clubDocumentId)) return;
+
+        if (
+          (payload.type === "SESSION_ASSIGNED" || payload.type === "SESSION_UPDATED") &&
+          payload.session &&
+          typeof payload.session === "object"
+        ) {
+          const sessionObj = payload.session;
+          const sessionDocumentId =
+            typeof sessionObj.documentId === "string" && sessionObj.documentId.trim().length > 0
+              ? sessionObj.documentId.trim()
+              : null;
+          const lifecycleSessionId = String(
+            sessionObj.documentId ?? payload.sessionId ?? sessionObj.id ?? payload.screenIdentifier ?? payload.screenId ?? "",
+          ).trim();
+          const lifecycleScreenId = String(
+            payload.screenIdentifier ?? payload.screenId ?? sessionObj.screenIdentifier ?? "",
+          ).trim();
+          const lifecycleStatus =
+            String((payload.session?.sessionStatus ?? payload.session?.status ?? payload.type) || "").trim() || null;
+
+          if (
+            payload.ended === true ||
+            lifecycleStatus === "finished" ||
+            lifecycleStatus === "cancelled"
+          ) {
+            setWsLiveSessions((prev) =>
+              prev.filter(
+                (entry) =>
+                  entry.sessionId !== lifecycleSessionId &&
+                  entry.documentId !== lifecycleSessionId &&
+                  entry.id !== lifecycleSessionId &&
+                  entry.screenId !== lifecycleScreenId &&
+                  entry.screenIdentifier !== lifecycleScreenId,
+              ),
+            );
+            return;
+          }
+
+          upsertLiveSession({
+            id: lifecycleSessionId || lifecycleScreenId || "unknown-session",
+            documentId: sessionDocumentId || lifecycleSessionId || lifecycleScreenId || "",
+            sessionId: lifecycleSessionId || lifecycleScreenId || "unknown-session",
+            screenId: lifecycleScreenId || null,
+            screenIdentifier: lifecycleScreenId || null,
+            updatedAt: new Date().toISOString(),
+            clubId: summary.clubDocumentId,
+            eventId: typeof sessionObj.eventId === "string" ? sessionObj.eventId : null,
+            eventStageId: typeof sessionObj.eventStageId === "string" ? sessionObj.eventStageId : null,
+            groupNumber:
+              typeof sessionObj.groupNumber === "number"
+                ? sessionObj.groupNumber
+                : typeof sessionObj.groupNumber === "string"
+                  ? Number(sessionObj.groupNumber)
+                  : null,
+            player1DocumentId: typeof sessionObj.player1DocumentId === "string" ? sessionObj.player1DocumentId : null,
+            player2DocumentId: typeof sessionObj.player2DocumentId === "string" ? sessionObj.player2DocumentId : null,
+            player1Name: typeof sessionObj.player1Name === "string" ? sessionObj.player1Name : null,
+            player2Name: typeof sessionObj.player2Name === "string" ? sessionObj.player2Name : null,
+            sessionStatus: lifecycleStatus,
+            state: {
+              scoreA: Number(sessionObj.player1_points ?? 0) || 0,
+              scoreB: Number(sessionObj.player2_points ?? 0) || 0,
+              inningsA: Number(sessionObj.player1_innings ?? 0) || 0,
+              inningsB: Number(sessionObj.player2_innings ?? 0) || 0,
+              inningsCount: Math.max(Number(sessionObj.player1_innings ?? 0) || 0, Number(sessionObj.player2_innings ?? 0) || 0),
+              bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
+              bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
+              playerAName: typeof sessionObj.player1Name === "string" ? sessionObj.player1Name : "Player A",
+              playerBName: typeof sessionObj.player2Name === "string" ? sessionObj.player2Name : "Player B",
+              playerACountry: typeof sessionObj.player1Country === "string" ? sessionObj.player1Country : null,
+              playerBCountry: typeof sessionObj.player2Country === "string" ? sessionObj.player2Country : null,
+              playerAPhotoUrl: typeof sessionObj.player1PhotoUrl === "string" ? sessionObj.player1PhotoUrl : null,
+              playerBPhotoUrl: typeof sessionObj.player2PhotoUrl === "string" ? sessionObj.player2PhotoUrl : null,
+              progress: Number(sessionObj.progress ?? 0) || 0,
+              totalBlocks: 40,
+              isRunning: lifecycleStatus === "in_progress",
+              tournamentName: typeof sessionObj.eventTitle === "string" ? sessionObj.eventTitle : null,
+              stageName: typeof sessionObj.stageTitle === "string" ? sessionObj.stageTitle : null,
+              groupName: typeof sessionObj.groupLabel === "string" ? sessionObj.groupLabel : null,
+              tableName: typeof sessionObj.tableNumber === "string" ? sessionObj.tableNumber : null,
+            },
+          });
+          return;
+        }
+
+        if (payload.type !== "score:update") return;
+        if (payload.ended === true) {
+          const endedSessionId = String(payload.sessionId ?? "");
+          const endedScreenId = String(payload.screenId ?? "");
+          setWsLiveSessions((prev) =>
+            prev.filter(
+              (entry) =>
+                entry.sessionId !== endedSessionId &&
+                entry.documentId !== endedSessionId &&
+                entry.id !== endedSessionId &&
+                entry.screenId !== endedScreenId &&
+                entry.screenIdentifier !== endedScreenId,
+            ),
+          );
+          return;
+        }
+
+        const players = Array.isArray(payload.players) ? payload.players : [];
+        const playerA = players[0] ?? {};
+        const playerB = players[1] ?? {};
+        const sessionId = String(payload.sessionId ?? payload.screenId ?? "").trim();
+        const screenId = String(payload.screenId ?? "").trim();
+        upsertLiveSession({
+          id: sessionId || screenId || "unknown-session",
+          documentId: sessionId || screenId || "unknown-session",
+          sessionId: sessionId || screenId || "unknown-session",
+          screenId: screenId || null,
+          screenIdentifier: screenId || null,
+          updatedAt:
+            typeof payload.ts === "number" && Number.isFinite(payload.ts)
+              ? new Date(payload.ts).toISOString()
+              : new Date().toISOString(),
+          clubId: summary.clubDocumentId,
+          eventId: null,
+          eventStageId: null,
+          groupNumber: null,
+          player1DocumentId: null,
+          player2DocumentId: null,
+          player1Name: typeof playerA.name === "string" ? playerA.name : null,
+          player2Name: typeof playerB.name === "string" ? playerB.name : null,
+          sessionStatus: payload.isRunning ? "in_progress" : "pending",
+          state: {
+            scoreA: Number(playerA.points ?? 0) || 0,
+            scoreB: Number(playerB.points ?? 0) || 0,
+            runA: Number(playerA.run ?? 0) || 0,
+            runB: Number(playerB.run ?? 0) || 0,
+            inningsA: Number(playerA.innings ?? 0) || 0,
+            inningsB: Number(playerB.innings ?? 0) || 0,
+            inningsCount: Math.max(Number(playerA.innings ?? 0) || 0, Number(playerB.innings ?? 0) || 0),
+            bestRunA: Number(playerA.hr ?? 0) || 0,
+            bestRunB: Number(playerB.hr ?? 0) || 0,
+            avgFormattedA: typeof playerA.avgFormatted === "string" ? playerA.avgFormatted : undefined,
+            avgFormattedB: typeof playerB.avgFormatted === "string" ? playerB.avgFormatted : undefined,
+            accPercentA: typeof playerA.accPercent === "number" ? playerA.accPercent : undefined,
+            accPercentB: typeof playerB.accPercent === "number" ? playerB.accPercent : undefined,
+            playerAName: typeof playerA.name === "string" ? playerA.name : "Player A",
+            playerBName: typeof playerB.name === "string" ? playerB.name : "Player B",
+            playerACountry: typeof playerA.country === "string" ? playerA.country : null,
+            playerBCountry: typeof playerB.country === "string" ? playerB.country : null,
+            progress: Number(payload.progress ?? 0) || 0,
+            totalBlocks: 40,
+            isRunning: Boolean(payload.isRunning),
+          },
+        });
+      } catch {
+        // ignore malformed payloads
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [summary.clubDocumentId]);
+
+  useEffect(() => {
     if (activeView !== "live" || !highlightedLiveSessionId) return;
     const target = document.getElementById(`tournament-live-session-${highlightedLiveSessionId}`);
     if (!target) return;
@@ -166,9 +423,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     () => tournamentLiveScreens.filter((screen) => screen.isActive),
     [tournamentLiveScreens],
   );
+  const mergedEventLiveSessions = useMemo(
+    () => mergeLiveSessions(wsLiveSessions, eventLiveSessions),
+    [eventLiveSessions, wsLiveSessions],
+  );
   const liveCards = useMemo(
-    () => eventLiveSessions.filter((session) => session.state?.isRunning || session.sessionStatus === "in_progress" || session.sessionStatus === "pending"),
-    [eventLiveSessions],
+    () =>
+      mergedEventLiveSessions.filter(
+        (session) =>
+          session.state?.isRunning ||
+          session.sessionStatus === "in_progress" ||
+          session.sessionStatus === "pending",
+      ),
+    [mergedEventLiveSessions],
   );
 
   const mainContent = activeView === "tournament" ? (
@@ -180,6 +447,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       showStandaloneTitle={false}
       showEventHeader={false}
       emptyStateMessage="This tournament page is missing event data."
+      liveSessionsOverride={mergedEventLiveSessions}
       onLiveMatchOpen={(sessionId) => {
         setHighlightedLiveSessionId(sessionId);
         setActiveView("live");
