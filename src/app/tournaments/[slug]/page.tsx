@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
-import { extractTournamentDocumentId, getTournamentEventSummary } from "@/lib/tournaments";
+import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -11,8 +11,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const documentId = extractTournamentDocumentId(slug);
-  const summary = await getTournamentEventSummary(documentId);
+  const summary = await resolveTournamentEventSummary(slug);
 
   if (!summary) {
     return {
@@ -29,22 +28,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? `${summary.tournamentTitle} ${seasonLabel} tournament page with stages, standings, and results.`
         : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`,
     alternates: {
-      canonical: `/tournaments/${slug}`,
+      canonical: `/tournaments/${buildTournamentSlug(summary.documentId, summary.title)}`,
     },
   };
 }
 
 export default async function TournamentPage({ params }: Props) {
   const { slug } = await params;
-  const documentId = extractTournamentDocumentId(slug);
   const [summary, settings, appearance] = await Promise.all([
-    getTournamentEventSummary(documentId),
+    resolveTournamentEventSummary(slug),
     getCmsSiteSettings(),
     getCmsAppearance(),
   ]);
 
   if (!summary) {
     notFound();
+  }
+
+  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title);
+  if (slug !== canonicalSlug) {
+    permanentRedirect(`/tournaments/${canonicalSlug}`);
   }
 
   return (

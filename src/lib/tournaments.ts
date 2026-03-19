@@ -42,8 +42,47 @@ const readString = (value: unknown): string | null => {
   return cleaned || null;
 };
 
-const slugify = (value: string) =>
+const GREEK_TO_LATIN: Record<string, string> = {
+  α: "a",
+  β: "v",
+  γ: "g",
+  δ: "d",
+  ε: "e",
+  ζ: "z",
+  η: "i",
+  θ: "th",
+  ι: "i",
+  κ: "k",
+  λ: "l",
+  μ: "m",
+  ν: "n",
+  ξ: "x",
+  ο: "o",
+  π: "p",
+  ρ: "r",
+  σ: "s",
+  ς: "s",
+  τ: "t",
+  υ: "y",
+  φ: "f",
+  χ: "ch",
+  ψ: "ps",
+  ω: "o",
+};
+
+const transliterateGreek = (value: string) =>
   value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split("")
+    .map((char) => {
+      const lower = char.toLowerCase();
+      return GREEK_TO_LATIN[lower] ?? char;
+    })
+    .join("");
+
+const slugify = (value: string) =>
+  transliterateGreek(value)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -69,10 +108,9 @@ const normalizeStage = (value: unknown, index: number): TournamentEventStageSumm
   };
 };
 
-export const buildTournamentSlug = (documentId: string, title: string) => {
-  const safeDocumentId = String(documentId || "").trim();
+export const buildTournamentSlug = (_documentId: string, title: string) => {
   const safeTitle = slugify(String(title || "").trim()) || "event";
-  return `${safeDocumentId}--${safeTitle}`;
+  return safeTitle;
 };
 
 export const buildTournamentHref = (
@@ -84,7 +122,7 @@ export const buildTournamentHref = (
 export const extractTournamentDocumentId = (slug: string) =>
   String(slug || "").split("--")[0]?.trim() || "";
 
-export const getTournamentEventSummary = async (
+const fetchTournamentEventSummaryById = async (
   documentId: string,
 ): Promise<TournamentEventSummary | null> => {
   const cleanId = String(documentId || "").trim();
@@ -142,3 +180,68 @@ export const getTournamentEventSummary = async (
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };
+
+const fetchTournamentEventSummaryBySlug = async (
+  slug: string,
+): Promise<TournamentEventSummary | null> => {
+  const cleanSlug = slugify(String(slug || "").trim());
+  if (!cleanSlug) return null;
+
+  const params = new URLSearchParams();
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "documentId");
+  params.set("pagination[pageSize]", "500");
+  params.set("sort[0]", "updatedAt:desc");
+
+  const response = await fetch(`${STRAPI_URL}/api/bt-events?${params.toString()}`, {
+    headers: buildHeaders(),
+    cache: IS_DEVELOPMENT ? "no-store" : undefined,
+    next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
+  }).catch(() => null);
+
+  if (!response?.ok) return null;
+
+  const json = await response.json().catch(() => null);
+  const items: unknown[] = Array.isArray(json?.data) ? json.data : [];
+  const match = items.find((item: unknown) => {
+    const itemRecord = item && typeof item === "object" ? (item as Record<string, unknown>) : null;
+    const attributes =
+      itemRecord?.attributes && typeof itemRecord.attributes === "object"
+        ? (itemRecord.attributes as Record<string, unknown>)
+        : null;
+    const source =
+      attributes
+        ? { ...attributes, ...itemRecord }
+        : itemRecord;
+    const title = readString((source as Record<string, unknown>)?.title);
+    return title ? slugify(title) === cleanSlug : false;
+  });
+
+  const matchRecord = match && typeof match === "object" ? (match as Record<string, unknown>) : null;
+  const matchAttributes =
+    matchRecord?.attributes && typeof matchRecord.attributes === "object"
+      ? (matchRecord.attributes as Record<string, unknown>)
+      : null;
+  const documentId = readString(
+    matchAttributes?.documentId ?? matchRecord?.documentId,
+  );
+
+  return documentId ? fetchTournamentEventSummaryById(documentId) : null;
+};
+
+export const resolveTournamentEventSummary = async (
+  slugOrLegacy: string,
+): Promise<TournamentEventSummary | null> => {
+  const cleanValue = String(slugOrLegacy || "").trim();
+  if (!cleanValue) return null;
+
+  if (cleanValue.includes("--")) {
+    return fetchTournamentEventSummaryById(extractTournamentDocumentId(cleanValue));
+  }
+
+  return fetchTournamentEventSummaryBySlug(cleanValue);
+};
+
+export const getTournamentEventSummary = async (
+  documentId: string,
+): Promise<TournamentEventSummary | null> => fetchTournamentEventSummaryById(documentId);

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { getCmsPageWidth } from "@/lib/cms/layout";
 import { getCmsAppearance } from "@/lib/cms/strapi";
-import { extractTournamentDocumentId, getTournamentEventSummary } from "@/lib/tournaments";
+import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -12,8 +12,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const documentId = extractTournamentDocumentId(slug);
-  const summary = await getTournamentEventSummary(documentId);
+  const summary = await resolveTournamentEventSummary(slug);
 
   return {
     title: summary ? `${summary.title} Embed` : "Tournament Embed",
@@ -26,14 +25,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EmbedTournamentPage({ params }: Props) {
   const { slug } = await params;
-  const documentId = extractTournamentDocumentId(slug);
   const [summary, appearance] = await Promise.all([
-    getTournamentEventSummary(documentId),
+    resolveTournamentEventSummary(slug),
     getCmsAppearance(),
   ]);
 
   if (!summary) {
     notFound();
+  }
+
+  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title);
+  if (slug !== canonicalSlug) {
+    permanentRedirect(`/embed/tournaments/${canonicalSlug}`);
   }
 
   return (
