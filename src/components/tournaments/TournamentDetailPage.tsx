@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { LiveScoreBoardCard } from "@/components/live/LiveScoreBoardCard";
+import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
@@ -468,7 +468,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {liveCards.map((session) => (
+          {liveCards.map((session) => {
+            const state = (session.state ?? {}) as any;
+            return (
             <div
               key={session.sessionId}
               id={`tournament-live-session-${session.sessionId}`}
@@ -478,9 +480,56 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   : undefined
               }
             >
-              <LiveScoreBoardCard item={session} />
+              <LiveScoreBoardCard
+                sessionId={session.sessionId}
+                clubName={session.clubName}
+                clubCity={session.clubCity}
+                updatedAt={session.updatedAt}
+                timerProgress={state.progress}
+                timerTotal={state.totalBlocks}
+                timerRunning={state.isRunning}
+                timeoutsUsed1={state.timeoutsA}
+                maxTimeouts1={state.maxTimeoutsA}
+                timeoutsUsed2={state.timeoutsB}
+                maxTimeouts2={state.maxTimeoutsB}
+                inningsCount={state.inningsCount}
+                gameDurationSeconds={state.gameDurationSeconds}
+                player1={{
+                  name: state.playerAName || "Player A",
+                  country: state.playerACountry ?? null,
+                  photoUrl: state.playerAPhotoUrl ?? null,
+                  points: state.scoreA ?? 0,
+                  run: state.runA ?? 0,
+                  liveRun: state.liveRunA ?? 0,
+                  innings: state.inningsA ?? 0,
+                  hr: state.bestRunA ?? 0,
+                  flag: "🇬🇷",
+                  avgFormatted: state.avgFormattedA,
+                  accPercent: state.accPercentA,
+                  secondsPerInning: state.secondsPerInningA,
+                  playerTimeSeconds: state.playerATimeSeconds,
+                  targetPoints: state.targetPointsA ?? null,
+                }}
+                player2={{
+                  name: state.playerBName || "Player B",
+                  country: state.playerBCountry ?? null,
+                  photoUrl: state.playerBPhotoUrl ?? null,
+                  points: state.scoreB ?? 0,
+                  run: state.runB ?? 0,
+                  liveRun: state.liveRunB ?? 0,
+                  innings: state.inningsB ?? 0,
+                  hr: state.bestRunB ?? 0,
+                  flag: "🇬🇷",
+                  avgFormatted: state.avgFormattedB,
+                  accPercent: state.accPercentB,
+                  secondsPerInning: state.secondsPerInningB,
+                  playerTimeSeconds: state.playerBTimeSeconds,
+                  targetPoints: state.targetPointsB ?? null,
+                }}
+                current={state.current}
+              />
             </div>
-          ))}
+          )})}
         </div>
       )}
     </section>
