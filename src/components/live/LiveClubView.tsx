@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 const STALE_TTL_MS = 60 * 60 * 1000; // 60 minutes
@@ -1404,7 +1405,12 @@ type HighlightModalProps = {
 
 export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) {
   const [modalScale, setModalScale] = React.useState(1);
+  const [portalReady, setPortalReady] = React.useState(false);
   const modalCardRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    setPortalReady(typeof document !== "undefined");
+  }, []);
 
   React.useEffect(() => {
     if (!item || typeof window === "undefined") return;
@@ -1700,7 +1706,7 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
   const leftFlagUrl = leftFlag ? `https://flagcdn.com/w1600/${leftFlag}.png` : null;
   const rightFlagUrl = rightFlag ? `https://flagcdn.com/w1600/${rightFlag}.png` : null;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden"
       role="dialog"
@@ -1894,6 +1900,9 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
       </div>
     </div>
   );
+
+  if (!portalReady) return null;
+  return createPortal(modalContent, document.body);
 }
 
 function PlayerHighlightCard({
