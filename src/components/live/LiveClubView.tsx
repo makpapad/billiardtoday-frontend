@@ -1407,6 +1407,18 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
   const modalCardRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
+    if (!item || typeof window === "undefined") return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [item, onClose]);
+
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
 
     const computeScale = () => {
@@ -1693,6 +1705,13 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden"
       role="dialog"
       aria-modal="true"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          event.preventDefault();
+          event.stopPropagation();
+          onClose();
+        }
+      }}
     >
       <div className="absolute inset-0">
         <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
@@ -1725,7 +1744,14 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
 
         `}</style>
       </div>
-      <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onClose();
+        }}
+      />
       {leftFlagUrl ? (
         <div
           className="absolute bottom-0 left-0 z-[5] h-52 w-80 md:h-64 md:w-[28rem] opacity-30 pointer-events-none"
@@ -1751,6 +1777,9 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
       <div
         ref={modalCardRef}
         className="relative w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl border border-white/15 text-white bg-white/5 live-recap-zoom"
+        onMouseDown={(event) => {
+          event.stopPropagation();
+        }}
         style={
           modalScale < 1
             ? {
@@ -1777,7 +1806,15 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
               </div>
             </div>
             <button
-              onClick={onClose}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onClose();
+              }}
               className="ml-auto text-white/70 hover:text-white transition text-xl border border-white/30 rounded-full w-10 h-10 flex items-center justify-center bg-black/10 backdrop-blur-sm"
               aria-label="Close"
             >
