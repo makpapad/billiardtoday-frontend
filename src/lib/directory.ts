@@ -38,10 +38,17 @@ const buildHeaders = (): HeadersInit =>
   STRAPI_API_TOKEN ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` } : {};
 
 const fetchStrapiJson = async (path: string) => {
-  const res = await fetch(`${STRAPI_URL}${path}`, {
-    cache: "no-store",
-    headers: buildHeaders(),
-  });
+  const url = `${STRAPI_URL}${path}`;
+  const doFetch = async (useAuth: boolean) =>
+    fetch(url, {
+      cache: "no-store",
+      headers: useAuth ? buildHeaders() : {},
+    });
+
+  let res = await doFetch(Boolean(STRAPI_API_TOKEN));
+  if (!res.ok && STRAPI_API_TOKEN && (res.status === 401 || res.status === 403)) {
+    res = await doFetch(false);
+  }
 
   if (!res.ok) {
     throw new Error(`Strapi request failed: ${res.status} ${path}`);

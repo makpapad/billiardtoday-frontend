@@ -49,12 +49,18 @@ const isHttpStatusError = (error: unknown, status: number) => {
 const fetchJson = async (path: string, revalidate = CMS_FETCH_REVALIDATE_SECONDS) => {
   const url = `${STRAPI_URL}${path.startsWith("/") ? path : `/${path}`}`;
   const useNoStore = IS_DEVELOPMENT || revalidate === 0;
-  const res = await fetch(url, {
-    headers: buildHeaders(),
-    cache: useNoStore ? "no-store" : undefined,
-    next: useNoStore ? undefined : { revalidate },
-    signal: AbortSignal.timeout(CMS_FETCH_TIMEOUT_MS),
-  });
+  const doFetch = async (useAuth: boolean) =>
+    fetch(url, {
+      headers: useAuth ? buildHeaders() : {},
+      cache: useNoStore ? "no-store" : undefined,
+      next: useNoStore ? undefined : { revalidate },
+      signal: AbortSignal.timeout(CMS_FETCH_TIMEOUT_MS),
+    });
+
+  let res = await doFetch(Boolean(STRAPI_API_TOKEN));
+  if (!res.ok && STRAPI_API_TOKEN && (res.status === 401 || res.status === 403)) {
+    res = await doFetch(false);
+  }
 
   if (!res.ok) {
     throw new Error(`Strapi request failed: ${res.status} ${path}`);
