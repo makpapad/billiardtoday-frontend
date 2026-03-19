@@ -99,7 +99,6 @@ export function LiveClubView({ club, embedded = false }: Props) {
     if (!club.documentId || typeof window === "undefined") return;
 
     const params = new URLSearchParams();
-    params.set("screenId", `club:${club.documentId}`);
     if (WS_TOKEN) params.set("token", WS_TOKEN);
 
     let socket: WebSocket | null = null;
