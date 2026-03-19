@@ -3,7 +3,11 @@ import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
 import { getServerEnv } from "@/lib/serverEnv";
 
 const STRAPI_URL =
-  getServerEnv("NEXT_PUBLIC_STRAPI_URL") || "https://app.billiardtoday.com";
+  getServerEnv("STRAPI_API_URL") ||
+  getServerEnv("NEXT_PUBLIC_STRAPI_URL") ||
+  ((getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production"
+    ? "http://127.0.0.1:1337"
+    : "https://app.billiardtoday.com");
 const CMS_ADMIN_URL =
   getServerEnv("CMS_ADMIN_URL") ||
   getServerEnv("NEXT_PUBLIC_CMS_ADMIN_URL") ||

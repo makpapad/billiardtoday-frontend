@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { getServerEnv } from "@/lib/serverEnv";
 
-const STRAPI_URL = getServerEnv("NEXT_PUBLIC_STRAPI_URL") || "http://localhost:1337";
+const STRAPI_URL =
+  getServerEnv("STRAPI_API_URL") ||
+  getServerEnv("NEXT_PUBLIC_STRAPI_URL") ||
+  ((getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production"
+    ? "http://127.0.0.1:1337"
+    : "http://localhost:1337");
 const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
 
 type Club = {
