@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
+import { LiveStatsHighlightModal, type LiveScoreItem } from "@/components/live/LiveClubView";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
@@ -69,7 +70,7 @@ const normalizeNameForMatch = (value: string | null | undefined) =>
 
 const mergeLiveSessions = (primary: EventLiveSession[], secondary: EventLiveSession[]) => {
   const merged = new Map<string, EventLiveSession>();
-  for (const session of [...primary, ...secondary]) {
+  for (const session of [...secondary, ...primary]) {
     const key =
       session.documentId ||
       session.sessionId ||
@@ -139,6 +140,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [eventLiveSessions, setEventLiveSessions] = useState<EventLiveSession[]>([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
+  const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -437,6 +440,59 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     [mergedEventLiveSessions],
   );
 
+  useEffect(() => {
+    const valid = new Set(liveCards.map((item) => item.sessionId));
+    setExpandedSessions((prev) => {
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (valid.has(id)) next.add(id);
+      });
+      return next;
+    });
+  }, [liveCards]);
+
+  useEffect(() => {
+    if (!highlightItem) return;
+    const fresh =
+      liveCards.find((x) => x.sessionId === highlightItem.sessionId) ??
+      liveCards.find((x) => x.screenId && x.screenId === highlightItem.screenId);
+    if (!fresh) return;
+    setHighlightItem({
+      id: fresh.id,
+      sessionId: fresh.sessionId,
+      screenId: fresh.screenId ?? undefined,
+      updatedAt: fresh.updatedAt ?? undefined,
+      clubId: fresh.clubId ?? undefined,
+      clubName: fresh.clubName ?? undefined,
+      clubCity: fresh.clubCity ?? undefined,
+      clubFederationName: fresh.clubFederationName ?? undefined,
+      state: fresh.state as any,
+    });
+  }, [liveCards, highlightItem]);
+
+  const handleExpandedChange = (expanded: boolean, sessionId: string) => {
+    setExpandedSessions((prev) => {
+      const next = new Set(prev);
+      if (expanded) next.add(sessionId);
+      else next.delete(sessionId);
+      return next;
+    });
+  };
+
+  const handleCardClick = (session: EventLiveSession) => {
+    setHighlightItem({
+      id: session.id,
+      sessionId: session.sessionId,
+      screenId: session.screenId ?? undefined,
+      updatedAt: session.updatedAt ?? undefined,
+      clubId: session.clubId ?? undefined,
+      clubName: session.clubName ?? undefined,
+      clubCity: session.clubCity ?? undefined,
+      clubFederationName: session.clubFederationName ?? undefined,
+      state: session.state as any,
+    });
+  };
+
   const mainContent = activeView === "tournament" ? (
     <TournamentEventsContent
       key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
@@ -527,11 +583,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   targetPoints: state.targetPointsB ?? null,
                 }}
                 current={state.current}
+                onNavigate={() => handleCardClick(session)}
+                expanded={expandedSessions.has(session.sessionId)}
+                onExpandedChange={handleExpandedChange}
               />
             </div>
           )})}
         </div>
       )}
+      <LiveStatsHighlightModal item={highlightItem} onClose={() => setHighlightItem(null)} />
     </section>
   );
 

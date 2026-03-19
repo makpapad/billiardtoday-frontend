@@ -94,6 +94,11 @@ export function TournamentEventsContent({
             tournamentContextSlug ? `?tournament=${encodeURIComponent(tournamentContextSlug)}` : ''
         }`
 
+    const liveBadgeAnimation = `@keyframes btLivePulse {
+        0%, 100% { opacity: 0.88; }
+        50% { opacity: 1; }
+    }`
+
     // Fetch event data
     useEffect(() => {
         if (!eventId) {
@@ -453,6 +458,7 @@ export function TournamentEventsContent({
 
     return (
         <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: 'var(--bt-page-width, 1280px)' }}>
+            <style>{liveBadgeAnimation}</style>
             <div className="flex flex-col gap-4">
                 {showStandaloneTitle ? <h1 className="text-2xl font-semibold">Tournament Events</h1> : null}
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
@@ -666,20 +672,22 @@ export function TournamentEventsContent({
                                                                                                         )}
                                                                                                     </td>
                                                                                                     <td
-                                                                                                        className={clsx('px-4 py-2', getDateCellClass())}
+                                                                                                        className={clsx('px-4 py-2 relative overflow-hidden', getDateCellClass())}
                                                                                                         rowSpan={2}
                                                                                                     >
-                                                                                                        <div className="flex flex-col items-center gap-1">
+                                                                                                        <div className="flex min-h-[72px] items-center justify-center">
                                                                                                             {liveSessionId ? (
                                                                                                                 <button
                                                                                                                     type="button"
                                                                                                                     onClick={() => onLiveMatchOpen?.(liveSessionId)}
-                                                                                                                    className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600 hover:bg-red-100 dark:bg-red-500/15 dark:text-red-300"
+                                                                                                                    className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(90deg,#facc15_0%,#facc15_82%,#1d4ed8_82%,#1d4ed8_100%)] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950 transition-opacity duration-300 ease-in-out animate-[btLivePulse_1.6s_ease-in-out_infinite]"
+                                                                                                                    aria-label="Open live match"
                                                                                                                 >
-                                                                                                                    Live
+                                                                                                                    LIVE
                                                                                                                 </button>
-                                                                                                            ) : null}
-                                                                                                            <span>{formatDateForTable(match.dateTime)}</span>
+                                                                                                            ) : (
+                                                                                                                <span>{formatDateForTable(match.dateTime)}</span>
+                                                                                                            )}
                                                                                                         </div>
                                                                                                     </td>
                                                                                                     <td className="px-4 py-2 text-center font-semibold">

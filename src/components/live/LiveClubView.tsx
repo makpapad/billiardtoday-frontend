@@ -342,7 +342,7 @@ function buildPlayerChartSeries(
   return series;
 }
 
-type LiveScoreItem = {
+export type LiveScoreItem = {
   id: string | number;
   sessionId: string;
   screenId?: string;
@@ -1376,7 +1376,7 @@ type HighlightModalProps = {
   onClose: () => void;
 };
 
-function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) {
+export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) {
   const [modalScale, setModalScale] = React.useState(1);
   const modalCardRef = React.useRef<HTMLDivElement | null>(null);
 
