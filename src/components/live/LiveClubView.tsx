@@ -100,6 +100,7 @@ const SHEET_TOURNAMENT_KEY = "scoreboard.sheet.tournamentName";
 const SHEET_STAGE_KEY = "scoreboard.sheet.stage";
 const SHEET_GROUP_KEY = "scoreboard.sheet.group";
 const SHEET_TABLE_KEY = "scoreboard.sheet.table";
+const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
 function normalizeMetaValue(value: any): string | null {
   if (value === undefined || value === null) return null;
@@ -356,6 +357,9 @@ type LiveScoreItem = {
 type LiveScorePayload = {
   screenId: string;
   sessionId?: string | null;
+  session?: Record<string, any>;
+  status?: string | null;
+  screenIdentifier?: string | null;
   clubId?: string | number | null;
   clubName?: string | null;
   clubCity?: string | null;
@@ -789,7 +793,7 @@ export function LiveClubView({ club }: Props) {
     if (!wsUrl) return;
 
     const params = new URLSearchParams();
-    params.set('token', process.env.NEXT_PUBLIC_WS_TOKEN || '');
+    if (WS_TOKEN) params.set('token', WS_TOKEN);
     const url = `${wsUrl}?${params.toString()}`;
     
     const socket = new WebSocket(url);
@@ -823,6 +827,90 @@ export function LiveClubView({ club }: Props) {
         
         const itemsSnapshot = itemsRef.current;
         const endedScreensSnapshot = endedScreensRef.current;
+
+        if (
+          (payload.type === "SESSION_ASSIGNED" || payload.type === "SESSION_UPDATED") &&
+          String(payload.clubId ?? payload.session?.clubId ?? "") === String(clubId)
+        ) {
+          const sessionObj = payload.session || {};
+          const lifecycleSessionId =
+            String(
+              sessionObj.documentId ??
+              payload.sessionId ??
+              sessionObj.id ??
+              "",
+            ) || "unknown-session";
+          const lifecycleScreenId =
+            payload.screenIdentifier ?? payload.screenId ?? sessionObj.screenIdentifier ?? undefined;
+          const lifecycleStatus = payload.status ?? sessionObj.status ?? null;
+          const ended = lifecycleStatus === "finished" || lifecycleStatus === "cancelled";
+
+          if (ended) {
+            setItems((prev) =>
+              prev.filter(
+                (x) =>
+                  x.sessionId !== lifecycleSessionId &&
+                  x.id !== lifecycleSessionId &&
+                  x.screenId !== lifecycleScreenId,
+              ),
+            );
+            return;
+          }
+
+          const meta = mergeSessionMeta(sessionObj, sessionObj.metadata, sessionObj.meta);
+          const item: LiveScoreItem = {
+            id: lifecycleSessionId,
+            sessionId: lifecycleSessionId,
+            screenId: lifecycleScreenId,
+            updatedAt: new Date().toISOString(),
+            clubId: sessionObj.clubId ?? payload.clubId ?? null,
+            clubName: sessionObj.clubName ?? club.name ?? null,
+            clubCity: sessionObj.clubCity ?? club.city ?? null,
+            clubFederationName: sessionObj.clubFederationName ?? club.federation?.name ?? null,
+            state: {
+              scoreA: Number(sessionObj.player1_points ?? 0) || 0,
+              scoreB: Number(sessionObj.player2_points ?? 0) || 0,
+              runA: 0,
+              runB: 0,
+              liveRunA: 0,
+              liveRunB: 0,
+              inningsA: Number(sessionObj.player1_innings ?? 0) || 0,
+              inningsB: Number(sessionObj.player2_innings ?? 0) || 0,
+              inningsCount: Math.max(
+                Number(sessionObj.player1_innings ?? 0) || 0,
+                Number(sessionObj.player2_innings ?? 0) || 0,
+              ),
+              bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
+              bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
+              ended: false,
+              playerAName: sessionObj.player1Name ?? "Player A",
+              playerBName: sessionObj.player2Name ?? "Player B",
+              progress: Number(sessionObj.progress ?? 0) || 0,
+              totalBlocks: 40,
+              tournamentName: meta.tournamentName ?? sessionObj.eventTitle ?? null,
+              stageName: meta.stageName ?? sessionObj.stageTitle ?? null,
+              groupName: meta.groupName ?? sessionObj.groupLabel ?? null,
+              tableName: meta.tableName ?? sessionObj.tableNumber ?? null,
+              playerACountry: sessionObj.player1Country ?? null,
+              playerBCountry: sessionObj.player2Country ?? null,
+              playerAPhotoUrl: sessionObj.player1PhotoUrl ?? null,
+              playerBPhotoUrl: sessionObj.player2PhotoUrl ?? null,
+            },
+          };
+
+          setItems((prev) => {
+            const idx = prev.findIndex(
+              (x) =>
+                x.sessionId === lifecycleSessionId ||
+                (lifecycleScreenId && x.screenId === lifecycleScreenId),
+            );
+            if (idx < 0) return [item, ...prev];
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...item, state: { ...next[idx].state, ...item.state } };
+            return next;
+          });
+          return;
+        }
 
         // Match any score update where the clubId matches
         if (payload.type === "score:update" && String(payload.clubId) === String(clubId)) {
