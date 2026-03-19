@@ -811,17 +811,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     lastClosedHighlightRef.current = null;
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
-    setHighlightItem({
-      id: session.id,
-      sessionId: session.sessionId,
-      screenId: session.screenId ?? undefined,
-      updatedAt: session.updatedAt ?? undefined,
-      clubId: session.clubId ?? undefined,
-      clubName: session.clubName ?? undefined,
-      clubCity: session.clubCity ?? undefined,
-      clubFederationName: session.clubFederationName ?? undefined,
-      state: session.state as any,
-    });
+    window.setTimeout(() => {
+      setHighlightItem({
+        id: session.id,
+        sessionId: session.sessionId,
+        screenId: session.screenId ?? undefined,
+        updatedAt: session.updatedAt ?? undefined,
+        clubId: session.clubId ?? undefined,
+        clubName: session.clubName ?? undefined,
+        clubCity: session.clubCity ?? undefined,
+        clubFederationName: session.clubFederationName ?? undefined,
+        state: session.state as any,
+      });
+    }, 0);
   };
 
   const toggleGroupPopover = (sessionId: string) => {
