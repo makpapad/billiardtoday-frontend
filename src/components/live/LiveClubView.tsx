@@ -25,6 +25,18 @@ type LiveSessionsResponse = {
   error?: string;
 };
 
+type WsPayload = Record<string, any> & {
+  type?: string;
+  clubId?: string | number | null;
+  screenId?: string | null;
+  screenIdentifier?: string | null;
+  sessionId?: string | number | null;
+  sessionDocumentId?: string | number | null;
+  ended?: boolean;
+  status?: string | null;
+  session?: Record<string, any> | null;
+};
+
 const POLL_INTERVAL_MS = 15000;
 const WS_URL =
   process.env.NEXT_PUBLIC_WS_ENDPOINT ||
@@ -62,7 +74,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
         const payload = (await response.json()) as LiveSessionsResponse;
         if (cancelled) return;
 
-        setItems(Array.isArray(payload.data) ? payload.data : []);
+        const nextItems = Array.isArray(payload.data) ? payload.data : [];
+        setItems((prev) => (nextItems.length > 0 ? nextItems : prev));
         setError(payload.error || null);
       } catch (requestError) {
         if (cancelled) return;
@@ -157,9 +170,80 @@ export function LiveClubView({ club, embedded = false }: Props) {
 
       socket.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data as string) as Record<string, any>;
-          if (payload?.type !== "score:update") return;
+          const payload = JSON.parse(event.data as string) as WsPayload;
           if (String(payload.clubId || "") !== String(club.documentId)) return;
+
+          if (payload.type === "SESSION_ASSIGNED" || payload.type === "SESSION_UPDATED") {
+            const sessionObj = payload.session || {};
+            const sessionId = String(
+              sessionObj.documentId ??
+                payload.sessionDocumentId ??
+                sessionObj.id ??
+                payload.sessionId ??
+                "",
+            );
+            const screenId = String(
+              payload.screenIdentifier ?? payload.screenId ?? sessionObj.screenIdentifier ?? "",
+            ) || null;
+            const status = String(payload.status ?? sessionObj.status ?? "");
+            const ended = status === "finished" || status === "cancelled";
+
+            if (!sessionId) return;
+
+            if (ended) {
+              setItems((prev) =>
+                prev.filter((item) => {
+                  if (screenId && item.screenId === screenId) return false;
+                  return String(item.sessionId || "") !== sessionId;
+                }),
+              );
+              return;
+            }
+
+            upsertItem({
+              id: sessionId,
+              sessionId,
+              screenId,
+              updatedAt: new Date().toISOString(),
+              clubId: String(sessionObj.clubId ?? payload.clubId ?? club.documentId),
+              clubName: sessionObj.clubName ?? club.name,
+              clubCity: sessionObj.clubCity ?? club.city ?? null,
+              clubFederationName: sessionObj.clubFederationName ?? club.federation?.name ?? null,
+              state: {
+                scoreA: Number(sessionObj.player1_points ?? 0),
+                scoreB: Number(sessionObj.player2_points ?? 0),
+                runA: 0,
+                runB: 0,
+                liveRunA: 0,
+                liveRunB: 0,
+                inningsA: Number(sessionObj.player1_innings ?? 0),
+                inningsB: Number(sessionObj.player2_innings ?? 0),
+                inningsCount: Math.max(
+                  Number(sessionObj.player1_innings ?? 0),
+                  Number(sessionObj.player2_innings ?? 0),
+                  0,
+                ),
+                bestRunA: Number(sessionObj.player1_high_run ?? 0),
+                bestRunB: Number(sessionObj.player2_high_run ?? 0),
+                playerAName: sessionObj.player1Name ?? "Player A",
+                playerBName: sessionObj.player2Name ?? "Player B",
+                playerACountry: sessionObj.player1Country ?? null,
+                playerBCountry: sessionObj.player2Country ?? null,
+                playerAPhotoUrl: sessionObj.player1PhotoUrl ?? null,
+                playerBPhotoUrl: sessionObj.player2PhotoUrl ?? null,
+                progress: Number(sessionObj.progress ?? 0),
+                totalBlocks: 40,
+                isRunning: status === "in_progress",
+                tournamentName: sessionObj.eventTitle ?? null,
+                stageName: sessionObj.stageTitle ?? null,
+                groupName: sessionObj.groupLabel ?? null,
+                tableName: sessionObj.tableNumber ?? null,
+              },
+            });
+            return;
+          }
+
+          if (payload?.type !== "score:update") return;
 
           const players = Array.isArray(payload.players) ? payload.players : [];
           const hasPlaceholderNames =
