@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
-import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubBySlug } from "@/lib/directory";
 
 type Props = {
@@ -10,14 +9,10 @@ type Props = {
 
 export default async function EmbedClubPage({ params }: Props) {
   const { slug } = await params;
-  const [settings, appearance, club] = await Promise.all([
-    getCmsSiteSettings(),
-    getCmsAppearance(),
-    requireClubBySlug(slug),
-  ]);
+  const [appearance, club] = await Promise.all([getCmsAppearance(), requireClubBySlug(slug)]);
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+    <>
       <section className="px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
@@ -62,6 +57,6 @@ export default async function EmbedClubPage({ params }: Props) {
         embedded
         clubSlug={club.slug}
       />
-    </CmsPageShell>
+    </>
   );
 }

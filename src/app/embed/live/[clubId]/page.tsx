@@ -1,6 +1,6 @@
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
+import { EmbedPageFrame } from "@/components/embed/EmbedPageFrame";
 import { LiveClubView } from "@/components/live/LiveClubView";
-import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
 
 type Props = {
@@ -9,14 +9,13 @@ type Props = {
 
 export default async function EmbedLiveClubPage({ params }: Props) {
   const { clubId } = await params;
-  const [settings, appearance, club] = await Promise.all([
-    getCmsSiteSettings(),
+  const [appearance, club] = await Promise.all([
     getCmsAppearance(),
     requireClubByIdentifier(clubId),
   ]);
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance} showChrome={false}>
+    <EmbedPageFrame appearance={appearance}>
       <LiveClubView
         embedded
         club={{
@@ -27,6 +26,6 @@ export default async function EmbedLiveClubPage({ params }: Props) {
           federation: club.federation ? { name: club.federation.name } : null,
         }}
       />
-    </CmsPageShell>
+    </EmbedPageFrame>
   );
 }
