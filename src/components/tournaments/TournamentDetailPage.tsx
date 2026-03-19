@@ -303,6 +303,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
   const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
   const tournamentScrollYRef = useRef<number | null>(null);
+  const pendingTournamentRestoreYRef = useRef<number | null>(null);
   const previousViewRef = useRef<"tournament" | "live">("tournament");
 
   useEffect(() => {
@@ -337,14 +338,37 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     }
 
     if (previousViewRef.current === "live" && activeView === "tournament" && tournamentScrollYRef.current !== null) {
-      const restoreY = tournamentScrollYRef.current;
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: restoreY, behavior: "auto" });
-      });
+      pendingTournamentRestoreYRef.current = tournamentScrollYRef.current;
     }
 
     previousViewRef.current = activeView;
   }, [activeView]);
+
+  useEffect(() => {
+    if (activeView !== "tournament" || pendingTournamentRestoreYRef.current === null) return;
+
+    const restoreY = pendingTournamentRestoreYRef.current;
+    const restoreScroll = () => {
+      window.scrollTo({ top: restoreY, behavior: "auto" });
+    };
+
+    const frameOne = requestAnimationFrame(restoreScroll);
+    const frameTwo = requestAnimationFrame(() => {
+      requestAnimationFrame(restoreScroll);
+    });
+    const timeoutOne = window.setTimeout(restoreScroll, 80);
+    const timeoutTwo = window.setTimeout(() => {
+      restoreScroll();
+      pendingTournamentRestoreYRef.current = null;
+    }, 180);
+
+    return () => {
+      cancelAnimationFrame(frameOne);
+      cancelAnimationFrame(frameTwo);
+      window.clearTimeout(timeoutOne);
+      window.clearTimeout(timeoutTwo);
+    };
+  }, [activeView, eventData, selectedStageDocumentId]);
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -873,6 +897,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     setOpenGroupSessionId((prev) => (prev === sessionId ? null : sessionId));
   };
 
+  const switchToLive = () => {
+    if (activeView === "tournament") {
+      tournamentScrollYRef.current = window.scrollY;
+    }
+    setActiveView("live");
+  };
+
+  const switchToTournament = () => {
+    setActiveView("tournament");
+  };
+
   const handleHighlightClose = () => {
     lastModalCloseAtRef.current = Date.now();
     lastClosedHighlightRef.current = {
@@ -902,7 +937,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       onLiveMatchOpen={(sessionId) => {
         setHighlightedLiveSessionId(sessionId);
         setExpandedSessions(new Set([sessionId]));
-        setActiveView("live");
+        switchToLive();
       }}
     />
   ) : (
@@ -1045,7 +1080,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => setActiveView("live")}
+                onClick={switchToLive}
                 className={
                   activeView === "live"
                     ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
@@ -1056,7 +1091,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveView("tournament")}
+                onClick={switchToTournament}
                 className={
                   activeView === "tournament"
                     ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
