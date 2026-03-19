@@ -505,6 +505,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       liveSessionsOverride={mergedEventLiveSessions}
       onLiveMatchOpen={(sessionId) => {
         setHighlightedLiveSessionId(sessionId);
+        setExpandedSessions(new Set([sessionId]));
         setActiveView("live");
       }}
     />
