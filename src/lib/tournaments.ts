@@ -108,16 +108,23 @@ const normalizeStage = (value: unknown, index: number): TournamentEventStageSumm
   };
 };
 
-export const buildTournamentSlug = (_documentId: string, title: string) => {
+export const buildTournamentSlug = (
+  _documentId: string,
+  title: string,
+  season?: number | null,
+) => {
   const safeTitle = slugify(String(title || "").trim()) || "event";
-  return safeTitle;
+  const safeSeason =
+    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
+  return safeSeason ? `${safeTitle}-${safeSeason}` : safeTitle;
 };
 
 export const buildTournamentHref = (
   documentId: string,
   title: string,
+  season?: number | null,
   embedded = false,
-) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(documentId, title)}`;
+) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(documentId, title, season)}`;
 
 export const extractTournamentDocumentId = (slug: string) =>
   String(slug || "").split("--")[0]?.trim() || "";
@@ -214,7 +221,8 @@ const fetchTournamentEventSummaryBySlug = async (
         ? { ...attributes, ...itemRecord }
         : itemRecord;
     const title = readString((source as Record<string, unknown>)?.title);
-    return title ? slugify(title) === cleanSlug : false;
+    const season = toNumber((source as Record<string, unknown>)?.season);
+    return title ? buildTournamentSlug("", title, season) === cleanSlug : false;
   });
 
   const matchRecord = match && typeof match === "object" ? (match as Record<string, unknown>) : null;

@@ -34,7 +34,7 @@ export default async function EmbedTournamentPage({ params }: Props) {
     notFound();
   }
 
-  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title);
+  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title, summary.season);
   if (slug !== canonicalSlug) {
     permanentRedirect(`/embed/tournaments/${canonicalSlug}`);
   }

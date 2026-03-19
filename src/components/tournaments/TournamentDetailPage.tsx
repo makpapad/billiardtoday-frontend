@@ -51,8 +51,8 @@ const formatDateRange = (start: string | null, end: string | null) => {
 };
 
 export function TournamentDetailPage({ summary, embedded = false }: Props) {
-  const fullPageHref = buildTournamentHref(summary.documentId, summary.title, false);
-  const embedPageHref = buildTournamentHref(summary.documentId, summary.title, true);
+  const fullPageHref = buildTournamentHref(summary.documentId, summary.title, summary.season, false);
+  const embedPageHref = buildTournamentHref(summary.documentId, summary.title, summary.season, true);
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
   const [activeView, setActiveView] = useState<"tournament" | "live">("tournament");
@@ -221,6 +221,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       <div className="mt-8">
         {activeView === "tournament" ? (
           <TournamentEventsContent
+            key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
             eventIdOverride={summary.documentId}
             preferredStageDocumentId={selectedStageDocumentId}
             embeddedOverride={embedded}

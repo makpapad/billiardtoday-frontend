@@ -137,8 +137,8 @@ export function TournamentListSection({
     }, [currentPage, currentSeason, itemsPerPage, clubSlug, federationId])
 
     const basePath = pathname || '/tournaments'
-    const tournamentEventHref = (eventDocumentId: string, title: string) =>
-        buildTournamentHref(eventDocumentId, title, embedded)
+    const tournamentEventHref = (eventDocumentId: string, title: string, season: number | null) =>
+        buildTournamentHref(eventDocumentId, title, season, embedded)
 
     const updateQuery = (nextPage: number, nextSeason: string) => {
         const params = new URLSearchParams(searchParams.toString())
@@ -301,7 +301,7 @@ export function TournamentListSection({
                                     {section.showResultsLink ? (
                                         <div className="mt-5">
                                             <Link
-                                                href={tournamentEventHref(item.documentId, item.title)}
+                                                href={tournamentEventHref(item.documentId, item.title, item.season)}
                                                 className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                             >
                                                 View tournament
@@ -377,7 +377,7 @@ export function TournamentListSection({
                                                 {section.showResultsLink ? (
                                                     <td className="px-6 py-4 text-sm">
                                                         <Link
-                                                            href={tournamentEventHref(item.documentId, item.title)}
+                                                            href={tournamentEventHref(item.documentId, item.title, item.season)}
                                                             className="font-semibold text-sky-700 transition hover:text-sky-900"
                                                         >
                                                             View tournament

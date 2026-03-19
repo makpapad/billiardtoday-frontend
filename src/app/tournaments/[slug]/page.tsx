@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? `${summary.tournamentTitle} ${seasonLabel} tournament page with stages, standings, and results.`
         : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`,
     alternates: {
-      canonical: `/tournaments/${buildTournamentSlug(summary.documentId, summary.title)}`,
+      canonical: `/tournaments/${buildTournamentSlug(summary.documentId, summary.title, summary.season)}`,
     },
   };
 }
@@ -45,7 +45,7 @@ export default async function TournamentPage({ params }: Props) {
     notFound();
   }
 
-  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title);
+  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title, summary.season);
   if (slug !== canonicalSlug) {
     permanentRedirect(`/tournaments/${canonicalSlug}`);
   }

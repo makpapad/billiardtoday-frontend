@@ -236,7 +236,7 @@ const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
     gameType: readString(entity.game_type),
     clubName: readString(clubEntity?.name),
     eventDocumentId,
-    href: eventDocumentId ? buildTournamentHref(eventDocumentId, title) : null,
+    href: eventDocumentId ? buildTournamentHref(eventDocumentId, title, toNumber(entity.season)) : null,
   };
 };
 
@@ -339,7 +339,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
         endDate: readString(entity.end_date),
         gameType: readString(entity.game_type),
         tournamentTitle: readString(tournamentEntity?.title),
-        href: buildTournamentHref(documentId, title),
+        href: buildTournamentHref(documentId, title, toNumber(entity.season)),
       } satisfies PublicTournamentEventCard;
     })
     .filter((row: PublicTournamentEventCard | null): row is PublicTournamentEventCard => Boolean(row));
