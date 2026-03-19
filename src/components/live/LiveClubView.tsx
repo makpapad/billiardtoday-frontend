@@ -931,9 +931,21 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const now = Date.now();
           const payloadAge = payload.ts ? now - payload.ts : Infinity;
           const isInitialLoad = itemsSnapshot.length === 0;
+          const existingItem =
+            itemsSnapshot.find((x) => x.screenId === payload.screenId) ??
+            itemsSnapshot.find((x) => x.sessionId === (payload.sessionId?.toString() || payload.screenId));
+          const existingHasPlaceholderNames = existingItem
+            ? isPlaceholderPlayerName(existingItem.state?.playerAName) ||
+              isPlaceholderPlayerName(existingItem.state?.playerBName)
+            : false;
+          const existingLooksEmpty = existingItem
+            ? (existingItem.state?.scoreA ?? 0) === 0 &&
+              (existingItem.state?.scoreB ?? 0) === 0 &&
+              !(existingItem.state?.playerAName && existingItem.state?.playerBName)
+            : false;
           const maxAge = isInitialLoad ? STALE_TTL_MS : 5 * 60 * 1000; // 60 minutes for initial load, 5 minutes for updates
           
-          if (payloadAge > maxAge) {
+          if (payloadAge > maxAge && !existingHasPlaceholderNames && !existingLooksEmpty) {
             console.log('[live view] Ignoring stale cached payload (age:', Math.round(payloadAge/1000), 'seconds, maxAge:', Math.round(maxAge/1000), 'seconds)');
             return;
           }
