@@ -410,6 +410,11 @@ type LiveScorePayload = {
   sheet?: unknown;
 };
 
+const isPlaceholderPlayerName = (value?: string | null) => {
+  const normalized = (value || "").trim().toLowerCase();
+  return !normalized || normalized === "player 1" || normalized === "player 2";
+};
+
 export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
@@ -915,9 +920,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
         // Match any score update where the clubId matches
         if (payload.type === "score:update" && String(payload.clubId) === String(clubId)) {
           // Ignore placeholder games (Player 1/Player 2) - these are stale cached payloads
-          const hasPlaceholderNames = payload.players?.every(p => 
-            !p.name || p.name === "Player 1" || p.name === "Player 2"
-          );
+          const hasPlaceholderNames = payload.players?.every((p) => isPlaceholderPlayerName(p?.name));
           
           if (hasPlaceholderNames && !payload.ended) {
             console.log('[live view] Ignoring placeholder game (stale cache)');
@@ -1002,6 +1005,15 @@ export function LiveClubView({ club, embedded = false }: Props) {
             (payload as any)?.metadata,
             (payload as any)?.meta,
           );
+          const existing =
+            itemsSnapshot.find((x) => x.screenId === payload.screenId) ??
+            itemsSnapshot.find((x) => x.sessionId === sessionKey);
+          const nextPlayerAName = isPlaceholderPlayerName(payload.players?.[0]?.name)
+            ? existing?.state?.playerAName
+            : payload.players?.[0]?.name;
+          const nextPlayerBName = isPlaceholderPlayerName(payload.players?.[1]?.name)
+            ? existing?.state?.playerBName
+            : payload.players?.[1]?.name;
           const state: LiveScoreState = {
             scoreA: payload.players?.[0]?.points,
             scoreB: payload.players?.[1]?.points,
@@ -1016,8 +1028,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
             bestRunA: payload.players?.[0]?.hr,
             bestRunB: payload.players?.[1]?.hr,
             ended: !!payload.ended,
-            playerAName: payload.players?.[0]?.name,
-            playerBName: payload.players?.[1]?.name,
+            playerAName: nextPlayerAName,
+            playerBName: nextPlayerBName,
             playerACountry:
               (payload as any)?.player1Country ??
               payload.players?.[0]?.country ??
@@ -1145,6 +1157,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
               const mergedState: LiveScoreState = {
                 ...existing.state,
                 ...state,
+                playerAName: state.playerAName ?? existing.state?.playerAName,
+                playerBName: state.playerBName ?? existing.state?.playerBName,
                 playerAPhotoUrl: state.playerAPhotoUrl ?? existing.state?.playerAPhotoUrl ?? null,
                 playerBPhotoUrl: state.playerBPhotoUrl ?? existing.state?.playerBPhotoUrl ?? null,
                 playerAPhotoMainUrl: state.playerAPhotoMainUrl ?? existing.state?.playerAPhotoMainUrl ?? null,
