@@ -20,8 +20,8 @@ interface Player {
   targetPoints?: number | null;
 }
 
-const SCORE_BOX_WIDTH = 88;
-const AVATAR_COLUMN_WIDTH = 70;
+const SCORE_BOX_WIDTH = 94;
+const AVATAR_COLUMN_WIDTH = 66;
 
 interface LiveScoreBoardCardProps {
   player1: Player;
