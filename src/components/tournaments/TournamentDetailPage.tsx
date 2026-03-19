@@ -845,17 +845,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               onMouseEnter={() => setHoveredGroupSessionId(session.sessionId)}
               onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
             >
-              {groupPopoverBySessionId.has(session.sessionId) ? (
-                <div className="absolute left-2 top-2 z-20">
-                  <button
-                    type="button"
-                    onClick={() => toggleGroupPopover(session.sessionId)}
-                    className="rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
-                  >
-                    Group
-                  </button>
-                </div>
-              ) : null}
               {groupPopoverBySessionId.has(session.sessionId) &&
               (hoveredGroupSessionId === session.sessionId || openGroupSessionId === session.sessionId) ? (
                 <GroupTooltip
@@ -914,6 +903,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 expanded={expandedSessions.has(session.sessionId)}
                 onExpandedChange={handleExpandedChange}
               />
+              {groupPopoverBySessionId.has(session.sessionId) ? (
+                <div className="pointer-events-none absolute inset-0 z-20">
+                  <div className="pointer-events-auto absolute left-3 top-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroupPopover(session.sessionId)}
+                      className="rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
+                    >
+                      Group
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )})}
         </div>
