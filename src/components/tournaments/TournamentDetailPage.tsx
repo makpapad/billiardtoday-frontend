@@ -288,6 +288,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
+  const lastClosedHighlightRef = useRef<{ sessionId?: string; screenId?: string; at: number } | null>(null);
   const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
   const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
   const tournamentScrollYRef = useRef<number | null>(null);
@@ -770,6 +771,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   useEffect(() => {
     if (!highlightItem) return;
+    const recentlyClosed = lastClosedHighlightRef.current;
+    if (
+      recentlyClosed &&
+      Date.now() - recentlyClosed.at < 1200 &&
+      (recentlyClosed.sessionId === highlightItem.sessionId ||
+        (recentlyClosed.screenId && recentlyClosed.screenId === highlightItem.screenId))
+    ) {
+      return;
+    }
     const fresh =
       liveCards.find((x) => x.sessionId === highlightItem.sessionId) ??
       liveCards.find((x) => x.screenId && x.screenId === highlightItem.screenId);
@@ -798,6 +808,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const handleCardClick = (session: EventLiveSession) => {
     if (Date.now() - lastModalCloseAtRef.current < 250) return;
+    lastClosedHighlightRef.current = null;
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
     setHighlightItem({
@@ -819,6 +830,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const handleHighlightClose = () => {
     lastModalCloseAtRef.current = Date.now();
+    lastClosedHighlightRef.current = {
+      sessionId: highlightItem?.sessionId,
+      screenId: highlightItem?.screenId,
+      at: Date.now(),
+    };
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
     setSuppressLiveGridClicks(true);
