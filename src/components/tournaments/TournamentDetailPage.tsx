@@ -80,6 +80,11 @@ type GroupPopoverData = {
   matches: StageMatchGroup["matches"];
 };
 
+const isPlaceholderPlayerName = (value?: string | null) => {
+  const normalized = (value || "").trim().toLowerCase();
+  return !normalized || normalized === "player 1" || normalized === "player 2";
+};
+
 function GroupTooltip({
   data,
   embedded,
@@ -547,9 +552,22 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         const playerB = players[1] ?? {};
         const sessionId = String(payload.sessionId ?? payload.screenId ?? "").trim();
         const screenId = String(payload.screenId ?? "").trim();
+        const existingSession =
+          wsLiveSessions.find((entry) => entry.screenId === screenId) ??
+          wsLiveSessions.find((entry) => entry.sessionId === sessionId);
         const current: "A" | "B" | undefined =
           payload.current ??
           (payload.activePlayer === 1 ? "A" : payload.activePlayer === 2 ? "B" : undefined);
+        const nextPlayerAName = isPlaceholderPlayerName(typeof playerA.name === "string" ? playerA.name : null)
+          ? existingSession?.state?.playerAName ?? existingSession?.player1Name ?? null
+          : typeof playerA.name === "string"
+            ? playerA.name
+            : null;
+        const nextPlayerBName = isPlaceholderPlayerName(typeof playerB.name === "string" ? playerB.name : null)
+          ? existingSession?.state?.playerBName ?? existingSession?.player2Name ?? null
+          : typeof playerB.name === "string"
+            ? playerB.name
+            : null;
         upsertLiveSession({
           id: sessionId || screenId || "unknown-session",
           documentId: sessionId || screenId || "unknown-session",
@@ -566,8 +584,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           groupNumber: null,
           player1DocumentId: null,
           player2DocumentId: null,
-          player1Name: typeof playerA.name === "string" ? playerA.name : null,
-          player2Name: typeof playerB.name === "string" ? playerB.name : null,
+          player1Name: nextPlayerAName,
+          player2Name: nextPlayerBName,
           sessionStatus: payload.isRunning ? "in_progress" : "pending",
           state: {
             scoreA: Number(playerA.points ?? 0) || 0,
@@ -585,8 +603,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             avgFormattedB: typeof playerB.avgFormatted === "string" ? playerB.avgFormatted : undefined,
             accPercentA: typeof playerA.accPercent === "number" ? playerA.accPercent : undefined,
             accPercentB: typeof playerB.accPercent === "number" ? playerB.accPercent : undefined,
-            playerAName: typeof playerA.name === "string" ? playerA.name : "Player A",
-            playerBName: typeof playerB.name === "string" ? playerB.name : "Player B",
+            playerAName: nextPlayerAName ?? "Player A",
+            playerBName: nextPlayerBName ?? "Player B",
             playerACountry: typeof playerA.country === "string" ? playerA.country : null,
             playerBCountry: typeof playerB.country === "string" ? playerB.country : null,
             progress: Number(payload.progress ?? 0) || 0,
