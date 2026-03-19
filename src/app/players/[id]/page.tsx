@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath } from "@/lib/countryFlags"
 import { getGameTypeLabel, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
+import { buildTournamentSlug } from "@/lib/tournaments"
 import {
     LineChart,
     Line,
@@ -176,8 +177,10 @@ const formatSafeAverage = (
 export default function PlayerProfilePage() {
     const params = useParams()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const rawId = params?.id as string
     const playerId = (rawId ? rawId.split('-')[0] : '') as string
+    const tournamentContextSlug = (searchParams?.get('tournament') || '').trim()
 
     const [player, setPlayer] = useState<Player | null>(null)
     const [participations, setParticipations] = useState<TournamentParticipation[]>([])
@@ -210,6 +213,12 @@ export default function PlayerProfilePage() {
     const [opponentHighlight, setOpponentHighlight] = useState<number>(0)
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
+    const buildPlayerUrl = (id: string, name: string) => {
+        const baseUrl = `/players/${buildPlayerSlug(id, name)}`
+        return tournamentContextSlug
+            ? `${baseUrl}?tournament=${encodeURIComponent(tournamentContextSlug)}`
+            : baseUrl
+    }
 
     const handleBack = () => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -226,7 +235,7 @@ export default function PlayerProfilePage() {
 
         // Αν μοιάζει ήδη με numeric id, πήγαινε κατευθείαν
         if (/^\d+$/.test(trimmedId)) {
-            router.push(`/players/${buildPlayerSlug(trimmedId, displayName)}`)
+            router.push(buildPlayerUrl(trimmedId, displayName))
             return
         }
 
@@ -252,10 +261,10 @@ export default function PlayerProfilePage() {
             const numericId = first?.id ? String(first.id) : trimmedId
             const nameFromApi = first?.full_name || displayName
 
-            router.push(`/players/${buildPlayerSlug(numericId, nameFromApi)}`)
+            router.push(buildPlayerUrl(numericId, nameFromApi))
         } catch {
             // Fallback: χρησιμοποίησε όπως είναι το opponentId αν κάτι πάει στραβά
-            router.push(`/players/${buildPlayerSlug(trimmedId, displayName)}`)
+            router.push(buildPlayerUrl(trimmedId, displayName))
         }
     }
 
@@ -292,6 +301,8 @@ export default function PlayerProfilePage() {
                     historyParams.set('year', selectedYear)
                     // Don't limit - fetch all events for the year (usually few)
                     // We'll paginate on frontend
+                } else if (tournamentContextSlug) {
+                    historyParams.set('limit', '1000')
                 } else {
                     // Fetch limited events for initial load - ultra-minimal for instant response
                     historyParams.set('limit', '3') // Start with just 3 most recent tournaments
@@ -430,7 +441,7 @@ export default function PlayerProfilePage() {
 
         fetchPlayerData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [playerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow])
+    }, [playerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow, tournamentContextSlug])
 
     const loadMoreYears = () => {
         setYearsToShow(prev => prev + 3) // Load 3 more years
@@ -485,19 +496,27 @@ export default function PlayerProfilePage() {
         )
     }
 
+    const tournamentScopedParticipations = tournamentContextSlug
+        ? participations.filter((participation) =>
+              buildTournamentSlug('', participation.tournament, participation.year) === tournamentContextSlug,
+          )
+        : participations
+
     // Filter participations by selected game type
     const filteredParticipations =
         selectedGameType === 'all'
-            ? participations
-            : participations.filter((p) => p.gameType === selectedGameType)
+            ? tournamentScopedParticipations
+            : tournamentScopedParticipations.filter((p) => p.gameType === selectedGameType)
 
     // Get available years for the selected game type using allParticipations metadata
     const filteredAvailableYears =
         selectedGameType === 'all'
-            ? availableYears
+            ? tournamentContextSlug
+                ? Array.from(new Set(tournamentScopedParticipations.map((p) => p.year))).sort((a, b) => b - a)
+                : availableYears
             : Array.from(
                   new Set(
-                      allParticipations
+                      (tournamentContextSlug ? tournamentScopedParticipations : allParticipations)
                           .filter((p) => p.gameType === selectedGameType)
                           .map((p) => p.year),
                   ),
@@ -507,8 +526,9 @@ export default function PlayerProfilePage() {
     const calculateFilteredStats = () => {
         const eventsSource = (() => {
             if (selectedYear === 'all') {
-                if (selectedGameType === 'all') return allParticipations
-                return allParticipations.filter(
+                const source = tournamentContextSlug ? tournamentScopedParticipations : allParticipations
+                if (selectedGameType === 'all') return source
+                return source.filter(
                     (p) => p.gameType === selectedGameType,
                 )
             }
@@ -757,16 +777,26 @@ export default function PlayerProfilePage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
             <div className="max-w-6xl mx-auto">
-                {/* Back Button */}
-                <button
-                    onClick={handleBack}
-                    className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    {t('players.profile.back')}
-                </button>
+                <div className="mb-6 flex flex-wrap items-center gap-4">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        {t('players.profile.back')}
+                    </button>
+                    {tournamentContextSlug ? (
+                        <button
+                            type="button"
+                            onClick={() => router.push(`/players/${buildPlayerSlug(playerId, player.full_name)}`)}
+                            className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                            Show all tournaments
+                        </button>
+                    ) : null}
+                </div>
 
                 {/* Player Header */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8">

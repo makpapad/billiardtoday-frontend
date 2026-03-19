@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 import type { EventApiResponse, NormalizedEventStage, StageMatchGroup } from './types'
+import { buildTournamentSlug } from '@/lib/tournaments'
 import {
     toRelationArray,
     normalizeEntity,
@@ -61,8 +62,18 @@ export function TournamentEventsContent({
     const searchParams = useSearchParams()
     const eventId = eventIdOverride ?? searchParams?.get('eventId') ?? null
     const embedded = embeddedOverride ?? (pathname?.startsWith('/embed/') ?? false)
+    const tournamentContextSlug =
+        eventData?.data?.title
+            ? buildTournamentSlug(
+                  '',
+                  String(eventData.data.title),
+                  typeof eventData.data.season === 'number' ? eventData.data.season : null,
+              )
+            : null
     const playerProfileHref = (playerId: string | number, playerName: string) =>
-        `${embedded ? '/embed' : ''}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, '-')}`
+        `${embedded ? '/embed' : ''}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, '-')}${
+            tournamentContextSlug ? `?tournament=${encodeURIComponent(tournamentContextSlug)}` : ''
+        }`
 
     // Fetch event data
     useEffect(() => {
