@@ -1,14 +1,22 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
-import { LiveStatsHighlightModal, type LiveScoreItem } from "@/components/live/LiveClubView";
+import {
+  LiveStatsHighlightModal,
+  type LiveScoreItem,
+} from "@/components/live/LiveClubView";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
-import type { EventApiResponse, GroupStanding, NormalizedEventStage, StageMatchGroup } from "@/app/tournaments/events/types";
+import type {
+  EventApiResponse,
+  GroupStanding,
+  NormalizedEventStage,
+  StageMatchGroup,
+} from "@/app/tournaments/events/types";
 import {
   buildGroupStandings,
   buildStageMatchGroups,
@@ -96,7 +104,9 @@ function GroupTooltip({
     <div className="absolute left-0 top-[-12px] z-30 w-[min(760px,calc(100vw-2rem))] -translate-y-full rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="text-sm font-semibold">{data.title}</div>
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Live group view</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Live group view
+        </div>
       </div>
 
       <div className="mb-3 overflow-hidden rounded-xl border border-slate-200">
@@ -117,7 +127,10 @@ function GroupTooltip({
           <tbody>
             {data.matches.map((match) => (
               <>
-                <tr key={`${match.key}-top`} className="border-t border-slate-200 bg-emerald-50/80">
+                <tr
+                  key={`${match.key}-top`}
+                  className="border-t border-slate-200 bg-emerald-50/80"
+                >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
                       href={`${embedded ? "/embed" : ""}/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, "-")}`}
@@ -126,16 +139,40 @@ function GroupTooltip({
                       {match.top.player.name}
                     </Link>
                   </td>
-                  <td className="px-2 py-1.5 text-xs text-slate-600">{match.dateTime ? new Date(match.dateTime).toLocaleDateString("el-GR") : "-"}</td>
-                  <td className="px-2 py-1.5 text-center font-semibold">{match.top.outcome ?? "-"}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.points)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.innings)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatAverage(match.top.player.points, match.top.player.innings)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.highRun)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.highRun2)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.top.player.matchPoints)}</td>
+                  <td className="px-2 py-1.5 text-xs text-slate-600">
+                    {match.dateTime
+                      ? new Date(match.dateTime).toLocaleDateString("el-GR")
+                      : "-"}
+                  </td>
+                  <td className="px-2 py-1.5 text-center font-semibold">
+                    {match.top.outcome ?? "-"}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.points)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.innings)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatAverage(
+                      match.top.player.points,
+                      match.top.player.innings,
+                    )}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.highRun)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.highRun2)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.matchPoints)}
+                  </td>
                 </tr>
-                <tr key={`${match.key}-bottom`} className="border-t border-slate-200 bg-rose-50/80">
+                <tr
+                  key={`${match.key}-bottom`}
+                  className="border-t border-slate-200 bg-rose-50/80"
+                >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
                       href={`${embedded ? "/embed" : ""}/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, "-")}`}
@@ -144,14 +181,35 @@ function GroupTooltip({
                       {match.bottom.player.name}
                     </Link>
                   </td>
-                  <td className="px-2 py-1.5 text-xs text-slate-600">{match.dateTime ? new Date(match.dateTime).toLocaleDateString("el-GR") : "-"}</td>
-                  <td className="px-2 py-1.5 text-center font-semibold">{match.bottom.outcome ?? "-"}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.points)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.innings)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatAverage(match.bottom.player.points, match.bottom.player.innings)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.highRun)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.highRun2)}</td>
-                  <td className="px-2 py-1.5 text-center">{formatNumberValue(match.bottom.player.matchPoints)}</td>
+                  <td className="px-2 py-1.5 text-xs text-slate-600">
+                    {match.dateTime
+                      ? new Date(match.dateTime).toLocaleDateString("el-GR")
+                      : "-"}
+                  </td>
+                  <td className="px-2 py-1.5 text-center font-semibold">
+                    {match.bottom.outcome ?? "-"}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.points)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.innings)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatAverage(
+                      match.bottom.player.points,
+                      match.bottom.player.innings,
+                    )}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.highRun)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.highRun2)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.matchPoints)}
+                  </td>
                 </tr>
               </>
             ))}
@@ -176,7 +234,10 @@ function GroupTooltip({
           </thead>
           <tbody>
             {data.standings.map((player) => (
-              <tr key={player.key} className="border-t border-slate-200 bg-white text-slate-700">
+              <tr
+                key={player.key}
+                className="border-t border-slate-200 bg-white text-slate-700"
+              >
                 <td className="px-2 py-1.5 font-medium">
                   {player.playerId ? (
                     <Link
@@ -189,14 +250,30 @@ function GroupTooltip({
                     player.playerName
                   )}
                 </td>
-                <td className="px-2 py-1.5 text-center font-semibold">{player.place}</td>
-                <td className="px-2 py-1.5 text-center">{formatRecord(player.record)}</td>
-                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalPoints)}</td>
-                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalInnings)}</td>
-                <td className="px-2 py-1.5 text-center">{formatAverage(player.totalPoints, player.totalInnings)}</td>
-                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.highRun)}</td>
-                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.highRun2)}</td>
-                <td className="px-2 py-1.5 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
+                <td className="px-2 py-1.5 text-center font-semibold">
+                  {player.place}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatRecord(player.record)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.totalPoints)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.totalInnings)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatAverage(player.totalPoints, player.totalInnings)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.highRun)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.highRun2)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.totalMatchPoints)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -222,7 +299,10 @@ const buildNameFragments = (value: string | null | undefined) =>
     .map((part) => part.trim())
     .filter((part) => part.length >= 3);
 
-const mergeLiveSessions = (primary: EventLiveSession[], secondary: EventLiveSession[]) => {
+const mergeLiveSessions = (
+  primary: EventLiveSession[],
+  secondary: EventLiveSession[],
+) => {
   const merged = new Map<string, EventLiveSession>();
   for (const session of [...secondary, ...primary]) {
     const key =
@@ -280,98 +360,82 @@ const formatDateRange = (start: string | null, end: string | null) => {
 };
 
 export function TournamentDetailPage({ summary, embedded = false }: Props) {
-  const fullPageHref = buildTournamentHref(summary.documentId, summary.title, summary.season, false);
+  const fullPageHref = buildTournamentHref(
+    summary.documentId,
+    summary.title,
+    summary.season,
+    false,
+  );
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
   const finalStageDocumentId =
     summary.stages.find((stage) => stage.isFinal)?.documentId ??
     summary.stages[summary.stages.length - 1]?.documentId ??
     null;
-  const [activeView, setActiveView] = useState<"tournament" | "live">("tournament");
-  const [tournamentPanelMode, setTournamentPanelMode] = useState<"stages" | "finals">("stages");
-  const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<string | null>(
-    summary.stages[0]?.documentId ?? null,
+  const [activeView, setActiveView] = useState<"tournament" | "live">(
+    "tournament",
   );
-  const heroRankingOptions = useMemo(
-    () =>
-      summary.stages.slice(0, 3).map((stage) => ({
-        value: stage.documentId,
-        label: `${stage.title} ranking`,
-      })),
-    [summary.stages],
+  const [tournamentPanelMode, setTournamentPanelMode] = useState<
+    "stages" | "finals"
+  >("stages");
+  const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
+    "results",
   );
-  const [dummyRankingStageDocumentId, setDummyRankingStageDocumentId] = useState<string>(
-    heroRankingOptions[0]?.value ?? "",
-  );
-  const [isHeroRankingMenuOpen, setIsHeroRankingMenuOpen] = useState(false);
-  const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
+  const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
+    string | null
+  >(summary.stages[0]?.documentId ?? null);
+  const [liveScreensData, setLiveScreensData] = useState<
+    TournamentLiveScreensResponse["data"]
+  >([]);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
-  const [eventLiveSessions, setEventLiveSessions] = useState<EventLiveSession[]>([]);
+  const [eventLiveSessions, setEventLiveSessions] = useState<
+    EventLiveSession[]
+  >([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
-  const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<string | null>(null);
-  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
-  const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
+  const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
+    string | null
+  >(null);
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
+    new Set(),
+  );
+  const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
+    null,
+  );
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
-  const lastClosedHighlightRef = useRef<{ sessionId?: string; screenId?: string; at: number } | null>(null);
-  const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<string | null>(null);
-  const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(null);
+  const lastClosedHighlightRef = useRef<{
+    sessionId?: string;
+    screenId?: string;
+    at: number;
+  } | null>(null);
+  const [hoveredGroupSessionId, setHoveredGroupSessionId] = useState<
+    string | null
+  >(null);
+  const [openGroupSessionId, setOpenGroupSessionId] = useState<string | null>(
+    null,
+  );
   const tournamentScrollYRef = useRef<number | null>(null);
   const pendingTournamentRestoreYRef = useRef<number | null>(null);
   const previousViewRef = useRef<"tournament" | "live">("tournament");
   const tournamentContentRef = useRef<HTMLDivElement | null>(null);
-  const heroRankingMenuRef = useRef<HTMLDivElement | null>(null);
-  const selectedHeroRankingLabel =
-    heroRankingOptions.find((option) => option.value === dummyRankingStageDocumentId)?.label ??
-    "Phase ranking";
-
-  useEffect(() => {
-    const nextDefault = heroRankingOptions[0]?.value ?? "";
-    if (!nextDefault) {
-      setDummyRankingStageDocumentId("");
-      return;
-    }
-    setDummyRankingStageDocumentId((current) =>
-      current && heroRankingOptions.some((option) => option.value === current) ? current : nextDefault,
-    );
-  }, [heroRankingOptions]);
-
-  useEffect(() => {
-    if (!isHeroRankingMenuOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!heroRankingMenuRef.current?.contains(event.target as Node)) {
-        setIsHeroRankingMenuOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsHeroRankingMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isHeroRankingMenuOpen]);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchEventData = async () => {
       try {
-        const response = await fetch(`/api/events/${encodeURIComponent(summary.documentId)}`, {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          `/api/events/${encodeURIComponent(summary.documentId)}`,
+          {
+            cache: "no-store",
+          },
+        );
         if (!response.ok) throw new Error("Failed to load event data.");
-        const payload = (await response.json().catch(() => null)) as EventApiResponse | null;
+        const payload = (await response
+          .json()
+          .catch(() => null)) as EventApiResponse | null;
         if (!cancelled) {
           setEventData(payload);
         }
@@ -393,7 +457,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       tournamentScrollYRef.current = window.scrollY;
     }
 
-    if (previousViewRef.current === "live" && activeView === "tournament" && tournamentScrollYRef.current !== null) {
+    if (
+      previousViewRef.current === "live" &&
+      activeView === "tournament" &&
+      tournamentScrollYRef.current !== null
+    ) {
       pendingTournamentRestoreYRef.current = tournamentScrollYRef.current;
     }
 
@@ -401,7 +469,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [activeView]);
 
   useEffect(() => {
-    if (activeView !== "tournament" || pendingTournamentRestoreYRef.current === null) return;
+    if (
+      activeView !== "tournament" ||
+      pendingTournamentRestoreYRef.current === null
+    )
+      return;
 
     const restoreY = pendingTournamentRestoreYRef.current;
     const restoreScroll = () => {
@@ -450,11 +522,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       try {
         setIsLiveLoading(true);
         setLiveError(null);
-        const response = await fetch("/api/admin/tournament/live-screens", { cache: "no-store" });
-        const payload = (await response.json().catch(() => null)) as TournamentLiveScreensResponse | null;
+        const response = await fetch("/api/admin/tournament/live-screens", {
+          cache: "no-store",
+        });
+        const payload = (await response
+          .json()
+          .catch(() => null)) as TournamentLiveScreensResponse | null;
 
         if (!response.ok || !payload?.success) {
-          throw new Error(payload?.error || "Failed to load live tournament screens.");
+          throw new Error(
+            payload?.error || "Failed to load live tournament screens.",
+          );
         }
 
         if (!cancelled) {
@@ -462,7 +540,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         }
       } catch (error) {
         if (!cancelled) {
-          setLiveError(error instanceof Error ? error.message : "Failed to load live tournament screens.");
+          setLiveError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load live tournament screens.",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -485,10 +567,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
     const fetchEventLiveSessions = async () => {
       try {
-        const response = await fetch(`/api/tournaments/${encodeURIComponent(summary.documentId)}/live-sessions`, {
-          cache: "no-store",
-        });
-        const payload = (await response.json().catch(() => ({ data: [] }))) as { data?: EventLiveSession[] };
+        const response = await fetch(
+          `/api/tournaments/${encodeURIComponent(summary.documentId)}/live-sessions`,
+          {
+            cache: "no-store",
+          },
+        );
+        const payload = (await response.json().catch(() => ({ data: [] }))) as {
+          data?: EventLiveSession[];
+        };
         if (!response.ok) {
           throw new Error("Failed to load event live sessions.");
         }
@@ -528,7 +615,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const upsertLiveSession = (item: EventLiveSession) => {
       setWsLiveSessions((prev) => {
         const next = mergeLiveSessions([item], prev);
-        return next.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+        return next.sort((a, b) =>
+          (b.updatedAt || "").localeCompare(a.updatedAt || ""),
+        );
       });
     };
 
@@ -543,28 +632,47 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
     socket.onmessage = (event) => {
       try {
-        const payload = JSON.parse(String(event.data || "{}")) as WsTournamentPayload;
-        const payloadClubId = String(payload.clubId ?? payload.session?.clubId ?? "");
+        const payload = JSON.parse(
+          String(event.data || "{}"),
+        ) as WsTournamentPayload;
+        const payloadClubId = String(
+          payload.clubId ?? payload.session?.clubId ?? "",
+        );
         if (payloadClubId !== String(summary.clubDocumentId)) return;
 
         if (
-          (payload.type === "SESSION_ASSIGNED" || payload.type === "SESSION_UPDATED") &&
+          (payload.type === "SESSION_ASSIGNED" ||
+            payload.type === "SESSION_UPDATED") &&
           payload.session &&
           typeof payload.session === "object"
         ) {
           const sessionObj = payload.session;
           const sessionDocumentId =
-            typeof sessionObj.documentId === "string" && sessionObj.documentId.trim().length > 0
+            typeof sessionObj.documentId === "string" &&
+            sessionObj.documentId.trim().length > 0
               ? sessionObj.documentId.trim()
               : null;
           const lifecycleSessionId = String(
-            sessionObj.documentId ?? payload.sessionId ?? sessionObj.id ?? payload.screenIdentifier ?? payload.screenId ?? "",
+            sessionObj.documentId ??
+              payload.sessionId ??
+              sessionObj.id ??
+              payload.screenIdentifier ??
+              payload.screenId ??
+              "",
           ).trim();
           const lifecycleScreenId = String(
-            payload.screenIdentifier ?? payload.screenId ?? sessionObj.screenIdentifier ?? "",
+            payload.screenIdentifier ??
+              payload.screenId ??
+              sessionObj.screenIdentifier ??
+              "",
           ).trim();
           const lifecycleStatus =
-            String((payload.session?.sessionStatus ?? payload.session?.status ?? payload.type) || "").trim() || null;
+            String(
+              (payload.session?.sessionStatus ??
+                payload.session?.status ??
+                payload.type) ||
+                "",
+            ).trim() || null;
 
           if (
             payload.ended === true ||
@@ -586,46 +694,102 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
           upsertLiveSession({
             id: lifecycleSessionId || lifecycleScreenId || "unknown-session",
-            documentId: sessionDocumentId || lifecycleSessionId || lifecycleScreenId || "",
-            sessionId: lifecycleSessionId || lifecycleScreenId || "unknown-session",
+            documentId:
+              sessionDocumentId ||
+              lifecycleSessionId ||
+              lifecycleScreenId ||
+              "",
+            sessionId:
+              lifecycleSessionId || lifecycleScreenId || "unknown-session",
             screenId: lifecycleScreenId || null,
             screenIdentifier: lifecycleScreenId || null,
             updatedAt: new Date().toISOString(),
             clubId: summary.clubDocumentId,
-            eventId: typeof sessionObj.eventId === "string" ? sessionObj.eventId : null,
-            eventStageId: typeof sessionObj.eventStageId === "string" ? sessionObj.eventStageId : null,
+            eventId:
+              typeof sessionObj.eventId === "string"
+                ? sessionObj.eventId
+                : null,
+            eventStageId:
+              typeof sessionObj.eventStageId === "string"
+                ? sessionObj.eventStageId
+                : null,
             groupNumber:
               typeof sessionObj.groupNumber === "number"
                 ? sessionObj.groupNumber
                 : typeof sessionObj.groupNumber === "string"
                   ? Number(sessionObj.groupNumber)
                   : null,
-            player1DocumentId: typeof sessionObj.player1DocumentId === "string" ? sessionObj.player1DocumentId : null,
-            player2DocumentId: typeof sessionObj.player2DocumentId === "string" ? sessionObj.player2DocumentId : null,
-            player1Name: typeof sessionObj.player1Name === "string" ? sessionObj.player1Name : null,
-            player2Name: typeof sessionObj.player2Name === "string" ? sessionObj.player2Name : null,
+            player1DocumentId:
+              typeof sessionObj.player1DocumentId === "string"
+                ? sessionObj.player1DocumentId
+                : null,
+            player2DocumentId:
+              typeof sessionObj.player2DocumentId === "string"
+                ? sessionObj.player2DocumentId
+                : null,
+            player1Name:
+              typeof sessionObj.player1Name === "string"
+                ? sessionObj.player1Name
+                : null,
+            player2Name:
+              typeof sessionObj.player2Name === "string"
+                ? sessionObj.player2Name
+                : null,
             sessionStatus: lifecycleStatus,
             state: {
               scoreA: Number(sessionObj.player1_points ?? 0) || 0,
               scoreB: Number(sessionObj.player2_points ?? 0) || 0,
               inningsA: Number(sessionObj.player1_innings ?? 0) || 0,
               inningsB: Number(sessionObj.player2_innings ?? 0) || 0,
-              inningsCount: Math.max(Number(sessionObj.player1_innings ?? 0) || 0, Number(sessionObj.player2_innings ?? 0) || 0),
+              inningsCount: Math.max(
+                Number(sessionObj.player1_innings ?? 0) || 0,
+                Number(sessionObj.player2_innings ?? 0) || 0,
+              ),
               bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
               bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
-              playerAName: typeof sessionObj.player1Name === "string" ? sessionObj.player1Name : "Player A",
-              playerBName: typeof sessionObj.player2Name === "string" ? sessionObj.player2Name : "Player B",
-              playerACountry: typeof sessionObj.player1Country === "string" ? sessionObj.player1Country : null,
-              playerBCountry: typeof sessionObj.player2Country === "string" ? sessionObj.player2Country : null,
-              playerAPhotoUrl: typeof sessionObj.player1PhotoUrl === "string" ? sessionObj.player1PhotoUrl : null,
-              playerBPhotoUrl: typeof sessionObj.player2PhotoUrl === "string" ? sessionObj.player2PhotoUrl : null,
+              playerAName:
+                typeof sessionObj.player1Name === "string"
+                  ? sessionObj.player1Name
+                  : "Player A",
+              playerBName:
+                typeof sessionObj.player2Name === "string"
+                  ? sessionObj.player2Name
+                  : "Player B",
+              playerACountry:
+                typeof sessionObj.player1Country === "string"
+                  ? sessionObj.player1Country
+                  : null,
+              playerBCountry:
+                typeof sessionObj.player2Country === "string"
+                  ? sessionObj.player2Country
+                  : null,
+              playerAPhotoUrl:
+                typeof sessionObj.player1PhotoUrl === "string"
+                  ? sessionObj.player1PhotoUrl
+                  : null,
+              playerBPhotoUrl:
+                typeof sessionObj.player2PhotoUrl === "string"
+                  ? sessionObj.player2PhotoUrl
+                  : null,
               progress: Number(sessionObj.progress ?? 0) || 0,
               totalBlocks: 40,
               isRunning: lifecycleStatus === "in_progress",
-              tournamentName: typeof sessionObj.eventTitle === "string" ? sessionObj.eventTitle : null,
-              stageName: typeof sessionObj.stageTitle === "string" ? sessionObj.stageTitle : null,
-              groupName: typeof sessionObj.groupLabel === "string" ? sessionObj.groupLabel : null,
-              tableName: typeof sessionObj.tableNumber === "string" ? sessionObj.tableNumber : null,
+              tournamentName:
+                typeof sessionObj.eventTitle === "string"
+                  ? sessionObj.eventTitle
+                  : null,
+              stageName:
+                typeof sessionObj.stageTitle === "string"
+                  ? sessionObj.stageTitle
+                  : null,
+              groupName:
+                typeof sessionObj.groupLabel === "string"
+                  ? sessionObj.groupLabel
+                  : null,
+              tableName:
+                typeof sessionObj.tableNumber === "string"
+                  ? sessionObj.tableNumber
+                  : null,
             },
           });
           return;
@@ -651,21 +815,35 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         const players = Array.isArray(payload.players) ? payload.players : [];
         const playerA = players[0] ?? {};
         const playerB = players[1] ?? {};
-        const sessionId = String(payload.sessionId ?? payload.screenId ?? "").trim();
+        const sessionId = String(
+          payload.sessionId ?? payload.screenId ?? "",
+        ).trim();
         const screenId = String(payload.screenId ?? "").trim();
         const existingSession =
           wsLiveSessions.find((entry) => entry.screenId === screenId) ??
           wsLiveSessions.find((entry) => entry.sessionId === sessionId);
         const current: "A" | "B" | undefined =
           payload.current ??
-          (payload.activePlayer === 1 ? "A" : payload.activePlayer === 2 ? "B" : undefined);
-        const nextPlayerAName = isPlaceholderPlayerName(typeof playerA.name === "string" ? playerA.name : null)
-          ? existingSession?.state?.playerAName ?? existingSession?.player1Name ?? null
+          (payload.activePlayer === 1
+            ? "A"
+            : payload.activePlayer === 2
+              ? "B"
+              : undefined);
+        const nextPlayerAName = isPlaceholderPlayerName(
+          typeof playerA.name === "string" ? playerA.name : null,
+        )
+          ? (existingSession?.state?.playerAName ??
+            existingSession?.player1Name ??
+            null)
           : typeof playerA.name === "string"
             ? playerA.name
             : null;
-        const nextPlayerBName = isPlaceholderPlayerName(typeof playerB.name === "string" ? playerB.name : null)
-          ? existingSession?.state?.playerBName ?? existingSession?.player2Name ?? null
+        const nextPlayerBName = isPlaceholderPlayerName(
+          typeof playerB.name === "string" ? playerB.name : null,
+        )
+          ? (existingSession?.state?.playerBName ??
+            existingSession?.player2Name ??
+            null)
           : typeof playerB.name === "string"
             ? playerB.name
             : null;
@@ -697,17 +875,34 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             liveRunB: Number(playerB.liveRun ?? playerB.run ?? 0) || 0,
             inningsA: Number(playerA.innings ?? 0) || 0,
             inningsB: Number(playerB.innings ?? 0) || 0,
-            inningsCount: Math.max(Number(playerA.innings ?? 0) || 0, Number(playerB.innings ?? 0) || 0),
+            inningsCount: Math.max(
+              Number(playerA.innings ?? 0) || 0,
+              Number(playerB.innings ?? 0) || 0,
+            ),
             bestRunA: Number(playerA.hr ?? 0) || 0,
             bestRunB: Number(playerB.hr ?? 0) || 0,
-            avgFormattedA: typeof playerA.avgFormatted === "string" ? playerA.avgFormatted : undefined,
-            avgFormattedB: typeof playerB.avgFormatted === "string" ? playerB.avgFormatted : undefined,
-            accPercentA: typeof playerA.accPercent === "number" ? playerA.accPercent : undefined,
-            accPercentB: typeof playerB.accPercent === "number" ? playerB.accPercent : undefined,
+            avgFormattedA:
+              typeof playerA.avgFormatted === "string"
+                ? playerA.avgFormatted
+                : undefined,
+            avgFormattedB:
+              typeof playerB.avgFormatted === "string"
+                ? playerB.avgFormatted
+                : undefined,
+            accPercentA:
+              typeof playerA.accPercent === "number"
+                ? playerA.accPercent
+                : undefined,
+            accPercentB:
+              typeof playerB.accPercent === "number"
+                ? playerB.accPercent
+                : undefined,
             playerAName: nextPlayerAName ?? "Player A",
             playerBName: nextPlayerBName ?? "Player B",
-            playerACountry: typeof playerA.country === "string" ? playerA.country : null,
-            playerBCountry: typeof playerB.country === "string" ? playerB.country : null,
+            playerACountry:
+              typeof playerA.country === "string" ? playerA.country : null,
+            playerBCountry:
+              typeof playerB.country === "string" ? playerB.country : null,
             progress: Number(payload.progress ?? 0) || 0,
             totalBlocks: 40,
             isRunning: Boolean(payload.isRunning),
@@ -726,7 +921,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   useEffect(() => {
     if (activeView !== "live" || !highlightedLiveSessionId) return;
-    const target = document.getElementById(`tournament-live-session-${highlightedLiveSessionId}`);
+    const target = document.getElementById(
+      `tournament-live-session-${highlightedLiveSessionId}`,
+    );
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [activeView, highlightedLiveSessionId, eventLiveSessions]);
@@ -761,22 +958,43 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         return {
           id: normalizedStage.id,
           documentId: normalizedStage.documentId,
-          title: typeof normalizedStage.title === "string" ? normalizedStage.title.trim() : "",
-          startDate: typeof normalizedStage.start_date === "string" ? normalizedStage.start_date : null,
-          endDate: typeof normalizedStage.end_date === "string" ? normalizedStage.end_date : null,
+          title:
+            typeof normalizedStage.title === "string"
+              ? normalizedStage.title.trim()
+              : "",
+          startDate:
+            typeof normalizedStage.start_date === "string"
+              ? normalizedStage.start_date
+              : null,
+          endDate:
+            typeof normalizedStage.end_date === "string"
+              ? normalizedStage.end_date
+              : null,
           order: toNumber(normalizedStage.order),
           isFinal: Boolean(normalizedStage.is_final),
-          stageType: typeof normalizedStage.stage_type === "string" ? normalizedStage.stage_type.trim() : null,
+          stageType:
+            typeof normalizedStage.stage_type === "string"
+              ? normalizedStage.stage_type.trim()
+              : null,
           groups: groupsRaw
-            .map((group, groupIndex) => normalizeGroup(group, `${normalizedStage.id}-group-${groupIndex}`))
+            .map((group, groupIndex) =>
+              normalizeGroup(
+                group,
+                `${normalizedStage.id}-group-${groupIndex}`,
+              ),
+            )
             .sort((a, b) => {
-              if (a.number !== null && b.number !== null) return a.number - b.number;
+              if (a.number !== null && b.number !== null)
+                return a.number - b.number;
               if (a.number !== null) return -1;
               if (b.number !== null) return 1;
               return a.id.localeCompare(b.id);
             }),
           results: resultsRaw.map((result, resultIndex) =>
-            normalizeResult(result, `${normalizedStage.id}-result-${resultIndex}`),
+            normalizeResult(
+              result,
+              `${normalizedStage.id}-result-${resultIndex}`,
+            ),
           ),
         } satisfies NormalizedEventStage;
       })
@@ -811,7 +1029,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const groupPopoverBySessionId = useMemo(() => {
     const result = new Map<string, GroupPopoverData>();
 
-    const buildNameKeys = (a: string | null | undefined, b: string | null | undefined) => {
+    const buildNameKeys = (
+      a: string | null | undefined,
+      b: string | null | undefined,
+    ) => {
       const left = normalizeNameForMatch(a);
       const right = normalizeNameForMatch(b);
       if (!left || !right) return [];
@@ -821,7 +1042,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const findByNames = (session: EventLiveSession) => {
       const pairNameKeys = new Set<string>([
         ...buildNameKeys(session.player1Name, session.player2Name),
-        ...buildNameKeys(session.state?.playerAName, session.state?.playerBName),
+        ...buildNameKeys(
+          session.state?.playerAName,
+          session.state?.playerBName,
+        ),
       ]);
       const sessionFragments = new Set<string>([
         ...buildNameFragments(session.player1Name),
@@ -836,8 +1060,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           const hit = group.matches.find((match) => {
             const candidateKeys = new Set<string>([
               ...buildNameKeys(match.top.player.name, match.bottom.player.name),
-              ...buildNameKeys(match.top.player.nativeName, match.bottom.player.nativeName),
-              ...buildNameKeys(match.top.player.name || match.top.player.nativeName, match.bottom.player.name || match.bottom.player.nativeName),
+              ...buildNameKeys(
+                match.top.player.nativeName,
+                match.bottom.player.nativeName,
+              ),
+              ...buildNameKeys(
+                match.top.player.name || match.top.player.nativeName,
+                match.bottom.player.name || match.bottom.player.nativeName,
+              ),
             ]);
             for (const key of candidateKeys) {
               if (pairNameKeys.has(key)) return true;
@@ -874,7 +1104,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       let popover: GroupPopoverData | null = null;
       if (session.eventStageId && session.groupNumber != null) {
         const groupedMatches = stageMatchGroups[session.eventStageId] ?? [];
-        const group = groupedMatches.find((entry) => entry.number === session.groupNumber) ?? null;
+        const group =
+          groupedMatches.find(
+            (entry) => entry.number === session.groupNumber,
+          ) ?? null;
         if (group) {
           popover = {
             title: `Group ${group.number ?? group.key}`,
@@ -914,13 +1147,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       recentlyClosed &&
       Date.now() - recentlyClosed.at < 1200 &&
       (recentlyClosed.sessionId === highlightItem.sessionId ||
-        (recentlyClosed.screenId && recentlyClosed.screenId === highlightItem.screenId))
+        (recentlyClosed.screenId &&
+          recentlyClosed.screenId === highlightItem.screenId))
     ) {
       return;
     }
     const fresh =
       liveCards.find((x) => x.sessionId === highlightItem.sessionId) ??
-      liveCards.find((x) => x.screenId && x.screenId === highlightItem.screenId);
+      liveCards.find(
+        (x) => x.screenId && x.screenId === highlightItem.screenId,
+      );
     if (!fresh) return;
     setHighlightItem({
       id: fresh.id,
@@ -976,7 +1212,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   };
 
   const switchToTournament = () => {
-    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement instanceof HTMLElement
+    ) {
       document.activeElement.blur();
     }
     if (tournamentScrollYRef.current !== null) {
@@ -990,7 +1229,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (finalStageDocumentId) {
       setSelectedStageDocumentId(finalStageDocumentId);
     }
-    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement instanceof HTMLElement
+    ) {
       document.activeElement.blur();
     }
     if (tournamentScrollYRef.current !== null) {
@@ -999,7 +1241,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     setTournamentPanelMode("finals");
     setActiveView("tournament");
     window.setTimeout(() => {
-      tournamentContentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      tournamentContentRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 80);
   };
 
@@ -1019,148 +1264,175 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     }, 400);
   };
 
-  const mainContent = activeView === "tournament" ? (
-    <TournamentEventsContent
-      key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
-      eventIdOverride={summary.documentId}
-      preferredStageDocumentId={selectedStageDocumentId}
-      onStageSelect={(stageDocumentId) => {
-        setTournamentPanelMode("stages");
-        setSelectedStageDocumentId(stageDocumentId);
-      }}
-      showPublishedFinalResults={tournamentPanelMode === "finals"}
-      embeddedOverride={embedded}
-      showStandaloneTitle={false}
-      showEventHeader={false}
-      emptyStateMessage="This tournament page is missing event data."
-      liveSessionsOverride={mergedEventLiveSessions}
-      onLiveMatchOpen={(sessionId) => {
-        setHighlightedLiveSessionId(sessionId);
-        setExpandedSessions(new Set([sessionId]));
-        switchToLive();
-      }}
-    />
-  ) : (
-    <section className="space-y-6">
-      {isLiveLoading && liveCards.length === 0 ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
-          Loading live scores...
-        </div>
-      ) : liveError && liveCards.length === 0 ? (
-        <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-6 text-sm text-red-700 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
-          {liveError}
-        </div>
-      ) : liveCards.length === 0 ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
-          Waiting for live scores...
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {liveCards.map((session) => {
-            const state = (session.state ?? {}) as any;
-            const boardInteractionDisabled = Boolean(highlightItem || suppressLiveGridClicks);
-            return (
-            <div
-              key={session.sessionId}
-              id={`tournament-live-session-${session.sessionId}`}
-              className={highlightedLiveSessionId === session.sessionId ? "relative rounded-[30px]" : "relative"}
-              onMouseEnter={() => {
-                if (!boardInteractionDisabled) setHoveredGroupSessionId(session.sessionId);
-              }}
-              onMouseLeave={() => setHoveredGroupSessionId((prev) => (prev === session.sessionId ? null : prev))}
-            >
-              {!highlightItem && groupPopoverBySessionId.has(session.sessionId) &&
-              (hoveredGroupSessionId === session.sessionId || openGroupSessionId === session.sessionId) ? (
-                <GroupTooltip
-                  data={groupPopoverBySessionId.get(session.sessionId)!}
-                  embedded={embedded}
-                />
-              ) : null}
-              <div className={boardInteractionDisabled ? "pointer-events-none" : ""}>
-              <LiveScoreBoardCard
-                sessionId={session.sessionId}
-                clubName={session.clubName}
-                clubCity={session.clubCity}
-                updatedAt={session.updatedAt}
-                timerProgress={state.progress}
-                timerTotal={state.totalBlocks}
-                timerRunning={state.isRunning}
-                timeoutsUsed1={state.timeoutsA}
-                maxTimeouts1={state.maxTimeoutsA}
-                timeoutsUsed2={state.timeoutsB}
-                maxTimeouts2={state.maxTimeoutsB}
-                inningsCount={state.inningsCount}
-                gameDurationSeconds={state.gameDurationSeconds}
-                player1={{
-                  name: state.playerAName || "Player A",
-                  country: state.playerACountry ?? null,
-                  photoUrl: state.playerAPhotoUrl ?? null,
-                  points: state.scoreA ?? 0,
-                  run: state.runA ?? 0,
-                  liveRun: state.liveRunA ?? 0,
-                  innings: state.inningsA ?? 0,
-                  hr: state.bestRunA ?? 0,
-                  flag: "🇬🇷",
-                  avgFormatted: state.avgFormattedA,
-                  accPercent: state.accPercentA,
-                  secondsPerInning: state.secondsPerInningA,
-                  playerTimeSeconds: state.playerATimeSeconds,
-                  targetPoints: state.targetPointsA ?? null,
-                }}
-                player2={{
-                  name: state.playerBName || "Player B",
-                  country: state.playerBCountry ?? null,
-                  photoUrl: state.playerBPhotoUrl ?? null,
-                  points: state.scoreB ?? 0,
-                  run: state.runB ?? 0,
-                  liveRun: state.liveRunB ?? 0,
-                  innings: state.inningsB ?? 0,
-                  hr: state.bestRunB ?? 0,
-                  flag: "🇬🇷",
-                  avgFormatted: state.avgFormattedB,
-                  accPercent: state.accPercentB,
-                  secondsPerInning: state.secondsPerInningB,
-                  playerTimeSeconds: state.playerBTimeSeconds,
-                  targetPoints: state.targetPointsB ?? null,
-                }}
-                current={state.current}
-                onNavigate={() => handleCardClick(session)}
-                expanded={expandedSessions.has(session.sessionId)}
-                onExpandedChange={handleExpandedChange}
-                topLeftControl={
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      toggleGroupPopover(session.sessionId);
-                    }}
-                    className={`sm:hidden rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
-                      groupPopoverBySessionId.has(session.sessionId)
-                        ? "border-white/30 bg-slate-900/50"
-                        : "border-white/15 bg-slate-900/30 opacity-70"
-                    }`}
+  const mainContent =
+    activeView === "tournament" ? (
+      <TournamentEventsContent
+        key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
+        eventIdOverride={summary.documentId}
+        preferredStageDocumentId={selectedStageDocumentId}
+        onStageSelect={(stageDocumentId) => {
+          setTournamentPanelMode("stages");
+          setSelectedStageDocumentId(stageDocumentId);
+        }}
+        showPublishedFinalResults={tournamentPanelMode === "finals"}
+        embeddedOverride={embedded}
+        showStandaloneTitle={false}
+        showEventHeader={false}
+        emptyStateMessage="This tournament page is missing event data."
+        liveSessionsOverride={mergedEventLiveSessions}
+        onLiveMatchOpen={(sessionId) => {
+          setHighlightedLiveSessionId(sessionId);
+          setExpandedSessions(new Set([sessionId]));
+          switchToLive();
+        }}
+      />
+    ) : (
+      <section className="space-y-6">
+        {isLiveLoading && liveCards.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+            Loading live scores...
+          </div>
+        ) : liveError && liveCards.length === 0 ? (
+          <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-6 text-sm text-red-700 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+            {liveError}
+          </div>
+        ) : liveCards.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+            Waiting for live scores...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {liveCards.map((session) => {
+              const state = (session.state ?? {}) as any;
+              const boardInteractionDisabled = Boolean(
+                highlightItem || suppressLiveGridClicks,
+              );
+              return (
+                <div
+                  key={session.sessionId}
+                  id={`tournament-live-session-${session.sessionId}`}
+                  className={
+                    highlightedLiveSessionId === session.sessionId
+                      ? "relative rounded-[30px]"
+                      : "relative"
+                  }
+                  onMouseEnter={() => {
+                    if (!boardInteractionDisabled)
+                      setHoveredGroupSessionId(session.sessionId);
+                  }}
+                  onMouseLeave={() =>
+                    setHoveredGroupSessionId((prev) =>
+                      prev === session.sessionId ? null : prev,
+                    )
+                  }
+                >
+                  {!highlightItem &&
+                  groupPopoverBySessionId.has(session.sessionId) &&
+                  (hoveredGroupSessionId === session.sessionId ||
+                    openGroupSessionId === session.sessionId) ? (
+                    <GroupTooltip
+                      data={groupPopoverBySessionId.get(session.sessionId)!}
+                      embedded={embedded}
+                    />
+                  ) : null}
+                  <div
+                    className={
+                      boardInteractionDisabled ? "pointer-events-none" : ""
+                    }
                   >
-                    Group
-                  </button>
-                }
-              />
-              </div>
-            </div>
-          )})}
-        </div>
-      )}
-      <LiveStatsHighlightModal item={highlightItem} onClose={handleHighlightClose} />
-    </section>
-  );
+                    <LiveScoreBoardCard
+                      sessionId={session.sessionId}
+                      clubName={session.clubName}
+                      clubCity={session.clubCity}
+                      updatedAt={session.updatedAt}
+                      timerProgress={state.progress}
+                      timerTotal={state.totalBlocks}
+                      timerRunning={state.isRunning}
+                      timeoutsUsed1={state.timeoutsA}
+                      maxTimeouts1={state.maxTimeoutsA}
+                      timeoutsUsed2={state.timeoutsB}
+                      maxTimeouts2={state.maxTimeoutsB}
+                      inningsCount={state.inningsCount}
+                      gameDurationSeconds={state.gameDurationSeconds}
+                      player1={{
+                        name: state.playerAName || "Player A",
+                        country: state.playerACountry ?? null,
+                        photoUrl: state.playerAPhotoUrl ?? null,
+                        points: state.scoreA ?? 0,
+                        run: state.runA ?? 0,
+                        liveRun: state.liveRunA ?? 0,
+                        innings: state.inningsA ?? 0,
+                        hr: state.bestRunA ?? 0,
+                        flag: "🇬🇷",
+                        avgFormatted: state.avgFormattedA,
+                        accPercent: state.accPercentA,
+                        secondsPerInning: state.secondsPerInningA,
+                        playerTimeSeconds: state.playerATimeSeconds,
+                        targetPoints: state.targetPointsA ?? null,
+                      }}
+                      player2={{
+                        name: state.playerBName || "Player B",
+                        country: state.playerBCountry ?? null,
+                        photoUrl: state.playerBPhotoUrl ?? null,
+                        points: state.scoreB ?? 0,
+                        run: state.runB ?? 0,
+                        liveRun: state.liveRunB ?? 0,
+                        innings: state.inningsB ?? 0,
+                        hr: state.bestRunB ?? 0,
+                        flag: "🇬🇷",
+                        avgFormatted: state.avgFormattedB,
+                        accPercent: state.accPercentB,
+                        secondsPerInning: state.secondsPerInningB,
+                        playerTimeSeconds: state.playerBTimeSeconds,
+                        targetPoints: state.targetPointsB ?? null,
+                      }}
+                      current={state.current}
+                      onNavigate={() => handleCardClick(session)}
+                      expanded={expandedSessions.has(session.sessionId)}
+                      onExpandedChange={handleExpandedChange}
+                      topLeftControl={
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toggleGroupPopover(session.sessionId);
+                          }}
+                          className={`sm:hidden rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
+                            groupPopoverBySessionId.has(session.sessionId)
+                              ? "border-white/30 bg-slate-900/50"
+                              : "border-white/15 bg-slate-900/30 opacity-70"
+                          }`}
+                        >
+                          Group
+                        </button>
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <LiveStatsHighlightModal
+          item={highlightItem}
+          onClose={handleHighlightClose}
+        />
+      </section>
+    );
 
   return (
-    <div className="mx-auto w-full px-4 py-8 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
+    <div
+      className="mx-auto w-full px-4 py-8 sm:px-6"
+      style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
+    >
       <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
         <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.85fr] lg:px-10 lg:py-10">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Tournament</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">
+                Tournament
+              </span>
               {summary.season ? <span>Season {summary.season}</span> : null}
               {summary.gameType ? <span>{summary.gameType}</span> : null}
             </div>
@@ -1174,7 +1446,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 {summary.title}
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
-                Public tournament presentation page backed by Strapi event data, with stage tabs, results tables, and an iframe-safe version.
+                Public tournament presentation page backed by Strapi event data,
+                with stage tabs, results tables, and an iframe-safe version.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -1193,73 +1466,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 type="button"
                 onClick={switchToTournament}
                 className={
-                  activeView === "tournament" && tournamentPanelMode === "stages"
+                  activeView === "tournament" &&
+                  tournamentPanelMode === "stages"
                     ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                     : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
                 }
               >
                 Tournament
               </button>
-              {!embedded && heroRankingOptions.length > 0 ? (
-                <div ref={heroRankingMenuRef} className="relative z-20">
-                  <button
-                    type="button"
-                    onClick={() => setIsHeroRankingMenuOpen((open) => !open)}
-                    className={`inline-flex h-[50px] min-w-[220px] items-center justify-between rounded-full border px-5 py-3 text-sm font-semibold shadow-[0_16px_40px_rgba(8,15,35,0.18)] transition ${
-                      isHeroRankingMenuOpen
-                        ? "border-cyan-300/35 bg-slate-950/72 text-white"
-                        : "border-white/15 bg-slate-950/34 text-white/90 hover:bg-slate-900/48"
-                    }`}
-                    aria-haspopup="menu"
-                    aria-expanded={isHeroRankingMenuOpen}
-                  >
-                    <span className="truncate pr-4">{selectedHeroRankingLabel}</span>
-                    <span className={`text-[11px] text-white/65 transition ${isHeroRankingMenuOpen ? "rotate-180" : ""}`}>
-                      ▼
-                    </span>
-                  </button>
-                  {isHeroRankingMenuOpen ? (
-                    <div className="absolute bottom-[calc(100%+12px)] left-0 z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_28px_80px_rgba(2,8,23,0.48)] backdrop-blur-xl">
-                      <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
-                        Phase ranking
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {heroRankingOptions.map((option) => {
-                          const selected = option.value === dummyRankingStageDocumentId;
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => {
-                                setDummyRankingStageDocumentId(option.value);
-                                setIsHeroRankingMenuOpen(false);
-                              }}
-                              className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition ${
-                                selected
-                                  ? "bg-cyan-400/18 text-white shadow-[inset_0_0_0_1px_rgba(103,232,249,0.38)]"
-                                  : "text-white/82 hover:bg-white/8 hover:text-white"
-                              }`}
-                            >
-                              <span>{option.label}</span>
-                              {selected ? (
-                                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200">
-                                  Active
-                                </span>
-                              ) : null}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
               {!embedded ? (
                 <button
                   type="button"
                   onClick={openFinalStandings}
                   className={
-                    activeView === "tournament" && tournamentPanelMode === "finals"
+                    activeView === "tournament" &&
+                    tournamentPanelMode === "finals"
                       ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                       : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
                   }
@@ -1280,17 +1501,55 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">Schedule</div>
-                <div className="mt-2 text-sm font-semibold text-white">{scheduleLabel || "To be announced"}</div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                  Schedule
+                </div>
+                <div className="mt-2 text-sm font-semibold text-white">
+                  {scheduleLabel || "To be announced"}
+                </div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">Stages</div>
-                <div className="mt-2 text-sm font-semibold text-white">{stageCount || 0}</div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                  Stages
+                </div>
+                <div className="mt-2 text-sm font-semibold text-white">
+                  {stageCount || 0}
+                </div>
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">Stage overview</div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                  Overview
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <button
+                    type="button"
+                    onClick={() => setOverviewMode("results")}
+                    className={
+                      overviewMode === "results"
+                        ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                        : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                    }
+                    aria-pressed={overviewMode === "results"}
+                  >
+                    Results
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOverviewMode("ranks")}
+                    className={
+                      overviewMode === "ranks"
+                        ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                        : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                    }
+                    aria-pressed={overviewMode === "ranks"}
+                  >
+                    Ranks
+                  </button>
+                </div>
+              </div>
               {summary.stages.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {summary.stages.map((stage) => (
@@ -1307,14 +1566,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
                           : "rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:border-white/25 hover:bg-white/15"
                       }
-                      aria-pressed={selectedStageDocumentId === stage.documentId}
+                      aria-pressed={
+                        selectedStageDocumentId === stage.documentId
+                      }
                     >
                       {stage.title}
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="mt-3 text-sm text-white/70">No stages published yet.</div>
+                <div className="mt-3 text-sm text-white/70">
+                  No stages published yet.
+                </div>
               )}
             </div>
           </div>
