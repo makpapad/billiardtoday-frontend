@@ -31,7 +31,7 @@ export default async function EmbedFederationsPage() {
               </div>
               <div className="mt-5">
                 <Link
-                  href={`/embed/federations/${federation.documentId}`}
+                  href={`/embed/federations/${federation.slug}`}
                   className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   View federation

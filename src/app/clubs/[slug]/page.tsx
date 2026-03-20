@@ -1,7 +1,8 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
-import { requireClubBySlug } from "@/lib/directory";
+import { requireClubByIdentifier } from "@/lib/directory";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -9,7 +10,11 @@ type Props = {
 
 export default async function ClubPage({ params }: Props) {
   const { slug } = await params;
-  const [appearance, club] = await Promise.all([getCmsAppearance(), requireClubBySlug(slug)]);
+  const [appearance, club] = await Promise.all([getCmsAppearance(), requireClubByIdentifier(slug)]);
+
+  if (slug !== club.slug) {
+    redirect(`/clubs/${club.slug}`);
+  }
 
   return (
     <>

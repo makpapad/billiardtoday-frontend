@@ -1,6 +1,7 @@
+import { redirect } from "next/navigation";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
-import { requireFederationByDocumentId } from "@/lib/directory";
+import { requireFederationByIdentifier } from "@/lib/directory";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -8,7 +9,11 @@ type Props = {
 
 export default async function FederationPage({ params }: Props) {
   const { id } = await params;
-  const [appearance, federation] = await Promise.all([getCmsAppearance(), requireFederationByDocumentId(id)]);
+  const [appearance, federation] = await Promise.all([getCmsAppearance(), requireFederationByIdentifier(id)]);
+
+  if (id !== federation.slug) {
+    redirect(`/federations/${federation.slug}`);
+  }
 
   return (
     <>

@@ -22,6 +22,7 @@ type Club = {
   federation?: {
     id: number;
     documentId: string;
+    slug?: string;
     name: string;
     country?: string | null;
   } | null;
@@ -30,6 +31,7 @@ type Club = {
 type Federation = {
   id: number;
   documentId: string;
+  slug: string;
   name: string;
   country?: string | null;
   clubs?: Club[];
@@ -72,6 +74,7 @@ export async function getClubs(): Promise<Club[]> {
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "country");
   params.set("populate[federation][fields][2]", "documentId");
+  params.set("populate[federation][fields][3]", "slug");
 
   const json = await fetchStrapiJson(`/api/clubs?${params.toString()}`);
   return Array.isArray(json?.data) ? json.data : [];
@@ -93,6 +96,7 @@ export async function getClubBySlug(slug: string): Promise<Club | null> {
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "country");
   params.set("populate[federation][fields][2]", "documentId");
+  params.set("populate[federation][fields][3]", "slug");
 
   const json = await fetchStrapiJson(`/api/clubs?${params.toString()}`);
   return Array.isArray(json?.data) ? json.data[0] || null : null;
@@ -120,6 +124,7 @@ export async function getClubByIdentifier(identifier: string): Promise<Club | nu
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "country");
   params.set("populate[federation][fields][2]", "documentId");
+  params.set("populate[federation][fields][3]", "slug");
 
   const json = await fetchStrapiJson(`/api/clubs?${params.toString()}`);
   return Array.isArray(json?.data) ? json.data[0] || null : null;
@@ -129,6 +134,10 @@ export async function getFederations(): Promise<Federation[]> {
   const params = new URLSearchParams();
   params.set("pagination[pageSize]", "100");
   params.set("sort[0]", "name:asc");
+  params.set("fields[0]", "name");
+  params.set("fields[1]", "country");
+  params.set("fields[2]", "documentId");
+  params.set("fields[3]", "slug");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
@@ -137,10 +146,36 @@ export async function getFederations(): Promise<Federation[]> {
   return Array.isArray(json?.data) ? json.data : [];
 }
 
-export async function getFederationByDocumentId(documentId: string): Promise<Federation | null> {
+export async function getFederationBySlug(slug: string): Promise<Federation | null> {
   const params = new URLSearchParams();
-  params.set("filters[documentId][$eq]", documentId);
+  params.set("filters[slug][$eq]", slug);
   params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "name");
+  params.set("fields[1]", "country");
+  params.set("fields[2]", "documentId");
+  params.set("fields[3]", "slug");
+  params.set("populate[clubs][fields][0]", "name");
+  params.set("populate[clubs][fields][1]", "slug");
+  params.set("populate[clubs][fields][2]", "documentId");
+
+  const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
+  return Array.isArray(json?.data) ? json.data[0] || null : null;
+}
+
+export async function getFederationByIdentifier(identifier: string): Promise<Federation | null> {
+  const clean = identifier.trim();
+  if (!clean) return null;
+
+  const bySlug = await getFederationBySlug(clean);
+  if (bySlug) return bySlug;
+
+  const params = new URLSearchParams();
+  params.set("filters[documentId][$eq]", clean);
+  params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "name");
+  params.set("fields[1]", "country");
+  params.set("fields[2]", "documentId");
+  params.set("fields[3]", "slug");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
@@ -161,8 +196,8 @@ export async function requireClubByIdentifier(identifier: string) {
   return club;
 }
 
-export async function requireFederationByDocumentId(documentId: string) {
-  const federation = await getFederationByDocumentId(documentId);
+export async function requireFederationByIdentifier(identifier: string) {
+  const federation = await getFederationByIdentifier(identifier);
   if (!federation) notFound();
   return federation;
 }

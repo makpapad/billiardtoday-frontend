@@ -424,8 +424,9 @@ export const listFederations = async (limit = 12): Promise<PublicFederationCard[
   params.set("pagination[pageSize]", String(limit));
   params.set("sort[0]", "name:asc");
   params.set("fields[0]", "name");
-  params.set("fields[1]", "country");
-  params.set("fields[2]", "documentId");
+  params.set("fields[1]", "slug");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "documentId");
   params.set("populate[clubs][fields][0]", "documentId");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`, 60).catch(() => null);
@@ -434,16 +435,13 @@ export const listFederations = async (limit = 12): Promise<PublicFederationCard[
 };
 
 export const getFederationBySlug = async (slug: string): Promise<PublicFederationDetail | null> => {
-  const federations = await listFederations(100);
-  const base = federations.find((entry) => entry.slug === slug) || null;
-  if (!base) return null;
-
   const params = new URLSearchParams();
-  params.set("filters[name][$eq]", base.name);
+  params.set("filters[slug][$eq]", slug);
   params.set("pagination[pageSize]", "1");
   params.set("fields[0]", "name");
-  params.set("fields[1]", "country");
-  params.set("fields[2]", "documentId");
+  params.set("fields[1]", "slug");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "documentId");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "city");
@@ -458,8 +456,9 @@ export const getFederationBySlug = async (slug: string): Promise<PublicFederatio
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`, 60).catch(() => null);
   const row = Array.isArray(json?.data) ? json.data[0] : null;
+  const base = mapFederationCard(row);
   const entity = unwrapEntity(row);
-  if (!entity) return null;
+  if (!entity || !base) return null;
 
   return {
     ...base,
