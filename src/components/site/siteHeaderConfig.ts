@@ -12,7 +12,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
       { label: "Live", href: "/live" },
       { label: "Tournaments", href: "/tournaments" },
       { label: "Clubs", href: "/clubs" },
-      { label: "Federations", href: "/federations" },
+      { label: "Organizers", href: "/federations" },
       { label: "Players", href: "/players" },
       { label: "Account", href: "/account" },
     ],
