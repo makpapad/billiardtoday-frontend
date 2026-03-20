@@ -1430,24 +1430,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.85fr] lg:px-10 lg:py-10">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">
-                Tournament
-              </span>
               {summary.season ? <span>Season {summary.season}</span> : null}
               {summary.gameType ? <span>{summary.gameType}</span> : null}
             </div>
             <div className="space-y-3">
-              {summary.tournamentTitle ? (
-                <div className="text-sm font-medium uppercase tracking-[0.18em] text-cyan-200/90">
-                  {summary.tournamentTitle}
-                </div>
-              ) : null}
               <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
                 {summary.title}
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
-                Public tournament presentation page backed by Strapi event data,
-                with stage tabs, results tables, and an iframe-safe version.
+                Follow every stage, match, and final standing in one polished tournament view built for players, organizers, and fans.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
