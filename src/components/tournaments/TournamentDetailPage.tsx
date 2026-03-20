@@ -1514,7 +1514,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
-                  Overview
+                  Stage overview
                 </div>
                 <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                   <button
@@ -1531,7 +1531,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     }
                     aria-pressed={overviewMode === "results"}
                   >
-                    Results
+                    Matches
                   </button>
                   <button
                     type="button"
@@ -1547,7 +1547,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     }
                     aria-pressed={overviewMode === "ranks"}
                   >
-                    Ranks
+                    Ranking
                   </button>
                 </div>
               </div>
