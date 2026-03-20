@@ -1275,6 +1275,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           setSelectedStageDocumentId(stageDocumentId);
         }}
         showPublishedFinalResults={tournamentPanelMode === "finals"}
+        stageViewMode={overviewMode}
         embeddedOverride={embedded}
         showStandaloneTitle={false}
         showEventHeader={false}
@@ -1438,7 +1439,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 {summary.title}
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
-                Follow every stage, match, and final standing in one polished tournament view built for players, organizers, and fans.
+                Follow every stage, match, and final standing in one polished
+                tournament view built for players, organizers, and fans.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -1517,7 +1519,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                   <button
                     type="button"
-                    onClick={() => setOverviewMode("results")}
+                    onClick={() => {
+                      setOverviewMode("results");
+                      setTournamentPanelMode("stages");
+                      setActiveView("tournament");
+                    }}
                     className={
                       overviewMode === "results"
                         ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
@@ -1529,7 +1535,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setOverviewMode("ranks")}
+                    onClick={() => {
+                      setOverviewMode("ranks");
+                      setTournamentPanelMode("stages");
+                      setActiveView("tournament");
+                    }}
                     className={
                       overviewMode === "ranks"
                         ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
