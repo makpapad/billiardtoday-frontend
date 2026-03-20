@@ -43,6 +43,21 @@ export type StrapiResult = {
     player?: unknown
 }
 
+export type StrapiFinalResult = {
+    id?: number | string | null
+    documentId?: string | null
+    position?: number | string | null
+    best_average?: number | string | null
+    caroms?: number | string | null
+    points?: number | string | null
+    innings?: number | string | null
+    high_run?: number | string | null
+    ranking_points?: number | string | null
+    penalty?: number | string | null
+    final_points?: number | string | null
+    player?: unknown
+}
+
 export type StrapiEvent = {
     id?: number | string | null
     documentId?: string | null
@@ -51,6 +66,7 @@ export type StrapiEvent = {
     start_date?: string | null
     end_date?: string | null
     event_stages?: StrapiEventStage[] | null
+    results_final?: StrapiFinalResult[] | null
 }
 
 export type EventApiResponse = {
@@ -106,6 +122,21 @@ export type NormalizedStageResult = {
     groupNumber: number | null
     groupPosition: number | null
     finalPosition: number | null
+}
+
+export type NormalizedFinalResult = {
+    id: string
+    documentId: string
+    position: number | null
+    playerName: string
+    bestAverage: number | null
+    caroms: number | null
+    points: number | null
+    innings: number | null
+    highRun: number | null
+    rankingPoints: number | null
+    penalty: number | null
+    finalPoints: number | null
 }
 
 export type StageMatchGroup = {

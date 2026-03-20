@@ -60,6 +60,21 @@ export async function GET(
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][1]', 'documentId')
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][2]', 'full_name_en')
 
+        queryParams.set('populate[results_final][sort][0]', 'position:asc')
+        queryParams.set('populate[results_final][fields][0]', 'position')
+        queryParams.set('populate[results_final][fields][1]', 'best_average')
+        queryParams.set('populate[results_final][fields][2]', 'caroms')
+        queryParams.set('populate[results_final][fields][3]', 'points')
+        queryParams.set('populate[results_final][fields][4]', 'innings')
+        queryParams.set('populate[results_final][fields][5]', 'high_run')
+        queryParams.set('populate[results_final][fields][6]', 'ranking_points')
+        queryParams.set('populate[results_final][fields][7]', 'penalty')
+        queryParams.set('populate[results_final][fields][8]', 'final_points')
+        queryParams.set('populate[results_final][fields][9]', 'documentId')
+        queryParams.set('populate[results_final][populate][player][fields][0]', 'full_name')
+        queryParams.set('populate[results_final][populate][player][fields][1]', 'documentId')
+        queryParams.set('populate[results_final][populate][player][fields][2]', 'full_name_en')
+
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 
         const headers: HeadersInit = {}

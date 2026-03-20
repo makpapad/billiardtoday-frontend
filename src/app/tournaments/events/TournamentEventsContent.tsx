@@ -4,12 +4,13 @@ import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'r
 import { usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
-import type { EventApiResponse, NormalizedEventStage, StageMatchGroup } from './types'
+import type { EventApiResponse, NormalizedEventStage, NormalizedFinalResult, StageMatchGroup } from './types'
 import { buildTournamentSlug } from '@/lib/tournaments'
 import {
     toRelationArray,
     normalizeEntity,
     normalizeGroup,
+    normalizeFinalResult,
     normalizeResult,
     toNumber,
     formatDateRange,
@@ -237,6 +238,21 @@ export function TournamentEventsContent({
             }, {}),
         [eventStages]
     )
+
+    const publishedFinalResults = useMemo<NormalizedFinalResult[]>(() => {
+        if (!eventData?.data?.results_final) return []
+
+        const resultsArray = toRelationArray(eventData.data.results_final)
+
+        return resultsArray
+            .map((result, index) => normalizeFinalResult(result, `final-result-${index}`))
+            .sort((a, b) => {
+                if (a.position !== null && b.position !== null) return a.position - b.position
+                if (a.position !== null) return -1
+                if (b.position !== null) return 1
+                return a.id.localeCompare(b.id)
+            })
+    }, [eventData])
 
     // Keep active stage in sync with external tournament hero selection when present.
     useEffect(() => {
@@ -523,12 +539,12 @@ export function TournamentEventsContent({
                             {emptyStateMessage}
                         </div>
                     )}
-                    {!isLoading && !error && eventId && eventStages.length === 0 && (
+                    {!isLoading && !error && eventId && eventStages.length === 0 && publishedFinalResults.length === 0 && (
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                             No stages found for this event.
                         </div>
                     )}
-                    {eventInfo && eventStages.length > 0 && (
+                    {eventInfo && (eventStages.length > 0 || publishedFinalResults.length > 0) && (
                         <div className="flex flex-col gap-4">
                             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
                                 {showEventHeader ? (
@@ -544,40 +560,108 @@ export function TournamentEventsContent({
                                         </div>
                                     </div>
                                 ) : null}
+                                {publishedFinalResults.length > 0 && (
+                                    <div className="mb-6 flex flex-col gap-3">
+                                        <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                            Final standings
+                                        </div>
+                                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                                            <table className="min-w-full border-collapse text-sm">
+                                                <thead className="bg-emerald-900 text-white">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-left font-semibold">#</th>
+                                                        <th className="px-4 py-3 text-left font-semibold">Player</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Caroms</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Innings</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">AVG</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Best AVG</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">H.R.</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Rank Pts</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Penalty</th>
+                                                        <th className="px-4 py-3 text-center font-semibold">Final Pts</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {publishedFinalResults.map((result) => (
+                                                        <tr
+                                                            key={result.id}
+                                                            className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                                        >
+                                                            <td className="px-4 py-3 font-semibold">
+                                                                {formatNumberValue(result.position)}
+                                                            </td>
+                                                            <td className="px-4 py-3 font-medium">
+                                                                {result.playerName || 'Unknown'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.caroms ?? result.points)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.innings)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatAverage(result.caroms ?? result.points, result.innings)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {result.bestAverage !== null
+                                                                    ? result.bestAverage.toFixed(3)
+                                                                    : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.highRun)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.rankingPoints)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.penalty)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {formatNumberValue(result.finalPoints)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
                                 {/* Tabs */}
-                                <div className="border-b border-gray-200 dark:border-gray-700">
-                                    <nav className="flex gap-2 overflow-x-auto" aria-label="Tabs">
-                                        {eventStages.map((stage: NormalizedEventStage) => {
-                                            const displayTitle =
-                                                stage.title || (stage.order !== null ? `Stage #${stage.order}` : 'Untitled stage')
-                                            const isActive = activeStageId === stage.id
+                                {eventStages.length > 0 && (
+                                    <div className="border-b border-gray-200 dark:border-gray-700">
+                                        <nav className="flex gap-2 overflow-x-auto" aria-label="Tabs">
+                                            {eventStages.map((stage: NormalizedEventStage) => {
+                                                const displayTitle =
+                                                    stage.title || (stage.order !== null ? `Stage #${stage.order}` : 'Untitled stage')
+                                                const isActive = activeStageId === stage.id
 
-                                            return (
-                                                <button
-                                                    key={stage.id}
-                                                    onClick={() => setActiveStageId(stage.id)}
-                                                    className={clsx(
-                                                        'px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                                                        isActive
-                                                            ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                                                    )}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span>{displayTitle}</span>
-                                                        {stage.isFinal && (
-                                                            <span className="text-xs font-semibold uppercase tracking-wide">
-                                                                Final
-                                                            </span>
+                                                return (
+                                                    <button
+                                                        key={stage.id}
+                                                        onClick={() => setActiveStageId(stage.id)}
+                                                        className={clsx(
+                                                            'px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                                            isActive
+                                                                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
                                                         )}
-                                                    </div>
-                                                </button>
-                                            )
-                                        })}
-                                    </nav>
-                                </div>
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <span>{displayTitle}</span>
+                                                            {stage.isFinal && (
+                                                                <span className="text-xs font-semibold uppercase tracking-wide">
+                                                                    Final
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                        </nav>
+                                    </div>
+                                )}
                                 {/* Tab Content */}
-                                <div className="mt-4">
+                                {eventStages.length > 0 && <div className="mt-4">
                                     {eventStages.map((stage: NormalizedEventStage) => {
                                         if (activeStageId !== stage.id) return null
                                         
@@ -856,7 +940,7 @@ export function TournamentEventsContent({
                                             </div>
                                         )
                                     })}
-                                </div>
+                                </div>}
                             </div>
                         </div>
                     )}

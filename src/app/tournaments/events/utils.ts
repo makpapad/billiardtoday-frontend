@@ -2,10 +2,12 @@ import type {
     StrapiEventStage,
     StrapiGroup,
     StrapiResult,
+    StrapiFinalResult,
     NormalizedEventStage,
     NormalizedGroupMatch,
     NormalizedGroupPlayer,
     NormalizedStageResult,
+    NormalizedFinalResult,
     StageMatchGroup,
     PlayerRecord,
     GroupStanding,
@@ -141,6 +143,26 @@ export const normalizeResult = (result: unknown, fallbackId: string): Normalized
         groupNumber: toNumber(normalized.group_number),
         groupPosition: toNumber(normalized.group_position),
         finalPosition: toNumber(normalized.final_position),
+    }
+}
+
+export const normalizeFinalResult = (result: unknown, fallbackId: string): NormalizedFinalResult => {
+    const normalized = normalizeEntity<StrapiFinalResult>(result, fallbackId)
+    const player = normalizePlayer(normalized.player, `${normalized.id}-player`)
+
+    return {
+        id: normalized.id,
+        documentId: normalized.documentId,
+        position: toNumber(normalized.position),
+        playerName: player.name,
+        bestAverage: toNumber(normalized.best_average),
+        caroms: toNumber(normalized.caroms),
+        points: toNumber(normalized.points),
+        innings: toNumber(normalized.innings),
+        highRun: toNumber(normalized.high_run),
+        rankingPoints: toNumber(normalized.ranking_points),
+        penalty: toNumber(normalized.penalty),
+        finalPoints: toNumber(normalized.final_points),
     }
 }
 
