@@ -292,6 +292,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<string | null>(
     summary.stages[0]?.documentId ?? null,
   );
+  const heroRankingOptions = useMemo(
+    () =>
+      summary.stages.slice(0, 3).map((stage) => ({
+        value: stage.documentId,
+        label: `${stage.title} ranking`,
+      })),
+    [summary.stages],
+  );
+  const [dummyRankingStageDocumentId, setDummyRankingStageDocumentId] = useState<string>(
+    heroRankingOptions[0]?.value ?? "",
+  );
   const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -1149,6 +1160,22 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               >
                 Tournament
               </button>
+              {!embedded && heroRankingOptions.length > 0 ? (
+                <label className="relative inline-flex items-center">
+                  <select
+                    value={dummyRankingStageDocumentId}
+                    onChange={(event) => setDummyRankingStageDocumentId(event.target.value)}
+                    className="h-[50px] min-w-[220px] appearance-none rounded-full border border-white/15 bg-white/10 pl-5 pr-12 text-sm font-semibold text-white outline-none transition hover:bg-white/15"
+                  >
+                    {heroRankingOptions.map((option) => (
+                      <option key={option.value} value={option.value} className="text-slate-950">
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-5 text-xs text-white/70">▼</span>
+                </label>
+              ) : null}
               {!embedded ? (
                 <button
                   type="button"
