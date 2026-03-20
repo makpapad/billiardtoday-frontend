@@ -456,6 +456,60 @@ export function TournamentEventsContent({
         }
     }, [eventData])
 
+    const renderStageResultsTable = (stage: NormalizedEventStage) => {
+        if (stage.results.length === 0) return null
+
+        const hasFinalPositions = stage.results.some((result) => result.finalPosition !== null)
+        const title = hasFinalPositions ? 'Final standings' : 'Stage standings'
+
+        return (
+            <div className="flex flex-col gap-3">
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">{title}</div>
+                <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                    <table className="min-w-full border-collapse text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-800/70 text-gray-600 dark:text-gray-300">
+                            <tr>
+                                <th className="px-4 py-3 text-left font-semibold">Pos</th>
+                                <th className="px-4 py-3 text-left font-semibold">Player</th>
+                                <th className="px-4 py-3 text-center font-semibold">Group</th>
+                                <th className="px-4 py-3 text-center font-semibold">MP</th>
+                                <th className="px-4 py-3 text-center font-semibold">Pts</th>
+                                <th className="px-4 py-3 text-center font-semibold">Inn</th>
+                                <th className="px-4 py-3 text-center font-semibold">AVG</th>
+                                <th className="px-4 py-3 text-center font-semibold">H.R.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stage.results.map((result) => (
+                                <tr
+                                    key={result.id}
+                                    className="border-t border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                                >
+                                    <td className="px-4 py-3 font-semibold">
+                                        {formatNumberValue(result.finalPosition ?? result.groupPosition)}
+                                    </td>
+                                    <td className="px-4 py-3 font-medium">{result.playerName || 'Unknown'}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        {formatNumberValue(result.groupNumber)}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {formatNumberValue(result.matchPoints)}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">{formatNumberValue(result.points)}</td>
+                                    <td className="px-4 py-3 text-center">{formatNumberValue(result.innings)}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        {formatAverage(result.points, result.innings)}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">{formatNumberValue(result.highRun)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: 'var(--bt-page-width, 1280px)' }}>
             <style>{liveBadgeAnimation}</style>
@@ -539,6 +593,7 @@ export function TournamentEventsContent({
                                                 <div className="flex flex-col gap-6">
                                                     <div className="flex flex-col gap-3">
                                                         <div className="flex flex-col gap-3">
+                                                            {renderStageResultsTable(stage)}
                                                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                                                 Matches - {stage.title || stage.order || ''}
                                                             </div>
