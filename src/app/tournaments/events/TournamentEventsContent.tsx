@@ -255,6 +255,18 @@ export function TournamentEventsContent({
                 return a.id.localeCompare(b.id)
             })
     }, [eventData])
+    const showRankPointsColumn = useMemo(
+        () => publishedFinalResults.some((result) => result.rankingPoints !== null),
+        [publishedFinalResults],
+    )
+    const showPenaltyColumn = useMemo(
+        () => publishedFinalResults.some((result) => result.penalty !== null),
+        [publishedFinalResults],
+    )
+    const showFinalPointsColumn = useMemo(
+        () => publishedFinalResults.some((result) => result.finalPoints !== null),
+        [publishedFinalResults],
+    )
 
     // Keep active stage in sync with external tournament hero selection when present.
     useEffect(() => {
@@ -578,9 +590,15 @@ export function TournamentEventsContent({
                                                         <th className="px-4 py-3 text-center font-semibold">AVG</th>
                                                         <th className="px-4 py-3 text-center font-semibold">Best AVG</th>
                                                         <th className="px-4 py-3 text-center font-semibold">H.R.</th>
-                                                        <th className="px-4 py-3 text-center font-semibold">Rank Pts</th>
-                                                        <th className="px-4 py-3 text-center font-semibold">Penalty</th>
-                                                        <th className="px-4 py-3 text-center font-semibold">Final Pts</th>
+                                                        {showRankPointsColumn && (
+                                                            <th className="px-4 py-3 text-center font-semibold">Rank Pts</th>
+                                                        )}
+                                                        {showPenaltyColumn && (
+                                                            <th className="px-4 py-3 text-center font-semibold">Penalty</th>
+                                                        )}
+                                                        {showFinalPointsColumn && (
+                                                            <th className="px-4 py-3 text-center font-semibold">Final Pts</th>
+                                                        )}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -612,15 +630,21 @@ export function TournamentEventsContent({
                                                             <td className="px-4 py-3 text-center">
                                                                 {formatNumberValue(result.highRun)}
                                                             </td>
-                                                            <td className="px-4 py-3 text-center">
-                                                                {formatNumberValue(result.rankingPoints)}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-center">
-                                                                {formatNumberValue(result.penalty)}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-center">
-                                                                {formatNumberValue(result.finalPoints)}
-                                                            </td>
+                                                            {showRankPointsColumn && (
+                                                                <td className="px-4 py-3 text-center">
+                                                                    {formatNumberValue(result.rankingPoints)}
+                                                                </td>
+                                                            )}
+                                                            {showPenaltyColumn && (
+                                                                <td className="px-4 py-3 text-center">
+                                                                    {formatNumberValue(result.penalty)}
+                                                                </td>
+                                                            )}
+                                                            {showFinalPointsColumn && (
+                                                                <td className="px-4 py-3 text-center">
+                                                                    {formatNumberValue(result.finalPoints)}
+                                                                </td>
+                                                            )}
                                                         </tr>
                                                     ))}
                                                 </tbody>
