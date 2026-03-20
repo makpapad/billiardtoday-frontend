@@ -24,6 +24,7 @@ export default async function EmbedClubPage({ params }: Props) {
             </h1>
             <div className="mt-6 grid gap-4 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
               {club.federation?.name ? <div>Federation: {club.federation.name}</div> : null}
+              {club.country ? <div>Country: {club.country}</div> : null}
               {club.city ? <div>City: {club.city}</div> : null}
               {club.contactEmail ? <div>Email: {club.contactEmail}</div> : null}
               {club.contactPhone ? <div>Phone: {club.contactPhone}</div> : null}
