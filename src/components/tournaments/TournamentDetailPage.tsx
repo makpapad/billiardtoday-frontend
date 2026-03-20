@@ -281,9 +281,12 @@ const formatDateRange = (start: string | null, end: string | null) => {
 
 export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const fullPageHref = buildTournamentHref(summary.documentId, summary.title, summary.season, false);
-  const embedPageHref = buildTournamentHref(summary.documentId, summary.title, summary.season, true);
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
+  const finalStageDocumentId =
+    summary.stages.find((stage) => stage.isFinal)?.documentId ??
+    summary.stages[summary.stages.length - 1]?.documentId ??
+    null;
   const [activeView, setActiveView] = useState<"tournament" | "live">("tournament");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<string | null>(
     summary.stages[0]?.documentId ?? null,
@@ -305,6 +308,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const tournamentScrollYRef = useRef<number | null>(null);
   const pendingTournamentRestoreYRef = useRef<number | null>(null);
   const previousViewRef = useRef<"tournament" | "live">("tournament");
+  const tournamentContentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -929,6 +933,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     setActiveView("tournament");
   };
 
+  const openFinalStandings = () => {
+    if (finalStageDocumentId) {
+      setSelectedStageDocumentId(finalStageDocumentId);
+    }
+    switchToTournament();
+    window.setTimeout(() => {
+      tournamentContentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  };
+
   const handleHighlightClose = () => {
     lastModalCloseAtRef.current = Date.now();
     lastClosedHighlightRef.current = {
@@ -1122,12 +1136,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 Tournament
               </button>
               {!embedded ? (
-                <Link
-                  href={embedPageHref}
+                <button
+                  type="button"
+                  onClick={openFinalStandings}
                   className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
                 >
-                  Embed
-                </Link>
+                  Final standings
+                </button>
               ) : (
                 <Link
                   href={fullPageHref}
@@ -1179,7 +1194,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         </div>
       </section>
 
-      <div className="mt-8">{mainContent}</div>
+      <div ref={tournamentContentRef} className="mt-8">
+        {mainContent}
+      </div>
     </div>
   );
 }
