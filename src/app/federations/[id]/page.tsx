@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
-import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireFederationByDocumentId } from "@/lib/directory";
 
 type Props = {
@@ -10,14 +9,10 @@ type Props = {
 
 export default async function FederationPage({ params }: Props) {
   const { id } = await params;
-  const [settings, appearance, federation] = await Promise.all([
-    getCmsSiteSettings(),
-    getCmsAppearance(),
-    requireFederationByDocumentId(id),
-  ]);
+  const [appearance, federation] = await Promise.all([getCmsAppearance(), requireFederationByDocumentId(id)]);
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance}>
+    <>
       <section className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
@@ -82,6 +77,6 @@ export default async function FederationPage({ params }: Props) {
         appearance={appearance}
         federationId={federation.documentId}
       />
-    </CmsPageShell>
+    </>
   );
 }
