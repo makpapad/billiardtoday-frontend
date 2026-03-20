@@ -1201,14 +1201,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 Tournament
               </button>
               {!embedded && heroRankingOptions.length > 0 ? (
-                <div ref={heroRankingMenuRef} className="relative">
+                <div ref={heroRankingMenuRef} className="relative z-20">
                   <button
                     type="button"
                     onClick={() => setIsHeroRankingMenuOpen((open) => !open)}
-                    className={`inline-flex h-[50px] min-w-[220px] items-center justify-between rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                    className={`inline-flex h-[50px] min-w-[220px] items-center justify-between rounded-full border px-5 py-3 text-sm font-semibold shadow-[0_16px_40px_rgba(8,15,35,0.18)] transition ${
                       isHeroRankingMenuOpen
-                        ? "border-white/35 bg-slate-950/45 text-white"
-                        : "border-white/15 bg-white/10 text-white/90 hover:bg-white/15"
+                        ? "border-cyan-300/35 bg-slate-950/72 text-white"
+                        : "border-white/15 bg-slate-950/34 text-white/90 hover:bg-slate-900/48"
                     }`}
                     aria-haspopup="menu"
                     aria-expanded={isHeroRankingMenuOpen}
@@ -1219,7 +1219,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     </span>
                   </button>
                   {isHeroRankingMenuOpen ? (
-                    <div className="absolute left-0 top-[calc(100%+10px)] z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_24px_70px_rgba(15,23,42,0.34)] backdrop-blur-xl">
+                    <div className="absolute bottom-[calc(100%+12px)] left-0 z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_28px_80px_rgba(2,8,23,0.48)] backdrop-blur-xl">
                       <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
                         Phase ranking
                       </div>
