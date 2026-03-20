@@ -50,6 +50,27 @@ type Player = {
               }
           }
         | null
+    career_stats?: {
+        overall?: {
+            totalMatches?: number
+            totalWins?: number
+            totalLosses?: number
+            winPercentage?: number | string
+            avgPerInning?: number | string
+            highestRun?: number
+        }
+        byGameType?: Record<
+            string,
+            {
+                totalMatches?: number
+                totalWins?: number
+                totalLosses?: number
+                winPercentage?: number | string
+                avgPerInning?: number | string
+                highestRun?: number
+            }
+        >
+    } | null
 }
 
 // Helper function to get Strapi base URL
@@ -172,6 +193,45 @@ const formatSafeAverage = (
     }
 
     return formatSafeDecimal(validScore / validInnings, 3)
+}
+
+const normalizeCareerStats = (
+    stats:
+        | {
+              totalMatches?: number
+              totalWins?: number
+              totalLosses?: number
+              winPercentage?: number | string
+              avgPerInning?: number | string
+              highestRun?: number
+          }
+        | null
+        | undefined,
+) => {
+    if (!stats) return null
+
+    const winPercentageValue =
+        typeof stats.winPercentage === 'number'
+            ? stats.winPercentage.toFixed(1)
+            : typeof stats.winPercentage === 'string'
+              ? stats.winPercentage
+              : '0.0'
+
+    const avgValue =
+        typeof stats.avgPerInning === 'number'
+            ? formatSafeDecimal(stats.avgPerInning, 3)
+            : typeof stats.avgPerInning === 'string'
+              ? stats.avgPerInning.replace('.', ',')
+              : '0,000'
+
+    return {
+        totalMatches: Number(stats.totalMatches) || 0,
+        totalWins: Number(stats.totalWins) || 0,
+        totalLosses: Number(stats.totalLosses) || 0,
+        winPercentage: winPercentageValue,
+        avgPerInning: avgValue,
+        highestRun: Number(stats.highestRun) || 0,
+    }
 }
 
 export default function PlayerProfilePage() {
@@ -537,14 +597,14 @@ export default function PlayerProfilePage() {
         const eventsCount = eventsSource.length
 
         // When showing ALL games and we have pre-calculated career stats from backend, use them
-        if (selectedGameType === 'all' && careerStats) {
+        if (selectedGameType === 'all' && effectiveCareerStats) {
             return {
-                totalMatches: careerStats.totalMatches,
-                totalWins: careerStats.totalWins,
-                totalLosses: careerStats.totalLosses,
-                winPercentage: careerStats.winPercentage,
-                avgPerInning: careerStats.avgPerInning,
-                highestRun: careerStats.highestRun,
+                totalMatches: effectiveCareerStats.totalMatches,
+                totalWins: effectiveCareerStats.totalWins,
+                totalLosses: effectiveCareerStats.totalLosses,
+                winPercentage: effectiveCareerStats.winPercentage,
+                avgPerInning: effectiveCareerStats.avgPerInning,
+                highestRun: effectiveCareerStats.highestRun,
                 eventsCount,
             }
         }
@@ -604,6 +664,15 @@ export default function PlayerProfilePage() {
         }
     }
 
+    const preloadedCareerStats =
+        selectedGameType !== 'all' &&
+        player?.career_stats?.byGameType?.[selectedGameType]
+            ? normalizeCareerStats(
+                  player.career_stats.byGameType[selectedGameType],
+              )
+            : normalizeCareerStats(player?.career_stats?.overall)
+
+    const effectiveCareerStats = careerStats ?? preloadedCareerStats
     const stats = calculateFilteredStats()
     const overallMatches = stats.totalMatches
     const overallWins = stats.totalWins
@@ -895,7 +964,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.matches')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallMatches
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
@@ -907,7 +976,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.wins')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallWins
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
@@ -919,7 +988,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallDraws
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
@@ -931,7 +1000,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.losses')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallLosses
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
@@ -943,7 +1012,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.winPct')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     `${overallWinPercentage}%`
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
@@ -955,7 +1024,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.avg')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallAvg
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
@@ -967,7 +1036,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.highRunShort')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                {careerStats ? (
+                                {effectiveCareerStats ? (
                                     overallHighestRun
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
