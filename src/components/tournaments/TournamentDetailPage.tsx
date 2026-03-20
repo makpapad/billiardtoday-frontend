@@ -304,7 +304,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     heroRankingOptions[0]?.value ?? "",
   );
   const [isHeroRankingMenuOpen, setIsHeroRankingMenuOpen] = useState(false);
-  const [heroRankingMenuDirection, setHeroRankingMenuDirection] = useState<"down" | "up">("down");
   const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -324,7 +323,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const previousViewRef = useRef<"tournament" | "live">("tournament");
   const tournamentContentRef = useRef<HTMLDivElement | null>(null);
   const heroRankingMenuRef = useRef<HTMLDivElement | null>(null);
-  const heroRankingTriggerRef = useRef<HTMLButtonElement | null>(null);
   const selectedHeroRankingLabel =
     heroRankingOptions.find((option) => option.value === dummyRankingStageDocumentId)?.label ??
     "Phase ranking";
@@ -342,16 +340,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   useEffect(() => {
     if (!isHeroRankingMenuOpen) return;
-
-    const triggerRect = heroRankingTriggerRef.current?.getBoundingClientRect() ?? null;
-    if (triggerRect) {
-      const estimatedMenuHeight = 248;
-      const spaceBelow = window.innerHeight - triggerRect.bottom;
-      const spaceAbove = triggerRect.top;
-      const nextDirection =
-        spaceBelow >= estimatedMenuHeight || spaceBelow >= spaceAbove ? "down" : "up";
-      setHeroRankingMenuDirection(nextDirection);
-    }
 
     const handlePointerDown = (event: MouseEvent) => {
       if (!heroRankingMenuRef.current?.contains(event.target as Node)) {
@@ -1215,7 +1203,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               {!embedded && heroRankingOptions.length > 0 ? (
                 <div ref={heroRankingMenuRef} className="relative z-20">
                   <button
-                    ref={heroRankingTriggerRef}
                     type="button"
                     onClick={() => setIsHeroRankingMenuOpen((open) => !open)}
                     className={`inline-flex h-[50px] min-w-[220px] items-center justify-between rounded-full border px-5 py-3 text-sm font-semibold shadow-[0_16px_40px_rgba(8,15,35,0.18)] transition ${
@@ -1232,13 +1219,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     </span>
                   </button>
                   {isHeroRankingMenuOpen ? (
-                    <div
-                      className={`absolute left-0 z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_28px_80px_rgba(2,8,23,0.48)] backdrop-blur-xl ${
-                        heroRankingMenuDirection === "down"
-                          ? "top-[calc(100%+12px)]"
-                          : "bottom-[calc(100%+12px)]"
-                      }`}
-                    >
+                    <div className="absolute bottom-[calc(100%+12px)] left-0 z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_28px_80px_rgba(2,8,23,0.48)] backdrop-blur-xl">
                       <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
                         Phase ranking
                       </div>
