@@ -303,6 +303,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [dummyRankingStageDocumentId, setDummyRankingStageDocumentId] = useState<string>(
     heroRankingOptions[0]?.value ?? "",
   );
+  const [isHeroRankingMenuOpen, setIsHeroRankingMenuOpen] = useState(false);
   const [liveScreensData, setLiveScreensData] = useState<TournamentLiveScreensResponse["data"]>([]);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -321,6 +322,45 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const pendingTournamentRestoreYRef = useRef<number | null>(null);
   const previousViewRef = useRef<"tournament" | "live">("tournament");
   const tournamentContentRef = useRef<HTMLDivElement | null>(null);
+  const heroRankingMenuRef = useRef<HTMLDivElement | null>(null);
+  const selectedHeroRankingLabel =
+    heroRankingOptions.find((option) => option.value === dummyRankingStageDocumentId)?.label ??
+    "Phase ranking";
+
+  useEffect(() => {
+    const nextDefault = heroRankingOptions[0]?.value ?? "";
+    if (!nextDefault) {
+      setDummyRankingStageDocumentId("");
+      return;
+    }
+    setDummyRankingStageDocumentId((current) =>
+      current && heroRankingOptions.some((option) => option.value === current) ? current : nextDefault,
+    );
+  }, [heroRankingOptions]);
+
+  useEffect(() => {
+    if (!isHeroRankingMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!heroRankingMenuRef.current?.contains(event.target as Node)) {
+        setIsHeroRankingMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsHeroRankingMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isHeroRankingMenuOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1161,20 +1201,58 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 Tournament
               </button>
               {!embedded && heroRankingOptions.length > 0 ? (
-                <label className="relative inline-flex items-center">
-                  <select
-                    value={dummyRankingStageDocumentId}
-                    onChange={(event) => setDummyRankingStageDocumentId(event.target.value)}
-                    className="h-[50px] min-w-[220px] appearance-none rounded-full border border-white/15 bg-white/10 pl-5 pr-12 text-sm font-semibold text-white outline-none transition hover:bg-white/15"
+                <div ref={heroRankingMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsHeroRankingMenuOpen((open) => !open)}
+                    className={`inline-flex h-[50px] min-w-[220px] items-center justify-between rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                      isHeroRankingMenuOpen
+                        ? "border-white/35 bg-slate-950/45 text-white"
+                        : "border-white/15 bg-white/10 text-white/90 hover:bg-white/15"
+                    }`}
+                    aria-haspopup="menu"
+                    aria-expanded={isHeroRankingMenuOpen}
                   >
-                    {heroRankingOptions.map((option) => (
-                      <option key={option.value} value={option.value} className="text-slate-950">
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute right-5 text-xs text-white/70">▼</span>
-                </label>
+                    <span className="truncate pr-4">{selectedHeroRankingLabel}</span>
+                    <span className={`text-[11px] text-white/65 transition ${isHeroRankingMenuOpen ? "rotate-180" : ""}`}>
+                      ▼
+                    </span>
+                  </button>
+                  {isHeroRankingMenuOpen ? (
+                    <div className="absolute left-0 top-[calc(100%+10px)] z-30 min-w-[260px] overflow-hidden rounded-[22px] border border-white/15 bg-slate-950/96 p-2 shadow-[0_24px_70px_rgba(15,23,42,0.34)] backdrop-blur-xl">
+                      <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
+                        Phase ranking
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        {heroRankingOptions.map((option) => {
+                          const selected = option.value === dummyRankingStageDocumentId;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => {
+                                setDummyRankingStageDocumentId(option.value);
+                                setIsHeroRankingMenuOpen(false);
+                              }}
+                              className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition ${
+                                selected
+                                  ? "bg-cyan-400/18 text-white shadow-[inset_0_0_0_1px_rgba(103,232,249,0.38)]"
+                                  : "text-white/82 hover:bg-white/8 hover:text-white"
+                              }`}
+                            >
+                              <span>{option.label}</span>
+                              {selected ? (
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200">
+                                  Active
+                                </span>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
               {!embedded ? (
                 <button
