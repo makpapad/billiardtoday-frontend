@@ -29,6 +29,7 @@ import SingleElimBracket, { type BracketRoundView } from './SingleElimBracket'
 type TournamentEventsContentProps = {
     eventIdOverride?: string | null
     preferredStageDocumentId?: string | null
+    onStageSelect?: (stageDocumentId: string) => void
     showPublishedFinalResults?: boolean
     embeddedOverride?: boolean
     showStandaloneTitle?: boolean
@@ -65,6 +66,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 export function TournamentEventsContent({
     eventIdOverride = null,
     preferredStageDocumentId = null,
+    onStageSelect,
     showPublishedFinalResults = false,
     embeddedOverride,
     showStandaloneTitle = true,
@@ -610,7 +612,10 @@ export function TournamentEventsContent({
                                                 return (
                                                     <button
                                                         key={stage.id}
-                                                        onClick={() => setActiveStageId(stage.id)}
+                                                        onClick={() => {
+                                                            setActiveStageId(stage.id)
+                                                            onStageSelect?.(stage.documentId)
+                                                        }}
                                                         className={clsx(
                                                             'px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                                                             isActive

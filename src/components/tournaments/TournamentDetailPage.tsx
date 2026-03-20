@@ -973,6 +973,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
       eventIdOverride={summary.documentId}
       preferredStageDocumentId={selectedStageDocumentId}
+      onStageSelect={(stageDocumentId) => {
+        setTournamentPanelMode("stages");
+        setSelectedStageDocumentId(stageDocumentId);
+      }}
       showPublishedFinalResults={tournamentPanelMode === "finals"}
       embeddedOverride={embedded}
       showStandaloneTitle={false}
