@@ -29,6 +29,7 @@ import SingleElimBracket, { type BracketRoundView } from './SingleElimBracket'
 type TournamentEventsContentProps = {
     eventIdOverride?: string | null
     preferredStageDocumentId?: string | null
+    showPublishedFinalResults?: boolean
     embeddedOverride?: boolean
     showStandaloneTitle?: boolean
     showEventHeader?: boolean
@@ -64,6 +65,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 export function TournamentEventsContent({
     eventIdOverride = null,
     preferredStageDocumentId = null,
+    showPublishedFinalResults = false,
     embeddedOverride,
     showStandaloneTitle = true,
     showEventHeader = true,
@@ -539,12 +541,12 @@ export function TournamentEventsContent({
                             {emptyStateMessage}
                         </div>
                     )}
-                    {!isLoading && !error && eventId && eventStages.length === 0 && publishedFinalResults.length === 0 && (
+                    {!isLoading && !error && eventId && eventStages.length === 0 && (!showPublishedFinalResults || publishedFinalResults.length === 0) && (
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                             No stages found for this event.
                         </div>
                     )}
-                    {eventInfo && (eventStages.length > 0 || publishedFinalResults.length > 0) && (
+                    {eventInfo && (eventStages.length > 0 || (showPublishedFinalResults && publishedFinalResults.length > 0)) && (
                         <div className="flex flex-col gap-4">
                             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
                                 {showEventHeader ? (
@@ -560,7 +562,7 @@ export function TournamentEventsContent({
                                         </div>
                                     </div>
                                 ) : null}
-                                {publishedFinalResults.length > 0 && (
+                                {showPublishedFinalResults && publishedFinalResults.length > 0 && (
                                     <div className="mb-6 flex flex-col gap-3">
                                         <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                             Final standings

@@ -288,6 +288,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     summary.stages[summary.stages.length - 1]?.documentId ??
     null;
   const [activeView, setActiveView] = useState<"tournament" | "live">("tournament");
+  const [tournamentPanelMode, setTournamentPanelMode] = useState<"stages" | "finals">("stages");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<string | null>(
     summary.stages[0]?.documentId ?? null,
   );
@@ -930,6 +931,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (tournamentScrollYRef.current !== null) {
       pendingTournamentRestoreYRef.current = tournamentScrollYRef.current;
     }
+    setTournamentPanelMode("stages");
     setActiveView("tournament");
   };
 
@@ -937,7 +939,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (finalStageDocumentId) {
       setSelectedStageDocumentId(finalStageDocumentId);
     }
-    switchToTournament();
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    if (tournamentScrollYRef.current !== null) {
+      pendingTournamentRestoreYRef.current = tournamentScrollYRef.current;
+    }
+    setTournamentPanelMode("finals");
+    setActiveView("tournament");
     window.setTimeout(() => {
       tournamentContentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
@@ -964,6 +973,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
       eventIdOverride={summary.documentId}
       preferredStageDocumentId={selectedStageDocumentId}
+      showPublishedFinalResults={tournamentPanelMode === "finals"}
       embeddedOverride={embedded}
       showStandaloneTitle={false}
       showEventHeader={false}
@@ -1128,7 +1138,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 type="button"
                 onClick={switchToTournament}
                 className={
-                  activeView === "tournament"
+                  activeView === "tournament" && tournamentPanelMode === "stages"
                     ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                     : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
                 }
@@ -1139,7 +1149,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 <button
                   type="button"
                   onClick={openFinalStandings}
-                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
+                  className={
+                    activeView === "tournament" && tournamentPanelMode === "finals"
+                      ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                      : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
+                  }
                 >
                   Final standings
                 </button>
@@ -1174,7 +1188,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     <button
                       key={stage.documentId}
                       type="button"
-                      onClick={() => setSelectedStageDocumentId(stage.documentId)}
+                      onClick={() => {
+                        setTournamentPanelMode("stages");
+                        setSelectedStageDocumentId(stage.documentId);
+                        setActiveView("tournament");
+                      }}
                       className={
                         selectedStageDocumentId === stage.documentId
                           ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
