@@ -14,6 +14,8 @@ export type TournamentEventSummary = {
   gameType: string | null;
   tournamentTitle: string | null;
   clubDocumentId: string | null;
+  organizerLogoUrl: string | null;
+  organizerLogoName: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -145,6 +147,9 @@ const fetchTournamentEventSummaryById = async (
   params.set("fields[5]", "documentId");
   params.set("populate[tournament][fields][0]", "title");
   params.set("populate[tournament][populate][club][fields][0]", "documentId");
+  params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
+  params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
+  params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
   params.set("populate[event_stages][sort][0]", "order:asc");
   params.set("populate[event_stages][fields][0]", "title");
   params.set("populate[event_stages][fields][1]", "order");
@@ -179,6 +184,20 @@ const fetchTournamentEventSummaryById = async (
     "attributes" in (tournamentSource.club as Record<string, unknown>)
       ? ((tournamentSource.club as { attributes?: Record<string, unknown> }).attributes ?? {})
       : ((tournamentSource.club as Record<string, unknown>) ?? {});
+  const federationSource =
+    tournamentClubSource &&
+    typeof tournamentClubSource.federation === "object" &&
+    tournamentClubSource.federation &&
+    "attributes" in (tournamentClubSource.federation as Record<string, unknown>)
+      ? ((tournamentClubSource.federation as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((tournamentClubSource.federation as Record<string, unknown>) ?? {});
+  const logoSource =
+    federationSource &&
+    typeof federationSource.logo === "object" &&
+    federationSource.logo &&
+    "attributes" in (federationSource.logo as Record<string, unknown>)
+      ? ((federationSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((federationSource.logo as Record<string, unknown>) ?? {});
   const stagesRaw = Array.isArray(event.event_stages)
     ? event.event_stages
     : Array.isArray((event.event_stages as { data?: unknown[] } | undefined)?.data)
@@ -194,6 +213,8 @@ const fetchTournamentEventSummaryById = async (
     gameType: readString(event.game_type),
     tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
     clubDocumentId: readString((tournamentClubSource as Record<string, unknown>).documentId),
+    organizerLogoUrl: readString((logoSource as Record<string, unknown>).url),
+    organizerLogoName: readString((logoSource as Record<string, unknown>).name),
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };

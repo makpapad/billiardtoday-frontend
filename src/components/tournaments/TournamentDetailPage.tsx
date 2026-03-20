@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
@@ -359,6 +360,14 @@ const formatDateRange = (start: string | null, end: string | null) => {
   return startText || endText || null;
 };
 
+const resolveMediaUrl = (url: string | null) => {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base =
+    process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
+  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+};
+
 export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const fullPageHref = buildTournamentHref(
     summary.documentId,
@@ -368,6 +377,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   );
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
+  const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const finalStageDocumentId =
     summary.stages.find((stage) => stage.isFinal)?.documentId ??
     summary.stages[summary.stages.length - 1]?.documentId ??
@@ -1488,6 +1498,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   Full page
                 </Link>
               )}
+              <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90">
+                Stages - {stageCount || 0}
+              </div>
             </div>
           </div>
 
@@ -1501,13 +1514,26 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   {scheduleLabel || "To be announced"}
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
-                  Stages
-                </div>
-                <div className="mt-2 text-sm font-semibold text-white">
-                  {stageCount || 0}
-                </div>
+              <div className="flex min-h-[102px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+                {organizerLogoUrl ? (
+                  <Image
+                    src={organizerLogoUrl}
+                    alt={summary.organizerLogoName || summary.tournamentTitle || "Organizer logo"}
+                    width={160}
+                    height={72}
+                    className="block h-auto max-h-[72px] max-w-full w-auto object-contain"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="text-center">
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                      Organizer
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-white/80">
+                      Logo coming soon
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
