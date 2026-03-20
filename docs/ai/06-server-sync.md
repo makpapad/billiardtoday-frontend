@@ -18,6 +18,26 @@ plink -i D:\.ssh\priv.ppk root@138.201.29.162
 ssh root@138.201.29.162
 ```
 
+## Current Root Key
+
+Current PuTTY/WinSCP root key:
+
+```text
+D:\.ssh\billiard_admin.ppk
+```
+
+Current OpenSSH root key:
+
+```text
+D:\.ssh\billiard_admin_openssh.key
+```
+
+Notes:
+
+- active root key comment on server: `rsa-key-20260126`
+- previous root key `rsa-key-20240807` was removed from `/root/.ssh/authorized_keys`
+- backup kept on server: `/root/.ssh/authorized_keys.bak-20260320-before-old-key-removal`
+
 ## Σημερινή Παρατήρηση
 
 Τα Node apps δεν τρέχουν πλέον ως `root`.
