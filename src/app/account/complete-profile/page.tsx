@@ -19,7 +19,7 @@ function friendlyStatus(status: string | null) {
 
 export default function CompleteProfilePage() {
   const searchParams = useSearchParams();
-  const claimToken = searchParams.get("claim")?.trim() || "";
+  const claimToken = searchParams?.get("claim")?.trim() || "";
 
   const [claimInfo, setClaimInfo] = React.useState<PlayerAccountClaimInfo | null>(null);
   const [account, setAccount] = React.useState<PlayerAccountSummary | null>(null);

@@ -9,9 +9,9 @@ import {
 
 export default function ClaimPage() {
   const params = useSearchParams();
-  const nonce = params.get("nonce") || "";
-  const slot = params.get("slot") || "p1";
-  const screenId = params.get("screenId") || "";
+  const nonce = params?.get("nonce") || "";
+  const slot = params?.get("slot") || "p1";
+  const screenId = params?.get("screenId") || "";
   const [trustedPlayerName, setTrustedPlayerName] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);

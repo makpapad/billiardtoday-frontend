@@ -18,10 +18,10 @@ type PlayerRow = {
 
 export default function EnrollPage() {
   const params = useSearchParams();
-  const next = params.get("next") || "/me";
-  const nonce = params.get("nonce") || "";
-  const slot = params.get("slot") || "";
-  const screenId = params.get("screenId") || "";
+  const next = params?.get("next") || "/me";
+  const nonce = params?.get("nonce") || "";
+  const slot = params?.get("slot") || "";
+  const screenId = params?.get("screenId") || "";
   const [trustedPlayerName, setTrustedPlayerName] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<PlayerRow[]>([]);

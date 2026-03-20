@@ -7,7 +7,7 @@ import { playerAccountAuth } from "@/lib/player-account-auth";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const token = searchParams?.get("token") || "";
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);

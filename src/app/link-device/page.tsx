@@ -8,7 +8,7 @@ import { playerAccountAuth } from "@/lib/player-account-auth";
 
 export default function LinkDevicePage() {
   const params = useSearchParams();
-  const linkToken = params.get("token") || "";
+  const linkToken = params?.get("token") || "";
   const [status, setStatus] = React.useState<string>("Checking trusted device...");
   const [trustedName, setTrustedName] = React.useState<string | null>(null);
   const [isBusy, setIsBusy] = React.useState(true);

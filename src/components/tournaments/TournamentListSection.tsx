@@ -82,8 +82,8 @@ export function TournamentListSection({
     const [seasonInput, setSeasonInput] = useState('')
 
     const itemsPerPage = section.itemsPerPage && section.itemsPerPage > 0 ? section.itemsPerPage : 10
-    const currentPage = toPositiveInt(searchParams.get('page'), 1)
-    const currentSeason = searchParams.get('season') || ''
+    const currentPage = toPositiveInt(searchParams?.get('page') ?? null, 1)
+    const currentSeason = searchParams?.get('season') || ''
     const isCards = section.layout === 'cards'
     const { tokens } = appearance
 
@@ -141,7 +141,7 @@ export function TournamentListSection({
         buildTournamentHref(eventDocumentId, title, season, embedded)
 
     const updateQuery = (nextPage: number, nextSeason: string) => {
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() || '')
         params.set('page', String(nextPage))
         if (nextSeason) {
             params.set('season', nextSeason)
