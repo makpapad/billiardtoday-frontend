@@ -78,7 +78,7 @@ export default async function EmbedFederationPage({ params }: Props) {
         section={{
           __component: "cms.tournament-list-section",
           title: "Organizer tournaments",
-          subtitle: `All tournaments linked to clubs and venues that belong to ${federation.name}.`,
+          subtitle: `All tournaments organized by ${federation.name} with link to clubs and Venues.`,
           layout: "table",
           itemsPerPage: 10,
           showSeasonFilter: true,
