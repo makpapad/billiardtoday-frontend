@@ -25,7 +25,7 @@ export default async function EmbedFederationPage({ params }: Props) {
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">
-              Federation
+              Organizer
             </div>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               {federation.name}
@@ -39,7 +39,7 @@ export default async function EmbedFederationPage({ params }: Props) {
               Venues
             </div>
             <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-              Federation venues
+              Organizer venues
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Clubs and venues connected to {federation.name}.
@@ -67,7 +67,7 @@ export default async function EmbedFederationPage({ params }: Props) {
               </div>
             ) : (
               <div className="mt-6 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                No venues connected to this federation yet.
+                No venues connected to this organizer yet.
               </div>
             )}
           </div>
@@ -77,15 +77,15 @@ export default async function EmbedFederationPage({ params }: Props) {
       <TournamentListSection
         section={{
           __component: "cms.tournament-list-section",
-          title: "Federation tournaments",
-          subtitle: `All tournaments linked to clubs that belong to ${federation.name}.`,
+          title: "Organizer tournaments",
+          subtitle: `All tournaments linked to clubs and venues that belong to ${federation.name}.`,
           layout: "table",
           itemsPerPage: 10,
           showSeasonFilter: true,
           showDate: true,
           showStatus: true,
           showResultsLink: true,
-          emptyStateText: "No tournaments found for this federation.",
+          emptyStateText: "No tournaments found for this organizer.",
         }}
         appearance={appearance}
         embedded

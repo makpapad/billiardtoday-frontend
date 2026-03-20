@@ -9,10 +9,10 @@ export default async function EmbedFederationsPage() {
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-            Federations
+            Organizers
           </h1>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Embedded directory of federations, affiliated clubs and related tournaments.
+            Embedded directory of organizers, affiliated clubs and related tournaments.
           </p>
         </div>
 
@@ -34,7 +34,7 @@ export default async function EmbedFederationsPage() {
                   href={`/embed/federations/${federation.slug}`}
                   className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  View federation
+                  View organizer
                 </Link>
               </div>
             </article>
