@@ -1321,6 +1321,11 @@ export function TournamentEventsContent({
                                                                           )}
                                                                       </div>
                                                                     )}
+                                                                    {formatNumberValue(
+                                                                      match.top
+                                                                        .player
+                                                                        .points,
+                                                                    )}
                                                                   </td>
                                                                   <td
                                                                     className={clsx(
@@ -1329,28 +1334,29 @@ export function TournamentEventsContent({
                                                                     )}
                                                                     rowSpan={2}
                                                                   >
-                                                                    <div className="flex min-h-[72px] flex-col items-center justify-center gap-2">
-                                                                      <span>
-                                                                        {formatDateForTable(
-                                                                          match.dateTime,
-                                                                        )}
-                                                                      </span>
-                                                                      {hasActiveLiveSession ? (
-                                                                        <button
-                                                                          type="button"
-                                                                          onClick={() => {
-                                                                            if (liveSessionId) {
-                                                                              onLiveMatchOpen?.(liveSessionId);
-                                                                            }
-                                                                          }}
-                                                                          className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-950 shadow-sm transition hover:bg-amber-100"
-                                                                          style={{ animation: "btLivePulse 1.25s ease-in-out infinite" }}
-                                                                        >
-                                                                          <span className="h-2 w-2 rounded-full bg-red-600" />
-                                                                          <span>Live</span>
-                                                                        </button>
-                                                                      ) : null}
-                                                                    </div>
+                                                                    {hasActiveLiveSession ? (
+                                                                      <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                          if (liveSessionId) {
+                                                                            onLiveMatchOpen?.(liveSessionId);
+                                                                          }
+                                                                        }}
+                                                                        className="flex min-h-[72px] w-full items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-200 px-4 py-3 text-sm font-semibold uppercase tracking-[0.24em] text-amber-950 shadow-sm transition hover:bg-amber-100"
+                                                                        style={{ animation: "btLivePulse 1.25s ease-in-out infinite" }}
+                                                                      >
+                                                                        <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
+                                                                        <span>Live</span>
+                                                                      </button>
+                                                                    ) : (
+                                                                      <div className="flex min-h-[72px] items-center justify-center">
+                                                                        <span>
+                                                                          {formatDateForTable(
+                                                                            match.dateTime,
+                                                                          )}
+                                                                        </span>
+                                                                      </div>
+                                                                    )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
                                                                     {formatOutcomeLabel(
