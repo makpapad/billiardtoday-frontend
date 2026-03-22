@@ -439,10 +439,116 @@ export function LiveClubView({ club, embedded = false }: Props) {
   }, [items, highlightItem]);
   const [endedScreens, setEndedScreens] = useState<Set<string>>(new Set()); // Track ended games
   const endedScreensRef = React.useRef<Set<string>>(new Set());
+  const snapshotHydratedScreensRef = React.useRef<Set<string>>(new Set());
   React.useEffect(() => {
     endedScreensRef.current = endedScreens;
   }, [endedScreens]);
   const [err, setErr] = React.useState<string | null>(null);
+
+  const hydrateFromScreenSnapshot = React.useCallback((screenId: string) => {
+    const cleanScreenId = String(screenId || "").trim();
+    if (!cleanScreenId) return;
+    if (snapshotHydratedScreensRef.current.has(cleanScreenId)) return;
+    snapshotHydratedScreensRef.current.add(cleanScreenId);
+
+    const wsUrl =
+      process.env.NEXT_PUBLIC_WS_ENDPOINT ||
+      process.env.NEXT_PUBLIC_WS_URL ||
+      "wss://ws.billiardtoday.com";
+    if (!wsUrl) return;
+
+    const params = new URLSearchParams();
+    if (WS_TOKEN) params.set("token", WS_TOKEN);
+    params.set("screenId", cleanScreenId);
+
+    const socket = new WebSocket(`${wsUrl}?${params.toString()}`);
+    const timeout = window.setTimeout(() => {
+      try {
+        socket.close();
+      } catch {}
+    }, 2500);
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(String(event.data || "{}")) as { type?: string } & LiveScorePayload;
+        if (payload.type !== "score:update") return;
+        if (String(payload.screenId || "") !== cleanScreenId) return;
+
+        const players = Array.isArray(payload.players) ? payload.players : [];
+        const sessionId = String(payload.sessionId ?? cleanScreenId).trim() || cleanScreenId;
+
+        setItems((prev) => {
+          const existing =
+            prev.find((item) => item.screenId === cleanScreenId) ??
+            prev.find((item) => item.sessionId === sessionId);
+          if (!existing) return prev;
+
+          const nextPlayerAName = isPlaceholderPlayerName(players[0]?.name)
+            ? (existing.state?.playerAName ?? "Player A")
+            : players[0]?.name ?? existing.state?.playerAName ?? "Player A";
+          const nextPlayerBName = isPlaceholderPlayerName(players[1]?.name)
+            ? (existing.state?.playerBName ?? "Player B")
+            : players[1]?.name ?? existing.state?.playerBName ?? "Player B";
+
+          return prev.map((item) =>
+            item === existing
+              ? {
+                  ...item,
+                  updatedAt:
+                    typeof payload.ts === "number" && Number.isFinite(payload.ts)
+                      ? new Date(payload.ts).toISOString()
+                      : new Date().toISOString(),
+                  state: {
+                    ...item.state,
+                    scoreA: Number(players[0]?.points ?? item.state?.scoreA ?? 0) || 0,
+                    scoreB: Number(players[1]?.points ?? item.state?.scoreB ?? 0) || 0,
+                    runA: Number(players[0]?.run ?? item.state?.runA ?? 0) || 0,
+                    runB: Number(players[1]?.run ?? item.state?.runB ?? 0) || 0,
+                    liveRunA: Number(players[0]?.liveRun ?? players[0]?.run ?? item.state?.liveRunA ?? 0) || 0,
+                    liveRunB: Number(players[1]?.liveRun ?? players[1]?.run ?? item.state?.liveRunB ?? 0) || 0,
+                    inningsA: Number(players[0]?.innings ?? item.state?.inningsA ?? 0) || 0,
+                    inningsB: Number(players[1]?.innings ?? item.state?.inningsB ?? 0) || 0,
+                    inningsCount:
+                      Number(payload.innings ?? Math.max(players[0]?.innings ?? 0, players[1]?.innings ?? 0, item.state?.inningsCount ?? 0)) || 0,
+                    bestRunA: Number(players[0]?.hr ?? item.state?.bestRunA ?? 0) || 0,
+                    bestRunB: Number(players[1]?.hr ?? item.state?.bestRunB ?? 0) || 0,
+                    current:
+                      payload.current ??
+                      (payload.activePlayer === 1 ? "A" : payload.activePlayer === 2 ? "B" : item.state?.current),
+                    progress: Number(payload.progress ?? item.state?.progress ?? 0) || 0,
+                    totalBlocks: Number(payload.totalBlocks ?? item.state?.totalBlocks ?? 40) || 40,
+                    isRunning: Boolean(payload.isRunning ?? item.state?.isRunning),
+                    ended: Boolean(payload.ended),
+                    playerAName: nextPlayerAName,
+                    playerBName: nextPlayerBName,
+                    playerACountry:
+                      (typeof players[0]?.country === "string" ? players[0]?.country : null) ??
+                      item.state?.playerACountry ??
+                      null,
+                    playerBCountry:
+                      (typeof players[1]?.country === "string" ? players[1]?.country : null) ??
+                      item.state?.playerBCountry ??
+                      null,
+                  },
+                }
+              : item,
+          );
+        });
+      } catch {}
+
+      window.clearTimeout(timeout);
+      try {
+        socket.close();
+      } catch {}
+    };
+
+    socket.onclose = () => {
+      window.clearTimeout(timeout);
+    };
+    socket.onerror = () => {
+      window.clearTimeout(timeout);
+    };
+  }, []);
 
   const recordSnapshot = React.useCallback((sessionKey: string | undefined | null, snapshot: SessionSnapshot) => {
     if (!sessionKey) return;
@@ -705,6 +811,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
         return {
           id: session.id || session.documentId,
           sessionId: session.id || session.documentId,
+          screenId: session.screenId ?? session.screenIdentifier ?? null,
           state,
           updatedAt: new Date().toISOString(),
           clubId,
@@ -716,6 +823,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
       
       if (nextItems.length > 0) {
         setItems(nextItems);
+        nextItems.forEach((it) => {
+          if (it.screenId) {
+            hydrateFromScreenSnapshot(it.screenId);
+          }
+        });
         nextItems.forEach((it) => {
           if (!it.sessionId) return;
           if (it.state?.targetPointsA == null || it.state?.targetPointsB == null) {
@@ -732,7 +844,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
       setErr(e?.message || "Network/API error");
       pruneItems();
     }
-  }, [clubId, pruneItems, fetchSessionTargetsOnce]);
+  }, [clubId, pruneItems, fetchSessionTargetsOnce, hydrateFromScreenSnapshot]);
 
   React.useEffect(() => {
     load();

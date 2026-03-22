@@ -300,17 +300,17 @@ Use the following template once per day during the monitoring window.
 
 ### 2026-03-21
 
-- Status:
-- Public site:
-- Strapi/admin:
-- Scoreboard:
-- WS/presence:
-- Suspicious processes:
-- Crontabs:
-- Temp artifacts:
-- Access log anomalies:
-- PM2/frontend anomalies:
-- Action taken:
+- Status: Monitoring run completed on 2026-03-21 14:19 server local time. Host remains operational but still historically untrusted; no fresh reinfection indicator was found in this pass.
+- Public site: `https://billiardtoday.com/` returned `HTTP/2 200`.
+- Strapi/admin: `https://app.billiardtoday.com/admin` returned `HTTP/2 200`. `https://admin.billiardtoday.com/` returned expected `HTTP/2 302` redirect to sign-in.
+- Scoreboard: `https://scoreboard.billiardtoday.com/scoreboard` returned `HTTP/2 200`.
+- WS/presence: `http://127.0.0.1:3010/presence` returned `[]`. PM2 shows `billiardtoday-ws` online.
+- Suspicious processes: No miner-like, temp-path, or attacker-style `bash -c` / `sh -c` process found. Only expected app launch wrappers were present for Next.js and Strapi.
+- Crontabs: `root` crontab empty. `billiardtoday_srv` crontab empty.
+- Temp artifacts: No obviously new malicious temp files found in this pass. `/tmp` and `/var/tmp` still contain many historical investigation/deploy artifacts from 2026-03-17 through 2026-03-21, plus routine `passenger.*` files. Treat as legacy residue unless new unexpected files appear.
+- Access log anomalies: Tail review showed normal traffic patterns and the expected local `curl` health probe from `138.201.29.162`. No suspicious `POST /`, `OQUxbY`, `d1337`, or similar indicator was observed in the reviewed tail.
+- PM2/frontend anomalies: No shell-execution or file-write pattern indicating reinfection. Frontend and scoreboard logs still contain app/runtime issues such as historical `ECONNREFUSED 127.0.0.1:1337`, `503` from `app.billiardtoday.com`, and stale Next.js `Failed to find Server Action` errors. WS logs show repeated localhost auth failures using old WS tokens, which looks like stale internal callers/config rather than external exploitation.
+- Action taken: Read-only monitoring only. No remediation applied during this check.
 
 ### 2026-03-22
 

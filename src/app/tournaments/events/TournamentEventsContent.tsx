@@ -1255,46 +1255,17 @@ export function TournamentEventsContent({
                                                                   </td>
                                                                   <td
                                                                     className={clsx(
-                                                                      "relative overflow-hidden",
-                                                                      liveSessionId
-                                                                        ? "p-0 align-stretch"
-                                                                        : "px-4 py-2",
+                                                                      "px-4 py-2",
                                                                       getDateCellClass(),
                                                                     )}
                                                                     rowSpan={2}
                                                                   >
-                                                                    <div
-                                                                      className={clsx(
-                                                                        "flex items-center justify-center",
-                                                                        liveSessionId
-                                                                          ? "h-full min-h-[86px] w-full"
-                                                                          : "min-h-[72px]",
-                                                                      )}
-                                                                    >
-                                                                      {liveSessionId ? (
-                                                                        <button
-                                                                          type="button"
-                                                                          onClick={() =>
-                                                                            onLiveMatchOpen?.(
-                                                                              liveSessionId,
-                                                                            )
-                                                                          }
-                                                                          className="absolute inset-0 flex h-full w-full items-center justify-center bg-[#ffd21c] text-[15px] font-black uppercase tracking-[0.08em] text-slate-950"
-                                                                          aria-label="Open live match"
-                                                                          style={{
-                                                                            animation:
-                                                                              "btLivePulse 0.95s ease-in-out infinite",
-                                                                          }}
-                                                                        >
-                                                                          LIVE
-                                                                        </button>
-                                                                      ) : (
-                                                                        <span>
-                                                                          {formatDateForTable(
-                                                                            match.dateTime,
-                                                                          )}
-                                                                        </span>
-                                                                      )}
+                                                                    <div className="flex min-h-[72px] items-center justify-center">
+                                                                      <span>
+                                                                        {formatDateForTable(
+                                                                          match.dateTime,
+                                                                        )}
+                                                                      </span>
                                                                     </div>
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
