@@ -1237,6 +1237,10 @@ export function TournamentEventsContent({
                                                               liveSession?.documentId ||
                                                               liveSession?.id ||
                                                               null;
+                                                            const hasActiveLiveSession =
+                                                              Boolean(liveSessionId) &&
+                                                              liveSession?.sessionStatus ===
+                                                                "in_progress";
 
                                                             return (
                                                               <>
@@ -1325,12 +1329,27 @@ export function TournamentEventsContent({
                                                                     )}
                                                                     rowSpan={2}
                                                                   >
-                                                                    <div className="flex min-h-[72px] items-center justify-center">
+                                                                    <div className="flex min-h-[72px] flex-col items-center justify-center gap-2">
                                                                       <span>
                                                                         {formatDateForTable(
                                                                           match.dateTime,
                                                                         )}
                                                                       </span>
+                                                                      {hasActiveLiveSession ? (
+                                                                        <button
+                                                                          type="button"
+                                                                          onClick={() => {
+                                                                            if (liveSessionId) {
+                                                                              onLiveMatchOpen?.(liveSessionId);
+                                                                            }
+                                                                          }}
+                                                                          className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-950 shadow-sm transition hover:bg-amber-100"
+                                                                          style={{ animation: "btLivePulse 1.25s ease-in-out infinite" }}
+                                                                        >
+                                                                          <span className="h-2 w-2 rounded-full bg-red-600" />
+                                                                          <span>Live</span>
+                                                                        </button>
+                                                                      ) : null}
                                                                     </div>
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
