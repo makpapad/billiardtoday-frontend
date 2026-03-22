@@ -275,6 +275,8 @@ export function TournamentEventsContent({
     }
 
     let cancelled = false;
+    const timeoutIds: number[] = [];
+    let intervalId: number | null = null;
 
     const fetchLiveSessions = async () => {
       try {
@@ -301,11 +303,25 @@ export function TournamentEventsContent({
     };
 
     void fetchLiveSessions();
-    const interval = window.setInterval(fetchLiveSessions, 15000);
+    timeoutIds.push(window.setTimeout(() => {
+      void fetchLiveSessions();
+    }, 1500));
+    timeoutIds.push(window.setTimeout(() => {
+      void fetchLiveSessions();
+    }, 4000));
+    timeoutIds.push(window.setTimeout(() => {
+      void fetchLiveSessions();
+    }, 8000));
+    intervalId = window.setInterval(() => {
+      void fetchLiveSessions();
+    }, 5000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
     };
   }, [eventId]);
 
