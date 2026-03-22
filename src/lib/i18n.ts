@@ -1,4 +1,5 @@
 export const t = (key: string): string => {
+  try {
     const dictionary: Record<string, string> = {
         // Player profile page
         'players.profile.logoAlt': 'BilliardToday logo',
@@ -143,4 +144,8 @@ export const t = (key: string): string => {
     }
 
     return dictionary[key] ?? key
+  } catch (error) {
+    console.error('Translation error:', error, 'for key:', key);
+    return key; // Fallback to key itself
+  }
 }

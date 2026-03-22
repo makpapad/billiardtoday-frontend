@@ -3,7 +3,38 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { t } from "@/lib/i18n";
+
+// Safe translation fallback
+const t = (key: string): string => {
+  try {
+    const dictionary: Record<string, string> = {
+      'remote.home.title': 'Remote Scoreboard Control',
+      'remote.home.screenIdLabel': 'Screen ID',
+      'remote.home.screenIdPlaceholder': 'Enter screen ID (e.g., TABLE-01)',
+      'remote.home.connectButton': 'Connect',
+      'remote.home.sessionsTitle': 'Available Matches',
+      'remote.home.noSessions': 'No matches found for this screen',
+      'remote.home.loading': 'Loading matches...',
+      'remote.home.error': 'Failed to load matches',
+      'remote.home.selectMatch': 'Select Match',
+      'remote.home.player1Label': 'Player 1',
+      'remote.home.player2Label': 'Player 2',
+      'remote.home.eventLabel': 'Event',
+      'remote.home.stageLabel': 'Stage',
+      'remote.home.tableLabel': 'Table',
+      'remote.home.matchLabel': 'Match',
+      'remote.home.controlButton': 'Remote Control',
+      'remote.home.unknownPlayer': 'Unknown Player',
+      'remote.home.unknownEvent': 'Unknown Event',
+      'remote.home.unknownStage': 'Unknown Stage',
+      'remote.home.unknownTable': 'Unknown Table',
+      'remote.home.unknownMatch': 'Unknown Match',
+    };
+    return dictionary[key] ?? key;
+  } catch {
+    return key;
+  }
+};
 
 type ScoreboardSessionStatus = "pending" | "in_progress" | "finished" | "cancelled";
 

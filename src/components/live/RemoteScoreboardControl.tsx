@@ -3,7 +3,38 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { t } from "@/lib/i18n";
+
+// Safe translation fallback
+const t = (key: string): string => {
+  try {
+    const dictionary: Record<string, string> = {
+      'remote.control.title': 'Remote Control',
+      'remote.control.sections.setup.title': 'Setup',
+      'remote.control.sections.scoring.title': 'Scoring',
+      'remote.control.sections.timer.title': 'Timer',
+      'remote.control.sections.corrections.title': 'Corrections',
+      'remote.control.actions.startMatch': 'Start Match',
+      'remote.control.actions.swapPlayers': 'Swap Players',
+      'remote.control.actions.warmupBreak': 'Warmup / Break',
+      'remote.control.actions.resetGame': 'Reset Game',
+      'remote.control.actions.runDec': 'Live Run -',
+      'remote.control.actions.confirmTurn': 'Confirm / End Turn',
+      'remote.control.actions.runInc': 'Live Run +',
+      'remote.control.actions.toggleTimer': 'Start / Pause Timer',
+      'remote.control.actions.resetShotClock': 'Reset Shot Clock',
+      'remote.control.actions.undo': 'Undo',
+      'remote.control.actions.undoTimeout': 'Undo Timeout',
+      'remote.control.errors.missingParams': 'Missing screen ID or session ID',
+      'remote.control.errors.commandFailed': 'Command failed to send',
+      'remote.control.status.sending': 'Sending...',
+      'remote.control.status.sent': 'Sent: {command}',
+      'remote.control.backButton': '← Back',
+    };
+    return dictionary[key] ?? key;
+  } catch {
+    return key;
+  }
+};
 
 type ScoreboardSessionStatus = "pending" | "in_progress" | "finished" | "cancelled";
 
