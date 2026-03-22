@@ -900,7 +900,7 @@ export function TournamentEventsContent({
                       </div>
                     )}
                   {/* Tab Content */}
-                  {eventStages.length > 0 && (
+                  {!showPublishedFinalResults && eventStages.length > 0 && (
                     <div className="mt-4">
                       {eventStages.map((stage: NormalizedEventStage) => {
                         if (activeStageId !== stage.id) return null;
