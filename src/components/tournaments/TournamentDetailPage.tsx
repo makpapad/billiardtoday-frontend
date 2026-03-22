@@ -2028,78 +2028,80 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               </div>
             </div>
 
-            {tournamentPanelMode === "finals" ? null : (
-              <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
-                    Stage overview
-                  </div>
-                  <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOverviewMode("results");
-                        setTournamentPanelMode("stages");
-                        setActiveView("tournament");
-                      }}
-                      className={
-                        overviewMode === "results"
-                          ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
-                          : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
-                      }
-                      aria-pressed={overviewMode === "results"}
-                    >
-                      Matches
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOverviewMode("ranks");
-                        setTournamentPanelMode("stages");
-                        setActiveView("tournament");
-                      }}
-                      className={
-                        overviewMode === "ranks"
-                          ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
-                          : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
-                      }
-                      aria-pressed={overviewMode === "ranks"}
-                    >
-                      Ranking
-                    </button>
-                  </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                  Stage overview
                 </div>
-                {summary.stages.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {summary.stages.map((stage) => (
-                      <button
-                        key={stage.documentId}
-                        type="button"
-                        onClick={() => {
-                          setTournamentPanelMode("stages");
-                          setSelectedStageDocumentId(stage.documentId);
-                          setActiveView("tournament");
-                        }}
-                        className={
-                          selectedStageDocumentId === stage.documentId
-                            ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
-                            : "rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:border-white/25 hover:bg-white/15"
-                        }
-                        aria-pressed={
-                          selectedStageDocumentId === stage.documentId
-                        }
-                      >
-                        {stage.title}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-3 text-sm text-white/70">
-                    No stages published yet.
-                  </div>
-                )}
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOverviewMode("results");
+                      setTournamentPanelMode("stages");
+                      setActiveView("tournament");
+                    }}
+                    className={
+                      overviewMode === "results"
+                        ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                        : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                    }
+                    aria-pressed={overviewMode === "results"}
+                  >
+                    Matches
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOverviewMode("ranks");
+                      setTournamentPanelMode("stages");
+                      setActiveView("tournament");
+                    }}
+                    className={
+                      overviewMode === "ranks"
+                        ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                        : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                    }
+                    aria-pressed={overviewMode === "ranks"}
+                  >
+                    Ranking
+                  </button>
+                </div>
               </div>
-            )}
+              {tournamentPanelMode === "finals" ? null : (
+                <>
+                  {summary.stages.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {summary.stages.map((stage) => (
+                        <button
+                          key={stage.documentId}
+                          type="button"
+                          onClick={() => {
+                            setTournamentPanelMode("stages");
+                            setSelectedStageDocumentId(stage.documentId);
+                            setActiveView("tournament");
+                          }}
+                          className={
+                            selectedStageDocumentId === stage.documentId
+                              ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
+                              : "rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:border-white/25 hover:bg-white/15"
+                          }
+                          aria-pressed={
+                            selectedStageDocumentId === stage.documentId
+                          }
+                        >
+                          {stage.title}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-sm text-white/70">
+                      No stages published yet.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </section>
