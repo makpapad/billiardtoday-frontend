@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { fetchScoreboardSessionRows, normalizeLiveSessionRow } from '@/lib/liveSessions'
 
 export interface LiveScreen {
   screenId: string
@@ -18,37 +19,90 @@ export interface LiveScreensResponse {
   error?: string
 }
 
-// Mock data - θα αντικατασταθεί με πραγματικά δεδομένα από το admin
-const mockLiveScreens: LiveScreensResponse = {
-  success: true,
-  data: [
-    {
-      tournamentId: "tournament-1",
-      tournamentTitle: "Local Test Tournament",
-      liveScreens: [
-        {
-          screenId: "GR-ATH-DEV-S1-897c20d4-1426",
-          screenName: "Dev Table 1 (Local)",
-          isActive: true,
-          tournamentId: "tournament-1",
-          lastUpdate: new Date().toISOString()
-        }
-      ]
-    }
-  ]
+type RawSession = Record<string, unknown>
+
+const asString = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
 }
 
-export async function GET(request: NextRequest) {
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== 'object') return null
+  return value as Record<string, unknown>
+}
+
+const getRowValue = (row: RawSession, key: string): unknown => {
+  if (key in row) return row[key]
+  const attributes = asRecord(row.attributes)
+  if (attributes && key in attributes) return attributes[key]
+  return undefined
+}
+
+export async function GET(_request: NextRequest) {
   try {
-    // Προσωρινά επιστρέφουμε mock data
-    // Στο μέλλον θα φέρνουμε δεδομένα από το admin API
-    return NextResponse.json(mockLiveScreens)
-  } catch (error) {
+    const rows = await fetchScoreboardSessionRows(['pending', 'in_progress'])
+    const grouped = new Map<string, { tournamentId: string; tournamentTitle: string; liveScreens: LiveScreen[] }>()
+
+    rows.forEach((row: RawSession) => {
+      const rawRow = row as RawSession
+      const normalized = normalizeLiveSessionRow(rawRow)
+      const tournamentId = asString(getRowValue(rawRow, 'eventId'))
+      const sessionStatus = asString(getRowValue(rawRow, 'sessionStatus'))
+      const screenId =
+        asString(getRowValue(rawRow, 'screenIdentifier')) ??
+        (typeof normalized.screenId === 'string' && normalized.screenId.trim().length > 0
+          ? normalized.screenId.trim()
+          : null)
+
+      if (!tournamentId || !screenId) return
+
+      const tournamentTitle =
+        asString(getRowValue(rawRow, 'eventTitle')) ??
+        (typeof normalized.state.tournamentName === 'string' && normalized.state.tournamentName.trim().length > 0
+          ? normalized.state.tournamentName.trim()
+          : tournamentId)
+
+      const screenName =
+        asString(getRowValue(rawRow, 'tableNumber')) ??
+        asString(getRowValue(rawRow, 'screenIdentifier')) ??
+        screenId
+
+      const current = grouped.get(tournamentId) ?? {
+        tournamentId,
+        tournamentTitle,
+        liveScreens: [],
+      }
+
+      const existingIndex = current.liveScreens.findIndex((screen) => screen.screenId === screenId)
+      const screen: LiveScreen = {
+        screenId,
+        screenName,
+        isActive: sessionStatus === 'in_progress',
+        tournamentId,
+        lastUpdate: typeof normalized.updatedAt === 'string' ? normalized.updatedAt : undefined,
+      }
+
+      if (existingIndex >= 0) {
+        current.liveScreens[existingIndex] = screen
+      } else {
+        current.liveScreens.push(screen)
+      }
+
+      grouped.set(tournamentId, current)
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: Array.from(grouped.values()),
+    } satisfies LiveScreensResponse)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch live screens'
     console.error('Error fetching live screens:', error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch live screens'
+        error: message
       },
       { status: 500 }
     )
@@ -57,12 +111,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { tournamentId, screenId, screenName, isActive } = body
+    let payload: Record<string, unknown> = {}
+    try {
+      const parsed = (await request.json()) as unknown
+      if (parsed && typeof parsed === 'object') {
+        payload = parsed as Record<string, unknown>
+      }
+    } catch {
+      payload = {}
+    }
+    const tournamentId = asString(payload.tournamentId)
+    const screenId = asString(payload.screenId)
+    const screenName = asString(payload.screenName)
+    const isActive = Boolean(payload.isActive)
 
-    // Εδώ θα γίνεται η αποθήκευση στο admin system
-    // Προς το παρόν απλά επιστρέφουμε επιτυχία
-    
     return NextResponse.json({
       success: true,
       data: {
@@ -73,12 +135,13 @@ export async function POST(request: NextRequest) {
         lastUpdate: new Date().toISOString()
       }
     })
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to update live screen'
     console.error('Error updating live screen:', error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to update live screen'
+        error: message
       },
       { status: 500 }
     )
