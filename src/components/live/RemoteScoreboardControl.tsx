@@ -57,6 +57,13 @@ interface ActionState {
   loading: boolean;
 }
 
+type RemoteCommandMessage = {
+  type: "REMOTE_COMMAND";
+  command: RemoteCommandType;
+  screenIdentifier: string;
+  sessionId?: string;
+};
+
 const isNonEmptyString = (value: string | null): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
@@ -74,7 +81,26 @@ export function RemoteScoreboardControl() {
     loading: false,
   });
 
-  const canSendCommands = isNonEmptyString(screenId) && isNonEmptyString(sessionId);
+  const canSendCommands = isNonEmptyString(screenId);
+
+  const resolveWsUrl = (): string => {
+    const base = (process.env.NEXT_PUBLIC_SCOREBOARD_WS_URL || process.env.NEXT_PUBLIC_WS_ENDPOINT || "").trim();
+    if (!base) {
+      throw new Error(t("remote.control.errors.commandFailed"));
+    }
+
+    const parsed = new URL(base);
+    const protocol = parsed.protocol === "https:" ? "wss:" : parsed.protocol === "http:" ? "ws:" : parsed.protocol;
+    parsed.protocol = protocol;
+    parsed.searchParams.set("screenId", screenId);
+
+    const wsToken = (process.env.NEXT_PUBLIC_WS_TOKEN || "").trim();
+    if (wsToken) {
+      parsed.searchParams.set("token", wsToken);
+    }
+
+    return parsed.toString();
+  };
 
   const commandGroups = useMemo(
     () => [
@@ -123,24 +149,64 @@ export function RemoteScoreboardControl() {
       return;
     }
 
+    if (type === "start_match" && !isNonEmptyString(sessionId)) {
+      setState({
+        error: t("remote.control.errors.missingParams"),
+        lastCommand: null,
+        loading: false,
+      });
+      return;
+    }
+
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      const response = await fetch(`/api/scoreboards/${encodeURIComponent(sessionId)}/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type,
-          payload: {
-            screenId,
-          },
-        }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error || t("remote.control.errors.commandFailed"));
+
+      const wsUrl = resolveWsUrl();
+      const payload: RemoteCommandMessage = {
+        type: "REMOTE_COMMAND",
+        command: type,
+        screenIdentifier: screenId,
+      };
+      if (type === "start_match" && sessionId) {
+        payload.sessionId = sessionId;
       }
+
+      await new Promise<void>((resolve, reject) => {
+        const socket = new WebSocket(wsUrl);
+        let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const clearSettleTimer = () => {
+          if (settleTimer) {
+            clearTimeout(settleTimer);
+            settleTimer = null;
+          }
+        };
+
+        socket.onopen = () => {
+          try {
+            socket.send(JSON.stringify(payload));
+            settleTimer = setTimeout(() => {
+              try {
+                socket.close(1000, "remote-command-sent");
+              } catch {}
+              resolve();
+            }, 180);
+          } catch (sendError: unknown) {
+            clearSettleTimer();
+            reject(sendError);
+          }
+        };
+
+        socket.onerror = () => {
+          clearSettleTimer();
+          reject(new Error(t("remote.control.errors.commandFailed")));
+        };
+
+        socket.onclose = () => {
+          clearSettleTimer();
+        };
+      });
+
       setState({
         error: null,
         lastCommand: type,

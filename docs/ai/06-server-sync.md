@@ -166,6 +166,72 @@ curl -I http://127.0.0.1:3010/presence
 su -s /bin/bash - billiardtoday_srv -c 'pm2 status billiardtoday-ws --no-color'
 ```
 
+## WS Redirect Fix (Safe Runbook)
+
+Χρήση μόνο όταν το WebSocket handshake αποτυγχάνει και βλέπουμε `301` αντί για `101` στο:
+
+```bash
+curl -I https://ws.billiardtoday.com/ws
+```
+
+### 1) Βρες το σωστό nginx vhost file
+
+```bash
+grep -R "server_name ws.billiardtoday.com" /etc/nginx /var/www/vhosts/system 2>/dev/null
+```
+
+### 2) Backup πριν από κάθε αλλαγή
+
+```bash
+cp /path/to/ws-vhost.conf /path/to/ws-vhost.conf.bak-$(date +%Y%m%d-%H%M%S)
+```
+
+### 3) Βάλε ΜΟΝΟ location για `/ws` μέσα στο `server { listen 443 ssl; ... }`
+
+```nginx
+location /ws {
+    proxy_pass http://127.0.0.1:3010;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_set_header Host $host;
+    proxy_read_timeout 86400;
+    proxy_send_timeout 86400;
+}
+```
+
+Σημειώσεις ασφαλείας:
+
+- Μην αλλάξεις global redirects/canonical rules.
+- Μην προσθέσεις redirect από `https` σε `http`.
+- Μην κάνεις rewrite από `/ws` σε `/ws/`.
+- Η αλλαγή αφορά μόνο το path `/ws` για να μη επηρεαστούν live score/ads routes.
+
+### 4) Validate + Reload
+
+```bash
+nginx -t && systemctl reload nginx
+```
+
+### 5) Verify
+
+```bash
+curl -I https://ws.billiardtoday.com/ws
+curl -I "https://ws.billiardtoday.com/ws?screenId=US-ATH-STORE1-S1-31cc-1445&token=YOUR_WS_TOKEN"
+```
+
+Αναμενόμενο:
+
+- όχι `301`
+- στο browser DevTools `Network > WS` το handshake να γυρίζει `101 Switching Protocols`
+
+### 6) Rollback (αν κάτι πάει στραβά)
+
+```bash
+cp /path/to/ws-vhost.conf.bak-YYYYMMDD-HHMMSS /path/to/ws-vhost.conf
+nginx -t && systemctl reload nginx
+```
+
 ## Αν Θες Να Δεις Το Repo Πριν Το Deploy
 
 Παράδειγμα για frontend:
