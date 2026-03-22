@@ -91,32 +91,36 @@ export function RemoteScoreboardControl() {
   const resolveTargetId = async (): Promise<string> => {
     if (isNonEmptyString(sessionId)) return sessionId;
 
-    const response = await fetch(
-      `/api/scoreboard/screens/${encodeURIComponent(screenId)}/sessions?status=pending,in_progress`,
-      { cache: "no-store" },
-    );
-    const payload = (await response.json().catch(() => ({}))) as ScreenSessionsResponse;
-    if (!response.ok) {
-      throw new Error(payload.error || t("remote.control.errors.commandFailed"));
-    }
+    try {
+      const response = await fetch(
+        `/api/scoreboard/screens/${encodeURIComponent(screenId)}/sessions?status=pending,in_progress`,
+        { cache: "no-store" },
+      );
+      const payload = (await response.json().catch(() => ({}))) as ScreenSessionsResponse;
+      if (!response.ok) {
+        return screenId;
+      }
 
-    const sessions = Array.isArray(payload.data) ? payload.data : [];
-    const inProgress = sessions.find((entry) => {
-      const statusValue = entry.sessionStatus || entry.status;
-      return statusValue === "in_progress";
-    });
-    const pending = sessions.find((entry) => {
-      const statusValue = entry.sessionStatus || entry.status;
-      return statusValue === "pending";
-    });
-    const selected = inProgress || pending || sessions[0];
+      const sessions = Array.isArray(payload.data) ? payload.data : [];
+      const inProgress = sessions.find((entry) => {
+        const statusValue = entry.sessionStatus || entry.status;
+        return statusValue === "in_progress";
+      });
+      const pending = sessions.find((entry) => {
+        const statusValue = entry.sessionStatus || entry.status;
+        return statusValue === "pending";
+      });
+      const selected = inProgress || pending || sessions[0];
 
-    const resolvedIdRaw = selected?.documentId || selected?.id;
-    if (typeof resolvedIdRaw === "string" && resolvedIdRaw.trim().length > 0) {
-      return resolvedIdRaw.trim();
-    }
-    if (typeof resolvedIdRaw === "number" && Number.isFinite(resolvedIdRaw)) {
-      return String(resolvedIdRaw);
+      const resolvedIdRaw = selected?.documentId || selected?.id;
+      if (typeof resolvedIdRaw === "string" && resolvedIdRaw.trim().length > 0) {
+        return resolvedIdRaw.trim();
+      }
+      if (typeof resolvedIdRaw === "number" && Number.isFinite(resolvedIdRaw)) {
+        return String(resolvedIdRaw);
+      }
+    } catch {
+      return screenId;
     }
 
     return screenId;
