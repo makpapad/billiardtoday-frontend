@@ -14,23 +14,38 @@ const asString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+};
+
+const getRowValue = (row: RawSession, key: string): unknown => {
+  if (key in row) return row[key];
+  const attributes = asRecord(row.attributes);
+  if (attributes && key in attributes) return attributes[key];
+  return undefined;
+};
+
 const normalizeSession = (row: RawSession) => ({
   ...normalizeLiveSessionRow(row),
-  documentId: asString(row.documentId) || String(row.id || ""),
-  eventId: asString(row.eventId),
-  eventStageId: asString(row.eventStageId),
+  documentId:
+    asString(getRowValue(row, "documentId")) ||
+    asString(row.documentId) ||
+    String(getRowValue(row, "id") || row.id || ""),
+  eventId: asString(getRowValue(row, "eventId")),
+  eventStageId: asString(getRowValue(row, "eventStageId")),
   groupNumber:
-    typeof row.groupNumber === "number"
-      ? row.groupNumber
-      : typeof row.groupNumber === "string"
-        ? Number(row.groupNumber)
+    typeof getRowValue(row, "groupNumber") === "number"
+      ? (getRowValue(row, "groupNumber") as number)
+      : typeof getRowValue(row, "groupNumber") === "string"
+        ? Number(getRowValue(row, "groupNumber"))
         : null,
-  screenIdentifier: asString(row.screenIdentifier),
-  player1DocumentId: asString(row.player1DocumentId),
-  player2DocumentId: asString(row.player2DocumentId),
-  player1Name: asString(row.player1Name),
-  player2Name: asString(row.player2Name),
-  sessionStatus: asString(row.sessionStatus),
+  screenIdentifier: asString(getRowValue(row, "screenIdentifier")),
+  player1DocumentId: asString(getRowValue(row, "player1DocumentId")),
+  player2DocumentId: asString(getRowValue(row, "player2DocumentId")),
+  player1Name: asString(getRowValue(row, "player1Name")),
+  player2Name: asString(getRowValue(row, "player2Name")),
+  sessionStatus: asString(getRowValue(row, "sessionStatus")),
 });
 
 export async function GET(
