@@ -482,6 +482,16 @@ export function TournamentEventsContent({
     });
     return map;
   }, [effectiveLiveSessions]);
+  const liveSessionsByStageId = useMemo(() => {
+    const map = new Map<string, EventLiveSession[]>();
+    effectiveLiveSessions.forEach((session) => {
+      if (!session.eventStageId) return;
+      const existing = map.get(session.eventStageId) ?? [];
+      existing.push(session);
+      map.set(session.eventStageId, existing);
+    });
+    return map;
+  }, [effectiveLiveSessions]);
   const liveSessionByPlayerNames = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -497,6 +507,7 @@ export function TournamentEventsContent({
     });
     return map;
   }, [effectiveLiveSessions, normalizeLiveName]);
+
   const normalizeBracketPlayer = useCallback(
     (player: unknown): { name: string } => {
       try {
@@ -1090,6 +1101,44 @@ export function TournamentEventsContent({
                                                                     exactNameMatch
                                                                   )
                                                                     return exactNameMatch;
+
+                                                                  const stageScopedSessions =
+                                                                    liveSessionsByStageId.get(
+                                                                      stage.documentId,
+                                                                    ) ?? [];
+                                                                  const stageScopedMatch =
+                                                                    stageScopedSessions.find(
+                                                                      (session) => {
+                                                                        const stagePairKey =
+                                                                          [
+                                                                            normalizeLiveName(
+                                                                              session.player1Name,
+                                                                            ),
+                                                                            normalizeLiveName(
+                                                                              session.player2Name,
+                                                                            ),
+                                                                          ]
+                                                                            .filter(
+                                                                              (
+                                                                                value,
+                                                                              ): value is string =>
+                                                                                value.length >
+                                                                                0,
+                                                                            )
+                                                                            .sort()
+                                                                            .join("::");
+                                                                        return (
+                                                                          stagePairKey.length >
+                                                                            0 &&
+                                                                          stagePairKey ===
+                                                                            pairNameKey
+                                                                        );
+                                                                      },
+                                                                    ) ?? null;
+                                                                  if (
+                                                                    stageScopedMatch
+                                                                  )
+                                                                    return stageScopedMatch;
                                                                 }
 
                                                                 const expandedKeys =
