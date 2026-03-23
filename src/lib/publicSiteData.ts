@@ -485,7 +485,7 @@ export const listFeaturedPlayers = async (limit = 6): Promise<PublicPlayerCard[]
   return rows.map(mapPlayerCard).filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row));
 };
 
-export const listPlayers = async (limit = 500): Promise<PublicPlayerCard[]> => {
+export const listPlayers = async (limit = 10000): Promise<PublicPlayerCard[]> => {
   const params = new URLSearchParams();
   params.set("pagination[pageSize]", String(limit));
   params.set("sort[0]", "full_name:asc");
