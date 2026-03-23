@@ -182,10 +182,9 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
     (isUsablePlayerName(englishName) ? englishName : null) ||
     (isUsablePlayerName(nativeName) ? nativeName : null);
   const documentId = readString(entity.documentId);
-
-  if (!displayName || !documentId) return null;
-
   const id = toNumber(entity.id);
+
+  if (!displayName || !documentId || id === null) return null;
   const clubEntity = unwrapEntity(
     entity.club && typeof entity.club === "object" && "data" in (entity.club as Record<string, unknown>)
       ? (entity.club as { data?: unknown }).data
@@ -201,7 +200,7 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
     city: readString(entity.city),
     clubName: readString(clubEntity?.name),
     photoUrl: resolveMediaUrl(entity.photo_main) || resolveMediaUrl(entity.photo_alt),
-    href: buildPlayerHref(id || documentId, displayName),
+    href: buildPlayerHref(id, displayName),
   };
 };
 
@@ -485,22 +484,72 @@ export const listFeaturedPlayers = async (limit = 6): Promise<PublicPlayerCard[]
   return rows.map(mapPlayerCard).filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row));
 };
 
-export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> => {
+export const getPlayersTotalCount = async (): Promise<number> => {
   const params = new URLSearchParams();
-  params.set("pagination[pageSize]", String(limit));
-  params.set("sort[0]", "full_name:asc");
-  params.set("fields[0]", "full_name");
-  params.set("fields[1]", "full_name_en");
-  params.set("fields[2]", "country");
-  params.set("fields[3]", "city");
-  params.set("fields[4]", "documentId");
-  params.set("populate[club][fields][0]", "name");
-  params.set("populate[photo_main][fields][0]", "url");
-  params.set("populate[photo_alt][fields][0]", "url");
+  params.set("pagination[page]", "1");
+  params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "documentId");
 
   const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
+  const total =
+    (json as { meta?: { pagination?: { total?: number } } } | null)?.meta?.pagination?.total;
+
+  if (typeof total === "number" && Number.isFinite(total) && total >= 0) {
+    return total;
+  }
+
   const rows = Array.isArray(json?.data) ? json.data : [];
-  return rows
+  return rows.length;
+};
+
+export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> => {
+  const pageSize = 1000;
+  const maxTotal = Math.max(0, Number.isFinite(limit) ? Number(limit) : 0);
+  const hardCap = 50000;
+
+  const baseParams = new URLSearchParams();
+  baseParams.set("sort[0]", "full_name:asc");
+  baseParams.set("fields[0]", "full_name");
+  baseParams.set("fields[1]", "full_name_en");
+  baseParams.set("fields[2]", "country");
+  baseParams.set("fields[3]", "city");
+  baseParams.set("fields[4]", "documentId");
+  baseParams.set("populate[club][fields][0]", "name");
+  baseParams.set("populate[photo_main][fields][0]", "url");
+  baseParams.set("populate[photo_alt][fields][0]", "url");
+
+  const allRows: unknown[] = [];
+  let page = 1;
+  let pageCount: number | null = null;
+
+  while (true) {
+    const params = new URLSearchParams(baseParams);
+    params.set("pagination[pageSize]", String(pageSize));
+    params.set("pagination[page]", String(page));
+
+    const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
+    const rows = Array.isArray(json?.data) ? json.data : [];
+    if (rows.length === 0) break;
+
+    allRows.push(...rows);
+
+    const metaPageCount = (json as { meta?: { pagination?: { pageCount?: number } } } | null)?.meta?.pagination?.pageCount;
+    if (typeof metaPageCount === "number" && Number.isFinite(metaPageCount) && metaPageCount > 0) {
+      pageCount = metaPageCount;
+    }
+
+    const reachedRequestedLimit = maxTotal > 0 && allRows.length >= maxTotal;
+    const reachedHardCap = allRows.length >= hardCap;
+    const reachedKnownEnd = pageCount !== null && page >= pageCount;
+
+    if (reachedRequestedLimit || reachedHardCap || reachedKnownEnd) break;
+    if (rows.length < pageSize) break;
+
+    page += 1;
+  }
+
+  const sliced = maxTotal > 0 ? allRows.slice(0, Math.min(maxTotal, hardCap)) : allRows.slice(0, hardCap);
+  return sliced
     .map(mapPlayerCard)
     .filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row))
     .sort((a: PublicPlayerCard, b: PublicPlayerCard) => {

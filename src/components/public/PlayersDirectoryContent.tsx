@@ -1,37 +1,121 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import type { PublicPlayerCard } from "@/lib/publicSiteData";
 
 type Props = {
   players: PublicPlayerCard[];
+  totalPlayers?: number;
 };
 
-const normalize = (value: string | null | undefined) => String(value || "").trim().toLowerCase();
+const DISPLAY_COUNT = 35; // Show 35 players
+const SEARCH_RESULTS_LIMIT = 50;
+const MIN_QUERY_LENGTH = 2;
+const SEARCH_DEBOUNCE_MS = 250;
 
-export function PlayersDirectoryContent({ players }: Props) {
+const pickRandomPlayers = (source: PublicPlayerCard[], count: number) => {
+  if (source.length <= count) return source;
+  const shuffled = [...source];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+};
+
+export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
   const [search, setSearch] = useState("");
+  const [remoteResults, setRemoteResults] = useState<PublicPlayerCard[]>([]);
+  const [remoteBusy, setRemoteBusy] = useState(false);
+  const [randomPlayers, setRandomPlayers] = useState<PublicPlayerCard[]>(() => players.slice(0, DISPLAY_COUNT));
 
-  const filteredPlayers = useMemo(() => {
-    const query = normalize(search);
-    if (!query) return players;
+  useEffect(() => {
+    setRandomPlayers(pickRandomPlayers(players, DISPLAY_COUNT));
+  }, [players]);
 
-    return players.filter((player) => {
-      const haystack = [
-        player.fullName,
-        player.fullNameEn,
-        player.country,
-        player.city,
-        player.clubName,
-      ]
-        .map(normalize)
-        .join(" ");
+  useEffect(() => {
+    const query = search.trim();
+    if (query.length < MIN_QUERY_LENGTH) {
+      setRemoteResults([]);
+      setRemoteBusy(false);
+      return;
+    }
 
-      return haystack.includes(query);
-    });
-  }, [players, search]);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const run = async () => {
+        try {
+          setRemoteBusy(true);
+          const res = await fetch(
+            `/api/players/search?q=${encodeURIComponent(query)}`,
+            { signal: controller.signal, cache: "no-store" },
+          );
+          const payload = await res.json().catch(() => ({ data: [] }));
+          const rows = Array.isArray(payload?.data) ? payload.data : [];
+          const mapped: PublicPlayerCard[] = rows
+            .map((row: any) => {
+              const numericId = row?.id;
+              const documentId = String(row?.documentId || row?.document_id || "").trim();
+              const fullName = String(row?.fullName || row?.full_name || "").trim();
+              const fullNameEnRaw = row?.fullNameEn ?? row?.full_name_en ?? null;
+              const fullNameEn = fullNameEnRaw ? String(fullNameEnRaw).trim() : null;
+              const countryRaw = row?.country ?? null;
+              const cityRaw = row?.city ?? null;
+              const clubNameRaw = row?.clubName ?? row?.club_name ?? null;
+              const hrefIdentifier =
+                typeof numericId === "number" ||
+                (typeof numericId === "string" && /^\d+$/.test(numericId))
+                  ? String(numericId)
+                  : "";
+
+              if (!hrefIdentifier || !documentId || !fullName) return null;
+              return {
+                id: null,
+                documentId,
+                fullName,
+                fullNameEn,
+                country: countryRaw ? String(countryRaw).trim() : null,
+                city: cityRaw ? String(cityRaw).trim() : null,
+                clubName: clubNameRaw ? String(clubNameRaw).trim() : null,
+                photoUrl: null,
+                href: `/players/${encodeURIComponent(hrefIdentifier)}-${encodeURIComponent(
+                  (fullNameEn || fullName).trim().replace(/\s+/g, "-"),
+                )}`,
+              };
+            })
+            .filter((it: PublicPlayerCard | null): it is PublicPlayerCard => Boolean(it));
+
+          setRemoteResults(mapped.slice(0, SEARCH_RESULTS_LIMIT));
+        } catch (error) {
+          if ((error as any)?.name === "AbortError") return;
+          setRemoteResults([]);
+        } finally {
+          setRemoteBusy(false);
+        }
+      };
+      void run();
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [search]);
+
+  const displayPlayers = useMemo(() => {
+    const query = search.trim();
+    if (query.length >= MIN_QUERY_LENGTH) {
+      return remoteResults;
+    }
+    return randomPlayers;
+  }, [randomPlayers, remoteResults, search]);
+
+  const availablePlayers =
+    typeof totalPlayers === "number" && Number.isFinite(totalPlayers) && totalPlayers >= 0
+      ? totalPlayers
+      : players.length;
 
   return (
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
@@ -44,7 +128,12 @@ export function PlayersDirectoryContent({ players }: Props) {
           { label: "Browse clubs", href: "/clubs", variant: "secondary" },
         ]}
         meta={[
-          `${players.length} ${players.length === 1 ? 'player profile' : 'player profiles'} available`,
+          `${availablePlayers} ${availablePlayers === 1 ? "player profile" : "player profiles"} available`,
+          search.trim().length >= MIN_QUERY_LENGTH
+            ? remoteBusy
+              ? "Searching..."
+              : `Showing ${displayPlayers.length} ${displayPlayers.length === 1 ? "result" : "results"}`
+            : `Showing ${DISPLAY_COUNT} players`,
           "Built for public cards, profile pages, and future embed variants",
         ]}
       />
@@ -53,7 +142,7 @@ export function PlayersDirectoryContent({ players }: Props) {
         <SectionHeading
           eyebrow="Directory"
           title="Find players by name, country, city, or club"
-          description="This listing is intentionally simple and fast. Search runs locally on the fetched player dataset."
+          description="This listing is intentionally simple and fast. Search runs against the server directory."
         />
         <div className="mb-6">
           <div className="relative max-w-3xl">
@@ -67,9 +156,9 @@ export function PlayersDirectoryContent({ players }: Props) {
           </div>
         </div>
 
-        {filteredPlayers.length > 0 ? (
+        {displayPlayers.length > 0 ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {filteredPlayers.map((player) => (
+            {displayPlayers.map((player) => (
               <Link
                 key={player.documentId}
                 href={player.href}

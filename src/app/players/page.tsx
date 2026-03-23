@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PlayersDirectoryContent } from "@/components/public/PlayersDirectoryContent";
-import { listPlayers } from "@/lib/publicSiteData";
+import { getPlayersTotalCount, listFeaturedPlayers } from "@/lib/publicSiteData";
 
 export const metadata: Metadata = {
   title: "Players",
@@ -8,6 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PlayersPage() {
-  const players = await listPlayers(100000);
-  return <PlayersDirectoryContent players={players} />;
+  const [players, totalPlayers] = await Promise.all([
+    listFeaturedPlayers(250),
+    getPlayersTotalCount(),
+  ]);
+
+  return <PlayersDirectoryContent players={players} totalPlayers={totalPlayers} />;
 }

@@ -243,7 +243,22 @@ export default function PlayerProfilePage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const rawId = params?.id as string
-    const playerId = (rawId ? rawId.split('-')[0] : '') as string
+    const extractPlayerIdentifier = (slug: string) => {
+        const clean = String(slug || '').trim()
+        if (!clean) return ''
+
+        const numeric = clean.match(/^(\d+)(?:-|$)/)
+        if (numeric?.[1]) return numeric[1]
+
+        const documentUuid = clean.match(
+            /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:-|$)/,
+        )
+        if (documentUuid?.[1]) return documentUuid[1]
+
+        return clean.split('-')[0] || ''
+    }
+    const playerId = extractPlayerIdentifier(rawId)
+    const isNumericPlayerId = /^\d+$/.test(playerId)
     const tournamentContextSlug = (searchParams?.get('tournament') || '').trim()
 
     const [player, setPlayer] = useState<Player | null>(null)
@@ -346,7 +361,11 @@ export default function PlayerProfilePage() {
 
             try {
                 const params = new URLSearchParams()
-                params.set('filters[id][$eq]', playerId)
+                if (isNumericPlayerId) {
+                    params.set('filters[id][$eq]', playerId)
+                } else {
+                    params.set('filters[documentId][$eq]', playerId)
+                }
                 params.set('pagination[pageSize]', '1')
                 params.set('populate[photo_main][fields][0]', 'url')
                 // Cache buster to avoid stale revalidated response when backend just changed
@@ -411,6 +430,17 @@ export default function PlayerProfilePage() {
                     if (data.data && data.data.length > 0) {
                         const playerData = data.data[0]
                         setPlayer(playerData)
+
+                        if (!isNumericPlayerId && playerData?.id) {
+                            const canonicalId = String(playerData.id)
+                            const canonicalName =
+                                playerData.full_name ||
+                                playerData.full_name_en ||
+                                playerData.name ||
+                                playerId
+                            const canonicalUrl = buildPlayerUrl(canonicalId, canonicalName)
+                            router.replace(canonicalUrl)
+                        }
 
                         // Set career stats from player.career_stats (pre-calculated in DB)
                         if (playerData.career_stats) {
@@ -505,7 +535,7 @@ export default function PlayerProfilePage() {
 
         fetchPlayerData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [playerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow, tournamentContextSlug])
+    }, [playerId, isNumericPlayerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow, tournamentContextSlug])
 
     const loadMoreYears = () => {
         setYearsToShow(prev => prev + 3) // Load 3 more years

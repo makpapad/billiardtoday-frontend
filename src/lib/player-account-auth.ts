@@ -206,10 +206,41 @@ type DeviceLinkEnvelope = {
 };
 
 function extractErrorMessage(json: any, fallback: string) {
-  const direct = typeof json?.error === "string" ? json.error : null;
-  if (direct) return direct;
-  const nested = typeof json?.error?.message === "string" ? json.error.message : null;
+  const parseMaybeJson = (value: string) => {
+    const clean = value.trim();
+    if (!clean || (!clean.startsWith("{") && !clean.startsWith("["))) return null;
+    try {
+      return JSON.parse(clean);
+    } catch {
+      return null;
+    }
+  };
+
+  const pickMessage = (value: any): string | null => {
+    if (!value || typeof value !== "object") return null;
+
+    const directNested = typeof value?.error?.message === "string" ? value.error.message : null;
+    if (directNested) return directNested;
+
+    const dataNested = typeof value?.data?.error?.message === "string" ? value.data.error.message : null;
+    if (dataNested) return dataNested;
+
+    const topLevel = typeof value?.message === "string" ? value.message : null;
+    if (topLevel) return topLevel;
+
+    return null;
+  };
+
+  if (typeof json?.error === "string") {
+    const parsedError = parseMaybeJson(json.error);
+    const parsedMessage = pickMessage(parsedError);
+    if (parsedMessage) return parsedMessage;
+    return json.error;
+  }
+
+  const nested = pickMessage(json);
   if (nested) return nested;
+
   return fallback;
 }
 
