@@ -17,6 +17,23 @@ const unwrapEntity = (value: any) => {
     : value;
 };
 
+const isInactiveStatus = (value: unknown) => {
+  const status = String(value || "").trim().toLowerCase();
+  return status === "inactive" || status === "disabled";
+};
+
+const isPlayerActive = (entity: any) => {
+  if (!entity || typeof entity !== "object") return false;
+
+  if (typeof entity.active === "boolean") return entity.active;
+  if (typeof entity.is_active === "boolean") return entity.is_active;
+  if (typeof entity.isActive === "boolean") return entity.isActive;
+
+  if (isInactiveStatus(entity.status)) return false;
+
+  return true;
+};
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
@@ -70,6 +87,10 @@ export async function GET(req: Request) {
       const documentId = readString(entity?.documentId);
       const fullName = readString(entity?.full_name);
       const fullNameEn = readString(entity?.full_name_en);
+
+      if (!isPlayerActive(entity)) {
+        return null;
+      }
 
       if (!Number.isFinite(id) || !documentId || !(fullName || fullNameEn)) {
         return null;
