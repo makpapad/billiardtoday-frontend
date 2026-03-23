@@ -898,7 +898,11 @@ export function TournamentEventsContent({
                                   </td>
                                   <td className="px-4 py-3 text-center">
                                     {result.bestAverage !== null
-                                      ? result.bestAverage.toFixed(3)
+                                      ? (() => {
+                                          const factor = Math.pow(10, 3);
+                                          const truncated = Math.floor(result.bestAverage * factor) / factor;
+                                          return truncated.toFixed(3);
+                                        })()
                                       : "-"}
                                   </td>
                                   <td className="px-4 py-3 text-center">

@@ -8,6 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default async function PlayersPage() {
-  const players = await listPlayers(10000);
+  const players = await listPlayers(100000);
   return <PlayersDirectoryContent players={players} />;
 }

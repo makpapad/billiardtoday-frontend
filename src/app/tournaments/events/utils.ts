@@ -317,7 +317,11 @@ export const formatAverage = (
   if (points === null || innings === null || innings === 0) return "-";
   const result = points / innings;
   if (!Number.isFinite(result)) return "-";
-  return result.toFixed(3);
+  
+  // Truncate instead of round
+  const factor = Math.pow(10, 3);
+  const truncated = Math.floor(result * factor) / factor;
+  return truncated.toFixed(3);
 };
 
 export const formatOutcomeLabel = (outcome: "W" | "L" | "D" | null): string => {

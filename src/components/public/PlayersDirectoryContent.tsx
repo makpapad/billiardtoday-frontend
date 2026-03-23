@@ -44,7 +44,7 @@ export function PlayersDirectoryContent({ players }: Props) {
           { label: "Browse clubs", href: "/clubs", variant: "secondary" },
         ]}
         meta={[
-          `${players.length} player profiles available`,
+          `${players.length} ${players.length === 1 ? 'player profile' : 'player profiles'} available`,
           "Built for public cards, profile pages, and future embed variants",
         ]}
       />

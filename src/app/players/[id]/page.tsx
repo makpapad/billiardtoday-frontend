@@ -174,7 +174,11 @@ const formatSafeDecimal = (value: number | null | undefined, digits = 3): string
     if (numericValue === null) {
         return digits === 1 ? '0.0' : '0.000'
     }
-    return numericValue.toFixed(digits).replace('.', ',')
+    
+    // Truncate instead of round
+    const factor = Math.pow(10, digits)
+    const truncated = Math.floor(numericValue * factor) / factor
+    return truncated.toFixed(digits).replace('.', ',')
 }
 
 const formatSafeAverage = (
