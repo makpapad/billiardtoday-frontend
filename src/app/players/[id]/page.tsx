@@ -1667,17 +1667,13 @@ export default function PlayerProfilePage() {
                                     key={participation.id}
                                     className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                                 >
-                                    {(() => {
-                                        const tournamentHref = `/tournaments/${buildTournamentSlug('', participation.tournament, participation.year)}`
-
-                                        return (
                                     {/* Tournament Header */}
                                     <div className={`bg-gradient-to-r ${getPositionGradient(participation.position)} p-6 text-white`}>
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
                                                 <h3 className="text-2xl font-bold flex items-center gap-2">
                                                     <a
-                                                        href={tournamentHref}
+                                                        href={`/tournaments/${buildTournamentSlug('', participation.tournament, participation.year)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 hover:text-blue-100 transition-colors"
@@ -1736,8 +1732,6 @@ export default function PlayerProfilePage() {
                                             </div>
                                         </div>
                                     </div>
-                                        )
-                                    })()}
 
                                     {/* Matches List */}
                                     <div className="p-6 bg-white dark:bg-gray-800">
