@@ -45,11 +45,6 @@ export async function GET(req: Request) {
   params.set("pagination[page]", "1");
   params.set("pagination[pageSize]", "50");
   params.set("sort[0]", "full_name:asc");
-  params.set("fields[0]", "full_name");
-  params.set("fields[1]", "full_name_en");
-  params.set("fields[2]", "country");
-  params.set("fields[3]", "city");
-  params.set("fields[4]", "documentId");
   params.set("populate[club][fields][0]", "name");
   params.set("filters[$or][0][full_name][$containsi]", q);
   params.set("filters[$or][1][full_name_en][$containsi]", q);
