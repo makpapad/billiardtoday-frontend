@@ -4,6 +4,9 @@ import React from "react";
 import { useAccountSession } from "@/components/account/AccountSessionProvider";
 import { AccountAccessCard, PrivateAccountShell } from "@/components/account/PrivateAccountShell";
 import { playerAccountAuth, type PlayerAccountTournamentParticipation } from "@/lib/player-account-auth";
+import { normalizeGameTypeOrFallback } from "@/lib/gameTypes";
+
+const getNormalizedGameType = (value: unknown): string | null => normalizeGameTypeOrFallback(value);
 
 export default function AccountTournamentsPage() {
   const { account, setAccount, isLoading } = useAccountSession();
@@ -41,20 +44,28 @@ export default function AccountTournamentsPage() {
   );
 
   const gameTypeOptions = React.useMemo(
-    () => Array.from(new Set(tournaments.map((row) => row.gameType?.trim()).filter(Boolean) as string[])).sort(),
+    () =>
+      Array.from(
+        new Set(
+          tournaments
+            .map((row) => normalizeGameTypeOrFallback(row.gameType))
+            .filter(Boolean) as string[],
+        ),
+      ).sort(),
     [tournaments],
   );
 
   const filteredTournaments = React.useMemo(() => {
     const q = search.trim().toLowerCase();
     return tournaments.filter((row) => {
+      const normalizedGameType = getNormalizedGameType(row.gameType) || "";
       if (yearFilter !== "all" && String(row.year ?? "") !== yearFilter) return false;
-      if (gameTypeFilter !== "all" && (row.gameType || "") !== gameTypeFilter) return false;
+      if (gameTypeFilter !== "all" && normalizedGameType !== gameTypeFilter) return false;
       if (!q) return true;
 
       const haystack = [
         row.tournament,
-        row.gameType,
+        normalizedGameType,
         row.position,
         ...row.stageResults.map((stage) => stage.stageTitle),
         ...row.matches.map((match) => match.opponent),
@@ -145,7 +156,9 @@ export default function AccountTournamentsPage() {
                 <div className="min-w-0">
                   <div className="text-lg font-semibold text-slate-950">{participation.tournament || "Tournament"}</div>
                   <div className="mt-1 text-sm text-slate-600">
-                    {[participation.year, participation.gameType, participation.position].filter(Boolean).join(" · ")}
+                    {[participation.year, getNormalizedGameType(participation.gameType), participation.position]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-slate-600">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { normalizeGameTypeOrFallback } from '@/lib/gameTypes'
 
 export const runtime = 'nodejs'
 
@@ -20,13 +21,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
         const searchParams = req.nextUrl.searchParams
         const year = searchParams.get('year')
         const gameType = searchParams.get('gameType')
+        const normalizedGameType = normalizeGameTypeOrFallback(gameType)
 
         const strapiUrl = new URL(
             `${STRAPI_URL}/api/bt-players/participations-by`,
         )
         strapiUrl.searchParams.set('id', playerId)
         if (year) strapiUrl.searchParams.set('year', year)
-        if (gameType) strapiUrl.searchParams.set('gameType', gameType)
 
         const fetchFromStrapi = async (useAuth: boolean) =>
             fetch(strapiUrl.toString(), {
@@ -113,8 +114,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 id: it?.id ?? '',
                 tournament: it?.tournament ?? null,
                 year: typeof it?.year === 'number' ? it.year : null,
-                gameType:
-                    typeof it?.gameType === 'string' ? it.gameType : null,
+                gameType: normalizeGameTypeOrFallback(it?.gameType),
                 position: it?.position ?? 'Participant',
                 finals: Array.isArray(it?.finals) ? it.finals : [],
                 stageResults: Array.isArray(it?.stageResults)
@@ -128,16 +128,25 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 avgPerInning: avgPerInningNum,
             }
         })
+        const filteredItems = normalizedGameType
+            ? items.filter(
+                  (item: { gameType: string | null }) =>
+                      normalizeGameTypeOrFallback(item.gameType) === normalizedGameType,
+              )
+            : items
         const normalized = {
-            data: items,
+            data: filteredItems,
             availableYears: Array.isArray(payload?.meta?.availableYears)
                 ? payload.meta.availableYears
                 : [],
-            availableGameTypes: Array.isArray(
-                payload?.meta?.availableGameTypes,
+            availableGameTypes: (
+                Array.isArray(payload?.meta?.availableGameTypes)
+                    ? payload.meta.availableGameTypes
+                    : []
             )
-                ? payload.meta.availableGameTypes
-                : [],
+                .map((value: unknown) => normalizeGameTypeOrFallback(value))
+                .filter((value: string | null): value is string => Boolean(value))
+                .filter((value: string, index: number, arr: string[]) => arr.indexOf(value) === index),
         }
         return NextResponse.json(normalized, { status: 200 })
     } catch (error) {

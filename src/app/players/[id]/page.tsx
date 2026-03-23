@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath } from "@/lib/countryFlags"
-import { getGameTypeLabel, type GameType } from "@/lib/gameTypes"
+import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
 import { buildTournamentSlug } from "@/lib/tournaments"
 import {
@@ -541,6 +541,28 @@ export default function PlayerProfilePage() {
         setYearsToShow(prev => prev + 3) // Load 3 more years
     }
 
+    const matchesSelectedGameType = (value: unknown) => {
+        if (selectedGameType === 'all') return true
+        return normalizeGameTypeOrFallback(value) === selectedGameType
+    }
+
+    const resolveCareerStatsForGameType = (gameType: GameType) => {
+        const byGameType = player?.career_stats?.byGameType
+        if (!byGameType) return null
+
+        if (byGameType[gameType]) {
+            return byGameType[gameType]
+        }
+
+        for (const [rawType, stats] of Object.entries(byGameType)) {
+            if (normalizeGameTypeOrFallback(rawType) === gameType) {
+                return stats
+            }
+        }
+
+        return null
+    }
+
     const loadMoreTournaments = () => {
         setTournamentsToShow(prev => prev + 3) // Load 3 more tournaments
     }
@@ -600,7 +622,7 @@ export default function PlayerProfilePage() {
     const filteredParticipations =
         selectedGameType === 'all'
             ? tournamentScopedParticipations
-            : tournamentScopedParticipations.filter((p) => p.gameType === selectedGameType)
+            : tournamentScopedParticipations.filter((p) => matchesSelectedGameType(p.gameType))
 
     // Get available years for the selected game type using allParticipations metadata
     const filteredAvailableYears =
@@ -611,7 +633,7 @@ export default function PlayerProfilePage() {
             : Array.from(
                   new Set(
                       (tournamentContextSlug ? tournamentScopedParticipations : allParticipations)
-                          .filter((p) => p.gameType === selectedGameType)
+                          .filter((p) => matchesSelectedGameType(p.gameType))
                           .map((p) => p.year),
                   ),
               ).sort((a, b) => b - a)
@@ -623,7 +645,7 @@ export default function PlayerProfilePage() {
                 const source = tournamentContextSlug ? tournamentScopedParticipations : allParticipations
                 if (selectedGameType === 'all') return source
                 return source.filter(
-                    (p) => p.gameType === selectedGameType,
+                    (p) => matchesSelectedGameType(p.gameType),
                 )
             }
             return filteredParticipations
@@ -646,7 +668,7 @@ export default function PlayerProfilePage() {
         const sourceParticipations =
             selectedYear === 'all' && selectedGameType !== 'all'
                 ? allParticipations.filter(
-                      (p) => p.gameType === selectedGameType,
+                      (p) => matchesSelectedGameType(p.gameType),
                   )
                 : filteredParticipations
 
@@ -700,9 +722,9 @@ export default function PlayerProfilePage() {
 
     const preloadedCareerStats =
         selectedGameType !== 'all' &&
-        player?.career_stats?.byGameType?.[selectedGameType]
+        resolveCareerStatsForGameType(selectedGameType)
             ? normalizeCareerStats(
-                  player.career_stats.byGameType[selectedGameType],
+                  resolveCareerStatsForGameType(selectedGameType),
               )
             : normalizeCareerStats(player?.career_stats?.overall)
 
@@ -813,7 +835,7 @@ export default function PlayerProfilePage() {
                   >()
 
                   allParticipations
-                      .filter((p) => p.gameType === selectedGameType)
+                      .filter((p) => matchesSelectedGameType(p.gameType))
                       .forEach((p) => {
                           p.matches.forEach((m) => {
                               const existing =
