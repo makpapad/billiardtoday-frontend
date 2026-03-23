@@ -383,19 +383,16 @@ export default function PlayerProfilePage() {
                     historyParams.set('gameType', selectedGameType)
                 }
 
+                const historyLimit =
+                    selectedYear !== 'all'
+                        ? Math.max(tournamentsToShow + 6, 12)
+                        : tournamentContextSlug
+                          ? 1000
+                          : Math.max(yearsToShow * 12, 24)
+                historyParams.set('limit', String(historyLimit))
+
                 if (selectedYear !== 'all') {
                     historyParams.set('year', selectedYear)
-                    historyParams.set(
-                        'limit',
-                        String(Math.max(tournamentsToShow + 6, 12)),
-                    )
-                } else if (tournamentContextSlug) {
-                    historyParams.set('limit', '1000')
-                } else {
-                    historyParams.set(
-                        'limit',
-                        String(Math.max(yearsToShow * 12, 24)),
-                    )
                 }
 
                 if (historyParams.toString()) {
@@ -414,12 +411,13 @@ export default function PlayerProfilePage() {
 
                 // Fetch unfiltered metadata when filters are missing.
                 // Keep allParticipations warm for non-all game type views only.
-                if (
+                const shouldFetchMetadata =
                     availableGameTypes.length === 0 ||
                     availableYears.length === 0 ||
                     (selectedGameType !== 'all' &&
                         allParticipations.length === 0)
-                ) {
+
+                if (shouldFetchMetadata) {
                     fetchPromises.push(
                         fetch(
                             buildApiUrl(
@@ -559,6 +557,11 @@ export default function PlayerProfilePage() {
     const matchesSelectedGameType = (value: unknown) => {
         if (selectedGameType === 'all') return true
         return normalizeGameTypeOrFallback(value) === selectedGameType
+    }
+
+    const toNumericAverage = (value: unknown) => {
+        const normalized = Number(String(value ?? '0').replace(',', '.'))
+        return Number.isFinite(normalized) ? normalized : 0
     }
 
     const resolveCareerStatsForGameType = (gameType: GameType) => {
@@ -726,8 +729,7 @@ export default function PlayerProfilePage() {
                 return
             }
 
-            const avgRaw = Number(String(p.avgPerInning ?? '0').replace(',', '.'))
-            const avgValue = Number.isFinite(avgRaw) ? avgRaw : 0
+            const avgValue = toNumericAverage(p.avgPerInning)
             const matchesWeight = Number(p.totalMatches) || 0
             if (matchesWeight > 0) {
                 weightedAvgSum += avgValue * matchesWeight
@@ -865,6 +867,15 @@ export default function PlayerProfilePage() {
         selectedGameType === 'all'
             ? []
             : (() => {
+                  const createYearAggregate = () => ({
+                      totalPoints: 0,
+                      totalInnings: 0,
+                      weightedAvgSum: 0,
+                      weightedAvgMatches: 0,
+                      wins: 0,
+                      losses: 0,
+                  })
+
                   const yearData = new Map<
                       number,
                       {
@@ -880,21 +891,10 @@ export default function PlayerProfilePage() {
                   allParticipations
                       .filter((p) => matchesSelectedGameType(p.gameType))
                       .forEach((p) => {
-                          const existing =
-                              yearData.get(p.year) || {
-                                  totalPoints: 0,
-                                  totalInnings: 0,
-                                  weightedAvgSum: 0,
-                                  weightedAvgMatches: 0,
-                                  wins: 0,
-                                  losses: 0,
-                              }
+                          const existing = yearData.get(p.year) || createYearAggregate()
 
                           if (!Array.isArray(p.matches) || p.matches.length === 0) {
-                              const avgRaw = Number(
-                                  String(p.avgPerInning ?? '0').replace(',', '.'),
-                              )
-                              const avgValue = Number.isFinite(avgRaw) ? avgRaw : 0
+                              const avgValue = toNumericAverage(p.avgPerInning)
                               const matchWeight = Number(p.totalMatches) || 0
                               yearData.set(p.year, {
                                   totalPoints: existing.totalPoints,
