@@ -1667,12 +1667,40 @@ export default function PlayerProfilePage() {
                                     key={participation.id}
                                     className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                                 >
+                                    {(() => {
+                                        const tournamentHref = `/tournaments/${buildTournamentSlug('', participation.tournament, participation.year)}`
+
+                                        return (
                                     {/* Tournament Header */}
                                     <div className={`bg-gradient-to-r ${getPositionGradient(participation.position)} p-6 text-white`}>
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
-                                                <h3 className="text-2xl font-bold">
-                                                    {participation.tournament}
+                                                <h3 className="text-2xl font-bold flex items-center gap-2">
+                                                    <a
+                                                        href={tournamentHref}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 hover:text-blue-100 transition-colors"
+                                                    >
+                                                        <span>{participation.tournament}</span>
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className="h-5 w-5"
+                                                            aria-hidden="true"
+                                                        >
+                                                            <path d="M14 3h7v7" />
+                                                            <path d="M10 14L21 3" />
+                                                            <path d="M21 14v7h-7" />
+                                                            <path d="M3 10V3h7" />
+                                                            <path d="M3 21h7" />
+                                                            <path d="M3 14v7" />
+                                                        </svg>
+                                                    </a>
                                                 </h3>
                                                 <p className="text-blue-100">{participation.year}</p>
                                             </div>
@@ -1708,6 +1736,8 @@ export default function PlayerProfilePage() {
                                             </div>
                                         </div>
                                     </div>
+                                        )
+                                    })()}
 
                                     {/* Matches List */}
                                     <div className="p-6 bg-white dark:bg-gray-800">
