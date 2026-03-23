@@ -22,6 +22,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
         const year = searchParams.get('year')
         const gameType = searchParams.get('gameType')
         const normalizedGameType = normalizeGameTypeOrFallback(gameType)
+        const includeMatchesParam = searchParams.get('includeMatches')
+        const includeMatches = includeMatchesParam !== 'false'
+        const limitRaw = Number(searchParams.get('limit'))
+        const limit =
+            Number.isFinite(limitRaw) && limitRaw > 0
+                ? Math.min(Math.floor(limitRaw), 1000)
+                : null
 
         const strapiUrl = new URL(
             `${STRAPI_URL}/api/bt-players/participations-by`,
@@ -35,7 +42,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
                     useAuth && STRAPI_API_TOKEN
                         ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
                         : undefined,
-                cache: 'no-store',
+                next: { revalidate: 120 },
             })
 
         let strapiResponse = await fetchFromStrapi(Boolean(STRAPI_API_TOKEN))
@@ -69,10 +76,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
         const rawItems = Array.isArray(payload?.data) ? payload.data : []
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items = rawItems.map((it: any) => {
+            const rawMatches = Array.isArray(it?.matches) ? it.matches : []
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const matches = Array.isArray(it?.matches)
-                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  it.matches.map((m: any) => ({
+            const matches = includeMatches
+                ? rawMatches.map((m: any) => ({
                       ...m,
                       scoreFor: Number(m?.scoreFor) || 0,
                       scoreAgainst: Number(m?.scoreAgainst) || 0,
@@ -121,10 +128,40 @@ export async function GET(req: NextRequest, context: RouteContext) {
                     ? it.stageResults
                     : [],
                 matches,
-                totalMatches: Number(it?.totalMatches) || totalMatches,
-                wins: Number(it?.wins) || wins,
-                losses: Number(it?.losses) || losses,
-                highestRun: Number(it?.highestRun) || highestRun,
+                totalMatches:
+                    Number(it?.totalMatches) ||
+                    (includeMatches
+                        ? totalMatches
+                        : Array.isArray(rawMatches)
+                          ? rawMatches.length
+                          : 0),
+                wins:
+                    Number(it?.wins) ||
+                    (includeMatches
+                        ? wins
+                        : Array.isArray(rawMatches)
+                          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            rawMatches.filter((m: any) => m?.result === 'win').length
+                          : 0),
+                losses:
+                    Number(it?.losses) ||
+                    (includeMatches
+                        ? losses
+                        : Array.isArray(rawMatches)
+                          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            rawMatches.filter((m: any) => m?.result === 'loss').length
+                          : 0),
+                highestRun:
+                    Number(it?.highestRun) ||
+                    (includeMatches
+                        ? highestRun
+                        : Array.isArray(rawMatches)
+                          ? Math.max(
+                                0,
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                ...rawMatches.map((m: any) => Number(m?.highRun) || 0),
+                            )
+                          : 0),
                 avgPerInning: avgPerInningNum,
             }
         })
@@ -134,8 +171,11 @@ export async function GET(req: NextRequest, context: RouteContext) {
                       normalizeGameTypeOrFallback(item.gameType) === normalizedGameType,
               )
             : items
+        const totalCount = filteredItems.length
+        const limitedItems = limit ? filteredItems.slice(0, limit) : filteredItems
         const normalized = {
-            data: filteredItems,
+            data: limitedItems,
+            totalCount,
             availableYears: Array.isArray(payload?.meta?.availableYears)
                 ? payload.meta.availableYears
                 : [],
