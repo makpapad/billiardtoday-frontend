@@ -151,8 +151,29 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search players..."
-              className="w-full rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm text-slate-900 shadow-[0_14px_45px_rgba(15,23,42,0.05)] outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-[22px] border border-slate-200 bg-white px-5 py-4 pr-12 text-sm text-slate-900 shadow-[0_14px_45px_rgba(15,23,42,0.05)] outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
             />
+            {search.trim().length > 0 ? (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            ) : null}
           </div>
         </div>
 
