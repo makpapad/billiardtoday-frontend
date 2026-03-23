@@ -113,6 +113,11 @@ const getPhotoUrl = (photo: Player['photo_main']): string | null => {
     return url
 }
 
+const parseAverageValue = (value: unknown) => {
+    const normalized = Number(String(value ?? '0').replace(',', '.'))
+    return Number.isFinite(normalized) ? normalized : 0
+}
+
 type Match = {
     id: string
     opponent: string
@@ -351,6 +356,9 @@ export default function PlayerProfilePage() {
     }
 
     useEffect(() => {
+        const abortController = new AbortController()
+        let isActive = true
+
         const fetchPlayerData = async () => {
             if (!playerId) return
 
@@ -405,8 +413,11 @@ export default function PlayerProfilePage() {
                         buildApiUrl(
                             `/api/admin/tournament/players?${params.toString()}`,
                         ),
+                        { signal: abortController.signal },
                     ),
-                    fetch(buildApiUrl(historyUrl)),
+                    fetch(buildApiUrl(historyUrl), {
+                        signal: abortController.signal,
+                    }),
                 ]
 
                 // Fetch unfiltered metadata when filters are missing.
@@ -423,11 +434,13 @@ export default function PlayerProfilePage() {
                             buildApiUrl(
                                 `/api/players/${playerId}/history?limit=1000&includeMatches=false`,
                             ),
+                            { signal: abortController.signal },
                         ),
                     )
                 }
 
                 const responses = await Promise.all(fetchPromises)
+                if (!isActive) return
                 const [playerResponse, historyResponse, metadataResponse] =
                     responses
 
@@ -538,15 +551,26 @@ export default function PlayerProfilePage() {
 
                 setIsLoadingHistory(false)
             } catch (err) {
+                if (
+                    err instanceof DOMException &&
+                    err.name === 'AbortError'
+                ) {
+                    return
+                }
                 setError(t('players.profile.error.generic'))
                 console.warn('Failed to fetch player data:', err)
             } finally {
+                if (!isActive) return
                 setIsLoading(false)
                 setIsLoadingHistory(false)
             }
         }
 
         fetchPlayerData()
+        return () => {
+            isActive = false
+            abortController.abort()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [playerId, isNumericPlayerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow, tournamentContextSlug])
 
@@ -557,11 +581,6 @@ export default function PlayerProfilePage() {
     const matchesSelectedGameType = (value: unknown) => {
         if (selectedGameType === 'all') return true
         return normalizeGameTypeOrFallback(value) === selectedGameType
-    }
-
-    const toNumericAverage = (value: unknown) => {
-        const normalized = Number(String(value ?? '0').replace(',', '.'))
-        return Number.isFinite(normalized) ? normalized : 0
     }
 
     const resolveCareerStatsForGameType = (gameType: GameType) => {
@@ -729,7 +748,7 @@ export default function PlayerProfilePage() {
                 return
             }
 
-            const avgValue = toNumericAverage(p.avgPerInning)
+            const avgValue = parseAverageValue(p.avgPerInning)
             const matchesWeight = Number(p.totalMatches) || 0
             if (matchesWeight > 0) {
                 weightedAvgSum += avgValue * matchesWeight
@@ -889,12 +908,16 @@ export default function PlayerProfilePage() {
                   >()
 
                   allParticipations
-                      .filter((p) => matchesSelectedGameType(p.gameType))
+                      .filter(
+                          (p) =>
+                              normalizeGameTypeOrFallback(p.gameType) ===
+                              selectedGameType,
+                      )
                       .forEach((p) => {
                           const existing = yearData.get(p.year) || createYearAggregate()
 
                           if (!Array.isArray(p.matches) || p.matches.length === 0) {
-                              const avgValue = toNumericAverage(p.avgPerInning)
+                              const avgValue = parseAverageValue(p.avgPerInning)
                               const matchWeight = Number(p.totalMatches) || 0
                               yearData.set(p.year, {
                                   totalPoints: existing.totalPoints,
