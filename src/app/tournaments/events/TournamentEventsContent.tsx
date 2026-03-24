@@ -1325,11 +1325,6 @@ export function TournamentEventsContent({
                                                                           )}
                                                                       </div>
                                                                     )}
-                                                                    {formatNumberValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .points,
-                                                                    )}
                                                                   </td>
                                                                   <td
                                                                     className={clsx(
