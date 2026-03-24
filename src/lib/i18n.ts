@@ -20,6 +20,7 @@ export const t = (key: string): string => {
         'players.profile.stats.losses': 'Losses',
         'players.profile.stats.winPct': 'Win %',
         'players.profile.stats.avg': 'AVG',
+        'players.profile.stats.bestAvgWinsShort': 'B.AVG (W)',
         'players.profile.stats.highRunShort': 'H.R.',
 
         // History section

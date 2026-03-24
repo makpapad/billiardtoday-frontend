@@ -57,6 +57,7 @@ type Player = {
             totalLosses?: number
             winPercentage?: number | string
             avgPerInning?: number | string
+            bestAverageFromWins?: number | string
             highestRun?: number
         }
         byGameType?: Record<
@@ -67,6 +68,7 @@ type Player = {
                 totalLosses?: number
                 winPercentage?: number | string
                 avgPerInning?: number | string
+                bestAverageFromWins?: number | string
                 highestRun?: number
             }
         >
@@ -212,6 +214,7 @@ const normalizeCareerStats = (
               totalLosses?: number
               winPercentage?: number | string
               avgPerInning?: number | string
+              bestAverageFromWins?: number | string
               highestRun?: number
           }
         | null
@@ -232,6 +235,12 @@ const normalizeCareerStats = (
             : typeof stats.avgPerInning === 'string'
               ? stats.avgPerInning.replace('.', ',')
               : '0,000'
+    const bestAverageFromWinsValue =
+        typeof stats.bestAverageFromWins === 'number'
+            ? formatSafeDecimal(stats.bestAverageFromWins, 3)
+            : typeof stats.bestAverageFromWins === 'string'
+              ? stats.bestAverageFromWins.replace('.', ',')
+              : avgValue
 
     return {
         totalMatches: Number(stats.totalMatches) || 0,
@@ -239,6 +248,7 @@ const normalizeCareerStats = (
         totalLosses: Number(stats.totalLosses) || 0,
         winPercentage: winPercentageValue,
         avgPerInning: avgValue,
+        bestAverageFromWins: bestAverageFromWinsValue,
         highestRun: Number(stats.highestRun) || 0,
     }
 }
@@ -292,6 +302,7 @@ export default function PlayerProfilePage() {
         totalLosses: number
         winPercentage: string
         avgPerInning: string
+        bestAverageFromWins: string
         highestRun: number
     } | null>(null)
     const [selectedOpponentId, setSelectedOpponentId] = useState<string>('')
@@ -432,7 +443,7 @@ export default function PlayerProfilePage() {
                     fetchPromises.push(
                         fetch(
                             buildApiUrl(
-                                `/api/players/${playerId}/history?limit=1000&includeMatches=false`,
+                                `/api/players/${playerId}/history?limit=1000`,
                             ),
                             { signal: abortController.signal },
                         ),
@@ -475,7 +486,7 @@ export default function PlayerProfilePage() {
                                       ]
                                     : playerData.career_stats.overall ||
                                       playerData.career_stats
-                            setCareerStats(stats)
+                            setCareerStats(normalizeCareerStats(stats))
                         }
 
                         setIsLoading(false) // Show player info immediately
@@ -698,14 +709,23 @@ export default function PlayerProfilePage() {
                 ? historyTotalCount
                 : eventsSource.length
 
-        // When showing ALL years and we have pre-calculated career stats from backend, use them
-        if (selectedYear === 'all' && effectiveCareerStats) {
+        // Use pre-calculated career stats only for "all game types".
+        // For specific game type we rely on participations, to stay aligned
+        // with the event list and avoid mixing in team-board stats.
+        if (
+            selectedYear === 'all' &&
+            selectedGameType === 'all' &&
+            effectiveCareerStats
+        ) {
             return {
                 totalMatches: effectiveCareerStats.totalMatches,
                 totalWins: effectiveCareerStats.totalWins,
                 totalLosses: effectiveCareerStats.totalLosses,
                 winPercentage: effectiveCareerStats.winPercentage,
                 avgPerInning: effectiveCareerStats.avgPerInning,
+                bestAverageFromWins:
+                    effectiveCareerStats.bestAverageFromWins ||
+                    effectiveCareerStats.avgPerInning,
                 highestRun: effectiveCareerStats.highestRun,
                 eventsCount,
             }
@@ -770,6 +790,19 @@ export default function PlayerProfilePage() {
             (max, p) => Math.max(max, p.highestRun),
             0,
         )
+        let bestAverageFromWins = 0
+        sourceParticipations.forEach((p) => {
+            if (!Array.isArray(p.matches)) return
+            p.matches.forEach((m) => {
+                if (m.result !== 'win') return
+                const innings = Number(m.innings) || 0
+                if (innings <= 0) return
+                const avg = (Number(m.scoreFor) || 0) / innings
+                if (avg > bestAverageFromWins) {
+                    bestAverageFromWins = avg
+                }
+            })
+        })
 
         return {
             totalMatches,
@@ -777,6 +810,7 @@ export default function PlayerProfilePage() {
             totalLosses,
             winPercentage,
             avgPerInning,
+            bestAverageFromWins: formatSafeDecimal(bestAverageFromWins, 3),
             highestRun,
             eventsCount,
         }
@@ -797,12 +831,46 @@ export default function PlayerProfilePage() {
     const overallLosses = stats.totalLosses
     const overallWinPercentage = stats.winPercentage
     const overallAvg = stats.avgPerInning
+    const overallBestAverageFromWins =
+        stats.bestAverageFromWins || stats.avgPerInning
     const overallHighestRun = stats.highestRun
     const overallEvents = stats.eventsCount
     const overallDraws = Math.max(
         0,
         overallMatches - overallWins - overallLosses,
     )
+    const gameTypeCareerBoxes = (() => {
+        if (selectedGameType === 'all') return null
+        const source = tournamentContextSlug
+            ? tournamentScopedParticipations
+            : allParticipations.length > 0
+              ? allParticipations
+              : participations
+        const filtered = source.filter((p) => matchesSelectedGameType(p.gameType))
+        let bestAverageFromWins = 0
+        let highestRun = 0
+        filtered.forEach((p) => {
+            if (Number(p.highestRun) > highestRun) {
+                highestRun = Number(p.highestRun) || 0
+            }
+            if (!Array.isArray(p.matches)) return
+            p.matches.forEach((m) => {
+                if (m.result !== 'win') return
+                const innings = Number(m.innings) || 0
+                if (innings <= 0) return
+                const avg = (Number(m.scoreFor) || 0) / innings
+                if (avg > bestAverageFromWins) {
+                    bestAverageFromWins = avg
+                }
+                const hr = Number(m.highRun) || 0
+                if (hr > highestRun) highestRun = hr
+            })
+        })
+        return {
+            bestAverageFromWins: formatSafeDecimal(bestAverageFromWins, 3),
+            highestRun,
+        }
+    })()
 
     // Frontend pagination for specific year (when year filter is applied)
     const displayedParticipations =
@@ -1048,7 +1116,7 @@ export default function PlayerProfilePage() {
                         </div>
 
                         {/* Player Info */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-start md:justify-between md:gap-6">
                             <div className="mb-2 md:mb-4">
                                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
                                     {primaryName}
@@ -1083,6 +1151,26 @@ export default function PlayerProfilePage() {
                                         {player.country}
                                     </span>
                                 </div>
+                            )}
+                            {selectedGameType !== 'all' && gameTypeCareerBoxes && (
+                            <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px]">
+                                <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
+                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                                        Best Average (wins only)
+                                    </div>
+                                    <div className="text-2xl md:text-3xl font-extrabold text-purple-700 dark:text-purple-300 leading-none">
+                                        {gameTypeCareerBoxes.bestAverageFromWins}
+                                    </div>
+                                </div>
+                                <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
+                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                                        Highest Run
+                                    </div>
+                                    <div className="text-2xl md:text-3xl font-extrabold text-orange-700 dark:text-orange-300 leading-none">
+                                        {gameTypeCareerBoxes.highestRun}
+                                    </div>
+                                </div>
+                            </div>
                             )}
                         </div>
                     </div>

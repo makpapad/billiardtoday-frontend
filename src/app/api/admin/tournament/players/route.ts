@@ -4,6 +4,7 @@ export const runtime = 'nodejs'
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
+const STRAPI_FALLBACK_URL = process.env.STRAPI_FALLBACK_URL || 'https://app.billiardtoday.com'
 
 const copySearchParams = (incoming: URLSearchParams) => {
     const params = new URLSearchParams()
@@ -63,43 +64,61 @@ const copySearchParams = (incoming: URLSearchParams) => {
 export async function GET(req: NextRequest) {
     try {
         const params = copySearchParams(req.nextUrl.searchParams)
-        const url = `${STRAPI_URL}/api/bt-players?${params.toString()}`
+        const primaryUrl = `${STRAPI_URL}/api/bt-players?${params.toString()}`
+        const fallbackUrl = `${STRAPI_FALLBACK_URL}/api/bt-players?${params.toString()}`
 
-        const fetchWithOptionalAuth = async (useAuth: boolean) =>
-            fetch(url, {
-                headers:
-                    useAuth && STRAPI_API_TOKEN
-                        ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
-                        : undefined,
-                next: { revalidate: 300 },
-            })
-
-        let res = await fetchWithOptionalAuth(Boolean(STRAPI_API_TOKEN))
-        let text = await res.text()
-
-        // Some environments have restricted API tokens but allow public read.
-        if (!res.ok && (res.status === 401 || res.status === 403)) {
-            const retryRes = await fetchWithOptionalAuth(false)
-            const retryText = await retryRes.text()
-            if (retryRes.ok) {
-                return new NextResponse(retryText, {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' },
+        const runRequest = async (url: string, allowAuth = true) => {
+            const fetchWithOptionalAuth = async (useAuth: boolean) =>
+                fetch(url, {
+                    headers:
+                        useAuth && STRAPI_API_TOKEN && allowAuth
+                            ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+                            : undefined,
+                    next: { revalidate: 300 },
                 })
+
+            let res = await fetchWithOptionalAuth(Boolean(STRAPI_API_TOKEN))
+            let text = await res.text()
+
+            if (!res.ok && (res.status === 401 || res.status === 403)) {
+                const retryRes = await fetchWithOptionalAuth(false)
+                const retryText = await retryRes.text()
+                if (retryRes.ok) {
+                    return { ok: true, status: 200, text: retryText }
+                }
+                if (retryRes.status >= res.status) {
+                    res = retryRes
+                    text = retryText
+                }
             }
-            // Keep the original error context if retry also fails.
-            if (retryRes.status >= res.status) {
-                res = retryRes
-                text = retryText
+
+            return { ok: res.ok, status: res.status, text }
+        }
+
+        let result: { ok: boolean; status: number; text: string }
+        try {
+            result = await runRequest(primaryUrl, true)
+        } catch {
+            result = await runRequest(fallbackUrl, false)
+        }
+
+        if (!result.ok && primaryUrl !== fallbackUrl) {
+            try {
+                const retryFallback = await runRequest(fallbackUrl, false)
+                if (retryFallback.ok) {
+                    result = retryFallback
+                }
+            } catch {
+                // ignore and return original failure
             }
         }
 
-        if (!res.ok) {
-            console.error('[frontend.api.admin.tournament.players][GET]', res.status, text)
-            return NextResponse.json({ error: text || 'Failed to fetch players' }, { status: res.status })
+        if (!result.ok) {
+            console.error('[frontend.api.admin.tournament.players][GET]', result.status, result.text)
+            return NextResponse.json({ error: result.text || 'Failed to fetch players' }, { status: result.status })
         }
 
-        return new NextResponse(text, {
+        return new NextResponse(result.text, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         })

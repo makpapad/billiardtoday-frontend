@@ -5,6 +5,7 @@ export const runtime = 'nodejs'
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
+const STRAPI_FALLBACK_URL = process.env.STRAPI_FALLBACK_URL || 'https://app.billiardtoday.com'
 
 type RouteContext = { params: Promise<{ id?: string }> }
 
@@ -30,46 +31,64 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 ? Math.min(Math.floor(limitRaw), 1000)
                 : null
 
-        const strapiUrl = new URL(
-            `${STRAPI_URL}/api/bt-players/participations-by`,
-        )
-        strapiUrl.searchParams.set('id', playerId)
-        if (year) strapiUrl.searchParams.set('year', year)
+        const buildStrapiUrl = (baseUrl: string) => {
+            const url = new URL(`${baseUrl}/api/bt-players/participations-by`)
+            url.searchParams.set('id', playerId)
+            if (year) url.searchParams.set('year', year)
+            return url
+        }
 
-        const fetchFromStrapi = async (useAuth: boolean) =>
-            fetch(strapiUrl.toString(), {
+        const fetchFromStrapi = async (
+            baseUrl: string,
+            useAuth: boolean,
+            allowAuth = true,
+        ) =>
+            fetch(buildStrapiUrl(baseUrl).toString(), {
                 headers:
-                    useAuth && STRAPI_API_TOKEN
+                    useAuth && STRAPI_API_TOKEN && allowAuth
                         ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
                         : undefined,
                 next: { revalidate: 120 },
             })
 
-        let strapiResponse = await fetchFromStrapi(Boolean(STRAPI_API_TOKEN))
+        const runRequest = async (baseUrl: string, allowAuth = true) => {
+            let res = await fetchFromStrapi(baseUrl, Boolean(STRAPI_API_TOKEN), allowAuth)
+            if (
+                !res.ok &&
+                STRAPI_API_TOKEN &&
+                (res.status === 401 || res.status === 403)
+            ) {
+                const retry = await fetchFromStrapi(baseUrl, false, allowAuth)
+                if (retry.ok) return retry
+                res = retry
+            }
+            return res
+        }
+
+        let strapiResponse: Response
+        try {
+            strapiResponse = await runRequest(STRAPI_URL, true)
+        } catch {
+            strapiResponse = await runRequest(STRAPI_FALLBACK_URL, false)
+        }
+
+        if (!strapiResponse.ok && STRAPI_URL !== STRAPI_FALLBACK_URL) {
+            try {
+                const retryFallback = await runRequest(STRAPI_FALLBACK_URL, false)
+                if (retryFallback.ok) {
+                    strapiResponse = retryFallback
+                }
+            } catch {
+                // ignore and return original error
+            }
+        }
 
         if (!strapiResponse.ok) {
-            // Some deployments have restricted API tokens but allow public read.
-            if (
-                STRAPI_API_TOKEN &&
-                (strapiResponse.status === 401 || strapiResponse.status === 403)
-            ) {
-                const retry = await fetchFromStrapi(false)
-                if (retry.ok) {
-                    strapiResponse = retry
-                } else {
-                    const retryText = await retry.text().catch(() => '')
-                    return NextResponse.json(
-                        { error: retryText || 'Failed to fetch player history' },
-                        { status: retry.status },
-                    )
-                }
-            } else {
-                const errorText = await strapiResponse.text().catch(() => '')
-                return NextResponse.json(
-                    { error: errorText || 'Failed to fetch player history' },
-                    { status: strapiResponse.status },
-                )
-            }
+            const errorText = await strapiResponse.text().catch(() => '')
+            return NextResponse.json(
+                { error: errorText || 'Failed to fetch player history' },
+                { status: strapiResponse.status },
+            )
         }
 
         const payload = await strapiResponse.json()
@@ -99,6 +118,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
                       ...matches.map((m: any) => Number(m.highRun) || 0),
                   )
                 : 0
+            const rawTotalPoints = Array.isArray(rawMatches)
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  rawMatches.reduce((sum: number, m: any) => sum + (Number(m?.scoreFor) || 0), 0)
+                : 0
+            const rawTotalInnings = Array.isArray(rawMatches)
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  rawMatches.reduce((sum: number, m: any) => sum + (Number(m?.innings) || 0), 0)
+                : 0
             let totalPoints = 0
             let totalInnings = 0
             for (const m of matches) {
@@ -108,6 +135,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
             const avgPerInningNum =
                 totalInnings > 0
                     ? Number((totalPoints / totalInnings).toFixed(3))
+                    : rawTotalInnings > 0
+                      ? Number((rawTotalPoints / rawTotalInnings).toFixed(3))
                     : (() => {
                           const raw = it?.avgPerInning
                           if (typeof raw === 'string') {
