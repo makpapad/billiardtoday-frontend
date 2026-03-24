@@ -93,6 +93,7 @@ export type NormalizedGroupPlayer = {
   name: string;
   // native/localized name (usually full_name), may be same as name if no translation
   nativeName: string | null;
+  country: string | null;
   documentId: string | null;
   points: number | null;
   matchPoints: number | null;
@@ -118,6 +119,7 @@ export type NormalizedStageResult = {
   // display name with preference (full_name_en if available, otherwise full_name)
   playerName: string;
   playerNativeName: string | null;
+  playerCountry: string | null;
   matchPoints: number | null;
   points: number | null;
   innings: number | null;
@@ -132,6 +134,7 @@ export type NormalizedFinalResult = {
   documentId: string;
   position: number | null;
   playerName: string;
+  playerCountry: string | null;
   bestAverage: number | null;
   caroms: number | null;
   points: number | null;
@@ -171,6 +174,7 @@ export type GroupStanding = {
   playerId: number | null;
   playerName: string;
   playerNativeName: string | null;
+  playerCountry: string | null;
   record: PlayerRecord;
   totalMatchPoints: number;
   totalPoints: number;

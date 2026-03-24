@@ -30,6 +30,7 @@ import {
   toNumber,
   toRelationArray,
 } from "@/app/tournaments/events/utils";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -94,6 +95,30 @@ const isPlaceholderPlayerName = (value?: string | null) => {
   return !normalized || normalized === "player 1" || normalized === "player 2";
 };
 
+function PlayerWithFlag({
+  name,
+  country,
+}: {
+  name: string;
+  country?: string | null;
+}) {
+  const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
+  return (
+    <span className="inline-flex items-center gap-2">
+      {flagSrc ? (
+        <img
+          src={flagSrc}
+          alt={country || "flag"}
+          className="h-3.5 w-5 rounded-[2px] object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      ) : null}
+      <span>{name}</span>
+    </span>
+  );
+}
+
 function GroupTooltip({
   data,
   embedded,
@@ -137,7 +162,10 @@ function GroupTooltip({
                       href={`${embedded ? "/embed" : ""}/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, "-")}`}
                       className="text-blue-600 hover:underline"
                     >
-                      {match.top.player.name}
+                      <PlayerWithFlag
+                        name={match.top.player.name}
+                        country={match.top.player.country}
+                      />
                     </Link>
                   </td>
                   <td className="px-2 py-1.5 text-xs text-slate-600">
@@ -179,7 +207,10 @@ function GroupTooltip({
                       href={`${embedded ? "/embed" : ""}/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, "-")}`}
                       className="text-blue-600 hover:underline"
                     >
-                      {match.bottom.player.name}
+                      <PlayerWithFlag
+                        name={match.bottom.player.name}
+                        country={match.bottom.player.country}
+                      />
                     </Link>
                   </td>
                   <td className="px-2 py-1.5 text-xs text-slate-600">
@@ -245,10 +276,16 @@ function GroupTooltip({
                       href={`${embedded ? "/embed" : ""}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, "-")}`}
                       className="text-blue-600 hover:underline"
                     >
-                      {player.playerName}
+                      <PlayerWithFlag
+                        name={player.playerName}
+                        country={player.playerCountry}
+                      />
                     </Link>
                   ) : (
-                    player.playerName
+                    <PlayerWithFlag
+                      name={player.playerName}
+                      country={player.playerCountry}
+                    />
                   )}
                 </td>
                 <td className="px-2 py-1.5 text-center font-semibold">

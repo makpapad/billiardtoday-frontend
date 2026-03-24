@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { GroupStanding } from './types'
 import { formatNumberValue, formatAverage, formatRecord } from './utils'
+import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
 
 type GroupStandingsTableProps = {
     standings: GroupStanding[]
@@ -30,6 +31,9 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                 </thead>
                 <tbody>
                     {standings.map((player) => (
+                        (() => {
+                            const flagSrc = getCountryFlagCdnUrl(player.playerCountry ?? null, 40)
+                            return (
                         <tr
                             key={player.key}
                             className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
@@ -40,7 +44,11 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                                         href={`${embedded ? '/embed' : ''}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, '-')}`}
                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                     >
-                                        <div className="flex flex-col leading-tight">
+                                        <div className="flex items-start gap-2 leading-tight">
+                                            {flagSrc ? (
+                                                <img src={flagSrc} alt={player.playerCountry || 'flag'} className="mt-0.5 h-3.5 w-5 rounded-[2px] object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                                            ) : null}
+                                            <div className="flex flex-col leading-tight">
                                             <span>{player.playerName || '-'}</span>
                                             {player.playerNativeName &&
                                                 player.playerNativeName.trim() !== player.playerName.trim() && (
@@ -48,17 +56,23 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                                                         {player.playerNativeName}
                                                     </span>
                                                 )}
+                                            </div>
                                         </div>
                                     </Link>
                                 ) : (
-                                    <div className="flex flex-col leading-tight">
-                                        <span>{player.playerName || '-'}</span>
-                                        {player.playerNativeName &&
-                                            player.playerNativeName.trim() !== player.playerName.trim() && (
-                                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                    {player.playerNativeName}
-                                                </span>
-                                            )}
+                                    <div className="flex items-start gap-2 leading-tight">
+                                        {flagSrc ? (
+                                            <img src={flagSrc} alt={player.playerCountry || 'flag'} className="mt-0.5 h-3.5 w-5 rounded-[2px] object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                                        ) : null}
+                                        <div className="flex flex-col leading-tight">
+                                            <span>{player.playerName || '-'}</span>
+                                            {player.playerNativeName &&
+                                                player.playerNativeName.trim() !== player.playerName.trim() && (
+                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                        {player.playerNativeName}
+                                                    </span>
+                                                )}
+                                        </div>
                                     </div>
                                 )}
                             </td>
@@ -73,6 +87,8 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
                         </tr>
+                            )
+                        })()
                     ))}
                 </tbody>
             </table>

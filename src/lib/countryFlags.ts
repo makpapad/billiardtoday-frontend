@@ -66,3 +66,12 @@ export function getCountryFlagPath(countryName: string | null): string | null {
 
     return `${basePath}/img/countries/${code}.png`
 }
+
+export function getCountryFlagCdnUrl(
+    countryName: string | null,
+    size: 40 | 80 | 160 = 40,
+): string | null {
+    const code = getCountryCode(countryName)
+    if (!code) return null
+    return `https://flagcdn.com/w${size}/${code.toLowerCase()}.png`
+}

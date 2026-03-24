@@ -74,6 +74,7 @@ export const normalizePlayer = (
   id: number | null;
   name: string;
   nativeName: string | null;
+  country: string | null;
   documentId: string | null;
 } => {
   const source =
@@ -93,6 +94,10 @@ export const normalizePlayer = (
   const nativeName =
     typeof normalized.full_name === "string" ? normalized.full_name.trim() : "";
   const name = nameEn || nativeName;
+  const country =
+    typeof (normalized as { country?: unknown }).country === "string"
+      ? (normalized as { country?: string }).country?.trim() || null
+      : null;
 
   // Extract numeric id from the source
   const rawId =
@@ -110,6 +115,7 @@ export const normalizePlayer = (
     id: numericId && !Number.isNaN(numericId) ? numericId : null,
     name,
     nativeName: nativeName || null,
+    country,
     documentId: normalized.documentId ?? null,
   };
 };
@@ -133,6 +139,7 @@ export const normalizeGroup = (
       id: player1.id,
       name: player1.name,
       nativeName: player1.nativeName,
+      country: player1.country,
       documentId: player1.documentId,
       points: toNumber(normalized.player1_points),
       matchPoints: toNumber(normalized.player1_match_points),
@@ -144,6 +151,7 @@ export const normalizeGroup = (
       id: player2.id,
       name: player2.name,
       nativeName: player2.nativeName,
+      country: player2.country,
       documentId: player2.documentId,
       points: toNumber(normalized.player2_points),
       matchPoints: toNumber(normalized.player2_match_points),
@@ -168,6 +176,7 @@ export const normalizeResult = (
     playerDocumentId: player.documentId,
     playerName: player.name,
     playerNativeName: player.nativeName ?? null,
+    playerCountry: player.country ?? null,
     matchPoints: toNumber(normalized.match_points),
     points: toNumber(normalized.points),
     innings: toNumber(normalized.innings),
@@ -190,6 +199,7 @@ export const normalizeFinalResult = (
     documentId: normalized.documentId,
     position: toNumber(normalized.position),
     playerName: player.name,
+    playerCountry: player.country ?? null,
     bestAverage: toNumber(normalized.best_average),
     caroms: toNumber(normalized.caroms),
     points: toNumber(normalized.points),
@@ -358,6 +368,7 @@ export const buildGroupStandings = (
             playerId: entry.player.id,
             playerName: entry.player.name,
             playerNativeName: entry.player.nativeName ?? null,
+            playerCountry: entry.player.country ?? null,
             record: { wins: 0, draws: 0, losses: 0 },
             totalMatchPoints: 0,
             totalPoints: 0,

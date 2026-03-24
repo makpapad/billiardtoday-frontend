@@ -37,6 +37,7 @@ import {
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
@@ -65,6 +66,39 @@ type EventLiveSession = {
   player2Name: string | null;
   sessionStatus: string | null;
 };
+
+function PlayerNameWithFlag({
+  name,
+  nativeName,
+  country,
+}: {
+  name: string;
+  nativeName?: string | null;
+  country?: string | null;
+}) {
+  const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
+  return (
+    <div className="flex items-start gap-2 leading-tight">
+      {flagSrc ? (
+        <img
+          src={flagSrc}
+          alt={country || "flag"}
+          className="mt-0.5 h-3.5 w-5 rounded-[2px] object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      ) : null}
+      <div className="flex flex-col leading-tight">
+        <span>{name || "Unknown"}</span>
+        {nativeName && nativeName.trim() !== name.trim() && (
+          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+            {nativeName}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function StageRankingTable({
   stage,
@@ -127,28 +161,18 @@ function StageRankingTable({
                     href={playerProfileHref(result.playerId, result.playerName)}
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                   >
-                    <div className="flex flex-col leading-tight">
-                      <span>{result.playerName || "Unknown"}</span>
-                      {result.playerNativeName &&
-                        result.playerNativeName.trim() !==
-                          result.playerName.trim() && (
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                            {result.playerNativeName}
-                          </span>
-                        )}
-                    </div>
+                    <PlayerNameWithFlag
+                      name={result.playerName || "Unknown"}
+                      nativeName={result.playerNativeName}
+                      country={result.playerCountry}
+                    />
                   </Link>
                 ) : (
-                  <div className="flex flex-col leading-tight">
-                    <span>{result.playerName || "Unknown"}</span>
-                    {result.playerNativeName &&
-                      result.playerNativeName.trim() !==
-                        result.playerName.trim() && (
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                          {result.playerNativeName}
-                        </span>
-                      )}
-                  </div>
+                  <PlayerNameWithFlag
+                    name={result.playerName || "Unknown"}
+                    nativeName={result.playerNativeName}
+                    country={result.playerCountry}
+                  />
                 )}
               </td>
               {showGroupColumn && (
@@ -880,7 +904,10 @@ export function TournamentEventsContent({
                                     {formatNumberValue(result.position)}
                                   </td>
                                   <td className="px-4 py-3 font-medium">
-                                    {result.playerName || "Unknown"}
+                                    <PlayerNameWithFlag
+                                      name={result.playerName || "Unknown"}
+                                      country={result.playerCountry}
+                                    />
                                   </td>
                                   <td className="px-4 py-3 text-center">
                                     {formatNumberValue(
@@ -1274,56 +1301,50 @@ export function TournamentEventsContent({
                                                                         )}
                                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                       >
-                                                                        <div className="flex flex-col leading-tight">
-                                                                          <span>
-                                                                            {match
+                                                                        <PlayerNameWithFlag
+                                                                          name={
+                                                                            match
                                                                               .top
                                                                               .player
                                                                               .name ||
-                                                                              "Unknown"}
-                                                                          </span>
-                                                                          {match
-                                                                            .top
-                                                                            .player
-                                                                            .nativeName &&
-                                                                            match.top.player.nativeName.trim() !==
-                                                                              match.top.player.name.trim() && (
-                                                                              <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                                {
-                                                                                  match
-                                                                                    .top
-                                                                                    .player
-                                                                                    .nativeName
-                                                                                }
-                                                                              </span>
-                                                                            )}
-                                                                        </div>
+                                                                            "Unknown"
+                                                                          }
+                                                                          nativeName={
+                                                                            match
+                                                                              .top
+                                                                              .player
+                                                                              .nativeName
+                                                                          }
+                                                                          country={
+                                                                            match
+                                                                              .top
+                                                                              .player
+                                                                              .country
+                                                                          }
+                                                                        />
                                                                       </Link>
                                                                     ) : (
-                                                                      <div className="flex flex-col leading-tight">
-                                                                        <span>
-                                                                          {match
+                                                                      <PlayerNameWithFlag
+                                                                        name={
+                                                                          match
                                                                             .top
                                                                             .player
                                                                             .name ||
-                                                                            "Unknown"}
-                                                                        </span>
-                                                                        {match
-                                                                          .top
-                                                                          .player
-                                                                          .nativeName &&
-                                                                          match.top.player.nativeName.trim() !==
-                                                                            match.top.player.name.trim() && (
-                                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                              {
-                                                                                match
-                                                                                  .top
-                                                                                  .player
-                                                                                  .nativeName
-                                                                              }
-                                                                            </span>
-                                                                          )}
-                                                                      </div>
+                                                                          "Unknown"
+                                                                        }
+                                                                        nativeName={
+                                                                          match
+                                                                            .top
+                                                                            .player
+                                                                            .nativeName
+                                                                        }
+                                                                        country={
+                                                                          match
+                                                                            .top
+                                                                            .player
+                                                                            .country
+                                                                        }
+                                                                      />
                                                                     )}
                                                                   </td>
                                                                   <td
@@ -1437,56 +1458,50 @@ export function TournamentEventsContent({
                                                                         )}
                                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                       >
-                                                                        <div className="flex flex-col leading-tight">
-                                                                          <span>
-                                                                            {match
+                                                                        <PlayerNameWithFlag
+                                                                          name={
+                                                                            match
                                                                               .bottom
                                                                               .player
                                                                               .name ||
-                                                                              "Unknown"}
-                                                                          </span>
-                                                                          {match
-                                                                            .bottom
-                                                                            .player
-                                                                            .nativeName &&
-                                                                            match.bottom.player.nativeName.trim() !==
-                                                                              match.bottom.player.name.trim() && (
-                                                                              <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                                {
-                                                                                  match
-                                                                                    .bottom
-                                                                                    .player
-                                                                                    .nativeName
-                                                                                }
-                                                                              </span>
-                                                                            )}
-                                                                        </div>
+                                                                            "Unknown"
+                                                                          }
+                                                                          nativeName={
+                                                                            match
+                                                                              .bottom
+                                                                              .player
+                                                                              .nativeName
+                                                                          }
+                                                                          country={
+                                                                            match
+                                                                              .bottom
+                                                                              .player
+                                                                              .country
+                                                                          }
+                                                                        />
                                                                       </Link>
                                                                     ) : (
-                                                                      <div className="flex flex-col leading-tight">
-                                                                        <span>
-                                                                          {match
+                                                                      <PlayerNameWithFlag
+                                                                        name={
+                                                                          match
                                                                             .bottom
                                                                             .player
                                                                             .name ||
-                                                                            "Unknown"}
-                                                                        </span>
-                                                                        {match
-                                                                          .bottom
-                                                                          .player
-                                                                          .nativeName &&
-                                                                          match.bottom.player.nativeName.trim() !==
-                                                                            match.bottom.player.name.trim() && (
-                                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                              {
-                                                                                match
-                                                                                  .bottom
-                                                                                  .player
-                                                                                  .nativeName
-                                                                              }
-                                                                            </span>
-                                                                          )}
-                                                                      </div>
+                                                                          "Unknown"
+                                                                        }
+                                                                        nativeName={
+                                                                          match
+                                                                            .bottom
+                                                                            .player
+                                                                            .nativeName
+                                                                        }
+                                                                        country={
+                                                                          match
+                                                                            .bottom
+                                                                            .player
+                                                                            .country
+                                                                        }
+                                                                      />
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
