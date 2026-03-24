@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         const page = toPositiveInt(searchParams.get('page'), 1)
         const pageSize = toPositiveInt(searchParams.get('pageSize'), 10)
         const season = searchParams.get('season')
-        const search = searchParams.get('q')?.trim()
+        const search = searchParams.get('q')?.trim() ?? null
         const clubSlug = searchParams.get('clubSlug')
         const federationId = searchParams.get('federationId')
 
