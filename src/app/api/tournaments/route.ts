@@ -10,6 +10,30 @@ function toPositiveInt(value: string | null, fallback: number): number {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
+function tokenizeSearch(input: string | null): string[] {
+    if (!input) return []
+    return input
+        .toLowerCase()
+        .replace(/[_/\\-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(Boolean)
+}
+
+function normalizeToken(token: string): string {
+    if (['cusion', 'cusions', 'cishion', 'cishions', 'cushions'].includes(token)) {
+        return 'cushion'
+    }
+    if (['sesion', 'session'].includes(token)) {
+        return 'season'
+    }
+    if (token === '3c') {
+        return '3-cushion'
+    }
+    return token
+}
+
 function emptyPayload(page: number, pageSize: number) {
     return {
         data: [],
@@ -30,6 +54,7 @@ export async function GET(req: NextRequest) {
         const page = toPositiveInt(searchParams.get('page'), 1)
         const pageSize = toPositiveInt(searchParams.get('pageSize'), 10)
         const season = searchParams.get('season')
+        const search = searchParams.get('q')?.trim()
         const clubSlug = searchParams.get('clubSlug')
         const federationId = searchParams.get('federationId')
 
@@ -42,9 +67,27 @@ export async function GET(req: NextRequest) {
         queryParams.set('fields[2]', 'start_date')
         queryParams.set('fields[3]', 'end_date')
         queryParams.set('fields[4]', 'documentId')
+        queryParams.set('fields[5]', 'game_type')
 
         if (season) {
             queryParams.set('filters[season][$eq]', season)
+        }
+        const searchTokens = tokenizeSearch(search).map(normalizeToken)
+        let andIndex = 0
+        for (const token of searchTokens) {
+            // keyword only, ignore as filter token
+            if (token === 'season') continue
+
+            // "2026 3 cushion" => season + text filters
+            if (/^\d{4}$/.test(token)) {
+                queryParams.set(`filters[$and][${andIndex}][season][$eq]`, token)
+                andIndex++
+                continue
+            }
+
+            queryParams.set(`filters[$and][${andIndex}][$or][0][title][$containsi]`, token)
+            queryParams.set(`filters[$and][${andIndex}][$or][1][game_type][$containsi]`, token)
+            andIndex++
         }
         if (clubSlug) {
             queryParams.set('filters[tournament][club][slug][$eq]', clubSlug)

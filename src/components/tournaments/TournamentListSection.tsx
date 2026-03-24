@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import type { CmsAppearance, CmsTournamentListSection } from '@/lib/cms/types'
 import { getCmsContainerStyle } from '@/lib/cms/layout'
 import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from '@/lib/cms/sectionStyles'
@@ -12,6 +12,7 @@ type Tournament = {
     id: string
     documentId: string
     title: string
+    game_type?: string | null
     season: number | null
     start_date: string | null
     end_date: string | null
@@ -72,24 +73,38 @@ export function TournamentListSection({
     clubSlug,
     federationId,
 }: Props) {
-    const router = useRouter()
-    const pathname = usePathname()
     const searchParams = useSearchParams()
     const [items, setItems] = useState<Tournament[]>([])
     const [pagination, setPagination] = useState(EMPTY_PAGINATION)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [seasonInput, setSeasonInput] = useState('')
+    const [searchInput, setSearchInput] = useState('')
 
     const itemsPerPage = section.itemsPerPage && section.itemsPerPage > 0 ? section.itemsPerPage : 10
-    const currentPage = toPositiveInt(searchParams?.get('page') ?? null, 1)
-    const currentSeason = searchParams?.get('season') || ''
+    const initialPage = toPositiveInt(searchParams?.get('page') ?? null, 1)
+    const initialSeason = searchParams?.get('season') || ''
+    const initialQuery = searchParams?.get('q') || ''
+    const [currentPage, setCurrentPage] = useState(initialPage)
+    const [debouncedSeason, setDebouncedSeason] = useState(initialSeason)
+    const [debouncedQuery, setDebouncedQuery] = useState(initialQuery)
     const isCards = section.layout === 'cards'
     const { tokens } = appearance
 
     useEffect(() => {
-        setSeasonInput(currentSeason)
-    }, [currentSeason])
+        setSeasonInput(initialSeason)
+        setSearchInput(initialQuery)
+    }, [initialSeason, initialQuery])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSeason(seasonInput.trim())
+            setDebouncedQuery(searchInput.trim())
+            setCurrentPage(1)
+        }, 500)
+
+        return () => clearTimeout(timer)
+    }, [seasonInput, searchInput])
 
     useEffect(() => {
         let mounted = true
@@ -102,7 +117,8 @@ export function TournamentListSection({
                 const params = new URLSearchParams()
                 params.set('page', String(currentPage))
                 params.set('pageSize', String(itemsPerPage))
-                if (currentSeason) params.set('season', currentSeason)
+                if (debouncedSeason) params.set('season', debouncedSeason)
+                if (debouncedQuery) params.set('q', debouncedQuery)
                 if (clubSlug) params.set('clubSlug', clubSlug)
                 if (federationId) params.set('federationId', federationId)
 
@@ -134,32 +150,13 @@ export function TournamentListSection({
         return () => {
             mounted = false
         }
-    }, [currentPage, currentSeason, itemsPerPage, clubSlug, federationId])
+    }, [currentPage, debouncedSeason, debouncedQuery, itemsPerPage, clubSlug, federationId])
 
-    const basePath = pathname || '/tournaments'
     const tournamentEventHref = (eventDocumentId: string, title: string, season: number | null) =>
         buildTournamentHref(eventDocumentId, title, season, embedded)
 
-    const updateQuery = (nextPage: number, nextSeason: string) => {
-        const params = new URLSearchParams(searchParams?.toString() || '')
-        params.set('page', String(nextPage))
-        if (nextSeason) {
-            params.set('season', nextSeason)
-        } else {
-            params.delete('season')
-        }
-
-        const query = params.toString()
-        router.push(query ? `${basePath}?${query}` : basePath)
-    }
-
-    const handleSearch = (event: React.FormEvent) => {
-        event.preventDefault()
-        updateQuery(1, seasonInput.trim())
-    }
-
     const handlePageChange = (nextPage: number) => {
-        updateQuery(nextPage, currentSeason)
+        setCurrentPage(nextPage)
     }
 
     const wrapperClass = embedded
@@ -205,8 +202,7 @@ export function TournamentListSection({
                 ) : null}
 
                 {section.showSeasonFilter ? (
-                    <form
-                        onSubmit={handleSearch}
+                    <div
                         className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end"
                         style={{ alignItems: 'flex-end' }}
                     >
@@ -217,43 +213,65 @@ export function TournamentListSection({
                             <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                                 Season
                             </label>
-                            <input
-                                type="number"
-                                value={seasonInput}
-                                onChange={(event) => setSeasonInput(event.target.value)}
-                                placeholder="e.g. 2025"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={seasonInput}
+                                    onChange={(event) => setSeasonInput(event.target.value)}
+                                    placeholder="e.g. 2025"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                                />
+                                {seasonInput ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSeasonInput('')
+                                            setCurrentPage(1)
+                                        }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                                        aria-label="Clear season"
+                                        title="Clear season"
+                                    >
+                                        X
+                                    </button>
+                                ) : null}
+                            </div>
                         </div>
                         <div
-                            className="flex flex-wrap gap-2 sm:flex-none"
-                            style={{ flex: '0 0 auto', alignSelf: 'flex-end' }}
+                            className="w-full sm:flex-none"
+                            style={{ width: '320px', maxWidth: '100%', flex: '0 0 320px' }}
                         >
-                            <button
-                                type="submit"
-                                className="inline-flex min-w-[110px] items-center justify-center whitespace-nowrap rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                                style={{ background: tokens.primary, minWidth: '110px', height: '48px', flexShrink: 0 }}
-                            >
-                                Filter
-                            </button>
-                            {currentSeason ? (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSeasonInput('')
-                                        updateQuery(1, '')
-                                    }}
-                                    className="inline-flex min-w-[110px] items-center justify-center whitespace-nowrap rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                    style={{ minWidth: '110px', height: '48px', flexShrink: 0 }}
-                                >
-                                    Clear
-                                </button>
-                            ) : null}
+                            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                Title or Game Type
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchInput}
+                                    onChange={(event) => setSearchInput(event.target.value)}
+                                    placeholder="e.g. 3 cushion"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                                />
+                                {searchInput ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchInput('')
+                                            setCurrentPage(1)
+                                        }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                                        aria-label="Clear search"
+                                        title="Clear search"
+                                    >
+                                        X
+                                    </button>
+                                ) : null}
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 ) : null}
 
-                {isLoading ? (
+                {isLoading && items.length === 0 ? (
                     <div className={`${panelClass} px-6 py-10 text-center text-sm text-slate-500`}>
                         Loading tournaments...
                     </div>
@@ -282,7 +300,10 @@ export function TournamentListSection({
                                             >
                                                 {item.title}
                                             </h3>
-                                            <p className="mt-2 text-sm text-slate-500">
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                {item.game_type || '-'}
+                                            </p>
+                                            <p className="mt-1 text-sm text-slate-500">
                                                 Season {item.season || '-'}
                                             </p>
                                         </div>
@@ -322,6 +343,9 @@ export function TournamentListSection({
                                             Title
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                            Game Type
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                                             Season
                                         </th>
                                         {section.showDate ? (
@@ -353,6 +377,9 @@ export function TournamentListSection({
                                             <tr key={item.documentId} className="hover:bg-slate-50">
                                                 <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                                                     {item.title}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-600">
+                                                    {item.game_type || '-'}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-slate-600">
                                                     {item.season || '-'}
