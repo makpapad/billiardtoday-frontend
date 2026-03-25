@@ -2042,16 +2042,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   {scheduleLabel || "To be announced"}
                 </div>
               </div>
-              <div className="flex min-h-[102px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
                 {organizerLogoUrl ? (
-                  <Image
-                    src={organizerLogoUrl}
-                    alt={summary.organizerLogoName || summary.tournamentTitle || "Organizer logo"}
-                    width={160}
-                    height={72}
-                    className="block h-auto max-h-[72px] max-w-full w-auto object-contain"
-                    unoptimized
-                  />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Image
+                      src={organizerLogoUrl}
+                      alt={summary.organizerLogoName || summary.tournamentTitle || "Organizer logo"}
+                      width={320}
+                      height={320}
+                      className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="text-center">
                     <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">

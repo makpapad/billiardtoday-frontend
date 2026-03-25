@@ -14,6 +14,7 @@ export type TournamentEventSummary = {
   gameType: string | null;
   tournamentTitle: string | null;
   clubDocumentId: string | null;
+  organizerType: string | null;
   organizerLogoUrl: string | null;
   organizerLogoName: string | null;
   stages: TournamentEventStageSummary[];
@@ -146,10 +147,16 @@ const fetchTournamentEventSummaryById = async (
   params.set("fields[4]", "game_type");
   params.set("fields[5]", "documentId");
   params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[tournament][fields][1]", "organizer_type");
   params.set("populate[tournament][populate][club][fields][0]", "documentId");
+  params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
+  params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
   params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
   params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
   params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
+  params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
+  params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
+  params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
   params.set("populate[event_stages][sort][0]", "order:asc");
   params.set("populate[event_stages][fields][0]", "title");
   params.set("populate[event_stages][fields][1]", "order");
@@ -191,13 +198,51 @@ const fetchTournamentEventSummaryById = async (
     "attributes" in (tournamentClubSource.federation as Record<string, unknown>)
       ? ((tournamentClubSource.federation as { attributes?: Record<string, unknown> }).attributes ?? {})
       : ((tournamentClubSource.federation as Record<string, unknown>) ?? {});
-  const logoSource =
+  const clubLogoSource =
+    tournamentClubSource &&
+    typeof tournamentClubSource.logo === "object" &&
+    tournamentClubSource.logo &&
+    "attributes" in (tournamentClubSource.logo as Record<string, unknown>)
+      ? ((tournamentClubSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((tournamentClubSource.logo as Record<string, unknown>) ?? {});
+  const federationLogoSource =
     federationSource &&
     typeof federationSource.logo === "object" &&
     federationSource.logo &&
     "attributes" in (federationSource.logo as Record<string, unknown>)
       ? ((federationSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
       : ((federationSource.logo as Record<string, unknown>) ?? {});
+  const organizerFederationSource =
+    tournamentSource &&
+    typeof tournamentSource.organizer_federation === "object" &&
+    tournamentSource.organizer_federation &&
+    "attributes" in (tournamentSource.organizer_federation as Record<string, unknown>)
+      ? ((tournamentSource.organizer_federation as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((tournamentSource.organizer_federation as Record<string, unknown>) ?? {});
+  const organizerFederationLogoSource =
+    organizerFederationSource &&
+    typeof organizerFederationSource.logo === "object" &&
+    organizerFederationSource.logo &&
+    "attributes" in (organizerFederationSource.logo as Record<string, unknown>)
+      ? ((organizerFederationSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
+      : ((organizerFederationSource.logo as Record<string, unknown>) ?? {});
+  const organizerType = readString((tournamentSource as Record<string, unknown>).organizer_type);
+  const preferredLogoSource =
+    organizerType === "federation"
+      ? organizerFederationLogoSource
+      : organizerType === "club"
+        ? clubLogoSource
+        : clubLogoSource;
+  const fallbackLogoSource =
+    organizerType === "federation"
+      ? federationLogoSource
+      : organizerFederationLogoSource;
+  const organizerLogoSource =
+    readString((preferredLogoSource as Record<string, unknown>).url)
+      ? preferredLogoSource
+      : readString((fallbackLogoSource as Record<string, unknown>).url)
+        ? fallbackLogoSource
+        : federationLogoSource;
   const stagesRaw = Array.isArray(event.event_stages)
     ? event.event_stages
     : Array.isArray((event.event_stages as { data?: unknown[] } | undefined)?.data)
@@ -213,8 +258,9 @@ const fetchTournamentEventSummaryById = async (
     gameType: readString(event.game_type),
     tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
     clubDocumentId: readString((tournamentClubSource as Record<string, unknown>).documentId),
-    organizerLogoUrl: readString((logoSource as Record<string, unknown>).url),
-    organizerLogoName: readString((logoSource as Record<string, unknown>).name),
+    organizerType,
+    organizerLogoUrl: readString((organizerLogoSource as Record<string, unknown>).url),
+    organizerLogoName: readString((organizerLogoSource as Record<string, unknown>).name),
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };
