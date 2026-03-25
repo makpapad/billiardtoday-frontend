@@ -1967,19 +1967,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     >
       <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
         <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.85fr] lg:px-10 lg:py-10">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-              {summary.season ? <span>Season {summary.season}</span> : null}
-              {summary.gameType ? <span>{summary.gameType}</span> : null}
-            </div>
-            <div className="space-y-3">
-              <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-                {summary.title}
-              </h1>
-              <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
-                Follow every stage, match, and final standing in one polished
-                tournament view built for players, organizers, and fans.
-              </p>
+          <div className="flex flex-col justify-between gap-8">
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                {summary.season ? <span>Season {summary.season}</span> : null}
+                {summary.gameType ? <span>{summary.gameType}</span> : null}
+              </div>
+              <div className="space-y-3">
+                <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                  {summary.title}
+                </h1>
+                <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
+                  Follow every stage, match, and final standing in one polished
+                  tournament view built for players, organizers, and fans.
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
