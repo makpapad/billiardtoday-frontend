@@ -139,6 +139,7 @@ type TournamentParticipation = {
     year: number
     position: string
     gameType?: GameType
+    tournamentType: string | null
     matches: Match[]
     totalMatches: number
     wins: number
@@ -146,6 +147,22 @@ type TournamentParticipation = {
     totalPoints: number
     avgPerInning: number
     highestRun: number
+}
+
+const getTournamentTypeLabel = (value: string) => {
+    const labels: Record<string, string> = {
+        'E.C': 'European Championship',
+        'W.C': 'World Championship',
+        'W.Cup': 'World Cup',
+        'N.C': 'National Championship',
+        'T.C': 'Team Competition National',
+        'T.C.I': 'Team Competition International',
+        'O.T': 'Open Tournament',
+        Invitational: 'Invitational',
+        Other: 'Other',
+    }
+
+    return labels[value] || value
 }
 
 // Helper function to get gradient colors based on position
@@ -285,6 +302,11 @@ export default function PlayerProfilePage() {
     const [availableYears, setAvailableYears] = useState<number[]>([])
     const [selectedGameType, setSelectedGameType] = useState<GameType | 'all'>('all')
     const [availableGameTypes, setAvailableGameTypes] = useState<GameType[]>([])
+    const [selectedTournamentType, setSelectedTournamentType] =
+        useState<string>('all')
+    const [availableTournamentTypes, setAvailableTournamentTypes] = useState<
+        string[]
+    >([])
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
     const [yearsToShow, setYearsToShow] = useState(3) // Show last 3 years initially
     const [hasMoreYears, setHasMoreYears] = useState(false)
@@ -401,6 +423,9 @@ export default function PlayerProfilePage() {
                 if (selectedGameType !== 'all') {
                     historyParams.set('gameType', selectedGameType)
                 }
+                if (selectedTournamentType !== 'all') {
+                    historyParams.set('tournamentType', selectedTournamentType)
+                }
 
                 const historyLimit =
                     selectedYear !== 'all'
@@ -436,6 +461,7 @@ export default function PlayerProfilePage() {
                 const shouldFetchMetadata =
                     availableGameTypes.length === 0 ||
                     availableYears.length === 0 ||
+                    availableTournamentTypes.length === 0 ||
                     (selectedGameType !== 'all' &&
                         allParticipations.length === 0)
 
@@ -552,6 +578,11 @@ export default function PlayerProfilePage() {
                     if (metadataData.availableGameTypes) {
                         setAvailableGameTypes(metadataData.availableGameTypes)
                     }
+                    if (metadataData.availableTournamentTypes) {
+                        setAvailableTournamentTypes(
+                            metadataData.availableTournamentTypes,
+                        )
+                    }
                     if (metadataData.availableYears) {
                         setAvailableYears(metadataData.availableYears)
                     }
@@ -583,7 +614,7 @@ export default function PlayerProfilePage() {
             abortController.abort()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [playerId, isNumericPlayerId, selectedYear, selectedGameType, yearsToShow, tournamentsToShow, tournamentContextSlug])
+    }, [playerId, isNumericPlayerId, selectedYear, selectedGameType, selectedTournamentType, yearsToShow, tournamentsToShow, tournamentContextSlug])
 
     const loadMoreYears = () => {
         setYearsToShow(prev => prev + 3) // Load 3 more years
@@ -624,6 +655,13 @@ export default function PlayerProfilePage() {
     // Reset filters when game type changes
     const handleGameTypeChange = (gameType: GameType | 'all') => {
         setSelectedGameType(gameType)
+        setSelectedTournamentType('all')
+        setSelectedYear('all')
+        setTournamentsToShow(3)
+    }
+
+    const handleTournamentTypeChange = (tournamentType: string) => {
+        setSelectedTournamentType(tournamentType)
         setSelectedYear('all')
         setTournamentsToShow(3)
     }
@@ -668,23 +706,54 @@ export default function PlayerProfilePage() {
 
     // Filter participations by selected game type
     const filteredParticipations =
-        selectedGameType === 'all'
-            ? tournamentScopedParticipations
-            : tournamentScopedParticipations.filter((p) => matchesSelectedGameType(p.gameType))
+        tournamentScopedParticipations.filter((p) => {
+            if (!matchesSelectedGameType(p.gameType)) return false
+            if (
+                selectedTournamentType !== 'all' &&
+                p.tournamentType !== selectedTournamentType
+            ) {
+                return false
+            }
+            return true
+        })
 
-    // Get available years for the selected game type using allParticipations metadata
-    const filteredAvailableYears =
+    const filteredAvailableTournamentTypes =
         selectedGameType === 'all'
-            ? tournamentContextSlug
-                ? Array.from(new Set(tournamentScopedParticipations.map((p) => p.year))).sort((a, b) => b - a)
-                : availableYears
+            ? availableTournamentTypes
             : Array.from(
                   new Set(
-                      (tournamentContextSlug ? tournamentScopedParticipations : allParticipations)
+                      (tournamentContextSlug
+                          ? tournamentScopedParticipations
+                          : allParticipations
+                      )
                           .filter((p) => matchesSelectedGameType(p.gameType))
-                          .map((p) => p.year),
+                          .map((p) => p.tournamentType)
+                          .filter((value): value is string => Boolean(value)),
                   ),
-              ).sort((a, b) => b - a)
+              ).sort()
+
+    // Get available years for the selected game type using allParticipations metadata
+    const filteredAvailableYears = Array.from(
+        new Set(
+            (tournamentContextSlug
+                ? tournamentScopedParticipations
+                : allParticipations.length > 0
+                  ? allParticipations
+                  : participations
+            )
+                .filter((p) => {
+                    if (!matchesSelectedGameType(p.gameType)) return false
+                    if (
+                        selectedTournamentType !== 'all' &&
+                        p.tournamentType !== selectedTournamentType
+                    ) {
+                        return false
+                    }
+                    return true
+                })
+                .map((p) => p.year),
+        ),
+    ).sort((a, b) => b - a)
 
     // Calculate stats based on filters (overall + per game type/year) – mirrors admin logic
     const calculateFilteredStats = () => {
@@ -695,9 +764,17 @@ export default function PlayerProfilePage() {
                     : allParticipations.length > 0
                       ? allParticipations
                       : participations
-                if (selectedGameType === 'all') return source
+                if (
+                    selectedGameType === 'all' &&
+                    selectedTournamentType === 'all'
+                ) {
+                    return source
+                }
                 return source.filter(
-                    (p) => matchesSelectedGameType(p.gameType),
+                    (p) =>
+                        matchesSelectedGameType(p.gameType) &&
+                        (selectedTournamentType === 'all' ||
+                            p.tournamentType === selectedTournamentType),
                 )
             }
             return filteredParticipations
@@ -715,6 +792,7 @@ export default function PlayerProfilePage() {
         if (
             selectedYear === 'all' &&
             selectedGameType === 'all' &&
+            selectedTournamentType === 'all' &&
             effectiveCareerStats
         ) {
             return {
@@ -732,9 +810,13 @@ export default function PlayerProfilePage() {
         }
 
         const sourceParticipations =
-            selectedYear === 'all' && selectedGameType !== 'all'
+            selectedYear === 'all' &&
+            (selectedGameType !== 'all' || selectedTournamentType !== 'all')
                 ? allParticipations.filter(
-                      (p) => matchesSelectedGameType(p.gameType),
+                      (p) =>
+                          matchesSelectedGameType(p.gameType) &&
+                          (selectedTournamentType === 'all' ||
+                              p.tournamentType === selectedTournamentType),
                   )
                 : filteredParticipations
 
@@ -847,9 +929,14 @@ export default function PlayerProfilePage() {
               ? allParticipations
               : participations
         const filtered = source.filter((p) => matchesSelectedGameType(p.gameType))
+        const byTournamentType = filtered.filter(
+            (p) =>
+                selectedTournamentType === 'all' ||
+                p.tournamentType === selectedTournamentType,
+        )
         let bestAverageFromWins = 0
         let highestRun = 0
-        filtered.forEach((p) => {
+        byTournamentType.forEach((p) => {
             if (Number(p.highestRun) > highestRun) {
                 highestRun = Number(p.highestRun) || 0
             }
@@ -1317,6 +1404,35 @@ export default function PlayerProfilePage() {
                                             {getGameTypeLabel(gameType)}
                                         </option>
                                     ))}
+                                </select>
+                            )}
+
+                            {filteredAvailableTournamentTypes.length > 0 && (
+                                <select
+                                    value={selectedTournamentType}
+                                    onChange={(e) =>
+                                        handleTournamentTypeChange(
+                                            e.target.value,
+                                        )
+                                    }
+                                    disabled={isLoadingHistory}
+                                    className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <option value="all">
+                                        All tournament types
+                                    </option>
+                                    {filteredAvailableTournamentTypes.map(
+                                        (tournamentType) => (
+                                            <option
+                                                key={tournamentType}
+                                                value={tournamentType}
+                                            >
+                                                {getTournamentTypeLabel(
+                                                    tournamentType,
+                                                )}
+                                            </option>
+                                        ),
+                                    )}
                                 </select>
                             )}
 

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         const searchParams = req.nextUrl.searchParams
         const year = searchParams.get('year')
         const gameType = searchParams.get('gameType')
+        const tournamentType = searchParams.get('tournamentType')
         const normalizedGameType = normalizeGameTypeOrFallback(gameType)
         const includeMatchesParam = searchParams.get('includeMatches')
         const includeMatches = includeMatchesParam !== 'false'
@@ -35,6 +36,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
             const url = new URL(`${baseUrl}/api/bt-players/participations-by`)
             url.searchParams.set('id', playerId)
             if (year) url.searchParams.set('year', year)
+            if (gameType) url.searchParams.set('gameType', gameType)
+            if (tournamentType) {
+                url.searchParams.set('tournamentType', tournamentType)
+            }
             return url
         }
 
@@ -151,6 +156,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 tournament: it?.tournament ?? null,
                 year: typeof it?.year === 'number' ? it.year : null,
                 gameType: normalizeGameTypeOrFallback(it?.gameType),
+                tournamentType:
+                    typeof it?.tournamentType === 'string'
+                        ? it.tournamentType
+                        : null,
                 position: it?.position ?? 'Participant',
                 finals: Array.isArray(it?.finals) ? it.finals : [],
                 stageResults: Array.isArray(it?.stageResults)
@@ -216,6 +225,11 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 .map((value: unknown) => normalizeGameTypeOrFallback(value))
                 .filter((value: string | null): value is string => Boolean(value))
                 .filter((value: string, index: number, arr: string[]) => arr.indexOf(value) === index),
+            availableTournamentTypes: Array.isArray(
+                payload?.meta?.availableTournamentTypes,
+            )
+                ? payload.meta.availableTournamentTypes
+                : [],
         }
         return NextResponse.json(normalized, { status: 200 })
     } catch (error) {
