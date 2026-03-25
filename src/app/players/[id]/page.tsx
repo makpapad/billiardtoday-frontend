@@ -923,6 +923,11 @@ export default function PlayerProfilePage() {
         stats.bestAverageFromWins || stats.avgPerInning
     const overallHighestRun = stats.highestRun
     const overallEvents = stats.eventsCount
+    const shouldShowRateStats = selectedGameType !== 'all'
+    const displayedOverallAvg = shouldShowRateStats ? overallAvg : '-'
+    const displayedOverallHighestRun = shouldShowRateStats
+        ? overallHighestRun
+        : '-'
     const overallDraws = Math.max(
         0,
         overallMatches - overallWins - overallLosses,
@@ -940,8 +945,28 @@ export default function PlayerProfilePage() {
                 selectedTournamentType === 'all' ||
                 p.tournamentType === selectedTournamentType,
         )
+        const isTopFourParticipation = (p: TournamentParticipation) => {
+            if (p.finals.some((entry) => (Number(entry.position) || 0) > 0 && (Number(entry.position) || 0) <= 4)) {
+                return true
+            }
+            if (
+                p.stageResults.some((result) => {
+                    const finalPosition = Number(result.finalPosition) || 0
+                    const groupPosition = Number(result.groupPosition) || 0
+                    return (
+                        (finalPosition > 0 && finalPosition <= 4) ||
+                        (groupPosition > 0 && groupPosition <= 4)
+                    )
+                })
+            ) {
+                return true
+            }
+            const numericPosition = Number.parseInt(String(p.position || '').replace(/\D+/g, ''), 10)
+            return Number.isFinite(numericPosition) && numericPosition > 0 && numericPosition <= 4
+        }
         let bestAverageFromWins = 0
         let highestRun = 0
+        let topFourFinishes = 0
         filtered.forEach((p) => {
             if (!Array.isArray(p.matches)) return
             p.matches.forEach((m) => {
@@ -955,6 +980,9 @@ export default function PlayerProfilePage() {
             })
         })
         byTournamentType.forEach((p) => {
+            if (isTopFourParticipation(p)) {
+                topFourFinishes += 1
+            }
             if (Number(p.highestRun) > highestRun) {
                 highestRun = Number(p.highestRun) || 0
             }
@@ -967,6 +995,7 @@ export default function PlayerProfilePage() {
         return {
             bestAverageFromWins: formatSafeDecimal(bestAverageFromWins, 3),
             highestRun,
+            topFourFinishes,
         }
     })()
 
@@ -1224,34 +1253,59 @@ export default function PlayerProfilePage() {
                                         {nativeName}
                                     </div>
                                 )}
+                                {player.country && (
+                                    <div className="mt-3 flex items-center gap-3 text-base sm:text-lg text-gray-600 dark:text-gray-300">
+                                        {(() => {
+                                            const flagPath = getCountryFlagPath(
+                                                player.country,
+                                            )
+                                            return flagPath ? (
+                                                <img
+                                                    src={flagPath}
+                                                    alt={player.country}
+                                                    width={40}
+                                                    height={30}
+                                                    className="rounded shadow-sm"
+                                                />
+                                            ) : (
+                                                <span className="text-xl sm:text-2xl">
+                                                    π
+                                                </span>
+                                            )
+                                        })()}
+                                        <span className="truncate">
+                                            {player.country}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                            {player.country && (
-                                <div className="flex items-center gap-2 text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                            {false && player?.country && (
+                                <div className="mt-3 flex items-center gap-3 text-base sm:text-lg text-gray-600 dark:text-gray-300">
                                     {(() => {
                                         const flagPath = getCountryFlagPath(
-                                            player.country,
+                                            player?.country ?? null,
                                         )
                                         return flagPath ? (
                                             <img
-                                                src={flagPath}
-                                                alt={player.country}
-                                                width={28}
-                                                height={21}
+                                                src={flagPath || undefined}
+                                                alt={player?.country || ''}
+                                                width={40}
+                                                height={30}
                                                 className="rounded shadow-sm"
                                             />
                                         ) : (
-                                            <span className="text-base sm:text-lg">
+                                            <span className="text-xl sm:text-2xl">
                                                 🌍
                                             </span>
                                         )
                                     })()}
                                     <span className="truncate">
-                                        {player.country}
+                                        {player?.country}
                                     </span>
                                 </div>
                             )}
                             {selectedGameType !== 'all' && gameTypeCareerBoxes && (
-                            <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px]">
+                            <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px] lg:grid-cols-3">
                                 <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
                                     <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
                                         Best Average (wins only)
@@ -1268,6 +1322,16 @@ export default function PlayerProfilePage() {
                                         {gameTypeCareerBoxes.highestRun}
                                     </div>
                                 </div>
+                                {gameTypeCareerBoxes.topFourFinishes > 0 ? (
+                                    <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
+                                        <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                                            Top 4 Finishes
+                                        </div>
+                                        <div className="text-2xl md:text-3xl font-extrabold text-blue-700 dark:text-blue-300 leading-none">
+                                            {gameTypeCareerBoxes.topFourFinishes}
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
                             )}
                         </div>
@@ -1366,7 +1430,7 @@ export default function PlayerProfilePage() {
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {effectiveCareerStats ? (
-                                    overallAvg
+                                    displayedOverallAvg
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
                                 )}
@@ -1378,7 +1442,7 @@ export default function PlayerProfilePage() {
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 {effectiveCareerStats ? (
-                                    overallHighestRun
+                                    displayedOverallHighestRun
                                 ) : (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 )}
