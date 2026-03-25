@@ -140,6 +140,12 @@ type TournamentParticipation = {
     position: string
     gameType?: GameType
     tournamentType: string | null
+    finals: Array<{ position: number | null }>
+    stageResults: Array<{
+        stageTitle: string | null
+        finalPosition: number | null
+        groupPosition: number | null
+    }>
     matches: Match[]
     totalMatches: number
     wins: number
