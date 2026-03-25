@@ -946,19 +946,11 @@ export default function PlayerProfilePage() {
                 p.tournamentType === selectedTournamentType,
         )
         const isTopFourParticipation = (p: TournamentParticipation) => {
-            if (
-                p.finals.some(
-                    (entry) =>
-                        (Number(entry.position) || 0) > 0 &&
-                        (Number(entry.position) || 0) <= 4,
-                )
-            ) {
-                return true
-            }
-            return p.stageResults.some((result) => {
-                const finalPosition = Number(result.finalPosition) || 0
-                return finalPosition > 0 && finalPosition <= 4
-            })
+            return p.finals.some(
+                (entry) =>
+                    (Number(entry.position) || 0) > 0 &&
+                    (Number(entry.position) || 0) <= 4,
+            )
         }
         let bestAverageFromWins = 0
         let highestRun = 0
