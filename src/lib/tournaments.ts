@@ -46,6 +46,22 @@ const readString = (value: unknown): string | null => {
   return cleaned || null;
 };
 
+const unwrapEntitySource = (value: unknown): Record<string, unknown> => {
+  if (!value || typeof value !== "object") return {};
+  const candidate = value as Record<string, unknown>;
+  const data = candidate.data;
+  if (data && typeof data === "object") {
+    return unwrapEntitySource(data);
+  }
+  if (candidate.attributes && typeof candidate.attributes === "object") {
+    return {
+      ...(candidate.attributes as Record<string, unknown>),
+      ...candidate,
+    };
+  }
+  return candidate;
+};
+
 const GREEK_TO_LATIN: Record<string, string> = {
   α: "a",
   β: "v",
@@ -180,52 +196,13 @@ const fetchTournamentEventSummaryById = async (
   if (!source || typeof source !== "object") return null;
 
   const event = source as Record<string, unknown>;
-  const tournamentSource =
-    event.tournament && typeof event.tournament === "object" && "attributes" in (event.tournament as Record<string, unknown>)
-      ? ((event.tournament as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((event.tournament as Record<string, unknown>) ?? {});
-  const tournamentClubSource =
-    tournamentSource &&
-    typeof tournamentSource.club === "object" &&
-    tournamentSource.club &&
-    "attributes" in (tournamentSource.club as Record<string, unknown>)
-      ? ((tournamentSource.club as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((tournamentSource.club as Record<string, unknown>) ?? {});
-  const federationSource =
-    tournamentClubSource &&
-    typeof tournamentClubSource.federation === "object" &&
-    tournamentClubSource.federation &&
-    "attributes" in (tournamentClubSource.federation as Record<string, unknown>)
-      ? ((tournamentClubSource.federation as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((tournamentClubSource.federation as Record<string, unknown>) ?? {});
-  const clubLogoSource =
-    tournamentClubSource &&
-    typeof tournamentClubSource.logo === "object" &&
-    tournamentClubSource.logo &&
-    "attributes" in (tournamentClubSource.logo as Record<string, unknown>)
-      ? ((tournamentClubSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((tournamentClubSource.logo as Record<string, unknown>) ?? {});
-  const federationLogoSource =
-    federationSource &&
-    typeof federationSource.logo === "object" &&
-    federationSource.logo &&
-    "attributes" in (federationSource.logo as Record<string, unknown>)
-      ? ((federationSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((federationSource.logo as Record<string, unknown>) ?? {});
-  const organizerFederationSource =
-    tournamentSource &&
-    typeof tournamentSource.organizer_federation === "object" &&
-    tournamentSource.organizer_federation &&
-    "attributes" in (tournamentSource.organizer_federation as Record<string, unknown>)
-      ? ((tournamentSource.organizer_federation as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((tournamentSource.organizer_federation as Record<string, unknown>) ?? {});
-  const organizerFederationLogoSource =
-    organizerFederationSource &&
-    typeof organizerFederationSource.logo === "object" &&
-    organizerFederationSource.logo &&
-    "attributes" in (organizerFederationSource.logo as Record<string, unknown>)
-      ? ((organizerFederationSource.logo as { attributes?: Record<string, unknown> }).attributes ?? {})
-      : ((organizerFederationSource.logo as Record<string, unknown>) ?? {});
+  const tournamentSource = unwrapEntitySource(event.tournament);
+  const tournamentClubSource = unwrapEntitySource(tournamentSource.club);
+  const federationSource = unwrapEntitySource(tournamentClubSource.federation);
+  const clubLogoSource = unwrapEntitySource(tournamentClubSource.logo);
+  const federationLogoSource = unwrapEntitySource(federationSource.logo);
+  const organizerFederationSource = unwrapEntitySource(tournamentSource.organizer_federation);
+  const organizerFederationLogoSource = unwrapEntitySource(organizerFederationSource.logo);
   const organizerType = readString((tournamentSource as Record<string, unknown>).organizer_type);
   const preferredLogoSource =
     organizerType === "federation"
