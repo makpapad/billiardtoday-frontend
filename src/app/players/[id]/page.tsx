@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { getCountryFlagPath } from "@/lib/countryFlags"
+import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
 import { buildTournamentSlug } from "@/lib/tournaments"
@@ -946,23 +946,19 @@ export default function PlayerProfilePage() {
                 p.tournamentType === selectedTournamentType,
         )
         const isTopFourParticipation = (p: TournamentParticipation) => {
-            if (p.finals.some((entry) => (Number(entry.position) || 0) > 0 && (Number(entry.position) || 0) <= 4)) {
-                return true
-            }
             if (
-                p.stageResults.some((result) => {
-                    const finalPosition = Number(result.finalPosition) || 0
-                    const groupPosition = Number(result.groupPosition) || 0
-                    return (
-                        (finalPosition > 0 && finalPosition <= 4) ||
-                        (groupPosition > 0 && groupPosition <= 4)
-                    )
-                })
+                p.finals.some(
+                    (entry) =>
+                        (Number(entry.position) || 0) > 0 &&
+                        (Number(entry.position) || 0) <= 4,
+                )
             ) {
                 return true
             }
-            const numericPosition = Number.parseInt(String(p.position || '').replace(/\D+/g, ''), 10)
-            return Number.isFinite(numericPosition) && numericPosition > 0 && numericPosition <= 4
+            return p.stageResults.some((result) => {
+                const finalPosition = Number(result.finalPosition) || 0
+                return finalPosition > 0 && finalPosition <= 4
+            })
         }
         let bestAverageFromWins = 0
         let highestRun = 0
@@ -1192,6 +1188,7 @@ export default function PlayerProfilePage() {
 
     const primaryName = (decodedSlugName || player.full_name || '').trim()
     const nativeName = (player.full_name || '').trim()
+    const playerCountryLabel = getCountryLabel(player.country)
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
@@ -1274,7 +1271,7 @@ export default function PlayerProfilePage() {
                                             )
                                         })()}
                                         <span className="truncate">
-                                            {player.country}
+                                            {playerCountryLabel || player.country}
                                         </span>
                                     </div>
                                 )}

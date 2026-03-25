@@ -54,6 +54,19 @@ export function getCountryCode(countryName: string | null): string | null {
     return country?.value || null
 }
 
+export function getCountryLabel(countryName: string | null): string | null {
+    if (!countryName) return null
+
+    const trimmed = countryName.trim()
+    if (!trimmed) return null
+
+    const code = getCountryCode(trimmed)
+    if (!code) return trimmed
+
+    const country = countryList.find((c) => c.value === code)
+    return country?.label || trimmed
+}
+
 export function getCountryFlagPath(countryName: string | null): string | null {
     if (!countryName) return null
 
