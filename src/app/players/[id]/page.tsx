@@ -1350,7 +1350,11 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.events')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {overallEvents}
+                                {isLoadingHistory ? (
+                                    <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    overallEvents
+                                )}
                             </div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
