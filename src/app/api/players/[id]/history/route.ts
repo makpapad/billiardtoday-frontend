@@ -37,9 +37,6 @@ export async function GET(req: NextRequest, context: RouteContext) {
             url.searchParams.set('id', playerId)
             if (year) url.searchParams.set('year', year)
             if (gameType) url.searchParams.set('gameType', gameType)
-            if (tournamentType) {
-                url.searchParams.set('tournamentType', tournamentType)
-            }
             return url
         }
 
@@ -203,12 +200,23 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 avgPerInning: avgPerInningNum,
             }
         })
-        const filteredItems = normalizedGameType
-            ? items.filter(
-                  (item: { gameType: string | null }) =>
-                      normalizeGameTypeOrFallback(item.gameType) === normalizedGameType,
-              )
-            : items
+        const filteredItems = items.filter(
+            (item: { gameType: string | null; tournamentType: string | null }) => {
+                if (
+                    normalizedGameType &&
+                    normalizeGameTypeOrFallback(item.gameType) !== normalizedGameType
+                ) {
+                    return false
+                }
+                if (
+                    tournamentType &&
+                    String(item.tournamentType || '').trim() !== tournamentType
+                ) {
+                    return false
+                }
+                return true
+            },
+        )
         const totalCount = filteredItems.length
         const limitedItems = limit ? filteredItems.slice(0, limit) : filteredItems
         const normalized = {
