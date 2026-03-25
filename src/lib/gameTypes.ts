@@ -13,10 +13,13 @@ export type GameType =
 const canonicalGameTypeByKey: Record<string, GameType> = {
     threecushion: 'Three-Cushion',
     '3cushion': 'Three-Cushion',
+    '3cushions': 'Three-Cushion',
+    '3cusions': 'Three-Cushion',
     balkline471: 'Balk-Line-47-1',
     balkline712: 'Balk-Line-71-2',
     onecushion: 'One-Cushion',
     '1cushion': 'One-Cushion',
+    'onecushions': 'One-Cushion',
     balkline472: 'Balk-Line-47-2',
     libre: 'Libre',
 }
