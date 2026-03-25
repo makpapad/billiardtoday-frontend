@@ -936,10 +936,7 @@ export default function PlayerProfilePage() {
         )
         let bestAverageFromWins = 0
         let highestRun = 0
-        byTournamentType.forEach((p) => {
-            if (Number(p.highestRun) > highestRun) {
-                highestRun = Number(p.highestRun) || 0
-            }
+        filtered.forEach((p) => {
             if (!Array.isArray(p.matches)) return
             p.matches.forEach((m) => {
                 if (m.result !== 'win') return
@@ -949,6 +946,14 @@ export default function PlayerProfilePage() {
                 if (avg > bestAverageFromWins) {
                     bestAverageFromWins = avg
                 }
+            })
+        })
+        byTournamentType.forEach((p) => {
+            if (Number(p.highestRun) > highestRun) {
+                highestRun = Number(p.highestRun) || 0
+            }
+            if (!Array.isArray(p.matches)) return
+            p.matches.forEach((m) => {
                 const hr = Number(m.highRun) || 0
                 if (hr > highestRun) highestRun = hr
             })
