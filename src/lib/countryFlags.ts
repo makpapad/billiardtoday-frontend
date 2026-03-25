@@ -33,6 +33,10 @@ const countryAliases: Record<string, string> = {
 }
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
+const regionNames =
+    typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
+        ? new Intl.DisplayNames(['en'], { type: 'region' })
+        : null
 
 export function getCountryCode(countryName: string | null): string | null {
     if (!countryName) return null
@@ -62,6 +66,9 @@ export function getCountryLabel(countryName: string | null): string | null {
 
     const code = getCountryCode(trimmed)
     if (!code) return trimmed
+
+    const displayName = regionNames?.of(code)
+    if (displayName) return displayName
 
     const country = countryList.find((c) => c.value === code)
     return country?.label || trimmed
