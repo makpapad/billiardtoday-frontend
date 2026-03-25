@@ -1945,8 +1945,17 @@ export default function PlayerProfilePage() {
                                     {/* Matches List */}
                                     <div className="p-6 bg-white dark:bg-gray-800">
                                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                            {t('players.profile.history.tournament.detailsTitle').replace('{count}', String(participation.matches.length))}
+                                            {t('players.profile.history.tournament.detailsTitle').replace(
+                                                '{count}',
+                                                String(
+                                                    participation.matches.length ||
+                                                        participation.totalMatches ||
+                                                        participation.stageResults.length ||
+                                                        participation.finals.length,
+                                                ),
+                                            )}
                                         </h4>
+                                        {participation.matches.length > 0 ? (
                                         <div className="space-y-3">
                                             {participation.matches.map((match) => (
                                                 <div
@@ -2042,6 +2051,58 @@ export default function PlayerProfilePage() {
                                                 </div>
                                             ))}
                                         </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {participation.finals.length > 0 ? (
+                                                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                                                        <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                                                            Final standings
+                                                        </div>
+                                                        <div className="mt-2 flex flex-wrap gap-2">
+                                                            {participation.finals.map((entry, index) => (
+                                                                <span
+                                                                    key={`final-${participation.id}-${index}`}
+                                                                    className="inline-flex items-center rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white"
+                                                                >
+                                                                    Position {entry.position ?? '-'}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+
+                                                {participation.stageResults.length > 0 ? (
+                                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                                                        <div className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                                                            Stage results
+                                                        </div>
+                                                        <div className="mt-3 space-y-2">
+                                                            {participation.stageResults.map((result, index) => (
+                                                                <div
+                                                                    key={`stage-${participation.id}-${index}`}
+                                                                    className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-white/70 px-3 py-2 text-sm text-gray-800 dark:bg-gray-800/60 dark:text-gray-100"
+                                                                >
+                                                                    <span className="font-medium">
+                                                                        {result.stageTitle || `Stage ${index + 1}`}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-600 dark:text-gray-300">
+                                                                        {result.finalPosition != null
+                                                                            ? `Final position: ${result.finalPosition}`
+                                                                            : result.groupPosition != null
+                                                                              ? `Group position: ${result.groupPosition}`
+                                                                              : 'Recorded participation'}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+
+                                                <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300">
+                                                    Detailed match rows are not available for this event, but the tournament participation is recorded in the official standings.
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
