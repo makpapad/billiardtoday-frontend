@@ -16,6 +16,7 @@ const canonicalGameTypeByKey: Record<string, GameType> = {
     balkline471: 'Balk-Line-47-1',
     balkline712: 'Balk-Line-71-2',
     onecushion: 'One-Cushion',
+    '1cushion': 'One-Cushion',
     balkline472: 'Balk-Line-47-2',
     libre: 'Libre',
 }
