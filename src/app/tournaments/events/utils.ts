@@ -198,6 +198,8 @@ export const normalizeFinalResult = (
     id: normalized.id,
     documentId: normalized.documentId,
     position: toNumber(normalized.position),
+    playerId: player.id,
+    playerDocumentId: player.documentId ?? null,
     playerName: player.name,
     playerCountry: player.country ?? null,
     bestAverage: toNumber(normalized.best_average),

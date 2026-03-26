@@ -904,10 +904,25 @@ export function TournamentEventsContent({
                                     {formatNumberValue(result.position)}
                                   </td>
                                   <td className="px-4 py-3 font-medium">
-                                    <PlayerNameWithFlag
-                                      name={result.playerName || "Unknown"}
-                                      country={result.playerCountry}
-                                    />
+                                    {result.playerId ? (
+                                      <Link
+                                        href={playerProfileHref(
+                                          result.playerId,
+                                          result.playerName || "Unknown",
+                                        )}
+                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                                      >
+                                        <PlayerNameWithFlag
+                                          name={result.playerName || "Unknown"}
+                                          country={result.playerCountry}
+                                        />
+                                      </Link>
+                                    ) : (
+                                      <PlayerNameWithFlag
+                                        name={result.playerName || "Unknown"}
+                                        country={result.playerCountry}
+                                      />
+                                    )}
                                   </td>
                                   <td className="px-4 py-3 text-center">
                                     {formatNumberValue(

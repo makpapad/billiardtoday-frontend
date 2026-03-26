@@ -133,6 +133,8 @@ export type NormalizedFinalResult = {
   id: string;
   documentId: string;
   position: number | null;
+  playerId: number | null;
+  playerDocumentId: string | null;
   playerName: string;
   playerCountry: string | null;
   bestAverage: number | null;
