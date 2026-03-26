@@ -1,6 +1,6 @@
 'use client'
 
-import { useLiveScore } from '@/hooks/useLiveScore'
+import { normalizeWebSocketUrl, useLiveScore } from '@/hooks/useLiveScore'
 import { LiveScoreState } from '@/hooks/useLiveScore'
 
 interface LiveScoreDisplayProps {
@@ -9,7 +9,9 @@ interface LiveScoreDisplayProps {
   isActive: boolean
 }
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://ws.billiardtoday.com'
+const WS_URL = normalizeWebSocketUrl(
+  process.env.NEXT_PUBLIC_WS_URL || 'wss://ws.billiardtoday.com/ws'
+).toString()
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || 'BT_WS_RELAY_TOKEN_2025'
 
 function PlayerScore({ player }: { player: any }) {

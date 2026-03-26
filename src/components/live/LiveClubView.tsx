@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 const STALE_TTL_MS = 60 * 60 * 1000; // 60 minutes
 const LiveScoreBoardCard = dynamic(() => import('@/components/LiveScoreBoardCard').then(mod => mod.LiveScoreBoardCard), { ssr: false });
 
@@ -451,17 +452,20 @@ export function LiveClubView({ club, embedded = false }: Props) {
     if (snapshotHydratedScreensRef.current.has(cleanScreenId)) return;
     snapshotHydratedScreensRef.current.add(cleanScreenId);
 
-    const wsUrl =
+    const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
-      process.env.NEXT_PUBLIC_WS_URL ||
-      "wss://ws.billiardtoday.com";
+        process.env.NEXT_PUBLIC_WS_URL ||
+        "wss://ws.billiardtoday.com/ws",
+    );
     if (!wsUrl) return;
 
     const params = new URLSearchParams();
     if (WS_TOKEN) params.set("token", WS_TOKEN);
     params.set("screenId", cleanScreenId);
 
-    const socket = new WebSocket(`${wsUrl}?${params.toString()}`);
+    wsUrl.search = params.toString();
+
+    const socket = new WebSocket(wsUrl.toString());
     const timeout = window.setTimeout(() => {
       try {
         socket.close();
@@ -904,15 +908,17 @@ export function LiveClubView({ club, embedded = false }: Props) {
 
   React.useEffect(() => {
     if (!clubId) return;
-    const wsUrl =
+    const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
-      process.env.NEXT_PUBLIC_WS_URL ||
-      "wss://ws.billiardtoday.com";
+        process.env.NEXT_PUBLIC_WS_URL ||
+        "wss://ws.billiardtoday.com/ws",
+    );
     if (!wsUrl) return;
 
     const params = new URLSearchParams();
     if (WS_TOKEN) params.set('token', WS_TOKEN);
-    const url = `${wsUrl}?${params.toString()}`;
+    wsUrl.search = params.toString();
+    const url = wsUrl.toString();
     
     const socket = new WebSocket(url);
     socket.onopen = () => {

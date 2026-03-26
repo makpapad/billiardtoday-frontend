@@ -31,9 +31,19 @@ interface UseLiveScoreOptions {
   maxReconnectAttempts?: number
 }
 
+export function normalizeWebSocketUrl(rawUrl: string) {
+  const url = new URL(rawUrl)
+
+  if (url.pathname === '/' || url.pathname === '') {
+    url.pathname = '/ws'
+  }
+
+  return url
+}
+
 export function useLiveScore({
   screenId,
-  wsUrl = 'wss://ws.billiardtoday.com',
+  wsUrl = 'wss://ws.billiardtoday.com/ws',
   token = '',
   reconnectInterval = 3000,
   maxReconnectAttempts = 5
@@ -56,7 +66,7 @@ export function useLiveScore({
     }
 
     try {
-      const url = new URL(wsUrl)
+      const url = normalizeWebSocketUrl(wsUrl)
       if (token) {
         url.searchParams.set('token', token)
       }

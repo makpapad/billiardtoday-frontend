@@ -30,6 +30,7 @@ import {
   toNumber,
   toRelationArray,
 } from "@/app/tournaments/events/utils";
+import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 type Props = {
@@ -669,14 +670,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       return;
     }
 
-    const wsUrl =
+    const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
-      process.env.NEXT_PUBLIC_WS_URL ||
-      "wss://ws.billiardtoday.com";
+        process.env.NEXT_PUBLIC_WS_URL ||
+        "wss://ws.billiardtoday.com/ws",
+    );
     const params = new URLSearchParams();
     if (WS_TOKEN) params.set("token", WS_TOKEN);
 
-    const socket = new WebSocket(`${wsUrl}?${params.toString()}`);
+    wsUrl.search = params.toString();
+
+    const socket = new WebSocket(wsUrl.toString());
 
     const upsertLiveSession = (item: EventLiveSession) => {
       setWsLiveSessions((prev) => {
@@ -1007,17 +1011,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     }
     screenSocketKeysRef.current = nextKey;
 
-    const wsUrl =
+    const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
-      process.env.NEXT_PUBLIC_WS_URL ||
-      "wss://ws.billiardtoday.com";
+        process.env.NEXT_PUBLIC_WS_URL ||
+        "wss://ws.billiardtoday.com/ws",
+    );
 
     const sockets = screenIds.map((screenId) => {
       const params = new URLSearchParams();
       if (WS_TOKEN) params.set("token", WS_TOKEN);
       params.set("screenId", screenId);
 
-      const socket = new WebSocket(`${wsUrl}?${params.toString()}`);
+      const socketUrl = new URL(wsUrl.toString());
+      socketUrl.search = params.toString();
+
+      const socket = new WebSocket(socketUrl.toString());
       socket.onmessage = (event) => {
         try {
           const payload = JSON.parse(
