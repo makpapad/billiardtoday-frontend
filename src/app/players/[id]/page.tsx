@@ -939,22 +939,32 @@ export default function PlayerProfilePage() {
             : allParticipations.length > 0
               ? allParticipations
               : participations
-        const filtered = source.filter((p) => matchesSelectedGameType(p.gameType))
-        const byTournamentType = filtered.filter(
+        const filtered = source.filter((p) => {
+            if (!matchesSelectedGameType(p.gameType)) return false
+            if (
+                selectedTournamentType !== 'all' &&
+                p.tournamentType !== selectedTournamentType
+            ) {
+                return false
+            }
+            if (
+                selectedYear !== 'all' &&
+                p.year !== Number(selectedYear)
+            ) {
+                return false
+            }
+            return true
+        })
+        const topFourScopedParticipations = filtered.filter(
             (p) =>
-                selectedTournamentType === 'all' ||
-                p.tournamentType === selectedTournamentType,
+                Array.isArray(p.finals) &&
+                p.finals.some((entry) => {
+                    const position = Number(entry.position) || 0
+                    return position > 0 && position <= 4
+                }),
         )
-        const isTopFourParticipation = (p: TournamentParticipation) => {
-            return p.finals.some(
-                (entry) =>
-                    (Number(entry.position) || 0) > 0 &&
-                    (Number(entry.position) || 0) <= 4,
-            )
-        }
         let bestAverageFromWins = 0
         let highestRun = 0
-        let topFourFinishes = 0
         filtered.forEach((p) => {
             if (!Array.isArray(p.matches)) return
             p.matches.forEach((m) => {
@@ -967,10 +977,7 @@ export default function PlayerProfilePage() {
                 }
             })
         })
-        byTournamentType.forEach((p) => {
-            if (isTopFourParticipation(p)) {
-                topFourFinishes += 1
-            }
+        filtered.forEach((p) => {
             if (Number(p.highestRun) > highestRun) {
                 highestRun = Number(p.highestRun) || 0
             }
@@ -983,7 +990,7 @@ export default function PlayerProfilePage() {
         return {
             bestAverageFromWins: formatSafeDecimal(bestAverageFromWins, 3),
             highestRun,
-            topFourFinishes,
+            topFourFinishes: topFourScopedParticipations.length,
         }
     })()
 
