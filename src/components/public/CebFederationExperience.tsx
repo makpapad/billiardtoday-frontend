@@ -18,6 +18,14 @@ type TournamentItem = {
 
 type TournamentPayload = {
   data?: TournamentItem[];
+  meta?: {
+    pagination?: {
+      page?: number;
+      pageSize?: number;
+      pageCount?: number;
+      total?: number;
+    };
+  };
 };
 
 type HeroView = "network" | "tournaments";
@@ -76,6 +84,32 @@ const DETAIL_FIELDS = [
   { key: "youthDirector", label: "Youth director" },
 ] as const;
 
+async function fetchAllFederationTournaments(federationId: string): Promise<TournamentItem[]> {
+  const pageSize = 100;
+  let page = 1;
+  let pageCount = 1;
+  const allItems: TournamentItem[] = [];
+
+  while (page <= pageCount) {
+    const response = await fetch(
+      `/api/tournaments?page=${page}&pageSize=${pageSize}&federationId=${encodeURIComponent(federationId)}`,
+      { cache: "no-store" },
+    );
+    const payload = (await response.json().catch(() => ({ data: [], meta: {} }))) as TournamentPayload;
+    const items = Array.isArray(payload.data) ? payload.data : [];
+    allItems.push(...items);
+    pageCount = payload.meta?.pagination?.pageCount || 1;
+    page += 1;
+  }
+
+  const seen = new Set<string>();
+  return allItems.filter((item) => {
+    if (!item.documentId || seen.has(item.documentId)) return false;
+    seen.add(item.documentId);
+    return true;
+  });
+}
+
 export function CebFederationExperience({ federation, members, embedded = false }: Props) {
   const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "en"));
   const initialSelectedId = sortedMembers[0]?.documentId || null;
@@ -128,12 +162,10 @@ export function CebFederationExperience({ federation, members, embedded = false 
     const load = async () => {
       setLoadingCebTournaments(true);
       try {
-        const response = await fetch(`/api/tournaments?page=1&pageSize=12&federationId=${encodeURIComponent(federation.documentId)}`, {
-          cache: "no-store",
-        });
-        const payload = (await response.json().catch(() => ({ data: [] }))) as TournamentPayload;
         if (!mounted) return;
-        setCebTournaments(Array.isArray(payload.data) ? payload.data : []);
+        const items = await fetchAllFederationTournaments(federation.documentId);
+        if (!mounted) return;
+        setCebTournaments(items);
       } catch {
         if (!mounted) return;
         setCebTournaments([]);
