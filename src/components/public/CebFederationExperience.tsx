@@ -263,21 +263,26 @@ export function CebFederationExperience({ federation, members }: Props) {
                 Review federation details, official tournament activity, and affiliated clubs from a single panel.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="w-full sm:w-auto">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Federation tabs
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {(["details", "tournaments", "clubs"] as TabKey[]).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold capitalize transition ${
+                  className={`rounded-2xl px-5 py-3 text-sm font-semibold capitalize transition ${
                     activeTab === tab
                       ? "bg-sky-600 text-white shadow-[0_10px_24px_rgba(2,132,199,0.28)]"
-                      : "border border-slate-200 text-slate-700 hover:bg-slate-50"
+                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {tab}
+                  {tab === "details" ? "1. Federation details" : tab === "tournaments" ? "2. Official tournaments" : "3. Clubs"}
                 </button>
               ))}
+              </div>
             </div>
           </div>
 
