@@ -174,16 +174,21 @@ export function CebFederationExperience({ federation, members }: Props) {
                     key={member.documentId}
                     type="button"
                     onClick={() => setSelectedId(member.documentId)}
-                    className={`group absolute -translate-x-1/2 -translate-y-1/2 transition ${isActive ? "z-20 scale-110" : "z-10 hover:scale-105"}`}
-                    style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                    className={`group absolute transition ${isActive ? "z-20" : "z-10"}`}
+                    style={{
+                      left: `${point.x}%`,
+                      top: `${point.y}%`,
+                      transform: `translate(calc(-50% + ${point.offsetX || 0}px), calc(-100% + ${point.offsetY || 0}px)) ${isActive ? "scale(1.08)" : "scale(1)"}`,
+                      transformOrigin: "bottom center",
+                    }}
                     aria-label={`Select ${member.name}`}
                   >
-                    <span className="absolute left-1/2 top-[-0.65rem] h-4 w-[2px] -translate-x-1/2 rounded-full bg-slate-900/55" />
+                    <span className="absolute bottom-[0.85rem] left-1/2 h-4 w-[2px] -translate-x-1/2 rounded-full bg-slate-900/55" />
                     <span className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[3px] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.24)] ${isActive ? "border-sky-500 ring-4 ring-sky-200/85" : "border-white"}`}>
                       <CountryFlag country={member.country || null} className="h-full w-full object-cover" />
                     </span>
-                    <span className="absolute left-1/2 top-[2.4rem] h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-white shadow-[0_6px_14px_rgba(15,23,42,0.2)]" />
-                    <span className={`absolute left-1/2 top-14 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition ${isActive ? "bg-slate-950 text-white" : "bg-white/92 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
+                    <span className="absolute bottom-[0.2rem] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-white shadow-[0_6px_14px_rgba(15,23,42,0.2)]" />
+                    <span className={`absolute bottom-[3.6rem] left-1/2 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition ${isActive ? "bg-slate-950 text-white" : "bg-white/92 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
                       {member.country || member.name}
                     </span>
                   </button>
