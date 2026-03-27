@@ -23,6 +23,7 @@ type TournamentPayload = {
 type Props = {
   federation: Federation;
   members: Federation[];
+  embedded?: boolean;
 };
 
 type TabKey = "details" | "tournaments" | "clubs";
@@ -52,9 +53,9 @@ const getStatus = (startDate: string | null | undefined, endDate: string | null 
   return "Live";
 };
 
-const buildClubHref = (slug?: string | null, documentId?: string | null) => {
+const buildClubHref = (slug?: string | null, documentId?: string | null, embedded = false) => {
   const target = slug || documentId;
-  return target ? `/clubs/${target}` : "#";
+  return target ? `${embedded ? "/embed" : ""}/clubs/${target}` : "#";
 };
 
 const DETAIL_FIELDS = [
@@ -73,7 +74,7 @@ const DETAIL_FIELDS = [
   { key: "youthDirector", label: "Youth director" },
 ] as const;
 
-export function CebFederationExperience({ federation, members }: Props) {
+export function CebFederationExperience({ federation, members, embedded = false }: Props) {
   const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "en"));
   const initialSelectedId = sortedMembers[0]?.documentId || null;
   const [selectedId, setSelectedId] = useState(initialSelectedId);
@@ -308,7 +309,7 @@ export function CebFederationExperience({ federation, members }: Props) {
                     return (
                       <Link
                         key={item.documentId}
-                        href={buildTournamentHref(item.documentId, item.title, item.season)}
+                        href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
                         className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -346,7 +347,7 @@ export function CebFederationExperience({ federation, members }: Props) {
                   {selectedFederation.clubs.map((club) => (
                     <Link
                       key={club.documentId}
-                      href={buildClubHref(club.slug, club.documentId)}
+                      href={buildClubHref(club.slug, club.documentId, embedded)}
                       className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                     >
                       <div className="flex items-center gap-3">
