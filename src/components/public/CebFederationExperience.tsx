@@ -185,12 +185,12 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     }}
                     aria-label={`Select ${member.name}`}
                   >
-                    <span className="absolute bottom-[0.85rem] left-1/2 h-4 w-[2px] -translate-x-1/2 rounded-full bg-slate-900/55" />
-                    <span className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[3px] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.24)] ${isActive ? "border-sky-500 ring-4 ring-sky-200/85" : "border-white"}`}>
+                    <span className="absolute bottom-[0.7rem] left-1/2 h-3 w-[2px] -translate-x-1/2 rounded-full bg-slate-900/55" />
+                    <span className={`relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-[3px] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.24)] sm:h-10 sm:w-10 ${isActive ? "border-sky-500 ring-4 ring-sky-200/85" : "border-white"}`}>
                       <CountryFlag country={member.country || null} className="h-full w-full object-cover" />
                     </span>
-                    <span className="absolute bottom-[0.2rem] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-white shadow-[0_6px_14px_rgba(15,23,42,0.2)]" />
-                    <span className={`absolute bottom-[3.6rem] left-1/2 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition ${isActive ? "bg-slate-950 text-white" : "bg-white/92 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
+                    <span className="absolute bottom-[0.1rem] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-white shadow-[0_6px_14px_rgba(15,23,42,0.2)]" />
+                    <span className={`absolute bottom-[3.05rem] left-1/2 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition sm:bottom-[3.3rem] ${isActive ? "bg-slate-950 text-white" : "bg-white/92 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
                       {member.country || member.name}
                     </span>
                   </button>
