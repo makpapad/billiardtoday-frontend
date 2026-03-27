@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { getCountryFlagPath } from "@/lib/countryFlags";
 
 type HeroProps = {
@@ -7,6 +8,7 @@ type HeroProps = {
   description?: string | null;
   actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary" }>;
   meta?: string[];
+  aside?: ReactNode;
 };
 
 type SectionProps = {
@@ -16,7 +18,7 @@ type SectionProps = {
   action?: { label: string; href: string };
 };
 
-export function PresentationHero({ eyebrow, title, description, actions = [], meta = [] }: HeroProps) {
+export function PresentationHero({ eyebrow, title, description, actions = [], meta = [], aside }: HeroProps) {
   return (
     <section className="overflow-hidden rounded-[36px] border border-black/5 bg-[linear-gradient(135deg,#081528_0%,#0f2f52_50%,#1d4ed8_100%)] text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)]">
       <div className="grid gap-10 px-6 py-10 lg:grid-cols-[1.4fr_0.8fr] lg:px-10 lg:py-12">
@@ -48,13 +50,17 @@ export function PresentationHero({ eyebrow, title, description, actions = [], me
             </div>
           ) : null}
         </div>
-        <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
-          {meta.map((item, index) => (
-            <div key={`${item}-${index}`} className="rounded-2xl border border-white/10 bg-slate-950/25 p-4 text-sm text-white/85">
-              {item}
-            </div>
-          ))}
-        </div>
+        {aside ? (
+          <div>{aside}</div>
+        ) : (
+          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+            {meta.map((item, index) => (
+              <div key={`${item}-${index}`} className="rounded-2xl border border-white/10 bg-slate-950/25 p-4 text-sm text-white/85">
+                {item}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

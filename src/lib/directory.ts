@@ -35,6 +35,11 @@ type Federation = {
   name: string;
   country?: string | null;
   level?: string | null;
+  logo?: {
+    id?: number;
+    url?: string | null;
+    name?: string | null;
+  } | null;
   parent?: {
     id: number;
     documentId: string;
@@ -156,6 +161,8 @@ export async function getFederations(): Promise<Federation[]> {
   params.set("fields[2]", "documentId");
   params.set("fields[3]", "slug");
   params.set("fields[4]", "level");
+  params.set("populate[logo][fields][0]", "url");
+  params.set("populate[logo][fields][1]", "name");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
@@ -187,6 +194,8 @@ export async function getFederationBySlug(slug: string): Promise<Federation | nu
   params.set("fields[2]", "documentId");
   params.set("fields[3]", "slug");
   params.set("fields[4]", "level");
+  params.set("populate[logo][fields][0]", "url");
+  params.set("populate[logo][fields][1]", "name");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
@@ -225,6 +234,8 @@ export async function getFederationByIdentifier(identifier: string): Promise<Fed
   params.set("fields[2]", "documentId");
   params.set("fields[3]", "slug");
   params.set("fields[4]", "level");
+  params.set("populate[logo][fields][0]", "url");
+  params.set("populate[logo][fields][1]", "name");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
