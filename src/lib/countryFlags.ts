@@ -55,11 +55,13 @@ const COUNTRY_ALIASES: Record<string, string> = {
     turkiye: 'TR',
     't\u00fcrkiye': 'TR',
     greece: 'GR',
+    gre: 'GR',
     hellas: 'GR',
     'ellada': 'GR',
     '\u0395\u03bb\u03bb\u03ac\u03b4\u03b1': 'GR',
     egypt: 'EG',
     belgium: 'BE',
+    libanon: 'LB',
 }
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
