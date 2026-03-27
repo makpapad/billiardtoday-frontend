@@ -29,6 +29,14 @@ export default async function FederationPage({ params }: Props) {
             {federation.country ? (
               <p className="mt-4 text-lg text-slate-600">Country: {federation.country}</p>
             ) : null}
+            {federation.level ? (
+              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-slate-500">
+                Level: {federation.level}
+              </p>
+            ) : null}
+            {federation.parent?.name ? (
+              <p className="mt-2 text-sm text-slate-500">Parent federation: {federation.parent.name}</p>
+            ) : null}
           </div>
 
         </div>

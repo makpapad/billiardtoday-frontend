@@ -33,6 +33,14 @@ export default async function EmbedFederationPage({ params }: Props) {
             {federation.country ? (
               <p className="mt-4 text-lg text-slate-600">Country: {federation.country}</p>
             ) : null}
+            {federation.level ? (
+              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-slate-500">
+                Level: {federation.level}
+              </p>
+            ) : null}
+            {federation.parent?.name ? (
+              <p className="mt-2 text-sm text-slate-500">Parent federation: {federation.parent.name}</p>
+            ) : null}
           </div>
           <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] sm:p-8">
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">
@@ -42,7 +50,7 @@ export default async function EmbedFederationPage({ params }: Props) {
               Organizer venues
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              Clubs and venues connected to {federation.name}.
+              Clubs connected to {federation.name}. Tournament venues are managed separately from organizers.
             </p>
 
             {Array.isArray(federation.clubs) && federation.clubs.length > 0 ? (

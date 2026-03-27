@@ -30,6 +30,14 @@ export function FederationsPageContent({ federations }: Props) {
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{federation.country}</div>
               </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">{federation.name}</h2>
+              {federation.level ? (
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {federation.level}
+                </div>
+              ) : null}
+              {federation.parentName ? (
+                <div className="mt-2 text-sm text-slate-500">Parent: {federation.parentName}</div>
+              ) : null}
               <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
                 <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Connected clubs</div>
                 <div className="mt-2 text-lg font-semibold text-slate-950">{federation.clubCount}</div>

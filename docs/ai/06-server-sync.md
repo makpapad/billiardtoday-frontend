@@ -326,6 +326,59 @@ cd /var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
 node scripts/restore-cms-home.js
 ```
 
+## Organizer / Venue Migration Runbook
+
+Για το redesign των `federations / organizers / venues`, το απλό `bt-sync` δεν αρκεί μόνο του, γιατί υπάρχει και production data migration.
+
+Σωστή σειρά:
+
+1. `commit` / `push` και στα 3 repos
+2. `bt-sync app`
+3. μπες στο live Strapi path:
+
+```bash
+cd /var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
+```
+
+4. τρέξε verification πριν το migration:
+
+```bash
+node scripts/verify-organizer-venue-migration.js
+```
+
+5. τρέξε dry-run:
+
+```bash
+node scripts/production-migrate-organizers-and-venues.js
+```
+
+6. αν το summary είναι σωστό, τρέξε apply:
+
+```bash
+node scripts/production-migrate-organizers-and-venues.js --apply
+```
+
+7. ξανατρέξε verification:
+
+```bash
+node scripts/verify-organizer-venue-migration.js
+```
+
+8. μετά μόνο:
+
+```bash
+bt-sync admin
+bt-sync frontend
+```
+
+Checks μετά το migration:
+
+- η `CEB` να έχει federation-owned tournaments και όχι club-owned imports
+- η `UMB` να συνεχίζει να δείχνει μόνο τα δικά της tournaments
+- η `Hellenic Billiard Union` να δείχνει `ACROPOLIS 2018`, `ACROPOLIS 2023`, `3k investment partner`
+- το `League 2 II` να παραμείνει club-owned test tournament
+- να μην αλλάξουν player stats totals
+
 ## Σημαντικό
 
 - Δεν κάνουμε deploy με σκέτο `git pull` μέσα στα `httpdocs`.

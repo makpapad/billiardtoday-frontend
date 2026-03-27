@@ -21,6 +21,20 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
         }
         meta={[federation.country || "Country", `${federation.clubCount} connected clubs`]}
       />
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-[22px] border border-black/5 bg-white p-4 text-sm text-slate-600 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Level</div>
+          <div className="mt-2 text-base font-semibold text-slate-950">{federation.level || "n/a"}</div>
+        </div>
+        <div className="rounded-[22px] border border-black/5 bg-white p-4 text-sm text-slate-600 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Parent</div>
+          <div className="mt-2 text-base font-semibold text-slate-950">{federation.parentName || "No parent"}</div>
+        </div>
+        <div className="rounded-[22px] border border-black/5 bg-white p-4 text-sm text-slate-600 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Ownership</div>
+          <div className="mt-2 text-base font-semibold text-slate-950">Own tournaments only</div>
+        </div>
+      </div>
 
       <section>
         <SectionHeading

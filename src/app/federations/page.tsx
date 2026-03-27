@@ -27,6 +27,8 @@ export default async function FederationsPage() {
               </div>
               <div className="mt-3 space-y-2 text-sm text-slate-600">
                 {federation.country ? <div>Country: {federation.country}</div> : null}
+                {federation.level ? <div>Level: {federation.level}</div> : null}
+                {federation.parent?.name ? <div>Parent: {federation.parent.name}</div> : null}
                 <div>Clubs: {federation.clubs?.length || 0}</div>
               </div>
               <div className="mt-5">

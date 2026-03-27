@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
             queryParams.set('filters[tournament][club][slug][$eq]', clubSlug)
         }
         if (federationId) {
-            queryParams.set('filters[tournament][club][federation][documentId][$eq]', federationId)
+            queryParams.set('filters[tournament][organizer_federation][documentId][$eq]', federationId)
         }
 
         const url = `${STRAPI_URL}/api/bt-events?${queryParams.toString()}`
