@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getFederations } from "@/lib/directory";
+import { CountryFlag } from "@/components/public/PresentationBlocks";
 
 export default async function FederationsPage() {
   const federations = await getFederations();
@@ -22,11 +23,21 @@ export default async function FederationsPage() {
               key={federation.documentId}
               className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]"
             >
+              {federation.country ? (
+                <div className="flex items-center gap-3">
+                  <CountryFlag
+                    country={federation.country}
+                    className="h-5 w-7 rounded object-cover"
+                  />
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                    {federation.country}
+                  </div>
+                </div>
+              ) : null}
               <div className="text-xl font-semibold tracking-tight text-slate-950">
                 {federation.name}
               </div>
               <div className="mt-3 space-y-2 text-sm text-slate-600">
-                {federation.country ? <div>Country: {federation.country}</div> : null}
                 {federation.level ? <div>Level: {federation.level}</div> : null}
                 {federation.parent?.name ? <div>Parent: {federation.parent.name}</div> : null}
                 <div>
