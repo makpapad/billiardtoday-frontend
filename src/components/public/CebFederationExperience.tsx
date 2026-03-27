@@ -86,6 +86,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
   const [cebTournaments, setCebTournaments] = useState<TournamentItem[] | null>(null);
   const [loadingCebTournaments, setLoadingCebTournaments] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState<string>("all");
+  const [selectedGameType, setSelectedGameType] = useState<string>("all");
 
   useEffect(() => {
     if (!selectedId || tournaments[selectedId]) return;
@@ -149,6 +151,25 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const selectedFederation = sortedMembers.find((item) => item.documentId === selectedId) || sortedMembers[0] || null;
   const selectedTournaments = selectedFederation ? tournaments[selectedFederation.documentId] || [] : [];
   const cebLogoUrl = resolveLogoUrl(federation.logo) || "/img/logo/ceb.png";
+  const cebSeasonOptions = Array.from(
+    new Set(
+      (cebTournaments || [])
+        .map((item) => item.season)
+        .filter((value): value is number => typeof value === "number" && Number.isFinite(value)),
+    ),
+  ).sort((a, b) => b - a);
+  const cebGameTypeOptions = Array.from(
+    new Set(
+      (cebTournaments || [])
+        .map((item) => String(item.game_type || "").trim())
+        .filter((value) => value.length > 0),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "en"));
+  const filteredCebTournaments = (cebTournaments || []).filter((item) => {
+    const seasonMatch = selectedSeason === "all" || String(item.season || "") === selectedSeason;
+    const gameTypeMatch = selectedGameType === "all" || String(item.game_type || "").trim() === selectedGameType;
+    return seasonMatch && gameTypeMatch;
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
@@ -302,19 +323,55 @@ export function CebFederationExperience({ federation, members, embedded = false 
       </section>
       ) : (
       <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
-        <SectionHeading
-          eyebrow="Official calendar"
-          title={`${federation.name} tournaments`}
-          description="Direct tournament calendar for events organized by the CEB itself."
-        />
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Official calendar</div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{`${federation.name} tournaments`}</h2>
+            <p className="max-w-2xl text-sm leading-7 text-slate-600">
+              Direct tournament calendar for events organized by the CEB itself.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex min-w-[180px] flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Season</span>
+              <select
+                value={selectedSeason}
+                onChange={(event) => setSelectedSeason(event.target.value)}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-sky-300"
+              >
+                <option value="all">All seasons</option>
+                {cebSeasonOptions.map((season) => (
+                  <option key={season} value={String(season)}>
+                    {season}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex min-w-[180px] flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Game type</span>
+              <select
+                value={selectedGameType}
+                onChange={(event) => setSelectedGameType(event.target.value)}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-sky-300"
+              >
+                <option value="all">All game types</option>
+                {cebGameTypeOptions.map((gameType) => (
+                  <option key={gameType} value={gameType}>
+                    {gameType}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
 
         {loadingCebTournaments && cebTournaments === null ? (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             Loading CEB tournaments...
           </div>
-        ) : cebTournaments && cebTournaments.length > 0 ? (
+        ) : filteredCebTournaments.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {cebTournaments.map((item) => {
+            {filteredCebTournaments.map((item) => {
               const status = getStatus(item.start_date, item.end_date);
               return (
                 <Link
@@ -344,7 +401,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-            No CEB tournaments found yet.
+            No CEB tournaments match the selected filters.
           </div>
         )}
       </section>
