@@ -4,6 +4,9 @@ export type SiteHeaderNavItem = {
   label: string;
   href: string;
   children?: SiteHeaderNavItem[];
+  iconSrc?: string;
+  iconAlt?: string;
+  iconClassName?: string;
 };
 
 type SiteHeaderProps = {
@@ -65,8 +68,20 @@ export function SiteHeader({
                 key={`${item.label}-${item.href}`}
                 href={item.href}
                 className="text-sm font-medium text-slate-300 transition hover:text-white"
+                aria-label={item.iconAlt || item.label}
+                title={item.label}
               >
-                {item.label}
+                {item.iconSrc ? (
+                  <span className="inline-flex items-center">
+                    <img
+                      src={item.iconSrc}
+                      alt={item.iconAlt || item.label}
+                      className={item.iconClassName || "h-10 w-auto object-contain"}
+                    />
+                  </span>
+                ) : (
+                  item.label
+                )}
               </Link>
             )
           ))}

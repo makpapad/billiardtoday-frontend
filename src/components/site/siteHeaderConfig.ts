@@ -17,6 +17,13 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
       { label: "Account", href: "/account" },
     ],
   },
+  {
+    label: "CEB",
+    href: "/federations/ceb",
+    iconSrc: "/img/logo/ceb.png",
+    iconAlt: "CEB logo",
+    iconClassName: "h-10 w-auto object-contain",
+  },
 ];
 
 export const SITE_HEADER_PRIMARY_CTA: SiteHeaderNavItem = {

@@ -3,7 +3,9 @@ import { getFederations } from "@/lib/directory";
 import { CountryFlag } from "@/components/public/PresentationBlocks";
 
 export default async function FederationsPage() {
-  const federations = await getFederations();
+  const federations = (await getFederations()).filter(
+    (federation) => federation.slug !== "ceb" && federation.slug !== "union-mondiale-de-billard",
+  );
 
   return (
     <section className="px-4 py-12 sm:px-6 sm:py-16">
