@@ -73,35 +73,6 @@ const DETAIL_FIELDS = [
   { key: "youthDirector", label: "Youth director" },
 ] as const;
 
-function EuropeBackdrop() {
-  return (
-    <svg viewBox="0 0 960 720" className="absolute inset-0 h-full w-full" aria-hidden="true">
-      <defs>
-        <linearGradient id="ceb-europe-fill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#dbeafe" />
-          <stop offset="55%" stopColor="#93c5fd" />
-          <stop offset="100%" stopColor="#60a5fa" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="960" height="720" rx="44" fill="#eff6ff" />
-      <path
-        d="M132 418c8-42 32-77 76-104l34-39 56-10 22-44 69-43 41 4 27-32 46-12 54 13 40 36 47-1 52 30 26 48-13 58-53 18-10 48 31 24-8 33-39 14-39-3-12 36-31 13-26 45-43 12-33-22-19-59-40-15-25-48-37-5-44 17-51-7-35 25-34-10-24-38-61-4-20-33 7-48z"
-        fill="url(#ceb-europe-fill)"
-        opacity="0.95"
-      />
-      <path
-        d="M364 508l24 27-12 48 32 52 43 17 4 30-21 15-54-25-34-57 1-54-21-23 38-30z"
-        fill="url(#ceb-europe-fill)"
-        opacity="0.78"
-      />
-      <circle cx="725" cy="601" r="10" fill="#60a5fa" opacity="0.7" />
-      <circle cx="748" cy="618" r="7" fill="#60a5fa" opacity="0.56" />
-      <circle cx="131" cy="551" r="8" fill="#60a5fa" opacity="0.5" />
-      <circle cx="862" cy="204" r="6" fill="#60a5fa" opacity="0.42" />
-    </svg>
-  );
-}
-
 export function CebFederationExperience({ federation, members }: Props) {
   const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "en"));
   const initialSelectedId = sortedMembers[0]?.documentId || null;
@@ -186,8 +157,13 @@ export function CebFederationExperience({ federation, members }: Props) {
         />
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="relative min-h-[520px] overflow-hidden rounded-[30px] border border-sky-100 bg-[radial-gradient(circle_at_top,#ffffff_0%,#eef6ff_58%,#dbeafe_100%)] p-4 sm:p-6">
-            <EuropeBackdrop />
+          <div className="relative min-h-[520px] overflow-hidden rounded-[30px] border border-sky-100 bg-white p-4 sm:p-6">
+            <img
+              src="/img/europe-map.webp"
+              alt="Europe map"
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)]" />
             <div className="absolute inset-0">
               {sortedMembers.map((member) => {
                 const point = CEB_MEMBER_PIN_POSITIONS[member.slug as keyof typeof CEB_MEMBER_PIN_POSITIONS];
@@ -202,11 +178,12 @@ export function CebFederationExperience({ federation, members }: Props) {
                     style={{ left: `${point.x}%`, top: `${point.y}%` }}
                     aria-label={`Select ${member.name}`}
                   >
-                    <span className="absolute left-1/2 top-[-0.9rem] h-5 w-[2px] -translate-x-1/2 rounded-full bg-sky-500/60" />
-                    <span className={`relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-lg ${isActive ? "border-sky-500 ring-4 ring-sky-200/80" : "border-white/90"}`}>
+                    <span className="absolute left-1/2 top-[-0.65rem] h-4 w-[2px] -translate-x-1/2 rounded-full bg-slate-900/55" />
+                    <span className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[3px] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.24)] ${isActive ? "border-sky-500 ring-4 ring-sky-200/85" : "border-white"}`}>
                       <CountryFlag country={member.country || null} className="h-full w-full object-cover" />
                     </span>
-                    <span className={`absolute left-1/2 top-12 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition ${isActive ? "bg-slate-950 text-white" : "bg-white/90 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
+                    <span className="absolute left-1/2 top-[2.4rem] h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-white shadow-[0_6px_14px_rgba(15,23,42,0.2)]" />
+                    <span className={`absolute left-1/2 top-14 min-w-max -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-md transition ${isActive ? "bg-slate-950 text-white" : "bg-white/92 text-slate-700 opacity-0 group-hover:opacity-100"}`}>
                       {member.country || member.name}
                     </span>
                   </button>
@@ -279,7 +256,7 @@ export function CebFederationExperience({ federation, members }: Props) {
                       : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {tab === "details" ? "1. Federation details" : tab === "tournaments" ? "2. Official tournaments" : "3. Clubs"}
+                  {tab === "details" ? "Federation details" : tab === "tournaments" ? "Official tournaments" : "Clubs"}
                 </button>
               ))}
               </div>
