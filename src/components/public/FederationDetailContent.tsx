@@ -36,19 +36,19 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
         actions={[]}
         aside={
           <div className="flex flex-col gap-4">
-            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-sm">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
               {logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={federation.logo?.name || `${federation.name} logo`}
-                  className="max-h-28 w-auto object-contain"
+                  className="max-h-36 max-w-full w-auto object-contain"
                 />
               ) : (
                 <div className="text-center text-sm font-medium text-white/70">No logo available</div>
               )}
             </div>
-            <div className="rounded-[28px] border border-white/10 bg-slate-950/25 p-6 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/25 p-6 text-center backdrop-blur-sm">
+              <div className="flex items-center justify-center gap-3">
                 <CountryFlag country={federation.country || null} className="h-6 w-9 rounded-md object-cover" />
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Country</div>
               </div>
@@ -56,7 +56,7 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
                 {federation.country || "Country pending"}
               </div>
               <div className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Connected clubs</div>
-              <div className="mt-2 text-4xl font-semibold tracking-tight text-white">{federation.clubCount || 0}</div>
+              <div className="mt-2 text-3xl font-semibold tracking-tight text-white">{federation.clubCount || 0}</div>
             </div>
           </div>
         }
