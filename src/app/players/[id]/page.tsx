@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
@@ -278,6 +278,7 @@ const normalizeCareerStats = (
 
 export default function PlayerProfilePage() {
     const params = useParams()
+    const pathname = usePathname()
     const router = useRouter()
     const searchParams = useSearchParams()
     const rawId = params?.id as string
@@ -298,6 +299,7 @@ export default function PlayerProfilePage() {
     const playerId = extractPlayerIdentifier(rawId)
     const isNumericPlayerId = /^\d+$/.test(playerId)
     const tournamentContextSlug = (searchParams?.get('tournament') || '').trim()
+    const isEmbedMode = pathname?.startsWith('/embed/players/') ?? false
 
     const [player, setPlayer] = useState<Player | null>(null)
     const [participations, setParticipations] = useState<TournamentParticipation[]>([])
@@ -1205,7 +1207,11 @@ export default function PlayerProfilePage() {
                     {tournamentContextSlug ? (
                         <button
                             type="button"
-                            onClick={() => router.push(`/players/${buildPlayerSlug(playerId, player.full_name)}`)}
+                            onClick={() =>
+                                router.push(
+                                    `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player.full_name)}`,
+                                )
+                            }
                             className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                             Show all tournaments
