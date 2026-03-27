@@ -158,14 +158,15 @@ export function CebFederationExperience({ federation, members, embedded = false 
         />
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="relative min-h-[520px] overflow-hidden rounded-[30px] border border-sky-100 bg-white p-4 sm:p-6">
-            <img
-              src="/img/europe-map.webp"
-              alt="Europe map"
-              className="absolute inset-0 h-full w-full object-contain"
-            />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)]" />
-            <div className="absolute inset-0">
+          <div className="rounded-[30px] border border-sky-100 bg-white p-3 sm:p-4">
+            <div className="relative w-full overflow-hidden rounded-[24px] bg-white" style={{ aspectRatio: "800 / 665" }}>
+              <img
+                src="/img/europe-map.webp"
+                alt="Europe map"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)]" />
+              <div className="absolute inset-0">
               {sortedMembers.map((member) => {
                 const point = CEB_MEMBER_PIN_POSITIONS[member.slug as keyof typeof CEB_MEMBER_PIN_POSITIONS];
                 if (!point) return null;
@@ -195,9 +196,10 @@ export function CebFederationExperience({ federation, members, embedded = false 
                   </button>
                 );
               })}
-            </div>
-            <div className="pointer-events-none absolute bottom-4 left-4 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 shadow-sm backdrop-blur-sm">
-              CEB member map
+              </div>
+              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4">
+                CEB member map
+              </div>
             </div>
           </div>
 
