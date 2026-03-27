@@ -23,18 +23,20 @@ export function PresentationHero({ eyebrow, title, description, actions = [], ac
   return (
     <section className="overflow-hidden rounded-[36px] border border-black/5 bg-[linear-gradient(135deg,#081528_0%,#0f2f52_50%,#1d4ed8_100%)] text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)]">
       <div className="grid gap-10 px-6 py-10 lg:grid-cols-[1.4fr_0.8fr] lg:px-10 lg:py-12">
-        <div className="space-y-5">
-          {eyebrow ? (
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/80">{eyebrow}</div>
-          ) : null}
-          <div className="space-y-4">
-            <h1 className="max-w-5xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">{title}</h1>
-            {description ? (
-              <p className="max-w-3xl text-sm leading-7 text-white/78 sm:text-base">{description}</p>
+        <div className="flex min-h-full flex-col gap-5">
+          <div className="space-y-5">
+            {eyebrow ? (
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/80">{eyebrow}</div>
             ) : null}
+            <div className="space-y-4">
+              <h1 className="max-w-5xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">{title}</h1>
+              {description ? (
+                <p className="max-w-3xl text-sm leading-7 text-white/78 sm:text-base">{description}</p>
+              ) : null}
+            </div>
           </div>
-          {actions.length > 0 ? (
-            <div className="flex flex-wrap gap-3">
+          {(actions.length > 0 || actionSlot) ? (
+            <div className="mt-auto flex flex-wrap gap-3 pt-2">
               {actions.map((action) => (
                 <Link
                   key={`${action.label}-${action.href}`}
@@ -48,9 +50,9 @@ export function PresentationHero({ eyebrow, title, description, actions = [], ac
                   {action.label}
                 </Link>
               ))}
+              {actionSlot}
             </div>
           ) : null}
-          {actionSlot ? <div className="flex flex-wrap gap-3">{actionSlot}</div> : null}
         </div>
         {aside ? (
           <div>{aside}</div>
