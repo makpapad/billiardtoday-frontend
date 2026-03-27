@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireFederationByIdentifier } from "@/lib/directory";
+import { FederationDetailContent } from "@/components/public/FederationDetailContent";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -41,6 +42,8 @@ export default async function FederationPage({ params }: Props) {
 
         </div>
       </section>
+
+      <FederationDetailContent federation={federation as never} />
 
       <TournamentListSection
         section={{

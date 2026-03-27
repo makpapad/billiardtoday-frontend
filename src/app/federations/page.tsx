@@ -12,7 +12,7 @@ export default async function FederationsPage() {
             Organizers
           </h1>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Browse organizers and open their pages to see affiliated clubs and related tournaments.
+            Browse the hierarchy of federations and open each page to see child federations or affiliated clubs.
           </p>
         </div>
 
@@ -29,7 +29,11 @@ export default async function FederationsPage() {
                 {federation.country ? <div>Country: {federation.country}</div> : null}
                 {federation.level ? <div>Level: {federation.level}</div> : null}
                 {federation.parent?.name ? <div>Parent: {federation.parent.name}</div> : null}
-                <div>Clubs: {federation.clubs?.length || 0}</div>
+                <div>
+                  {federation.level === "national"
+                    ? `Clubs: ${federation.clubCount || 0}`
+                    : `Federations: ${federation.federationCount || 0}`}
+                </div>
               </div>
               <div className="mt-5">
                 <Link

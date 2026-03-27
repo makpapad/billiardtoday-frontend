@@ -12,7 +12,7 @@ export default async function EmbedFederationsPage() {
             Organizers
           </h1>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Embedded directory of organizers, affiliated clubs and related tournaments.
+            Embedded directory of federations, confederations and their tournament ownership.
           </p>
         </div>
 
@@ -27,7 +27,11 @@ export default async function EmbedFederationsPage() {
               </div>
               <div className="mt-3 space-y-2 text-sm text-slate-600">
                 {federation.country ? <div>Country: {federation.country}</div> : null}
-                <div>Clubs: {federation.clubs?.length || 0}</div>
+                <div>
+                  {federation.level === "national"
+                    ? `Clubs: ${federation.clubCount || 0}`
+                    : `Federations: ${federation.federationCount || 0}`}
+                </div>
               </div>
               <div className="mt-5">
                 <Link

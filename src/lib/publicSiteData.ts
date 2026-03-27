@@ -66,11 +66,13 @@ export type PublicFederationCard = {
   level: string | null;
   parentName: string | null;
   clubCount: number;
+  federationCount: number;
   href: string;
 };
 
 export type PublicFederationDetail = PublicFederationCard & {
   clubs: PublicClubCard[];
+  children: PublicFederationCard[];
 };
 
 export type PublicTournamentEventCard = {
@@ -290,6 +292,7 @@ const mapFederationCard = (value: unknown): PublicFederationCard | null => {
   if (!name || !country || !documentId || !slug) return null;
 
   const clubs = toRelationArray(entity.clubs);
+  const children = toRelationArray(entity.children);
   const parentEntity = unwrapEntity(
     entity.parent && typeof entity.parent === "object" && "data" in (entity.parent as Record<string, unknown>)
       ? (entity.parent as { data?: unknown }).data
@@ -305,7 +308,8 @@ const mapFederationCard = (value: unknown): PublicFederationCard | null => {
     countryCode: getCountryCode(country),
     level: readString(entity.level),
     parentName: readString(parentEntity?.name),
-    clubCount: clubs.length,
+    clubCount: readString(entity.level) === "national" ? clubs.length : 0,
+    federationCount: children.length,
     href: `/federations/${slug}`,
   };
 };
@@ -437,6 +441,11 @@ export const listFederations = async (limit = 12): Promise<PublicFederationCard[
   params.set("fields[3]", "documentId");
   params.set("fields[4]", "level");
   params.set("populate[clubs][fields][0]", "documentId");
+  params.set("populate[children][fields][0]", "name");
+  params.set("populate[children][fields][1]", "slug");
+  params.set("populate[children][fields][2]", "country");
+  params.set("populate[children][fields][3]", "documentId");
+  params.set("populate[children][fields][4]", "level");
   params.set("populate[parent][fields][0]", "name");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`, 60).catch(() => null);
@@ -464,6 +473,11 @@ export const getFederationBySlug = async (slug: string): Promise<PublicFederatio
   params.set("populate[clubs][populate][players][fields][0]", "documentId");
   params.set("populate[clubs][populate][tournaments][fields][0]", "documentId");
   params.set("populate[clubs][populate][federation][fields][0]", "name");
+  params.set("populate[children][fields][0]", "name");
+  params.set("populate[children][fields][1]", "slug");
+  params.set("populate[children][fields][2]", "country");
+  params.set("populate[children][fields][3]", "documentId");
+  params.set("populate[children][fields][4]", "level");
   params.set("populate[parent][fields][0]", "name");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`, 60).catch(() => null);
@@ -477,6 +491,9 @@ export const getFederationBySlug = async (slug: string): Promise<PublicFederatio
     clubs: toRelationArray(entity.clubs)
       .map(mapClubCard)
       .filter((club: PublicClubCard | null): club is PublicClubCard => Boolean(club)),
+    children: toRelationArray(entity.children)
+      .map(mapFederationCard)
+      .filter((child: PublicFederationCard | null): child is PublicFederationCard => Boolean(child)),
   };
 };
 

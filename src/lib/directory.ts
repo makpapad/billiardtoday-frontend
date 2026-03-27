@@ -42,6 +42,16 @@ type Federation = {
     name: string;
   } | null;
   clubs?: Club[];
+  children?: Array<{
+    id: number;
+    documentId: string;
+    slug?: string;
+    name: string;
+    country?: string | null;
+    level?: string | null;
+  }>;
+  clubCount?: number;
+  federationCount?: number;
 };
 
 const buildHeaders = (): HeadersInit =>
@@ -149,12 +159,23 @@ export async function getFederations(): Promise<Federation[]> {
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
+  params.set("populate[children][fields][0]", "name");
+  params.set("populate[children][fields][1]", "slug");
+  params.set("populate[children][fields][2]", "documentId");
+  params.set("populate[children][fields][3]", "country");
+  params.set("populate[children][fields][4]", "level");
   params.set("populate[parent][fields][0]", "name");
   params.set("populate[parent][fields][1]", "documentId");
   params.set("populate[parent][fields][2]", "slug");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
-  return Array.isArray(json?.data) ? json.data : [];
+  return Array.isArray(json?.data)
+    ? json.data.map((row: Federation) => ({
+        ...row,
+        clubCount: row.level === "national" ? row.clubs?.length || 0 : 0,
+        federationCount: row.children?.length || 0,
+      }))
+    : [];
 }
 
 export async function getFederationBySlug(slug: string): Promise<Federation | null> {
@@ -169,12 +190,24 @@ export async function getFederationBySlug(slug: string): Promise<Federation | nu
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
+  params.set("populate[children][fields][0]", "name");
+  params.set("populate[children][fields][1]", "slug");
+  params.set("populate[children][fields][2]", "documentId");
+  params.set("populate[children][fields][3]", "country");
+  params.set("populate[children][fields][4]", "level");
   params.set("populate[parent][fields][0]", "name");
   params.set("populate[parent][fields][1]", "documentId");
   params.set("populate[parent][fields][2]", "slug");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
-  return Array.isArray(json?.data) ? json.data[0] || null : null;
+  if (!Array.isArray(json?.data)) return null;
+  const row = json.data[0] || null;
+  if (!row) return null;
+  return {
+    ...row,
+    clubCount: row.level === "national" ? row.clubs?.length || 0 : 0,
+    federationCount: row.children?.length || 0,
+  };
 }
 
 export async function getFederationByIdentifier(identifier: string): Promise<Federation | null> {
@@ -195,12 +228,24 @@ export async function getFederationByIdentifier(identifier: string): Promise<Fed
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
+  params.set("populate[children][fields][0]", "name");
+  params.set("populate[children][fields][1]", "slug");
+  params.set("populate[children][fields][2]", "documentId");
+  params.set("populate[children][fields][3]", "country");
+  params.set("populate[children][fields][4]", "level");
   params.set("populate[parent][fields][0]", "name");
   params.set("populate[parent][fields][1]", "documentId");
   params.set("populate[parent][fields][2]", "slug");
 
   const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
-  return Array.isArray(json?.data) ? json.data[0] || null : null;
+  if (!Array.isArray(json?.data)) return null;
+  const row = json.data[0] || null;
+  if (!row) return null;
+  return {
+    ...row,
+    clubCount: row.level === "national" ? row.clubs?.length || 0 : 0,
+    federationCount: row.children?.length || 0,
+  };
 }
 
 export async function requireClubBySlug(slug: string) {
