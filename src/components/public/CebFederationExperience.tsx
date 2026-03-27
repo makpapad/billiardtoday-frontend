@@ -20,6 +20,8 @@ type TournamentPayload = {
   data?: TournamentItem[];
 };
 
+type HeroView = "network" | "tournaments";
+
 type Props = {
   federation: Federation;
   members: Federation[];
@@ -79,8 +81,11 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const initialSelectedId = sortedMembers[0]?.documentId || null;
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeTab, setActiveTab] = useState<TabKey>("details");
+  const [heroView, setHeroView] = useState<HeroView>("network");
   const [tournaments, setTournaments] = useState<Record<string, TournamentItem[]>>({});
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
+  const [cebTournaments, setCebTournaments] = useState<TournamentItem[] | null>(null);
+  const [loadingCebTournaments, setLoadingCebTournaments] = useState(false);
 
   useEffect(() => {
     if (!selectedId || tournaments[selectedId]) return;
@@ -114,6 +119,33 @@ export function CebFederationExperience({ federation, members, embedded = false 
     };
   }, [selectedId, tournaments]);
 
+  useEffect(() => {
+    if (heroView !== "tournaments" || cebTournaments !== null) return;
+
+    let mounted = true;
+    const load = async () => {
+      setLoadingCebTournaments(true);
+      try {
+        const response = await fetch(`/api/tournaments?page=1&pageSize=12&federationId=${encodeURIComponent(federation.documentId)}`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json().catch(() => ({ data: [] }))) as TournamentPayload;
+        if (!mounted) return;
+        setCebTournaments(Array.isArray(payload.data) ? payload.data : []);
+      } catch {
+        if (!mounted) return;
+        setCebTournaments([]);
+      } finally {
+        if (mounted) setLoadingCebTournaments(false);
+      }
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [heroView, cebTournaments, federation.documentId]);
+
   const selectedFederation = sortedMembers.find((item) => item.documentId === selectedId) || sortedMembers[0] || null;
   const selectedTournaments = selectedFederation ? tournaments[selectedFederation.documentId] || [] : [];
   const cebLogoUrl = resolveLogoUrl(federation.logo) || "/img/logo/ceb.png";
@@ -123,8 +155,38 @@ export function CebFederationExperience({ federation, members, embedded = false 
       <PresentationHero
         eyebrow="European Confederation"
         title={federation.name}
-        description="Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
+        description={
+          heroView === "tournaments"
+            ? "Browse the official tournament calendar organized directly by the CEB, including championships and major European events."
+            : "Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
+        }
         actions={[]}
+        actionSlot={
+          <>
+            <button
+              type="button"
+              onClick={() => setHeroView("network")}
+              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
+                heroView === "network"
+                  ? "bg-white text-slate-950"
+                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+              }`}
+            >
+              National federation network
+            </button>
+            <button
+              type="button"
+              onClick={() => setHeroView("tournaments")}
+              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
+                heroView === "tournaments"
+                  ? "bg-white text-slate-950"
+                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+              }`}
+            >
+              Tournaments
+            </button>
+          </>
+        }
         aside={
           <div className="grid gap-4">
             <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-sm">
@@ -150,6 +212,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
         }
       />
 
+      {heroView === "network" ? (
       <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <SectionHeading
           eyebrow="Interactive map"
@@ -237,8 +300,57 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
         </div>
       </section>
+      ) : (
+      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <SectionHeading
+          eyebrow="Official calendar"
+          title={`${federation.name} tournaments`}
+          description="Direct tournament calendar for events organized by the CEB itself."
+        />
 
-      {selectedFederation ? (
+        {loadingCebTournaments && cebTournaments === null ? (
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+            Loading CEB tournaments...
+          </div>
+        ) : cebTournaments && cebTournaments.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {cebTournaments.map((item) => {
+              const status = getStatus(item.start_date, item.end_date);
+              return (
+                <Link
+                  key={item.documentId}
+                  href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
+                  className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                        {item.game_type || "Tournament"}
+                      </div>
+                      <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">{item.title}</h3>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {status}
+                    </span>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600">
+                    <span>Season {item.season || "-"}</span>
+                    <span>{formatDate(item.start_date)}</span>
+                    <span>{formatDate(item.end_date)}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+            No CEB tournaments found yet.
+          </div>
+        )}
+      </section>
+      )}
+
+      {heroView === "network" && selectedFederation ? (
         <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>

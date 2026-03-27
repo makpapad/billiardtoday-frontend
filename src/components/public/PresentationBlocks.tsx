@@ -7,6 +7,7 @@ type HeroProps = {
   title: string;
   description?: string | null;
   actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary" }>;
+  actionSlot?: ReactNode;
   meta?: string[];
   aside?: ReactNode;
 };
@@ -18,7 +19,7 @@ type SectionProps = {
   action?: { label: string; href: string };
 };
 
-export function PresentationHero({ eyebrow, title, description, actions = [], meta = [], aside }: HeroProps) {
+export function PresentationHero({ eyebrow, title, description, actions = [], actionSlot, meta = [], aside }: HeroProps) {
   return (
     <section className="overflow-hidden rounded-[36px] border border-black/5 bg-[linear-gradient(135deg,#081528_0%,#0f2f52_50%,#1d4ed8_100%)] text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)]">
       <div className="grid gap-10 px-6 py-10 lg:grid-cols-[1.4fr_0.8fr] lg:px-10 lg:py-12">
@@ -49,6 +50,7 @@ export function PresentationHero({ eyebrow, title, description, actions = [], me
               ))}
             </div>
           ) : null}
+          {actionSlot ? <div className="flex flex-wrap gap-3">{actionSlot}</div> : null}
         </div>
         {aside ? (
           <div>{aside}</div>
