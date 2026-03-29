@@ -183,6 +183,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const selectedFederation = sortedMembers.find((item) => item.documentId === selectedId) || sortedMembers[0] || null;
   const selectedTournaments = selectedFederation ? tournaments[selectedFederation.documentId] || [] : [];
   const cebLogoUrl = resolveLogoUrl(federation.logo) || "/img/logo/ceb.png";
+  const selectedFederationLogoUrl = resolveLogoUrl(selectedFederation?.logo);
   const cebSeasonOptions = Array.from(
     new Set(
       (cebTournaments || [])
@@ -343,6 +344,19 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 </div>
               </div>
             </div>
+
+            {selectedFederationLogoUrl ? (
+              <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Federation logo</div>
+                <div className="mt-4 flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6">
+                  <img
+                    src={selectedFederationLogoUrl}
+                    alt={selectedFederation?.logo?.name || `${selectedFederation?.name || "Federation"} logo`}
+                    className="max-h-28 w-auto max-w-full object-contain sm:max-h-32"
+                  />
+                </div>
+              </div>
+            ) : null}
 
             <div className="rounded-[28px] border border-black/5 bg-slate-950 p-5 text-white shadow-[0_18px_60px_rgba(15,23,42,0.12)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">How it works</div>
