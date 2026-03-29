@@ -347,8 +347,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
 
             {selectedFederationLogoUrl ? (
               <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Federation logo</div>
-                <div className="mt-4 flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6">
+                <div className="flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6">
                   <img
                     src={selectedFederationLogoUrl}
                     alt={selectedFederation?.logo?.name || `${selectedFederation?.name || "Federation"} logo`}
