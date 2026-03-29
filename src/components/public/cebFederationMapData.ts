@@ -37,7 +37,7 @@ export const CEB_MEMBER_PIN_POSITIONS: Record<
   "suomen-biljardiliitto-ry": { x: 68.8, y: 33.6, offsetX: 4, offsetY: -6 },
   "federation-francaise-de-billard": { x: 40.8, y: 76.1, offsetX: -20, offsetY: -4 },
   "deutsche-billard-union": { x: 49.4, y: 66.2, offsetX: -6, offsetY: -18 },
-  "eoaa-elliniki-omospondia-athlimaton-akriveias": { x: 63.7, y: 96.4, offsetX: 6, offsetY: -12 },
+  "eoaa-elliniki-omospondia-athlimaton-akriveias": { x: 63.7, y: 91.8, offsetX: 6, offsetY: -12 },
   "magyar-biliard-szovetseg": { x: 58.2, y: 76.7, offsetX: 18, offsetY: -8 },
   "federazione-italiana-sport-biliardo-e-bowling": { x: 57.0, y: 90.0, offsetX: -14, offsetY: -6 },
   "federation-luxembourgeoise-des-amateurs-de-billard": { x: 48.8, y: 67.0, offsetX: -24, offsetY: 6 },

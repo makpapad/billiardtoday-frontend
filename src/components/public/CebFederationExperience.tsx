@@ -274,7 +274,36 @@ export function CebFederationExperience({ federation, members, embedded = false 
           description="Tap any federation pin on the Europe map to switch the content below between federation profile, official tournaments, and affiliated clubs."
         />
 
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-8 lg:grid-cols-[0.68fr_1.12fr_0.8fr]">
+          <div className="rounded-[30px] border border-sky-100 bg-slate-50/70 p-4 sm:p-5">
+            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Federations</div>
+            <div className="max-h-[665px] space-y-2 overflow-y-auto pr-1">
+              {sortedMembers.map((member) => {
+                const isActive = member.documentId === selectedFederation?.documentId;
+                return (
+                  <button
+                    key={`list-${member.documentId}`}
+                    type="button"
+                    onClick={() => setSelectedId(member.documentId)}
+                    className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+                      isActive
+                        ? "border-sky-300 bg-white shadow-[0_10px_24px_rgba(2,132,199,0.12)]"
+                        : "border-white/70 bg-white/80 hover:border-sky-200 hover:bg-white"
+                    }`}
+                  >
+                    <CountryFlag country={member.country || null} className="h-4 w-6 rounded object-cover" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-slate-950">{member.name}</div>
+                      <div className="truncate text-xs uppercase tracking-[0.14em] text-slate-500">
+                        {member.country || "Country pending"}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="rounded-[30px] border border-sky-100 bg-white p-3 sm:p-4">
             <div className="relative w-full overflow-hidden rounded-[24px] bg-white" style={{ aspectRatio: "800 / 665" }}>
               <img
@@ -346,9 +375,13 @@ export function CebFederationExperience({ federation, members, embedded = false 
             </div>
 
             {selectedFederationLogoUrl ? (
-              <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+              <div
+                key={`${selectedFederation?.documentId || "federation"}-${selectedFederationLogoUrl}`}
+                className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]"
+              >
                 <div className="flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6">
                   <img
+                    key={selectedFederationLogoUrl}
                     src={selectedFederationLogoUrl}
                     alt={selectedFederation?.logo?.name || `${selectedFederation?.name || "Federation"} logo`}
                     className="max-h-28 w-auto max-w-full object-contain sm:max-h-32"
