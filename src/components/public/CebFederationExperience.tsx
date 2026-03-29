@@ -274,10 +274,10 @@ export function CebFederationExperience({ federation, members, embedded = false 
           description="Tap any federation pin on the Europe map to switch the content below between federation profile, official tournaments, and affiliated clubs."
         />
 
-        <div className="grid gap-8 lg:grid-cols-[0.68fr_1.12fr_0.8fr]">
-          <div className="rounded-[30px] border border-sky-100 bg-slate-50/70 p-4 sm:p-5">
-            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Federations</div>
-            <div className="max-h-[665px] space-y-2 overflow-y-auto pr-1">
+        <div className="grid gap-8 lg:grid-cols-[0.58fr_1.12fr_0.8fr]">
+          <div className="flex h-full max-h-[665px] flex-col rounded-[30px] border border-sky-100 bg-slate-50/70 p-4 sm:p-5">
+            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Countries</div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {sortedMembers.map((member) => {
                 const isActive = member.documentId === selectedFederation?.documentId;
                 return (
@@ -292,11 +292,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     }`}
                   >
                     <CountryFlag country={member.country || null} className="h-4 w-6 rounded object-cover" />
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-slate-950">{member.name}</div>
-                      <div className="truncate text-xs uppercase tracking-[0.14em] text-slate-500">
-                        {member.country || "Country pending"}
-                      </div>
+                    <div className="min-w-0 truncate text-sm font-semibold uppercase tracking-[0.08em] text-slate-900">
+                      {member.country || "Country pending"}
                     </div>
                   </button>
                 );
