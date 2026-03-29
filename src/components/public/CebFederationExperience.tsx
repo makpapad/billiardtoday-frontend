@@ -274,33 +274,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
           description="Tap any federation pin on the Europe map to switch the content below between federation profile, official tournaments, and affiliated clubs."
         />
 
-        <div className="grid gap-8 lg:grid-cols-[0.58fr_1.12fr_0.8fr]">
-          <div className="flex h-full max-h-[665px] flex-col rounded-[30px] border border-sky-100 bg-slate-50/70 p-4 sm:p-5">
-            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Countries</div>
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-              {sortedMembers.map((member) => {
-                const isActive = member.documentId === selectedFederation?.documentId;
-                return (
-                  <button
-                    key={`list-${member.documentId}`}
-                    type="button"
-                    onClick={() => setSelectedId(member.documentId)}
-                    className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
-                      isActive
-                        ? "border-sky-300 bg-white shadow-[0_10px_24px_rgba(2,132,199,0.12)]"
-                        : "border-white/70 bg-white/80 hover:border-sky-200 hover:bg-white"
-                    }`}
-                  >
-                    <CountryFlag country={member.country || null} className="h-4 w-6 rounded object-cover" />
-                    <div className="min-w-0 truncate text-sm font-semibold uppercase tracking-[0.08em] text-slate-900">
-                      {member.country || "Country pending"}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-[30px] border border-sky-100 bg-white p-3 sm:p-4">
             <div className="relative w-full overflow-hidden rounded-[24px] bg-white" style={{ aspectRatio: "800 / 665" }}>
               <img
