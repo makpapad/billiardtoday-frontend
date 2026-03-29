@@ -283,6 +283,33 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)]" />
+              <div className="absolute inset-y-4 left-4 z-30 hidden w-52 rounded-[28px] border border-white/45 bg-white/24 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl lg:flex lg:flex-col">
+                <div className="px-4 pb-2 pt-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-900/80">
+                  Countries
+                </div>
+                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+                  {sortedMembers.map((member) => {
+                    const isActive = member.documentId === selectedFederation?.documentId;
+                    return (
+                      <button
+                        key={`map-list-${member.documentId}`}
+                        type="button"
+                        onClick={() => setSelectedId(member.documentId)}
+                        className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition ${
+                          isActive
+                            ? "bg-white/85 text-slate-950 shadow-[0_8px_20px_rgba(15,23,42,0.14)]"
+                            : "bg-white/45 text-slate-800 hover:bg-white/70"
+                        }`}
+                      >
+                        <CountryFlag country={member.country || null} className="h-4 w-6 rounded object-cover" />
+                        <span className="truncate text-sm font-semibold uppercase tracking-[0.08em]">
+                          {member.country || "Country pending"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="absolute inset-0">
               {sortedMembers.map((member) => {
                 const point = CEB_MEMBER_PIN_POSITIONS[member.slug as keyof typeof CEB_MEMBER_PIN_POSITIONS];
