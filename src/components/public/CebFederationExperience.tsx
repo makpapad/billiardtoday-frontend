@@ -274,9 +274,9 @@ export function CebFederationExperience({ federation, members, embedded = false 
           description="Tap any federation pin on the Europe map to switch the content below between federation profile, official tournaments, and affiliated clubs."
         />
 
-        <div className="grid gap-8 lg:grid-cols-[1.85fr_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[2.35fr_1fr]">
           <div className="rounded-[30px] border border-sky-100 bg-white p-3 sm:p-4">
-            <div className="relative w-full overflow-hidden rounded-[24px] bg-white" style={{ aspectRatio: "800 / 665" }}>
+            <div className="relative w-full overflow-hidden rounded-[24px] bg-white" style={{ aspectRatio: "860 / 665" }}>
               <img
                 src="/img/europe-map.webp"
                 alt="Europe map"
