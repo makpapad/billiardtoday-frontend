@@ -907,21 +907,21 @@ function PlayerRow({
         active ? "bg-sky-500/90" : "bg-sky-400/60"
       }`}
     >
-      <div className="flex min-w-0 flex-[0_1_auto] items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <TimeoutTicks activeCount={timeouts} totalCount={maxTimeouts} />
         <FlagBadge name={name} countryCode={countryCode} />
         <span className="truncate text-xl font-semibold leading-none tracking-wide md:text-2xl">
           {name}
         </span>
       </div>
-      <div className="ml-4 flex items-center gap-3">
-        <div className="min-w-[60px] text-right text-4xl font-black">{score}</div>
+      <div className="ml-2 flex w-[128px] items-center justify-end gap-3">
+        <div className="w-[60px] text-right text-4xl font-black">{score}</div>
         {active ? (
-          <div className="min-w-[52px] rounded-lg bg-amber-300 px-3 py-1 text-center text-xl font-black text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]">
+          <div className="w-[52px] rounded-lg bg-amber-300 px-3 py-1 text-center text-xl font-black text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]">
             {run}
           </div>
         ) : (
-          <div className="min-w-[52px] text-center text-xs uppercase tracking-[0.3em] text-white/40">
+          <div className="w-[52px] text-center text-xs uppercase tracking-[0.3em] text-white/40">
             -
           </div>
         )}
@@ -940,12 +940,12 @@ function TimeoutTicks({
   const safeTotal = Math.max(2, totalCount || 0);
 
   return (
-    <div className="flex h-10 items-center gap-[3px]">
+    <div className="flex w-[14px] items-center justify-start gap-[3px]">
       {Array.from({ length: safeTotal }).map((_, index) => (
         <span
           key={index}
-          className={`h-6 w-[4px] rounded-full ${
-            index < activeCount ? "bg-emerald-400" : "bg-white/30"
+          className={`h-7 w-[5px] rounded-full ${
+            index < activeCount ? "bg-emerald-400" : "bg-slate-200/55"
           }`}
         />
       ))}
