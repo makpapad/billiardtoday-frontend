@@ -109,8 +109,8 @@ type WsPayload = {
   }>;
 };
 
-const DEFAULT_WIDTH = 640;
-const DEFAULT_HEIGHT = 180;
+const DEFAULT_WIDTH = 560;
+const DEFAULT_HEIGHT = 158;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
 function getParamValue(value: string | string[] | undefined): string | undefined {
