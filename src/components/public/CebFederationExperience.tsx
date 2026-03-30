@@ -28,7 +28,7 @@ type TournamentPayload = {
   };
 };
 
-type HeroView = "network" | "tournaments" | "board";
+type HeroView = "network" | "tournaments" | "board" | "upcoming";
 
 type Props = {
   federation: Federation;
@@ -227,6 +227,24 @@ const formatDate = (value: string | null | undefined) => {
   });
 };
 
+const formatCalendarDay = (value: string | null | undefined) => {
+  if (!value) return { day: "--", month: "TBD" };
+  const date = new Date(value);
+  return {
+    day: date.toLocaleDateString("en-GB", { day: "2-digit" }),
+    month: date.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
+  };
+};
+
+const formatMonthHeading = (value: string) => {
+  const [year, month] = value.split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
 const getStatus = (startDate: string | null | undefined, endDate: string | null | undefined) => {
   const now = Date.now();
   const start = startDate ? new Date(startDate).getTime() : null;
@@ -329,7 +347,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
   }, [selectedId, tournaments]);
 
   useEffect(() => {
-    if (heroView !== "tournaments" || cebTournaments !== null) return;
+    if (cebTournaments !== null) return;
 
     let mounted = true;
     const load = async () => {
@@ -376,6 +394,32 @@ export function CebFederationExperience({ federation, members, embedded = false 
     const gameTypeMatch = selectedGameType === "all" || String(item.game_type || "").trim() === selectedGameType;
     return seasonMatch && gameTypeMatch;
   });
+  const upcomingCebTournaments = [...(cebTournaments || [])]
+    .filter((item) => getStatus(item.start_date, item.end_date) === "Upcoming")
+    .sort((a, b) => {
+      const aTime = a.start_date ? new Date(a.start_date).getTime() : Number.MAX_SAFE_INTEGER;
+      const bTime = b.start_date ? new Date(b.start_date).getTime() : Number.MAX_SAFE_INTEGER;
+      return aTime - bTime;
+    });
+  const upcomingCalendarGroups = upcomingCebTournaments.reduce<
+    Array<{ key: string; label: string; items: TournamentItem[] }>
+  >((groups, item) => {
+    const start = item.start_date ? new Date(item.start_date) : null;
+    const key = start
+      ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`
+      : "date-pending";
+    const existingGroup = groups.find((group) => group.key === key);
+    if (existingGroup) {
+      existingGroup.items.push(item);
+      return groups;
+    }
+    groups.push({
+      key,
+      label: key === "date-pending" ? "Date pending" : formatMonthHeading(key),
+      items: [item],
+    });
+    return groups;
+  }, []);
   const leadershipMembers = CEB_BOARD_MEMBERS.slice(0, 6);
   const extendedBoardMembers = CEB_BOARD_MEMBERS.slice(6);
 
@@ -387,6 +431,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
         description={
           heroView === "tournaments"
             ? "Browse the official tournament calendar organized directly by the CEB, including championships and major European events."
+            : heroView === "upcoming"
+              ? "Track the next CEB events in a clean monthly calendar view, focused only on upcoming competitions."
             : heroView === "board"
               ? "Meet the CEB leadership team through a dedicated board roster with portraits, roles, and direct contact details."
             : "Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
@@ -418,6 +464,17 @@ export function CebFederationExperience({ federation, members, embedded = false 
             </button>
             <button
               type="button"
+              onClick={() => setHeroView("upcoming")}
+              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
+                heroView === "upcoming"
+                  ? "bg-white text-slate-950"
+                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+              }`}
+            >
+              Upcoming Events
+            </button>
+            <button
+              type="button"
               onClick={() => setHeroView("board")}
               className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
                 heroView === "board"
@@ -440,15 +497,16 @@ export function CebFederationExperience({ federation, members, embedded = false 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Member federations</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Affiliate federations</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{sortedMembers.length}</div>
               </div>
-              <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Connected clubs</div>
-                <div className="mt-3 text-4xl font-semibold text-white">
-                  {sortedMembers.reduce((sum, item) => sum + (item.clubCount || 0), 0)}
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setHeroView("upcoming")}
+                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Upcoming Events</div>
+              </button>
             </div>
           </div>
         }
@@ -668,6 +726,99 @@ export function CebFederationExperience({ federation, members, embedded = false 
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             No CEB tournaments match the selected filters.
+          </div>
+        )}
+      </section>
+      ) : null}
+
+      {heroView === "upcoming" ? (
+      <section className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,#ffffff_0%,#f3f8ff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Upcoming events</div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">CEB competition calendar</h2>
+            <p className="max-w-2xl text-sm leading-7 text-slate-600">
+              A month-by-month view of the next confirmed CEB events, designed as a cleaner calendar snapshot than the full tournament listing.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[24px] border border-sky-100 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Schedule</div>
+              <div className="mt-2 text-lg font-semibold text-slate-950">Upcoming only</div>
+              <div className="mt-1 text-sm text-slate-500">No completed or live tournaments in this view.</div>
+            </div>
+            <div className="rounded-[24px] border border-slate-200 bg-slate-950 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.12)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Navigation</div>
+              <button
+                type="button"
+                onClick={() => setHeroView("tournaments")}
+                className="mt-3 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+              >
+                Open full tournaments list
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {loadingCebTournaments && cebTournaments === null ? (
+          <div className="rounded-[24px] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
+            Loading upcoming events...
+          </div>
+        ) : upcomingCalendarGroups.length > 0 ? (
+          <div className="space-y-8">
+            {upcomingCalendarGroups.map((group) => (
+              <div key={group.key} className="rounded-[28px] border border-slate-200/80 bg-white/92 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.05)] sm:p-6">
+                <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Month</div>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{group.label}</h3>
+                  </div>
+                  <div className="rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                    {group.items.length} event{group.items.length === 1 ? "" : "s"}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {group.items.map((item) => {
+                    const calendarDate = formatCalendarDay(item.start_date);
+                    return (
+                      <Link
+                        key={item.documentId}
+                        href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
+                        className="grid gap-4 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:grid-cols-[90px_1fr]"
+                      >
+                        <div className="flex min-h-[90px] flex-col items-center justify-center rounded-[22px] bg-slate-950 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">{calendarDate.month}</div>
+                          <div className="mt-2 text-4xl font-semibold leading-none">{calendarDate.day}</div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700">
+                              {item.game_type || "Tournament"}
+                            </span>
+                            {item.season ? (
+                              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-600">
+                                Season {item.season}
+                              </span>
+                            ) : null}
+                          </div>
+                          <h4 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">{item.title}</h4>
+                          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
+                            <span>{formatDate(item.start_date)}</span>
+                            <span>{formatDate(item.end_date)}</span>
+                          </div>
+                          <div className="mt-4 text-sm font-semibold text-sky-700">Open event page</div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
+            No upcoming CEB events are available right now.
           </div>
         )}
       </section>
