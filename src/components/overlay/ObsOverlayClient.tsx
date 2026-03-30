@@ -621,10 +621,13 @@ function RoyalProOverlayCard({
   const rightScore = state.scoreB ?? 0;
   const leftAvg = formatAverageValue(leftScore, state.inningsCount);
   const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftRun = state.liveRunA ?? state.runA ?? 0;
+  const rightRun = state.liveRunB ?? state.runB ?? 0;
   const innings = state.inningsCount ?? 0;
   const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
+  const activeSide = state.current;
   const overlayWidth = Math.round(width * 0.6);
   const overlayBottom = Math.max(260, Math.round(height * 0.25));
   const topBarHeight = Math.max(18, Math.round(height * 0.024));
@@ -701,13 +704,29 @@ function RoyalProOverlayCard({
               style={{ minHeight: subBarHeight }}
             >
               <div className="text-right pr-10">
-                Avg <span className="font-black text-cyan-100">{leftAvg}</span>
+                {activeSide === "A" ? (
+                  <>
+                    Run <span className="font-black text-cyan-100">{leftRun}</span>
+                  </>
+                ) : (
+                  <>
+                    Avg <span className="font-black text-cyan-100">{leftAvg}</span>
+                  </>
+                )}
               </div>
               <div className="text-center font-black uppercase tracking-[0.08em]">
                 Innings {innings}
               </div>
               <div className="text-left pl-10">
-                Avg <span className="font-black text-cyan-100">{rightAvg}</span>
+                {activeSide === "B" ? (
+                  <>
+                    Run <span className="font-black text-cyan-100">{rightRun}</span>
+                  </>
+                ) : (
+                  <>
+                    Avg <span className="font-black text-cyan-100">{rightAvg}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
