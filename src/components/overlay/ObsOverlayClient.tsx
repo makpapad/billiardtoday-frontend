@@ -653,27 +653,20 @@ function RoyalProOverlayCard({
           <div
             className="grid items-stretch overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
             style={{
-              gridTemplateColumns: "0.18fr 1.18fr auto auto auto 1.18fr 0.18fr",
+              gridTemplateColumns: "0.22fr 1.35fr auto auto auto 1.35fr 0.22fr",
               minHeight: mainBarHeight,
               background:
                 "linear-gradient(180deg, rgba(28,62,160,0.98) 0%, rgba(21,46,121,0.98) 100%)",
             }}
           >
-            <div className="flex items-center justify-center bg-black/52 px-3">
-              <div className="text-center leading-none">
-                <div className="text-[32px] font-black tracking-[-0.04em] text-[#1f8cff]">
-                  RP
-                </div>
-                <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/72">
-                  RoyalPro
-                </div>
-              </div>
+            <div className="flex items-center justify-center bg-black/58 px-2">
+              <EdgeSponsor side="left" />
             </div>
 
-            <div className="flex items-center gap-2 border-l border-white/10 px-3">
+            <div className="flex items-center gap-2 border-l border-white/10 px-2">
               <PortraitBadge side="left" countryCode={leftFlag} />
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                <div className="min-w-0 truncate text-right text-[19px] font-semibold leading-none">
+                <div className="min-w-0 truncate text-right text-[18px] font-semibold leading-none">
                   {leftName}
                 </div>
                 <FlagOnly countryCode={leftFlag} />
@@ -690,20 +683,18 @@ function RoyalProOverlayCard({
               {rightScore}
             </div>
 
-            <div className="flex items-center gap-2 px-3">
+            <div className="flex items-center gap-2 px-2">
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <FlagOnly countryCode={rightFlag} />
-                <div className="min-w-0 truncate text-left text-[19px] font-semibold leading-none">
+                <div className="min-w-0 truncate text-left text-[18px] font-semibold leading-none">
                   {rightName}
                 </div>
               </div>
               <PortraitBadge side="right" countryCode={rightFlag} />
             </div>
 
-            <div className="flex items-center justify-center bg-black/52 px-3">
-              <div className="text-[17px] font-black uppercase tracking-[0.02em] text-white/30">
-                ds
-              </div>
+            <div className="flex items-center justify-center bg-black/58 px-2">
+              <EdgeSponsor side="right" />
             </div>
           </div>
 
@@ -745,12 +736,31 @@ function PortraitBadge({
 }) {
   return (
     <div
-      className={`h-12 w-12 overflow-hidden rounded-full border-2 border-[#11214e] bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.18),rgba(0,0,0,0.45))] shadow-[0_6px_16px_rgba(0,0,0,0.45)] ${
+      className={`relative h-12 w-12 overflow-hidden rounded-[18%] border-2 border-[#11214e] bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.18),rgba(0,0,0,0.45))] shadow-[0_6px_16px_rgba(0,0,0,0.45)] ${
         side === "left" ? "ml-1" : "mr-1"
       }`}
+      style={{
+        clipPath:
+          side === "left"
+            ? "polygon(18% 0, 100% 0, 100% 100%, 0 100%, 0 22%)"
+            : "polygon(0 0, 82% 0, 100% 22%, 100% 100%, 0 100%)",
+      }}
     >
       <div className="flex h-full w-full items-end justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(0,0,0,0.36))]">
         <div className="mb-1 h-4 w-8 rounded-t-full bg-white/10" />
+      </div>
+    </div>
+  );
+}
+
+function EdgeSponsor({ side }: { side: "left" | "right" }) {
+  return (
+    <div className={`text-center ${side === "right" ? "opacity-75" : ""}`}>
+      <div className="text-[28px] font-black tracking-[-0.05em] text-[#1f8cff]">
+        {side === "left" ? "Q" : "DS"}
+      </div>
+      <div className="mt-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/55">
+        {side === "left" ? "Sponsor" : "Sponsor"}
       </div>
     </div>
   );
