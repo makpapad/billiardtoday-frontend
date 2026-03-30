@@ -907,14 +907,14 @@ function PlayerRow({
         active ? "bg-sky-500/90" : "bg-sky-400/60"
       }`}
     >
-      <div className="flex flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-[0_1_auto] items-center gap-3">
         <TimeoutTicks activeCount={timeouts} totalCount={maxTimeouts} />
         <FlagBadge name={name} countryCode={countryCode} />
-        <span className="text-xl font-semibold leading-none tracking-wide md:text-2xl">
+        <span className="truncate text-xl font-semibold leading-none tracking-wide md:text-2xl">
           {name}
         </span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="ml-4 flex items-center gap-3">
         <div className="min-w-[60px] text-right text-4xl font-black">{score}</div>
         {active ? (
           <div className="min-w-[52px] rounded-lg bg-amber-300 px-3 py-1 text-center text-xl font-black text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]">
