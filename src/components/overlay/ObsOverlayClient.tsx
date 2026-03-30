@@ -626,7 +626,7 @@ function RoyalProOverlayCard({
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const overlayWidth = Math.round(width * 0.7);
-  const overlayBottom = Math.max(180, Math.round(height * 0.18));
+  const overlayBottom = Math.max(260, Math.round(height * 0.25));
   const topBarHeight = Math.max(10, Math.round(height * 0.014));
   const mainBarHeight = Math.max(44, Math.round(height * 0.064));
   const subBarHeight = Math.max(16, Math.round(height * 0.022));
@@ -665,7 +665,7 @@ function RoyalProOverlayCard({
             <div
               className="grid items-stretch"
               style={{
-                gridTemplateColumns: "auto 1fr auto auto auto 1fr auto",
+                gridTemplateColumns: "auto minmax(180px,0.7fr) auto auto auto minmax(180px,0.7fr) auto",
                 minHeight: mainBarHeight,
                 background:
                   "linear-gradient(180deg, rgba(18,44,122,0.98) 0%, rgba(13,32,94,0.98) 100%)",
@@ -675,8 +675,8 @@ function RoyalProOverlayCard({
                 <SmallFlag countryCode={leftFlag} />
               </div>
 
-              <div className="flex min-w-0 items-center px-3">
-                <div className="min-w-0 truncate text-right text-[16px] font-semibold leading-none text-white">
+              <div className="flex min-w-0 items-center justify-end px-2">
+                <div className="min-w-0 truncate text-right text-[15px] font-semibold leading-none text-white">
                   {leftName}
                 </div>
               </div>
@@ -691,8 +691,8 @@ function RoyalProOverlayCard({
                 {rightScore}
               </div>
 
-              <div className="flex min-w-0 items-center justify-end px-3">
-                <div className="min-w-0 truncate text-left text-[16px] font-semibold leading-none text-white">
+              <div className="flex min-w-0 items-center px-2">
+                <div className="min-w-0 truncate text-left text-[15px] font-semibold leading-none text-white">
                   {rightName}
                 </div>
               </div>
