@@ -159,6 +159,15 @@ function normalizeTargetPoints(...values: unknown[]): number | null {
   return null;
 }
 
+function formatOverlayPlayerName(name: string | null | undefined): string {
+  const raw = normalizeString(name) ?? "Player";
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return raw;
+  const lastName = parts[0] ?? raw;
+  const firstInitial = (parts[1] ?? "").slice(0, 1).toUpperCase();
+  return firstInitial ? `${lastName} ${firstInitial}.` : lastName;
+}
+
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
   if (!input) return null;
 
@@ -596,7 +605,7 @@ function ScoreOverlayCard({
 
             <div className="flex flex-1 flex-col">
               <PlayerRow
-                name={state.playerAName ?? "Player A"}
+                name={formatOverlayPlayerName(state.playerAName)}
                 score={state.scoreA ?? 0}
                 run={state.liveRunA ?? state.runA ?? 0}
                 active={currentLabel === "A"}
@@ -605,7 +614,7 @@ function ScoreOverlayCard({
                 maxTimeouts={state.maxTimeoutsA ?? 0}
               />
               <PlayerRow
-                name={state.playerBName ?? "Player B"}
+                name={formatOverlayPlayerName(state.playerBName)}
                 score={state.scoreB ?? 0}
                 run={state.liveRunB ?? state.runB ?? 0}
                 active={currentLabel === "B"}
@@ -664,8 +673,8 @@ function RoyalProOverlayCard({
   const tournament = state.tournamentName ?? "Live Match";
   const stage = stripLeadingWord(state.stageName ?? "Stage", "stage") ?? "Stage";
   const table = stripLeadingWord(state.tableName ?? "Table", "table") ?? "Table";
-  const leftName = state.playerAName ?? "Player A";
-  const rightName = state.playerBName ?? "Player B";
+  const leftName = formatOverlayPlayerName(state.playerAName);
+  const rightName = formatOverlayPlayerName(state.playerBName);
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
   const leftAvg = formatAverageValue(leftScore, state.inningsCount);
@@ -679,7 +688,7 @@ function RoyalProOverlayCard({
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const activeSide = state.current;
-  const overlayWidth = Math.round(width * 0.6);
+  const overlayWidth = Math.round(width * 0.56);
   const overlayBottom = Math.max(260, Math.round(height * 0.25));
   const topBarHeight = Math.max(18, Math.round(height * 0.024));
   const mainBarHeight = Math.max(44, Math.round(height * 0.064));
