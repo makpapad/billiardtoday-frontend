@@ -109,7 +109,7 @@ type WsPayload = {
   }>;
 };
 
-const DEFAULT_WIDTH = 500;
+const DEFAULT_WIDTH = 540;
 const DEFAULT_HEIGHT = 146;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
@@ -914,7 +914,7 @@ function PlayerRow({
           {name}
         </span>
       </div>
-      <div className="ml-2 flex w-[128px] items-center justify-end gap-3">
+      <div className="ml-2 flex w-[148px] items-center justify-end gap-3">
         <div className="w-[60px] text-right text-4xl font-black">{score}</div>
         {active ? (
           <div className="w-[52px] rounded-lg bg-amber-300 px-3 py-1 text-center text-xl font-black text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]">
