@@ -692,11 +692,14 @@ function RoyalProOverlayCard({
         <div className="relative">
           <div className="overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
             <div
-              className="flex items-center justify-center bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-5 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-950"
+              className="flex items-center justify-between gap-4 bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-5 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-950"
               style={{ minHeight: topBarHeight }}
             >
-              <span className="truncate">
-                {tournament} • Stage {stage} • Table {table} • Race To {raceTo}
+              <span className="min-w-0 truncate">
+                {tournament} • Stage {stage} • Table {table}
+              </span>
+              <span className="shrink-0 whitespace-nowrap font-black">
+                Race To {raceTo}
               </span>
             </div>
 
