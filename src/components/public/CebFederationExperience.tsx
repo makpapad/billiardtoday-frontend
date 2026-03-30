@@ -395,7 +395,10 @@ export function CebFederationExperience({ federation, members, embedded = false 
     return seasonMatch && gameTypeMatch;
   });
   const upcomingCebTournaments = [...(cebTournaments || [])]
-    .filter((item) => getStatus(item.start_date, item.end_date) === "Upcoming")
+    .filter((item) => {
+      const status = getStatus(item.start_date, item.end_date);
+      return status === "Upcoming" || status === "Live";
+    })
     .sort((a, b) => {
       const aTime = a.start_date ? new Date(a.start_date).getTime() : Number.MAX_SAFE_INTEGER;
       const bTime = b.start_date ? new Date(b.start_date).getTime() : Number.MAX_SAFE_INTEGER;
@@ -432,7 +435,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
           heroView === "tournaments"
             ? "Browse the official tournament calendar organized directly by the CEB, including championships and major European events."
             : heroView === "upcoming"
-              ? "Track the next CEB events in a clean monthly calendar view, focused only on upcoming competitions."
+              ? "Track the next CEB events in a clean monthly calendar view, focused on upcoming and currently live competitions."
             : heroView === "board"
               ? "Meet the CEB leadership team through a dedicated board roster with portraits, roles, and direct contact details."
             : "Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
@@ -738,14 +741,14 @@ export function CebFederationExperience({ federation, members, embedded = false 
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Upcoming events</div>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">CEB competition calendar</h2>
             <p className="max-w-2xl text-sm leading-7 text-slate-600">
-              A month-by-month view of the next confirmed CEB events, designed as a cleaner calendar snapshot than the full tournament listing.
+              A month-by-month view of confirmed CEB events that are either upcoming or currently live, designed as a cleaner calendar snapshot than the full tournament listing.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-[24px] border border-sky-100 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Schedule</div>
-              <div className="mt-2 text-lg font-semibold text-slate-950">Upcoming only</div>
-              <div className="mt-1 text-sm text-slate-500">No completed or live tournaments in this view.</div>
+              <div className="mt-2 text-lg font-semibold text-slate-950">Upcoming + Live</div>
+              <div className="mt-1 text-sm text-slate-500">Completed tournaments stay in the full calendar only.</div>
             </div>
             <div className="rounded-[24px] border border-slate-200 bg-slate-950 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.12)]">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Navigation</div>
@@ -762,7 +765,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
 
         {loadingCebTournaments && cebTournaments === null ? (
           <div className="rounded-[24px] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
-            Loading upcoming events...
+            Loading upcoming and live events...
           </div>
         ) : upcomingCalendarGroups.length > 0 ? (
           <div className="space-y-8">
@@ -818,7 +821,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
-            No upcoming CEB events are available right now.
+            No upcoming or live CEB events are available right now.
           </div>
         )}
       </section>
