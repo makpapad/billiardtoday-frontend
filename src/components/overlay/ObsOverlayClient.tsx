@@ -626,10 +626,10 @@ function RoyalProOverlayCard({
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const overlayWidth = Math.round(width * 0.7);
-  const overlayBottom = Math.max(90, Math.round(height * 0.11));
-  const topBarHeight = Math.max(12, Math.round(height * 0.018));
-  const mainBarHeight = Math.max(52, Math.round(height * 0.078));
-  const subBarHeight = Math.max(20, Math.round(height * 0.03));
+  const overlayBottom = Math.max(180, Math.round(height * 0.18));
+  const topBarHeight = Math.max(10, Math.round(height * 0.014));
+  const mainBarHeight = Math.max(44, Math.round(height * 0.064));
+  const subBarHeight = Math.max(16, Math.round(height * 0.022));
 
   return (
     <div
