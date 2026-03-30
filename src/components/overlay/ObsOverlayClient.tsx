@@ -109,8 +109,8 @@ type WsPayload = {
   }>;
 };
 
-const DEFAULT_WIDTH = 560;
-const DEFAULT_HEIGHT = 158;
+const DEFAULT_WIDTH = 500;
+const DEFAULT_HEIGHT = 146;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
 function getParamValue(value: string | string[] | undefined): string | undefined {
@@ -937,8 +937,7 @@ function TimeoutTicks({
   activeCount: number;
   totalCount: number;
 }) {
-  const safeTotal = Math.max(0, totalCount || 0);
-  if (safeTotal <= 0) return null;
+  const safeTotal = Math.max(2, totalCount || 0);
 
   return (
     <div className="flex h-10 items-center gap-[3px]">
