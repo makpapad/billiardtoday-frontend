@@ -624,6 +624,10 @@ function RoyalProOverlayCard({
   const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
+  const overlayWidth = Math.round(width * 0.7);
+  const overlayBottom = Math.max(18, Math.round(height * 0.055));
+  const mainBarHeight = Math.max(54, Math.round(height * 0.17));
+  const subBarHeight = Math.max(22, Math.round(height * 0.058));
 
   return (
     <div
@@ -641,63 +645,76 @@ function RoyalProOverlayCard({
           "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
       }}
     >
-      <div className="absolute left-[3.2%] top-[3.5%] w-[43%]">
-        <div className="relative overflow-hidden rounded-sm bg-white/95 text-slate-900 shadow-[0_16px_35px_rgba(0,0,0,0.35)]">
-          <div className="absolute right-0 top-0 h-full w-20 bg-[linear-gradient(135deg,transparent_0%,transparent_44%,rgba(79,101,255,0.35)_45%,rgba(79,101,255,0.15)_100%)]" />
-          <div className="flex items-stretch">
-            <div className="flex w-20 items-center justify-center bg-white p-2">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#162856] text-[11px] font-black uppercase tracking-[0.2em] text-yellow-300">
-                BT
-              </div>
-            </div>
-            <div className="flex-1 px-4 py-2">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
-                {tournament}
-              </div>
-              <div className="mt-1 text-[22px] font-black uppercase leading-none text-slate-900">
-                {stripLeadingWord(stage, "stage") ?? stage}
-              </div>
-              <div className="mt-1 text-[13px] font-medium text-slate-600">
-                {table}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-[4.5%] left-1/2 w-[74%] -translate-x-1/2">
-        <div className="overflow-hidden rounded-sm border border-white/15 bg-[linear-gradient(180deg,rgba(31,61,150,0.96)_0%,rgba(24,45,121,0.96)_100%)] shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-          <div className="grid grid-cols-[1.2fr_auto_auto_auto_1.2fr] items-stretch">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <SideBadge side="left" countryCode={leftFlag} name={leftName} />
-              <div className="min-w-0 flex-1 truncate text-right text-[25px] font-semibold leading-none">
-                {leftName}
+      <div
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{ width: overlayWidth, bottom: overlayBottom }}
+      >
+        <div className="relative">
+          <div
+            className="grid items-stretch overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+            style={{
+              gridTemplateColumns: "0.18fr 1.18fr auto auto auto 1.18fr 0.18fr",
+              minHeight: mainBarHeight,
+              background:
+                "linear-gradient(180deg, rgba(28,62,160,0.98) 0%, rgba(21,46,121,0.98) 100%)",
+            }}
+          >
+            <div className="flex items-center justify-center bg-black/52 px-3">
+              <div className="text-center leading-none">
+                <div className="text-[32px] font-black tracking-[-0.04em] text-[#1f8cff]">
+                  RP
+                </div>
+                <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/72">
+                  RoyalPro
+                </div>
               </div>
             </div>
 
-            <div className="flex min-w-[64px] items-center justify-center bg-[#21397f] px-4 text-[38px] font-black">
+            <div className="flex items-center gap-2 border-l border-white/10 px-3">
+              <PortraitBadge side="left" countryCode={leftFlag} />
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                <div className="min-w-0 truncate text-right text-[19px] font-semibold leading-none">
+                  {leftName}
+                </div>
+                <FlagOnly countryCode={leftFlag} />
+              </div>
+            </div>
+
+            <div className="flex min-w-[58px] items-center justify-center border-l border-r border-black/20 bg-[linear-gradient(180deg,#3557ac_0%,#233a79_100%)] px-3 text-[33px] font-black leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               {leftScore}
             </div>
-            <div className="flex min-w-[40px] items-center justify-center bg-[#18306f] px-2 text-[28px] font-black text-white/80">
+            <div className="flex min-w-[34px] items-center justify-center border-r border-black/25 bg-[linear-gradient(180deg,#2c468f_0%,#1c2d60_100%)] px-2 text-[24px] font-black text-white/92">
               -
             </div>
-            <div className="flex min-w-[64px] items-center justify-center bg-[#21397f] px-4 text-[38px] font-black">
+            <div className="flex min-w-[58px] items-center justify-center border-r border-black/20 bg-[linear-gradient(180deg,#3557ac_0%,#233a79_100%)] px-3 text-[33px] font-black leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               {rightScore}
             </div>
 
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="min-w-0 flex-1 truncate text-left text-[25px] font-semibold leading-none">
-                {rightName}
+            <div className="flex items-center gap-2 px-3">
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                <FlagOnly countryCode={rightFlag} />
+                <div className="min-w-0 truncate text-left text-[19px] font-semibold leading-none">
+                  {rightName}
+                </div>
               </div>
-              <SideBadge side="right" countryCode={rightFlag} name={rightName} />
+              <PortraitBadge side="right" countryCode={rightFlag} />
+            </div>
+
+            <div className="flex items-center justify-center bg-black/52 px-3">
+              <div className="text-[17px] font-black uppercase tracking-[0.02em] text-white/30">
+                ds
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 items-center bg-[linear-gradient(180deg,rgba(15,27,73,0.98)_0%,rgba(12,21,58,0.98)_100%)] px-4 py-2 text-[15px]">
+          <div
+            className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,rgba(22,36,93,0.98)_0%,rgba(14,24,63,0.98)_100%)] px-4 text-[14px]"
+            style={{ minHeight: subBarHeight }}
+          >
             <div className="text-center text-white/85">
               Average <span className="font-black text-cyan-300">{leftAvg}</span>
             </div>
-            <div className="text-center text-[16px] font-black uppercase tracking-[0.14em] text-white">
+            <div className="text-center text-[15px] font-black uppercase tracking-[0.08em] text-white">
               Race To {raceTo}
             </div>
             <div className="text-center text-white/85">
@@ -719,20 +736,42 @@ function formatAverageValue(score?: number | null, innings?: number | null) {
   return (safeScore / safeInnings).toFixed(3);
 }
 
-function SideBadge({
+function PortraitBadge({
   side,
   countryCode,
-  name,
 }: {
   side: "left" | "right";
   countryCode: string | null;
-  name: string;
 }) {
   return (
-    <div className={`flex items-center gap-2 ${side === "right" ? "flex-row-reverse" : ""}`}>
-      <FlagBadge name={name} countryCode={countryCode} />
-      <div className="h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-black/25" />
+    <div
+      className={`h-12 w-12 overflow-hidden rounded-full border-2 border-[#11214e] bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.18),rgba(0,0,0,0.45))] shadow-[0_6px_16px_rgba(0,0,0,0.45)] ${
+        side === "left" ? "ml-1" : "mr-1"
+      }`}
+    >
+      <div className="flex h-full w-full items-end justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(0,0,0,0.36))]">
+        <div className="mb-1 h-4 w-8 rounded-t-full bg-white/10" />
+      </div>
     </div>
+  );
+}
+
+function FlagOnly({ countryCode }: { countryCode: string | null }) {
+  if (!countryCode) {
+    return <div className="h-[18px] w-7 rounded-[2px] bg-yellow-300/20" />;
+  }
+
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
+      alt={countryCode}
+      width={28}
+      height={18}
+      className="h-[18px] w-7 rounded-[2px] object-cover"
+      loading="eager"
+      decoding="async"
+      referrerPolicy="no-referrer"
+    />
   );
 }
 
