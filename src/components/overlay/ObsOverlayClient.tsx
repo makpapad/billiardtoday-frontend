@@ -18,6 +18,10 @@ type LiveScoreState = {
   liveRunB?: number;
   bestRunA?: number;
   bestRunB?: number;
+  timeoutsA?: number;
+  timeoutsB?: number;
+  maxTimeoutsA?: number;
+  maxTimeoutsB?: number;
   current?: "A" | "B";
   inningsCount?: number;
   playerAName?: string | null;
@@ -186,6 +190,10 @@ function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fall
       liveRunB: state.liveRunB ?? coerceNumber(playerB.liveRun ?? playerB.run, 0),
       bestRunA: state.bestRunA ?? 0,
       bestRunB: state.bestRunB ?? 0,
+      timeoutsA: coerceNumber(state.timeoutsA, 0),
+      timeoutsB: coerceNumber(state.timeoutsB, 0),
+      maxTimeoutsA: coerceNumber(state.maxTimeoutsA, 0),
+      maxTimeoutsB: coerceNumber(state.maxTimeoutsB, 0),
       current:
         state.current ??
         (input.current === "A" || input.current === "B"
@@ -253,6 +261,10 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       liveRunB: coerceNumber(playerB.liveRun ?? playerB.run, item.state.liveRunB ?? 0),
       bestRunA: item.state.bestRunA ?? 0,
       bestRunB: item.state.bestRunB ?? 0,
+      timeoutsA: item.state.timeoutsA ?? 0,
+      timeoutsB: item.state.timeoutsB ?? 0,
+      maxTimeoutsA: item.state.maxTimeoutsA ?? 0,
+      maxTimeoutsB: item.state.maxTimeoutsB ?? 0,
       inningsCount: Math.max(
         coerceNumber(playerA.innings, 0),
         coerceNumber(playerB.innings, 0),
@@ -589,6 +601,8 @@ function ScoreOverlayCard({
                 run={state.liveRunA ?? state.runA ?? 0}
                 active={currentLabel === "A"}
                 countryCode={resolveCountryCode(state.playerACountry)}
+                timeouts={state.timeoutsA ?? 0}
+                maxTimeouts={state.maxTimeoutsA ?? 0}
               />
               <PlayerRow
                 name={state.playerBName ?? "Player B"}
@@ -596,6 +610,8 @@ function ScoreOverlayCard({
                 run={state.liveRunB ?? state.runB ?? 0}
                 active={currentLabel === "B"}
                 countryCode={resolveCountryCode(state.playerBCountry)}
+                timeouts={state.timeoutsB ?? 0}
+                maxTimeouts={state.maxTimeoutsB ?? 0}
               />
             </div>
           </div>
@@ -865,12 +881,16 @@ function PlayerRow({
   run,
   active,
   countryCode,
+  timeouts,
+  maxTimeouts,
 }: {
   name: string;
   score: number;
   run: number;
   active: boolean;
   countryCode: string | null;
+  timeouts: number;
+  maxTimeouts: number;
 }) {
   return (
     <div
@@ -879,6 +899,7 @@ function PlayerRow({
       }`}
     >
       <div className="flex flex-1 items-center gap-3">
+        <TimeoutTicks activeCount={timeouts} totalCount={maxTimeouts} />
         <FlagBadge name={name} countryCode={countryCode} />
         <span className="text-xl font-semibold leading-none tracking-wide md:text-2xl">
           {name}
@@ -896,6 +917,30 @@ function PlayerRow({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function TimeoutTicks({
+  activeCount,
+  totalCount,
+}: {
+  activeCount: number;
+  totalCount: number;
+}) {
+  const safeTotal = Math.max(0, totalCount || 0);
+  if (safeTotal <= 0) return null;
+
+  return (
+    <div className="flex h-10 items-center gap-[3px]">
+      {Array.from({ length: safeTotal }).map((_, index) => (
+        <span
+          key={index}
+          className={`h-6 w-[4px] rounded-full ${
+            index < activeCount ? "bg-emerald-400" : "bg-white/30"
+          }`}
+        />
+      ))}
     </div>
   );
 }
