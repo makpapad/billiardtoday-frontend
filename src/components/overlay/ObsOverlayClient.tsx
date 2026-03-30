@@ -625,7 +625,7 @@ function RoyalProOverlayCard({
   const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
-  const overlayWidth = Math.round(width * 0.7);
+  const overlayWidth = Math.round(width * 0.6);
   const overlayBottom = Math.max(260, Math.round(height * 0.25));
   const topBarHeight = Math.max(10, Math.round(height * 0.014));
   const mainBarHeight = Math.max(44, Math.round(height * 0.064));
@@ -654,7 +654,7 @@ function RoyalProOverlayCard({
         <div className="relative">
           <div className="overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
             <div
-              className="flex items-center justify-center bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-4 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-950"
+              className="flex items-center justify-center bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-950"
               style={{ minHeight: topBarHeight }}
             >
               <span className="truncate">
@@ -665,54 +665,54 @@ function RoyalProOverlayCard({
             <div
               className="grid items-stretch"
               style={{
-                gridTemplateColumns: "auto minmax(180px,0.7fr) auto auto auto minmax(180px,0.7fr) auto",
+                gridTemplateColumns: "auto minmax(120px,0.46fr) auto auto auto minmax(120px,0.46fr) auto",
                 minHeight: mainBarHeight,
                 background:
                   "linear-gradient(180deg, rgba(18,44,122,0.98) 0%, rgba(13,32,94,0.98) 100%)",
               }}
             >
-              <div className="flex items-center justify-center px-2">
+              <div className="flex items-center justify-center px-3">
                 <SmallFlag countryCode={leftFlag} />
               </div>
 
-              <div className="flex min-w-0 items-center justify-end px-2">
-                <div className="min-w-0 truncate text-right text-[15px] font-semibold leading-none text-white">
+              <div className="flex min-w-0 items-center justify-end px-2 pr-1">
+                <div className="min-w-0 truncate text-right text-[19px] font-semibold leading-none text-white">
                   {leftName}
                 </div>
               </div>
 
-              <div className="flex min-w-[56px] items-center justify-center border-l border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[28px] font-black leading-none">
+              <div className="flex min-w-[68px] items-center justify-center border-l border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[36px] font-black leading-none">
                 {leftScore}
               </div>
-              <div className="flex min-w-[30px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#314b93_0%,#24366d_100%)] px-2 text-[20px] font-black text-white/92">
+              <div className="flex min-w-[40px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#314b93_0%,#24366d_100%)] px-2 text-[26px] font-black text-white/92">
                 -
               </div>
-              <div className="flex min-w-[56px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[28px] font-black leading-none">
+              <div className="flex min-w-[68px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[36px] font-black leading-none">
                 {rightScore}
               </div>
 
-              <div className="flex min-w-0 items-center px-2">
-                <div className="min-w-0 truncate text-left text-[15px] font-semibold leading-none text-white">
+              <div className="flex min-w-0 items-center px-2 pl-1">
+                <div className="min-w-0 truncate text-left text-[19px] font-semibold leading-none text-white">
                   {rightName}
                 </div>
               </div>
 
-              <div className="flex items-center justify-center px-2">
+              <div className="flex items-center justify-center px-3">
                 <SmallFlag countryCode={rightFlag} />
               </div>
             </div>
 
             <div
-              className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-4 text-[12px] text-white"
+              className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-4 text-[15px] text-white"
               style={{ minHeight: subBarHeight }}
             >
-              <div className="text-center">
+              <div className="text-right pr-8">
                 Avg <span className="font-black text-cyan-100">{leftAvg}</span>
               </div>
-              <div className="text-center font-black uppercase tracking-[0.06em]">
+              <div className="text-center font-black uppercase tracking-[0.08em]">
                 Innings {innings} • Race To {raceTo}
               </div>
-              <div className="text-center">
+              <div className="text-left pl-8">
                 Avg <span className="font-black text-cyan-100">{rightAvg}</span>
               </div>
             </div>
