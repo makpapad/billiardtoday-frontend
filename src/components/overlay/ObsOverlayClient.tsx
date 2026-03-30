@@ -746,14 +746,14 @@ function RoyalProOverlayCard({
                   {activeSide === "A" ? (
                     <>
                       Run <span className="font-black text-cyan-100">{leftRun}</span>
-                      <span className="ml-3">
-                        H.R. <span className="font-black text-cyan-100">{leftHr}</span>
-                      </span>
                     </>
                   ) : null}
                 </span>
                 <span className="min-w-0 text-right">
                   Avg <span className="font-black text-cyan-100">{leftAvg}</span>
+                  <span className="ml-3">
+                    H.R. <span className="font-black text-cyan-100">{leftHr}</span>
+                  </span>
                 </span>
               </div>
               <div className="text-center font-black uppercase tracking-[0.08em]">
@@ -762,14 +762,14 @@ function RoyalProOverlayCard({
               <div className="flex items-center justify-between gap-4 pl-6">
                 <span className="min-w-0 text-left">
                   Avg <span className="font-black text-cyan-100">{rightAvg}</span>
+                  <span className="ml-3">
+                    H.R. <span className="font-black text-cyan-100">{rightHr}</span>
+                  </span>
                 </span>
                 <span className="min-w-0 text-right">
                   {activeSide === "B" ? (
                     <>
                       Run <span className="font-black text-cyan-100">{rightRun}</span>
-                      <span className="ml-3">
-                        H.R. <span className="font-black text-cyan-100">{rightHr}</span>
-                      </span>
                     </>
                   ) : null}
                 </span>
