@@ -730,24 +730,32 @@ function RoyalProOverlayCard({
               className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-6 text-[18px] text-white"
               style={{ minHeight: subBarHeight }}
             >
-              <div className="text-right pr-6">
-                Avg <span className="font-black text-cyan-100">{leftAvg}</span>
-                {activeSide === "A" ? (
-                  <span className="ml-3">
-                    Run <span className="font-black text-cyan-100">{leftRun}</span>
-                  </span>
-                ) : null}
+              <div className="flex items-center justify-between gap-4 pr-6">
+                <span className="min-w-0 text-left">
+                  {activeSide === "A" ? (
+                    <>
+                      Run <span className="font-black text-cyan-100">{leftRun}</span>
+                    </>
+                  ) : null}
+                </span>
+                <span className="min-w-0 text-right">
+                  Avg <span className="font-black text-cyan-100">{leftAvg}</span>
+                </span>
               </div>
               <div className="text-center font-black uppercase tracking-[0.08em]">
                 Innings {innings}
               </div>
-              <div className="text-left pl-6">
-                Avg <span className="font-black text-cyan-100">{rightAvg}</span>
-                {activeSide === "B" ? (
-                  <span className="ml-3">
-                    Run <span className="font-black text-cyan-100">{rightRun}</span>
-                  </span>
-                ) : null}
+              <div className="flex items-center justify-between gap-4 pl-6">
+                <span className="min-w-0 text-left">
+                  Avg <span className="font-black text-cyan-100">{rightAvg}</span>
+                </span>
+                <span className="min-w-0 text-right">
+                  {activeSide === "B" ? (
+                    <>
+                      Run <span className="font-black text-cyan-100">{rightRun}</span>
+                    </>
+                  ) : null}
+                </span>
               </div>
             </div>
           </div>
