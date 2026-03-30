@@ -47,6 +47,7 @@ type BoardMember = {
   fax?: string | null;
   email?: string | null;
   imageUrl: string;
+  imagePosition?: string;
 };
 
 type CebPartner = {
@@ -112,6 +113,7 @@ const CEB_BOARD_MEMBERS: BoardMember[] = [
     phone: "+30 6947521517",
     email: "nikos.tremoulis@eurobillard.org",
     imageUrl: "https://www.eurobillard.org/medias/photos/nick1.jpg",
+    imagePosition: "center 1%",
   },
   {
     role: "Board Member",
@@ -689,7 +691,12 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 className="overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
               >
                 <div className="relative aspect-[4/4.4] overflow-hidden bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]">
-                  <img src={member.imageUrl} alt={member.name} className="h-full w-full object-cover" />
+                  <img
+                    src={member.imageUrl}
+                    alt={member.name}
+                    className="h-full w-full object-cover"
+                    style={member.imagePosition ? { objectPosition: member.imagePosition } : undefined}
+                  />
                   <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent_0%,rgba(2,6,23,0.78)_100%)] p-5">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">{member.role}</div>
                     <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">{member.name}</h3>
@@ -744,6 +751,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     src={member.imageUrl}
                     alt={member.name}
                     className="h-28 w-24 flex-none rounded-[20px] object-cover"
+                    style={member.imagePosition ? { objectPosition: member.imagePosition } : undefined}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">{member.role}</div>
