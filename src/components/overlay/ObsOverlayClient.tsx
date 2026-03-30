@@ -7,6 +7,8 @@ type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
+type OverlayTemplate = "1" | "2";
+
 type LiveScoreState = {
   scoreA?: number;
   scoreB?: number;
@@ -282,6 +284,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const sessionId = getParamValue(searchParams?.session) ?? getParamValue(searchParams?.sessionId);
   const width = Number(getParamValue(searchParams?.width)) || DEFAULT_WIDTH;
   const height = Number(getParamValue(searchParams?.height)) || DEFAULT_HEIGHT;
+  const templateParam = (getParamValue(searchParams?.t) ?? getParamValue(searchParams?.template) ?? "classic")
+    .trim()
+    .toLowerCase();
+  const template: OverlayTemplate =
+    templateParam === "2" || templateParam === "royalpro" ? "2" : "1";
   const obsSafe = parseBooleanParam(
     searchParams?.obs ?? searchParams?.obsSafe ?? searchParams?.safe,
     true,
@@ -424,7 +431,13 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
       }
       style={{ backgroundColor: "transparent" }}
     >
-      <ScoreOverlayCard item={item} width={width} height={height} obsSafe={obsSafe} />
+      <ScoreOverlayCard
+        item={item}
+        width={width}
+        height={height}
+        obsSafe={obsSafe}
+        template={template}
+      />
     </div>
   );
 }
@@ -453,11 +466,13 @@ function ScoreOverlayCard({
   width,
   height,
   obsSafe,
+  template,
 }: {
   item: LiveScoreItem;
   width: number;
   height: number;
   obsSafe: boolean;
+  template: OverlayTemplate;
 }) {
   const state = item.state;
   const compact = height <= 180;
@@ -477,6 +492,17 @@ function ScoreOverlayCard({
       : remainingBlocks > 10
         ? "text-orange-300"
         : "text-red-500";
+
+  if (template === "2") {
+    return (
+      <RoyalProOverlayCard
+        item={item}
+        width={width}
+        height={height}
+        obsSafe={obsSafe}
+      />
+    );
+  }
 
   return (
     <div
@@ -570,6 +596,142 @@ function ScoreOverlayCard({
           </footer>
         </div>
       </div>
+    </div>
+  );
+}
+
+function RoyalProOverlayCard({
+  item,
+  width,
+  height,
+  obsSafe,
+}: {
+  item: LiveScoreItem;
+  width: number;
+  height: number;
+  obsSafe: boolean;
+}) {
+  const state = item.state;
+  const tournament = state.tournamentName ?? "Live Match";
+  const stage = state.stageName ?? "Stage";
+  const table = state.tableName ?? "Table";
+  const leftName = state.playerAName ?? "Player A";
+  const rightName = state.playerBName ?? "Player B";
+  const leftScore = state.scoreA ?? 0;
+  const rightScore = state.scoreB ?? 0;
+  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
+  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
+  const leftFlag = resolveCountryCode(state.playerACountry);
+  const rightFlag = resolveCountryCode(state.playerBCountry);
+
+  return (
+    <div
+      className="relative text-white"
+      style={{
+        width,
+        height,
+        minWidth: width,
+        minHeight: height,
+        transform: obsSafe ? "translateZ(0)" : undefined,
+        backfaceVisibility: obsSafe ? "hidden" : undefined,
+        WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
+        textRendering: obsSafe ? "geometricPrecision" : undefined,
+        fontFamily:
+          "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
+      }}
+    >
+      <div className="absolute left-[3.2%] top-[3.5%] w-[43%]">
+        <div className="relative overflow-hidden rounded-sm bg-white/95 text-slate-900 shadow-[0_16px_35px_rgba(0,0,0,0.35)]">
+          <div className="absolute right-0 top-0 h-full w-20 bg-[linear-gradient(135deg,transparent_0%,transparent_44%,rgba(79,101,255,0.35)_45%,rgba(79,101,255,0.15)_100%)]" />
+          <div className="flex items-stretch">
+            <div className="flex w-20 items-center justify-center bg-white p-2">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#162856] text-[11px] font-black uppercase tracking-[0.2em] text-yellow-300">
+                BT
+              </div>
+            </div>
+            <div className="flex-1 px-4 py-2">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+                {tournament}
+              </div>
+              <div className="mt-1 text-[22px] font-black uppercase leading-none text-slate-900">
+                {stripLeadingWord(stage, "stage") ?? stage}
+              </div>
+              <div className="mt-1 text-[13px] font-medium text-slate-600">
+                {table}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-[4.5%] left-1/2 w-[74%] -translate-x-1/2">
+        <div className="overflow-hidden rounded-sm border border-white/15 bg-[linear-gradient(180deg,rgba(31,61,150,0.96)_0%,rgba(24,45,121,0.96)_100%)] shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+          <div className="grid grid-cols-[1.2fr_auto_auto_auto_1.2fr] items-stretch">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <SideBadge side="left" countryCode={leftFlag} name={leftName} />
+              <div className="min-w-0 flex-1 truncate text-right text-[25px] font-semibold leading-none">
+                {leftName}
+              </div>
+            </div>
+
+            <div className="flex min-w-[64px] items-center justify-center bg-[#21397f] px-4 text-[38px] font-black">
+              {leftScore}
+            </div>
+            <div className="flex min-w-[40px] items-center justify-center bg-[#18306f] px-2 text-[28px] font-black text-white/80">
+              -
+            </div>
+            <div className="flex min-w-[64px] items-center justify-center bg-[#21397f] px-4 text-[38px] font-black">
+              {rightScore}
+            </div>
+
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1 truncate text-left text-[25px] font-semibold leading-none">
+                {rightName}
+              </div>
+              <SideBadge side="right" countryCode={rightFlag} name={rightName} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 items-center bg-[linear-gradient(180deg,rgba(15,27,73,0.98)_0%,rgba(12,21,58,0.98)_100%)] px-4 py-2 text-[15px]">
+            <div className="text-center text-white/85">
+              Average <span className="font-black text-cyan-300">{leftAvg}</span>
+            </div>
+            <div className="text-center text-[16px] font-black uppercase tracking-[0.14em] text-white">
+              Race To {raceTo}
+            </div>
+            <div className="text-center text-white/85">
+              Average <span className="font-black text-cyan-300">{rightAvg}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatAverageValue(score?: number | null, innings?: number | null) {
+  const safeScore = Number(score ?? 0);
+  const safeInnings = Number(innings ?? 0);
+  if (!Number.isFinite(safeScore) || !Number.isFinite(safeInnings) || safeInnings <= 0) {
+    return "0.000";
+  }
+  return (safeScore / safeInnings).toFixed(3);
+}
+
+function SideBadge({
+  side,
+  countryCode,
+  name,
+}: {
+  side: "left" | "right";
+  countryCode: string | null;
+  name: string;
+}) {
+  return (
+    <div className={`flex items-center gap-2 ${side === "right" ? "flex-row-reverse" : ""}`}>
+      <FlagBadge name={name} countryCode={countryCode} />
+      <div className="h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-black/25" />
     </div>
   );
 }
