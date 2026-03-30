@@ -74,6 +74,9 @@ type SessionApiRecord = {
   stageTitle?: string | null;
   tableName?: string | null;
   tableNumber?: string | number | null;
+  targetPoints?: number | null;
+  targetPointsP1?: number | null;
+  targetPointsP2?: number | null;
   player1Name?: string | null;
   player2Name?: string | null;
   player1Country?: string | null;
@@ -142,6 +145,14 @@ function coerceNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(num) ? num : fallback;
 }
 
+function normalizeTargetPoints(...values: unknown[]): number | null {
+  for (const value of values) {
+    const num = Number(value);
+    if (Number.isFinite(num) && num > 0) return Math.floor(num);
+  }
+  return null;
+}
+
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
   if (!input) return null;
 
@@ -190,8 +201,20 @@ function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fall
       progress: state.progress ?? coerceNumber(input.progress, 0),
       totalBlocks: state.totalBlocks ?? coerceNumber(input.totalBlocks, 40),
       isRunning: state.isRunning ?? Boolean(input.isRunning),
-      targetPointsA: state.targetPointsA ?? (playerA.targetPoints ?? null),
-      targetPointsB: state.targetPointsB ?? (playerB.targetPoints ?? null),
+      targetPointsA:
+        normalizeTargetPoints(
+          state.targetPointsA,
+          playerA.targetPoints,
+          input.targetPointsP1,
+          input.targetPoints,
+        ),
+      targetPointsB:
+        normalizeTargetPoints(
+          state.targetPointsB,
+          playerB.targetPoints,
+          input.targetPointsP2,
+          input.targetPoints,
+        ),
       tournamentName: state.tournamentName ?? normalizeString(input.tournamentName) ?? normalizeString(input.eventTitle),
       stageName: state.stageName ?? normalizeString(input.stageName) ?? normalizeString(input.stageTitle),
       tableName: state.tableName ?? normalizeString(input.tableName) ?? normalizeString(input.tableNumber),
@@ -240,10 +263,14 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         payload.isRunning === undefined || payload.isRunning === null
           ? item.state.isRunning
           : Boolean(payload.isRunning),
-      targetPointsA:
-        playerA.targetPoints === undefined ? item.state.targetPointsA ?? null : playerA.targetPoints,
-      targetPointsB:
-        playerB.targetPoints === undefined ? item.state.targetPointsB ?? null : playerB.targetPoints,
+      targetPointsA: normalizeTargetPoints(
+        playerA.targetPoints,
+        item.state.targetPointsA,
+      ),
+      targetPointsB: normalizeTargetPoints(
+        playerB.targetPoints,
+        item.state.targetPointsB,
+      ),
     },
   };
 }
@@ -703,7 +730,7 @@ function RoyalProOverlayCard({
               className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-6 text-[18px] text-white"
               style={{ minHeight: subBarHeight }}
             >
-              <div className="text-right pr-10">
+              <div className="text-right pr-6">
                 {activeSide === "A" ? (
                   <>
                     Run <span className="font-black text-cyan-100">{leftRun}</span>
@@ -717,7 +744,7 @@ function RoyalProOverlayCard({
               <div className="text-center font-black uppercase tracking-[0.08em]">
                 Innings {innings}
               </div>
-              <div className="text-left pl-10">
+              <div className="text-left pl-6">
                 {activeSide === "B" ? (
                   <>
                     Run <span className="font-black text-cyan-100">{rightRun}</span>
