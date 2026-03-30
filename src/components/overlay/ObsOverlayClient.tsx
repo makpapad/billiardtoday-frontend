@@ -627,9 +627,9 @@ function RoyalProOverlayCard({
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const overlayWidth = Math.round(width * 0.6);
   const overlayBottom = Math.max(260, Math.round(height * 0.25));
-  const topBarHeight = Math.max(10, Math.round(height * 0.014));
+  const topBarHeight = Math.max(18, Math.round(height * 0.024));
   const mainBarHeight = Math.max(44, Math.round(height * 0.064));
-  const subBarHeight = Math.max(16, Math.round(height * 0.022));
+  const subBarHeight = Math.max(26, Math.round(height * 0.034));
 
   return (
     <div
@@ -654,28 +654,25 @@ function RoyalProOverlayCard({
         <div className="relative">
           <div className="overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
             <div
-              className="flex items-center justify-center bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-950"
+              className="flex items-center justify-center bg-[linear-gradient(180deg,#79d3ff_0%,#45b7f5_100%)] px-5 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-950"
               style={{ minHeight: topBarHeight }}
             >
               <span className="truncate">
-                {tournament} • Stage {stage} • Table {table}
+                {tournament} • Stage {stage} • Table {table} • Race To {raceTo}
               </span>
             </div>
 
             <div
               className="grid items-stretch"
               style={{
-                gridTemplateColumns: "auto minmax(120px,0.46fr) auto auto auto minmax(120px,0.46fr) auto",
+                gridTemplateColumns: "minmax(190px,0.75fr) auto auto auto minmax(190px,0.75fr)",
                 minHeight: mainBarHeight,
                 background:
                   "linear-gradient(180deg, rgba(18,44,122,0.98) 0%, rgba(13,32,94,0.98) 100%)",
               }}
             >
-              <div className="flex items-center justify-center px-3">
+              <div className="flex min-w-0 items-center justify-end gap-3 px-3 pr-2">
                 <SmallFlag countryCode={leftFlag} />
-              </div>
-
-              <div className="flex min-w-0 items-center justify-end px-2 pr-1">
                 <div className="min-w-0 truncate text-right text-[19px] font-semibold leading-none text-white">
                   {leftName}
                 </div>
@@ -691,28 +688,25 @@ function RoyalProOverlayCard({
                 {rightScore}
               </div>
 
-              <div className="flex min-w-0 items-center px-2 pl-1">
+              <div className="flex min-w-0 items-center gap-3 px-3 pl-2">
                 <div className="min-w-0 truncate text-left text-[19px] font-semibold leading-none text-white">
                   {rightName}
                 </div>
-              </div>
-
-              <div className="flex items-center justify-center px-3">
                 <SmallFlag countryCode={rightFlag} />
               </div>
             </div>
 
             <div
-              className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-4 text-[15px] text-white"
+              className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#377fd7_0%,#2a67be_100%)] px-6 text-[18px] text-white"
               style={{ minHeight: subBarHeight }}
             >
-              <div className="text-right pr-8">
+              <div className="text-right pr-10">
                 Avg <span className="font-black text-cyan-100">{leftAvg}</span>
               </div>
               <div className="text-center font-black uppercase tracking-[0.08em]">
-                Innings {innings} • Race To {raceTo}
+                Innings {innings}
               </div>
-              <div className="text-left pl-8">
+              <div className="text-left pl-10">
                 Avg <span className="font-black text-cyan-100">{rightAvg}</span>
               </div>
             </div>
