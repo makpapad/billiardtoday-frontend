@@ -16,6 +16,8 @@ type LiveScoreState = {
   runB?: number;
   liveRunA?: number;
   liveRunB?: number;
+  bestRunA?: number;
+  bestRunB?: number;
   current?: "A" | "B";
   inningsCount?: number;
   playerAName?: string | null;
@@ -182,6 +184,8 @@ function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fall
       runB: state.runB ?? coerceNumber(playerB.run, 0),
       liveRunA: state.liveRunA ?? coerceNumber(playerA.liveRun ?? playerA.run, 0),
       liveRunB: state.liveRunB ?? coerceNumber(playerB.liveRun ?? playerB.run, 0),
+      bestRunA: state.bestRunA ?? 0,
+      bestRunB: state.bestRunB ?? 0,
       current:
         state.current ??
         (input.current === "A" || input.current === "B"
@@ -247,6 +251,8 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       runB: coerceNumber(playerB.run, item.state.runB ?? 0),
       liveRunA: coerceNumber(playerA.liveRun ?? playerA.run, item.state.liveRunA ?? 0),
       liveRunB: coerceNumber(playerB.liveRun ?? playerB.run, item.state.liveRunB ?? 0),
+      bestRunA: item.state.bestRunA ?? 0,
+      bestRunB: item.state.bestRunB ?? 0,
       inningsCount: Math.max(
         coerceNumber(playerA.innings, 0),
         coerceNumber(playerB.innings, 0),
@@ -650,6 +656,8 @@ function RoyalProOverlayCard({
   const rightAvg = formatAverageValue(rightScore, state.inningsCount);
   const leftRun = state.liveRunA ?? state.runA ?? 0;
   const rightRun = state.liveRunB ?? state.runB ?? 0;
+  const leftHr = state.bestRunA ?? 0;
+  const rightHr = state.bestRunB ?? 0;
   const innings = state.inningsCount ?? 0;
   const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
@@ -735,6 +743,9 @@ function RoyalProOverlayCard({
                   {activeSide === "A" ? (
                     <>
                       Run <span className="font-black text-cyan-100">{leftRun}</span>
+                      <span className="ml-3">
+                        H.R. <span className="font-black text-cyan-100">{leftHr}</span>
+                      </span>
                     </>
                   ) : null}
                 </span>
@@ -753,6 +764,9 @@ function RoyalProOverlayCard({
                   {activeSide === "B" ? (
                     <>
                       Run <span className="font-black text-cyan-100">{rightRun}</span>
+                      <span className="ml-3">
+                        H.R. <span className="font-black text-cyan-100">{rightHr}</span>
+                      </span>
                     </>
                   ) : null}
                 </span>
