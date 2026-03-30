@@ -731,29 +731,23 @@ function RoyalProOverlayCard({
               style={{ minHeight: subBarHeight }}
             >
               <div className="text-right pr-6">
+                Avg <span className="font-black text-cyan-100">{leftAvg}</span>
                 {activeSide === "A" ? (
-                  <>
+                  <span className="ml-3">
                     Run <span className="font-black text-cyan-100">{leftRun}</span>
-                  </>
-                ) : (
-                  <>
-                    Avg <span className="font-black text-cyan-100">{leftAvg}</span>
-                  </>
-                )}
+                  </span>
+                ) : null}
               </div>
               <div className="text-center font-black uppercase tracking-[0.08em]">
                 Innings {innings}
               </div>
               <div className="text-left pl-6">
+                Avg <span className="font-black text-cyan-100">{rightAvg}</span>
                 {activeSide === "B" ? (
-                  <>
+                  <span className="ml-3">
                     Run <span className="font-black text-cyan-100">{rightRun}</span>
-                  </>
-                ) : (
-                  <>
-                    Avg <span className="font-black text-cyan-100">{rightAvg}</span>
-                  </>
-                )}
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
