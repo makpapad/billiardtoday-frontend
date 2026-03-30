@@ -28,7 +28,7 @@ type TournamentPayload = {
   };
 };
 
-type HeroView = "network" | "tournaments";
+type HeroView = "network" | "tournaments" | "board";
 
 type Props = {
   federation: Federation;
@@ -37,6 +37,101 @@ type Props = {
 };
 
 type TabKey = "details" | "tournaments" | "clubs";
+
+type BoardMember = {
+  role: string;
+  name: string;
+  city: string;
+  country: string;
+  phone?: string | null;
+  fax?: string | null;
+  email?: string | null;
+  imageUrl: string;
+};
+
+const CEB_BOARD_MEMBERS: BoardMember[] = [
+  {
+    role: "President",
+    name: "Diane Wild",
+    city: "Lausanne",
+    country: "Switzerland",
+    phone: "+41 79 449 46 78",
+    fax: "+41 21 351 42 05",
+    email: "diane.wild@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/pages/board/csm-wild-5de63532ab.jpg",
+  },
+  {
+    role: "Vice-President",
+    name: "Carlos Borrell Danis",
+    city: "Bözberg",
+    country: "Switzerland",
+    phone: "+41 564417219",
+    email: "carlos.borrell@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/photos/carlos.jpg",
+  },
+  {
+    role: "Secretary General",
+    name: "Jean-Pierre Guiraud",
+    city: "Vannes",
+    country: "France",
+    email: "jean-pierre.guiraud@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/photos/jpg.jpg",
+  },
+  {
+    role: "Treasurer",
+    name: "Rainer Selgrath",
+    city: "St. Wendel",
+    country: "Germany",
+    phone: "+49 6851 5550",
+    email: "rainer.selgrath@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/pages/board/rainer.png",
+  },
+  {
+    role: "Sports Director",
+    name: "Stefano Malacrita",
+    city: "Rome",
+    country: "Italy",
+    phone: "+39 3478067556",
+    email: "stefano.malacrita@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/pages/board/pic-3.jpg",
+  },
+  {
+    role: "Youth Director",
+    name: "Nikolaos Tremoulis",
+    city: "Athens",
+    country: "Greece",
+    phone: "+30 6947521517",
+    email: "nikos.tremoulis@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/photos/nick1.jpg",
+  },
+  {
+    role: "Board Member",
+    name: "Ümit Özkul",
+    city: "Atakum / Samsun",
+    country: "Turkiye",
+    phone: "+90 532 615 61 03",
+    fax: "+90 362 435 42 80",
+    email: "umit.ozkul@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/photos/umit.jpg",
+  },
+  {
+    role: "Board Member",
+    name: "Francesco Volino",
+    city: "Milan",
+    country: "Italy",
+    phone: "+39 335 582 2919",
+    email: "francesco.volino@eurobillard.org",
+    imageUrl: "https://www.eurobillard.org/medias/photos/volino.jpeg",
+  },
+  {
+    role: "Marketing / Communications Manager",
+    name: "Ninad Vardam",
+    city: "Lausanne",
+    country: "Switzerland",
+    email: "ninad.vardam@billiards.sport",
+    imageUrl: "https://www.eurobillard.org/medias/pages/board/ninad-vardam-700x980.jpg",
+  },
+];
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
   if (!value?.url) return null;
@@ -203,6 +298,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
     const gameTypeMatch = selectedGameType === "all" || String(item.game_type || "").trim() === selectedGameType;
     return seasonMatch && gameTypeMatch;
   });
+  const leadershipMembers = CEB_BOARD_MEMBERS.slice(0, 6);
+  const extendedBoardMembers = CEB_BOARD_MEMBERS.slice(6);
 
   return (
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
@@ -212,6 +309,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
         description={
           heroView === "tournaments"
             ? "Browse the official tournament calendar organized directly by the CEB, including championships and major European events."
+            : heroView === "board"
+              ? "Meet the CEB leadership team through a dedicated board roster with portraits, roles, and direct contact details."
             : "Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
         }
         actions={[]}
@@ -238,6 +337,17 @@ export function CebFederationExperience({ federation, members, embedded = false 
               }`}
             >
               Tournaments
+            </button>
+            <button
+              type="button"
+              onClick={() => setHeroView("board")}
+              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
+                heroView === "board"
+                  ? "bg-white text-slate-950"
+                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+              }`}
+            >
+              Board members
             </button>
           </>
         }
@@ -397,7 +507,9 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
         </div>
       </section>
-      ) : (
+      ) : null}
+
+      {heroView === "tournaments" ? (
       <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
@@ -481,7 +593,99 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
         )}
       </section>
-      )}
+      ) : null}
+
+      {heroView === "board" ? (
+        <section
+          id="ceb-board-members"
+          className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,rgba(248,250,252,0.96)_0%,rgba(239,246,255,0.96)_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8"
+        >
+          <SectionHeading
+            eyebrow="Leadership"
+            title="CEB Board Members"
+            description="The executive and board structure of the Confédération Européenne de Billard, presented as a dedicated roster with portraits and direct contact details."
+          />
+
+          <div className="grid gap-5 xl:grid-cols-3">
+            {leadershipMembers.map((member) => (
+              <article
+                key={`${member.role}-${member.name}`}
+                className="overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
+              >
+                <div className="relative aspect-[4/4.4] overflow-hidden bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]">
+                  <img src={member.imageUrl} alt={member.name} className="h-full w-full object-cover" />
+                  <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent_0%,rgba(2,6,23,0.78)_100%)] p-5">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">{member.role}</div>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">{member.name}</h3>
+                    <div className="mt-1 text-sm text-white/80">{member.city}, {member.country}</div>
+                  </div>
+                </div>
+                <div className="space-y-4 p-5">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                      {member.country}
+                    </span>
+                    {member.phone ? (
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                        {member.phone}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-3 text-sm text-slate-600">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Location</div>
+                      <div className="mt-1 font-medium text-slate-800">{member.city}, {member.country}</div>
+                    </div>
+                    {member.email ? (
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Email</div>
+                        <a href={`mailto:${member.email}`} className="mt-1 block font-medium text-sky-700 hover:text-sky-900">
+                          {member.email}
+                        </a>
+                      </div>
+                    ) : null}
+                    {member.fax ? (
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Fax</div>
+                        <div className="mt-1 font-medium text-slate-800">{member.fax}</div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Board and communications</div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {extendedBoardMembers.map((member) => (
+                <article
+                  key={`${member.role}-${member.name}`}
+                  className="flex gap-4 rounded-[26px] border border-white/70 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)]"
+                >
+                  <img
+                    src={member.imageUrl}
+                    alt={member.name}
+                    className="h-28 w-24 flex-none rounded-[20px] object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">{member.role}</div>
+                    <h3 className="mt-2 text-lg font-semibold tracking-tight text-slate-950">{member.name}</h3>
+                    <div className="mt-1 text-sm text-slate-600">{member.city}, {member.country}</div>
+                    {member.phone ? <div className="mt-3 text-sm font-medium text-slate-700">{member.phone}</div> : null}
+                    {member.email ? (
+                      <a href={`mailto:${member.email}`} className="mt-2 block truncate text-sm font-medium text-sky-700 hover:text-sky-900">
+                        {member.email}
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {heroView === "network" && selectedFederation ? (
         <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
