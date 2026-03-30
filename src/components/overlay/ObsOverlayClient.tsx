@@ -613,21 +613,23 @@ function RoyalProOverlayCard({
 }) {
   const state = item.state;
   const tournament = state.tournamentName ?? "Live Match";
-  const stage = state.stageName ?? "Stage";
-  const table = state.tableName ?? "Table";
+  const stage = stripLeadingWord(state.stageName ?? "Stage", "stage") ?? "Stage";
+  const table = stripLeadingWord(state.tableName ?? "Table", "table") ?? "Table";
   const leftName = state.playerAName ?? "Player A";
   const rightName = state.playerBName ?? "Player B";
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
   const leftAvg = formatAverageValue(leftScore, state.inningsCount);
   const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const innings = state.inningsCount ?? 0;
   const raceTo = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const overlayWidth = Math.round(width * 0.7);
-  const overlayBottom = Math.max(18, Math.round(height * 0.055));
-  const mainBarHeight = Math.max(54, Math.round(height * 0.17));
-  const subBarHeight = Math.max(22, Math.round(height * 0.058));
+  const overlayBottom = Math.max(28, Math.round(height * 0.075));
+  const topBarHeight = Math.max(18, Math.round(height * 0.028));
+  const mainBarHeight = Math.max(54, Math.round(height * 0.108));
+  const subBarHeight = Math.max(24, Math.round(height * 0.045));
 
   return (
     <div
@@ -650,66 +652,69 @@ function RoyalProOverlayCard({
         style={{ width: overlayWidth, bottom: overlayBottom }}
       >
         <div className="relative">
-          <div
-            className="grid items-stretch overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
-            style={{
-              gridTemplateColumns: "0.22fr 1.35fr auto auto auto 1.35fr 0.22fr",
-              minHeight: mainBarHeight,
-              background:
-                "linear-gradient(180deg, rgba(28,62,160,0.98) 0%, rgba(21,46,121,0.98) 100%)",
-            }}
-          >
-            <div className="flex items-center justify-center bg-black/58 px-2">
-              <EdgeSponsor side="left" />
+          <div className="overflow-hidden border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+            <div
+              className="flex items-center justify-center bg-[linear-gradient(180deg,#67c7ff_0%,#35aef2_100%)] px-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-950"
+              style={{ minHeight: topBarHeight }}
+            >
+              <span className="truncate">
+                {tournament} • Stage {stage} • Table {table}
+              </span>
             </div>
 
-            <div className="flex items-center gap-2 border-l border-white/10 px-2">
-              <PortraitBadge side="left" countryCode={leftFlag} />
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                <div className="min-w-0 truncate text-right text-[18px] font-semibold leading-none">
-                  {leftName}
-                </div>
+            <div
+              className="grid items-stretch"
+              style={{
+                gridTemplateColumns: "auto 1fr auto auto auto 1fr auto",
+                minHeight: mainBarHeight,
+                background:
+                  "linear-gradient(180deg, rgba(18,44,122,0.98) 0%, rgba(13,32,94,0.98) 100%)",
+              }}
+            >
+              <div className="flex items-center justify-center px-2">
                 <FlagOnly countryCode={leftFlag} />
               </div>
-            </div>
 
-            <div className="flex min-w-[58px] items-center justify-center border-l border-r border-black/20 bg-[linear-gradient(180deg,#3557ac_0%,#233a79_100%)] px-3 text-[33px] font-black leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-              {leftScore}
-            </div>
-            <div className="flex min-w-[34px] items-center justify-center border-r border-black/25 bg-[linear-gradient(180deg,#2c468f_0%,#1c2d60_100%)] px-2 text-[24px] font-black text-white/92">
-              -
-            </div>
-            <div className="flex min-w-[58px] items-center justify-center border-r border-black/20 bg-[linear-gradient(180deg,#3557ac_0%,#233a79_100%)] px-3 text-[33px] font-black leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-              {rightScore}
-            </div>
+              <div className="flex min-w-0 items-center px-3">
+                <div className="min-w-0 truncate text-right text-[20px] font-semibold leading-none text-white">
+                  {leftName}
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2 px-2">
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                <FlagOnly countryCode={rightFlag} />
-                <div className="min-w-0 truncate text-left text-[18px] font-semibold leading-none">
+              <div className="flex min-w-[64px] items-center justify-center border-l border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[34px] font-black leading-none">
+                {leftScore}
+              </div>
+              <div className="flex min-w-[34px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#314b93_0%,#24366d_100%)] px-2 text-[24px] font-black text-white/92">
+                -
+              </div>
+              <div className="flex min-w-[64px] items-center justify-center border-r border-white/10 bg-[linear-gradient(180deg,#3e5fb3_0%,#2a4586_100%)] px-3 text-[34px] font-black leading-none">
+                {rightScore}
+              </div>
+
+              <div className="flex min-w-0 items-center justify-end px-3">
+                <div className="min-w-0 truncate text-left text-[20px] font-semibold leading-none text-white">
                   {rightName}
                 </div>
               </div>
-              <PortraitBadge side="right" countryCode={rightFlag} />
+
+              <div className="flex items-center justify-center px-2">
+                <FlagOnly countryCode={rightFlag} />
+              </div>
             </div>
 
-            <div className="flex items-center justify-center bg-black/58 px-2">
-              <EdgeSponsor side="right" />
-            </div>
-          </div>
-
-          <div
-            className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,rgba(22,36,93,0.98)_0%,rgba(14,24,63,0.98)_100%)] px-4 text-[14px]"
-            style={{ minHeight: subBarHeight }}
-          >
-            <div className="text-center text-white/85">
-              Average <span className="font-black text-cyan-300">{leftAvg}</span>
-            </div>
-            <div className="text-center text-[15px] font-black uppercase tracking-[0.08em] text-white">
-              Race To {raceTo}
-            </div>
-            <div className="text-center text-white/85">
-              Average <span className="font-black text-cyan-300">{rightAvg}</span>
+            <div
+              className="grid grid-cols-3 items-center border-t border-white/10 bg-[linear-gradient(180deg,#2f78d7_0%,#255fbb_100%)] px-4 text-[14px] text-white"
+              style={{ minHeight: subBarHeight }}
+            >
+              <div className="text-center">
+                Avg <span className="font-black text-cyan-100">{leftAvg}</span>
+              </div>
+              <div className="text-center font-black uppercase tracking-[0.08em]">
+                Innings {innings} • Race To {raceTo}
+              </div>
+              <div className="text-center">
+                Avg <span className="font-black text-cyan-100">{rightAvg}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -753,22 +758,13 @@ function PortraitBadge({
   );
 }
 
-function EdgeSponsor({ side }: { side: "left" | "right" }) {
-  return (
-    <div className={`text-center ${side === "right" ? "opacity-75" : ""}`}>
-      <div className="text-[28px] font-black tracking-[-0.05em] text-[#1f8cff]">
-        {side === "left" ? "Q" : "DS"}
-      </div>
-      <div className="mt-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/55">
-        {side === "left" ? "Sponsor" : "Sponsor"}
-      </div>
-    </div>
-  );
-}
-
 function FlagOnly({ countryCode }: { countryCode: string | null }) {
   if (!countryCode) {
-    return <div className="h-[18px] w-7 rounded-[2px] bg-yellow-300/20" />;
+    return (
+      <div className="flex h-[18px] w-7 items-center justify-center rounded-[2px] bg-white/8 text-[8px] font-bold text-white/55">
+        --
+      </div>
+    );
   }
 
   return (
