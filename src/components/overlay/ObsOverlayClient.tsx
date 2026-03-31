@@ -958,12 +958,12 @@ function TemplateThreeOverlayCard({
           <OverlayMiniStat label="H.R." value={rightHr} align="right" />
         </div>
 
-        <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-1/2 z-10 flex h-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white">
+        <div className="absolute inset-0 grid grid-cols-[1fr_auto_1fr] items-center">
+          <div className="z-10 flex h-7 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white col-start-2 row-start-1">
             ({innings})
           </div>
 
-          <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end pr-6">
+          <div className="col-start-1 row-start-1 flex min-w-0 items-center justify-end pr-6">
             <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-3">
               <CompactTimeoutTicks
                 activeCount={leftTimeouts}
@@ -984,7 +984,7 @@ function TemplateThreeOverlayCard({
             </div>
           </div>
 
-          <div className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center pl-6">
+          <div className="col-start-3 row-start-1 flex min-w-0 items-center pl-6">
             <div className="flex min-w-0 max-w-[390px] items-center gap-3">
               <OverlayScoreBox score={rightScore} tone="accent" />
               <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
