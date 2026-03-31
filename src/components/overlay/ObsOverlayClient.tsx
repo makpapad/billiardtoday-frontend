@@ -880,7 +880,7 @@ function TemplateThreeOverlayCard({
   obsSafe: boolean;
 }) {
   const state = item.state;
-  const target = state.targetPointsA ?? state.targetPointsB ?? 40;
+  const innings = state.inningsCount ?? 0;
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
   const leftRun = state.liveRunA ?? state.runA ?? 0;
@@ -900,7 +900,8 @@ function TemplateThreeOverlayCard({
     <div
       className="relative text-white"
       style={{
-        width,
+        width: "100%",
+        maxWidth: width,
         height: Math.min(height, overlayHeight),
         minWidth: width,
         minHeight: overlayHeight,
@@ -913,41 +914,41 @@ function TemplateThreeOverlayCard({
       }}
     >
       <div
-        className="relative flex h-8 items-center overflow-hidden text-white"
+        className="flex h-8 w-full items-center overflow-hidden text-white"
         style={{ backgroundColor: "#079cfa" }}
       >
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pl-3 pr-[86px]">
-          <OverlayMiniStat label="H.R." value={leftHr} align="right" />
-          <OverlayMiniStat label="AVG:" value={leftAvg} align="right" />
-          <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center justify-start gap-2 pl-3">
+          <OverlayMiniStat label="H.R." value={leftHr} align="left" />
+          <OverlayMiniStat label="AVG:" value={leftAvg} align="left" />
+          <div className="flex min-w-0 items-center justify-end gap-1.5">
             {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
-            <span className="max-w-[260px] truncate text-[15px] font-semibold leading-none tracking-[0.04em]">
+            <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
               {leftName}
             </span>
           </div>
           <OverlayScoreBox score={leftScore} tone="light" />
-          {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
-          {activeSide === "A" ? <TurnArrow side="right" active /> : null}
         </div>
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <span className="whitespace-nowrap text-[14px] font-black leading-none tracking-[0.06em] text-white">
-            ({target})
-          </span>
+        <div className="flex shrink-0 items-center justify-center gap-1 px-3">
+          {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : <div className="h-6 w-6" />}
+          {activeSide === "A" ? <TurnArrow side="left" active /> : <div className="h-0 w-0" />}
+          <div className="flex min-w-[64px] items-center justify-center text-[14px] font-normal leading-none tracking-[0.06em] text-white">
+            ({innings})
+          </div>
+          {activeSide === "B" ? <TurnArrow side="right" active /> : <div className="h-0 w-0" />}
+          {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : <div className="h-6 w-6" />}
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2 pl-[86px] pr-3">
-          {activeSide === "B" ? <TurnArrow side="left" active /> : null}
-          {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pr-3">
           <OverlayScoreBox score={rightScore} tone="accent" />
           <div className="flex min-w-0 items-center gap-1.5">
-            <span className="max-w-[260px] truncate text-[15px] font-semibold leading-none tracking-[0.04em]">
+            <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
               {rightName}
             </span>
             {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
           </div>
-          <OverlayMiniStat label="AVG:" value={rightAvg} align="left" />
-          <OverlayMiniStat label="H.R." value={rightHr} align="left" />
+          <OverlayMiniStat label="AVG:" value={rightAvg} align="right" />
+          <OverlayMiniStat label="H.R." value={rightHr} align="right" />
         </div>
       </div>
     </div>
@@ -977,21 +978,23 @@ function OverlayMiniStat({
   label,
   value,
   align,
+  className,
 }: {
   label: string;
   value: string | number;
   align: "left" | "right";
+  className?: string;
 }) {
   return (
     <div
       className={`flex shrink-0 items-baseline gap-1 leading-none ${
         align === "right" ? "text-right" : "text-left"
-      }`}
+      } ${className ?? ""}`}
     >
-      <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/90">
+      <span className="text-[12px] font-normal uppercase tracking-[0.08em] text-white/95">
         {label}
       </span>
-      <span className="text-[13px] font-black text-white">{value}</span>
+      <span className="text-[15px] font-normal text-white">{value}</span>
     </div>
   );
 }
@@ -1005,7 +1008,7 @@ function OverlayScoreBox({
 }) {
   return (
     <div
-      className={`flex h-6 min-w-[42px] shrink-0 items-center justify-center rounded-[4px] border px-2 text-[18px] font-black leading-none ${
+      className={`flex h-6 min-w-[42px] shrink-0 items-center justify-center rounded-[4px] border px-2 text-[18px] font-semibold leading-none ${
         tone === "accent"
           ? "border-slate-950/35 bg-amber-400 text-slate-950"
           : "border-slate-950/20 bg-white text-slate-950"
@@ -1018,7 +1021,7 @@ function OverlayScoreBox({
 
 function OverlayRunCircle({ run }: { run: number }) {
   return (
-    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[13px] font-black leading-none text-slate-950">
+    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[13px] font-normal leading-none text-slate-950">
       {run}
     </div>
   );
