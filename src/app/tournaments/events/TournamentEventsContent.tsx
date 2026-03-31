@@ -1035,6 +1035,20 @@ export function TournamentEventsContent({
                                           (group) => {
                                             const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
                                             const isExpanded = expandedGroups.has(groupKey);
+                                            const previewPlayers = Array.from(
+                                              new Map(
+                                                group.matches
+                                                  .flatMap((match) => [
+                                                    match.top.player,
+                                                    match.bottom.player,
+                                                  ])
+                                                  .map((player) => [
+                                                    player.documentId ||
+                                                      `${player.name}-${player.country || "xx"}`,
+                                                    player,
+                                                  ]),
+                                              ).values(),
+                                            );
 
                                             return (
                                             <div
@@ -1077,6 +1091,38 @@ export function TournamentEventsContent({
                                                     <div className="font-semibold text-gray-700 dark:text-gray-200">
                                                       Group {group.number ?? "?"}
                                                     </div>
+                                                    {!isExpanded ? (
+                                                      <div className="ml-3 flex flex-wrap items-center gap-3 text-[11px] font-normal text-gray-500 dark:text-gray-300">
+                                                        {previewPlayers.map((player) => (
+                                                          <div
+                                                            key={
+                                                              player.documentId ||
+                                                              `${player.name}-${player.country || "xx"}`
+                                                            }
+                                                            className="flex items-center gap-1.5"
+                                                          >
+                                                            {getCountryFlagCdnUrl(
+                                                              player.country ?? null,
+                                                              40,
+                                                            ) ? (
+                                                              <img
+                                                                src={getCountryFlagCdnUrl(
+                                                                  player.country ?? null,
+                                                                  40,
+                                                                )!}
+                                                                alt={player.country || "flag"}
+                                                                className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                loading="lazy"
+                                                                referrerPolicy="no-referrer"
+                                                              />
+                                                            ) : null}
+                                                            <span className="leading-none">
+                                                              {player.name || player.nativeName || "Unknown"}
+                                                            </span>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    ) : null}
                                                   </div>
                                                   <div className="text-[11px] uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
                                                     {isExpanded ? "Hide" : "Show"}
