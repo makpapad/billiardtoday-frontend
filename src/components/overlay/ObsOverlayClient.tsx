@@ -937,8 +937,8 @@ function TimeoutTicks({
   activeCount: number;
   totalCount: number;
 }) {
-  const safeTotal = Math.max(2, totalCount || 0);
-  const usedCount = Math.max(0, Math.min(activeCount, safeTotal));
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
+  const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
 
   return (
     <div className="flex w-[14px] items-center justify-start gap-[3px]">

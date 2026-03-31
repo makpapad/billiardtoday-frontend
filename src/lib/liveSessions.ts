@@ -115,6 +115,51 @@ export function matchesClub(row: UnknownRecord, club: ClubIdentity) {
   return [club.id, club.documentId, club.slug].filter(Boolean).some((value) => candidates.includes(String(value)));
 }
 
+function readPositiveNumber(value: unknown): number | null {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? Math.floor(num) : null;
+}
+
+function extractTargetPointsFromSource(source: unknown): number | null {
+  if (!source) return null;
+
+  if (typeof source === "string") {
+    try {
+      return extractTargetPointsFromSource(JSON.parse(source));
+    } catch {
+      return null;
+    }
+  }
+
+  if (Array.isArray(source)) {
+    for (const item of source) {
+      const found = extractTargetPointsFromSource(item);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+
+  const node = unwrapStrapiNode(source);
+  if (!node) return null;
+
+  const direct =
+    readPositiveNumber(node.targetPoints) ??
+    readPositiveNumber(node.target_points) ??
+    readPositiveNumber(node.targetPoint) ??
+    readPositiveNumber(node.target) ??
+    readPositiveNumber(node.pointsToWin) ??
+    readPositiveNumber(node.goalPoints) ??
+    readPositiveNumber(node.equalInningPoints) ??
+    readPositiveNumber(node.equal_inning_points) ??
+    readPositiveNumber(node.targetP1) ??
+    readPositiveNumber(node.targetP2) ??
+    readPositiveNumber(node.targetPointsP1) ??
+    readPositiveNumber(node.targetPointsP2);
+  if (direct !== null) return direct;
+
+  return null;
+}
+
 export function normalizeLiveSessionRow(row: UnknownRecord) {
   const attrs = unwrapStrapiNode(row?.attributes) || row;
   const club = unwrapStrapiNode(attrs?.club) || {};
@@ -124,6 +169,28 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
   const sessionId = String(row?.documentId || row?.id || attrs?.documentId || attrs?.id || "");
   const inningsA = Number(playerA?.innings ?? attrs?.inningsA ?? attrs?.innings ?? 0);
   const inningsB = Number(playerB?.innings ?? attrs?.inningsB ?? attrs?.innings ?? 0);
+  const targetA =
+    readPositiveNumber(playerA?.targetPoints) ??
+    readPositiveNumber(playerA?.target_points) ??
+    readPositiveNumber(attrs?.targetPointsP1) ??
+    readPositiveNumber(attrs?.target_points_p1) ??
+    readPositiveNumber(attrs?.targetPoints) ??
+    readPositiveNumber(attrs?.target_points) ??
+    readPositiveNumber(attrs?.targetP1) ??
+    extractTargetPointsFromSource(attrs?.matchSheet) ??
+    extractTargetPointsFromSource(attrs?.matchSheetJson) ??
+    extractTargetPointsFromSource(attrs?.sheet);
+  const targetB =
+    readPositiveNumber(playerB?.targetPoints) ??
+    readPositiveNumber(playerB?.target_points) ??
+    readPositiveNumber(attrs?.targetPointsP2) ??
+    readPositiveNumber(attrs?.target_points_p2) ??
+    readPositiveNumber(attrs?.targetPoints) ??
+    readPositiveNumber(attrs?.target_points) ??
+    readPositiveNumber(attrs?.targetP2) ??
+    extractTargetPointsFromSource(attrs?.matchSheet) ??
+    extractTargetPointsFromSource(attrs?.matchSheetJson) ??
+    extractTargetPointsFromSource(attrs?.sheet);
 
   return {
     id: sessionId,
@@ -156,16 +223,16 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       progress: Number(attrs?.progress ?? 0),
       totalBlocks: Number(attrs?.totalBlocks ?? 0),
       isRunning: Boolean(attrs?.isRunning),
-      timeoutsA: Number(playerA?.timeoutsUsed ?? attrs?.timeoutsA ?? 0),
-      timeoutsB: Number(playerB?.timeoutsUsed ?? attrs?.timeoutsB ?? 0),
-      maxTimeoutsA: Number(playerA?.maxTimeouts ?? attrs?.maxTimeoutsA ?? 0),
-      maxTimeoutsB: Number(playerB?.maxTimeouts ?? attrs?.maxTimeoutsB ?? 0),
+      timeoutsA: Number(playerA?.timeoutsUsed ?? playerA?.timeouts ?? attrs?.timeoutsA ?? 0),
+      timeoutsB: Number(playerB?.timeoutsUsed ?? playerB?.timeouts ?? attrs?.timeoutsB ?? 0),
+      maxTimeoutsA: Number(playerA?.maxTimeouts ?? attrs?.maxTimeoutsA ?? 3),
+      maxTimeoutsB: Number(playerB?.maxTimeouts ?? attrs?.maxTimeoutsB ?? 3),
       avgFormattedA: playerA?.avgFormatted ?? null,
       avgFormattedB: playerB?.avgFormatted ?? null,
       accPercentA: typeof playerA?.accPercent === "number" ? playerA.accPercent : undefined,
       accPercentB: typeof playerB?.accPercent === "number" ? playerB.accPercent : undefined,
-      targetPointsA: typeof playerA?.targetPoints === "number" ? playerA.targetPoints : null,
-      targetPointsB: typeof playerB?.targetPoints === "number" ? playerB.targetPoints : null,
+      targetPointsA: targetA,
+      targetPointsB: targetB,
       gameDurationSeconds: typeof attrs?.gameDurationSeconds === "number" ? attrs.gameDurationSeconds : undefined,
       tournamentName: attrs?.tournamentName ?? attrs?.eventTitle ?? null,
       stageName: attrs?.stageName ?? attrs?.stageTitle ?? null,
