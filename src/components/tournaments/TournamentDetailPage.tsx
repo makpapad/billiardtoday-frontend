@@ -1946,20 +1946,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       ? "relative rounded-[30px]"
                       : "relative"
                   }
-                  onMouseEnter={() => {
-                    if (!boardInteractionDisabled)
-                      setHoveredGroupSessionId(session.sessionId);
-                  }}
-                  onMouseLeave={() =>
-                    setHoveredGroupSessionId((prev) =>
-                      prev === session.sessionId ? null : prev,
-                    )
-                  }
                 >
                   {!highlightItem &&
                   groupPopoverBySessionId.has(session.sessionId) &&
-                  (hoveredGroupSessionId === session.sessionId ||
-                    openGroupSessionId === session.sessionId) ? (
+                  openGroupSessionId === session.sessionId ? (
                     <GroupTooltip
                       data={groupPopoverBySessionId.get(session.sessionId)!}
                       embedded={embedded}
@@ -2027,13 +2017,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             event.stopPropagation();
                             toggleGroupPopover(session.sessionId);
                           }}
-                          className={`sm:hidden rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
+                          className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
                             groupPopoverBySessionId.has(session.sessionId)
                               ? "border-white/30 bg-slate-900/50"
                               : "border-white/15 bg-slate-900/30 opacity-70"
                           }`}
                         >
-                          Group
+                          Groups
                         </button>
                       }
                     />
