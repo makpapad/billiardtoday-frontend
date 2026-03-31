@@ -1032,7 +1032,7 @@ export function TournamentEventsContent({
                                     ) : (
                                       <div className="flex flex-col gap-6">
                                         {(stageMatchGroups[stage.id] ?? []).map(
-                                          (group) => {
+                                          (group, groupIndex) => {
                                             const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
                                             const isExpanded = expandedGroups.has(groupKey);
                                             const previewPlayers = Array.from(
@@ -1053,7 +1053,7 @@ export function TournamentEventsContent({
                                             return (
                                             <div
                                               key={group.key}
-                                              className="flex flex-col gap-2"
+                                              className="flex flex-col gap-1.5"
                                             >
                                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                                 <button
@@ -1069,9 +1069,15 @@ export function TournamentEventsContent({
                                                       return next;
                                                     });
                                                   }}
-                                                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                  className={clsx(
+                                                    "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-800",
+                                                    !isExpanded &&
+                                                      (groupIndex % 2 === 0
+                                                        ? "bg-gray-100/90 dark:bg-gray-800/60"
+                                                        : "bg-gray-200/85 dark:bg-gray-700/60"),
+                                                  )}
                                                 >
-                                                  <div className="flex items-center gap-2">
+                                                  <div className="flex items-center gap-1.5">
                                                     <svg
                                                       className={clsx(
                                                         "h-4 w-4 transition-transform",
@@ -1092,14 +1098,14 @@ export function TournamentEventsContent({
                                                       Group {group.number ?? "?"}
                                                     </div>
                                                     {!isExpanded ? (
-                                                      <div className="ml-3 flex flex-wrap items-center gap-3 text-[11px] font-normal text-gray-500 dark:text-gray-300">
+                                                      <div className="ml-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300">
                                                         {previewPlayers.map((player) => (
                                                           <div
                                                             key={
                                                               player.documentId ||
                                                               `${player.name}-${player.country || "xx"}`
                                                             }
-                                                            className="flex items-center gap-1.5"
+                                                            className="flex items-center gap-2"
                                                           >
                                                             {getCountryFlagCdnUrl(
                                                               player.country ?? null,
@@ -1111,7 +1117,7 @@ export function TournamentEventsContent({
                                                                   40,
                                                                 )!}
                                                                 alt={player.country || "flag"}
-                                                                className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                className="h-4 w-[22px] rounded-[2px] object-cover"
                                                                 loading="lazy"
                                                                 referrerPolicy="no-referrer"
                                                               />
@@ -1123,9 +1129,6 @@ export function TournamentEventsContent({
                                                         ))}
                                                       </div>
                                                     ) : null}
-                                                  </div>
-                                                  <div className="text-[11px] uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                                    {isExpanded ? "Hide" : "Show"}
                                                   </div>
                                                 </button>
                                               </div>
@@ -1382,7 +1385,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200",
+                                                                    "border-t border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1537,7 +1540,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t-2 border-b-4 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200",
+                                                                    "border-t-2 border-b-4 border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
