@@ -938,6 +938,7 @@ function TimeoutTicks({
   totalCount: number;
 }) {
   const safeTotal = Math.max(2, totalCount || 0);
+  const usedCount = Math.max(0, Math.min(activeCount, safeTotal));
 
   return (
     <div className="flex w-[14px] items-center justify-start gap-[3px]">
@@ -945,7 +946,7 @@ function TimeoutTicks({
         <span
           key={index}
           className={`h-7 w-[5px] rounded-full ${
-            index < activeCount ? "bg-emerald-400" : "bg-slate-200/55"
+            index < usedCount ? "bg-slate-200/55" : "bg-emerald-400"
           }`}
         />
       ))}

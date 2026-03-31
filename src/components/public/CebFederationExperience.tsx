@@ -452,7 +452,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                   : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
               }`}
             >
-              National federation network
+              National federations
             </button>
             <button
               type="button"
@@ -463,18 +463,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                   : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
               }`}
             >
-              Tournaments
-            </button>
-            <button
-              type="button"
-              onClick={() => setHeroView("upcoming")}
-              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
-                heroView === "upcoming"
-                  ? "bg-white text-slate-950"
-                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
-              }`}
-            >
-              Upcoming Events
+              Events
             </button>
             <button
               type="button"
@@ -500,7 +489,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Affiliate federations</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Affiliated federations</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{sortedMembers.length}</div>
               </div>
               <button
@@ -519,7 +508,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <SectionHeading
           eyebrow="Interactive map"
-          title="National federation network"
+          title="National federations"
           description="Tap any federation pin on the Europe map to switch the content below between federation profile, official tournaments, and affiliated clubs."
         />
 
