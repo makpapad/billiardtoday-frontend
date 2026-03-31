@@ -922,7 +922,7 @@ function TemplateThreeOverlayCard({
     >
       <div className="flex h-6 w-full items-end justify-center overflow-visible">
         <div
-          className="grid h-6 w-[80%] grid-cols-[minmax(0,1fr)_auto_auto] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
+          className="grid h-6 w-[80%] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
           style={{ backgroundColor: "#d6d9e1" }}
         >
           <span className="truncate whitespace-nowrap">
