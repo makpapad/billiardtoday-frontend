@@ -7,7 +7,7 @@ type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-type OverlayTemplate = "1" | "2";
+type OverlayTemplate = "1" | "2" | "3";
 
 type LiveScoreState = {
   scoreA?: number;
@@ -349,7 +349,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     .trim()
     .toLowerCase();
   const template: OverlayTemplate =
-    templateParam === "2" || templateParam === "royalpro" ? "2" : "1";
+    templateParam === "3" || templateParam === "t3"
+      ? "3"
+      : templateParam === "2" || templateParam === "royalpro"
+        ? "2"
+        : "1";
   const obsSafe = parseBooleanParam(
     searchParams?.obs ?? searchParams?.obsSafe ?? searchParams?.safe,
     true,
@@ -590,6 +594,17 @@ function ScoreOverlayCard({
   if (template === "2") {
     return (
       <RoyalProOverlayCard
+        item={item}
+        width={width}
+        height={height}
+        obsSafe={obsSafe}
+      />
+    );
+  }
+
+  if (template === "3") {
+    return (
+      <TemplateThreeOverlayCard
         item={item}
         width={width}
         height={height}
@@ -847,6 +862,93 @@ function RoyalProOverlayCard({
   );
 }
 
+function TemplateThreeOverlayCard({
+  item,
+  width,
+  height,
+  obsSafe,
+}: {
+  item: LiveScoreItem;
+  width: number;
+  height: number;
+  obsSafe: boolean;
+}) {
+  const state = item.state;
+  const targetA = state.targetPointsA ?? state.targetPointsB ?? 40;
+  const targetB = state.targetPointsB ?? state.targetPointsA ?? targetA;
+  const leftScore = state.scoreA ?? 0;
+  const rightScore = state.scoreB ?? 0;
+  const leftRun = state.liveRunA ?? state.runA ?? 0;
+  const rightRun = state.liveRunB ?? state.runB ?? 0;
+  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
+  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftHr = state.bestRunA ?? 0;
+  const rightHr = state.bestRunB ?? 0;
+  const leftFlag = resolveCountryCode(state.playerACountry);
+  const rightFlag = resolveCountryCode(state.playerBCountry);
+  const leftName = formatOverlayPlayerName(state.playerAName);
+  const rightName = formatOverlayPlayerName(state.playerBName);
+  const activeSide = state.current;
+  const overlayHeight = 32;
+
+  return (
+    <div
+      className="relative text-white"
+      style={{
+        width,
+        height: Math.min(height, overlayHeight),
+        minWidth: width,
+        minHeight: overlayHeight,
+        transform: obsSafe ? "translateZ(0)" : undefined,
+        backfaceVisibility: obsSafe ? "hidden" : undefined,
+        WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
+        textRendering: obsSafe ? "geometricPrecision" : undefined,
+        fontFamily:
+          "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
+      }}
+    >
+      <div
+        className="relative flex h-8 items-center overflow-hidden rounded-md text-white shadow-[0_8px_22px_rgba(0,0,0,0.38)]"
+        style={{ backgroundColor: "#079cfa" }}
+      >
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 pl-2 pr-[72px]">
+          <OverlayMiniStat label="HR" value={leftHr} align="right" />
+          <OverlayMiniStat label="AVG" value={leftAvg} align="right" />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <SmallFlag countryCode={leftFlag} />
+            <span className="max-w-[180px] truncate text-[15px] font-semibold leading-none">
+              {leftName}
+            </span>
+          </div>
+          <OverlayScoreBox score={leftScore} />
+          <OverlayRunCircle run={leftRun} />
+          <TurnArrow side="right" active={activeSide === "A"} />
+        </div>
+
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+          <span className="whitespace-nowrap text-[14px] font-black leading-none tracking-[0.06em] text-white">
+            ({targetA}-{targetB})
+          </span>
+        </div>
+
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 pl-[72px] pr-2">
+          <TurnArrow side="left" active={activeSide === "B"} />
+          <OverlayRunCircle run={rightRun} />
+          <OverlayScoreBox score={rightScore} />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="max-w-[180px] truncate text-[15px] font-semibold leading-none">
+              {rightName}
+            </span>
+            <SmallFlag countryCode={rightFlag} />
+          </div>
+          <OverlayMiniStat label="AVG" value={rightAvg} align="left" />
+          <OverlayMiniStat label="HR" value={rightHr} align="left" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SmallFlag({ countryCode }: { countryCode: string | null }) {
   if (!countryCode) {
     return <div className="h-[14px] w-5 rounded-[2px] bg-white/12" />;
@@ -862,6 +964,68 @@ function SmallFlag({ countryCode }: { countryCode: string | null }) {
       loading="eager"
       decoding="async"
       referrerPolicy="no-referrer"
+    />
+  );
+}
+
+function OverlayMiniStat({
+  label,
+  value,
+  align,
+}: {
+  label: string;
+  value: string | number;
+  align: "left" | "right";
+}) {
+  return (
+    <div
+      className={`flex shrink-0 items-baseline gap-1 leading-none ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/80">
+        {label}
+      </span>
+      <span className="text-[13px] font-black text-white">{value}</span>
+    </div>
+  );
+}
+
+function OverlayScoreBox({ score }: { score: number }) {
+  return (
+    <div className="flex h-7 min-w-[42px] shrink-0 items-center justify-center rounded-md bg-white px-2 text-[18px] font-black leading-none text-slate-950">
+      {score}
+    </div>
+  );
+}
+
+function OverlayRunCircle({ run }: { run: number }) {
+  return (
+    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/60 bg-sky-950/28 text-[14px] font-black leading-none text-white">
+      {run}
+    </div>
+  );
+}
+
+function TurnArrow({
+  side,
+  active,
+}: {
+  side: "left" | "right";
+  active: boolean;
+}) {
+  return (
+    <div
+      className={`h-0 w-0 shrink-0 ${
+        active ? "opacity-100" : "opacity-25"
+      }`}
+      style={{
+        borderTop: "7px solid transparent",
+        borderBottom: "7px solid transparent",
+        borderLeft: side === "right" ? "11px solid rgba(255,255,255,0.96)" : undefined,
+        borderRight: side === "left" ? "11px solid rgba(255,255,255,0.96)" : undefined,
+        filter: active ? "drop-shadow(0 0 6px rgba(255,255,255,0.45))" : undefined,
+      }}
     />
   );
 }
