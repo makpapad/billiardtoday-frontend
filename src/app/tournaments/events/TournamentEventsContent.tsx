@@ -1156,14 +1156,33 @@ export function TournamentEventsContent({
                                                       Group {group.number ?? "?"}
                                                     </div>
                                                     {!isExpanded ? (
-                                                      <div className="ml-2 flex flex-wrap items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300">
+                                                      <div className="ml-2 grid flex-1 grid-cols-2 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300 xl:grid-cols-3">
                                                         {previewPlayers.map((player) => (
+                                                          (() => {
+                                                            const playerLabel =
+                                                              player.name ||
+                                                              player.nativeName ||
+                                                              "Unknown";
+                                                            const isSearchMatch =
+                                                              normalizedPlayerSearchQuery.length >
+                                                                0 &&
+                                                              [player.name, player.nativeName]
+                                                                .map((value) =>
+                                                                  normalizeLiveName(value),
+                                                                )
+                                                                .some((value) =>
+                                                                  value.includes(
+                                                                    normalizedPlayerSearchQuery,
+                                                                  ),
+                                                                );
+
+                                                            return (
                                                           <div
                                                             key={
                                                               player.documentId ||
                                                               `${player.name}-${player.country || "xx"}`
                                                             }
-                                                            className="flex items-center gap-2"
+                                                            className="flex min-w-0 items-center gap-2"
                                                           >
                                                             {getCountryFlagCdnUrl(
                                                               player.country ?? null,
@@ -1180,10 +1199,18 @@ export function TournamentEventsContent({
                                                                 referrerPolicy="no-referrer"
                                                               />
                                                             ) : null}
-                                                            <span className="leading-none">
-                                                              {player.name || player.nativeName || "Unknown"}
+                                                            <span
+                                                              className={clsx(
+                                                                "truncate leading-none",
+                                                                isSearchMatch &&
+                                                                  "text-yellow-600 dark:text-yellow-300",
+                                                              )}
+                                                            >
+                                                              {playerLabel}
                                                             </span>
                                                           </div>
+                                                            );
+                                                          })()
                                                         ))}
                                                       </div>
                                                     ) : null}
