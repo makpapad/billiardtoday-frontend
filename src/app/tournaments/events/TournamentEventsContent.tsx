@@ -564,7 +564,7 @@ export function TournamentEventsContent({
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
 
-    const maxPreviewColumns = 3;
+    const maxPreviewColumns = 4;
     const maxLengths: number[] = [];
     filteredActiveStageGroups.forEach((group) => {
       getGroupPreviewPlayers(group).forEach((player, index) => {
