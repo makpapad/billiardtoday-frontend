@@ -1185,7 +1185,7 @@ export function TournamentEventsContent({
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
-                                                        className="ml-2 grid flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
+                                                        className="ml-5 grid flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
                                                         style={{
                                                           gridTemplateColumns:
                                                             previewGridTemplateColumns ||
