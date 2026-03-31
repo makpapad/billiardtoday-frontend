@@ -273,8 +273,8 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       runB: coerceNumber(playerB.run, item.state.runB ?? 0),
       liveRunA: coerceNumber(playerA.liveRun ?? playerA.run, item.state.liveRunA ?? 0),
       liveRunB: coerceNumber(playerB.liveRun ?? playerB.run, item.state.liveRunB ?? 0),
-      bestRunA: item.state.bestRunA ?? 0,
-      bestRunB: item.state.bestRunB ?? 0,
+      bestRunA: coerceNumber((playerA as Record<string, unknown>)?.hr, item.state.bestRunA ?? 0),
+      bestRunB: coerceNumber((playerB as Record<string, unknown>)?.hr, item.state.bestRunB ?? 0),
       timeoutsA: coerceNumber(playerA.timeoutsUsed ?? playerA.timeouts, item.state.timeoutsA ?? 0),
       timeoutsB: coerceNumber(playerB.timeoutsUsed ?? playerB.timeouts, item.state.timeoutsB ?? 0),
       maxTimeoutsA: coerceNumber(playerA.maxTimeouts, item.state.maxTimeoutsA ?? 3),
@@ -356,7 +356,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const requestedHeight = Number(getParamValue(searchParams?.height));
   const width =
     (Number.isFinite(requestedWidth) && requestedWidth > 0 ? requestedWidth : 0) ||
-    (template === "3" ? 1080 : DEFAULT_WIDTH);
+    (template === "3" ? 1920 : DEFAULT_WIDTH);
   const height =
     (Number.isFinite(requestedHeight) && requestedHeight > 0 ? requestedHeight : 0) ||
     DEFAULT_HEIGHT;
@@ -889,12 +889,19 @@ function TemplateThreeOverlayCard({
   const rightAvg = formatAverageValue(rightScore, state.inningsCount);
   const leftHr = state.bestRunA ?? 0;
   const rightHr = state.bestRunB ?? 0;
+  const target = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
   const rightName = normalizeString(state.playerBName) ?? "Player 2";
   const activeSide = state.current;
-  const overlayHeight = 32;
+  const tournament = state.tournamentName ?? "Live Match";
+  const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
+  const table = stripLeadingWord(state.tableName ?? "-", "table") ?? "-";
+  const totalBlocks = 40;
+  const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
+  const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
+  const overlayHeight = 50;
 
   return (
     <div
@@ -913,6 +920,21 @@ function TemplateThreeOverlayCard({
           "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
       }}
     >
+      <div className="flex h-5 w-full items-end justify-center overflow-visible">
+        <div
+          className="grid h-5 w-[80%] grid-cols-[1fr_auto_1fr] items-center rounded-t-[10px] px-4 text-[12px] font-normal tracking-[0.06em] text-slate-900"
+          style={{ backgroundColor: "#9fdcff" }}
+        >
+          <span />
+          <span className="truncate whitespace-nowrap text-center">
+            {tournament} / Stage {stage} / Table {table}
+          </span>
+          <span className="justify-self-end whitespace-nowrap">
+            Race to {target}
+          </span>
+        </div>
+      </div>
+
       <div
         className="relative h-8 w-full overflow-hidden text-white"
         style={{ backgroundColor: "#079cfa" }}
@@ -928,27 +950,33 @@ function TemplateThreeOverlayCard({
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex min-w-0 max-w-full items-center justify-center gap-2 px-40">
-            <div className="flex min-w-0 max-w-[340px] items-center justify-end gap-1.5">
+          <div className="flex min-w-0 max-w-full items-center justify-center gap-1 px-28">
+            <div className="flex min-w-0 max-w-[360px] items-center justify-end gap-1.5">
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
               <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
                 {leftName}
               </span>
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
+              </div>
+              <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+                {activeSide === "A" ? <TurnArrow side="right" active /> : null}
+              </div>
               <OverlayScoreBox score={leftScore} tone="light" />
             </div>
 
             <div className="flex shrink-0 items-center justify-center gap-1">
-              {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : <div className="h-6 w-6" />}
-              {activeSide === "A" ? <TurnArrow side="left" active /> : <div className="h-0 w-0" />}
-              <div className="flex min-w-[64px] items-center justify-center text-[14px] font-normal leading-none tracking-[0.06em] text-white">
-                ({innings})
-              </div>
-              {activeSide === "B" ? <TurnArrow side="right" active /> : <div className="h-0 w-0" />}
-              {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : <div className="h-6 w-6" />}
+              <TimeStrip remainingBlocks={remainingBlocks} elapsedBlocks={elapsedBlocks} totalBlocks={totalBlocks} />
             </div>
 
-            <div className="flex min-w-0 max-w-[340px] items-center gap-1.5">
+            <div className="flex min-w-0 max-w-[360px] items-center gap-1.5">
               <OverlayScoreBox score={rightScore} tone="accent" />
+              <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+                {activeSide === "B" ? <TurnArrow side="left" active /> : null}
+              </div>
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
+              </div>
               <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
                 {rightName}
               </span>
@@ -956,6 +984,50 @@ function TemplateThreeOverlayCard({
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TimeStrip({
+  remainingBlocks,
+  elapsedBlocks,
+  totalBlocks,
+}: {
+  remainingBlocks: number;
+  elapsedBlocks: number;
+  totalBlocks: number;
+}) {
+  const remainingColorClass =
+    remainingBlocks > 20
+      ? "text-emerald-200"
+      : remainingBlocks > 10
+        ? "text-amber-200"
+        : "text-red-200";
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`flex h-6 w-8 items-center justify-center rounded-[4px] bg-sky-950/70 text-[13px] font-normal leading-none ${remainingColorClass}`}
+      >
+        {remainingBlocks}
+      </div>
+      <div className="flex w-[240px] gap-[2px]">
+        {Array.from({ length: totalBlocks }).map((_, index) => {
+          const isRemaining = index >= elapsedBlocks;
+          const zoneClass =
+            index < 20
+              ? "bg-emerald-400"
+              : index < 30
+                ? "bg-amber-300"
+                : "bg-red-400";
+          return (
+            <span
+              key={index}
+              className={`h-5 flex-1 rounded-[1px] ${isRemaining ? zoneClass : "bg-white/20"}`}
+            />
+          );
+        })}
       </div>
     </div>
   );
