@@ -964,7 +964,7 @@ function TemplateThreeOverlayCard({
           </div>
 
           <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end pr-6">
-            <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-2">
+            <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-3">
               <CompactTimeoutTicks
                 activeCount={leftTimeouts}
                 totalCount={leftMaxTimeouts}
@@ -985,7 +985,7 @@ function TemplateThreeOverlayCard({
           </div>
 
           <div className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center pl-6">
-            <div className="flex min-w-0 max-w-[390px] items-center gap-2">
+            <div className="flex min-w-0 max-w-[390px] items-center gap-3">
               <OverlayScoreBox score={rightScore} tone="accent" />
               <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
                 {activeSide === "B" ? <TurnArrow side="left" active /> : null}
