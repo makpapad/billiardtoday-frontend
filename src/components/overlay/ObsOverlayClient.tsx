@@ -116,7 +116,6 @@ type WsPayload = {
 const DEFAULT_WIDTH = 540;
 const DEFAULT_HEIGHT = 146;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
-const OVERLAY_RESYNC_INTERVAL_MS = 15000;
 const OVERLAY_WS_RECONNECT_MS = 2500;
 
 function getParamValue(value: string | string[] | undefined): string | undefined {
@@ -428,14 +427,8 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
     void runLoad();
 
-    const intervalId = window.setInterval(() => {
-      if (cancelled) return;
-      void loadSession(currentSessionId, { preserveItem: true, silent: true });
-    }, OVERLAY_RESYNC_INTERVAL_MS);
-
     return () => {
       cancelled = true;
-      window.clearInterval(intervalId);
     };
   }, [loadSession, sessionId]);
 
