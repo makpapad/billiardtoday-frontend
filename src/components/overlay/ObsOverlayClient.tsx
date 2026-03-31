@@ -1017,7 +1017,7 @@ function TimeStrip({
       <div className={`${compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
-      <div className={`flex ${compact ? "w-[360px]" : "w-[320px]"} gap-[2px]`}>
+      <div className={`flex ${compact ? "w-[460px]" : "w-[320px]"} gap-[2px]`}>
         {Array.from({ length: totalBlocks }).map((_, index) => {
           const isRemaining = index >= elapsedBlocks;
           const zoneClass =
