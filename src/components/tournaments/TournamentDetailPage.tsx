@@ -338,6 +338,34 @@ const buildNameFragments = (value: string | null | undefined) =>
     .map((part) => part.trim())
     .filter((part) => part.length >= 3);
 
+const buildPairKey = (
+  left: string | null | undefined,
+  right: string | null | undefined,
+) => {
+  const a = String(left || "").trim();
+  const b = String(right || "").trim();
+  if (!a || !b) return null;
+  return [a, b].sort().join("::");
+};
+
+const buildSessionPairKeys = (session: EventLiveSession) => {
+  const keys = new Set<string>();
+
+  const documentPairKey = buildPairKey(
+    session.player1DocumentId,
+    session.player2DocumentId,
+  );
+  if (documentPairKey) keys.add(`doc:${documentPairKey}`);
+
+  const namePairKey = buildPairKey(
+    normalizeNameForMatch(session.player1Name ?? session.state?.playerAName ?? null),
+    normalizeNameForMatch(session.player2Name ?? session.state?.playerBName ?? null),
+  );
+  if (namePairKey) keys.add(`name:${namePairKey}`);
+
+  return keys;
+};
+
 const mergeLiveSessions = (
   primary: EventLiveSession[],
   secondary: EventLiveSession[],
@@ -1428,6 +1456,40 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     () => tournamentLiveScreens.filter((screen) => screen.isActive),
     [tournamentLiveScreens],
   );
+  const allowedEventPairKeys = useMemo(() => {
+    const keys = new Set<string>();
+    const stagesArray = toRelationArray(eventData?.data?.event_stages);
+
+    stagesArray.forEach((stage, index) => {
+      const normalizedStage = normalizeEntity<any>(stage, `live-stage-${index}`);
+      const groupsRaw = toRelationArray(normalizedStage.groups);
+      const normalizedGroups = groupsRaw.map((group, groupIndex) =>
+        normalizeGroup(group, `${normalizedStage.id}-live-group-${groupIndex}`),
+      );
+
+      buildStageMatchGroups(normalizedGroups).forEach((group) => {
+        group.matches.forEach((match) => {
+          const documentPairKey = buildPairKey(
+            match.top.player.documentId,
+            match.bottom.player.documentId,
+          );
+          if (documentPairKey) keys.add(`doc:${documentPairKey}`);
+
+          const namePairKey = buildPairKey(
+            normalizeNameForMatch(
+              match.top.player.nativeName ?? match.top.player.name,
+            ),
+            normalizeNameForMatch(
+              match.bottom.player.nativeName ?? match.bottom.player.name,
+            ),
+          );
+          if (namePairKey) keys.add(`name:${namePairKey}`);
+        });
+      });
+    });
+
+    return keys;
+  }, [eventData]);
   const allowedEventSessionKeys = useMemo(() => {
     const keys = new Set<string>();
     eventLiveSessions.forEach((session) => {
@@ -1460,9 +1522,29 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         .some((value) => value.length > 0 && allowedEventSessionKeys.has(value)),
     );
   }, [allowedEventSessionKeys, eventLiveSessions.length, wsLiveSessions]);
+  const filteredEventLiveSessions = useMemo(() => {
+    if (allowedEventPairKeys.size === 0) return eventLiveSessions;
+    return eventLiveSessions.filter((session) =>
+      Array.from(buildSessionPairKeys(session)).some((key) =>
+        allowedEventPairKeys.has(key),
+      ),
+    );
+  }, [allowedEventPairKeys, eventLiveSessions]);
+  const filteredWsLiveSessionsByPair = useMemo(() => {
+    if (allowedEventPairKeys.size === 0) return filteredWsLiveSessions;
+    return filteredWsLiveSessions.filter((session) =>
+      Array.from(buildSessionPairKeys(session)).some((key) =>
+        allowedEventPairKeys.has(key),
+      ),
+    );
+  }, [allowedEventPairKeys, filteredWsLiveSessions]);
   const mergedEventLiveSessions = useMemo(
-    () => mergeLiveSessions(filteredWsLiveSessions, eventLiveSessions),
-    [eventLiveSessions, filteredWsLiveSessions],
+    () =>
+      mergeLiveSessions(
+        filteredWsLiveSessionsByPair,
+        filteredEventLiveSessions,
+      ),
+    [filteredEventLiveSessions, filteredWsLiveSessionsByPair],
   );
 
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
