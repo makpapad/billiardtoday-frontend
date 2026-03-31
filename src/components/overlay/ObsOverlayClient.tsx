@@ -971,7 +971,7 @@ function TemplateThreeOverlayCard({
                 reverse={false}
               />
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
-              <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
+              <span className="truncate text-[18px] font-normal leading-none tracking-[0.04em]">
                 {leftName}
               </span>
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">
@@ -993,7 +993,7 @@ function TemplateThreeOverlayCard({
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">
                 {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
               </div>
-              <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
+              <span className="truncate text-[18px] font-normal leading-none tracking-[0.04em]">
                 {rightName}
               </span>
               {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
@@ -1056,16 +1056,16 @@ function TimeStrip({
 
 function SmallFlag({ countryCode }: { countryCode: string | null }) {
   if (!countryCode) {
-    return <div className="h-[14px] w-5 rounded-[2px] bg-white/12" />;
+    return <div className="h-4 w-6 rounded-[2px] bg-white/12" />;
   }
 
   return (
     <img
       src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
       alt={countryCode}
-      width={22}
-      height={15}
-      className="h-[15px] w-[22px] rounded-[2px] object-cover"
+      width={24}
+      height={16}
+      className="h-4 w-6 rounded-[2px] object-cover"
       loading="eager"
       decoding="async"
       referrerPolicy="no-referrer"
