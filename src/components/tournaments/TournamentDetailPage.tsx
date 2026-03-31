@@ -1809,6 +1809,23 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     });
   };
 
+  useEffect(() => {
+    const validSessionIds = new Set(liveCards.map((session) => session.sessionId));
+    setExpandedSessions((prev) => {
+      if (validSessionIds.size === 0) return new Set();
+
+      const next = new Set(
+        Array.from(prev).filter((sessionId) => validSessionIds.has(sessionId)),
+      );
+
+      if (next.size === 0) {
+        liveCards.forEach((session) => next.add(session.sessionId));
+      }
+
+      return next;
+    });
+  }, [liveCards]);
+
   const handleCardClick = (session: EventLiveSession) => {
     if (Date.now() - lastModalCloseAtRef.current < 250) return;
     lastClosedHighlightRef.current = null;
@@ -2008,7 +2025,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
-                      expanded
+                      expanded={expandedSessions.has(session.sessionId)}
+                      onExpandedChange={handleExpandedChange}
                       topLeftControl={
                         <button
                           type="button"
@@ -2017,10 +2035,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             event.stopPropagation();
                             toggleGroupPopover(session.sessionId);
                           }}
-                          className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm ${
+                          className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
                             groupPopoverBySessionId.has(session.sessionId)
-                              ? "border-white/30 bg-slate-900/50"
-                              : "border-white/15 bg-slate-900/30 opacity-70"
+                              ? "border-white/20 bg-slate-900/35"
+                              : "border-white/10 bg-slate-900/18 opacity-55"
                           }`}
                         >
                           Groups
