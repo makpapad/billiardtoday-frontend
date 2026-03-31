@@ -167,7 +167,7 @@ const CEB_PARTNERS: CebPartner[] = [
     imageUrl: "https://www.eurobillard.org/medias/partners/kozoom-5.jpg",
     description: null,
     category: "Partner" as const,
-    order: 2,
+    order: 98,
   },
   {
     name: "TOUCH",
@@ -175,7 +175,7 @@ const CEB_PARTNERS: CebPartner[] = [
     imageUrl: "https://www.eurobillard.org/medias/partners/touch-billard-1-logo-10.jpg",
     description: null,
     category: "Partner" as const,
-    order: 2,
+    order: 99,
   },
   {
     name: "Longoni",
@@ -1052,7 +1052,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <SectionHeading
           eyebrow="Sponsors"
-          title="CEB Partners"
+          title="CEB Sponsors & Partners"
           description="Official sponsors and partners supporting CEB competitions, youth activities, media coverage, and equipment standards."
         />
 
