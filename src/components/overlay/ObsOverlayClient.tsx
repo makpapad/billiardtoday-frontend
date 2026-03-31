@@ -965,7 +965,11 @@ function TemplateThreeOverlayCard({
 
           <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end pr-6">
             <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-2">
-              <CompactTimeoutTicks activeCount={leftTimeouts} totalCount={leftMaxTimeouts} />
+              <CompactTimeoutTicks
+                activeCount={leftTimeouts}
+                totalCount={leftMaxTimeouts}
+                reverse={false}
+              />
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
               <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
                 {leftName}
@@ -993,7 +997,11 @@ function TemplateThreeOverlayCard({
                 {rightName}
               </span>
               {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
-              <CompactTimeoutTicks activeCount={rightTimeouts} totalCount={rightMaxTimeouts} />
+              <CompactTimeoutTicks
+                activeCount={rightTimeouts}
+                totalCount={rightMaxTimeouts}
+                reverse
+              />
             </div>
           </div>
         </div>
@@ -1121,16 +1129,20 @@ function OverlayRunCircle({ run }: { run: number }) {
 function CompactTimeoutTicks({
   activeCount,
   totalCount,
+  reverse,
 }: {
   activeCount: number;
   totalCount: number;
+  reverse?: boolean;
 }) {
   const safeTotal = Math.max(0, totalCount || 0) || 3;
   const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
+  const positions = Array.from({ length: safeTotal }, (_, index) => index);
+  const orderedPositions = reverse ? [...positions].reverse() : positions;
 
   return (
     <div className="flex shrink-0 items-center gap-[3px]">
-      {Array.from({ length: safeTotal }).map((_, index) => (
+      {orderedPositions.map((index) => (
         <span
           key={index}
           className={`h-4 w-[4px] rounded-full ${
