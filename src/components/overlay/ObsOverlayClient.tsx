@@ -356,7 +356,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const requestedHeight = Number(getParamValue(searchParams?.height));
   const width =
     (Number.isFinite(requestedWidth) && requestedWidth > 0 ? requestedWidth : 0) ||
-    (template === "3" ? 1080 : DEFAULT_WIDTH);
+    (template === "3" ? 1920 : DEFAULT_WIDTH);
   const height =
     (Number.isFinite(requestedHeight) && requestedHeight > 0 ? requestedHeight : 0) ||
     DEFAULT_HEIGHT;
