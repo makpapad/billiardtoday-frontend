@@ -232,6 +232,7 @@ export function TournamentEventsContent({
   onLiveMatchOpen,
 }: TournamentEventsContentProps = {}) {
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1031,16 +1032,59 @@ export function TournamentEventsContent({
                                     ) : (
                                       <div className="flex flex-col gap-6">
                                         {(stageMatchGroups[stage.id] ?? []).map(
-                                          (group) => (
+                                          (group) => {
+                                            const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
+                                            const isExpanded = expandedGroups.has(groupKey);
+
+                                            return (
                                             <div
                                               key={group.key}
                                               className="flex flex-col gap-2"
                                             >
                                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                                                <div className="font-semibold text-gray-700 dark:text-gray-200">
-                                                  Όμιλος {group.number ?? "?"}
-                                                </div>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setExpandedGroups((prev) => {
+                                                      const next = new Set(prev);
+                                                      if (next.has(groupKey)) {
+                                                        next.delete(groupKey);
+                                                      } else {
+                                                        next.add(groupKey);
+                                                      }
+                                                      return next;
+                                                    });
+                                                  }}
+                                                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <svg
+                                                      className={clsx(
+                                                        "h-4 w-4 transition-transform",
+                                                        isExpanded && "rotate-90",
+                                                      )}
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 5l7 7-7 7"
+                                                      />
+                                                    </svg>
+                                                    <div className="font-semibold text-gray-700 dark:text-gray-200">
+                                                      Group {group.number ?? "?"}
+                                                    </div>
+                                                  </div>
+                                                  <div className="text-[11px] uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                                    {isExpanded ? "Hide" : "Show"}
+                                                  </div>
+                                                </button>
                                               </div>
+                                              {isExpanded ? (
+                                              <>
                                               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                                                 <table className="min-w-full text-xs">
                                                   <thead className="bg-blue-600 text-white">
@@ -1594,8 +1638,11 @@ export function TournamentEventsContent({
                                                 )}
                                                 embedded={embedded}
                                               />
+                                              </>
+                                              ) : null}
                                             </div>
-                                          ),
+                                            );
+                                          },
                                         )}
                                       </div>
                                     )}
