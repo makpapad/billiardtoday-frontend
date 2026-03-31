@@ -1003,7 +1003,7 @@ export function TournamentEventsContent({
                                 />
                               </div>
                             ) : (
-                              <div className="flex flex-col gap-6">
+                              <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-3">
                                   <div className="flex flex-col gap-3">
                                     <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -1030,7 +1030,7 @@ export function TournamentEventsContent({
                                         No matches
                                       </div>
                                     ) : (
-                                      <div className="flex flex-col gap-6">
+                                      <div className="flex flex-col gap-3">
                                         {(stageMatchGroups[stage.id] ?? []).map(
                                           (group, groupIndex) => {
                                             const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
@@ -1385,7 +1385,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1540,7 +1540,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t-2 border-b-4 border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
