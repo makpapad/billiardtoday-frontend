@@ -116,6 +116,8 @@ type WsPayload = {
 const DEFAULT_WIDTH = 540;
 const DEFAULT_HEIGHT = 146;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
+const OVERLAY_RESYNC_INTERVAL_MS = 15000;
+const OVERLAY_WS_RECONNECT_MS = 2500;
 
 function getParamValue(value: string | string[] | undefined): string | undefined {
   if (Array.isArray(value)) return value[0];
@@ -358,6 +360,37 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const loadSession = React.useCallback(
+    async (requestedSessionId: string, options?: { preserveItem?: boolean; silent?: boolean }) => {
+      try {
+        if (!options?.silent) setLoading(true);
+        const response = await fetch(
+          `/api/scoreboard/session-by-id/${encodeURIComponent(requestedSessionId)}`,
+          { cache: "no-store" },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Failed to load session");
+        }
+        const row = Array.isArray(payload?.data) ? payload.data[0] : null;
+        const normalized = normalizeSessionRecord(row, requestedSessionId);
+        if (!normalized) {
+          throw new Error("No live data found for this session.");
+        }
+        setItem(normalized);
+        setError(null);
+      } catch (err) {
+        if (!options?.preserveItem) {
+          setItem(null);
+        }
+        setError(err instanceof Error ? err.message : "Failed to load session");
+      } finally {
+        if (!options?.silent) setLoading(false);
+      }
+    },
+    [],
+  );
+
   React.useEffect(() => {
     if (!obsSafe || typeof document === "undefined") return;
     const html = document.documentElement;
@@ -381,55 +414,35 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   }, [obsSafe]);
 
   React.useEffect(() => {
-    let cancelled = false;
-
     if (!sessionId) {
       setItem(null);
       setError(null);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
+    const currentSessionId = sessionId;
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/scoreboard/session-by-id/${encodeURIComponent(sessionId)}`,
-          { cache: "no-store" },
-        );
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to load session");
-        }
-        const row = Array.isArray(payload?.data) ? payload.data[0] : null;
-        const normalized = normalizeSessionRecord(row, sessionId);
-        if (!normalized) {
-          throw new Error("No live data found for this session.");
-        }
-        if (!cancelled) {
-          setItem(normalized);
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setItem(null);
-          setError(err instanceof Error ? err.message : "Failed to load session");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    let cancelled = false;
+    const runLoad = async () => {
+      await loadSession(currentSessionId);
     };
 
-    void load();
+    void runLoad();
+
+    const intervalId = window.setInterval(() => {
+      if (cancelled) return;
+      void loadSession(currentSessionId, { preserveItem: true, silent: true });
+    }, OVERLAY_RESYNC_INTERVAL_MS);
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
-  }, [sessionId]);
+  }, [loadSession, sessionId]);
 
   React.useEffect(() => {
     if (!item?.screenId) return;
+    const currentSessionId = sessionId;
+    if (!currentSessionId) return;
 
     const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
@@ -441,26 +454,54 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     params.set("screenId", item.screenId);
     wsUrl.search = params.toString();
 
-    const socket = new WebSocket(wsUrl.toString());
+    let closedByEffect = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimeoutId: number | null = null;
 
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(String(event.data || "{}")) as WsPayload;
-        if (payload.type !== "score:update") return;
-        const payloadScreenId = normalizeString(payload.screenId);
-        if (payloadScreenId && payloadScreenId !== item.screenId) return;
-        setItem((current) => (current ? applyWsUpdate(current, payload) : current));
-      } catch {
-        // Ignore malformed realtime payloads for overlay rendering.
-      }
+    const connect = () => {
+      if (closedByEffect) return;
+
+      socket = new WebSocket(wsUrl.toString());
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(String(event.data || "{}")) as WsPayload;
+          if (payload.type !== "score:update") return;
+          const payloadScreenId = normalizeString(payload.screenId);
+          if (payloadScreenId && payloadScreenId !== item.screenId) return;
+          setError(null);
+          setItem((current) => (current ? applyWsUpdate(current, payload) : current));
+        } catch {
+          // Ignore malformed realtime payloads for overlay rendering.
+        }
+      };
+
+      socket.onerror = () => {
+        try {
+          socket?.close();
+        } catch {}
+      };
+
+      socket.onclose = () => {
+        if (closedByEffect) return;
+        if (reconnectTimeoutId !== null) window.clearTimeout(reconnectTimeoutId);
+        reconnectTimeoutId = window.setTimeout(() => {
+          void loadSession(currentSessionId, { preserveItem: true, silent: true });
+          connect();
+        }, OVERLAY_WS_RECONNECT_MS);
+      };
     };
+
+    connect();
 
     return () => {
+      closedByEffect = true;
+      if (reconnectTimeoutId !== null) window.clearTimeout(reconnectTimeoutId);
       try {
-        socket.close();
+        socket?.close();
       } catch {}
     };
-  }, [item?.screenId]);
+  }, [item?.screenId, loadSession, sessionId]);
 
   if (!sessionId) {
     return (

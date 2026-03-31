@@ -5,7 +5,7 @@ module.exports = {
       script: 'server.js',
       cwd: '/var/www/vhosts/billiardtoday.com/tournaments-app',
       interpreter: '/root/.nvm/versions/node/v20.19.5/bin/node',
-      instances: 1,
+      instances: 2,
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',
@@ -23,6 +23,9 @@ module.exports = {
       log_file: './logs/combined.log',
       time: true,
       autorestart: true,
+      wait_ready: false,
+      listen_timeout: 10000,
+      kill_timeout: 5000,
       max_restarts: 10,
       min_uptime: '10s',
       max_memory_restart: '500M',
