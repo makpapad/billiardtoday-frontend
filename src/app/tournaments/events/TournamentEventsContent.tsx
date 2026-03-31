@@ -254,6 +254,7 @@ export function TournamentEventsContent({
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
+  const [previewColumnCount, setPreviewColumnCount] = useState(4);
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -513,6 +514,26 @@ export function TournamentEventsContent({
     }
   }, [eventStages, activeStageId, preferredStageDocumentId]);
 
+  useEffect(() => {
+    const updatePreviewColumnCount = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setPreviewColumnCount(1);
+      } else if (width < 900) {
+        setPreviewColumnCount(2);
+      } else if (width < 1280) {
+        setPreviewColumnCount(3);
+      } else {
+        setPreviewColumnCount(4);
+      }
+    };
+
+    updatePreviewColumnCount();
+    window.addEventListener("resize", updatePreviewColumnCount);
+    return () =>
+      window.removeEventListener("resize", updatePreviewColumnCount);
+  }, []);
+
   const activeStage = useMemo(
     () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
     [eventStages, activeStageId],
@@ -564,11 +585,10 @@ export function TournamentEventsContent({
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
 
-    const maxPreviewColumns = 4;
     const maxLengths: number[] = [];
     filteredActiveStageGroups.forEach((group) => {
       getGroupPreviewPlayers(group).forEach((player, index) => {
-        const columnIndex = index % maxPreviewColumns;
+        const columnIndex = index % previewColumnCount;
         const length = getPreviewPlayerLabel(player).trim().length;
         maxLengths[columnIndex] = Math.max(
           maxLengths[columnIndex] ?? 0,
@@ -580,7 +600,7 @@ export function TournamentEventsContent({
     return maxLengths
       .map((length) => `${Math.min(Math.max(length + 4, 16), 30)}ch`)
       .join(" ");
-  }, [filteredActiveStageGroups]);
+  }, [filteredActiveStageGroups, previewColumnCount]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -1189,7 +1209,7 @@ export function TournamentEventsContent({
                                                         style={{
                                                           gridTemplateColumns:
                                                             previewGridTemplateColumns ||
-                                                            `repeat(${Math.max(previewPlayers.length, 1)}, minmax(0, 1fr))`,
+                                                            `repeat(${Math.max(Math.min(previewPlayers.length, previewColumnCount), 1)}, minmax(0, 1fr))`,
                                                         }}
                                                       >
                                                         {previewPlayers.map((player) => (
