@@ -928,7 +928,12 @@ function TemplateThreeOverlayCard({
           <span className="truncate whitespace-nowrap">
             {tournament} / Stage {stage} / Table {table}
           </span>
-          <TimeStrip remainingBlocks={remainingBlocks} elapsedBlocks={elapsedBlocks} totalBlocks={totalBlocks} compact />
+          <TimeStrip
+            remainingBlocks={remainingBlocks}
+            elapsedBlocks={elapsedBlocks}
+            totalBlocks={totalBlocks}
+            compact
+          />
           <span className="justify-self-end whitespace-nowrap">
             Race to {target}
           </span>
@@ -1009,9 +1014,7 @@ function TimeStrip({
 
   return (
     <div className={`flex items-center ${compact ? "gap-1.5" : "gap-2"}`}>
-      <div
-        className={`flex ${compact ? "h-4 w-6 text-[10px]" : "h-6 w-8 text-[13px]"} items-center justify-center rounded-[4px] bg-sky-950/70 font-normal leading-none ${remainingColorClass}`}
-      >
+      <div className={`${compact ? "text-[10px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
       <div className={`flex ${compact ? "w-[160px]" : "w-[240px]"} gap-[2px]`}>
