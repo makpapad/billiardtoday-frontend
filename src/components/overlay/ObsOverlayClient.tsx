@@ -117,10 +117,35 @@ const DEFAULT_WIDTH = 540;
 const DEFAULT_HEIGHT = 146;
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 const OVERLAY_WS_RECONNECT_MS = 2500;
+const OVERLAY_SCREEN_ALIASES = parseOverlayScreenAliases(
+  process.env.NEXT_PUBLIC_OBS_OVERLAY_SCREENS,
+);
 
 function getParamValue(value: string | string[] | undefined): string | undefined {
   if (Array.isArray(value)) return value[0];
   return value;
+}
+
+function parseOverlayScreenAliases(raw: string | undefined): Record<string, string> {
+  if (!raw) return {};
+  return raw
+    .split(/[\r\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .reduce<Record<string, string>>((acc, entry) => {
+      const separatorIndex = entry.includes("=") ? entry.indexOf("=") : entry.indexOf(":");
+      if (separatorIndex <= 0) return acc;
+      const alias = entry.slice(0, separatorIndex).trim().toLowerCase();
+      const screenId = entry.slice(separatorIndex + 1).trim();
+      if (alias && screenId) acc[alias] = screenId;
+      return acc;
+    }, {});
+}
+
+function resolveOverlayScreenId(value: string | null | undefined): string | null {
+  const normalized = normalizeString(value);
+  if (!normalized) return null;
+  return OVERLAY_SCREEN_ALIASES[normalized.toLowerCase()] ?? normalized;
 }
 
 function parseBooleanParam(
@@ -343,6 +368,11 @@ function resolveCountryCode(rawCountry: string | null | undefined): string | nul
 
 export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps) {
   const sessionId = getParamValue(searchParams?.session) ?? getParamValue(searchParams?.sessionId);
+  const rawScreenParam =
+    getParamValue(searchParams?.screen) ??
+    getParamValue(searchParams?.screenId) ??
+    getParamValue(searchParams?.screenIdentifier);
+  const requestedScreenId = resolveOverlayScreenId(rawScreenParam);
   const templateParam = (getParamValue(searchParams?.t) ?? getParamValue(searchParams?.template) ?? "classic")
     .trim()
     .toLowerCase();
@@ -400,6 +430,40 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     [],
   );
 
+  const loadScreenSession = React.useCallback(
+    async (screenIdentifier: string, options?: { preserveItem?: boolean; silent?: boolean }) => {
+      try {
+        if (!options?.silent) setLoading(true);
+        const response = await fetch(
+          `/api/scoreboard/screens/${encodeURIComponent(screenIdentifier)}/sessions?status=pending,in_progress`,
+          { cache: "no-store" },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Failed to load screen session");
+        }
+        const row = Array.isArray(payload?.data) ? payload.data[0] : null;
+        const normalized = normalizeSessionRecord(row, screenIdentifier);
+        if (!normalized) {
+          throw new Error("No live data found for this screen.");
+        }
+        setItem({
+          ...normalized,
+          screenId: normalized.screenId ?? screenIdentifier,
+        });
+        setError(null);
+      } catch (err) {
+        if (!options?.preserveItem) {
+          setItem(null);
+        }
+        setError(err instanceof Error ? err.message : "Failed to load screen session");
+      } finally {
+        if (!options?.silent) setLoading(false);
+      }
+    },
+    [],
+  );
+
   React.useEffect(() => {
     if (!obsSafe || typeof document === "undefined") return;
     const html = document.documentElement;
@@ -423,29 +487,25 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   }, [obsSafe]);
 
   React.useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId && !requestedScreenId) {
       setItem(null);
       setError(null);
       return;
     }
-    const currentSessionId = sessionId;
-
-    let cancelled = false;
-    const runLoad = async () => {
-      await loadSession(currentSessionId);
-    };
-
-    void runLoad();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadSession, sessionId]);
+    if (sessionId) {
+      void loadSession(sessionId);
+      return;
+    }
+    if (requestedScreenId) {
+      void loadScreenSession(requestedScreenId);
+    }
+  }, [loadScreenSession, loadSession, requestedScreenId, sessionId]);
 
   React.useEffect(() => {
     if (!item?.screenId) return;
-    const currentSessionId = sessionId;
-    if (!currentSessionId) return;
+    const currentSessionId = sessionId ?? item.sessionId;
+    const currentScreenId = item.screenId ?? requestedScreenId;
+    if (!currentScreenId) return;
 
     const wsUrl = normalizeWebSocketUrl(
       process.env.NEXT_PUBLIC_WS_ENDPOINT ||
@@ -454,7 +514,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     );
     const params = new URLSearchParams();
     if (WS_TOKEN) params.set("token", WS_TOKEN);
-    params.set("screenId", item.screenId);
+    params.set("screenId", currentScreenId);
     wsUrl.search = params.toString();
 
     let closedByEffect = false;
@@ -489,7 +549,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
         if (closedByEffect) return;
         if (reconnectTimeoutId !== null) window.clearTimeout(reconnectTimeoutId);
         reconnectTimeoutId = window.setTimeout(() => {
-          void loadSession(currentSessionId, { preserveItem: true, silent: true });
+          if (currentSessionId) {
+            void loadSession(currentSessionId, { preserveItem: true, silent: true });
+          } else if (currentScreenId) {
+            void loadScreenSession(currentScreenId, { preserveItem: true, silent: true });
+          }
           connect();
         }, OVERLAY_WS_RECONNECT_MS);
       };
@@ -504,12 +568,12 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
         socket?.close();
       } catch {}
     };
-  }, [item?.screenId, loadSession, sessionId]);
+  }, [item?.screenId, item?.sessionId, loadScreenSession, loadSession, requestedScreenId, sessionId]);
 
-  if (!sessionId) {
+  if (!sessionId && !requestedScreenId) {
     return (
       <CenteredMessage tone="muted">
-        Provide `?session=&lt;id&gt;` in the URL.
+        Provide `?session=&lt;id&gt;` or use `/embed/overlay/&lt;screen&gt;`.
       </CenteredMessage>
     );
   }
@@ -523,7 +587,13 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   }
 
   if (!item) {
-    return <CenteredMessage tone="muted">No live data found for this session.</CenteredMessage>;
+    return (
+      <CenteredMessage tone="muted">
+        {requestedScreenId && !sessionId
+          ? "No live data found for this screen."
+          : "No live data found for this session."}
+      </CenteredMessage>
+    );
   }
 
   return (
