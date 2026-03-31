@@ -356,7 +356,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const requestedHeight = Number(getParamValue(searchParams?.height));
   const width =
     (Number.isFinite(requestedWidth) && requestedWidth > 0 ? requestedWidth : 0) ||
-    (template === "3" ? 1920 : DEFAULT_WIDTH);
+    (template === "3" ? 1080 : DEFAULT_WIDTH);
   const height =
     (Number.isFinite(requestedHeight) && requestedHeight > 0 ? requestedHeight : 0) ||
     DEFAULT_HEIGHT;
@@ -925,10 +925,10 @@ function TemplateThreeOverlayCard({
           className="grid h-5 w-[80%] grid-cols-[1fr_auto_1fr] items-center rounded-t-[10px] px-4 text-[12px] font-normal tracking-[0.06em] text-slate-900"
           style={{ backgroundColor: "#9fdcff" }}
         >
-          <span />
-          <span className="truncate whitespace-nowrap text-center">
+          <span className="truncate whitespace-nowrap">
             {tournament} / Stage {stage} / Table {table}
           </span>
+          <TimeStrip remainingBlocks={remainingBlocks} elapsedBlocks={elapsedBlocks} totalBlocks={totalBlocks} compact />
           <span className="justify-self-end whitespace-nowrap">
             Race to {target}
           </span>
@@ -965,8 +965,8 @@ function TemplateThreeOverlayCard({
               <OverlayScoreBox score={leftScore} tone="light" />
             </div>
 
-            <div className="flex shrink-0 items-center justify-center gap-1">
-              <TimeStrip remainingBlocks={remainingBlocks} elapsedBlocks={elapsedBlocks} totalBlocks={totalBlocks} />
+            <div className="flex h-6 shrink-0 items-center justify-center px-1">
+              <div className="min-w-[10px]" />
             </div>
 
             <div className="flex min-w-0 max-w-[360px] items-center gap-1.5">
@@ -993,10 +993,12 @@ function TimeStrip({
   remainingBlocks,
   elapsedBlocks,
   totalBlocks,
+  compact,
 }: {
   remainingBlocks: number;
   elapsedBlocks: number;
   totalBlocks: number;
+  compact?: boolean;
 }) {
   const remainingColorClass =
     remainingBlocks > 20
@@ -1006,13 +1008,13 @@ function TimeStrip({
         : "text-red-200";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center ${compact ? "gap-1.5" : "gap-2"}`}>
       <div
-        className={`flex h-6 w-8 items-center justify-center rounded-[4px] bg-sky-950/70 text-[13px] font-normal leading-none ${remainingColorClass}`}
+        className={`flex ${compact ? "h-4 w-6 text-[10px]" : "h-6 w-8 text-[13px]"} items-center justify-center rounded-[4px] bg-sky-950/70 font-normal leading-none ${remainingColorClass}`}
       >
         {remainingBlocks}
       </div>
-      <div className="flex w-[240px] gap-[2px]">
+      <div className={`flex ${compact ? "w-[160px]" : "w-[240px]"} gap-[2px]`}>
         {Array.from({ length: totalBlocks }).map((_, index) => {
           const isRemaining = index >= elapsedBlocks;
           const zoneClass =
@@ -1024,7 +1026,7 @@ function TimeStrip({
           return (
             <span
               key={index}
-              className={`h-5 flex-1 rounded-[1px] ${isRemaining ? zoneClass : "bg-white/20"}`}
+              className={`${compact ? "h-3" : "h-5"} flex-1 rounded-[1px] ${isRemaining ? zoneClass : "bg-white/20"}`}
             />
           );
         })}
