@@ -963,9 +963,9 @@ function TemplateThreeOverlayCard({
             ({innings})
           </div>
 
-          <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end gap-2 pr-6">
-            <CompactTimeoutTicks activeCount={leftTimeouts} totalCount={leftMaxTimeouts} />
+          <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end pr-6">
             <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-2">
+              <CompactTimeoutTicks activeCount={leftTimeouts} totalCount={leftMaxTimeouts} />
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
               <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
                 {leftName}
@@ -980,7 +980,7 @@ function TemplateThreeOverlayCard({
             </div>
           </div>
 
-          <div className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center gap-2 pl-6">
+          <div className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center pl-6">
             <div className="flex min-w-0 max-w-[390px] items-center gap-2">
               <OverlayScoreBox score={rightScore} tone="accent" />
               <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
@@ -993,8 +993,8 @@ function TemplateThreeOverlayCard({
                 {rightName}
               </span>
               {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
+              <CompactTimeoutTicks activeCount={rightTimeouts} totalCount={rightMaxTimeouts} />
             </div>
-            <CompactTimeoutTicks activeCount={rightTimeouts} totalCount={rightMaxTimeouts} />
           </div>
         </div>
       </div>
