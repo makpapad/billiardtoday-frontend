@@ -944,7 +944,7 @@ function PlayerRow({
   return (
     <div
       className={`flex flex-1 items-center gap-3 border-t border-white/10 px-5 ${
-        active ? "bg-sky-500/90" : "bg-sky-400/60"
+        active ? "bg-sky-700/92" : "bg-sky-400/60"
       }`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
