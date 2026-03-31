@@ -890,6 +890,10 @@ function TemplateThreeOverlayCard({
   const leftHr = state.bestRunA ?? 0;
   const rightHr = state.bestRunB ?? 0;
   const target = state.targetPointsA ?? state.targetPointsB ?? null;
+  const leftTimeouts = state.timeoutsA ?? 0;
+  const rightTimeouts = state.timeoutsB ?? 0;
+  const leftMaxTimeouts = state.maxTimeoutsA ?? 3;
+  const rightMaxTimeouts = state.maxTimeoutsB ?? 3;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
@@ -954,8 +958,13 @@ function TemplateThreeOverlayCard({
           <OverlayMiniStat label="H.R." value={rightHr} align="right" />
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex min-w-0 max-w-full items-center justify-center gap-2 px-28">
+        <div className="absolute inset-0">
+          <div className="absolute left-1/2 top-1/2 z-10 flex h-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white">
+            ({innings})
+          </div>
+
+          <div className="absolute right-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center justify-end gap-2 pr-6">
+            <CompactTimeoutTicks activeCount={leftTimeouts} totalCount={leftMaxTimeouts} />
             <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-2">
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
               <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
@@ -969,11 +978,9 @@ function TemplateThreeOverlayCard({
               </div>
               <OverlayScoreBox score={leftScore} tone="light" />
             </div>
+          </div>
 
-            <div className="flex h-7 shrink-0 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white">
-              ({innings})
-            </div>
-
+          <div className="absolute left-1/2 top-1/2 flex min-w-0 max-w-[430px] -translate-y-1/2 items-center gap-2 pl-6">
             <div className="flex min-w-0 max-w-[390px] items-center gap-2">
               <OverlayScoreBox score={rightScore} tone="accent" />
               <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
@@ -987,6 +994,7 @@ function TemplateThreeOverlayCard({
               </span>
               {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
             </div>
+            <CompactTimeoutTicks activeCount={rightTimeouts} totalCount={rightMaxTimeouts} />
           </div>
         </div>
       </div>
@@ -1106,6 +1114,30 @@ function OverlayRunCircle({ run }: { run: number }) {
   return (
     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[14px] font-normal leading-none text-slate-950">
       {run}
+    </div>
+  );
+}
+
+function CompactTimeoutTicks({
+  activeCount,
+  totalCount,
+}: {
+  activeCount: number;
+  totalCount: number;
+}) {
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
+  const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
+
+  return (
+    <div className="flex shrink-0 items-center gap-[3px]">
+      {Array.from({ length: safeTotal }).map((_, index) => (
+        <span
+          key={index}
+          className={`h-4 w-[4px] rounded-full ${
+            index < usedCount ? "bg-slate-200/65" : "bg-emerald-400"
+          }`}
+        />
+      ))}
     </div>
   );
 }
