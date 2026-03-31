@@ -343,8 +343,6 @@ function resolveCountryCode(rawCountry: string | null | undefined): string | nul
 
 export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps) {
   const sessionId = getParamValue(searchParams?.session) ?? getParamValue(searchParams?.sessionId);
-  const width = Number(getParamValue(searchParams?.width)) || DEFAULT_WIDTH;
-  const height = Number(getParamValue(searchParams?.height)) || DEFAULT_HEIGHT;
   const templateParam = (getParamValue(searchParams?.t) ?? getParamValue(searchParams?.template) ?? "classic")
     .trim()
     .toLowerCase();
@@ -354,6 +352,14 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
       : templateParam === "2" || templateParam === "royalpro"
         ? "2"
         : "1";
+  const requestedWidth = Number(getParamValue(searchParams?.width));
+  const requestedHeight = Number(getParamValue(searchParams?.height));
+  const width =
+    (Number.isFinite(requestedWidth) && requestedWidth > 0 ? requestedWidth : 0) ||
+    (template === "3" ? 1080 : DEFAULT_WIDTH);
+  const height =
+    (Number.isFinite(requestedHeight) && requestedHeight > 0 ? requestedHeight : 0) ||
+    DEFAULT_HEIGHT;
   const obsSafe = parseBooleanParam(
     searchParams?.obs ?? searchParams?.obsSafe ?? searchParams?.safe,
     true,
@@ -874,8 +880,7 @@ function TemplateThreeOverlayCard({
   obsSafe: boolean;
 }) {
   const state = item.state;
-  const targetA = state.targetPointsA ?? state.targetPointsB ?? 40;
-  const targetB = state.targetPointsB ?? state.targetPointsA ?? targetA;
+  const target = state.targetPointsA ?? state.targetPointsB ?? 40;
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
   const leftRun = state.liveRunA ?? state.runA ?? 0;
@@ -886,8 +891,8 @@ function TemplateThreeOverlayCard({
   const rightHr = state.bestRunB ?? 0;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
-  const leftName = formatOverlayPlayerName(state.playerAName);
-  const rightName = formatOverlayPlayerName(state.playerBName);
+  const leftName = normalizeString(state.playerAName) ?? "Player 1";
+  const rightName = normalizeString(state.playerBName) ?? "Player 2";
   const activeSide = state.current;
   const overlayHeight = 32;
 
@@ -908,41 +913,41 @@ function TemplateThreeOverlayCard({
       }}
     >
       <div
-        className="relative flex h-8 items-center overflow-hidden rounded-md text-white shadow-[0_8px_22px_rgba(0,0,0,0.38)]"
+        className="relative flex h-8 items-center overflow-hidden text-white"
         style={{ backgroundColor: "#079cfa" }}
       >
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 pl-2 pr-[72px]">
-          <OverlayMiniStat label="HR" value={leftHr} align="right" />
-          <OverlayMiniStat label="AVG" value={leftAvg} align="right" />
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pl-3 pr-[86px]">
+          <OverlayMiniStat label="H.R." value={leftHr} align="right" />
+          <OverlayMiniStat label="AVG:" value={leftAvg} align="right" />
           <div className="flex min-w-0 items-center gap-1.5">
-            <SmallFlag countryCode={leftFlag} />
-            <span className="max-w-[180px] truncate text-[15px] font-semibold leading-none">
+            {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
+            <span className="max-w-[260px] truncate text-[15px] font-semibold leading-none tracking-[0.04em]">
               {leftName}
             </span>
           </div>
-          <OverlayScoreBox score={leftScore} />
-          <OverlayRunCircle run={leftRun} />
-          <TurnArrow side="right" active={activeSide === "A"} />
+          <OverlayScoreBox score={leftScore} tone="light" />
+          {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
+          {activeSide === "A" ? <TurnArrow side="right" active /> : null}
         </div>
 
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
           <span className="whitespace-nowrap text-[14px] font-black leading-none tracking-[0.06em] text-white">
-            ({targetA}-{targetB})
+            ({target})
           </span>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 pl-[72px] pr-2">
-          <TurnArrow side="left" active={activeSide === "B"} />
-          <OverlayRunCircle run={rightRun} />
-          <OverlayScoreBox score={rightScore} />
+        <div className="flex min-w-0 flex-1 items-center gap-2 pl-[86px] pr-3">
+          {activeSide === "B" ? <TurnArrow side="left" active /> : null}
+          {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
+          <OverlayScoreBox score={rightScore} tone="accent" />
           <div className="flex min-w-0 items-center gap-1.5">
-            <span className="max-w-[180px] truncate text-[15px] font-semibold leading-none">
+            <span className="max-w-[260px] truncate text-[15px] font-semibold leading-none tracking-[0.04em]">
               {rightName}
             </span>
-            <SmallFlag countryCode={rightFlag} />
+            {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
           </div>
-          <OverlayMiniStat label="AVG" value={rightAvg} align="left" />
-          <OverlayMiniStat label="HR" value={rightHr} align="left" />
+          <OverlayMiniStat label="AVG:" value={rightAvg} align="left" />
+          <OverlayMiniStat label="H.R." value={rightHr} align="left" />
         </div>
       </div>
     </div>
@@ -983,7 +988,7 @@ function OverlayMiniStat({
         align === "right" ? "text-right" : "text-left"
       }`}
     >
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/80">
+      <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/90">
         {label}
       </span>
       <span className="text-[13px] font-black text-white">{value}</span>
@@ -991,9 +996,21 @@ function OverlayMiniStat({
   );
 }
 
-function OverlayScoreBox({ score }: { score: number }) {
+function OverlayScoreBox({
+  score,
+  tone,
+}: {
+  score: number;
+  tone: "light" | "accent";
+}) {
   return (
-    <div className="flex h-7 min-w-[42px] shrink-0 items-center justify-center rounded-md bg-white px-2 text-[18px] font-black leading-none text-slate-950">
+    <div
+      className={`flex h-6 min-w-[42px] shrink-0 items-center justify-center rounded-[4px] border px-2 text-[18px] font-black leading-none ${
+        tone === "accent"
+          ? "border-slate-950/35 bg-amber-400 text-slate-950"
+          : "border-slate-950/20 bg-white text-slate-950"
+      }`}
+    >
       {score}
     </div>
   );
@@ -1001,7 +1018,7 @@ function OverlayScoreBox({ score }: { score: number }) {
 
 function OverlayRunCircle({ run }: { run: number }) {
   return (
-    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/60 bg-sky-950/28 text-[14px] font-black leading-none text-white">
+    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[13px] font-black leading-none text-slate-950">
       {run}
     </div>
   );
@@ -1016,15 +1033,12 @@ function TurnArrow({
 }) {
   return (
     <div
-      className={`h-0 w-0 shrink-0 ${
-        active ? "opacity-100" : "opacity-25"
-      }`}
+      className={`h-0 w-0 shrink-0 ${active ? "opacity-100" : "opacity-25"}`}
       style={{
         borderTop: "7px solid transparent",
         borderBottom: "7px solid transparent",
-        borderLeft: side === "right" ? "11px solid rgba(255,255,255,0.96)" : undefined,
-        borderRight: side === "left" ? "11px solid rgba(255,255,255,0.96)" : undefined,
-        filter: active ? "drop-shadow(0 0 6px rgba(255,255,255,0.45))" : undefined,
+        borderLeft: side === "right" ? "11px solid rgba(255,255,255,0.98)" : undefined,
+        borderRight: side === "left" ? "11px solid rgba(255,255,255,0.98)" : undefined,
       }}
     />
   );
