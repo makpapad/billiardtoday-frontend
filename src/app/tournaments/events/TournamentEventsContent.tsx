@@ -233,6 +233,7 @@ export function TournamentEventsContent({
 }: TournamentEventsContentProps = {}) {
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -505,6 +506,41 @@ export function TournamentEventsContent({
       .replace(/\s+/g, " ")
       .trim();
   }, []);
+  const normalizedPlayerSearchQuery = useMemo(
+    () => normalizeLiveName(playerSearchQuery),
+    [normalizeLiveName, playerSearchQuery],
+  );
+  const filteredActiveStageGroups = useMemo(() => {
+    if (!activeStage) return [];
+
+    const groups = stageMatchGroups[activeStage.id] ?? [];
+    if (!normalizedPlayerSearchQuery) return groups;
+
+    const searchTerms = normalizedPlayerSearchQuery
+      .split(" ")
+      .map((term) => term.trim())
+      .filter((term) => term.length > 0);
+
+    if (searchTerms.length === 0) return groups;
+
+    return groups.filter((group) =>
+      group.matches.some((match) =>
+        [match.top.player, match.bottom.player].some((player) => {
+          const haystack = [player.name, player.nativeName, player.country]
+            .map((value) => normalizeLiveName(value))
+            .filter((value): value is string => value.length > 0)
+            .join(" ");
+
+          return searchTerms.every((term) => haystack.includes(term));
+        }),
+      ),
+    );
+  }, [
+    activeStage,
+    normalizeLiveName,
+    normalizedPlayerSearchQuery,
+    stageMatchGroups,
+  ]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -1010,6 +1046,23 @@ export function TournamentEventsContent({
                                       Matches -{" "}
                                       {stage.title || stage.order || ""}
                                     </div>
+                                    {stage.stageType !== "brackets" &&
+                                    (stageMatchGroups[stage.id] ?? []).length >
+                                      0 ? (
+                                      <div className="flex items-center">
+                                        <input
+                                          type="search"
+                                          value={playerSearchQuery}
+                                          onChange={(event) =>
+                                            setPlayerSearchQuery(
+                                              event.target.value,
+                                            )
+                                          }
+                                          placeholder="Search player..."
+                                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                        />
+                                      </div>
+                                    ) : null}
                                     {stage.stageType === "brackets" ? (
                                       brLoadingByStage[stage.documentId] ? (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -1031,7 +1084,12 @@ export function TournamentEventsContent({
                                       </div>
                                     ) : (
                                       <div className="flex flex-col gap-3">
-                                        {(stageMatchGroups[stage.id] ?? []).map(
+                                        {filteredActiveStageGroups.length ===
+                                        0 ? (
+                                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            No players found.
+                                          </div>
+                                        ) : filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
                                             const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
                                             const isExpanded = expandedGroups.has(groupKey);
@@ -1098,7 +1156,7 @@ export function TournamentEventsContent({
                                                       Group {group.number ?? "?"}
                                                     </div>
                                                     {!isExpanded ? (
-                                                      <div className="ml-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300">
+                                                      <div className="ml-2 flex flex-wrap items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300">
                                                         {previewPlayers.map((player) => (
                                                           <div
                                                             key={
