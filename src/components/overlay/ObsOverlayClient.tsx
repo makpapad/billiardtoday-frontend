@@ -914,41 +914,47 @@ function TemplateThreeOverlayCard({
       }}
     >
       <div
-        className="flex h-8 w-full items-center overflow-hidden text-white"
+        className="relative h-8 w-full overflow-hidden text-white"
         style={{ backgroundColor: "#079cfa" }}
       >
-        <div className="flex min-w-0 flex-1 items-center justify-start gap-2 pl-3">
+        <div className="absolute inset-y-0 left-0 flex items-center gap-3 pl-3">
           <OverlayMiniStat label="H.R." value={leftHr} align="left" />
           <OverlayMiniStat label="AVG:" value={leftAvg} align="left" />
-          <div className="flex min-w-0 items-center justify-end gap-1.5">
-            {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
-            <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
-              {leftName}
-            </span>
-          </div>
-          <OverlayScoreBox score={leftScore} tone="light" />
         </div>
 
-        <div className="flex shrink-0 items-center justify-center gap-1 px-3">
-          {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : <div className="h-6 w-6" />}
-          {activeSide === "A" ? <TurnArrow side="left" active /> : <div className="h-0 w-0" />}
-          <div className="flex min-w-[64px] items-center justify-center text-[14px] font-normal leading-none tracking-[0.06em] text-white">
-            ({innings})
-          </div>
-          {activeSide === "B" ? <TurnArrow side="right" active /> : <div className="h-0 w-0" />}
-          {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : <div className="h-6 w-6" />}
-        </div>
-
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pr-3">
-          <OverlayScoreBox score={rightScore} tone="accent" />
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
-              {rightName}
-            </span>
-            {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
-          </div>
+        <div className="absolute inset-y-0 right-0 flex items-center gap-3 pr-3">
           <OverlayMiniStat label="AVG:" value={rightAvg} align="right" />
           <OverlayMiniStat label="H.R." value={rightHr} align="right" />
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex min-w-0 max-w-full items-center justify-center gap-2 px-40">
+            <div className="flex min-w-0 max-w-[340px] items-center justify-end gap-1.5">
+              {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
+              <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
+                {leftName}
+              </span>
+              <OverlayScoreBox score={leftScore} tone="light" />
+            </div>
+
+            <div className="flex shrink-0 items-center justify-center gap-1">
+              {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : <div className="h-6 w-6" />}
+              {activeSide === "A" ? <TurnArrow side="left" active /> : <div className="h-0 w-0" />}
+              <div className="flex min-w-[64px] items-center justify-center text-[14px] font-normal leading-none tracking-[0.06em] text-white">
+                ({innings})
+              </div>
+              {activeSide === "B" ? <TurnArrow side="right" active /> : <div className="h-0 w-0" />}
+              {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : <div className="h-6 w-6" />}
+            </div>
+
+            <div className="flex min-w-0 max-w-[340px] items-center gap-1.5">
+              <OverlayScoreBox score={rightScore} tone="accent" />
+              <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
+                {rightName}
+              </span>
+              {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
+            </div>
+          </div>
         </div>
       </div>
     </div>
