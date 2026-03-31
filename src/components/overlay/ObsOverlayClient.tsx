@@ -106,6 +106,10 @@ type WsPayload = {
     liveRun?: number | null;
     innings?: number | null;
     targetPoints?: number | null;
+    target_points?: number | null;
+    timeoutsUsed?: number | null;
+    timeouts?: number | null;
+    maxTimeouts?: number | null;
   }>;
 };
 
@@ -270,10 +274,10 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       liveRunB: coerceNumber(playerB.liveRun ?? playerB.run, item.state.liveRunB ?? 0),
       bestRunA: item.state.bestRunA ?? 0,
       bestRunB: item.state.bestRunB ?? 0,
-      timeoutsA: item.state.timeoutsA ?? 0,
-      timeoutsB: item.state.timeoutsB ?? 0,
-      maxTimeoutsA: item.state.maxTimeoutsA ?? 0,
-      maxTimeoutsB: item.state.maxTimeoutsB ?? 0,
+      timeoutsA: coerceNumber(playerA.timeoutsUsed ?? playerA.timeouts, item.state.timeoutsA ?? 0),
+      timeoutsB: coerceNumber(playerB.timeoutsUsed ?? playerB.timeouts, item.state.timeoutsB ?? 0),
+      maxTimeoutsA: coerceNumber(playerA.maxTimeouts, item.state.maxTimeoutsA ?? 3),
+      maxTimeoutsB: coerceNumber(playerB.maxTimeouts, item.state.maxTimeoutsB ?? 3),
       inningsCount: Math.max(
         coerceNumber(playerA.innings, 0),
         coerceNumber(playerB.innings, 0),
@@ -292,10 +296,12 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
           : Boolean(payload.isRunning),
       targetPointsA: normalizeTargetPoints(
         playerA.targetPoints,
+        playerA.target_points,
         item.state.targetPointsA,
       ),
       targetPointsB: normalizeTargetPoints(
         playerB.targetPoints,
+        playerB.target_points,
         item.state.targetPointsB,
       ),
     },
