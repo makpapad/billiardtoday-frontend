@@ -901,7 +901,7 @@ function TemplateThreeOverlayCard({
   const totalBlocks = 40;
   const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
   const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
-  const overlayHeight = 50;
+  const overlayHeight = 56;
 
   return (
     <div
@@ -920,10 +920,10 @@ function TemplateThreeOverlayCard({
           "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
       }}
     >
-      <div className="flex h-5 w-full items-end justify-center overflow-visible">
+      <div className="flex h-6 w-full items-end justify-center overflow-visible">
         <div
-          className="grid h-5 w-[80%] grid-cols-[1fr_auto_1fr] items-center rounded-t-[10px] px-4 text-[12px] font-normal tracking-[0.06em] text-slate-900"
-          style={{ backgroundColor: "#9fdcff" }}
+          className="grid h-6 w-[80%] grid-cols-[1fr_auto_1fr] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
+          style={{ backgroundColor: "#d6d9e1" }}
         >
           <span className="truncate whitespace-nowrap">
             {tournament} / Stage {stage} / Table {table}
@@ -941,24 +941,24 @@ function TemplateThreeOverlayCard({
       </div>
 
       <div
-        className="relative h-8 w-full overflow-hidden text-white"
-        style={{ backgroundColor: "#079cfa" }}
+        className="relative h-10 w-full overflow-hidden text-white"
+        style={{ backgroundColor: "#8a909d" }}
       >
-        <div className="absolute inset-y-0 left-0 flex items-center gap-3 pl-3">
+        <div className="absolute inset-y-0 left-0 flex items-center gap-5 pl-4">
           <OverlayMiniStat label="H.R." value={leftHr} align="left" />
           <OverlayMiniStat label="AVG:" value={leftAvg} align="left" />
         </div>
 
-        <div className="absolute inset-y-0 right-0 flex items-center gap-3 pr-3">
+        <div className="absolute inset-y-0 right-0 flex items-center gap-5 pr-4">
           <OverlayMiniStat label="AVG:" value={rightAvg} align="right" />
           <OverlayMiniStat label="H.R." value={rightHr} align="right" />
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex min-w-0 max-w-full items-center justify-center gap-1 px-28">
-            <div className="flex min-w-0 max-w-[360px] items-center justify-end gap-1.5">
+          <div className="flex min-w-0 max-w-full items-center justify-center gap-2 px-28">
+            <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-2">
               {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
-              <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
+              <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
                 {leftName}
               </span>
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">
@@ -970,11 +970,11 @@ function TemplateThreeOverlayCard({
               <OverlayScoreBox score={leftScore} tone="light" />
             </div>
 
-            <div className="flex h-6 shrink-0 items-center justify-center px-2 text-[14px] font-normal leading-none tracking-[0.06em] text-white">
+            <div className="flex h-7 shrink-0 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white">
               ({innings})
             </div>
 
-            <div className="flex min-w-0 max-w-[360px] items-center gap-1.5">
+            <div className="flex min-w-0 max-w-[390px] items-center gap-2">
               <OverlayScoreBox score={rightScore} tone="accent" />
               <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
                 {activeSide === "B" ? <TurnArrow side="left" active /> : null}
@@ -982,7 +982,7 @@ function TemplateThreeOverlayCard({
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">
                 {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
               </div>
-              <span className="truncate text-[15px] font-normal leading-none tracking-[0.04em]">
+              <span className="truncate text-[17px] font-normal leading-none tracking-[0.04em]">
                 {rightName}
               </span>
               {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
@@ -1013,11 +1013,11 @@ function TimeStrip({
         : "text-red-200";
 
   return (
-    <div className={`flex items-center ${compact ? "gap-1.5" : "gap-2"}`}>
-      <div className={`${compact ? "text-[10px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
+    <div className={`flex items-center rounded-full bg-slate-700/90 px-3 py-1 ${compact ? "gap-2" : "gap-3"}`}>
+      <div className={`${compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
-      <div className={`flex ${compact ? "w-[160px]" : "w-[240px]"} gap-[2px]`}>
+      <div className={`flex ${compact ? "w-[240px]" : "w-[320px]"} gap-[2px]`}>
         {Array.from({ length: totalBlocks }).map((_, index) => {
           const isRemaining = index >= elapsedBlocks;
           const zoneClass =
@@ -1029,7 +1029,7 @@ function TimeStrip({
           return (
             <span
               key={index}
-              className={`${compact ? "h-3" : "h-5"} flex-1 rounded-[1px] ${isRemaining ? zoneClass : "bg-white/20"}`}
+              className={`${compact ? "h-3.5" : "h-5"} flex-1 rounded-[1px] ${isRemaining ? zoneClass : "bg-white/20"}`}
             />
           );
         })}
@@ -1047,9 +1047,9 @@ function SmallFlag({ countryCode }: { countryCode: string | null }) {
     <img
       src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
       alt={countryCode}
-      width={20}
-      height={14}
-      className="h-[14px] w-5 rounded-[2px] object-cover"
+      width={22}
+      height={15}
+      className="h-[15px] w-[22px] rounded-[2px] object-cover"
       loading="eager"
       decoding="async"
       referrerPolicy="no-referrer"
@@ -1070,14 +1070,14 @@ function OverlayMiniStat({
 }) {
   return (
     <div
-      className={`flex shrink-0 items-baseline gap-1 leading-none ${
+      className={`flex shrink-0 items-baseline gap-2.5 leading-none ${
         align === "right" ? "text-right" : "text-left"
       } ${className ?? ""}`}
     >
-      <span className="text-[12px] font-normal uppercase tracking-[0.08em] text-white/95">
+      <span className="text-[13px] font-normal uppercase tracking-[0.12em] text-white/95">
         {label}
       </span>
-      <span className="text-[15px] font-normal text-white">{value}</span>
+      <span className="text-[17px] font-normal text-white">{value}</span>
     </div>
   );
 }
@@ -1091,7 +1091,7 @@ function OverlayScoreBox({
 }) {
   return (
     <div
-      className={`flex h-6 min-w-[42px] shrink-0 items-center justify-center rounded-[4px] border px-2 text-[18px] font-semibold leading-none ${
+      className={`flex h-7 min-w-[46px] shrink-0 items-center justify-center rounded-[5px] border px-3 text-[21px] font-semibold leading-none ${
         tone === "accent"
           ? "border-slate-950/35 bg-amber-400 text-slate-950"
           : "border-slate-950/20 bg-white text-slate-950"
@@ -1104,7 +1104,7 @@ function OverlayScoreBox({
 
 function OverlayRunCircle({ run }: { run: number }) {
   return (
-    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[13px] font-normal leading-none text-slate-950">
+    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white text-[14px] font-normal leading-none text-slate-950">
       {run}
     </div>
   );
@@ -1287,3 +1287,4 @@ function FlagBadge({
     </div>
   );
 }
+
