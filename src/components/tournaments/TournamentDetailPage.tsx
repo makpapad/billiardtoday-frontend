@@ -358,8 +358,8 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   if (documentPairKey) keys.add(`doc:${documentPairKey}`);
 
   const namePairKey = buildPairKey(
-    normalizeNameForMatch(session.player1Name ?? session.state?.playerAName ?? null),
-    normalizeNameForMatch(session.player2Name ?? session.state?.playerBName ?? null),
+    normalizeNameForMatch(session.state?.playerAName ?? session.player1Name ?? null),
+    normalizeNameForMatch(session.state?.playerBName ?? session.player2Name ?? null),
   );
   if (namePairKey) keys.add(`name:${namePairKey}`);
 
