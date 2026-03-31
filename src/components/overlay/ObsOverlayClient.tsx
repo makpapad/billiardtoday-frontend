@@ -922,7 +922,7 @@ function TemplateThreeOverlayCard({
     >
       <div className="flex h-6 w-full items-end justify-center overflow-visible">
         <div
-          className="grid h-6 w-[80%] grid-cols-[1fr_auto_1fr] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
+          className="grid h-6 w-[80%] grid-cols-[minmax(0,1fr)_auto_auto] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
           style={{ backgroundColor: "#d6d9e1" }}
         >
           <span className="truncate whitespace-nowrap">
@@ -934,7 +934,7 @@ function TemplateThreeOverlayCard({
             totalBlocks={totalBlocks}
             compact
           />
-          <span className="justify-self-end whitespace-nowrap">
+          <span className="justify-self-end whitespace-nowrap pl-4 text-[14px] tracking-[0.08em] text-slate-950">
             {target ? `Race to ${target}` : ""}
           </span>
         </div>
@@ -1013,11 +1013,11 @@ function TimeStrip({
         : "text-red-200";
 
   return (
-    <div className={`flex items-center rounded-full bg-slate-700/90 px-3 py-1 ${compact ? "gap-2" : "gap-3"}`}>
+    <div className={`flex items-center rounded-full bg-slate-700/90 px-3 py-1 ${compact ? "gap-2.5" : "gap-3"}`}>
       <div className={`${compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
-      <div className={`flex ${compact ? "w-[240px]" : "w-[320px]"} gap-[2px]`}>
+      <div className={`flex ${compact ? "w-[360px]" : "w-[320px]"} gap-[2px]`}>
         {Array.from({ length: totalBlocks }).map((_, index) => {
           const isRemaining = index >= elapsedBlocks;
           const zoneClass =
