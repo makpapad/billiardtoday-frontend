@@ -100,6 +100,26 @@ function PlayerNameWithFlag({
   );
 }
 
+function getPreviewPlayerLabel(player: {
+  name?: string | null;
+  nativeName?: string | null;
+}) {
+  return player.name || player.nativeName || "Unknown";
+}
+
+function getGroupPreviewPlayers(group: StageMatchGroup) {
+  return Array.from(
+    new Map(
+      group.matches
+        .flatMap((match) => [match.top.player, match.bottom.player])
+        .map((player) => [
+          player.documentId || `${player.name}-${player.country || "xx"}`,
+          player,
+        ]),
+    ).values(),
+  );
+}
+
 function StageRankingTable({
   stage,
   embedded,
@@ -541,6 +561,21 @@ export function TournamentEventsContent({
     normalizedPlayerSearchQuery,
     stageMatchGroups,
   ]);
+  const previewGridTemplateColumns = useMemo(() => {
+    if (filteredActiveStageGroups.length === 0) return "";
+
+    const maxLengths: number[] = [];
+    filteredActiveStageGroups.forEach((group) => {
+      getGroupPreviewPlayers(group).forEach((player, index) => {
+        const length = getPreviewPlayerLabel(player).trim().length;
+        maxLengths[index] = Math.max(maxLengths[index] ?? 0, length);
+      });
+    });
+
+    return maxLengths
+      .map((length) => `${Math.min(Math.max(length + 4, 16), 30)}ch`)
+      .join(" ");
+  }, [filteredActiveStageGroups]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -1093,20 +1128,8 @@ export function TournamentEventsContent({
                                           (group, groupIndex) => {
                                             const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
                                             const isExpanded = expandedGroups.has(groupKey);
-                                            const previewPlayers = Array.from(
-                                              new Map(
-                                                group.matches
-                                                  .flatMap((match) => [
-                                                    match.top.player,
-                                                    match.bottom.player,
-                                                  ])
-                                                  .map((player) => [
-                                                    player.documentId ||
-                                                      `${player.name}-${player.country || "xx"}`,
-                                                    player,
-                                                  ]),
-                                              ).values(),
-                                            );
+                                            const previewPlayers =
+                                              getGroupPreviewPlayers(group);
 
                                             return (
                                             <div
@@ -1156,13 +1179,20 @@ export function TournamentEventsContent({
                                                       Group {group.number ?? "?"}
                                                     </div>
                                                     {!isExpanded ? (
-                                                      <div className="ml-2 grid flex-1 grid-cols-2 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300 xl:grid-cols-3">
+                                                      <div
+                                                        className="ml-2 grid flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
+                                                        style={{
+                                                          gridTemplateColumns:
+                                                            previewGridTemplateColumns ||
+                                                            `repeat(${Math.max(previewPlayers.length, 1)}, minmax(0, 1fr))`,
+                                                        }}
+                                                      >
                                                         {previewPlayers.map((player) => (
                                                           (() => {
                                                             const playerLabel =
-                                                              player.name ||
-                                                              player.nativeName ||
-                                                              "Unknown";
+                                                              getPreviewPlayerLabel(
+                                                                player,
+                                                              );
                                                             const isSearchMatch =
                                                               normalizedPlayerSearchQuery.length >
                                                                 0 &&
