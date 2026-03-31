@@ -889,7 +889,7 @@ function TemplateThreeOverlayCard({
   const rightAvg = formatAverageValue(rightScore, state.inningsCount);
   const leftHr = state.bestRunA ?? 0;
   const rightHr = state.bestRunB ?? 0;
-  const target = state.targetPointsA ?? state.targetPointsB ?? 40;
+  const target = state.targetPointsA ?? state.targetPointsB ?? null;
   const leftFlag = resolveCountryCode(state.playerACountry);
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
@@ -935,7 +935,7 @@ function TemplateThreeOverlayCard({
             compact
           />
           <span className="justify-self-end whitespace-nowrap">
-            Race to {target}
+            {target ? `Race to ${target}` : ""}
           </span>
         </div>
       </div>
@@ -970,8 +970,8 @@ function TemplateThreeOverlayCard({
               <OverlayScoreBox score={leftScore} tone="light" />
             </div>
 
-            <div className="flex h-6 shrink-0 items-center justify-center px-1">
-              <div className="min-w-[10px]" />
+            <div className="flex h-6 shrink-0 items-center justify-center px-2 text-[14px] font-normal leading-none tracking-[0.06em] text-white">
+              ({innings})
             </div>
 
             <div className="flex min-w-0 max-w-[360px] items-center gap-1.5">
