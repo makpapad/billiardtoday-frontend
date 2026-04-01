@@ -1311,7 +1311,6 @@ export function TournamentEventsContent({
                                                     (match) => (
                                                       <tbody
                                                         key={match.key}
-                                                        className="shadow-[0_6px_18px_rgba(15,23,42,0.16)] dark:shadow-[0_8px_20px_rgba(2,6,23,0.42)]"
                                                       >
                                                           {(() => {
                                                             const playerIds = [
