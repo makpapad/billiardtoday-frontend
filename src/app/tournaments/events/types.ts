@@ -137,6 +137,7 @@ export type NormalizedFinalResult = {
   playerDocumentId: string | null;
   playerName: string;
   playerCountry: string | null;
+  matchPoints: number | null;
   bestAverage: number | null;
   caroms: number | null;
   points: number | null;

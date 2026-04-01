@@ -498,6 +498,24 @@ export function TournamentEventsContent({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+
+  const getEffectiveFinalPoints = useCallback(
+    (result: NormalizedFinalResult) => {
+      if (result.finalPoints === null) return null;
+      const hasScoringSignal =
+        result.rankingPoints !== null || result.penalty !== null;
+      if (
+        !hasScoringSignal &&
+        result.caroms !== null &&
+        result.finalPoints === result.caroms
+      ) {
+        return null;
+      }
+      return result.finalPoints;
+    },
+    [],
+  );
+
   const showRankPointsColumn = useMemo(
     () => publishedFinalResults.some((result) => result.rankingPoints !== null),
     [publishedFinalResults],
@@ -507,8 +525,11 @@ export function TournamentEventsContent({
     [publishedFinalResults],
   );
   const showFinalPointsColumn = useMemo(
-    () => publishedFinalResults.some((result) => result.finalPoints !== null),
-    [publishedFinalResults],
+    () =>
+      publishedFinalResults.some(
+        (result) => getEffectiveFinalPoints(result) !== null,
+      ),
+    [getEffectiveFinalPoints, publishedFinalResults],
   );
 
   // Keep active stage in sync with external tournament hero selection when present.
@@ -995,6 +1016,9 @@ export function TournamentEventsContent({
                                   Player
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
+                                  Match Pts
+                                </th>
+                                <th className="px-4 py-3 text-center font-semibold">
                                   Caroms
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
@@ -1057,6 +1081,9 @@ export function TournamentEventsContent({
                                     )}
                                   </td>
                                   <td className="px-4 py-3 text-center">
+                                    {formatNumberValue(result.matchPoints)}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
                                     {formatNumberValue(
                                       result.caroms ?? result.points,
                                     )}
@@ -1094,7 +1121,9 @@ export function TournamentEventsContent({
                                   )}
                                   {showFinalPointsColumn && (
                                     <td className="px-4 py-3 text-center">
-                                      {formatNumberValue(result.finalPoints)}
+                                      {formatNumberValue(
+                                        getEffectiveFinalPoints(result),
+                                      )}
                                     </td>
                                   )}
                                 </tr>
