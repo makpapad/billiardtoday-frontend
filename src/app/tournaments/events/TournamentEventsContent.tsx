@@ -1307,12 +1307,12 @@ export function TournamentEventsContent({
                                                       </th>
                                                     </tr>
                                                   </thead>
-                                                  <tbody>
-                                                    {group.matches.map(
-                                                      (match) => (
-                                                        <Fragment
-                                                          key={match.key}
-                                                        >
+                                                  {group.matches.map(
+                                                    (match) => (
+                                                      <tbody
+                                                        key={match.key}
+                                                        className="shadow-[0_3px_10px_rgba(15,23,42,0.08)] dark:shadow-[0_4px_12px_rgba(2,6,23,0.3)]"
+                                                      >
                                                           {(() => {
                                                             const playerIds = [
                                                               match.top.player
@@ -1525,7 +1525,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200 shadow-[0_0_0_1px_rgba(148,163,184,0.22),0_4px_12px_rgba(15,23,42,0.08)] dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_4px_12px_rgba(2,6,23,0.35)]",
+                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1680,7 +1680,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200 shadow-[0_0_0_1px_rgba(148,163,184,0.22),0_4px_12px_rgba(15,23,42,0.08)] dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_4px_12px_rgba(2,6,23,0.35)]",
+                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
@@ -1815,10 +1815,9 @@ export function TournamentEventsContent({
                                                               </>
                                                             );
                                                           })()}
-                                                        </Fragment>
-                                                      ),
-                                                    )}
-                                                  </tbody>
+                                                      </tbody>
+                                                    ),
+                                                  )}
                                                 </table>
                                               </div>
                                               <GroupStandingsTable
