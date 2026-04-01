@@ -47,6 +47,7 @@ type TournamentEventsContentProps = {
   preferredStageDocumentId?: string | null;
   onStageSelect?: (stageDocumentId: string) => void;
   showPublishedFinalResults?: boolean;
+  showTimetable?: boolean;
   stageViewMode?: "results" | "ranks";
   embeddedOverride?: boolean;
   showStandaloneTitle?: boolean;
@@ -356,6 +357,7 @@ export function TournamentEventsContent({
   preferredStageDocumentId = null,
   onStageSelect,
   showPublishedFinalResults = false,
+  showTimetable = true,
   stageViewMode = "results",
   embeddedOverride,
   showStandaloneTitle = true,
@@ -1261,7 +1263,7 @@ export function TournamentEventsContent({
                         </div>
                       </div>
                     )}
-                  {timetableSlots.length > 0 && (
+                  {showTimetable && timetableSlots.length > 0 && (
                     <div className="mb-6 flex flex-col gap-3">
                       <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                         Time table

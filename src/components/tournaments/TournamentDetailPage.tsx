@@ -16,12 +16,14 @@ import type {
   EventApiResponse,
   GroupStanding,
   NormalizedEventStage,
+  NormalizedTimetableSlot,
   StageMatchGroup,
 } from "@/app/tournaments/events/types";
 import {
   buildGroupStandings,
   buildStageMatchGroups,
   formatAverage,
+  formatDateForTable,
   formatNumberValue,
   formatRecord,
   normalizeEntity,
@@ -472,7 +474,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     "tournament",
   );
   const [tournamentPanelMode, setTournamentPanelMode] = useState<
-    "stages" | "finals" | "gallery"
+    "stages" | "finals" | "gallery" | "timetable"
   >("stages");
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
@@ -1616,6 +1618,129 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       });
   }, [eventData]);
 
+  const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
+    if (!eventData?.data?.timetable_slots) return [];
+
+    return toRelationArray(eventData.data.timetable_slots)
+      .map((slot, index) => {
+        const normalized = normalizeEntity<any>(slot, `slot-${index}`);
+        const stage = normalized.stage
+          ? normalizeEntity<{ title?: unknown }>(
+              normalized.stage,
+              `${normalized.id}-stage`,
+            )
+          : null;
+        const match = normalized.match
+          ? normalizeEntity<{
+              number?: unknown;
+              player1?: unknown;
+              player2?: unknown;
+            }>(normalized.match, `${normalized.id}-match`)
+          : null;
+        const player1 = match
+          ? normalizeEntity<{ full_name?: unknown; full_name_en?: unknown }>(
+              match.player1,
+              `${match.id}-p1`,
+            )
+          : null;
+        const player2 = match
+          ? normalizeEntity<{ full_name?: unknown; full_name_en?: unknown }>(
+              match.player2,
+              `${match.id}-p2`,
+            )
+          : null;
+        const player1Name =
+          typeof player1?.full_name_en === "string" && player1.full_name_en.trim()
+            ? player1.full_name_en
+            : typeof player1?.full_name === "string"
+              ? player1.full_name
+              : "";
+        const player2Name =
+          typeof player2?.full_name_en === "string" && player2.full_name_en.trim()
+            ? player2.full_name_en
+            : typeof player2?.full_name === "string"
+              ? player2.full_name
+              : "";
+        const matchNumber = toNumber(match?.number);
+
+        return {
+          id: normalized.id,
+          documentId: normalized.documentId,
+          slotType:
+            typeof normalized.slot_type === "string" && normalized.slot_type.trim()
+              ? normalized.slot_type
+              : "match",
+          title: typeof normalized.title === "string" ? normalized.title : "",
+          subtitle:
+            typeof normalized.subtitle === "string" ? normalized.subtitle : "",
+          description:
+            typeof normalized.description === "string"
+              ? normalized.description
+              : "",
+          date: typeof normalized.date === "string" ? normalized.date : "",
+          time: typeof normalized.time === "string" ? normalized.time : "",
+          dateTime:
+            typeof normalized.date_time === "string"
+              ? normalized.date_time
+              : null,
+          tableLabel:
+            typeof normalized.table_label === "string"
+              ? normalized.table_label
+              : "",
+          tableOrder: toNumber(normalized.table_order),
+          slotOrder: toNumber(normalized.slot_order),
+          status:
+            typeof normalized.status === "string" && normalized.status.trim()
+              ? normalized.status
+              : "scheduled",
+          isVisible: normalized.is_visible !== false,
+          stageTitle:
+            typeof stage?.title === "string" && stage.title.trim()
+              ? stage.title
+              : null,
+          matchLabel:
+            player1Name || player2Name
+              ? [player1Name, player2Name].filter(Boolean).join(" vs ")
+              : matchNumber !== null
+                ? `Match ${matchNumber}`
+                : null,
+        } satisfies NormalizedTimetableSlot;
+      })
+      .filter((slot) => slot.isVisible)
+      .sort((a, b) => {
+        const aDateTime = a.dateTime ? Date.parse(a.dateTime) : Number.NaN;
+        const bDateTime = b.dateTime ? Date.parse(b.dateTime) : Number.NaN;
+        if (
+          !Number.isNaN(aDateTime) &&
+          !Number.isNaN(bDateTime) &&
+          aDateTime !== bDateTime
+        ) {
+          return aDateTime - bDateTime;
+        }
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        if (a.time !== b.time) return a.time.localeCompare(b.time);
+        if (
+          a.tableOrder !== null &&
+          b.tableOrder !== null &&
+          a.tableOrder !== b.tableOrder
+        ) {
+          return a.tableOrder - b.tableOrder;
+        }
+        if (a.tableOrder !== null) return -1;
+        if (b.tableOrder !== null) return 1;
+        if (
+          a.slotOrder !== null &&
+          b.slotOrder !== null &&
+          a.slotOrder !== b.slotOrder
+        ) {
+          return a.slotOrder - b.slotOrder;
+        }
+        if (a.slotOrder !== null) return -1;
+        if (b.slotOrder !== null) return 1;
+        return a.id.localeCompare(b.id);
+      });
+  }, [eventData]);
+
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () =>
       eventStages.reduce<Record<string, StageMatchGroup[]>>((acc, stage) => {
@@ -1933,6 +2058,102 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             </p>
           </div>
         </section>
+      ) : tournamentPanelMode === "timetable" ? (
+        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+          <div className="flex flex-col gap-4">
+            <div>
+              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Time table
+              </div>
+              <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Tournament schedule
+              </h2>
+            </div>
+            {timetableSlots.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                No timetable has been published yet.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-sm">
+                    <thead className="bg-slate-900 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold">Date</th>
+                        <th className="px-4 py-3 text-left font-semibold">Time</th>
+                        <th className="px-4 py-3 text-left font-semibold">Table</th>
+                        <th className="px-4 py-3 text-left font-semibold">Type</th>
+                        <th className="px-4 py-3 text-left font-semibold">Title</th>
+                        <th className="px-4 py-3 text-left font-semibold">Stage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {timetableSlots.map((slot) => {
+                        const parsedDateTime = slot.dateTime
+                          ? new Date(slot.dateTime)
+                          : null;
+                        const dateLabel =
+                          slot.dateTime &&
+                          parsedDateTime &&
+                          !Number.isNaN(parsedDateTime.getTime())
+                            ? formatDateForTable(slot.dateTime)
+                            : slot.date || "-";
+                        const timeLabel =
+                          slot.dateTime &&
+                          parsedDateTime &&
+                          !Number.isNaN(parsedDateTime.getTime())
+                            ? parsedDateTime.toLocaleTimeString("el-GR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : slot.time || "-";
+
+                        return (
+                          <tr
+                            key={slot.documentId}
+                            className="border-t border-slate-200 bg-white text-slate-700"
+                          >
+                            <td className="px-4 py-3">{dateLabel}</td>
+                            <td className="px-4 py-3">{timeLabel}</td>
+                            <td className="px-4 py-3">{slot.tableLabel || "-"}</td>
+                            <td className="px-4 py-3">
+                              <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                                {slot.slotType}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {slot.title || "Untitled row"}
+                                </span>
+                                {slot.subtitle ? (
+                                  <span className="text-xs text-slate-500">
+                                    {slot.subtitle}
+                                  </span>
+                                ) : null}
+                                {slot.matchLabel ? (
+                                  <span className="text-xs text-slate-500">
+                                    {slot.matchLabel}
+                                  </span>
+                                ) : null}
+                                {slot.description ? (
+                                  <span className="text-xs text-slate-500">
+                                    {slot.description}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">{slot.stageTitle || "-"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       ) : (
         <TournamentEventsContent
           key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
@@ -1943,6 +2164,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             setSelectedStageDocumentId(stageDocumentId);
           }}
           showPublishedFinalResults={tournamentPanelMode === "finals"}
+          showTimetable={false}
           stageViewMode={overviewMode}
           embeddedOverride={embedded}
           showStandaloneTitle={false}
@@ -2127,6 +2349,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 }
               >
                 Tournament
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTournamentPanelMode("timetable");
+                  setActiveView("tournament");
+                }}
+                className={
+                  activeView === "tournament" &&
+                  tournamentPanelMode === "timetable"
+                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
+                }
+              >
+                Time table
               </button>
               {!embedded ? (
                 <button
