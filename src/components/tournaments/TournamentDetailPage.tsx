@@ -261,6 +261,7 @@ function GroupTooltip({
               <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
               <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
               <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
               <th className="px-2 py-1.5 text-center font-semibold">MP</th>
