@@ -578,12 +578,55 @@ export function TournamentEventsContent({
   }, [eventData]);
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
-    () =>
-      eventStages.reduce<Record<string, StageMatchGroup[]>>((acc, stage) => {
-        acc[stage.id] = buildStageMatchGroups(stage.groups);
-        return acc;
-      }, {}),
-    [eventStages],
+    () => {
+      const autoScheduledMatchIdsByStage = new Map<string, Set<string>>();
+      if (eventData?.data?.timetable_slots) {
+        toRelationArray(eventData.data.timetable_slots)
+          .map((slot, index) => normalizeTimetableSlot(slot, `slot-${index}`))
+          .forEach((slot) => {
+            if (
+              slot.slotType !== "match" ||
+              !slot.stageDocumentId ||
+              !slot.matchDocumentId ||
+              !slot.source.startsWith("auto-generated")
+            ) {
+              return;
+            }
+            const existing =
+              autoScheduledMatchIdsByStage.get(slot.stageDocumentId) ??
+              new Set<string>();
+            existing.add(slot.matchDocumentId);
+            autoScheduledMatchIdsByStage.set(slot.stageDocumentId, existing);
+          });
+      }
+
+      return eventStages.reduce<Record<string, StageMatchGroup[]>>(
+        (acc, stage) => {
+          const visibleGroups =
+            autoScheduledMatchIdsByStage.has(stage.documentId)
+              ? stage.groups.filter((match) => {
+                  const hasPlayed =
+                    (match.player1.matchPoints ?? 0) > 0 ||
+                    (match.player2.matchPoints ?? 0) > 0 ||
+                    (match.player1.points ?? 0) > 0 ||
+                    (match.player2.points ?? 0) > 0 ||
+                    (match.player1.innings ?? 0) > 0 ||
+                    (match.player2.innings ?? 0) > 0;
+                  const allowed = match.documentId
+                    ? autoScheduledMatchIdsByStage
+                        .get(stage.documentId)
+                        ?.has(match.documentId) ?? false
+                    : false;
+                  return hasPlayed || allowed;
+                })
+              : stage.groups;
+          acc[stage.id] = buildStageMatchGroups(visibleGroups);
+          return acc;
+        },
+        {},
+      );
+    },
+    [eventData, eventStages],
   );
 
   const publishedFinalResults = useMemo<NormalizedFinalResult[]>(() => {
