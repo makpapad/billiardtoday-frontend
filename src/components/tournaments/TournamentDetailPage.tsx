@@ -146,6 +146,7 @@ function GroupTooltip({
               <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
               <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
               <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
+              <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
               <th className="px-2 py-1.5 text-center font-semibold">MP</th>
@@ -303,6 +304,11 @@ function GroupTooltip({
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   {formatAverage(player.totalPoints, player.totalInnings)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  {typeof player.bestAverage === "number"
+                    ? player.bestAverage.toFixed(3)
+                    : "-"}
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   {formatNumberValue(player.highRun)}
