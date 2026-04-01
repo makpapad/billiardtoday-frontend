@@ -15,6 +15,7 @@ import type {
   EventApiResponse,
   NormalizedEventStage,
   NormalizedFinalResult,
+  NormalizedStageResult,
   StageMatchGroup,
 } from "./types";
 import { buildTournamentSlug } from "@/lib/tournaments";
@@ -137,6 +138,17 @@ function getGroupKey(stage: NormalizedEventStage, group: StageMatchGroup) {
   return `${stage.documentId || stage.id}-${group.number ?? group.key}`;
 }
 
+function hasMeaningfulStageResult(
+  result: NormalizedStageResult,
+): boolean {
+  return (
+    (result.matchPoints ?? 0) > 0 ||
+    (result.points ?? 0) > 0 ||
+    (result.innings ?? 0) > 0 ||
+    (result.highRun ?? 0) > 0
+  );
+}
+
 function StageRankingTable({
   stage,
   embedded,
@@ -146,14 +158,15 @@ function StageRankingTable({
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
 }) {
-  const showGroupColumn = stage.results.some(
+  const visibleResults = stage.results.filter(hasMeaningfulStageResult);
+  const showGroupColumn = visibleResults.some(
     (result) => result.groupNumber !== null,
   );
-  const showGroupPositionColumn = stage.results.some(
+  const showGroupPositionColumn = visibleResults.some(
     (result) => result.groupPosition !== null,
   );
 
-  if (stage.results.length === 0) {
+  if (visibleResults.length === 0) {
     return (
       <div className="text-sm text-gray-500 dark:text-gray-400">
         No ranking published for this stage.
@@ -184,7 +197,7 @@ function StageRankingTable({
           </tr>
         </thead>
         <tbody>
-          {stage.results.map((result, index) => (
+          {visibleResults.map((result, index) => (
             <tr
               key={result.id}
               className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
