@@ -1525,7 +1525,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-x border-t-[3px] border-white/80 dark:border-white/45 text-gray-700 dark:text-gray-200",
+                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200 shadow-[0_0_0_1px_rgba(148,163,184,0.22),0_4px_12px_rgba(15,23,42,0.08)] dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_4px_12px_rgba(2,6,23,0.35)]",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1680,7 +1680,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-x border-b-[5px] border-white/80 dark:border-white/45 text-gray-700 dark:text-gray-200",
+                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200 shadow-[0_0_0_1px_rgba(148,163,184,0.22),0_4px_12px_rgba(15,23,42,0.08)] dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_4px_12px_rgba(2,6,23,0.35)]",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
