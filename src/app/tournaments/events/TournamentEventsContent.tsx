@@ -1525,7 +1525,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "border-x border-t-[3px] border-white/80 dark:border-white/45 text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1680,7 +1680,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "border-x border-b-[5px] border-white/80 dark:border-white/45 text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
