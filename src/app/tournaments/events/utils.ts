@@ -385,6 +385,7 @@ export const buildGroupStandings = (
 
         const current = acc[key];
         const entryAverage =
+          entry.outcome === "W" &&
           typeof entry.player.points === "number" &&
           typeof entry.player.innings === "number" &&
           entry.player.innings > 0
@@ -437,6 +438,9 @@ export const buildGroupStandings = (
     const avgA = a.average ?? -1;
     const avgB = b.average ?? -1;
     if (avgA !== avgB) return avgB - avgA;
+    const bestAvgA = a.bestAverage ?? -1;
+    const bestAvgB = b.bestAverage ?? -1;
+    if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
     const highRunA = a.highRun ?? -1;
     const highRunB = b.highRun ?? -1;
     if (highRunA !== highRunB) return highRunB - highRunA;
