@@ -1275,7 +1275,7 @@ export function TournamentEventsContent({
                                               {isExpanded ? (
                                               <>
                                               <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
-                                                <table className="min-w-full border-separate [border-spacing:0_8px] text-xs">
+                                                <table className="min-w-full text-xs">
                                                   <thead className="bg-blue-600 text-white">
                                                     <tr>
                                                       <th className="px-4 py-2 font-medium">
@@ -1311,7 +1311,7 @@ export function TournamentEventsContent({
                                                     (match) => (
                                                       <tbody
                                                         key={match.key}
-                                                        className="shadow-[0_6px_18px_rgba(15,23,42,0.16)] dark:shadow-[0_8px_20px_rgba(2,6,23,0.42)]"
+                                                        className="mb-2 block overflow-hidden rounded-lg border border-slate-200 shadow-[0_6px_18px_rgba(15,23,42,0.14)] dark:border-slate-700 dark:shadow-[0_8px_20px_rgba(2,6,23,0.36)]"
                                                       >
                                                           {(() => {
                                                             const playerIds = [
@@ -1525,7 +1525,7 @@ export function TournamentEventsContent({
                                                               <>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-t-[3px] border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "table w-full text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match.top
                                                                         .outcome,
@@ -1680,7 +1680,7 @@ export function TournamentEventsContent({
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
-                                                                    "border-b-[5px] border-white dark:border-white text-gray-700 dark:text-gray-200",
+                                                                    "table w-full text-gray-700 dark:text-gray-200",
                                                                     getMatchRowClass(
                                                                       match
                                                                         .bottom
