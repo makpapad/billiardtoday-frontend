@@ -2224,39 +2224,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   </button>
                 </div>
               </div>
-              {tournamentPanelMode === "finals" ? null : (
-                <>
-                  {summary.stages.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {summary.stages.map((stage) => (
-                        <button
-                          key={stage.documentId}
-                          type="button"
-                          onClick={() => {
-                            setTournamentPanelMode("stages");
-                            setSelectedStageDocumentId(stage.documentId);
-                            setActiveView("tournament");
-                          }}
-                          className={
-                            selectedStageDocumentId === stage.documentId
-                              ? "rounded-full border border-cyan-300/70 bg-cyan-300/20 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-cyan-300/30"
-                              : "rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition hover:border-white/25 hover:bg-white/15"
-                          }
-                          aria-pressed={
-                            selectedStageDocumentId === stage.documentId
-                          }
-                        >
-                          {stage.title}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-3 text-sm text-white/70">
-                      No stages published yet.
-                    </div>
-                  )}
-                </>
-              )}
+              {tournamentPanelMode === "finals" ? null : summary.stages.length === 0 ? (
+                <div className="mt-3 text-sm text-white/70">
+                  No stages published yet.
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
