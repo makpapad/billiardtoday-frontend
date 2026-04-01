@@ -2082,8 +2082,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         <th className="px-4 py-3 text-left font-semibold">Date</th>
                         <th className="px-4 py-3 text-left font-semibold">Time</th>
                         <th className="px-4 py-3 text-left font-semibold">Table</th>
-                        <th className="px-4 py-3 text-left font-semibold">Type</th>
-                        <th className="px-4 py-3 text-left font-semibold">Title</th>
+                        <th className="px-4 py-3 text-left font-semibold">Schedule</th>
                         <th className="px-4 py-3 text-left font-semibold">Stage</th>
                       </tr>
                     </thead>
@@ -2117,22 +2116,20 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3">{timeLabel}</td>
                             <td className="px-4 py-3">{slot.tableLabel || "-"}</td>
                             <td className="px-4 py-3">
-                              <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                                {slot.slotType}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex flex-col">
-                                <span className="font-medium">
+                              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                                  {slot.slotType}
+                                </span>
+                                <span className="font-semibold text-slate-950">
                                   {slot.title || "Untitled row"}
                                 </span>
                                 {slot.subtitle ? (
-                                  <span className="text-xs text-slate-500">
+                                  <span className="text-slate-500">
                                     {slot.subtitle}
                                   </span>
                                 ) : null}
                                 {slot.matchLabel ? (
-                                  <span className="text-xs text-slate-500">
+                                  <span className="font-semibold text-slate-950">
                                     {slot.matchLabel}
                                   </span>
                                 ) : null}
