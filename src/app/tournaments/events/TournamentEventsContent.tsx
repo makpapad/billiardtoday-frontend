@@ -1274,8 +1274,8 @@ export function TournamentEventsContent({
                                               </div>
                                               {isExpanded ? (
                                               <>
-                                              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
-                                                <table className="min-w-full border-separate [border-spacing:0_8px] text-xs">
+                                              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                                <table className="min-w-full text-xs">
                                                   <thead className="bg-blue-600 text-white">
                                                     <tr>
                                                       <th className="px-4 py-2 font-medium">
@@ -1307,11 +1307,12 @@ export function TournamentEventsContent({
                                                       </th>
                                                     </tr>
                                                   </thead>
-                                                  {group.matches.map(
-                                                    (match) => (
-                                                      <tbody
-                                                        key={match.key}
-                                                      >
+                                                  <tbody>
+                                                    {group.matches.map(
+                                                      (match) => (
+                                                        <Fragment
+                                                          key={match.key}
+                                                        >
                                                           {(() => {
                                                             const playerIds = [
                                                               match.top.player
@@ -1814,9 +1815,10 @@ export function TournamentEventsContent({
                                                               </>
                                                             );
                                                           })()}
-                                                      </tbody>
-                                                    ),
-                                                  )}
+                                                        </Fragment>
+                                                      ),
+                                                    )}
+                                                  </tbody>
                                                 </table>
                                               </div>
                                               <GroupStandingsTable
