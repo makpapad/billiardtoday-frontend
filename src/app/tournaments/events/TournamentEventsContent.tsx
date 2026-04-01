@@ -71,10 +71,12 @@ function PlayerNameWithFlag({
   name,
   nativeName,
   country,
+  highlight = false,
 }: {
   name: string;
   nativeName?: string | null;
   country?: string | null;
+  highlight?: boolean;
 }) {
   const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
   return (
@@ -89,9 +91,20 @@ function PlayerNameWithFlag({
         />
       ) : null}
       <div className="flex flex-col leading-tight">
-        <span>{name || "Unknown"}</span>
+        <span
+          className={clsx(
+            highlight && "text-yellow-600 dark:text-yellow-300",
+          )}
+        >
+          {name || "Unknown"}
+        </span>
         {nativeName && nativeName.trim() !== name.trim() && (
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+          <span
+            className={clsx(
+              "text-[10px] text-gray-500 dark:text-gray-400",
+              highlight && "text-yellow-600/80 dark:text-yellow-300/80",
+            )}
+          >
             {nativeName}
           </span>
         )}
@@ -118,6 +131,10 @@ function getGroupPreviewPlayers(group: StageMatchGroup) {
         ]),
     ).values(),
   );
+}
+
+function getGroupKey(stage: NormalizedEventStage, group: StageMatchGroup) {
+  return `${stage.documentId || stage.id}-${group.number ?? group.key}`;
 }
 
 function StageRankingTable({
@@ -551,35 +568,53 @@ export function TournamentEventsContent({
     () => normalizeLiveName(playerSearchQuery),
     [normalizeLiveName, playerSearchQuery],
   );
+  const playerSearchTerms = useMemo(
+    () =>
+      normalizedPlayerSearchQuery
+        .split(" ")
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0),
+    [normalizedPlayerSearchQuery],
+  );
+  const playerMatchesSearch = useCallback(
+    (
+      player: {
+        name?: string | null;
+        nativeName?: string | null;
+        country?: string | null;
+      },
+      searchTerms: string[],
+    ) => {
+      if (searchTerms.length === 0) return false;
+
+      const haystack = [player.name, player.nativeName, player.country]
+        .map((value) => normalizeLiveName(value))
+        .filter((value): value is string => value.length > 0)
+        .join(" ");
+
+      return searchTerms.every((term) => haystack.includes(term));
+    },
+    [normalizeLiveName],
+  );
   const filteredActiveStageGroups = useMemo(() => {
     if (!activeStage) return [];
 
     const groups = stageMatchGroups[activeStage.id] ?? [];
     if (!normalizedPlayerSearchQuery) return groups;
-
-    const searchTerms = normalizedPlayerSearchQuery
-      .split(" ")
-      .map((term) => term.trim())
-      .filter((term) => term.length > 0);
-
-    if (searchTerms.length === 0) return groups;
+    if (playerSearchTerms.length === 0) return groups;
 
     return groups.filter((group) =>
       group.matches.some((match) =>
         [match.top.player, match.bottom.player].some((player) => {
-          const haystack = [player.name, player.nativeName, player.country]
-            .map((value) => normalizeLiveName(value))
-            .filter((value): value is string => value.length > 0)
-            .join(" ");
-
-          return searchTerms.every((term) => haystack.includes(term));
+          return playerMatchesSearch(player, playerSearchTerms);
         }),
       ),
     );
   }, [
     activeStage,
-    normalizeLiveName,
     normalizedPlayerSearchQuery,
+    playerMatchesSearch,
+    playerSearchTerms,
     stageMatchGroups,
   ]);
   const previewGridTemplateColumns = useMemo(() => {
@@ -1151,10 +1186,61 @@ export function TournamentEventsContent({
                                           </div>
                                         ) : filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
-                                            const groupKey = `${stage.documentId || stage.id}-${group.number ?? group.key}`;
-                                            const isExpanded = expandedGroups.has(groupKey);
+                                            const groupKey = getGroupKey(
+                                              stage,
+                                              group,
+                                            );
                                             const previewPlayers =
                                               getGroupPreviewPlayers(group);
+                                            const isLargeGroup =
+                                              previewPlayers.length > 4;
+                                            const matchingPlayerIds =
+                                              normalizedPlayerSearchQuery.length >
+                                              0
+                                                ? new Set(
+                                                    previewPlayers
+                                                      .filter((player) =>
+                                                        playerMatchesSearch(
+                                                          player,
+                                                          playerSearchTerms,
+                                                        ),
+                                                      )
+                                                      .map(
+                                                        (player) =>
+                                                          player.documentId ||
+                                                          `${player.name}-${player.country || "xx"}`,
+                                                      ),
+                                                  )
+                                                : new Set<string>();
+                                            const hasSearchMatch =
+                                              matchingPlayerIds.size > 0;
+                                            const isExpanded =
+                                              normalizedPlayerSearchQuery.length >
+                                                0 && hasSearchMatch
+                                                ? true
+                                                : expandedGroups.has(groupKey);
+                                            const visibleMatches =
+                                              normalizedPlayerSearchQuery.length >
+                                                0 &&
+                                              isLargeGroup &&
+                                              hasSearchMatch
+                                                ? group.matches.filter((match) =>
+                                                    [match.top.player, match.bottom.player].some(
+                                                      (player) =>
+                                                        matchingPlayerIds.has(
+                                                          player.documentId ||
+                                                            `${player.name}-${player.country || "xx"}`,
+                                                        ),
+                                                    ),
+                                                  )
+                                                : group.matches;
+                                            const showGroupStandings =
+                                              !(
+                                                normalizedPlayerSearchQuery.length >
+                                                  0 &&
+                                                isLargeGroup &&
+                                                hasSearchMatch
+                                              );
 
                                             return (
                                             <div
@@ -1219,17 +1305,10 @@ export function TournamentEventsContent({
                                                                 player,
                                                               );
                                                             const isSearchMatch =
-                                                              normalizedPlayerSearchQuery.length >
-                                                                0 &&
-                                                              [player.name, player.nativeName]
-                                                                .map((value) =>
-                                                                  normalizeLiveName(value),
-                                                                )
-                                                                .some((value) =>
-                                                                  value.includes(
-                                                                    normalizedPlayerSearchQuery,
-                                                                  ),
-                                                                );
+                                                              matchingPlayerIds.has(
+                                                                player.documentId ||
+                                                                  `${player.name}-${player.country || "xx"}`,
+                                                              );
 
                                                             return (
                                                           <div
@@ -1308,7 +1387,7 @@ export function TournamentEventsContent({
                                                     </tr>
                                                   </thead>
                                                   <tbody>
-                                                    {group.matches.map(
+                                                    {visibleMatches.map(
                                                       (match) => (
                                                         <Fragment
                                                           key={match.key}
@@ -1569,6 +1648,12 @@ export function TournamentEventsContent({
                                                                               .player
                                                                               .country
                                                                           }
+                                                                          highlight={playerMatchesSearch(
+                                                                            match
+                                                                              .top
+                                                                              .player,
+                                                                            playerSearchTerms,
+                                                                          )}
                                                                         />
                                                                       </Link>
                                                                     ) : (
@@ -1592,6 +1677,12 @@ export function TournamentEventsContent({
                                                                             .player
                                                                             .country
                                                                         }
+                                                                        highlight={playerMatchesSearch(
+                                                                          match
+                                                                            .top
+                                                                            .player,
+                                                                          playerSearchTerms,
+                                                                        )}
                                                                       />
                                                                     )}
                                                                   </td>
@@ -1726,6 +1817,12 @@ export function TournamentEventsContent({
                                                                               .player
                                                                               .country
                                                                           }
+                                                                          highlight={playerMatchesSearch(
+                                                                            match
+                                                                              .bottom
+                                                                              .player,
+                                                                            playerSearchTerms,
+                                                                          )}
                                                                         />
                                                                       </Link>
                                                                     ) : (
@@ -1749,6 +1846,12 @@ export function TournamentEventsContent({
                                                                             .player
                                                                             .country
                                                                         }
+                                                                        highlight={playerMatchesSearch(
+                                                                          match
+                                                                            .bottom
+                                                                            .player,
+                                                                          playerSearchTerms,
+                                                                        )}
                                                                       />
                                                                     )}
                                                                   </td>
@@ -1821,12 +1924,14 @@ export function TournamentEventsContent({
                                                   </tbody>
                                                 </table>
                                               </div>
-                                              <GroupStandingsTable
-                                                standings={buildGroupStandings(
-                                                  group.matches,
-                                                )}
-                                                embedded={embedded}
-                                              />
+                                              {showGroupStandings ? (
+                                                <GroupStandingsTable
+                                                  standings={buildGroupStandings(
+                                                    group.matches,
+                                                  )}
+                                                  embedded={embedded}
+                                                />
+                                              ) : null}
                                               </>
                                               ) : null}
                                             </div>
