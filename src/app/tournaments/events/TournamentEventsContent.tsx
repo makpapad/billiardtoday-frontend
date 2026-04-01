@@ -1274,8 +1274,8 @@ export function TournamentEventsContent({
                                               </div>
                                               {isExpanded ? (
                                               <>
-                                              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                                <table className="min-w-full text-xs">
+                                              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
+                                                <table className="min-w-full border-separate [border-spacing:0_8px] text-xs">
                                                   <thead className="bg-blue-600 text-white">
                                                     <tr>
                                                       <th className="px-4 py-2 font-medium">
