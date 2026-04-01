@@ -58,6 +58,26 @@ export type StrapiFinalResult = {
   player?: unknown;
 };
 
+export type StrapiEventTimetableSlot = {
+  id?: number | string | null;
+  documentId?: string | null;
+  slot_type?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  date?: string | null;
+  time?: string | null;
+  date_time?: string | null;
+  table_label?: string | null;
+  table_order?: number | string | null;
+  slot_order?: number | string | null;
+  status?: string | null;
+  is_visible?: boolean | null;
+  source?: string | null;
+  stage?: unknown;
+  match?: unknown;
+};
+
 export type StrapiEvent = {
   id?: number | string | null;
   documentId?: string | null;
@@ -67,6 +87,7 @@ export type StrapiEvent = {
   end_date?: string | null;
   event_stages?: StrapiEventStage[] | null;
   results_final?: StrapiFinalResult[] | null;
+  timetable_slots?: StrapiEventTimetableSlot[] | null;
 };
 
 export type EventApiResponse = {
@@ -146,6 +167,25 @@ export type NormalizedFinalResult = {
   rankingPoints: number | null;
   penalty: number | null;
   finalPoints: number | null;
+};
+
+export type NormalizedTimetableSlot = {
+  id: string;
+  documentId: string;
+  slotType: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  date: string;
+  time: string;
+  dateTime: string | null;
+  tableLabel: string;
+  tableOrder: number | null;
+  slotOrder: number | null;
+  status: string;
+  isVisible: boolean;
+  stageTitle: string | null;
+  matchLabel: string | null;
 };
 
 export type StageMatchGroup = {

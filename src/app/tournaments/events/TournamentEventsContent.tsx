@@ -16,6 +16,8 @@ import type {
   NormalizedEventStage,
   NormalizedFinalResult,
   NormalizedStageResult,
+  NormalizedTimetableSlot,
+  StrapiEventTimetableSlot,
   StageMatchGroup,
 } from "./types";
 import { buildTournamentSlug } from "@/lib/tournaments";
@@ -147,6 +149,87 @@ function hasMeaningfulStageResult(
     (result.innings ?? 0) > 0 ||
     (result.highRun ?? 0) > 0
   );
+}
+
+function normalizeTimetableSlot(
+  slot: unknown,
+  fallbackId: string,
+): NormalizedTimetableSlot {
+  const normalized = normalizeEntity<StrapiEventTimetableSlot>(slot, fallbackId);
+  const stage = normalized.stage
+    ? normalizeEntity<{ title?: unknown }>(
+        normalized.stage,
+        `${normalized.id}-stage`,
+      )
+    : null;
+  const match = normalized.match
+    ? normalizeEntity<{
+        number?: unknown;
+        player1?: unknown;
+        player2?: unknown;
+      }>(normalized.match, `${normalized.id}-match`)
+    : null;
+  const player1 = match
+    ? normalizeEntity<{ full_name?: unknown; full_name_en?: unknown }>(
+        match.player1,
+        `${match.id}-p1`,
+      )
+    : null;
+  const player2 = match
+    ? normalizeEntity<{ full_name?: unknown; full_name_en?: unknown }>(
+        match.player2,
+        `${match.id}-p2`,
+      )
+    : null;
+  const player1Name =
+    typeof player1?.full_name_en === "string" && player1.full_name_en.trim()
+      ? player1.full_name_en
+      : typeof player1?.full_name === "string"
+        ? player1.full_name
+        : "";
+  const player2Name =
+    typeof player2?.full_name_en === "string" && player2.full_name_en.trim()
+      ? player2.full_name_en
+      : typeof player2?.full_name === "string"
+        ? player2.full_name
+        : "";
+  const matchNumber = toNumber(match?.number);
+
+  return {
+    id: normalized.id,
+    documentId: normalized.documentId,
+    slotType:
+      typeof normalized.slot_type === "string" && normalized.slot_type.trim()
+        ? normalized.slot_type
+        : "match",
+    title: typeof normalized.title === "string" ? normalized.title : "",
+    subtitle: typeof normalized.subtitle === "string" ? normalized.subtitle : "",
+    description:
+      typeof normalized.description === "string" ? normalized.description : "",
+    date: typeof normalized.date === "string" ? normalized.date : "",
+    time: typeof normalized.time === "string" ? normalized.time : "",
+    dateTime:
+      typeof normalized.date_time === "string" ? normalized.date_time : null,
+    tableLabel:
+      typeof normalized.table_label === "string" ? normalized.table_label : "",
+    tableOrder: toNumber(normalized.table_order),
+    slotOrder: toNumber(normalized.slot_order),
+    status:
+      typeof normalized.status === "string" && normalized.status.trim()
+        ? normalized.status
+        : "scheduled",
+    isVisible: normalized.is_visible !== false,
+    stageTitle:
+      typeof stage?.title === "string" && stage.title.trim()
+        ? stage.title
+        : null,
+    matchLabel:
+      player1Name || player2Name
+        ? [player1Name, player2Name].filter(Boolean).join(" vs ")
+        : matchNumber !== null
+          ? `Match ${matchNumber}`
+          : null,
+  };
 }
 
 function StageRankingTable({
@@ -508,6 +591,38 @@ export function TournamentEventsContent({
           return a.position - b.position;
         if (a.position !== null) return -1;
         if (b.position !== null) return 1;
+        return a.id.localeCompare(b.id);
+      });
+  }, [eventData]);
+
+  const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
+    if (!eventData?.data?.timetable_slots) return [];
+
+    return toRelationArray(eventData.data.timetable_slots)
+      .map((slot, index) => normalizeTimetableSlot(slot, `slot-${index}`))
+      .filter((slot) => slot.isVisible)
+      .sort((a, b) => {
+        const aDateTime = a.dateTime ? Date.parse(a.dateTime) : Number.NaN;
+        const bDateTime = b.dateTime ? Date.parse(b.dateTime) : Number.NaN;
+        if (
+          !Number.isNaN(aDateTime) &&
+          !Number.isNaN(bDateTime) &&
+          aDateTime !== bDateTime
+        ) {
+          return aDateTime - bDateTime;
+        }
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        if (a.time !== b.time) return a.time.localeCompare(b.time);
+        if (a.tableOrder !== null && b.tableOrder !== null && a.tableOrder !== b.tableOrder) {
+          return a.tableOrder - b.tableOrder;
+        }
+        if (a.tableOrder !== null) return -1;
+        if (b.tableOrder !== null) return 1;
+        if (a.slotOrder !== null && b.slotOrder !== null && a.slotOrder !== b.slotOrder) {
+          return a.slotOrder - b.slotOrder;
+        }
+        if (a.slotOrder !== null) return -1;
+        if (b.slotOrder !== null) return 1;
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
@@ -1146,6 +1261,81 @@ export function TournamentEventsContent({
                         </div>
                       </div>
                     )}
+                  {timetableSlots.length > 0 && (
+                    <div className="mb-6 flex flex-col gap-3">
+                      <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        Time table
+                      </div>
+                      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border-collapse text-sm">
+                            <thead className="bg-slate-800 text-white">
+                              <tr>
+                                <th className="px-4 py-3 text-left font-semibold">Date</th>
+                                <th className="px-4 py-3 text-left font-semibold">Time</th>
+                                <th className="px-4 py-3 text-left font-semibold">Table</th>
+                                <th className="px-4 py-3 text-left font-semibold">Type</th>
+                                <th className="px-4 py-3 text-left font-semibold">Title</th>
+                                <th className="px-4 py-3 text-left font-semibold">Stage</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {timetableSlots.map((slot) => {
+                                const parsedDateTime = slot.dateTime ? new Date(slot.dateTime) : null;
+                                const dateLabel =
+                                  slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
+                                    ? formatDateForTable(slot.dateTime)
+                                    : slot.date || "-";
+                                const timeLabel =
+                                  slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
+                                    ? parsedDateTime.toLocaleTimeString("el-GR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : slot.time || "-";
+                                return (
+                                  <tr
+                                    key={slot.documentId}
+                                    className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                  >
+                                    <td className="px-4 py-3">{dateLabel}</td>
+                                    <td className="px-4 py-3">{timeLabel}</td>
+                                    <td className="px-4 py-3">{slot.tableLabel || "-"}</td>
+                                    <td className="px-4 py-3">
+                                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                                        {slot.slotType}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{slot.title || "Untitled row"}</span>
+                                        {slot.subtitle ? (
+                                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {slot.subtitle}
+                                          </span>
+                                        ) : null}
+                                        {slot.matchLabel ? (
+                                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {slot.matchLabel}
+                                          </span>
+                                        ) : null}
+                                        {slot.description ? (
+                                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {slot.description}
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">{slot.stageTitle || "-"}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {/* Tab Content */}
                   {!showPublishedFinalResults && eventStages.length > 0 && (
                     <div className="mt-4">
