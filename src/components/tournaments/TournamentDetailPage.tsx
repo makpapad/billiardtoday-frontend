@@ -476,6 +476,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [tournamentPanelMode, setTournamentPanelMode] = useState<
     "stages" | "finals" | "gallery" | "timetable"
   >("stages");
+  const [timetableViewMode, setTimetableViewMode] = useState<
+    "matches" | "training"
+  >("matches");
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
@@ -1741,6 +1744,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       });
   }, [eventData]);
 
+  const visibleTimetableSlots = useMemo(() => {
+    if (timetableViewMode === "training") {
+      return timetableSlots.filter((slot) => slot.slotType === "training");
+    }
+    return timetableSlots.filter((slot) => slot.slotType !== "training");
+  }, [timetableSlots, timetableViewMode]);
+
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () =>
       eventStages.reduce<Record<string, StageMatchGroup[]>>((acc, stage) => {
@@ -2069,9 +2079,35 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 Tournament schedule
               </h2>
             </div>
-            {timetableSlots.length === 0 ? (
+            <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => setTimetableViewMode("matches")}
+                className={
+                  timetableViewMode === "matches"
+                    ? "rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+                    : "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                }
+              >
+                Matches
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimetableViewMode("training")}
+                className={
+                  timetableViewMode === "training"
+                    ? "rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+                    : "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                }
+              >
+                Training
+              </button>
+            </div>
+            {visibleTimetableSlots.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
-                No timetable has been published yet.
+                {timetableViewMode === "training"
+                  ? "No training slots have been published yet."
+                  : "No timetable has been published yet."}
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-slate-200">
@@ -2087,7 +2123,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {timetableSlots.map((slot) => {
+                      {visibleTimetableSlots.map((slot) => {
                         const parsedDateTime = slot.dateTime
                           ? new Date(slot.dateTime)
                           : null;
@@ -2107,6 +2143,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 hour12: false,
                               })
                             : slot.time || "-";
+
+                        const matchupParts = slot.matchLabel
+                          ? slot.matchLabel.split(/\s+vs\s+/i)
+                          : [];
 
                         return (
                           <tr
@@ -2129,8 +2169,20 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     {slot.subtitle}
                                   </span>
                                 ) : null}
-                                {slot.matchLabel ? (
+                                {slot.matchLabel && matchupParts.length === 2 ? (
                                   <span className="font-bold text-slate-950">
+                                    <span className="font-black text-slate-950">
+                                      {matchupParts[0]}
+                                    </span>
+                                    <span className="mx-1 font-semibold text-slate-500">
+                                      vs
+                                    </span>
+                                    <span className="font-black text-slate-950">
+                                      {matchupParts[1]}
+                                    </span>
+                                  </span>
+                                ) : slot.matchLabel ? (
+                                  <span className="font-black text-slate-950">
                                     {slot.matchLabel}
                                   </span>
                                 ) : null}
