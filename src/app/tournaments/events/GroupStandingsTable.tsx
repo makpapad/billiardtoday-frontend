@@ -24,6 +24,7 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                         <th className="px-2 py-2 text-center font-medium w-16">Points</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Innings</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Average</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">Best AVG</th>
                         <th className="px-2 py-2 text-center font-medium w-16">High Run</th>
                         <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
@@ -82,6 +83,9 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.totalInnings)}</td>
                             <td className="px-2 py-2 text-center">
                                 {formatAverage(player.totalPoints, player.totalInnings)}
+                            </td>
+                            <td className="px-2 py-2 text-center">
+                                {typeof player.bestAverage === 'number' ? player.bestAverage.toFixed(3) : '-'}
                             </td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>

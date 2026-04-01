@@ -376,6 +376,7 @@ export const buildGroupStandings = (
             totalPoints: 0,
             totalInnings: 0,
             average: null,
+            bestAverage: null,
             highRun: null,
             highRun2: null,
             place: 0,
@@ -383,6 +384,12 @@ export const buildGroupStandings = (
         }
 
         const current = acc[key];
+        const entryAverage =
+          typeof entry.player.points === "number" &&
+          typeof entry.player.innings === "number" &&
+          entry.player.innings > 0
+            ? entry.player.points / entry.player.innings
+            : null;
         acc[key] = {
           ...current,
           record: aggregateRecord(current.record, entry.outcome),
@@ -390,6 +397,10 @@ export const buildGroupStandings = (
             current.totalMatchPoints + (entry.player.matchPoints ?? 0),
           totalPoints: current.totalPoints + (entry.player.points ?? 0),
           totalInnings: current.totalInnings + (entry.player.innings ?? 0),
+          bestAverage:
+            entryAverage === null
+              ? current.bestAverage
+              : Math.max(current.bestAverage ?? 0, entryAverage),
           highRun: Math.max(current.highRun ?? 0, entry.player.highRun ?? 0),
           highRun2: Math.max(current.highRun2 ?? 0, entry.player.highRun2 ?? 0),
         };
@@ -408,11 +419,13 @@ export const buildGroupStandings = (
       standing.totalInnings > 0
         ? standing.totalPoints / standing.totalInnings
         : null;
+    const bestAverageValue = standing.bestAverage;
     const bestHighRun = standing.highRun;
     const bestHighRun2 = standing.highRun2;
     return {
       ...standing,
       average: averageValue,
+      bestAverage: bestAverageValue,
       highRun: bestHighRun,
       highRun2: bestHighRun2,
     };

@@ -182,6 +182,7 @@ export type GroupStanding = {
   totalPoints: number;
   totalInnings: number;
   average: number | null;
+  bestAverage: number | null;
   highRun: number | null;
   highRun2: number | null;
   place: number;
