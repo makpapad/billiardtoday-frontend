@@ -448,6 +448,59 @@ const formatDateRange = (start: string | null, end: string | null) => {
   return startText || endText || null;
 };
 
+const formatGmtOffsetLabel = (offsetMinutes: number) => {
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absolute = Math.abs(offsetMinutes);
+  const hours = Math.floor(absolute / 60);
+  const minutes = absolute % 60;
+  return `GMT${sign}${String(hours).padStart(2, "0")}${
+    minutes > 0 ? `:${String(minutes).padStart(2, "0")}` : ""
+  }`;
+};
+
+const formatDateTimeWithOffset = (
+  dateTime: string | null,
+  offsetMinutes: number | null,
+) => {
+  if (!dateTime || offsetMinutes === null) return null;
+  const parsed = new Date(dateTime);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const shifted = new Date(parsed.getTime() + offsetMinutes * 60 * 1000);
+  const year = shifted.getUTCFullYear();
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(shifted.getUTCDate()).padStart(2, "0");
+  const hours = String(shifted.getUTCHours()).padStart(2, "0");
+  const minutes = String(shifted.getUTCMinutes()).padStart(2, "0");
+  return {
+    date: `${day}/${month}/${year}`,
+    time: `${hours}:${minutes}`,
+  };
+};
+
+const highlightText = (value: string, query: string) => {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return value;
+  const escaped = trimmedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matcher = new RegExp(`(${escaped})`, "ig");
+  const parts = value.split(matcher);
+  return (
+    <>
+      {parts.map((part, index) =>
+        index % 2 === 1 ? (
+          <mark
+            key={`${part}-${index}`}
+            className="rounded bg-yellow-200 px-0.5 text-current"
+          >
+            {part}
+          </mark>
+        ) : (
+          <span key={`${part}-${index}`}>{part}</span>
+        ),
+      )}
+    </>
+  );
+};
+
 const resolveMediaUrl = (url: string | null) => {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
@@ -479,6 +532,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [timetableViewMode, setTimetableViewMode] = useState<
     "matches" | "training"
   >("matches");
+  const [timetableSearchQuery, setTimetableSearchQuery] = useState("");
+  const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
+    useState<number | null>(null);
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
@@ -1697,16 +1753,24 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               ? normalized.status
               : "scheduled",
           isVisible: normalized.is_visible !== false,
+          source:
+            typeof normalized.source === "string" ? normalized.source : "",
+          metadata:
+            normalized.metadata && typeof normalized.metadata === "object"
+              ? (normalized.metadata as Record<string, unknown>)
+              : null,
           stageTitle:
             typeof stage?.title === "string" && stage.title.trim()
               ? stage.title
               : null,
+          stageDocumentId: stage?.documentId ?? null,
           matchLabel:
             player1Name || player2Name
               ? [player1Name, player2Name].filter(Boolean).join(" vs ")
               : matchNumber !== null
                 ? `Match ${matchNumber}`
                 : null,
+          matchDocumentId: match?.documentId ?? null,
         } satisfies NormalizedTimetableSlot;
       })
       .filter((slot) => slot.isVisible)
@@ -1744,12 +1808,58 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       });
   }, [eventData]);
 
+  const eventTimezoneOffsetMinutes = useMemo(() => {
+    const raw =
+      eventData?.data?.timetable_config &&
+      typeof eventData.data.timetable_config === "object"
+        ? (eventData.data.timetable_config as { timezoneOffsetMinutes?: unknown })
+            .timezoneOffsetMinutes
+        : null;
+    return typeof raw === "number" && Number.isFinite(raw) ? raw : 180;
+  }, [eventData]);
+
+  useEffect(() => {
+    setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
+  }, [eventTimezoneOffsetMinutes]);
+
+  const timezoneOptions = useMemo(
+    () =>
+      Array.from({ length: 27 }, (_, index) => {
+        const hours = index - 12;
+        return {
+          value: hours * 60,
+          label: formatGmtOffsetLabel(hours * 60),
+        };
+      }),
+    [],
+  );
+
   const visibleTimetableSlots = useMemo(() => {
+    const trimmedQuery = timetableSearchQuery.trim().toLowerCase();
     if (timetableViewMode === "training") {
       return timetableSlots.filter((slot) => slot.slotType === "training");
     }
-    return timetableSlots.filter((slot) => slot.slotType !== "training");
-  }, [timetableSlots, timetableViewMode]);
+    return timetableSlots.filter((slot) => {
+      if (slot.slotType === "training") return false;
+      if (!trimmedQuery) return true;
+      const placeholder =
+        typeof slot.metadata?.placeholderLabel === "string"
+          ? slot.metadata.placeholderLabel
+          : "";
+      const haystack = [
+        slot.title,
+        slot.subtitle,
+        slot.description,
+        slot.matchLabel,
+        slot.stageTitle,
+        placeholder,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(trimmedQuery);
+    });
+  }, [timetableSearchQuery, timetableSlots, timetableViewMode]);
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () =>
@@ -2103,6 +2213,32 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 Training
               </button>
             </div>
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
+              <input
+                type="search"
+                value={timetableSearchQuery}
+                onChange={(e) => setTimetableSearchQuery(e.target.value)}
+                placeholder={
+                  timetableViewMode === "training"
+                    ? "Search training slots..."
+                    : "Search player or placeholder..."
+                }
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
+              />
+              <select
+                value={selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes}
+                onChange={(e) =>
+                  setSelectedTimezoneOffsetMinutes(Number(e.target.value))
+                }
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
+              >
+                {timezoneOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             {visibleTimetableSlots.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
                 {timetableViewMode === "training"
@@ -2124,28 +2260,25 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     </thead>
                     <tbody>
                       {visibleTimetableSlots.map((slot) => {
-                        const parsedDateTime = slot.dateTime
-                          ? new Date(slot.dateTime)
-                          : null;
-                        const dateLabel =
-                          slot.dateTime &&
-                          parsedDateTime &&
-                          !Number.isNaN(parsedDateTime.getTime())
-                            ? formatDateForTable(slot.dateTime)
-                            : slot.date || "-";
-                        const timeLabel =
-                          slot.dateTime &&
-                          parsedDateTime &&
-                          !Number.isNaN(parsedDateTime.getTime())
-                            ? parsedDateTime.toLocaleTimeString("el-GR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              })
-                            : slot.time || "-";
+                        const shiftedDateTime = formatDateTimeWithOffset(
+                          slot.dateTime,
+                          selectedTimezoneOffsetMinutes,
+                        );
+                        const dateLabel = shiftedDateTime?.date || slot.date || "-";
+                        const timeLabel = shiftedDateTime?.time || slot.time || "-";
+                        const placeholderLabel =
+                          typeof slot.metadata?.placeholderLabel === "string"
+                            ? slot.metadata.placeholderLabel
+                            : null;
+                        const resolved =
+                          slot.metadata?.resolved === false ? false : true;
+                        const publicMatchLabel =
+                          resolved && slot.matchLabel
+                            ? slot.matchLabel
+                            : placeholderLabel || slot.matchLabel || null;
 
-                        const matchupParts = slot.matchLabel
-                          ? slot.matchLabel.split(/\s+vs\s+/i)
+                        const matchupParts = publicMatchLabel
+                          ? publicMatchLabel.split(/\s+vs\s+/i)
                           : [];
 
                         return (
@@ -2162,33 +2295,51 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                   {slot.slotType}
                                 </span>
                                 <span className="font-semibold text-slate-950">
-                                  {slot.title || "Untitled row"}
+                                  {highlightText(
+                                    slot.title || "Untitled row",
+                                    timetableSearchQuery,
+                                  )}
                                 </span>
                                 {slot.subtitle ? (
                                   <span className="text-slate-500">
-                                    {slot.subtitle}
+                                    {highlightText(
+                                      slot.subtitle,
+                                      timetableSearchQuery,
+                                    )}
                                   </span>
                                 ) : null}
-                                {slot.matchLabel && matchupParts.length === 2 ? (
+                                {publicMatchLabel && matchupParts.length === 2 ? (
                                   <span className="font-bold text-slate-950">
                                     <span className="font-black text-slate-950">
-                                      {matchupParts[0]}
+                                      {highlightText(
+                                        matchupParts[0],
+                                        timetableSearchQuery,
+                                      )}
                                     </span>
                                     <span className="mx-1 font-semibold text-slate-500">
                                       vs
                                     </span>
                                     <span className="font-black text-slate-950">
-                                      {matchupParts[1]}
+                                      {highlightText(
+                                        matchupParts[1],
+                                        timetableSearchQuery,
+                                      )}
                                     </span>
                                   </span>
-                                ) : slot.matchLabel ? (
+                                ) : publicMatchLabel ? (
                                   <span className="font-black text-slate-950">
-                                    {slot.matchLabel}
+                                    {highlightText(
+                                      publicMatchLabel,
+                                      timetableSearchQuery,
+                                    )}
                                   </span>
                                 ) : null}
                                 {slot.description ? (
                                   <span className="text-xs text-slate-500">
-                                    {slot.description}
+                                    {highlightText(
+                                      slot.description,
+                                      timetableSearchQuery,
+                                    )}
                                   </span>
                                 ) : null}
                               </div>

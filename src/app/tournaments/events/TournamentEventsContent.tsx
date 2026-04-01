@@ -220,16 +220,23 @@ function normalizeTimetableSlot(
         ? normalized.status
         : "scheduled",
     isVisible: normalized.is_visible !== false,
+    source: typeof normalized.source === "string" ? normalized.source : "",
+    metadata:
+      normalized.metadata && typeof normalized.metadata === "object"
+        ? (normalized.metadata as Record<string, unknown>)
+        : null,
     stageTitle:
       typeof stage?.title === "string" && stage.title.trim()
         ? stage.title
         : null,
+    stageDocumentId: stage?.documentId ?? null,
     matchLabel:
       player1Name || player2Name
         ? [player1Name, player2Name].filter(Boolean).join(" vs ")
         : matchNumber !== null
           ? `Match ${matchNumber}`
           : null,
+    matchDocumentId: match?.documentId ?? null,
   };
 }
 

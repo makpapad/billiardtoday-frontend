@@ -1,3 +1,21 @@
+export type TimetableConfig = {
+  tableCount?: number | null;
+  slotMinutes?: number | null;
+  breakBetweenSlotsMinutes?: number | null;
+  defaultDayStartTime?: string | null;
+  defaultLastStartTime?: string | null;
+  timezoneOffsetMinutes?: number | null;
+  training?: {
+    enabled?: boolean | null;
+    date?: string | null;
+    endDate?: string | null;
+    slotMinutes?: number | null;
+    startTime?: string | null;
+    lastStartTime?: string | null;
+    allowedTables?: Array<number | string | null> | null;
+  } | null;
+};
+
 export type StrapiEventStage = {
   id?: number | string | null;
   documentId?: string | null;
@@ -7,6 +25,7 @@ export type StrapiEventStage = {
   order?: number | null;
   is_final?: boolean | null;
   stage_type?: string | null;
+  timetable_config?: TimetableConfig | null;
   groups?: unknown;
   results?: unknown;
 };
@@ -74,6 +93,7 @@ export type StrapiEventTimetableSlot = {
   status?: string | null;
   is_visible?: boolean | null;
   source?: string | null;
+  metadata?: Record<string, unknown> | null;
   stage?: unknown;
   match?: unknown;
 };
@@ -85,6 +105,7 @@ export type StrapiEvent = {
   season?: number | string | null;
   start_date?: string | null;
   end_date?: string | null;
+  timetable_config?: TimetableConfig | null;
   event_stages?: StrapiEventStage[] | null;
   results_final?: StrapiFinalResult[] | null;
   timetable_slots?: StrapiEventTimetableSlot[] | null;
@@ -185,7 +206,11 @@ export type NormalizedTimetableSlot = {
   status: string;
   isVisible: boolean;
   stageTitle: string | null;
+  stageDocumentId: string | null;
   matchLabel: string | null;
+  matchDocumentId: string | null;
+  source: string;
+  metadata: Record<string, unknown> | null;
 };
 
 export type StageMatchGroup = {

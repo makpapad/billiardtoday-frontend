@@ -22,6 +22,7 @@ export async function GET(
         queryParams.set('populate[event_stages][fields][4]', 'is_final')
         queryParams.set('populate[event_stages][fields][5]', 'documentId')
         queryParams.set('populate[event_stages][fields][6]', 'stage_type')
+        queryParams.set('populate[event_stages][fields][7]', 'timetable_config')
 
         queryParams.set('populate[event_stages][populate][groups][sort][0]', 'number:asc')
         queryParams.set('populate[event_stages][populate][groups][fields][0]', 'number')
@@ -96,6 +97,7 @@ export async function GET(
         queryParams.set('populate[timetable_slots][fields][11]', 'is_visible')
         queryParams.set('populate[timetable_slots][fields][12]', 'source')
         queryParams.set('populate[timetable_slots][fields][13]', 'documentId')
+        queryParams.set('populate[timetable_slots][fields][14]', 'metadata')
         queryParams.set('populate[timetable_slots][populate][stage][fields][0]', 'title')
         queryParams.set('populate[timetable_slots][populate][stage][fields][1]', 'order')
         queryParams.set('populate[timetable_slots][populate][stage][fields][2]', 'documentId')
@@ -108,6 +110,12 @@ export async function GET(
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][0]', 'full_name')
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][1]', 'full_name_en')
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][2]', 'documentId')
+        queryParams.set('fields[0]', 'documentId')
+        queryParams.set('fields[1]', 'title')
+        queryParams.set('fields[2]', 'season')
+        queryParams.set('fields[3]', 'start_date')
+        queryParams.set('fields[4]', 'end_date')
+        queryParams.set('fields[5]', 'timetable_config')
 
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 
