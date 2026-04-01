@@ -2104,6 +2104,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             ? parsedDateTime.toLocaleTimeString("el-GR", {
                                 hour: "2-digit",
                                 minute: "2-digit",
+                                hour12: false,
                               })
                             : slot.time || "-";
 
@@ -2112,11 +2113,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             key={slot.documentId}
                             className="border-t border-slate-200 bg-white text-slate-700"
                           >
-                            <td className="px-4 py-3">{dateLabel}</td>
-                            <td className="px-4 py-3">{timeLabel}</td>
-                            <td className="px-4 py-3">{slot.tableLabel || "-"}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{timeLabel}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{slot.tableLabel || "-"}</td>
                             <td className="px-4 py-3">
-                              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                                   {slot.slotType}
                                 </span>
@@ -2129,7 +2130,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                   </span>
                                 ) : null}
                                 {slot.matchLabel ? (
-                                  <span className="font-semibold text-slate-950">
+                                  <span className="font-bold text-slate-950">
                                     {slot.matchLabel}
                                   </span>
                                 ) : null}
