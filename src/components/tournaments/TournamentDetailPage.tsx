@@ -2252,6 +2252,34 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   </button>
                 </div>
               </div>
+              {tournamentPanelMode === "finals" ? null : stageCount > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {summary.stages.map((stage, index) => {
+                    const isSelected = selectedStageDocumentId === stage.documentId;
+                    const label =
+                      stage.title?.trim() || `Stage ${index + 1}`;
+
+                    return (
+                      <button
+                        key={stage.documentId || `${label}-${index}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStageDocumentId(stage.documentId);
+                          setTournamentPanelMode("stages");
+                          setActiveView("tournament");
+                        }}
+                        className={
+                          isSelected
+                            ? "inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition"
+                            : "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
+                        }
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
               {tournamentPanelMode === "finals" ? null : summary.stages.length === 0 ? (
                 <div className="mt-3 text-sm text-white/70">
                   No stages published yet.
