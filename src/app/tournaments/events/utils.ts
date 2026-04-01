@@ -250,6 +250,18 @@ export const getMatchOutcome = (
   player: NormalizedGroupPlayer,
   opponent: NormalizedGroupPlayer,
 ): "W" | "L" | "D" | null => {
+  const isUnplayed =
+    (player.matchPoints ?? 0) === 0 &&
+    (opponent.matchPoints ?? 0) === 0 &&
+    (player.points ?? 0) === 0 &&
+    (opponent.points ?? 0) === 0 &&
+    (player.innings ?? 0) === 0 &&
+    (opponent.innings ?? 0) === 0 &&
+    (player.highRun ?? 0) === 0 &&
+    (opponent.highRun ?? 0) === 0 &&
+    (player.highRun2 ?? 0) === 0 &&
+    (opponent.highRun2 ?? 0) === 0;
+  if (isUnplayed) return null;
   if (player.matchPoints === null || opponent.matchPoints === null) return null;
   if (player.matchPoints > opponent.matchPoints) return "W";
   if (player.matchPoints < opponent.matchPoints) return "L";
@@ -385,6 +397,13 @@ export const buildGroupStandings = (
         }
 
         const current = acc[key];
+        const hasPlayedEntry =
+          entry.outcome !== null ||
+          (entry.player.points ?? 0) > 0 ||
+          (entry.player.innings ?? 0) > 0 ||
+          (entry.player.highRun ?? 0) > 0 ||
+          (entry.player.highRun2 ?? 0) > 0 ||
+          (entry.player.matchPoints ?? 0) > 0;
         const entryAverage =
           entry.outcome === "W" &&
           typeof entry.player.points === "number" &&
@@ -396,7 +415,8 @@ export const buildGroupStandings = (
           ...current,
           record: aggregateRecord(current.record, entry.outcome),
           totalMatchPoints:
-            current.totalMatchPoints + (entry.player.matchPoints ?? 0),
+            current.totalMatchPoints +
+            (hasPlayedEntry ? (entry.player.matchPoints ?? 0) : 0),
           totalPoints: current.totalPoints + (entry.player.points ?? 0),
           totalInnings: current.totalInnings + (entry.player.innings ?? 0),
           bestAverage:
