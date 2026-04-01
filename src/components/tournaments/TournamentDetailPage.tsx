@@ -472,7 +472,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     "tournament",
   );
   const [tournamentPanelMode, setTournamentPanelMode] = useState<
-    "stages" | "finals"
+    "stages" | "finals" | "gallery"
   >("stages");
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
@@ -1919,27 +1919,43 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const mainContent =
     activeView === "tournament" ? (
-      <TournamentEventsContent
-        key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
-        eventIdOverride={summary.documentId}
-        preferredStageDocumentId={selectedStageDocumentId}
-        onStageSelect={(stageDocumentId) => {
-          setTournamentPanelMode("stages");
-          setSelectedStageDocumentId(stageDocumentId);
-        }}
-        showPublishedFinalResults={tournamentPanelMode === "finals"}
-        stageViewMode={overviewMode}
-        embeddedOverride={embedded}
-        showStandaloneTitle={false}
-        showEventHeader={false}
-        emptyStateMessage="This tournament page is missing event data."
-        liveSessionsOverride={mergedEventLiveSessions}
-        onLiveMatchOpen={(sessionId) => {
-          setHighlightedLiveSessionId(sessionId);
-          setExpandedSessions(new Set([sessionId]));
-          switchToLive();
-        }}
-      />
+      tournamentPanelMode === "gallery" ? (
+        <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-16 text-center shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-10">
+          <div className="mx-auto max-w-2xl">
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+              Photo Gallery
+            </div>
+            <h2 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+              Coming soon
+            </h2>
+            <p className="mt-4 text-sm text-slate-600 sm:text-base">
+              The photo gallery for {summary.title} is being prepared.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <TournamentEventsContent
+          key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
+          eventIdOverride={summary.documentId}
+          preferredStageDocumentId={selectedStageDocumentId}
+          onStageSelect={(stageDocumentId) => {
+            setTournamentPanelMode("stages");
+            setSelectedStageDocumentId(stageDocumentId);
+          }}
+          showPublishedFinalResults={tournamentPanelMode === "finals"}
+          stageViewMode={overviewMode}
+          embeddedOverride={embedded}
+          showStandaloneTitle={false}
+          showEventHeader={false}
+          emptyStateMessage="This tournament page is missing event data."
+          liveSessionsOverride={mergedEventLiveSessions}
+          onLiveMatchOpen={(sessionId) => {
+            setHighlightedLiveSessionId(sessionId);
+            setExpandedSessions(new Set([sessionId]));
+            switchToLive();
+          }}
+        />
+      )
     ) : (
       <section ref={liveContentRef} className="space-y-6">
         {isLiveLoading && liveCards.length === 0 ? (
@@ -2133,9 +2149,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   Full page
                 </Link>
               )}
-              <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90">
-                Stages - {stageCount || 0}
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTournamentPanelMode("gallery");
+                  setActiveView("tournament");
+                }}
+                className={
+                  activeView === "tournament" &&
+                  tournamentPanelMode === "gallery"
+                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
+                }
+              >
+                Photo gallery
+              </button>
             </div>
           </div>
 
