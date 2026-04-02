@@ -97,6 +97,7 @@ function PlayerNameWithFlag({
       <div className="flex flex-col leading-tight">
         <span
           className={clsx(
+            "font-semibold",
             highlight && "text-yellow-600 dark:text-yellow-300",
           )}
         >
@@ -1680,7 +1681,7 @@ export function TournamentEventsContent({
                                                             ) : null}
                                                             <span
                                                               className={clsx(
-                                                                "truncate leading-none",
+                                                                "truncate leading-none font-semibold",
                                                                 isSearchMatch &&
                                                                   "text-yellow-600 dark:text-yellow-300",
                                                               )}
