@@ -94,7 +94,7 @@ export async function GET(
         queryParams.set('populate[timetable_slots][fields][7]', 'table_label')
         queryParams.set('populate[timetable_slots][fields][8]', 'table_order')
         queryParams.set('populate[timetable_slots][fields][9]', 'slot_order')
-        queryParams.set('populate[timetable_slots][fields][10]', 'status')
+        queryParams.set('populate[timetable_slots][fields][10]', 'slot_status')
         queryParams.set('populate[timetable_slots][fields][11]', 'is_visible')
         queryParams.set('populate[timetable_slots][fields][12]', 'is_published')
         queryParams.set('populate[timetable_slots][fields][13]', 'source')

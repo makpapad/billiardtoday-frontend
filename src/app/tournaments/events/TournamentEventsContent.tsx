@@ -215,9 +215,9 @@ function normalizeTimetableSlot(
       typeof normalized.table_label === "string" ? normalized.table_label : "",
     tableOrder: toNumber(normalized.table_order),
     slotOrder: toNumber(normalized.slot_order),
-    status:
-      typeof normalized.status === "string" && normalized.status.trim()
-        ? normalized.status
+    slotStatus:
+      typeof normalized.slot_status === "string" && normalized.slot_status.trim()
+        ? normalized.slot_status
         : "scheduled",
     isVisible: normalized.is_visible !== false,
     isPublished: normalized.is_published === true,

@@ -90,7 +90,7 @@ export type StrapiEventTimetableSlot = {
   table_label?: string | null;
   table_order?: number | string | null;
   slot_order?: number | string | null;
-  status?: string | null;
+  slot_status?: string | null;
   is_visible?: boolean | null;
   is_published?: boolean | null;
   source?: string | null;
@@ -204,7 +204,7 @@ export type NormalizedTimetableSlot = {
   tableLabel: string;
   tableOrder: number | null;
   slotOrder: number | null;
-  status: string;
+  slotStatus: string;
   isVisible: boolean;
   isPublished: boolean;
   stageTitle: string | null;
