@@ -1786,6 +1786,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ? (normalized.metadata as Record<string, unknown>).matchNumber
             : null,
         );
+        const trainingPlayerName =
+          normalized.metadata &&
+          typeof normalized.metadata === "object" &&
+          typeof (normalized.metadata as Record<string, unknown>).trainingPlayerName === "string"
+            ? ((normalized.metadata as Record<string, unknown>).trainingPlayerName as string)
+            : "";
+        const trainingPlayerCountry =
+          normalized.metadata &&
+          typeof normalized.metadata === "object" &&
+          typeof (normalized.metadata as Record<string, unknown>).trainingPlayerCountry === "string"
+            ? ((normalized.metadata as Record<string, unknown>).trainingPlayerCountry as string)
+            : null;
 
         return {
           id: normalized.id,
@@ -1838,6 +1850,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               : matchNumber !== null
                 ? `Match ${matchNumber}`
                 : null,
+          trainingPlayerName: trainingPlayerName || null,
+          trainingPlayerCountry,
           matchPlayer1Name: player1Name || null,
           matchPlayer2Name: player2Name || null,
           matchPlayer1Country:
@@ -2339,9 +2353,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         <th className="px-4 py-3 text-center font-semibold">Time</th>
                         <th className="px-4 py-3 text-center font-semibold">Table</th>
                         <th className="px-4 py-3 text-center font-semibold">Players</th>
-                        <th className="px-4 py-3 text-center font-semibold">Group</th>
-                        <th className="px-4 py-3 text-center font-semibold">Number</th>
-                        <th className="px-4 py-3 text-center font-semibold">Stage</th>
+                        {timetableViewMode === "matches" ? (
+                          <>
+                            <th className="px-4 py-3 text-center font-semibold">Group</th>
+                            <th className="px-4 py-3 text-center font-semibold">Number</th>
+                            <th className="px-4 py-3 text-center font-semibold">Stage</th>
+                          </>
+                        ) : null}
                       </tr>
                     </thead>
                     <tbody>
@@ -2355,6 +2373,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         const placeholderLabel =
                           typeof slot.metadata?.placeholderLabel === "string"
                             ? slot.metadata.placeholderLabel
+                            : null;
+                        const trainingPlayerFlag =
+                          slot.trainingPlayerCountry
+                            ? getCountryFlagCdnUrl(slot.trainingPlayerCountry, 40)
                             : null;
                         const resolved =
                           slot.metadata?.resolved === false ? false : true;
@@ -2397,7 +2419,20 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{slot.tableLabel || "-"}</td>
                             <td className="px-4 py-3 align-middle">
                               <div className="flex flex-col items-center gap-1 text-center">
-                                {hasPlayerGrid ? (
+                                {slot.slotType === "training" && slot.trainingPlayerName ? (
+                                  <span className="flex items-center justify-center gap-2 font-semibold text-slate-950">
+                                    {trainingPlayerFlag ? (
+                                      <img
+                                        src={trainingPlayerFlag}
+                                        alt={slot.trainingPlayerCountry || "flag"}
+                                        className="h-3.5 w-5 rounded-[2px] object-cover"
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : null}
+                                    <span>{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
+                                  </span>
+                                ) : hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                     <span className={`flex items-center justify-end gap-2 text-right ${leftResolved ? "font-semibold text-slate-950" : "font-medium text-slate-500"}`}>
                                       <span>{highlightText(leftLabel || "", timetableSearchQuery)}</span>
@@ -2445,13 +2480,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 ) : null}
                               </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
-                              {slot.groupNumber !== null ? `Group ${slot.groupNumber}` : "-"}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
-                              {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || "-"}</td>
+                            {timetableViewMode === "matches" ? (
+                              <>
+                                <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
+                                  {slot.groupNumber !== null ? `Group ${slot.groupNumber}` : "-"}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
+                                  {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || "-"}</td>
+                              </>
+                            ) : null}
                           </tr>
                         );
                       })}

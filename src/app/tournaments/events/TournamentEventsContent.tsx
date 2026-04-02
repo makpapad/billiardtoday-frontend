@@ -233,6 +233,18 @@ function normalizeTimetableSlot(
       ? (normalized.metadata as Record<string, unknown>).matchNumber
       : null,
   );
+  const trainingPlayerName =
+    normalized.metadata &&
+    typeof normalized.metadata === "object" &&
+    typeof (normalized.metadata as Record<string, unknown>).trainingPlayerName === "string"
+      ? ((normalized.metadata as Record<string, unknown>).trainingPlayerName as string)
+      : "";
+  const trainingPlayerCountry =
+    normalized.metadata &&
+    typeof normalized.metadata === "object" &&
+    typeof (normalized.metadata as Record<string, unknown>).trainingPlayerCountry === "string"
+      ? ((normalized.metadata as Record<string, unknown>).trainingPlayerCountry as string)
+      : null;
 
   return {
     id: normalized.id,
@@ -277,6 +289,8 @@ function normalizeTimetableSlot(
         : matchNumber !== null
           ? `Match ${matchNumber}`
           : null,
+    trainingPlayerName: trainingPlayerName || null,
+    trainingPlayerCountry,
     matchPlayer1Name: player1Name || null,
     matchPlayer2Name: player2Name || null,
     matchPlayer1Country:
