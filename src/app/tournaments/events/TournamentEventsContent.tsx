@@ -42,6 +42,16 @@ import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
+const BRACKET_STAGE_TYPES = new Set([
+  "brackets",
+  "single_elimination",
+  "double_elimination",
+]);
+
+function isBracketStageType(stageType: string | null | undefined): boolean {
+  return typeof stageType === "string" && BRACKET_STAGE_TYPES.has(stageType);
+}
+
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   preferredStageDocumentId?: string | null;
@@ -441,6 +451,10 @@ export function TournamentEventsContent({
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deBracketType, setDeBracketType] = useState<"winners" | "losers">(
+    "winners",
+  );
+  const [deSelectedRound, setDeSelectedRound] = useState<string>("all");
   const [liveSessions, setLiveSessions] = useState<EventLiveSession[]>([]);
   const [brMatchesByStage, setBrMatchesByStage] = useState<
     Record<string, unknown[]>
@@ -995,13 +1009,13 @@ export function TournamentEventsContent({
   }, []);
 
   useEffect(() => {
-    if (!activeStage || activeStage.stageType !== "brackets") return;
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) return;
     if (brMatchesByStage[activeStage.documentId]) return;
     void fetchBracketMatches(activeStage.documentId);
   }, [activeStage, brMatchesByStage, fetchBracketMatches]);
 
   const activeBracketRounds = useMemo<BracketRoundView[]>(() => {
-    if (!activeStage || activeStage.stageType !== "brackets") return [];
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
     const sourceRaw = brMatchesByStage[activeStage.documentId];
     const source = Array.isArray(sourceRaw) ? sourceRaw : [];
     if (source.length === 0) return [];
@@ -1163,6 +1177,119 @@ export function TournamentEventsContent({
       };
     });
   }, [activeStage, brMatchesByStage, normalizeBracketPlayer]);
+
+  const activeDoubleEliminationRounds = useMemo(() => {
+    if (!activeStage || activeStage.stageType !== "double_elimination") {
+      return [] as Array<{
+        label: string;
+        matches: Array<{
+          id: string;
+          matchNumber: number | null;
+          player1: string;
+          player2: string;
+          score1: number | null;
+          score2: number | null;
+          dateTime: string | null;
+        }>;
+      }>;
+    }
+    const sourceRaw = brMatchesByStage[activeStage.documentId];
+    const source = Array.isArray(sourceRaw) ? sourceRaw : [];
+    const byRound = new Map<string, typeof source>();
+    source
+      .filter((m) => {
+        const bracket =
+          typeof (m as { bracket_type?: unknown }).bracket_type === "string"
+            ? ((m as { bracket_type: string }).bracket_type as
+                | "winners"
+                | "losers")
+            : "winners";
+        return bracket === deBracketType;
+      })
+      .forEach((m) => {
+        const label =
+          typeof (m as { round?: unknown }).round === "string" &&
+          (m as { round: string }).round.trim()
+            ? (m as { round: string }).round.trim()
+            : "Round";
+        const arr = byRound.get(label) ?? [];
+        arr.push(m);
+        byRound.set(label, arr);
+      });
+
+    const getPriority = (label: string): number => {
+      const upper = label.toUpperCase().trim();
+      if (upper.startsWith("WINNERS R")) {
+        return Number(upper.replace("WINNERS R", "")) || 500;
+      }
+      if (upper === "WINNERS FINAL") return 900;
+      if (upper.startsWith("LOSERS R")) {
+        return Number(upper.replace("LOSERS R", "")) || 500;
+      }
+      if (upper === "LOSERS FINAL") return 900;
+      if (upper === "GRAND FINAL") return 1000;
+      if (upper === "GRAND FINAL RESET") return 1001;
+      return 9999;
+    };
+
+    return Array.from(byRound.entries())
+      .sort((a, b) => {
+        const diff = getPriority(a[0]) - getPriority(b[0]);
+        if (diff !== 0) return diff;
+        return a[0].localeCompare(b[0]);
+      })
+      .map(([label, matches]) => ({
+        label,
+        matches: matches
+          .slice()
+          .sort(
+            (a, b) =>
+              (toNumber((a as { match_number?: unknown }).match_number) ?? 0) -
+              (toNumber((b as { match_number?: unknown }).match_number) ?? 0),
+          )
+          .map((m) => {
+            const p1 = normalizeBracketPlayer((m as { player1?: unknown }).player1);
+            const p2 = normalizeBracketPlayer((m as { player2?: unknown }).player2);
+            return {
+              id: String((m as { id?: unknown }).id ?? ""),
+              matchNumber:
+                toNumber((m as { match_number?: unknown }).match_number) ?? null,
+              player1: p1.name || "Unknown player",
+              player2: p2.name || "Unknown player",
+              score1:
+                toNumber(
+                  (m as { player1_points?: unknown }).player1_points,
+                ) ??
+                toNumber(
+                  (m as { player1_match_points?: unknown }).player1_match_points,
+                ),
+              score2:
+                toNumber(
+                  (m as { player2_points?: unknown }).player2_points,
+                ) ??
+                toNumber(
+                  (m as { player2_match_points?: unknown }).player2_match_points,
+                ),
+              dateTime:
+                typeof (m as { date_time?: unknown }).date_time === "string"
+                  ? (m as { date_time: string }).date_time
+                  : null,
+            };
+          }),
+      }));
+  }, [activeStage, brMatchesByStage, deBracketType, normalizeBracketPlayer]);
+
+  const displayedDoubleEliminationRounds = useMemo(() => {
+    if (deSelectedRound === "all") return activeDoubleEliminationRounds;
+    return activeDoubleEliminationRounds.filter(
+      (round) => round.label === deSelectedRound,
+    );
+  }, [activeDoubleEliminationRounds, deSelectedRound]);
+
+  useEffect(() => {
+    setDeBracketType("winners");
+    setDeSelectedRound("all");
+  }, [activeStage?.documentId]);
 
   const eventInfo = useMemo(() => {
     if (!eventData?.data) return null;
@@ -1438,10 +1565,10 @@ export function TournamentEventsContent({
                                               {slot.trainingPlayerName}
                                             </span>
                                           </div>
-                                        ) : slot.title ? (
+                                        ) : slot.slotType !== "match" && slot.title ? (
                                           <span className="font-medium">{slot.title}</span>
                                         ) : null}
-                                        {slot.slotType !== "training" && slot.subtitle ? (
+                                        {slot.slotType !== "training" && slot.slotType !== "match" && slot.subtitle ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.subtitle}
                                           </span>
@@ -1540,7 +1667,7 @@ export function TournamentEventsContent({
                                       Matches -{" "}
                                       {stage.title || stage.order || ""}
                                     </div>
-                                    {stage.stageType !== "brackets" &&
+                                    {!isBracketStageType(stage.stageType) &&
                                     (stageMatchGroups[stage.id] ?? []).length >
                                       0 ? (
                                       <div className="flex items-center">
@@ -1557,11 +1684,131 @@ export function TournamentEventsContent({
                                         />
                                       </div>
                                     ) : null}
-                                    {stage.stageType === "brackets" ? (
+                                    {isBracketStageType(stage.stageType) ? (
                                       brLoadingByStage[stage.documentId] ? (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
                                           Loading bracket...
                                         </div>
+                                      ) : stage.stageType ===
+                                          "double_elimination" ? (
+                                        displayedDoubleEliminationRounds.length >
+                                        0 ? (
+                                          <div className="flex flex-col gap-4">
+                                            <div className="grid gap-3 md:grid-cols-[220px_220px_minmax(0,1fr)]">
+                                              <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                                                Bracket
+                                                <select
+                                                  value={deBracketType}
+                                                  onChange={(event) =>
+                                                    setDeBracketType(
+                                                      event.target.value as
+                                                        | "winners"
+                                                        | "losers",
+                                                    )
+                                                  }
+                                                  className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                                >
+                                                  <option value="winners">
+                                                    Winners
+                                                  </option>
+                                                  <option value="losers">
+                                                    Losers
+                                                  </option>
+                                                </select>
+                                              </label>
+                                              <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                                                Round
+                                                <select
+                                                  value={deSelectedRound}
+                                                  onChange={(event) =>
+                                                    setDeSelectedRound(
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                  className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                                >
+                                                  <option value="all">
+                                                    Show all
+                                                  </option>
+                                                  {activeDoubleEliminationRounds.map(
+                                                    (round) => (
+                                                      <option
+                                                        key={round.label}
+                                                        value={round.label}
+                                                      >
+                                                        {round.label}
+                                                      </option>
+                                                    ),
+                                                  )}
+                                                </select>
+                                              </label>
+                                              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+                                                Premium round view for double
+                                                elimination. Use Winners/Losers
+                                                and round filters to focus on
+                                                the active block.
+                                              </div>
+                                            </div>
+                                            <div className="grid gap-4">
+                                              {displayedDoubleEliminationRounds.map(
+                                                (round) => (
+                                                  <section
+                                                    key={round.label}
+                                                    className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900"
+                                                  >
+                                                    <div className="border-b border-slate-200 bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-white dark:border-slate-700">
+                                                      {round.label}
+                                                    </div>
+                                                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                                                      {round.matches.map(
+                                                        (match) => (
+                                                          <div
+                                                            key={match.id}
+                                                            className="grid grid-cols-[110px_minmax(0,1fr)_90px_120px] items-center gap-4 px-5 py-4"
+                                                          >
+                                                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                                              {match.matchNumber
+                                                                ? `Match ${match.matchNumber}`
+                                                                : "Match"}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                              <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                                                {match.player1}
+                                                              </div>
+                                                              <div className="truncate text-sm text-slate-600 dark:text-slate-300">
+                                                                {match.player2}
+                                                              </div>
+                                                            </div>
+                                                            <div className="text-center font-semibold text-slate-700 dark:text-slate-200">
+                                                              {(match.score1 ??
+                                                                "-") +
+                                                                " : " +
+                                                                (match.score2 ??
+                                                                  "-")}
+                                                            </div>
+                                                            <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                                                              {match.dateTime
+                                                                ? new Date(
+                                                                    match.dateTime,
+                                                                  ).toLocaleString(
+                                                                    "el-GR",
+                                                                  )
+                                                                : "-"}
+                                                            </div>
+                                                          </div>
+                                                        ),
+                                                      )}
+                                                    </div>
+                                                  </section>
+                                                ),
+                                              )}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            No bracket matches
+                                          </div>
+                                        )
                                       ) : activeBracketRounds.length > 0 ? (
                                         <SingleElimBracket
                                           rounds={activeBracketRounds}
