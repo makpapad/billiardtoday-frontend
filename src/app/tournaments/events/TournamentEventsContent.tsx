@@ -220,6 +220,7 @@ function normalizeTimetableSlot(
         ? normalized.status
         : "scheduled",
     isVisible: normalized.is_visible !== false,
+    isPublished: normalized.is_published === true,
     source: typeof normalized.source === "string" ? normalized.source : "",
     metadata:
       normalized.metadata && typeof normalized.metadata === "object"
