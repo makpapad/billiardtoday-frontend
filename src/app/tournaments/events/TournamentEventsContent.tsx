@@ -1422,17 +1422,19 @@ export function TournamentEventsContent({
                                     <td className="px-4 py-3 align-middle">
                                       <div className="flex flex-col items-center gap-1 text-center">
                                         {slot.slotType === "training" && slot.trainingPlayerName ? (
-                                          <div className="flex items-center justify-center gap-2">
-                                            {slot.trainingPlayerCountry ? (
-                                              <img
-                                                src={getCountryFlagCdnUrl(slot.trainingPlayerCountry, 40) || ""}
-                                                alt={slot.trainingPlayerCountry || "flag"}
-                                                className="h-3.5 w-5 rounded-[2px] object-cover"
-                                                loading="lazy"
-                                                referrerPolicy="no-referrer"
-                                              />
-                                            ) : null}
-                                            <span className="text-sm font-semibold leading-tight">
+                                          <div className="grid grid-cols-[20px_minmax(0,max-content)] items-center justify-center gap-2">
+                                            <div className="flex h-4 w-5 items-center justify-center">
+                                              {slot.trainingPlayerCountry ? (
+                                                <img
+                                                  src={getCountryFlagCdnUrl(slot.trainingPlayerCountry, 40) || ""}
+                                                  alt={slot.trainingPlayerCountry || "flag"}
+                                                  className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                  loading="lazy"
+                                                  referrerPolicy="no-referrer"
+                                                />
+                                              ) : null}
+                                            </div>
+                                            <span className="text-left text-sm font-semibold leading-tight">
                                               {slot.trainingPlayerName}
                                             </span>
                                           </div>

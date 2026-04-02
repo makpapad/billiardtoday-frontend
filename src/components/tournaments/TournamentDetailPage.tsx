@@ -2464,7 +2464,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         const publicMatchLabel =
                           resolved && slot.matchLabel
                             ? slot.matchLabel
-                            : placeholderLabel || slot.matchLabel || null;
+                            : placeholderLabel ||
+                              slot.matchLabel ||
+                              slot.title ||
+                              slot.subtitle ||
+                              null;
                         return (
                           <tr
                             key={slot.documentId}
@@ -2476,17 +2480,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3 align-middle">
                               <div className="flex flex-col items-center gap-1 text-center">
                                 {slot.slotType === "training" && slot.trainingPlayerName ? (
-                                  <span className="flex items-center justify-center gap-2 font-semibold text-slate-950">
-                                    {trainingPlayerFlag ? (
-                                      <img
-                                        src={trainingPlayerFlag}
-                                        alt={slot.trainingPlayerCountry || "flag"}
-                                        className="h-3.5 w-5 rounded-[2px] object-cover"
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer"
-                                      />
-                                    ) : null}
-                                    <span>{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
+                                  <span className="grid grid-cols-[20px_minmax(0,max-content)] items-center justify-center gap-2 font-semibold text-slate-950">
+                                    <span className="flex h-4 w-5 items-center justify-center">
+                                      {trainingPlayerFlag ? (
+                                        <img
+                                          src={trainingPlayerFlag}
+                                          alt={slot.trainingPlayerCountry || "flag"}
+                                          className="h-3.5 w-5 rounded-[2px] object-cover"
+                                          loading="lazy"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                      ) : null}
+                                    </span>
+                                    <span className="text-left">{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
                                   </span>
                                 ) : hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
