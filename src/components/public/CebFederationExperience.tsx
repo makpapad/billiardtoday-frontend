@@ -306,7 +306,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const initialSelectedId = sortedMembers[0]?.documentId || null;
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeTab, setActiveTab] = useState<TabKey>("details");
-  const [heroView, setHeroView] = useState<HeroView>("network");
+  const [heroView, setHeroView] = useState<HeroView>("tournaments");
   const [tournaments, setTournaments] = useState<Record<string, TournamentItem[]>>({});
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
   const [cebTournaments, setCebTournaments] = useState<TournamentItem[] | null>(null);
@@ -442,41 +442,9 @@ export function CebFederationExperience({ federation, members, embedded = false 
         }
         actions={[]}
         actionSlot={
-          <>
-            <button
-              type="button"
-              onClick={() => setHeroView("network")}
-              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
-                heroView === "network"
-                  ? "bg-white text-slate-950"
-                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
-              }`}
-            >
-              National federations
-            </button>
-            <button
-              type="button"
-              onClick={() => setHeroView("tournaments")}
-              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
-                heroView === "tournaments"
-                  ? "bg-white text-slate-950"
-                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
-              }`}
-            >
-              Events
-            </button>
-            <button
-              type="button"
-              onClick={() => setHeroView("board")}
-              className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
-                heroView === "board"
-                  ? "bg-white text-slate-950"
-                  : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
-              }`}
-            >
-              Board members
-            </button>
-          </>
+          <span className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950">
+            Events
+          </span>
         }
         aside={
           <div className="grid gap-4">
