@@ -1765,12 +1765,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               ? stage.title
               : null,
           stageDocumentId: stage?.documentId ?? null,
+          matchNumber,
           matchLabel:
             player1Name || player2Name
               ? [player1Name, player2Name].filter(Boolean).join(" vs ")
               : matchNumber !== null
                 ? `Match ${matchNumber}`
                 : null,
+          matchPlayer1Country:
+            typeof player1?.country === "string" ? player1.country : null,
+          matchPlayer2Country:
+            typeof player2?.country === "string" ? player2.country : null,
           matchDocumentId: match?.documentId ?? null,
         } satisfies NormalizedTimetableSlot;
       })
@@ -2281,6 +2286,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         const matchupParts = publicMatchLabel
                           ? publicMatchLabel.split(/\s+vs\s+/i)
                           : [];
+                        const matchPlayer1Flag =
+                          publicMatchLabel && matchupParts.length === 2
+                            ? getCountryFlagCdnUrl(
+                                slot.matchPlayer1Country ?? null,
+                                32,
+                              )
+                            : null;
+                        const matchPlayer2Flag =
+                          publicMatchLabel && matchupParts.length === 2
+                            ? getCountryFlagCdnUrl(
+                                slot.matchPlayer2Country ?? null,
+                                32,
+                              )
+                            : null;
+                        const hasHeading = Boolean(slot.title?.trim());
 
                         return (
                           <tr
@@ -2295,12 +2315,19 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                                   {slot.slotType}
                                 </span>
-                                <span className="font-semibold text-slate-950">
-                                  {highlightText(
-                                    slot.title || "Untitled row",
-                                    timetableSearchQuery,
-                                  )}
-                                </span>
+                                {slot.matchNumber !== null ? (
+                                  <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                                    Match {slot.matchNumber}
+                                  </span>
+                                ) : null}
+                                {hasHeading ? (
+                                  <span className="font-semibold text-slate-950">
+                                    {highlightText(
+                                      slot.title,
+                                      timetableSearchQuery,
+                                    )}
+                                  </span>
+                                ) : null}
                                 {slot.subtitle ? (
                                   <span className="text-slate-500">
                                     {highlightText(
@@ -2311,7 +2338,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 ) : null}
                                 {publicMatchLabel && matchupParts.length === 2 ? (
                                   <span className="font-bold text-slate-950">
-                                    <span className="font-black text-slate-950">
+                                    <span className="inline-flex items-center gap-1 font-black text-slate-950">
+                                      {matchPlayer1Flag ? (
+                                        <img
+                                          src={matchPlayer1Flag}
+                                          alt={slot.matchPlayer1Country || "flag"}
+                                          className="h-3.5 w-5 rounded-[2px] object-cover"
+                                          loading="lazy"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                      ) : null}
                                       {highlightText(
                                         matchupParts[0],
                                         timetableSearchQuery,
@@ -2320,7 +2356,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     <span className="mx-1 font-semibold text-slate-500">
                                       vs
                                     </span>
-                                    <span className="font-black text-slate-950">
+                                    <span className="inline-flex items-center gap-1 font-black text-slate-950">
+                                      {matchPlayer2Flag ? (
+                                        <img
+                                          src={matchPlayer2Flag}
+                                          alt={slot.matchPlayer2Country || "flag"}
+                                          className="h-3.5 w-5 rounded-[2px] object-cover"
+                                          loading="lazy"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                      ) : null}
                                       {highlightText(
                                         matchupParts[1],
                                         timetableSearchQuery,
