@@ -231,12 +231,17 @@ function normalizeTimetableSlot(
         ? stage.title
         : null,
     stageDocumentId: stage?.documentId ?? null,
+    matchNumber,
     matchLabel:
       player1Name || player2Name
         ? [player1Name, player2Name].filter(Boolean).join(" vs ")
         : matchNumber !== null
           ? `Match ${matchNumber}`
           : null,
+    matchPlayer1Country:
+      typeof player1?.country === "string" ? player1.country : null,
+    matchPlayer2Country:
+      typeof player2?.country === "string" ? player2.country : null,
     matchDocumentId: match?.documentId ?? null,
   };
 }
