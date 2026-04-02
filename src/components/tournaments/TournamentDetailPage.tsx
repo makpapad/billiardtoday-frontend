@@ -1720,6 +1720,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             : typeof player2?.full_name === "string"
               ? player2.full_name
               : "";
+        const player1Country =
+          player1 &&
+          typeof (player1 as Record<string, unknown>).country === "string"
+            ? ((player1 as Record<string, unknown>).country as string)
+            : null;
+        const player2Country =
+          player2 &&
+          typeof (player2 as Record<string, unknown>).country === "string"
+            ? ((player2 as Record<string, unknown>).country as string)
+            : null;
         const matchNumber = toNumber(match?.number);
 
         return {
@@ -1773,9 +1783,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 ? `Match ${matchNumber}`
                 : null,
           matchPlayer1Country:
-            typeof player1?.country === "string" ? player1.country : null,
+            player1Country,
           matchPlayer2Country:
-            typeof player2?.country === "string" ? player2.country : null,
+            player2Country,
           matchDocumentId: match?.documentId ?? null,
         } satisfies NormalizedTimetableSlot;
       })
