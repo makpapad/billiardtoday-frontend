@@ -530,7 +530,13 @@ const buildPlaceholderSideLabel = (
         : null;
   if (!role || !Number.isFinite(matchNumber ?? NaN)) return null;
   const normalizedRole = role.toLowerCase();
+  const resolvedMatchNumber = Number(matchNumber);
   if (normalizedRole === "qual") return `QUAL ${matchNumber}`;
+  if (normalizedRole === "winner") {
+    if (resolvedMatchNumber >= 43 && resolvedMatchNumber <= 50) return `QF${resolvedMatchNumber - 42}`;
+    if (resolvedMatchNumber >= 51 && resolvedMatchNumber <= 54) return `SF${resolvedMatchNumber - 50}`;
+    if (resolvedMatchNumber >= 55 && resolvedMatchNumber <= 56) return `SF${resolvedMatchNumber - 54}`;
+  }
   return `${normalizedRole === "loser" ? "Loser" : "Winner"} M${matchNumber}`;
 };
 
@@ -2466,9 +2472,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             ? slot.matchLabel
                             : placeholderLabel ||
                               slot.matchLabel ||
-                              slot.title ||
-                              slot.subtitle ||
-                              null;
+                              (slot.slotType !== "match"
+                                ? slot.title || slot.subtitle || null
+                                : null);
                         return (
                           <tr
                             key={slot.documentId}
