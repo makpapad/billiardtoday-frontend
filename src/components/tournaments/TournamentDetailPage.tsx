@@ -510,9 +510,61 @@ const highlightText = (value: string, query: string) => {
   );
 };
 
+const getMetadataString = (
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+) =>
+  typeof metadata?.[key] === "string" ? String(metadata[key]).trim() : "";
+
+const getMetadataNumber = (
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+) => {
+  const value = metadata?.[key];
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const formatRoundNodeLabel = (
+  roundCode: string,
+  roundIndex: number | null,
+) => {
+  const normalized = roundCode.trim().toUpperCase();
+  if (!normalized) return null;
+  if (normalized === "F" || normalized === "FINAL") return "FINAL";
+  if (roundIndex === null || !Number.isFinite(roundIndex)) return normalized;
+  return `${normalized}${roundIndex}`;
+};
+
+const inferLegacyRoundNodeLabel = (matchNumber: number | null) => {
+  if (matchNumber === null || !Number.isFinite(matchNumber)) return null;
+  if (matchNumber === 57) return "FINAL";
+  if (matchNumber >= 55 && matchNumber <= 56) return `SF${matchNumber - 54}`;
+  if (matchNumber >= 51 && matchNumber <= 54) return `QF${matchNumber - 50}`;
+  if (matchNumber >= 43 && matchNumber <= 50) return `L16-${matchNumber - 42}`;
+  return null;
+};
+
+const buildOwnMatchNodeLabel = (
+  matchNumber: number | null,
+  metadata: Record<string, unknown> | null | undefined,
+) => {
+  const roundCode = getMetadataString(metadata, "roundCode");
+  const roundIndex = getMetadataNumber(metadata, "roundIndex");
+  return (
+    formatRoundNodeLabel(roundCode, roundIndex) ||
+    inferLegacyRoundNodeLabel(matchNumber)
+  );
+};
+
 const buildPlaceholderSideLabel = (
   metadata: Record<string, unknown> | null | undefined,
   side: "left" | "right",
+  matchNodeLabelByNumber: Map<number, string>,
 ) => {
   const roleKey =
     side === "left" ? "placeholderLeftRole" : "placeholderRightRole";
@@ -520,23 +572,13 @@ const buildPlaceholderSideLabel = (
     side === "left"
       ? "placeholderLeftMatchNumber"
       : "placeholderRightMatchNumber";
-  const role =
-    typeof metadata?.[roleKey] === "string" ? String(metadata[roleKey]) : "";
-  const matchNumber =
-    typeof metadata?.[matchKey] === "number"
-      ? metadata[matchKey]
-      : typeof metadata?.[matchKey] === "string" && metadata[matchKey].trim()
-        ? Number(metadata[matchKey])
-        : null;
+  const role = getMetadataString(metadata, roleKey);
+  const matchNumber = getMetadataNumber(metadata, matchKey);
   if (!role || !Number.isFinite(matchNumber ?? NaN)) return null;
   const normalizedRole = role.toLowerCase();
-  const resolvedMatchNumber = Number(matchNumber);
   if (normalizedRole === "qual") return `QUAL ${matchNumber}`;
-  if (normalizedRole === "winner") {
-    if (resolvedMatchNumber >= 55 && resolvedMatchNumber <= 56) return `SF${resolvedMatchNumber - 54}`;
-    if (resolvedMatchNumber >= 43 && resolvedMatchNumber <= 50) return `QF${resolvedMatchNumber - 42}`;
-    if (resolvedMatchNumber >= 51 && resolvedMatchNumber <= 54) return `SF${resolvedMatchNumber - 50}`;
-  }
+  const sourceNodeLabel = matchNodeLabelByNumber.get(Number(matchNumber));
+  if (sourceNodeLabel) return sourceNodeLabel;
   return `${normalizedRole === "loser" ? "Loser" : "Winner"} M${matchNumber}`;
 };
 
@@ -1978,6 +2020,16 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     return typeof raw === "number" && Number.isFinite(raw) ? raw : 180;
   }, [eventData]);
 
+  const timetableMatchNodeLabelByNumber = useMemo(() => {
+    const next = new Map<number, string>();
+    timetableSlots.forEach((slot) => {
+      if (slot.matchNumber === null) return;
+      const label = buildOwnMatchNodeLabel(slot.matchNumber, slot.metadata);
+      if (label) next.set(slot.matchNumber, label);
+    });
+    return next;
+  }, [timetableSlots]);
+
   useEffect(() => {
     setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
   }, [eventTimezoneOffsetMinutes]);
@@ -2445,10 +2497,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         const leftPlaceholderLabel = buildPlaceholderSideLabel(
                           slot.metadata ?? null,
                           "left",
+                          timetableMatchNodeLabelByNumber,
                         );
                         const rightPlaceholderLabel = buildPlaceholderSideLabel(
                           slot.metadata ?? null,
                           "right",
+                          timetableMatchNodeLabelByNumber,
                         );
                         const isFinalPlaceholderRow =
                           slot.matchNumber === 57 &&
