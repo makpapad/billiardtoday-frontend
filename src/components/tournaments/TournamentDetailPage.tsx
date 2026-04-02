@@ -522,8 +522,9 @@ const buildPlaceholderSideLabel = (
         ? Number(metadata[matchKey])
         : null;
   if (!role || !Number.isFinite(matchNumber ?? NaN)) return null;
-  const normalizedRole = role.toLowerCase() === "loser" ? "Loser" : "Winner";
-  return `${normalizedRole} M${matchNumber}`;
+  const normalizedRole = role.toLowerCase();
+  if (normalizedRole === "qual") return `QUAL ${matchNumber}`;
+  return `${normalizedRole === "loser" ? "Loser" : "Winner"} M${matchNumber}`;
 };
 
 const resolveMediaUrl = (url: string | null) => {
