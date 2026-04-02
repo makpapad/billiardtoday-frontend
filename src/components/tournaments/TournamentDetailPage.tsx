@@ -2387,8 +2387,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           resolved && slot.matchLabel
                             ? slot.matchLabel
                             : placeholderLabel || slot.matchLabel || null;
-                        const hasHeading = Boolean(slot.title?.trim());
-
                         return (
                           <tr
                             key={slot.documentId}
@@ -2399,22 +2397,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{slot.tableLabel || "-"}</td>
                             <td className="px-4 py-3 align-middle">
                               <div className="flex flex-col items-center gap-1 text-center">
-                                {hasHeading ? (
-                                  <span className="font-semibold text-slate-950">
-                                    {highlightText(
-                                      slot.title,
-                                      timetableSearchQuery,
-                                    )}
-                                  </span>
-                                ) : null}
-                                {slot.subtitle ? (
-                                  <span className="text-slate-500">
-                                    {highlightText(
-                                      slot.subtitle,
-                                      timetableSearchQuery,
-                                    )}
-                                  </span>
-                                ) : null}
                                 {hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                     <span className={`flex items-center justify-end gap-2 text-right ${leftResolved ? "font-semibold text-slate-950" : "font-medium text-slate-500"}`}>
