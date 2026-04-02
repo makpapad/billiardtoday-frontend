@@ -202,7 +202,14 @@ function normalizeTimetableSlot(
     player2 && typeof (player2 as Record<string, unknown>).country === "string"
       ? ((player2 as Record<string, unknown>).country as string)
       : null;
-  const matchNumber = toNumber(match?.number);
+  const groupNumber = toNumber(match?.number);
+  const matchNumber = toNumber(
+    normalized.metadata &&
+      typeof normalized.metadata === "object" &&
+      "matchNumber" in normalized.metadata
+      ? (normalized.metadata as Record<string, unknown>).matchNumber
+      : null,
+  );
 
   return {
     id: normalized.id,
@@ -239,6 +246,7 @@ function normalizeTimetableSlot(
         ? stage.title
         : null,
     stageDocumentId: stage?.documentId ?? null,
+    groupNumber,
     matchNumber,
     matchLabel:
       player1Name || player2Name

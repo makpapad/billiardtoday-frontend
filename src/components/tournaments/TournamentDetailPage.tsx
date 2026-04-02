@@ -458,6 +458,8 @@ const formatGmtOffsetLabel = (offsetMinutes: number) => {
   }`;
 };
 
+const sortTableLabel = (value: string) => value.trim().toLowerCase();
+
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
@@ -1730,7 +1732,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           typeof (player2 as Record<string, unknown>).country === "string"
             ? ((player2 as Record<string, unknown>).country as string)
             : null;
-        const matchNumber = toNumber(match?.number);
+        const groupNumber = toNumber(match?.number);
+        const matchNumber = toNumber(
+          normalized.metadata &&
+            typeof normalized.metadata === "object" &&
+            "matchNumber" in normalized.metadata
+            ? (normalized.metadata as Record<string, unknown>).matchNumber
+            : null,
+        );
 
         return {
           id: normalized.id,
@@ -1775,6 +1784,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               ? stage.title
               : null,
           stageDocumentId: stage?.documentId ?? null,
+          groupNumber,
           matchNumber,
           matchLabel:
             player1Name || player2Name
@@ -1811,6 +1821,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         }
         if (a.tableOrder !== null) return -1;
         if (b.tableOrder !== null) return 1;
+        if (sortTableLabel(a.tableLabel) !== sortTableLabel(b.tableLabel)) {
+          return sortTableLabel(a.tableLabel).localeCompare(
+            sortTableLabel(b.tableLabel),
+          );
+        }
         if (
           a.slotOrder !== null &&
           b.slotOrder !== null &&
@@ -2270,7 +2285,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         <th className="px-4 py-3 text-left font-semibold">Date</th>
                         <th className="px-4 py-3 text-left font-semibold">Time</th>
                         <th className="px-4 py-3 text-left font-semibold">Table</th>
-                        <th className="px-4 py-3 text-left font-semibold">Schedule</th>
+                        <th className="px-4 py-3 text-left font-semibold">Players</th>
+                        <th className="px-4 py-3 text-left font-semibold">Group</th>
+                        <th className="px-4 py-3 text-left font-semibold">Number</th>
                         <th className="px-4 py-3 text-left font-semibold">Stage</th>
                       </tr>
                     </thead>
@@ -2322,14 +2339,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3 whitespace-nowrap">{slot.tableLabel || "-"}</td>
                             <td className="px-4 py-3">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                                  {slot.slotType}
-                                </span>
-                                {slot.matchNumber !== null ? (
-                                  <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-                                    Match {slot.matchNumber}
-                                  </span>
-                                ) : null}
                                 {hasHeading ? (
                                   <span className="font-semibold text-slate-950">
                                     {highlightText(
@@ -2399,6 +2408,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                   </span>
                                 ) : null}
                               </div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {slot.groupNumber !== null ? `Group ${slot.groupNumber}` : "-"}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
                             </td>
                             <td className="px-4 py-3">{slot.stageTitle || "-"}</td>
                           </tr>

@@ -209,6 +209,7 @@ export type NormalizedTimetableSlot = {
   isPublished: boolean;
   stageTitle: string | null;
   stageDocumentId: string | null;
+  groupNumber: number | null;
   matchNumber: number | null;
   matchLabel: string | null;
   matchPlayer1Country: string | null;
