@@ -1739,7 +1739,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ? player1.full_name_en
             : typeof player1?.full_name === "string"
               ? player1.full_name
-              : typeof normalized.metadata === "object" &&
+              : normalized.metadata &&
+                  typeof normalized.metadata === "object" &&
                   typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer1Name === "string"
                 ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer1Name as string)
                 : "";
@@ -1748,7 +1749,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ? player2.full_name_en
             : typeof player2?.full_name === "string"
               ? player2.full_name
-              : typeof normalized.metadata === "object" &&
+              : normalized.metadata &&
+                  typeof normalized.metadata === "object" &&
                   typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer2Name === "string"
                 ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer2Name as string)
                 : "";
