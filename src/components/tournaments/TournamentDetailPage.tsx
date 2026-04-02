@@ -533,9 +533,9 @@ const buildPlaceholderSideLabel = (
   const resolvedMatchNumber = Number(matchNumber);
   if (normalizedRole === "qual") return `QUAL ${matchNumber}`;
   if (normalizedRole === "winner") {
+    if (resolvedMatchNumber >= 55 && resolvedMatchNumber <= 56) return `SF${resolvedMatchNumber - 54}`;
     if (resolvedMatchNumber >= 43 && resolvedMatchNumber <= 50) return `QF${resolvedMatchNumber - 42}`;
     if (resolvedMatchNumber >= 51 && resolvedMatchNumber <= 54) return `SF${resolvedMatchNumber - 50}`;
-    if (resolvedMatchNumber >= 55 && resolvedMatchNumber <= 56) return `SF${resolvedMatchNumber - 54}`;
   }
   return `${normalizedRole === "loser" ? "Loser" : "Winner"} M${matchNumber}`;
 };
@@ -2468,6 +2468,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           ? getCountryFlagCdnUrl(slot.matchPlayer2Country ?? null, 40)
                           : null;
                         const publicMatchLabel =
+                          slot.matchNumber === 57 && !slot.matchPlayer1Name && !slot.matchPlayer2Name
+                            ? "FINAL"
+                            :
                           resolved && slot.matchLabel
                             ? slot.matchLabel
                             : placeholderLabel ||
