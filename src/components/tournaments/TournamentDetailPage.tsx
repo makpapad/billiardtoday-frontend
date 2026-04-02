@@ -2300,14 +2300,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           publicMatchLabel && matchupParts.length === 2
                             ? getCountryFlagCdnUrl(
                                 slot.matchPlayer1Country ?? null,
-                                32,
+                                40,
                               )
                             : null;
                         const matchPlayer2Flag =
                           publicMatchLabel && matchupParts.length === 2
                             ? getCountryFlagCdnUrl(
                                 slot.matchPlayer2Country ?? null,
-                                32,
+                                40,
                               )
                             : null;
                         const hasHeading = Boolean(slot.title?.trim());
