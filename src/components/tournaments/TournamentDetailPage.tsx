@@ -1792,6 +1792,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               : matchNumber !== null
                 ? `Match ${matchNumber}`
                 : null,
+          matchPlayer1Name: player1Name || null,
+          matchPlayer2Name: player2Name || null,
           matchPlayer1Country:
             player1Country,
           matchPlayer2Country:
@@ -2282,13 +2284,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   <table className="min-w-full border-collapse text-sm">
                     <thead className="bg-slate-900 text-white">
                       <tr>
-                        <th className="px-4 py-3 text-left font-semibold">Date</th>
-                        <th className="px-4 py-3 text-left font-semibold">Time</th>
-                        <th className="px-4 py-3 text-left font-semibold">Table</th>
-                        <th className="px-4 py-3 text-left font-semibold">Players</th>
-                        <th className="px-4 py-3 text-left font-semibold">Group</th>
-                        <th className="px-4 py-3 text-left font-semibold">Number</th>
-                        <th className="px-4 py-3 text-left font-semibold">Stage</th>
+                        <th className="px-4 py-3 text-center font-semibold">Date</th>
+                        <th className="px-4 py-3 text-center font-semibold">Time</th>
+                        <th className="px-4 py-3 text-center font-semibold">Table</th>
+                        <th className="px-4 py-3 text-center font-semibold">Players</th>
+                        <th className="px-4 py-3 text-center font-semibold">Group</th>
+                        <th className="px-4 py-3 text-center font-semibold">Number</th>
+                        <th className="px-4 py-3 text-center font-semibold">Stage</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2309,24 +2311,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           resolved && slot.matchLabel
                             ? slot.matchLabel
                             : placeholderLabel || slot.matchLabel || null;
-
-                        const matchupParts = publicMatchLabel
-                          ? publicMatchLabel.split(/\s+vs\s+/i)
-                          : [];
-                        const matchPlayer1Flag =
-                          publicMatchLabel && matchupParts.length === 2
-                            ? getCountryFlagCdnUrl(
-                                slot.matchPlayer1Country ?? null,
-                                40,
-                              )
-                            : null;
-                        const matchPlayer2Flag =
-                          publicMatchLabel && matchupParts.length === 2
-                            ? getCountryFlagCdnUrl(
-                                slot.matchPlayer2Country ?? null,
-                                40,
-                              )
-                            : null;
+                        const hasResolvedPlayers =
+                          resolved &&
+                          Boolean(slot.matchPlayer1Name || slot.matchPlayer2Name);
+                        const matchPlayer1Flag = hasResolvedPlayers
+                          ? getCountryFlagCdnUrl(slot.matchPlayer1Country ?? null, 40)
+                          : null;
+                        const matchPlayer2Flag = hasResolvedPlayers
+                          ? getCountryFlagCdnUrl(slot.matchPlayer2Country ?? null, 40)
+                          : null;
                         const hasHeading = Boolean(slot.title?.trim());
 
                         return (
@@ -2334,11 +2327,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             key={slot.documentId}
                             className="border-t border-slate-200 bg-white text-slate-700"
                           >
-                            <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{timeLabel}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{slot.tableLabel || "-"}</td>
-                            <td className="px-4 py-3">
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{dateLabel}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{timeLabel}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{slot.tableLabel || "-"}</td>
+                            <td className="px-4 py-3 align-middle">
+                              <div className="flex flex-col items-center gap-1 text-center">
                                 {hasHeading ? (
                                   <span className="font-semibold text-slate-950">
                                     {highlightText(
@@ -2355,9 +2348,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     )}
                                   </span>
                                 ) : null}
-                                {publicMatchLabel && matchupParts.length === 2 ? (
-                                  <span className="font-bold text-slate-950">
-                                    <span className="inline-flex items-center gap-1 font-black text-slate-950">
+                                {hasResolvedPlayers ? (
+                                  <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+                                    <span className="flex items-center justify-end gap-2 text-right font-black text-slate-950">
+                                      <span>{highlightText(slot.matchPlayer1Name || "", timetableSearchQuery)}</span>
                                       {matchPlayer1Flag ? (
                                         <img
                                           src={matchPlayer1Flag}
@@ -2367,15 +2361,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                           referrerPolicy="no-referrer"
                                         />
                                       ) : null}
-                                      {highlightText(
-                                        matchupParts[0],
-                                        timetableSearchQuery,
-                                      )}
                                     </span>
-                                    <span className="mx-1 font-semibold text-slate-500">
-                                      vs
+                                    <span className="text-center font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                      VS
                                     </span>
-                                    <span className="inline-flex items-center gap-1 font-black text-slate-950">
+                                    <span className="flex items-center justify-start gap-2 text-left font-black text-slate-950">
                                       {matchPlayer2Flag ? (
                                         <img
                                           src={matchPlayer2Flag}
@@ -2385,12 +2375,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                           referrerPolicy="no-referrer"
                                         />
                                       ) : null}
-                                      {highlightText(
-                                        matchupParts[1],
-                                        timetableSearchQuery,
-                                      )}
+                                      <span>{highlightText(slot.matchPlayer2Name || "", timetableSearchQuery)}</span>
                                     </span>
-                                  </span>
+                                  </div>
                                 ) : publicMatchLabel ? (
                                   <span className="font-black text-slate-950">
                                     {highlightText(
@@ -2409,13 +2396,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 ) : null}
                               </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                               {slot.groupNumber !== null ? `Group ${slot.groupNumber}` : "-"}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                               {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
                             </td>
-                            <td className="px-4 py-3">{slot.stageTitle || "-"}</td>
+                            <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || "-"}</td>
                           </tr>
                         );
                       })}
