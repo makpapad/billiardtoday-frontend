@@ -188,22 +188,44 @@ function normalizeTimetableSlot(
       ? player1.full_name_en
       : typeof player1?.full_name === "string"
         ? player1.full_name
-        : "";
+        : normalized.metadata &&
+            typeof normalized.metadata === "object" &&
+            typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer1Name === "string"
+          ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer1Name as string)
+          : "";
   const player2Name =
     typeof player2?.full_name_en === "string" && player2.full_name_en.trim()
       ? player2.full_name_en
       : typeof player2?.full_name === "string"
         ? player2.full_name
-        : "";
+        : normalized.metadata &&
+            typeof normalized.metadata === "object" &&
+            typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer2Name === "string"
+          ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer2Name as string)
+          : "";
   const player1Country =
     player1 && typeof (player1 as Record<string, unknown>).country === "string"
       ? ((player1 as Record<string, unknown>).country as string)
+      : normalized.metadata &&
+          typeof normalized.metadata === "object" &&
+          typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer1Country === "string"
+        ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer1Country as string)
       : null;
   const player2Country =
     player2 && typeof (player2 as Record<string, unknown>).country === "string"
       ? ((player2 as Record<string, unknown>).country as string)
+      : normalized.metadata &&
+          typeof normalized.metadata === "object" &&
+          typeof (normalized.metadata as Record<string, unknown>).resolvedPlayer2Country === "string"
+        ? ((normalized.metadata as Record<string, unknown>).resolvedPlayer2Country as string)
       : null;
-  const groupNumber = toNumber(match?.number);
+  const groupNumber = toNumber(match?.number) ?? toNumber(
+    normalized.metadata &&
+      typeof normalized.metadata === "object" &&
+      "groupNumber" in normalized.metadata
+      ? (normalized.metadata as Record<string, unknown>).groupNumber
+      : null,
+  );
   const matchNumber = toNumber(
     normalized.metadata &&
       typeof normalized.metadata === "object" &&
