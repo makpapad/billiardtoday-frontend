@@ -2350,7 +2350,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 ) : null}
                                 {hasResolvedPlayers ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
-                                    <span className="flex items-center justify-end gap-2 text-right font-black text-slate-950">
+                                    <span className="flex items-center justify-end gap-2 text-right font-semibold text-slate-950">
                                       <span>{highlightText(slot.matchPlayer1Name || "", timetableSearchQuery)}</span>
                                       {matchPlayer1Flag ? (
                                         <img
@@ -2365,7 +2365,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     <span className="text-center font-semibold uppercase tracking-[0.16em] text-slate-500">
                                       VS
                                     </span>
-                                    <span className="flex items-center justify-start gap-2 text-left font-black text-slate-950">
+                                    <span className="flex items-center justify-start gap-2 text-left font-semibold text-slate-950">
                                       {matchPlayer2Flag ? (
                                         <img
                                           src={matchPlayer2Flag}
@@ -2379,7 +2379,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     </span>
                                   </div>
                                 ) : publicMatchLabel ? (
-                                  <span className="font-black text-slate-950">
+                                  <span className="font-semibold text-slate-950">
                                     {highlightText(
                                       publicMatchLabel,
                                       timetableSearchQuery,
