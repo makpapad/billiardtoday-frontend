@@ -254,6 +254,8 @@ function normalizeTimetableSlot(
         : matchNumber !== null
           ? `Match ${matchNumber}`
           : null,
+    matchPlayer1Name: player1Name || null,
+    matchPlayer2Name: player2Name || null,
     matchPlayer1Country:
       player1Country,
     matchPlayer2Country:
@@ -1345,12 +1347,12 @@ export function TournamentEventsContent({
                           <table className="min-w-full border-collapse text-sm">
                             <thead className="bg-slate-800 text-white">
                               <tr>
-                                <th className="px-4 py-3 text-left font-semibold">Date</th>
-                                <th className="px-4 py-3 text-left font-semibold">Time</th>
-                                <th className="px-4 py-3 text-left font-semibold">Table</th>
-                                <th className="px-4 py-3 text-left font-semibold">Type</th>
-                                <th className="px-4 py-3 text-left font-semibold">Title</th>
-                                <th className="px-4 py-3 text-left font-semibold">Stage</th>
+                                <th className="px-4 py-3 text-center font-semibold">Date</th>
+                                <th className="px-4 py-3 text-center font-semibold">Time</th>
+                                <th className="px-4 py-3 text-center font-semibold">Table</th>
+                                <th className="px-4 py-3 text-center font-semibold">Type</th>
+                                <th className="px-4 py-3 text-center font-semibold">Title</th>
+                                <th className="px-4 py-3 text-center font-semibold">Stage</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1372,23 +1374,60 @@ export function TournamentEventsContent({
                                     key={slot.documentId}
                                     className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                                   >
-                                    <td className="px-4 py-3">{dateLabel}</td>
-                                    <td className="px-4 py-3">{timeLabel}</td>
-                                    <td className="px-4 py-3">{slot.tableLabel || "-"}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 text-center align-middle">{dateLabel}</td>
+                                    <td className="px-4 py-3 text-center align-middle">{timeLabel}</td>
+                                    <td className="px-4 py-3 text-center align-middle">{slot.tableLabel || "-"}</td>
+                                    <td className="px-4 py-3 text-center align-middle">
                                       <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                         {slot.slotType}
                                       </span>
                                     </td>
-                                    <td className="px-4 py-3">
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">{slot.title || "Untitled row"}</span>
+                                    <td className="px-4 py-3 align-middle">
+                                      <div className="flex flex-col items-center gap-1 text-center">
+                                        {slot.title ? (
+                                          <span className="font-medium">{slot.title}</span>
+                                        ) : null}
                                         {slot.subtitle ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.subtitle}
                                           </span>
                                         ) : null}
-                                        {slot.matchLabel ? (
+                                        {slot.matchPlayer1Name || slot.matchPlayer2Name ? (
+                                          <div className="grid gap-1">
+                                            {[{
+                                              name: slot.matchPlayer1Name,
+                                              country: slot.matchPlayer1Country,
+                                            }, {
+                                              name: slot.matchPlayer2Name,
+                                              country: slot.matchPlayer2Country,
+                                            }]
+                                              .filter((player) => player.name)
+                                              .map((player, index) => {
+                                                const flagSrc = getCountryFlagCdnUrl(player.country ?? null, 40);
+                                                return (
+                                                  <div
+                                                    key={`${slot.documentId}-player-${index}`}
+                                                    className="grid grid-cols-[20px_minmax(0,1fr)] items-center justify-center gap-2"
+                                                  >
+                                                    <div className="flex h-4 w-5 items-center justify-center">
+                                                      {flagSrc ? (
+                                                        <img
+                                                          src={flagSrc}
+                                                          alt={player.country || "flag"}
+                                                          className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                          loading="lazy"
+                                                          referrerPolicy="no-referrer"
+                                                        />
+                                                      ) : null}
+                                                    </div>
+                                                    <span className="text-sm font-semibold leading-tight">
+                                                      {player.name}
+                                                    </span>
+                                                  </div>
+                                                );
+                                              })}
+                                          </div>
+                                        ) : slot.matchLabel ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.matchLabel}
                                           </span>
@@ -1400,7 +1439,7 @@ export function TournamentEventsContent({
                                         ) : null}
                                       </div>
                                     </td>
-                                    <td className="px-4 py-3">{slot.stageTitle || "-"}</td>
+                                    <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || "-"}</td>
                                   </tr>
                                 );
                               })}

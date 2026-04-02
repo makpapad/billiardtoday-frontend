@@ -212,6 +212,8 @@ export type NormalizedTimetableSlot = {
   groupNumber: number | null;
   matchNumber: number | null;
   matchLabel: string | null;
+  matchPlayer1Name: string | null;
+  matchPlayer2Name: string | null;
   matchPlayer1Country: string | null;
   matchPlayer2Country: string | null;
   matchDocumentId: string | null;
