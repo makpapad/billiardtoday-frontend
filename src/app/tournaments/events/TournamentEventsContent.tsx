@@ -1421,15 +1421,30 @@ export function TournamentEventsContent({
                                     </td>
                                     <td className="px-4 py-3 align-middle">
                                       <div className="flex flex-col items-center gap-1 text-center">
-                                        {slot.title ? (
+                                        {slot.slotType === "training" && slot.trainingPlayerName ? (
+                                          <div className="flex items-center justify-center gap-2">
+                                            {slot.trainingPlayerCountry ? (
+                                              <img
+                                                src={getCountryFlagCdnUrl(slot.trainingPlayerCountry, 40) || ""}
+                                                alt={slot.trainingPlayerCountry || "flag"}
+                                                className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                loading="lazy"
+                                                referrerPolicy="no-referrer"
+                                              />
+                                            ) : null}
+                                            <span className="text-sm font-semibold leading-tight">
+                                              {slot.trainingPlayerName}
+                                            </span>
+                                          </div>
+                                        ) : slot.title ? (
                                           <span className="font-medium">{slot.title}</span>
                                         ) : null}
-                                        {slot.subtitle ? (
+                                        {slot.slotType !== "training" && slot.subtitle ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.subtitle}
                                           </span>
                                         ) : null}
-                                        {slot.matchPlayer1Name || slot.matchPlayer2Name ? (
+                                        {slot.slotType !== "training" && (slot.matchPlayer1Name || slot.matchPlayer2Name) ? (
                                           <div className="grid gap-1">
                                             {[{
                                               name: slot.matchPlayer1Name,
@@ -1464,12 +1479,12 @@ export function TournamentEventsContent({
                                                 );
                                               })}
                                           </div>
-                                        ) : slot.matchLabel ? (
+                                        ) : slot.slotType !== "training" && slot.matchLabel ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.matchLabel}
                                           </span>
                                         ) : null}
-                                        {slot.description ? (
+                                        {slot.slotType !== "training" && slot.description ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
                                             {slot.description}
                                           </span>

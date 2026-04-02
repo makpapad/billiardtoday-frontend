@@ -459,6 +459,13 @@ const formatGmtOffsetLabel = (offsetMinutes: number) => {
 };
 
 const sortTableLabel = (value: string) => value.trim().toLowerCase();
+const normalizeLookupText = (value: string | null | undefined) =>
+  (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 const formatDateTimeWithOffset = (
   dateTime: string | null,
@@ -1703,6 +1710,40 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       });
   }, [eventData]);
 
+  const timetableTrainingPlayers = useMemo(() => {
+    const byId = new Map<string, { name: string; country: string | null }>();
+    eventStages.forEach((stage) => {
+      stage.groups.forEach((group) => {
+        [group.player1, group.player2].forEach((player) => {
+          if (!player.documentId || !player.name) return;
+          byId.set(player.documentId, {
+            name: player.name,
+            country: player.country,
+          });
+        });
+      });
+    });
+    const players = [...byId.values()];
+    return {
+      list: players,
+      resolve(label: string | null) {
+        const query = normalizeLookupText(label);
+        if (!query) return null;
+        return (
+          players.find((player) => {
+            const full = normalizeLookupText(player.name);
+            return (
+              full === query ||
+              full.includes(query) ||
+              query.includes(full) ||
+              full.split(" ").some((part) => part === query)
+            );
+          }) ?? null
+        );
+      },
+    };
+  }, [eventStages]);
+
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
 
@@ -1798,6 +1839,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           typeof (normalized.metadata as Record<string, unknown>).trainingPlayerCountry === "string"
             ? ((normalized.metadata as Record<string, unknown>).trainingPlayerCountry as string)
             : null;
+        const resolvedTrainingPlayer =
+          normalized.slot_type === "training"
+            ? timetableTrainingPlayers.resolve(
+                trainingPlayerName ||
+                  (typeof normalized.subtitle === "string" ? normalized.subtitle : "") ||
+                  (typeof normalized.title === "string" ? normalized.title : ""),
+              )
+            : null;
 
         return {
           id: normalized.id,
@@ -1850,8 +1899,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               : matchNumber !== null
                 ? `Match ${matchNumber}`
                 : null,
-          trainingPlayerName: trainingPlayerName || null,
-          trainingPlayerCountry,
+          trainingPlayerName:
+            trainingPlayerName || resolvedTrainingPlayer?.name || null,
+          trainingPlayerCountry:
+            trainingPlayerCountry || resolvedTrainingPlayer?.country || null,
           matchPlayer1Name: player1Name || null,
           matchPlayer2Name: player2Name || null,
           matchPlayer1Country:
@@ -1863,6 +1914,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       })
       .filter((slot) => slot.isVisible)
       .sort((a, b) => {
+        const aHasCalendarInfo = Boolean(a.dateTime || a.date || a.time);
+        const bHasCalendarInfo = Boolean(b.dateTime || b.date || b.time);
+        if (aHasCalendarInfo !== bHasCalendarInfo) {
+          return aHasCalendarInfo ? -1 : 1;
+        }
         const aDateTime = a.dateTime ? Date.parse(a.dateTime) : Number.NaN;
         const bDateTime = b.dateTime ? Date.parse(b.dateTime) : Number.NaN;
         if (
@@ -1880,6 +1936,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         if (a.matchNumber !== null) return -1;
         if (b.matchNumber !== null) return 1;
         if (
+          a.slotOrder !== null &&
+          b.slotOrder !== null &&
+          a.slotOrder !== b.slotOrder
+        ) {
+          return a.slotOrder - b.slotOrder;
+        }
+        if (a.slotOrder !== null) return -1;
+        if (b.slotOrder !== null) return 1;
+        if (
           a.tableOrder !== null &&
           b.tableOrder !== null &&
           a.tableOrder !== b.tableOrder
@@ -1893,18 +1958,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             sortTableLabel(b.tableLabel),
           );
         }
-        if (
-          a.slotOrder !== null &&
-          b.slotOrder !== null &&
-          a.slotOrder !== b.slotOrder
-        ) {
-          return a.slotOrder - b.slotOrder;
-        }
-        if (a.slotOrder !== null) return -1;
-        if (b.slotOrder !== null) return 1;
         return a.id.localeCompare(b.id);
       });
-  }, [eventData]);
+  }, [eventData, timetableTrainingPlayers]);
 
   const eventTimezoneOffsetMinutes = useMemo(() => {
     const raw =
@@ -2470,7 +2526,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     )}
                                   </span>
                                 ) : null}
-                                {slot.description ? (
+                                {slot.description && slot.slotType !== "training" ? (
                                   <span className="text-xs text-slate-500">
                                     {highlightText(
                                       slot.description,
