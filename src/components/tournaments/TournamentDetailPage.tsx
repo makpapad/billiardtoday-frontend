@@ -1814,6 +1814,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         }
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         if (a.time !== b.time) return a.time.localeCompare(b.time);
+        if (a.matchNumber !== null && b.matchNumber !== null && a.matchNumber !== b.matchNumber) {
+          return a.matchNumber - b.matchNumber;
+        }
+        if (a.matchNumber !== null) return -1;
+        if (b.matchNumber !== null) return 1;
         if (
           a.tableOrder !== null &&
           b.tableOrder !== null &&
