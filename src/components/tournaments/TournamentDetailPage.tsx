@@ -2464,8 +2464,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           : slot.matchPlayer2Name ||
                             rightPlaceholderLabel ||
                             null;
+                        const hasResolvedPlayers = Boolean(
+                          slot.matchPlayer1Name || slot.matchPlayer2Name,
+                        );
                         const hasPlayerGrid =
-                          !isFinalPlaceholderRow && Boolean(leftLabel || rightLabel);
+                          !isFinalPlaceholderRow &&
+                          (hasResolvedPlayers ||
+                            (!placeholderLabel && Boolean(leftLabel || rightLabel)));
                         const leftResolved = Boolean(slot.matchPlayer1Name);
                         const rightResolved = Boolean(slot.matchPlayer2Name);
                         const matchPlayer1Flag = leftResolved
