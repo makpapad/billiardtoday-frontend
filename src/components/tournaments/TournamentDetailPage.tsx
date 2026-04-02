@@ -2450,15 +2450,22 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           slot.metadata ?? null,
                           "right",
                         );
-                        const leftLabel =
-                          slot.matchPlayer1Name ||
-                          leftPlaceholderLabel ||
-                          null;
-                        const rightLabel =
-                          slot.matchPlayer2Name ||
-                          rightPlaceholderLabel ||
-                          null;
-                        const hasPlayerGrid = Boolean(leftLabel || rightLabel);
+                        const isFinalPlaceholderRow =
+                          slot.matchNumber === 57 &&
+                          !slot.matchPlayer1Name &&
+                          !slot.matchPlayer2Name;
+                        const leftLabel = isFinalPlaceholderRow
+                          ? null
+                          : slot.matchPlayer1Name ||
+                            leftPlaceholderLabel ||
+                            null;
+                        const rightLabel = isFinalPlaceholderRow
+                          ? null
+                          : slot.matchPlayer2Name ||
+                            rightPlaceholderLabel ||
+                            null;
+                        const hasPlayerGrid =
+                          !isFinalPlaceholderRow && Boolean(leftLabel || rightLabel);
                         const leftResolved = Boolean(slot.matchPlayer1Name);
                         const rightResolved = Boolean(slot.matchPlayer2Name);
                         const matchPlayer1Flag = leftResolved
@@ -2468,7 +2475,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           ? getCountryFlagCdnUrl(slot.matchPlayer2Country ?? null, 40)
                           : null;
                         const publicMatchLabel =
-                          slot.matchNumber === 57 && !slot.matchPlayer1Name && !slot.matchPlayer2Name
+                          isFinalPlaceholderRow
                             ? "FINAL"
                             :
                           resolved && slot.matchLabel
