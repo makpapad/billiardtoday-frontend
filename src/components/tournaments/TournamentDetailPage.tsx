@@ -503,6 +503,29 @@ const highlightText = (value: string, query: string) => {
   );
 };
 
+const buildPlaceholderSideLabel = (
+  metadata: Record<string, unknown> | null | undefined,
+  side: "left" | "right",
+) => {
+  const roleKey =
+    side === "left" ? "placeholderLeftRole" : "placeholderRightRole";
+  const matchKey =
+    side === "left"
+      ? "placeholderLeftMatchNumber"
+      : "placeholderRightMatchNumber";
+  const role =
+    typeof metadata?.[roleKey] === "string" ? String(metadata[roleKey]) : "";
+  const matchNumber =
+    typeof metadata?.[matchKey] === "number"
+      ? metadata[matchKey]
+      : typeof metadata?.[matchKey] === "string" && metadata[matchKey].trim()
+        ? Number(metadata[matchKey])
+        : null;
+  if (!role || !Number.isFinite(matchNumber ?? NaN)) return null;
+  const normalizedRole = role.toLowerCase() === "loser" ? "Loser" : "Winner";
+  return `${normalizedRole} M${matchNumber}`;
+};
+
 const resolveMediaUrl = (url: string | null) => {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
@@ -2332,19 +2355,35 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             : null;
                         const resolved =
                           slot.metadata?.resolved === false ? false : true;
+                        const leftPlaceholderLabel = buildPlaceholderSideLabel(
+                          slot.metadata ?? null,
+                          "left",
+                        );
+                        const rightPlaceholderLabel = buildPlaceholderSideLabel(
+                          slot.metadata ?? null,
+                          "right",
+                        );
+                        const leftLabel =
+                          slot.matchPlayer1Name ||
+                          leftPlaceholderLabel ||
+                          null;
+                        const rightLabel =
+                          slot.matchPlayer2Name ||
+                          rightPlaceholderLabel ||
+                          null;
+                        const hasPlayerGrid = Boolean(leftLabel || rightLabel);
+                        const leftResolved = Boolean(slot.matchPlayer1Name);
+                        const rightResolved = Boolean(slot.matchPlayer2Name);
+                        const matchPlayer1Flag = leftResolved
+                          ? getCountryFlagCdnUrl(slot.matchPlayer1Country ?? null, 40)
+                          : null;
+                        const matchPlayer2Flag = rightResolved
+                          ? getCountryFlagCdnUrl(slot.matchPlayer2Country ?? null, 40)
+                          : null;
                         const publicMatchLabel =
                           resolved && slot.matchLabel
                             ? slot.matchLabel
                             : placeholderLabel || slot.matchLabel || null;
-                        const hasResolvedPlayers =
-                          resolved &&
-                          Boolean(slot.matchPlayer1Name || slot.matchPlayer2Name);
-                        const matchPlayer1Flag = hasResolvedPlayers
-                          ? getCountryFlagCdnUrl(slot.matchPlayer1Country ?? null, 40)
-                          : null;
-                        const matchPlayer2Flag = hasResolvedPlayers
-                          ? getCountryFlagCdnUrl(slot.matchPlayer2Country ?? null, 40)
-                          : null;
                         const hasHeading = Boolean(slot.title?.trim());
 
                         return (
@@ -2373,10 +2412,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     )}
                                   </span>
                                 ) : null}
-                                {hasResolvedPlayers ? (
+                                {hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
-                                    <span className="flex items-center justify-end gap-2 text-right font-semibold text-slate-950">
-                                      <span>{highlightText(slot.matchPlayer1Name || "", timetableSearchQuery)}</span>
+                                    <span className={`flex items-center justify-end gap-2 text-right ${leftResolved ? "font-semibold text-slate-950" : "font-medium text-slate-500"}`}>
+                                      <span>{highlightText(leftLabel || "", timetableSearchQuery)}</span>
                                       {matchPlayer1Flag ? (
                                         <img
                                           src={matchPlayer1Flag}
@@ -2387,10 +2426,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                         />
                                       ) : null}
                                     </span>
-                                    <span className="text-center font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                    <span className={`text-center font-semibold uppercase tracking-[0.16em] ${leftResolved && rightResolved ? "text-slate-500" : "text-slate-400"}`}>
                                       VS
                                     </span>
-                                    <span className="flex items-center justify-start gap-2 text-left font-semibold text-slate-950">
+                                    <span className={`flex items-center justify-start gap-2 text-left ${rightResolved ? "font-semibold text-slate-950" : "font-medium text-slate-500"}`}>
                                       {matchPlayer2Flag ? (
                                         <img
                                           src={matchPlayer2Flag}
@@ -2400,7 +2439,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                           referrerPolicy="no-referrer"
                                         />
                                       ) : null}
-                                      <span>{highlightText(slot.matchPlayer2Name || "", timetableSearchQuery)}</span>
+                                      <span>{highlightText(rightLabel || "", timetableSearchQuery)}</span>
                                     </span>
                                   </div>
                                 ) : publicMatchLabel ? (
