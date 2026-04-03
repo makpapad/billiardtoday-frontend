@@ -1192,6 +1192,7 @@ export function TournamentEventsContent({
         matches: Array<{
           id: string;
           matchNumber: number | null;
+          displayMatchNumber: number;
           player1: string;
           player1Country: string | null;
           player1FlagSrc: string | null;
@@ -1255,6 +1256,8 @@ export function TournamentEventsContent({
       return 9999;
     };
 
+    let deDisplayCounter = 0;
+
     return Array.from(byRound.entries())
       .sort((a, b) => {
         const diff = getPriority(a[0]) - getPriority(b[0]);
@@ -1271,6 +1274,7 @@ export function TournamentEventsContent({
               (toNumber((b as { match_number?: unknown }).match_number) ?? 0),
           )
           .map((m) => {
+            deDisplayCounter += 1;
             const p1 = normalizeBracketPlayer((m as { player1?: unknown }).player1);
             const p2 = normalizeBracketPlayer((m as { player2?: unknown }).player2);
             const p1FlagSrc = p1.country
@@ -1283,6 +1287,7 @@ export function TournamentEventsContent({
               id: String((m as { id?: unknown }).id ?? ""),
               matchNumber:
                 toNumber((m as { match_number?: unknown }).match_number) ?? null,
+              displayMatchNumber: deDisplayCounter,
               player1: p1.name || "Unknown player",
               player2: p2.name || "Unknown player",
               player1Country: p1.country,
@@ -1827,12 +1832,22 @@ export function TournamentEventsContent({
                                             </div>
                                             <div className="mx-auto grid w-[95%] max-w-[1600px] min-w-0 gap-4">
                                               {displayedDoubleEliminationRounds.map(
-                                                (round) => (
+                                                (round, roundIndex) => (
                                                   <section
                                                     key={round.label}
-                                                    className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900"
+                                                    className={`overflow-hidden rounded-[24px] border shadow-[0_16px_40px_rgba(15,23,42,0.08)] ${
+                                                      roundIndex % 2 === 0
+                                                        ? "border-blue-200 bg-blue-50/65 dark:border-blue-800 dark:bg-blue-950/35"
+                                                        : "border-sky-200 bg-sky-100/55 dark:border-sky-800 dark:bg-sky-950/30"
+                                                    }`}
                                                   >
-                                                    <div className="border-b border-slate-200 bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-white dark:border-slate-700">
+                                                    <div
+                                                      className={`px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-white ${
+                                                        roundIndex % 2 === 0
+                                                          ? "border-b border-blue-200 bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 dark:border-blue-800"
+                                                          : "border-b border-sky-200 bg-gradient-to-r from-sky-900 via-blue-800 to-sky-700 dark:border-sky-800"
+                                                      }`}
+                                                    >
                                                       {round.label}
                                                     </div>
                                                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -1873,33 +1888,11 @@ export function TournamentEventsContent({
                                                                       : match.id,
                                                                   )
                                                                 }
-                                                                className={`mx-auto grid w-[95%] min-w-0 items-center gap-2 px-4 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
-                                                                  match.dateTime
-                                                                    ? "grid-cols-[40px_100px_112px_minmax(260px,1fr)_44px_40px_44px_minmax(260px,1fr)_40px]"
-                                                                    : "grid-cols-[40px_100px_minmax(320px,1fr)_44px_40px_44px_minmax(320px,1fr)_40px]"
-                                                                }`}
+                                                                className="mx-auto grid w-[95%] min-w-0 grid-cols-[100px_minmax(320px,1fr)_44px_40px_44px_minmax(320px,1fr)_120px] items-center gap-2 px-4 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
                                                               >
-                                                                <div className="flex justify-center">
-                                                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                                                                    {isExpanded
-                                                                      ? "↑"
-                                                                      : "↓"}
-                                                                  </span>
-                                                                </div>
                                                                 <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                                                  {match.matchNumber
-                                                                    ? `Match ${match.matchNumber}`
-                                                                    : "Match"}
+                                                                  {`M${match.displayMatchNumber ?? match.matchNumber ?? ""}`}
                                                                 </div>
-                                                                {match.dateTime ? (
-                                                                  <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-                                                                    {new Date(
-                                                                      match.dateTime,
-                                                                    ).toLocaleString(
-                                                                      "el-GR",
-                                                                    )}
-                                                                  </div>
-                                                                ) : null}
                                                                 <div className="min-w-0">
                                                                   <div className="flex items-center justify-end gap-2 text-right">
                                                                     <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
@@ -1941,11 +1934,14 @@ export function TournamentEventsContent({
                                                                     </span>
                                                                   </div>
                                                                 </div>
-                                                                <div className="text-center text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                                                                  {deBracketType ===
-                                                                  "winners"
-                                                                    ? "W"
-                                                                    : "L"}
+                                                                <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                                                                  {match.dateTime
+                                                                    ? new Date(
+                                                                        match.dateTime,
+                                                                      ).toLocaleString(
+                                                                        "el-GR",
+                                                                      )
+                                                                    : "Date"}
                                                                 </div>
                                                               </button>
                                                               {isExpanded ? (
