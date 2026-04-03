@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerEnv } from '@/lib/serverEnv'
 
 export const runtime = 'nodejs'
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
+const IS_PRODUCTION = (getServerEnv('NODE_ENV') || process.env.NODE_ENV) === 'production'
+const STRAPI_URL =
+    getServerEnv('STRAPI_API_URL') ||
+    (IS_PRODUCTION ? 'http://127.0.0.1:1337' : getServerEnv('NEXT_PUBLIC_STRAPI_URL')) ||
+    'http://localhost:1337'
+const STRAPI_API_TOKEN = getServerEnv('STRAPI_API_TOKEN') || process.env.STRAPI_API_TOKEN
 
 export async function GET(
     req: NextRequest,
