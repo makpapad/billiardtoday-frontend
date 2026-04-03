@@ -1767,7 +1767,7 @@ export function TournamentEventsContent({
                                                 the active block.
                                               </div>
                                             </div>
-                                            <div className="grid gap-4">
+                                            <div className="mx-auto grid w-[70%] max-w-[1120px] min-w-0 gap-4">
                                               {displayedDoubleEliminationRounds.map(
                                                 (round) => (
                                                   <section
@@ -1782,14 +1782,14 @@ export function TournamentEventsContent({
                                                         (match) => (
                                                           <div
                                                             key={match.id}
-                                                            className="grid grid-cols-[110px_120px_minmax(0,1fr)_72px_72px_minmax(0,1fr)_90px] items-center gap-3 px-5 py-4"
+                                                            className="grid grid-cols-[96px_120px_minmax(220px,1fr)_56px_56px_minmax(220px,1fr)_48px] items-center gap-3 px-5 py-4"
                                                           >
                                                             <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                                               {match.matchNumber
                                                                 ? `Match ${match.matchNumber}`
                                                                 : "Match"}
                                                             </div>
-                                                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                                                            <div className="text-center text-xs text-slate-500 dark:text-slate-400">
                                                               {match.dateTime
                                                                 ? new Date(
                                                                     match.dateTime,
@@ -1839,7 +1839,7 @@ export function TournamentEventsContent({
                                                                 </span>
                                                               </div>
                                                             </div>
-                                                            <div className="text-right text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                                                            <div className="text-center text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
                                                               {deBracketType === "winners"
                                                                 ? "W"
                                                                 : "L"}
