@@ -1852,7 +1852,7 @@ export function TournamentEventsContent({
                                                     </div>
                                                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
                                                       {round.matches.map(
-                                                        (match) => {
+                                                        (match, matchIndex) => {
                                                           const avg1 =
                                                             match.score1 !== null &&
                                                             match.innings1 &&
@@ -1888,7 +1888,11 @@ export function TournamentEventsContent({
                                                                       : match.id,
                                                                   )
                                                                 }
-                                                                className="mx-auto grid w-[95%] min-w-0 grid-cols-[100px_minmax(320px,1fr)_44px_40px_44px_minmax(320px,1fr)_120px] items-center gap-2 px-4 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                                                className={`mx-auto grid w-[95%] min-w-0 grid-cols-[64px_minmax(280px,1fr)_40px_32px_40px_minmax(280px,1fr)_104px] items-center gap-1.5 px-3 py-3 text-left transition ${
+                                                                  matchIndex % 2 === 0
+                                                                    ? "bg-white/70 hover:bg-white dark:bg-slate-900/65 dark:hover:bg-slate-900"
+                                                                    : "bg-blue-100/55 hover:bg-blue-100 dark:bg-blue-950/45 dark:hover:bg-blue-950/60"
+                                                                }`}
                                                               >
                                                                 <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                                                   {`M${match.displayMatchNumber ?? match.matchNumber ?? ""}`}
@@ -1934,7 +1938,7 @@ export function TournamentEventsContent({
                                                                     </span>
                                                                   </div>
                                                                 </div>
-                                                                <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                                                                <div className="text-right text-[11px] text-slate-500 dark:text-slate-400">
                                                                   {match.dateTime
                                                                     ? new Date(
                                                                         match.dateTime,
