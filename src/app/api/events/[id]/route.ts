@@ -134,8 +134,6 @@ export async function GET(
         queryParams.set('fields[2]', 'season')
         queryParams.set('fields[3]', 'start_date')
         queryParams.set('fields[4]', 'end_date')
-        queryParams.set('fields[5]', 'timetable_config')
-
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 
         const headers: HeadersInit = {}
