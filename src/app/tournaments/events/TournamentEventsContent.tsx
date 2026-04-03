@@ -957,7 +957,7 @@ export function TournamentEventsContent({
   }, [effectiveLiveSessions, normalizeLiveName]);
 
   const normalizeBracketPlayer = useCallback(
-    (player: unknown): { name: string } => {
+    (player: unknown): { name: string; country: string | null } => {
       try {
         const src =
           player &&
@@ -973,11 +973,15 @@ export function TournamentEventsContent({
               src)
             : src;
 
-        if (!attr || typeof attr !== "object") return { name: "" };
+        if (!attr || typeof attr !== "object") return { name: "", country: null };
         const fullName = (attr as Record<string, unknown>).full_name;
-        return { name: typeof fullName === "string" ? fullName : "" };
+        const country = (attr as Record<string, unknown>).country;
+        return {
+          name: typeof fullName === "string" ? fullName : "",
+          country: typeof country === "string" ? country : null,
+        };
       } catch {
-        return { name: "" };
+        return { name: "", country: null };
       }
     },
     [],
@@ -1186,7 +1190,11 @@ export function TournamentEventsContent({
           id: string;
           matchNumber: number | null;
           player1: string;
+          player1Country: string | null;
+          player1FlagSrc: string | null;
           player2: string;
+          player2Country: string | null;
+          player2FlagSrc: string | null;
           score1: number | null;
           score2: number | null;
           dateTime: string | null;
@@ -1250,12 +1258,22 @@ export function TournamentEventsContent({
           .map((m) => {
             const p1 = normalizeBracketPlayer((m as { player1?: unknown }).player1);
             const p2 = normalizeBracketPlayer((m as { player2?: unknown }).player2);
+            const p1FlagSrc = p1.country
+              ? getCountryFlagCdnUrl(p1.country, 40)
+              : null;
+            const p2FlagSrc = p2.country
+              ? getCountryFlagCdnUrl(p2.country, 40)
+              : null;
             return {
               id: String((m as { id?: unknown }).id ?? ""),
               matchNumber:
                 toNumber((m as { match_number?: unknown }).match_number) ?? null,
               player1: p1.name || "Unknown player",
               player2: p2.name || "Unknown player",
+              player1Country: p1.country,
+              player2Country: p2.country,
+              player1FlagSrc: p1FlagSrc,
+              player2FlagSrc: p2FlagSrc,
               score1:
                 toNumber(
                   (m as { player1_points?: unknown }).player1_points,
@@ -1764,29 +1782,14 @@ export function TournamentEventsContent({
                                                         (match) => (
                                                           <div
                                                             key={match.id}
-                                                            className="grid grid-cols-[110px_minmax(0,1fr)_90px_120px] items-center gap-4 px-5 py-4"
+                                                            className="grid grid-cols-[110px_120px_minmax(0,1fr)_72px_72px_minmax(0,1fr)_90px] items-center gap-3 px-5 py-4"
                                                           >
                                                             <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                                                               {match.matchNumber
                                                                 ? `Match ${match.matchNumber}`
                                                                 : "Match"}
                                                             </div>
-                                                            <div className="min-w-0">
-                                                              <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                                                                {match.player1}
-                                                              </div>
-                                                              <div className="truncate text-sm text-slate-600 dark:text-slate-300">
-                                                                {match.player2}
-                                                              </div>
-                                                            </div>
-                                                            <div className="text-center font-semibold text-slate-700 dark:text-slate-200">
-                                                              {(match.score1 ??
-                                                                "-") +
-                                                                " : " +
-                                                                (match.score2 ??
-                                                                  "-")}
-                                                            </div>
-                                                            <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                                                            <div className="text-xs text-slate-500 dark:text-slate-400">
                                                               {match.dateTime
                                                                 ? new Date(
                                                                     match.dateTime,
@@ -1794,6 +1797,52 @@ export function TournamentEventsContent({
                                                                     "el-GR",
                                                                   )
                                                                 : "-"}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                              <div className="flex items-center justify-end gap-2 text-right">
+                                                                <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                                                  {match.player1}
+                                                                </span>
+                                                                {match.player1FlagSrc ? (
+                                                                  <img
+                                                                    src={match.player1FlagSrc}
+                                                                    alt={match.player1Country ?? "flag"}
+                                                                    className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                    loading="lazy"
+                                                                    referrerPolicy="no-referrer"
+                                                                  />
+                                                                ) : null}
+                                                              </div>
+                                                            </div>
+                                                            <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
+                                                              {match.score1 ?? "-"}
+                                                            </div>
+                                                            <div className="text-center text-sm font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                                                              vs
+                                                            </div>
+                                                            <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
+                                                              {match.score2 ?? "-"}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                              <div className="flex items-center gap-2">
+                                                                {match.player2FlagSrc ? (
+                                                                  <img
+                                                                    src={match.player2FlagSrc}
+                                                                    alt={match.player2Country ?? "flag"}
+                                                                    className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                    loading="lazy"
+                                                                    referrerPolicy="no-referrer"
+                                                                  />
+                                                                ) : null}
+                                                                <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                                                  {match.player2}
+                                                                </span>
+                                                              </div>
+                                                            </div>
+                                                            <div className="text-right text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                                                              {deBracketType === "winners"
+                                                                ? "W"
+                                                                : "L"}
                                                             </div>
                                                           </div>
                                                         ),
