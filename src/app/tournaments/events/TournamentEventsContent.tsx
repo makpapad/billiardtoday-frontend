@@ -1825,7 +1825,7 @@ export function TournamentEventsContent({
                                                 the active block.
                                               </div>
                                             </div>
-                                            <div className="mx-auto grid w-[90%] max-w-[1440px] min-w-0 gap-4">
+                                            <div className="mx-auto grid w-[95%] max-w-[1600px] min-w-0 gap-4">
                                               {displayedDoubleEliminationRounds.map(
                                                 (round) => (
                                                   <section
@@ -1873,14 +1873,14 @@ export function TournamentEventsContent({
                                                                       : match.id,
                                                                   )
                                                                 }
-                                                                className={`mx-auto grid w-[90%] min-w-0 items-center gap-3 px-5 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
+                                                                className={`mx-auto grid w-[95%] min-w-0 items-center gap-2 px-4 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
                                                                   match.dateTime
-                                                                    ? "grid-cols-[44px_110px_120px_minmax(240px,1fr)_56px_56px_56px_minmax(240px,1fr)_48px]"
-                                                                    : "grid-cols-[44px_110px_minmax(280px,1fr)_56px_56px_56px_minmax(280px,1fr)_48px]"
+                                                                    ? "grid-cols-[40px_100px_112px_minmax(260px,1fr)_44px_40px_44px_minmax(260px,1fr)_40px]"
+                                                                    : "grid-cols-[40px_100px_minmax(320px,1fr)_44px_40px_44px_minmax(320px,1fr)_40px]"
                                                                 }`}
                                                               >
                                                                 <div className="flex justify-center">
-                                                                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
                                                                     {isExpanded
                                                                       ? "↑"
                                                                       : "↓"}
@@ -1950,7 +1950,7 @@ export function TournamentEventsContent({
                                                               </button>
                                                               {isExpanded ? (
                                                                 <div className="border-t border-slate-200 px-5 pb-5 dark:border-slate-800">
-                                                                  <div className="mx-auto mt-4 w-[90%] max-w-[1440px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+                                                                  <div className="mx-auto mt-4 w-[95%] max-w-[1600px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
                                                                     <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                                                       <div>Player</div>
                                                                       <div className="text-center">Winner</div>
