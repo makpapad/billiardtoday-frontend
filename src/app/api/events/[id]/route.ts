@@ -27,8 +27,6 @@ export async function GET(
         queryParams.set('populate[event_stages][fields][4]', 'is_final')
         queryParams.set('populate[event_stages][fields][5]', 'documentId')
         queryParams.set('populate[event_stages][fields][6]', 'stage_type')
-        queryParams.set('populate[event_stages][fields][7]', 'timetable_config')
-
         queryParams.set('populate[event_stages][populate][groups][sort][0]', 'number:asc')
         queryParams.set('populate[event_stages][populate][groups][fields][0]', 'number')
         queryParams.set('populate[event_stages][populate][groups][fields][1]', 'date_time')
