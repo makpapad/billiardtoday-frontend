@@ -1193,6 +1193,9 @@ export function TournamentEventsContent({
           id: string;
           matchNumber: number | null;
           displayMatchNumber: number;
+          globalMatchNumber: number | null;
+          winnerToGlobalMatchNumber: number | null;
+          loserToGlobalMatchNumber: number | null;
           player1: string;
           player1Country: string | null;
           player1FlagSrc: string | null;
@@ -1288,6 +1291,20 @@ export function TournamentEventsContent({
               matchNumber:
                 toNumber((m as { match_number?: unknown }).match_number) ?? null,
               displayMatchNumber: deDisplayCounter,
+              globalMatchNumber:
+                toNumber(
+                  (m as { global_match_number?: unknown }).global_match_number,
+                ) ?? null,
+              winnerToGlobalMatchNumber:
+                toNumber(
+                  (m as { winner_to_global_match_number?: unknown })
+                    .winner_to_global_match_number,
+                ) ?? null,
+              loserToGlobalMatchNumber:
+                toNumber(
+                  (m as { loser_to_global_match_number?: unknown })
+                    .loser_to_global_match_number,
+                ) ?? null,
               player1: p1.name || "Unknown player",
               player2: p2.name || "Unknown player",
               player1Country: p1.country,
@@ -1895,7 +1912,7 @@ export function TournamentEventsContent({
                                                                 }`}
                                                               >
                                                                 <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                                                  {`M${match.displayMatchNumber ?? match.matchNumber ?? ""}`}
+                                                                  {`M${match.globalMatchNumber ?? match.displayMatchNumber ?? match.matchNumber ?? ""}`}
                                                                 </div>
                                                                 <div className="min-w-0">
                                                                   <div className="flex items-center justify-end gap-2 text-right">
@@ -2038,6 +2055,27 @@ export function TournamentEventsContent({
                                                                           {match.tieBreak2 ??
                                                                             "-"}
                                                                         </div>
+                                                                      </div>
+                                                                    </div>
+                                                                    <div className="mt-4 grid min-w-[860px] grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                                                                      <div className="text-left">
+                                                                        Winner{" "}
+                                                                        <span className="font-semibold text-gray-700 dark:text-gray-200">
+                                                                          {match.winnerToGlobalMatchNumber
+                                                                            ? `M${match.winnerToGlobalMatchNumber}`
+                                                                            : round.label ===
+                                                                                "Grand Final"
+                                                                              ? "Champion"
+                                                                              : "-"}
+                                                                        </span>
+                                                                      </div>
+                                                                      <div className="text-right">
+                                                                        Loser{" "}
+                                                                        <span className="font-semibold text-gray-700 dark:text-gray-200">
+                                                                          {match.loserToGlobalMatchNumber
+                                                                            ? `M${match.loserToGlobalMatchNumber}`
+                                                                            : "Out"}
+                                                                        </span>
                                                                       </div>
                                                                     </div>
                                                                   </div>

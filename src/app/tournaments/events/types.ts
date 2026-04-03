@@ -47,6 +47,11 @@ export type StrapiGroup = {
   player2_innings?: number | string | null;
   player2_high_run?: number | string | null;
   player2_high_run_2?: number | string | null;
+  global_match_number?: number | string | null;
+  winner_to_global_match_number?: number | string | null;
+  winner_to_slot?: number | string | null;
+  loser_to_global_match_number?: number | string | null;
+  loser_to_slot?: number | string | null;
 };
 
 export type StrapiResult = {

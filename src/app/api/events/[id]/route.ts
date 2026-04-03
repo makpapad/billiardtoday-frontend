@@ -38,6 +38,11 @@ export async function GET(
         queryParams.set('populate[event_stages][populate][groups][fields][10]', 'documentId')
         queryParams.set('populate[event_stages][populate][groups][fields][11]', 'player1_high_run_2')
         queryParams.set('populate[event_stages][populate][groups][fields][12]', 'player2_high_run_2')
+        queryParams.set('populate[event_stages][populate][groups][fields][13]', 'global_match_number')
+        queryParams.set('populate[event_stages][populate][groups][fields][14]', 'winner_to_global_match_number')
+        queryParams.set('populate[event_stages][populate][groups][fields][15]', 'winner_to_slot')
+        queryParams.set('populate[event_stages][populate][groups][fields][16]', 'loser_to_global_match_number')
+        queryParams.set('populate[event_stages][populate][groups][fields][17]', 'loser_to_slot')
 
         queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'full_name')
         queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')
