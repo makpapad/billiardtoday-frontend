@@ -455,6 +455,9 @@ export function TournamentEventsContent({
     "winners",
   );
   const [deSelectedRound, setDeSelectedRound] = useState<string>("all");
+  const [deExpandedMatchId, setDeExpandedMatchId] = useState<string | null>(
+    null,
+  );
   const [liveSessions, setLiveSessions] = useState<EventLiveSession[]>([]);
   const [brMatchesByStage, setBrMatchesByStage] = useState<
     Record<string, unknown[]>
@@ -1198,6 +1201,18 @@ export function TournamentEventsContent({
           score1: number | null;
           score2: number | null;
           dateTime: string | null;
+          innings1: number | null;
+          innings2: number | null;
+          highRun1: number | null;
+          highRun2: number | null;
+          highRun1Second: number | null;
+          highRun2Second: number | null;
+          matchPoints1: number | null;
+          matchPoints2: number | null;
+          tieBreak1: number | null;
+          tieBreak2: number | null;
+          winner1: boolean;
+          winner2: boolean;
         }>;
       }>;
     }
@@ -1288,10 +1303,52 @@ export function TournamentEventsContent({
                 toNumber(
                   (m as { player2_match_points?: unknown }).player2_match_points,
                 ),
+              innings1: toNumber(
+                (m as { player1_innings?: unknown }).player1_innings,
+              ),
+              innings2: toNumber(
+                (m as { player2_innings?: unknown }).player2_innings,
+              ),
+              highRun1: toNumber(
+                (m as { player1_high_run?: unknown }).player1_high_run,
+              ),
+              highRun2: toNumber(
+                (m as { player2_high_run?: unknown }).player2_high_run,
+              ),
+              highRun1Second: toNumber(
+                (m as { player1_high_run_2?: unknown }).player1_high_run_2,
+              ),
+              highRun2Second: toNumber(
+                (m as { player2_high_run_2?: unknown }).player2_high_run_2,
+              ),
+              matchPoints1: toNumber(
+                (m as { player1_match_points?: unknown }).player1_match_points,
+              ),
+              matchPoints2: toNumber(
+                (m as { player2_match_points?: unknown }).player2_match_points,
+              ),
+              tieBreak1: toNumber(
+                (m as { player1_tie_break?: unknown }).player1_tie_break,
+              ),
+              tieBreak2: toNumber(
+                (m as { player2_tie_break?: unknown }).player2_tie_break,
+              ),
               dateTime:
                 typeof (m as { date_time?: unknown }).date_time === "string"
                   ? (m as { date_time: string }).date_time
                   : null,
+              winner1:
+                String((m as { source?: unknown }).source ?? "") === "ff-2" ||
+                (toNumber((m as { player1_points?: unknown }).player1_points) ??
+                  -1) >
+                  (toNumber((m as { player2_points?: unknown }).player2_points) ??
+                    -1),
+              winner2:
+                String((m as { source?: unknown }).source ?? "") === "ff-1" ||
+                (toNumber((m as { player2_points?: unknown }).player2_points) ??
+                  -1) >
+                  (toNumber((m as { player1_points?: unknown }).player1_points) ??
+                    -1),
             };
           }),
       }));
@@ -1307,6 +1364,7 @@ export function TournamentEventsContent({
   useEffect(() => {
     setDeBracketType("winners");
     setDeSelectedRound("all");
+    setDeExpandedMatchId(null);
   }, [activeStage?.documentId]);
 
   const eventInfo = useMemo(() => {
@@ -1767,7 +1825,7 @@ export function TournamentEventsContent({
                                                 the active block.
                                               </div>
                                             </div>
-                                            <div className="mx-auto grid w-[70%] max-w-[1120px] min-w-0 gap-4">
+                                            <div className="mx-auto grid w-[80%] max-w-[1280px] min-w-0 gap-4">
                                               {displayedDoubleEliminationRounds.map(
                                                 (round) => (
                                                   <section
@@ -1779,73 +1837,211 @@ export function TournamentEventsContent({
                                                     </div>
                                                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
                                                       {round.matches.map(
-                                                        (match) => (
-                                                          <div
-                                                            key={match.id}
-                                                            className="grid grid-cols-[96px_120px_minmax(220px,1fr)_56px_56px_minmax(220px,1fr)_48px] items-center gap-3 px-5 py-4"
-                                                          >
-                                                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                                              {match.matchNumber
-                                                                ? `Match ${match.matchNumber}`
-                                                                : "Match"}
-                                                            </div>
-                                                            <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-                                                              {match.dateTime
-                                                                ? new Date(
-                                                                    match.dateTime,
-                                                                  ).toLocaleString(
-                                                                    "el-GR",
+                                                        (match) => {
+                                                          const avg1 =
+                                                            match.score1 !== null &&
+                                                            match.innings1 &&
+                                                            match.innings1 > 0
+                                                              ? Math.trunc(
+                                                                  (match.score1 /
+                                                                    match.innings1) *
+                                                                    1000,
+                                                                ) / 1000
+                                                              : null;
+                                                          const avg2 =
+                                                            match.score2 !== null &&
+                                                            match.innings2 &&
+                                                            match.innings2 > 0
+                                                              ? Math.trunc(
+                                                                  (match.score2 /
+                                                                    match.innings2) *
+                                                                    1000,
+                                                                ) / 1000
+                                                              : null;
+                                                          const isExpanded =
+                                                            deExpandedMatchId ===
+                                                            match.id;
+
+                                                          return (
+                                                            <div key={match.id}>
+                                                              <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                  setDeExpandedMatchId(
+                                                                    isExpanded
+                                                                      ? null
+                                                                      : match.id,
                                                                   )
-                                                                : "-"}
+                                                                }
+                                                                className="mx-auto grid w-[80%] min-w-0 grid-cols-[44px_110px_120px_minmax(220px,1fr)_56px_56px_56px_minmax(220px,1fr)_48px] items-center gap-3 px-5 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                                              >
+                                                                <div className="flex justify-center">
+                                                                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                                                    {isExpanded
+                                                                      ? "↑"
+                                                                      : "↓"}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                                                  {match.matchNumber
+                                                                    ? `Match ${match.matchNumber}`
+                                                                    : "Match"}
+                                                                </div>
+                                                                <div className="text-center text-xs text-slate-500 dark:text-slate-400">
+                                                                  {match.dateTime
+                                                                    ? new Date(
+                                                                        match.dateTime,
+                                                                      ).toLocaleString(
+                                                                        "el-GR",
+                                                                      )
+                                                                    : "-"}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                  <div className="flex items-center justify-end gap-2 text-right">
+                                                                    <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                                                      {match.player1}
+                                                                    </span>
+                                                                    {match.player1FlagSrc ? (
+                                                                      <img
+                                                                        src={match.player1FlagSrc}
+                                                                        alt={match.player1Country ?? "flag"}
+                                                                        className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                        loading="lazy"
+                                                                        referrerPolicy="no-referrer"
+                                                                      />
+                                                                    ) : null}
+                                                                  </div>
+                                                                </div>
+                                                                <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
+                                                                  {match.score1 ?? "-"}
+                                                                </div>
+                                                                <div className="text-center text-sm font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                                                                  vs
+                                                                </div>
+                                                                <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
+                                                                  {match.score2 ?? "-"}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                  <div className="flex items-center gap-2">
+                                                                    {match.player2FlagSrc ? (
+                                                                      <img
+                                                                        src={match.player2FlagSrc}
+                                                                        alt={match.player2Country ?? "flag"}
+                                                                        className="h-3.5 w-5 rounded-[2px] object-cover"
+                                                                        loading="lazy"
+                                                                        referrerPolicy="no-referrer"
+                                                                      />
+                                                                    ) : null}
+                                                                    <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                                                      {match.player2}
+                                                                    </span>
+                                                                  </div>
+                                                                </div>
+                                                                <div className="text-center text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                                                                  {deBracketType ===
+                                                                  "winners"
+                                                                    ? "W"
+                                                                    : "L"}
+                                                                </div>
+                                                              </button>
+                                                              {isExpanded ? (
+                                                                <div className="border-t border-slate-200 px-5 pb-5 dark:border-slate-800">
+                                                                  <div className="mx-auto mt-4 w-[80%] max-w-[1280px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+                                                                    <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                                                      <div>Player</div>
+                                                                      <div className="text-center">Winner</div>
+                                                                      <div className="text-center">Points</div>
+                                                                      <div className="text-center">Innings</div>
+                                                                      <div className="text-center">Avg</div>
+                                                                      <div className="text-center">H.R.1</div>
+                                                                      <div className="text-center">H.R.2</div>
+                                                                      <div className="text-center">MP</div>
+                                                                      <div className="text-center">T.B.</div>
+                                                                    </div>
+                                                                    <div className="mt-3 space-y-2">
+                                                                      <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                                                                        <div className="font-medium">
+                                                                          {match.player1}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.winner1
+                                                                            ? "Yes"
+                                                                            : "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.score1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.innings1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {avg1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.highRun1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.highRun1Second ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.matchPoints1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.tieBreak1 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                      </div>
+                                                                      <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                                                                        <div className="font-medium">
+                                                                          {match.player2}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.winner2
+                                                                            ? "Yes"
+                                                                            : "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.score2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.innings2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {avg2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.highRun2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.highRun2Second ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.matchPoints2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.tieBreak2 ??
+                                                                            "-"}
+                                                                        </div>
+                                                                      </div>
+                                                                    </div>
+                                                                  </div>
+                                                                </div>
+                                                              ) : null}
                                                             </div>
-                                                            <div className="min-w-0">
-                                                              <div className="flex items-center justify-end gap-2 text-right">
-                                                                <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                                                                  {match.player1}
-                                                                </span>
-                                                                {match.player1FlagSrc ? (
-                                                                  <img
-                                                                    src={match.player1FlagSrc}
-                                                                    alt={match.player1Country ?? "flag"}
-                                                                    className="h-3.5 w-5 rounded-[2px] object-cover"
-                                                                    loading="lazy"
-                                                                    referrerPolicy="no-referrer"
-                                                                  />
-                                                                ) : null}
-                                                              </div>
-                                                            </div>
-                                                            <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
-                                                              {match.score1 ?? "-"}
-                                                            </div>
-                                                            <div className="text-center text-sm font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
-                                                              vs
-                                                            </div>
-                                                            <div className="text-center font-semibold text-slate-800 dark:text-slate-100">
-                                                              {match.score2 ?? "-"}
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                              <div className="flex items-center gap-2">
-                                                                {match.player2FlagSrc ? (
-                                                                  <img
-                                                                    src={match.player2FlagSrc}
-                                                                    alt={match.player2Country ?? "flag"}
-                                                                    className="h-3.5 w-5 rounded-[2px] object-cover"
-                                                                    loading="lazy"
-                                                                    referrerPolicy="no-referrer"
-                                                                  />
-                                                                ) : null}
-                                                                <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                                                                  {match.player2}
-                                                                </span>
-                                                              </div>
-                                                            </div>
-                                                            <div className="text-center text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                                                              {deBracketType === "winners"
-                                                                ? "W"
-                                                                : "L"}
-                                                            </div>
-                                                          </div>
-                                                        ),
+                                                          );
+                                                        },
                                                       )}
                                                     </div>
                                                   </section>
