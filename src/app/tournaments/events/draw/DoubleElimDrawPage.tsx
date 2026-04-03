@@ -35,17 +35,15 @@ type PositionedMatch = DrawMatch & {
 type ConnectorPath = {
   key: string;
   d: string;
-  tone: "winner" | "loser";
 };
 
 const CARD_WIDTH = 118;
 const CARD_HEIGHT = 46;
-const COLUMN_GAP = 110;
-const ROUND_GAP = 62;
-const SECTION_GAP = 72;
-const BASE_MATCH_GAP = 38;
+const COLUMN_GAP = 140;
+const ROW_GAP = 54;
+const BASE_MATCH_GAP = 34;
 const LEFT_PADDING = 48;
-const TOP_PADDING = 70;
+const TOP_PADDING = 46;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
@@ -85,40 +83,6 @@ function getBracketType(
   return "final";
 }
 
-function roundTitle(label: string) {
-  const upper = label.toUpperCase().trim();
-  return upper
-    .replace("WINNERS", "W")
-    .replace("LOSERS", "L")
-    .replace("GRAND FINAL RESET", "GF RESET")
-    .replace("GRAND FINAL", "GF");
-}
-
-function getRoundBand(roundLabel: string, bracketType: DrawMatch["bracketType"]) {
-  const upper = roundLabel.toUpperCase().trim();
-  if (bracketType === "winners") {
-    if (upper.startsWith("WINNERS R1")) return 0;
-    if (upper.startsWith("WINNERS R2")) return 1;
-    if (upper.startsWith("WINNERS R3")) return 2;
-    if (upper.startsWith("WINNERS R4")) return 3;
-    if (upper.startsWith("WINNERS R5")) return 4;
-    if (upper === "WINNERS FINAL") return 5;
-  }
-  if (bracketType === "losers") {
-    if (upper.startsWith("LOSERS R1")) return 1;
-    if (upper.startsWith("LOSERS R2")) return 2;
-    if (upper.startsWith("LOSERS R3")) return 2;
-    if (upper.startsWith("LOSERS R4")) return 3;
-    if (upper.startsWith("LOSERS R5")) return 3;
-    if (upper.startsWith("LOSERS R6")) return 4;
-    if (upper.startsWith("LOSERS R7")) return 4;
-    if (upper.startsWith("LOSERS R8")) return 5;
-    if (upper.startsWith("LOSERS R9")) return 5;
-    if (upper.startsWith("LOSERS R10")) return 6;
-  }
-  return 6;
-}
-
 function normalizeSpacing(values: number[], minimumGap: number) {
   if (!values.length) return values;
   const result = [...values].sort((a, b) => a - b);
@@ -128,46 +92,6 @@ function normalizeSpacing(values: number[], minimumGap: number) {
     }
   }
   return result;
-}
-
-function computeRoundPositions(
-  rounds: Array<{ label: string; matches: DrawMatch[] }>,
-  xOffset: number,
-  yOffset: number,
-  sourceMap: Map<number, number[]>,
-) {
-  const placed = new Map<number, PositionedMatch>();
-  const roundColumns: Array<{ label: string; x: number }> = [];
-
-  rounds.forEach((round, roundOrder) => {
-    const x = xOffset + roundOrder * COLUMN_GAP;
-    roundColumns.push({ label: round.label, x });
-    const desiredYs = round.matches.map((match, index) => {
-      const key = match.globalMatchNumber ?? -1;
-      const incoming = key > 0 ? sourceMap.get(key) ?? [] : [];
-      if (!incoming.length) {
-        return yOffset + index * BASE_MATCH_GAP;
-      }
-      const sourceYs = incoming
-        .map((number) => placed.get(number)?.y)
-        .filter((value): value is number => typeof value === "number");
-      if (!sourceYs.length) {
-        return yOffset + index * BASE_MATCH_GAP;
-      }
-      return sourceYs.reduce((sum, value) => sum + value, 0) / sourceYs.length;
-    });
-    const normalizedYs = normalizeSpacing(desiredYs, ROUND_GAP);
-    round.matches.forEach((match, index) => {
-      if (!match.globalMatchNumber) return;
-      placed.set(match.globalMatchNumber, {
-        ...match,
-        x,
-        y: normalizedYs[index],
-      });
-    });
-  });
-
-  return { placed, roundColumns };
 }
 
 function buildConnectorPath(
@@ -180,7 +104,7 @@ function buildConnectorPath(
   const endX = to.left - canvas.left;
   const endY = to.top - canvas.top + to.height / 2;
   const midX = startX + (endX - startX) / 2;
-  return `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+  return `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
 }
 
 function MatchNode({
@@ -193,12 +117,24 @@ function MatchNode({
   return (
     <div
       ref={(element) => assignRef(match.documentId, element)}
-      className="absolute rounded-xl border border-[#29448b] bg-[#18357d] px-3 py-2 text-white shadow-[0_8px_18px_rgba(17,35,86,0.22)]"
+      className="absolute rounded-xl border px-3 py-2 text-white shadow-[0_8px_18px_rgba(17,35,86,0.18)]"
       style={{
         left: `${match.x}px`,
         top: `${match.y}px`,
         width: `${CARD_WIDTH}px`,
         height: `${CARD_HEIGHT}px`,
+        backgroundColor:
+          match.bracketType === "final"
+            ? "#175c4f"
+            : match.bracketType === "losers"
+              ? "#1f3777"
+              : "#244592",
+        borderColor:
+          match.bracketType === "final"
+            ? "#27826f"
+            : match.bracketType === "losers"
+              ? "#395392"
+              : "#3e63b0",
       }}
     >
       <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-100/80">
@@ -318,38 +254,13 @@ export default function DoubleElimDrawPage() {
       );
   }, [activeStage]);
 
-  const roundsBySection = useMemo(() => {
-    const build = (type: DrawMatch["bracketType"]) => {
-      const byRound = new Map<string, DrawMatch[]>();
-      drawMatches
-        .filter((match) => match.bracketType === type)
-        .forEach((match) => {
-          const current = byRound.get(match.roundLabel) ?? [];
-          current.push(match);
-          byRound.set(match.roundLabel, current);
-        });
-      return Array.from(byRound.entries())
-        .sort((a, b) => getRoundIndex(a[0]) - getRoundIndex(b[0]))
-        .map(([label, matches]) => ({
-          label,
-          matches: matches.sort(
-            (a, b) =>
-              (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999),
-          ),
-        }));
-    };
-    return {
-      winners: build("winners"),
-      losers: build("losers"),
-      finals: build("final"),
-    };
-  }, [drawMatches]);
-
   const layout = useMemo(() => {
+    const byGlobal = new Map<number, DrawMatch>();
     const sourceMap = new Map<number, number[]>();
     drawMatches.forEach((match) => {
       const from = match.globalMatchNumber;
       if (!from) return;
+      byGlobal.set(from, match);
       const winnerTarget = match.winnerToGlobalMatchNumber;
       const loserTarget = match.loserToGlobalMatchNumber;
       if (winnerTarget) {
@@ -364,65 +275,100 @@ export default function DoubleElimDrawPage() {
       }
     });
 
-    const winnersLayout = computeRoundPositions(
-      roundsBySection.winners,
-      LEFT_PADDING,
-      TOP_PADDING,
-      sourceMap,
-    );
-    const winnersMatches = Array.from(winnersLayout.placed.values());
-    const winnersBottom =
-      winnersMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING) +
-      CARD_HEIGHT;
+    const depthCache = new Map<number, number>();
+    const computeDepth = (globalMatchNumber: number): number => {
+      if (depthCache.has(globalMatchNumber)) {
+        return depthCache.get(globalMatchNumber)!;
+      }
+      const match = byGlobal.get(globalMatchNumber);
+      if (!match) return 0;
+      const targets = [
+        match.winnerToGlobalMatchNumber,
+        match.loserToGlobalMatchNumber,
+      ].filter((value): value is number => typeof value === "number" && value > 0);
+      if (!targets.length) {
+        depthCache.set(globalMatchNumber, 0);
+        return 0;
+      }
+      const depth = 1 + Math.max(...targets.map((target) => computeDepth(target)));
+      depthCache.set(globalMatchNumber, depth);
+      return depth;
+    };
 
-    const firstLosersBandY =
-      TOP_PADDING + (ROUND_GAP + CARD_HEIGHT) * 8 + SECTION_GAP;
+    drawMatches.forEach((match) => {
+      if (match.globalMatchNumber) computeDepth(match.globalMatchNumber);
+    });
 
-    const losersLayout = computeRoundPositions(
-      roundsBySection.losers,
-      LEFT_PADDING + COLUMN_GAP / 2,
-      firstLosersBandY,
-      sourceMap,
-    );
-    const losersMatches = Array.from(losersLayout.placed.values());
-    const losersBottom =
-      losersMatches.reduce((max, match) => Math.max(max, match.y), winnersBottom + SECTION_GAP) +
-      CARD_HEIGHT;
+    const maxDepth = Math.max(...Array.from(depthCache.values()), 0);
+    const layerMap = new Map<number, DrawMatch[]>();
+    drawMatches.forEach((match) => {
+      const global = match.globalMatchNumber;
+      if (!global) return;
+      const depth = depthCache.get(global) ?? 0;
+      const layer = maxDepth - depth;
+      const current = layerMap.get(layer) ?? [];
+      current.push(match);
+      layerMap.set(layer, current);
+    });
 
-    const finalsStartX =
-      LEFT_PADDING +
-      Math.max(
-        roundsBySection.winners.length * COLUMN_GAP,
-        roundsBySection.losers.length * COLUMN_GAP + COLUMN_GAP / 2,
-      ) +
-      120;
+    const placed = new Map<number, PositionedMatch>();
+    const columns = Array.from(layerMap.entries()).sort((a, b) => a[0] - b[0]);
 
-    const finalsLayout = computeRoundPositions(
-      roundsBySection.finals,
-      finalsStartX,
-      TOP_PADDING + (ROUND_GAP + CARD_HEIGHT) * 14,
-      sourceMap,
-    );
+    columns.forEach(([layer, matches]) => {
+      const x = LEFT_PADDING + layer * COLUMN_GAP;
+      const desiredYs = matches.map((match, index) => {
+        const global = match.globalMatchNumber!;
+        const incoming = sourceMap.get(global) ?? [];
+        if (!incoming.length) {
+          return TOP_PADDING + index * BASE_MATCH_GAP;
+        }
+        const sourceYs = incoming
+          .map((number) => placed.get(number)?.y)
+          .filter((value): value is number => typeof value === "number");
+        if (!sourceYs.length) {
+          return TOP_PADDING + index * BASE_MATCH_GAP;
+        }
+        return sourceYs.reduce((sum, value) => sum + value, 0) / sourceYs.length;
+      });
+      const orderedMatches = matches
+        .slice()
+        .sort((a, b) => {
+          const aGlobal = a.globalMatchNumber ?? 9999;
+          const bGlobal = b.globalMatchNumber ?? 9999;
+          return aGlobal - bGlobal;
+        });
+      const normalizedYs = normalizeSpacing(desiredYs, ROW_GAP);
+      orderedMatches.forEach((match, index) => {
+        placed.set(match.globalMatchNumber!, {
+          ...match,
+          x,
+          y: normalizedYs[index],
+        });
+      });
+    });
 
-    const allMatches = [
-      ...Array.from(winnersLayout.placed.values()),
-      ...Array.from(losersLayout.placed.values()),
-      ...Array.from(finalsLayout.placed.values()),
-    ];
+    const allMatches = Array.from(placed.values());
+    const labels = columns.map(([layer, matches]) => {
+      const x = LEFT_PADDING + layer * COLUMN_GAP;
+      const uniqueLabels = Array.from(
+        new Set(
+          matches
+            .slice()
+            .sort((a, b) => getRoundIndex(a.roundLabel) - getRoundIndex(b.roundLabel))
+            .map((match) => match.roundLabel),
+        ),
+      );
+      return { x, labels: uniqueLabels };
+    });
+    const maxY = allMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING);
 
     return {
-      winnersColumns: winnersLayout.roundColumns,
-      losersColumns: losersLayout.roundColumns,
-      finalsColumns: finalsLayout.roundColumns,
+      columns: labels,
       matches: allMatches,
-      width:
-        finalsStartX +
-        Math.max(1, roundsBySection.finals.length) * COLUMN_GAP +
-        CARD_WIDTH +
-        120,
-      height: Math.max(losersBottom + 140, winnersBottom + 140),
+      width: LEFT_PADDING + columns.length * COLUMN_GAP + CARD_WIDTH + 80,
+      height: maxY + CARD_HEIGHT + 80,
     };
-  }, [drawMatches, roundsBySection]);
+  }, [drawMatches]);
 
   useLayoutEffect(() => {
     const rebuild = () => {
@@ -457,7 +403,6 @@ export default function DoubleElimDrawPage() {
           const toRect = toNode.getBoundingClientRect();
           paths.push({
             key: `${match.documentId}-${tone}-${targetMatch.documentId}`,
-            tone,
             d: buildConnectorPath(fromRect, toRect, canvasRect),
           });
         });
@@ -538,42 +483,28 @@ export default function DoubleElimDrawPage() {
                     key={path.key}
                     d={path.d}
                     fill="none"
-                    stroke={path.tone === "winner" ? "#2b7fff" : "#6a7da8"}
-                    strokeWidth={2.5}
+                    stroke="#445e9c"
+                    strokeWidth={2}
                     strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 ))}
               </svg>
 
-              {layout.winnersColumns.map((column) => (
+              {layout.columns.map((column, columnIndex) => (
                 <div
-                  key={`w-${column.label}`}
-                  className="absolute rounded-xl bg-[#122864] px-3 py-2 text-center text-xs font-black uppercase tracking-[0.16em] text-white"
-                  style={{ left: `${column.x}px`, top: "12px", width: `${CARD_WIDTH}px` }}
+                  key={`col-${columnIndex}`}
+                  className="absolute flex flex-col gap-1"
+                  style={{ left: `${column.x}px`, top: "10px", width: `${CARD_WIDTH}px` }}
                 >
-                  {roundTitle(column.label)}
-                </div>
-              ))}
-              {layout.losersColumns.map((column) => (
-                <div
-                  key={`l-${column.label}`}
-                  className="absolute rounded-xl bg-[#2a3f85] px-3 py-2 text-center text-xs font-black uppercase tracking-[0.16em] text-white"
-                  style={{
-                    left: `${column.x}px`,
-                    top: `${TOP_PADDING + 8 * (ROUND_GAP + CARD_HEIGHT) - 52}px`,
-                    width: `${CARD_WIDTH}px`,
-                  }}
-                >
-                  {roundTitle(column.label)}
-                </div>
-              ))}
-              {layout.finalsColumns.map((column) => (
-                <div
-                  key={`f-${column.label}`}
-                  className="absolute rounded-xl bg-[#0f6d5f] px-3 py-2 text-center text-xs font-black uppercase tracking-[0.16em] text-white"
-                  style={{ left: `${column.x}px`, top: "12px", width: `${CARD_WIDTH}px` }}
-                >
-                  {roundTitle(column.label)}
+                  {column.labels.map((label) => (
+                    <div
+                      key={`${columnIndex}-${label}`}
+                      className="rounded-xl bg-[#122864] px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-[0.14em] text-white"
+                    >
+                      {label}
+                    </div>
+                  ))}
                 </div>
               ))}
 
