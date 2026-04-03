@@ -41,9 +41,9 @@ type ConnectorPath = {
 const CARD_WIDTH = 118;
 const CARD_HEIGHT = 46;
 const COLUMN_GAP = 110;
-const ROUND_GAP = 94;
-const SECTION_GAP = 220;
-const BASE_MATCH_GAP = 78;
+const ROUND_GAP = 62;
+const SECTION_GAP = 72;
+const BASE_MATCH_GAP = 38;
 const LEFT_PADDING = 48;
 const TOP_PADDING = 70;
 
@@ -92,6 +92,31 @@ function roundTitle(label: string) {
     .replace("LOSERS", "L")
     .replace("GRAND FINAL RESET", "GF RESET")
     .replace("GRAND FINAL", "GF");
+}
+
+function getRoundBand(roundLabel: string, bracketType: DrawMatch["bracketType"]) {
+  const upper = roundLabel.toUpperCase().trim();
+  if (bracketType === "winners") {
+    if (upper.startsWith("WINNERS R1")) return 0;
+    if (upper.startsWith("WINNERS R2")) return 1;
+    if (upper.startsWith("WINNERS R3")) return 2;
+    if (upper.startsWith("WINNERS R4")) return 3;
+    if (upper.startsWith("WINNERS R5")) return 4;
+    if (upper === "WINNERS FINAL") return 5;
+  }
+  if (bracketType === "losers") {
+    if (upper.startsWith("LOSERS R1")) return 1;
+    if (upper.startsWith("LOSERS R2")) return 2;
+    if (upper.startsWith("LOSERS R3")) return 2;
+    if (upper.startsWith("LOSERS R4")) return 3;
+    if (upper.startsWith("LOSERS R5")) return 3;
+    if (upper.startsWith("LOSERS R6")) return 4;
+    if (upper.startsWith("LOSERS R7")) return 4;
+    if (upper.startsWith("LOSERS R8")) return 5;
+    if (upper.startsWith("LOSERS R9")) return 5;
+    if (upper.startsWith("LOSERS R10")) return 6;
+  }
+  return 6;
 }
 
 function normalizeSpacing(values: number[], minimumGap: number) {
@@ -350,10 +375,13 @@ export default function DoubleElimDrawPage() {
       winnersMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING) +
       CARD_HEIGHT;
 
+    const firstLosersBandY =
+      TOP_PADDING + (ROUND_GAP + CARD_HEIGHT) * 8 + SECTION_GAP;
+
     const losersLayout = computeRoundPositions(
       roundsBySection.losers,
       LEFT_PADDING + COLUMN_GAP / 2,
-      winnersBottom + SECTION_GAP,
+      firstLosersBandY,
       sourceMap,
     );
     const losersMatches = Array.from(losersLayout.placed.values());
@@ -372,7 +400,7 @@ export default function DoubleElimDrawPage() {
     const finalsLayout = computeRoundPositions(
       roundsBySection.finals,
       finalsStartX,
-      winnersBottom / 2 + 120,
+      TOP_PADDING + (ROUND_GAP + CARD_HEIGHT) * 14,
       sourceMap,
     );
 
@@ -392,7 +420,7 @@ export default function DoubleElimDrawPage() {
         Math.max(1, roundsBySection.finals.length) * COLUMN_GAP +
         CARD_WIDTH +
         120,
-      height: Math.max(losersBottom + 200, winnersBottom + 240),
+      height: Math.max(losersBottom + 140, winnersBottom + 140),
     };
   }, [drawMatches, roundsBySection]);
 
@@ -530,7 +558,11 @@ export default function DoubleElimDrawPage() {
                 <div
                   key={`l-${column.label}`}
                   className="absolute rounded-xl bg-[#2a3f85] px-3 py-2 text-center text-xs font-black uppercase tracking-[0.16em] text-white"
-                  style={{ left: `${column.x}px`, top: `${layout.matches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING) / 2 + 210}px`, width: `${CARD_WIDTH}px` }}
+                  style={{
+                    left: `${column.x}px`,
+                    top: `${TOP_PADDING + 8 * (ROUND_GAP + CARD_HEIGHT) - 52}px`,
+                    width: `${CARD_WIDTH}px`,
+                  }}
                 >
                   {roundTitle(column.label)}
                 </div>
