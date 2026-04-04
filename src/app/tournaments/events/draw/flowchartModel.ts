@@ -40,13 +40,11 @@ export type DrawColumn = {
 
 export function getRoundIndex(label: string): number {
   const upper = label.toUpperCase().trim();
-  if (upper.startsWith("WINNERS R")) {
-    return Number(upper.replace("WINNERS R", "")) || 999;
-  }
+  const winnersRound = upper.match(/^WINNER(?:S)?\s+(?:ROUND|R)\s*(\d+)$/);
+  if (winnersRound) return Number(winnersRound[1]) || 999;
   if (upper === "WINNERS FINAL") return 999;
-  if (upper.startsWith("LOSERS R")) {
-    return Number(upper.replace("LOSERS R", "")) || 999;
-  }
+  const losersRound = upper.match(/^LOSER(?:S)?\s+(?:ROUND|R)\s*(\d+)$/);
+  if (losersRound) return Number(losersRound[1]) || 999;
   if (upper === "LOSERS FINAL") return 999;
   if (upper === "GRAND FINAL") return 1000;
   if (upper === "GRAND FINAL RESET") return 1001;
@@ -138,13 +136,13 @@ export function buildDrawEdges(matches: DrawMatch[]): DrawEdge[] {
 
 function getColumnOrder(match: DrawMatch): number {
   const label = match.roundLabel.trim().toUpperCase();
-  const losers = label.match(/^LOSER(?:S)? ROUND\s+(\d+)$/);
+  const losers = label.match(/^LOSER(?:S)?\s+(?:ROUND|R)\s*(\d+)$/);
   if (losers) {
     return 100 - Number(losers[1]);
   }
 
   if (label === "ROUND 1") return 200;
-  const winnerRound = label.match(/^WINNER(?:S)? ROUND\s+(\d+)$/);
+  const winnerRound = label.match(/^WINNER(?:S)?\s+(?:ROUND|R)\s*(\d+)$/);
   if (winnerRound) {
     return 200 + Number(winnerRound[1]);
   }
