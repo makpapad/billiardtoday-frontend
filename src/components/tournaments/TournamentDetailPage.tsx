@@ -622,13 +622,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
   >(summary.stages[0]?.documentId ?? null);
-  const flowchartHref = `/tournaments/events/draw?eventId=${encodeURIComponent(
+  const flowchartHref = `${buildTournamentHref(
     summary.documentId,
-  )}${
-    selectedStageDocumentId
-      ? `&stage=${encodeURIComponent(selectedStageDocumentId)}`
-      : ""
-  }`;
+    summary.title,
+    summary.season,
+    embedded,
+  )}/flowchart`;
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);

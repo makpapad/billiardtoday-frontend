@@ -1,13 +1,22 @@
 import type { StrapiEventStage, StrapiGroup } from "../types";
-import { normalizeEntity, toNumber, toRelationArray } from "../utils";
+import { normalizeEntity, normalizePlayer, toNumber, toRelationArray } from "../utils";
 
 export type DrawMatch = {
   id: string;
   documentId: string;
   bracketType: "winners" | "losers" | "final";
+  status: "waiting" | "finished";
   roundLabel: string;
   roundIndex: number;
   matchIndex: number;
+  matchNumber: number | null;
+  dateTime: string | null;
+  player1Name: string;
+  player1Country: string | null;
+  player1Points: number | null;
+  player2Name: string;
+  player2Country: string | null;
+  player2Points: number | null;
   globalMatchNumber: number | null;
   winnerToGlobalMatchNumber: number | null;
   winnerToSlot: number | null;
@@ -65,6 +74,10 @@ export function buildDrawMatches(activeStage: StrapiEventStage | null): DrawMatc
     .map((group, index) => {
       const normalized = normalizeEntity<StrapiGroup>(group, `match-${index}`);
       const normalizedRecord = normalized as Record<string, unknown>;
+      const player1 = normalizePlayer(normalized.player1, `${normalized.id}-p1`);
+      const player2 = normalizePlayer(normalized.player2, `${normalized.id}-p2`);
+      const player1Points = toNumber(normalized.player1_points);
+      const player2Points = toNumber(normalized.player2_points);
       const roundLabel =
         typeof normalizedRecord.round === "string" && normalizedRecord.round.trim()
           ? normalizedRecord.round.trim()
@@ -73,10 +86,21 @@ export function buildDrawMatches(activeStage: StrapiEventStage | null): DrawMatc
         id: normalized.id,
         documentId: normalized.documentId,
         bracketType: getBracketType(normalizedRecord.bracket_type, roundLabel),
+        status:
+          player1Points !== null || player2Points !== null ? "finished" : "waiting",
         roundLabel,
         roundIndex: getRoundIndex(roundLabel),
         matchIndex:
           toNumber((normalized as { match_number?: unknown }).match_number) ?? index + 1,
+        matchNumber: toNumber((normalized as { number?: unknown }).number),
+        dateTime:
+          typeof normalized.date_time === "string" ? normalized.date_time : null,
+        player1Name: player1.name || "TBD",
+        player1Country: player1.country,
+        player1Points,
+        player2Name: player2.name || "TBD",
+        player2Country: player2.country,
+        player2Points,
         globalMatchNumber: toNumber(normalized.global_match_number),
         winnerToGlobalMatchNumber: toNumber(normalized.winner_to_global_match_number),
         winnerToSlot: toNumber(normalized.winner_to_slot),

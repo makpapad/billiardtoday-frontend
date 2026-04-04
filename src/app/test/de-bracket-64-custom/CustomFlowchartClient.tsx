@@ -1,19 +1,15 @@
 "use client";
 
-import Script from "next/script";
-import { useEffect, useState } from "react";
-
-declare global {
-  interface Window {
-    CueScore?: {
-      Tournament: new (id: number) => {
-        createFlowchart: (targetId: string) => unknown;
-      };
-    };
-  }
-}
-
-const FALLBACK_CUESCORE_ID = 58737796;
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { EventApiResponse, StrapiEventStage } from "@/app/tournaments/events/types";
+import { normalizeEntity, toRelationArray } from "@/app/tournaments/events/utils";
+import {
+  buildDrawEdges,
+  buildDrawMatches,
+  buildFullPyramidColumns,
+  type DrawMatch,
+} from "@/app/tournaments/events/draw/flowchartModel";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 const FLOWCHART_CSS = `
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800');
@@ -22,42 +18,40 @@ html, body { background-color: #FFF; font-family: Open Sans, sans-serif; padding
 #Content { padding-top: 0; max-width: 100vw; overflow-x: scroll; overflow-y: visible; }
 a, a:link, a:active, a:visited { color: #467DF7; }
 a { outline: none; }
-.breadcrumbs { width: fit-content; max-width: 100vw; box-sizing: border-box; position: sticky; left: 0; display: flex; align-items: center; padding: 16px 8px; font-size: 12px; text-transform: none; border: 0; }
+.breadcrumbs { width: fit-content; max-width: 100vw; box-sizing: border-box; position: sticky; left: 0; display: flex; align-items: center; padding: 16px 8px; font-size: 12px; text-transform: none; border: 0; background: #fff; z-index: 10; }
 .breadcrumbs a, .breadcrumbs span { font-size: 12px; padding-left: 17px; background: transparent url(https://cuescore.com/img/arrow-right-blue.svg) left 5px center/6px no-repeat; text-decoration: none; }
 .breadcrumbs span { color: #0E26668A; }
 .breadcrumbs a:first-child { background: transparent; padding-left: 0; }
-.cs-tournament.cs-flowchart .cs-match { background-color: transparent; }
-.cs-tournament.cs-flowchart .cs-match.waiting .cs-flowchart-participant-line { background-color: #F3F3F3; }
-.cs-tournament.cs-flowchart .cs-match.waiting:nth-child(even) { background-color: transparent; }
-.cs-tournament.cs-flowchart .cs-match.playing .cs-flowchart-participant-line { background-color: #467DF7; }
-.cs-tournament.cs-flowchart .cs-match.playing:nth-child(even) { background-color: transparent; }
-.cs-tournament.cs-flowchart .cs-match.finished .cs-flowchart-participant-line { background-color: #172266; }
-.cs-tournament.cs-flowchart .cs-match.finished:nth-child(even) { background-color: transparent; }
-.cs-tournament.cs-flowchart .cs-match .cs-score { height: 100%; align-items: center; font-weight: 700; }
-.cs-tournament.cs-flowchart .cs-match .cs-matchno { position: static; margin-left: 8px; border-radius: 4px 4px 0 0; }
-.cs-tournament.cs-flowchart .cs-match .cs-table { font-size: inherit; }
-.cs-flowchart { display: flex; transform-origin: top left; width: fit-content; padding: 0 8px; transition: all .2s ease-in-out; margin-bottom: 148px; }
-.cs-flowchart .cs-round-body { display: flex; height: 100%; flex-direction: column; justify-content: space-around; margin: 0; }
-.cs-flowchart .cs-round-body .cs-match { height: 96px; width: 250px; overflow: hidden; margin: 2px 0; }
-.cs-flowchart .cs-match .cs-participant-name { flex-direction: row; font-size: smaller; white-space: nowrap; text-overflow: ellipsis; max-width: 188px; overflow: hidden; }
-.cs-flowchart .cs-match .cs-participant-name .cs-participant-firstname:after { content: " "; display: inline; }
-.cs-flowchart .cs-match .cs-participant-name .cs-participant-lastname { text-transform: none; }
-.cs-flowchart .cs-match .cs-header { display: flex; justify-content: space-between; background-color: white; color: #808CAC; height: 16px; font-size: 12px; outline: none; }
-.cs-flowchart .cs-match .cs-footer { display: flex; justify-content: space-between; background-color: white; color: #808CAC; height: 16px; font-size: 12px; outline: none; }
-.walkover { display: block !important; }
-.cs-flowchart-participant-line { display: flex; justify-content: space-between; align-items: center; height: 32px; overflow: hidden; }
-.cs-flowchart-participant-line:nth-child(even) { border-radius: 8px 8px 0 0; }
-.cs-flowchart-participant-line:nth-child(odd) { border-radius: 0 0 8px 8px; }
+.cs-flowchart-shell { padding: 0 8px 148px; width: fit-content; transform-origin: top left; transition: transform .2s ease-in-out; }
+.cs-flowchart-grid { position: relative; width: fit-content; }
+.cs-round-column { position: absolute; top: 0; width: 250px; }
+.cs-round-header { color: #52668f; font-size: 12px; line-height: 16px; padding: 0 0 8px; border-top: 1px solid #b9c5de; border-bottom: 1px solid #b9c5de; white-space: nowrap; }
+.cs-match { position: absolute; width: 250px; height: 96px; background-color: transparent; }
+.cs-match .cs-matchno { margin-left: 8px; border-radius: 4px 4px 0 0; background: #667cac; color: #fff; font-size: 12px; font-weight: 700; line-height: 16px; padding: 0 6px; display: inline-block; }
+.cs-match .cs-header { display: flex; justify-content: space-between; align-items: center; background-color: white; color: #808CAC; height: 16px; font-size: 12px; overflow: hidden; }
+.cs-match .cs-header-meta { flex: 1; min-width: 0; padding: 0 6px 0 8px; text-align: right; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.cs-flowchart-participant-line { display: flex; justify-content: space-between; align-items: center; height: 32px; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.cs-flowchart-participant-line:nth-child(2) { border-radius: 8px 8px 0 0; }
+.cs-flowchart-participant-line:nth-child(3) { border-radius: 0 0 8px 8px; border-bottom: 0; }
+.cs-match.waiting .cs-flowchart-participant-line { background-color: #F3F3F3; color: #0E2666; }
+.cs-match.finished .cs-flowchart-participant-line { background-color: #172266; color: #fff; }
+.cs-match.finished .cs-flowchart-participant-line.is-winner { color: #7fe4ff; }
+.cs-match.finished .cs-flowchart-participant-line.is-loser { color: rgba(255,255,255,0.6); }
+.cs-player-line { display: flex; align-items: center; gap: 6px; min-width: 0; padding-left: 8px; }
+.cs-player-flag { width: 14px; height: 10px; border-radius: 2px; object-fit: cover; flex: 0 0 auto; box-shadow: 0 0 0 1px rgba(15,23,42,0.08); }
+.cs-player-name { font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.cs-score { height: 100%; min-width: 24px; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; font-weight: 700; font-size: 12px; }
+.cs-footer { display: flex; justify-content: space-between; align-items: center; background-color: white; color: #808CAC; height: 16px; font-size: 12px; padding: 0 6px 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 #ButtonBar { z-index: 2147483647; position: fixed; left: 8px; bottom: 8px; }
 div.zoom { z-index: 11; display: inline-block; padding: 8px; background-color: #DBDEE4; opacity: 0.9; border-radius: 4px; }
 .zoom .input { cursor: pointer; height: 36px; width: 36px; outline: 0; border: 0; background-color: transparent; background-position: center center; background-size: 36px; background-repeat: no-repeat; margin: 0; padding: 0; color: transparent; font-size: 0; line-height: 36px; }
 .zoom .in { background-image: url(https://cuescore.com/img/scoreboard/scoreboard-plus.svg); }
 .zoom .out { background-image: url(https://cuescore.com/img/scoreboard/scoreboard-minus.svg); }
 .zoom .value { text-align: center; color: #475569; font-size: 14px; font-weight: 600; padding: 8px 0; }
-[data-bt-editable="true"] .cs-flowchart { filter: saturate(1.02); }
-[data-bt-editable="true"] .cs-round-header { letter-spacing: -0.01em; }
-[data-bt-editable="true"] .cs-match { position: relative; }
-[data-bt-editable="true"] .cs-match[data-bt-match-no]::after { content: attr(data-bt-match-no); position: absolute; top: -14px; right: 6px; font-size: 10px; color: rgba(14, 38, 102, 0.28); font-weight: 700; pointer-events: none; }
+.bt-stage-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 8px 12px; }
+.bt-stage-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b; }
+.bt-stage-select { min-width: 220px; border: 1px solid #cbd5e1; border-radius: 9999px; padding: 8px 14px; font-size: 12px; font-weight: 600; color: #0f172a; background: #fff; }
+.bt-flowchart-empty { padding: 24px 8px; color: #64748b; font-size: 14px; }
 @media only screen and (max-width: 960px) {
   .breadcrumbs { font-size: 16px; }
   .breadcrumbs a, .breadcrumbs span { overflow: hidden; max-width: 50%; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
@@ -65,60 +59,327 @@ div.zoom { z-index: 11; display: inline-block; padding: 8px; background-color: #
 }
 `;
 
-function applyLocalFlowchartTweaks(root: HTMLElement) {
-  root.setAttribute("data-bt-editable", "true");
-
-  const roundHeaders = Array.from(root.querySelectorAll<HTMLElement>(".cs-round-header"));
-  roundHeaders.forEach((header) => {
-    header.textContent = header.textContent?.replace(/\s+/g, " ").trim() ?? "";
-  });
-
-  const matches = Array.from(root.querySelectorAll<HTMLElement>(".cs-match"));
-  matches.forEach((match) => {
-    const matchNo =
-      match.querySelector(".cs-matchno")?.textContent?.replace(/\s+/g, " ").trim() ?? "";
-    if (matchNo) match.setAttribute("data-bt-match-no", matchNo);
-  });
-}
-
 type Props = {
   eventDocumentId: string | null;
   tournamentSlug: string;
   tournamentTitle: string;
+  breadcrumbParentLabel?: string;
+  breadcrumbParentHref?: string;
+  showDebugInfo?: boolean;
 };
+
+type DrawStage = {
+  id: string;
+  documentId: string;
+  title: string;
+  stageType: string | null;
+  raw: StrapiEventStage & { id: string; documentId: string };
+};
+
+type PositionedMatch = DrawMatch & {
+  x: number;
+  y: number;
+};
+
+type ConnectorPath = {
+  key: string;
+  d: string;
+};
+
+const CARD_WIDTH = 250;
+const CARD_HEIGHT = 96;
+const HEADER_HEIGHT = 16;
+const PLAYER_ROW_HEIGHT = 32;
+const FOOTER_HEIGHT = 16;
+const COLUMN_GAP = 285;
+const MIN_ROW_GAP = 18;
+const LEFT_PADDING = 28;
+const TOP_PADDING = 44;
+
+const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
+  const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to fetch event");
+  }
+  return response.json();
+};
+
+function normalizeSpacing(values: number[], minimumGap: number) {
+  if (!values.length) return values;
+  const result = [...values].sort((a, b) => a - b);
+  for (let i = 1; i < result.length; i += 1) {
+    if (result[i] - result[i - 1] < minimumGap) {
+      result[i] = result[i - 1] + minimumGap;
+    }
+  }
+  return result;
+}
+
+function formatHeaderMeta(value: string | null) {
+  if (!value) return "T?";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "T?";
+  const weekday = parsed.toLocaleDateString("en-US", { weekday: "short" });
+  const time = parsed.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${weekday} ${time}`;
+}
+
+function getWinnerSlot(match: DrawMatch) {
+  const left = match.player1Points;
+  const right = match.player2Points;
+  if (left === null || right === null) return null;
+  if (left > right) return 1;
+  if (right > left) return 2;
+  return null;
+}
+
+function buildConnectorPath(
+  from: DOMRect,
+  to: DOMRect,
+  canvas: DOMRect,
+  slot: number | null,
+) {
+  const startX = from.right - canvas.left;
+  const startY = from.top - canvas.top + CARD_HEIGHT / 2;
+  const endX = to.left - canvas.left;
+  const endY =
+    to.top -
+    canvas.top +
+    HEADER_HEIGHT +
+    (slot === 2 ? PLAYER_ROW_HEIGHT * 1.5 : PLAYER_ROW_HEIGHT * 0.5);
+  const trunkX = startX + Math.max(18, (endX - startX) / 2);
+  return `M ${startX} ${startY} H ${trunkX} V ${endY} H ${endX}`;
+}
+
+function MatchCard({
+  match,
+  assignRef,
+}: {
+  match: PositionedMatch;
+  assignRef: (id: string, element: HTMLDivElement | null) => void;
+}) {
+  const winnerSlot = getWinnerSlot(match);
+  const loserRoute = match.loserToGlobalMatchNumber
+    ? `Loser to #${match.loserToGlobalMatchNumber}`
+    : "Eliminated";
+  const score1 = match.player1Points === null ? "-" : String(match.player1Points);
+  const score2 = match.player2Points === null ? "-" : String(match.player2Points);
+  const player1Flag = getCountryFlagCdnUrl(match.player1Country ?? null, 40);
+  const player2Flag = getCountryFlagCdnUrl(match.player2Country ?? null, 40);
+
+  return (
+    <div
+      ref={(element) => assignRef(match.documentId, element)}
+      className={`cs-match ${match.status}`}
+      style={{ left: `${match.x}px`, top: `${match.y}px` }}
+    >
+      <div className="cs-header">
+        <span className="cs-matchno">
+          Match {match.globalMatchNumber ?? match.matchNumber ?? match.matchIndex}
+        </span>
+        <span className="cs-header-meta">{formatHeaderMeta(match.dateTime)}</span>
+      </div>
+
+      <div
+        className={`cs-flowchart-participant-line ${winnerSlot === 1 ? "is-winner" : winnerSlot === 2 ? "is-loser" : ""}`}
+      >
+        <div className="cs-player-line">
+          {player1Flag ? (
+            <img
+              src={player1Flag}
+              alt={match.player1Country || "flag"}
+              className="cs-player-flag"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : null}
+          <span className="cs-player-name">{match.player1Name || "TBD"}</span>
+        </div>
+        <div className="cs-score">{score1}</div>
+      </div>
+
+      <div
+        className={`cs-flowchart-participant-line ${winnerSlot === 2 ? "is-winner" : winnerSlot === 1 ? "is-loser" : ""}`}
+      >
+        <div className="cs-player-line">
+          {player2Flag ? (
+            <img
+              src={player2Flag}
+              alt={match.player2Country || "flag"}
+              className="cs-player-flag"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : null}
+          <span className="cs-player-name">{match.player2Name || "TBD"}</span>
+        </div>
+        <div className="cs-score">{score2}</div>
+      </div>
+
+      <div className="cs-footer">{loserRoute}</div>
+    </div>
+  );
+}
 
 export default function CustomFlowchartClient({
   eventDocumentId,
   tournamentSlug,
   tournamentTitle,
+  breadcrumbParentLabel = "Tournaments",
+  breadcrumbParentHref = "/tournaments",
+  showDebugInfo = false,
 }: Props) {
-  const [zoom, setZoom] = useState(1);
-  const [scriptReady, setScriptReady] = useState(false);
+  const [zoom, setZoom] = useState(0.5);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeStageId, setActiveStageId] = useState<string | null>(null);
+  const [connectors, setConnectors] = useState<ConnectorPath[]>([]);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const nodeRefs = useRef(new Map<string, HTMLDivElement | null>());
 
   useEffect(() => {
-    if (!scriptReady || !window.CueScore) return;
-    const target = document.getElementById("cs-tournament-custom");
-    if (!target) return;
-    target.innerHTML = "";
+    if (!eventDocumentId) {
+      setEventData(null);
+      setError("Event id was not resolved.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetchEvent(eventDocumentId)
+      .then((data) => {
+        setEventData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to fetch event");
+        setLoading(false);
+      });
+  }, [eventDocumentId]);
 
-    // Current editable baseline still renders with CueScore's widget.
-    // The production event id is resolved server-side so this route is ready
-    // for the next step where we swap in our own data-backed renderer.
-    new window.CueScore.Tournament(FALLBACK_CUESCORE_ID).createFlowchart(
-      "cs-tournament-custom",
+  const stages = useMemo(() => {
+    const event = eventData?.data;
+    if (!event) return [] as DrawStage[];
+    return toRelationArray(event.event_stages).map((stage, index) => {
+      const normalized = normalizeEntity<StrapiEventStage>(stage, `stage-${index}`);
+      return {
+        id: normalized.id,
+        documentId: normalized.documentId,
+        title:
+          typeof normalized.title === "string" && normalized.title.trim()
+            ? normalized.title.trim()
+            : `Stage ${index + 1}`,
+        stageType:
+          typeof normalized.stage_type === "string" ? normalized.stage_type : null,
+        raw: normalized,
+      };
+    });
+  }, [eventData]);
+
+  useEffect(() => {
+    if (!stages.length) {
+      setActiveStageId(null);
+      return;
+    }
+    const preferred =
+      stages.find((stage) => stage.stageType === "double_elimination") || stages[0];
+    setActiveStageId((current) =>
+      current && stages.some((stage) => stage.documentId === current)
+        ? current
+        : preferred.documentId,
     );
+  }, [stages]);
 
-    const raf = window.requestAnimationFrame(() => {
-      const root = target.querySelector<HTMLElement>(".cs-flowchart");
-      if (!root) return;
-      applyLocalFlowchartTweaks(root);
-      root.style.transform = `scale(${zoom})`;
+  const activeStage = useMemo(() => {
+    if (!activeStageId) return null;
+    return stages.find((stage) => stage.documentId === activeStageId) ?? null;
+  }, [activeStageId, stages]);
+
+  const drawMatches = useMemo(() => buildDrawMatches(activeStage?.raw ?? null), [activeStage]);
+
+  const layout = useMemo(() => {
+    const columns = buildFullPyramidColumns(drawMatches);
+    const placed = new Map<number, PositionedMatch>();
+    const maxMatchesInColumn = Math.max(...columns.map((column) => column.matches.length), 1);
+    const baseSlot = CARD_HEIGHT + MIN_ROW_GAP;
+
+    columns.forEach((column, columnIndex) => {
+      const x = LEFT_PADDING + columnIndex * COLUMN_GAP;
+      const slotsPerMatch = Math.max(1, maxMatchesInColumn / column.matches.length);
+      const stride = baseSlot * slotsPerMatch;
+      const offset = ((slotsPerMatch - 1) * baseSlot) / 2;
+      const yValues = column.matches.map(
+        (_, index) => TOP_PADDING + index * stride + offset,
+      );
+      const normalizedYs = normalizeSpacing(yValues, CARD_HEIGHT + MIN_ROW_GAP);
+
+      column.matches.forEach((match, index) => {
+        placed.set(match.globalMatchNumber!, {
+          ...match,
+          x,
+          y: normalizedYs[index],
+        });
+      });
     });
 
-    return () => {
-      window.cancelAnimationFrame(raf);
+    const allMatches = Array.from(placed.values());
+    const maxY = allMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING);
+
+    return {
+      columns: columns.map((column, columnIndex) => ({
+        key: column.key,
+        label: column.label,
+        x: LEFT_PADDING + columnIndex * COLUMN_GAP,
+      })),
+      matches: allMatches,
+      width: LEFT_PADDING + columns.length * COLUMN_GAP + CARD_WIDTH + 40,
+      height: maxY + CARD_HEIGHT + 80,
     };
-  }, [scriptReady, zoom]);
+  }, [drawMatches]);
+
+  useLayoutEffect(() => {
+    const rebuild = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const canvasRect = canvas.getBoundingClientRect();
+      const byGlobal = new Map<number, PositionedMatch>();
+      layout.matches.forEach((match) => {
+        if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
+      });
+
+      const paths: ConnectorPath[] = [];
+      buildDrawEdges(drawMatches).forEach((edge) => {
+        const fromMatch = byGlobal.get(edge.from);
+        const toMatch = byGlobal.get(edge.to);
+        if (!fromMatch || !toMatch) return;
+        const fromNode = nodeRefs.current.get(fromMatch.documentId);
+        const toNode = nodeRefs.current.get(toMatch.documentId);
+        if (!fromNode || !toNode) return;
+        paths.push({
+          key: `${edge.from}-${edge.type}-${edge.to}-${edge.slot ?? "x"}`,
+          d: buildConnectorPath(
+            fromNode.getBoundingClientRect(),
+            toNode.getBoundingClientRect(),
+            canvasRect,
+            edge.slot,
+          ),
+        });
+      });
+      setConnectors(paths);
+    };
+
+    const raf = requestAnimationFrame(rebuild);
+    window.addEventListener("resize", rebuild);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", rebuild);
+    };
+  }, [drawMatches, layout]);
 
   useEffect(() => {
     let curYPos = 0;
@@ -157,54 +418,120 @@ export default function CustomFlowchartClient({
     };
   }, []);
 
+  const assignNodeRef = (id: string, element: HTMLDivElement | null) => {
+    nodeRefs.current.set(id, element);
+  };
+
   return (
     <>
-      <Script
-        src="https://api.cuescore.com/js/CueScore.min-3.33.js"
-        strategy="afterInteractive"
-        onLoad={() => setScriptReady(true)}
-      />
       <style jsx global>{FLOWCHART_CSS}</style>
 
       <div className="breadcrumbs">
-        <a href="/jouet">JOUET BILLIARDS HALL</a>
-        <a href="/jouet/tournaments">Tournaments</a>
+        <a href="/">BILLIARD TODAY</a>
+        <a href={breadcrumbParentHref}>{breadcrumbParentLabel}</a>
         <a href={`/tournaments/${tournamentSlug}`}>{tournamentTitle}</a>
         <span>Flowchart</span>
       </div>
 
-      <div className="px-2 pb-2 text-xs text-slate-500">
-        Production event documentId: {eventDocumentId ?? "not resolved"}
+      {showDebugInfo ? (
+        <div className="px-2 pb-2 text-xs text-slate-500">
+          Production event documentId: {eventDocumentId ?? "not resolved"}
+        </div>
+      ) : null}
+
+      {stages.length > 1 ? (
+        <div className="bt-stage-bar">
+          <span className="bt-stage-label">Stage</span>
+          <select
+            className="bt-stage-select"
+            value={activeStageId ?? ""}
+            onChange={(event) => setActiveStageId(event.target.value)}
+          >
+            {stages.map((stage) => (
+              <option key={stage.documentId} value={stage.documentId}>
+                {stage.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
+      <div id="ButtonBar" className="noPrint">
+        <div className="zoom">
+          <button
+            type="button"
+            className="input out"
+            onClick={() =>
+              setZoom((value) => Math.max(0.3, Number((value - 0.1).toFixed(1))))
+            }
+          >
+            -
+          </button>
+          <div className="value">{Math.round(zoom * 100)}%</div>
+          <button
+            type="button"
+            className="input in"
+            onClick={() =>
+              setZoom((value) => Math.min(1.8, Number((value + 0.1).toFixed(1))))
+            }
+          >
+            +
+          </button>
+        </div>
       </div>
 
-      <div style={{ minHeight: "100vh" }}>
-        <div id="ButtonBar" className="noPrint">
-          <div className="zoom">
-            <button
-              type="button"
-              className="input in"
-              onClick={() =>
-                setZoom((value) => Math.min(1.8, Number((value + 0.1).toFixed(1))))
-              }
-            >
-              +
-            </button>
-            <div className="value">{Math.round(zoom * 100)}%</div>
-            <button
-              type="button"
-              className="input out"
-              onClick={() =>
-                setZoom((value) => Math.max(0.4, Number((value - 0.1).toFixed(1))))
-              }
-            >
-              -
-            </button>
-          </div>
-        </div>
+      <div id="Content">
+        {loading ? <div className="bt-flowchart-empty">Loading flowchart...</div> : null}
+        {error ? <div className="bt-flowchart-empty">{error}</div> : null}
+        {!loading && !error && !drawMatches.length ? (
+          <div className="bt-flowchart-empty">No double-elimination matches found.</div>
+        ) : null}
 
-        <div id="Content">
-          <div id="cs-tournament-custom" />
-        </div>
+        {!loading && !error && drawMatches.length ? (
+          <div className="cs-flowchart-shell" style={{ transform: `scale(${zoom})` }}>
+            <div
+              ref={canvasRef}
+              className="cs-flowchart-grid"
+              style={{ width: `${layout.width}px`, height: `${layout.height}px` }}
+            >
+              <svg
+                className="pointer-events-none absolute inset-0"
+                width={layout.width}
+                height={layout.height}
+              >
+                {connectors.map((path) => (
+                  <path
+                    key={path.key}
+                    d={path.d}
+                    fill="none"
+                    stroke="#314f98"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </svg>
+
+              {layout.columns.map((column) => (
+                <div
+                  key={column.key}
+                  className="cs-round-column"
+                  style={{ left: `${column.x}px` }}
+                >
+                  <div className="cs-round-header">{column.label}</div>
+                </div>
+              ))}
+
+              {layout.matches.map((match) => (
+                <MatchCard
+                  key={match.documentId}
+                  match={match}
+                  assignRef={assignNodeRef}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   );
