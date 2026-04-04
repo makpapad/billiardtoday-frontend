@@ -2861,27 +2861,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               >
                 Flowchart
               </Link>
-              {!embedded ? (
-                <button
-                  type="button"
-                  onClick={openFinalStandings}
-                  className={
-                    activeView === "tournament" &&
-                    tournamentPanelMode === "finals"
-                      ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                      : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                  }
-                >
-                  Final standings
-                </button>
-              ) : (
-                <Link
-                  href={fullPageHref}
-                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                >
-                  Full page
-                </Link>
-              )}
+              <button
+                type="button"
+                onClick={openFinalStandings}
+                className={
+                  activeView === "tournament" &&
+                  tournamentPanelMode === "finals"
+                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
+                }
+              >
+                Final standings
+              </button>
               <button
                 type="button"
                 onClick={() => {
