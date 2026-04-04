@@ -42,6 +42,11 @@ export async function GET() {
   const clubPath =
     "/api/clubs?filters[documentId][$eq]=m3m5jxpr74fgvq3yk2bewmrn&pagination[pageSize]=1";
   const siteSettingPath = "/api/site-setting?populate=*";
+  const btEventsListPath = "/api/bt-events?pagination[pageSize]=1";
+  const btEventsFieldsPath =
+    "/api/bt-events?fields[0]=title&fields[1]=documentId&fields[2]=season&pagination[pageSize]=1&sort[0]=updatedAt:desc";
+  const btEventsFilterPath =
+    "/api/bt-events?filters[title][$containsi]=LONGONI&pagination[pageSize]=5";
 
   return NextResponse.json({
     cwd: process.cwd(),
@@ -57,6 +62,12 @@ export async function GET() {
       clubWithoutAuth: await test(clubPath, false),
       siteSettingWithAuth: await test(siteSettingPath, true),
       siteSettingWithoutAuth: await test(siteSettingPath, false),
+      btEventsListWithAuth: await test(btEventsListPath, true),
+      btEventsListWithoutAuth: await test(btEventsListPath, false),
+      btEventsFieldsWithAuth: await test(btEventsFieldsPath, true),
+      btEventsFieldsWithoutAuth: await test(btEventsFieldsPath, false),
+      btEventsFilterWithAuth: await test(btEventsFilterPath, true),
+      btEventsFilterWithoutAuth: await test(btEventsFilterPath, false),
     },
     tournamentSummary: await resolveTournamentEventSummary(slug).catch((error) => ({
       error: error instanceof Error ? error.message : String(error),
