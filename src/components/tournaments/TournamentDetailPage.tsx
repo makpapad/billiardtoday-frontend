@@ -93,16 +93,6 @@ type GroupPopoverData = {
   matches: StageMatchGroup["matches"];
 };
 
-const BRACKET_STAGE_TYPES = new Set([
-  "brackets",
-  "single_elimination",
-  "double_elimination",
-]);
-
-function isBracketStageType(stageType: string | null | undefined): boolean {
-  return typeof stageType === "string" && BRACKET_STAGE_TYPES.has(stageType);
-}
-
 const isPlaceholderPlayerName = (value?: string | null) => {
   const normalized = (value || "").trim().toLowerCase();
   return !normalized || normalized === "player 1" || normalized === "player 2";
@@ -632,12 +622,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
   >(summary.stages[0]?.documentId ?? null);
-  const flowchartHref = `${buildTournamentHref(
-    summary.documentId,
-    summary.title,
-    summary.season,
-    embedded,
-  )}/flowchart`;
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -1808,11 +1792,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     };
   }, [eventStages]);
 
-  const hasFlowchart = useMemo(
-    () => eventStages.some((stage) => isBracketStageType(stage.stageType)),
-    [eventStages],
-  );
-
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
 
@@ -2870,14 +2849,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               >
                 Time table
               </button>
-              {hasFlowchart ? (
-                <Link
-                  href={flowchartHref}
-                  className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                >
-                  Flowchart
-                </Link>
-              ) : null}
               <button
                 type="button"
                 onClick={openFinalStandings}

@@ -42,11 +42,7 @@ import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
-const BRACKET_STAGE_TYPES = new Set([
-  "brackets",
-  "single_elimination",
-  "double_elimination",
-]);
+const BRACKET_STAGE_TYPES = new Set(["double_elimination"]);
 
 function isBracketStageType(stageType: string | null | undefined): boolean {
   return typeof stageType === "string" && BRACKET_STAGE_TYPES.has(stageType);
