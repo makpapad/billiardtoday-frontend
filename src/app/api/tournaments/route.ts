@@ -117,11 +117,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json(emptyPayload(page, pageSize), { status: 200 })
         }
 
-        if (
-            !res.ok &&
-            STRAPI_API_TOKEN &&
-            (res.status === 401 || res.status === 403)
-        ) {
+        if (!res.ok && STRAPI_API_TOKEN) {
             try {
                 const retry = await fetchFromStrapi(false)
                 if (retry.ok) {

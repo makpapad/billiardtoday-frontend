@@ -32,6 +32,29 @@ const buildHeaders = (): HeadersInit => {
   };
 };
 
+const fetchWithOptionalAuth = async (
+  url: string,
+  options?: { retryWithoutAuth?: boolean },
+) => {
+  const runtimeOptions =
+    IS_DEVELOPMENT ? { cache: "no-store" as const } : { next: { revalidate: 60 } };
+
+  const firstResponse = await fetch(url, {
+    ...runtimeOptions,
+    headers: buildHeaders(),
+  }).catch(() => null);
+
+  if (
+    firstResponse?.ok ||
+    !options?.retryWithoutAuth ||
+    !STRAPI_API_TOKEN
+  ) {
+    return firstResponse;
+  }
+
+  return fetch(url, runtimeOptions).catch(() => null);
+};
+
 const toNumber = (value: unknown): number | null => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -183,11 +206,10 @@ const fetchTournamentEventSummaryById = async (
   params.set("populate[event_stages][fields][2]", "is_final");
   params.set("populate[event_stages][fields][3]", "documentId");
 
-  const response = await fetch(`${STRAPI_URL}/api/bt-events/${cleanId}?${params.toString()}`, {
-    headers: buildHeaders(),
-    cache: IS_DEVELOPMENT ? "no-store" : undefined,
-    next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
-  }).catch(() => null);
+  const response = await fetchWithOptionalAuth(
+    `${STRAPI_URL}/api/bt-events/${cleanId}?${params.toString()}`,
+    { retryWithoutAuth: true },
+  );
 
   if (!response?.ok) return null;
 
@@ -270,11 +292,10 @@ const fetchTournamentEventSummaryBySlug = async (
     params.set("pagination[page]", String(page));
     params.set("sort[0]", "updatedAt:desc");
 
-    const response = await fetch(`${STRAPI_URL}/api/bt-events?${params.toString()}`, {
-      headers: buildHeaders(),
-      cache: IS_DEVELOPMENT ? "no-store" : undefined,
-      next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
-    }).catch(() => null);
+    const response = await fetchWithOptionalAuth(
+      `${STRAPI_URL}/api/bt-events?${params.toString()}`,
+      { retryWithoutAuth: true },
+    );
 
     if (!response?.ok) return null;
 
