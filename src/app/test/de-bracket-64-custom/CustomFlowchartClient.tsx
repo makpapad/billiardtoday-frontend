@@ -7,6 +7,7 @@ import {
   buildDrawEdges,
   buildDrawMatches,
   buildFullPyramidColumns,
+  type DrawEdge,
   type DrawMatch,
 } from "@/app/tournaments/events/draw/flowchartModel";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
@@ -95,6 +96,7 @@ const COLUMN_GAP = 285;
 const MIN_ROW_GAP = 18;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
+const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
@@ -114,6 +116,86 @@ function normalizeSpacing(values: number[], minimumGap: number) {
     }
   }
   return result;
+}
+
+function buildVerticalPositions(
+  matches: DrawMatch[],
+  columns: ReturnType<typeof buildFullPyramidColumns>,
+  edges: DrawEdge[],
+) {
+  const yByMatch = new Map<number, number>();
+  const inboundByTarget = new Map<number, DrawEdge[]>();
+
+  edges.forEach((edge) => {
+    const current = inboundByTarget.get(edge.to);
+    if (current) {
+      current.push(edge);
+      return;
+    }
+    inboundByTarget.set(edge.to, [edge]);
+  });
+
+  const orderedMatches = matches
+    .filter((match): match is DrawMatch & { globalMatchNumber: number } =>
+      match.globalMatchNumber !== null,
+    )
+    .sort((a, b) => a.globalMatchNumber - b.globalMatchNumber);
+
+  const sourceMatches = orderedMatches.filter(
+    (match) => !inboundByTarget.has(match.globalMatchNumber),
+  );
+
+  sourceMatches.forEach((match, index) => {
+    yByMatch.set(match.globalMatchNumber, TOP_PADDING + index * SOURCE_ROW_GAP);
+  });
+
+  let progress = true;
+  while (progress) {
+    progress = false;
+    orderedMatches.forEach((match) => {
+      if (yByMatch.has(match.globalMatchNumber)) return;
+      const inbound = inboundByTarget.get(match.globalMatchNumber) ?? [];
+      if (!inbound.length) return;
+      const sourceYs = inbound
+        .map((edge) => yByMatch.get(edge.from))
+        .filter((value): value is number => typeof value === "number");
+      if (sourceYs.length !== inbound.length) return;
+      const average = sourceYs.reduce((sum, value) => sum + value, 0) / sourceYs.length;
+      yByMatch.set(match.globalMatchNumber, average);
+      progress = true;
+    });
+  }
+
+  let fallbackY =
+    (sourceMatches.length ? TOP_PADDING + sourceMatches.length * SOURCE_ROW_GAP : TOP_PADDING) +
+    40;
+  orderedMatches.forEach((match) => {
+    if (yByMatch.has(match.globalMatchNumber)) return;
+    yByMatch.set(match.globalMatchNumber, fallbackY);
+    fallbackY += SOURCE_ROW_GAP;
+  });
+
+  const normalized = new Map<number, number>();
+  columns.forEach((column) => {
+    const preliminary = column.matches.map(
+      (match) => yByMatch.get(match.globalMatchNumber ?? -1) ?? TOP_PADDING,
+    );
+    const spaced = normalizeSpacing(preliminary, CARD_HEIGHT + MIN_ROW_GAP);
+    column.matches
+      .slice()
+      .sort((a, b) => {
+        const left = yByMatch.get(a.globalMatchNumber ?? -1) ?? TOP_PADDING;
+        const right = yByMatch.get(b.globalMatchNumber ?? -1) ?? TOP_PADDING;
+        return left - right;
+      })
+      .forEach((match, index) => {
+        if (match.globalMatchNumber !== null) {
+          normalized.set(match.globalMatchNumber, spaced[index]);
+        }
+      });
+  });
+
+  return normalized;
 }
 
 function formatHeaderMeta(value: string | null) {
@@ -304,25 +386,18 @@ export default function CustomFlowchartClient({
 
   const layout = useMemo(() => {
     const columns = buildFullPyramidColumns(drawMatches);
+    const edges = buildDrawEdges(drawMatches);
     const placed = new Map<number, PositionedMatch>();
-    const maxMatchesInColumn = Math.max(...columns.map((column) => column.matches.length), 1);
-    const baseSlot = CARD_HEIGHT + MIN_ROW_GAP;
+    const yByMatch = buildVerticalPositions(drawMatches, columns, edges);
 
     columns.forEach((column, columnIndex) => {
       const x = LEFT_PADDING + columnIndex * COLUMN_GAP;
-      const slotsPerMatch = Math.max(1, maxMatchesInColumn / column.matches.length);
-      const stride = baseSlot * slotsPerMatch;
-      const offset = ((slotsPerMatch - 1) * baseSlot) / 2;
-      const yValues = column.matches.map(
-        (_, index) => TOP_PADDING + index * stride + offset,
-      );
-      const normalizedYs = normalizeSpacing(yValues, CARD_HEIGHT + MIN_ROW_GAP);
-
-      column.matches.forEach((match, index) => {
-        placed.set(match.globalMatchNumber!, {
+      column.matches.forEach((match) => {
+        if (match.globalMatchNumber === null) return;
+        placed.set(match.globalMatchNumber, {
           ...match,
           x,
-          y: normalizedYs[index],
+          y: yByMatch.get(match.globalMatchNumber) ?? TOP_PADDING,
         });
       });
     });
