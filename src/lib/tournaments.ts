@@ -1,3 +1,5 @@
+import { getServerEnv } from "@/lib/serverEnv";
+
 export type TournamentEventStageSummary = {
   documentId: string;
   title: string;
@@ -20,10 +22,18 @@ export type TournamentEventSummary = {
   stages: TournamentEventStageSummary[];
 };
 
-const STRAPI_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
-const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
-const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
+const IS_PRODUCTION = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production";
+const PRIMARY_STRAPI_URL =
+  getServerEnv("STRAPI_API_URL") ||
+  (IS_PRODUCTION ? "http://127.0.0.1:1337" : getServerEnv("NEXT_PUBLIC_STRAPI_URL")) ||
+  "https://app.billiardtoday.com";
+const FALLBACK_STRAPI_URL =
+  getServerEnv("NEXT_PUBLIC_STRAPI_URL") || (IS_PRODUCTION ? "https://app.billiardtoday.com" : undefined);
+const STRAPI_URLS = Array.from(
+  new Set([PRIMARY_STRAPI_URL, FALLBACK_STRAPI_URL].filter(Boolean)),
+) as string[];
+const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN") || process.env.STRAPI_API_TOKEN;
+const IS_DEVELOPMENT = !IS_PRODUCTION;
 
 const buildHeaders = (): HeadersInit => {
   if (!STRAPI_API_TOKEN) return {};
@@ -33,26 +43,35 @@ const buildHeaders = (): HeadersInit => {
 };
 
 const fetchWithOptionalAuth = async (
-  url: string,
+  path: string,
   options?: { retryWithoutAuth?: boolean },
 ) => {
   const runtimeOptions =
     IS_DEVELOPMENT ? { cache: "no-store" as const } : { next: { revalidate: 60 } };
 
-  const firstResponse = await fetch(url, {
-    ...runtimeOptions,
-    headers: buildHeaders(),
-  }).catch(() => null);
+  for (const baseUrl of STRAPI_URLS) {
+    const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+    const firstResponse = await fetch(url, {
+      ...runtimeOptions,
+      headers: buildHeaders(),
+    }).catch(() => null);
 
-  if (
-    firstResponse?.ok ||
-    !options?.retryWithoutAuth ||
-    !STRAPI_API_TOKEN
-  ) {
-    return firstResponse;
+    if (firstResponse?.ok) {
+      return firstResponse;
+    }
+
+    if (!options?.retryWithoutAuth || !STRAPI_API_TOKEN) {
+      if (firstResponse) return firstResponse;
+      continue;
+    }
+
+    const retryResponse = await fetch(url, runtimeOptions).catch(() => null);
+    if (retryResponse?.ok || retryResponse) {
+      return retryResponse;
+    }
   }
 
-  return fetch(url, runtimeOptions).catch(() => null);
+  return null;
 };
 
 const toNumber = (value: unknown): number | null => {
@@ -207,7 +226,7 @@ const fetchTournamentEventSummaryById = async (
   params.set("populate[event_stages][fields][3]", "documentId");
 
   const response = await fetchWithOptionalAuth(
-    `${STRAPI_URL}/api/bt-events/${cleanId}?${params.toString()}`,
+    `/api/bt-events/${cleanId}?${params.toString()}`,
     { retryWithoutAuth: true },
   );
 
@@ -293,7 +312,7 @@ const fetchTournamentEventSummaryBySlug = async (
     params.set("sort[0]", "updatedAt:desc");
 
     const response = await fetchWithOptionalAuth(
-      `${STRAPI_URL}/api/bt-events?${params.toString()}`,
+      `/api/bt-events?${params.toString()}`,
       { retryWithoutAuth: true },
     );
 
