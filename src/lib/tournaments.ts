@@ -195,38 +195,53 @@ const fetchTournamentEventSummaryById = async (
   const cleanId = String(documentId || "").trim();
   if (!cleanId) return null;
 
-  const params = new URLSearchParams();
-  params.set("fields[0]", "title");
-  params.set("fields[1]", "season");
-  params.set("fields[2]", "start_date");
-  params.set("fields[3]", "end_date");
-  params.set("fields[4]", "game_type");
-  params.set("fields[5]", "documentId");
-  params.set("populate[tournament][fields][0]", "title");
-  params.set("populate[tournament][fields][1]", "organizer_type");
-  params.set("populate[tournament][fields][2]", "startDate");
-  params.set("populate[tournament][fields][3]", "endDate");
-  params.set("populate[tournament][fields][4]", "start_date");
-  params.set("populate[tournament][fields][5]", "end_date");
-  params.set("populate[tournament][populate][club][fields][0]", "documentId");
-  params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
-  params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
-  params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
-  params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
-  params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
-  params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
-  params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
-  params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
-  params.set("populate[event_stages][sort][0]", "order:asc");
-  params.set("populate[event_stages][fields][0]", "title");
-  params.set("populate[event_stages][fields][1]", "order");
-  params.set("populate[event_stages][fields][2]", "is_final");
-  params.set("populate[event_stages][fields][3]", "documentId");
+  const buildParams = (mode: "full" | "safe") => {
+    const params = new URLSearchParams();
+    params.set("fields[0]", "title");
+    params.set("fields[1]", "season");
+    params.set("fields[2]", "start_date");
+    params.set("fields[3]", "end_date");
+    params.set("fields[4]", "game_type");
+    params.set("fields[5]", "documentId");
+    params.set("populate[event_stages][sort][0]", "order:asc");
+    params.set("populate[event_stages][fields][0]", "title");
+    params.set("populate[event_stages][fields][1]", "order");
+    params.set("populate[event_stages][fields][2]", "is_final");
+    params.set("populate[event_stages][fields][3]", "documentId");
 
-  const response = await fetchWithOptionalAuth(
-    `/api/bt-events/${cleanId}?${params.toString()}`,
+    params.set("populate[tournament][fields][0]", "title");
+    params.set("populate[tournament][fields][1]", "organizer_type");
+    params.set("populate[tournament][fields][2]", "startDate");
+    params.set("populate[tournament][fields][3]", "endDate");
+    params.set("populate[tournament][fields][4]", "start_date");
+    params.set("populate[tournament][fields][5]", "end_date");
+
+    if (mode === "full") {
+      params.set("populate[tournament][populate][club][fields][0]", "documentId");
+      params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
+      params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
+      params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
+      params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
+      params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
+      params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
+      params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
+      params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
+    }
+
+    return params;
+  };
+
+  let response = await fetchWithOptionalAuth(
+    `/api/bt-events/${cleanId}?${buildParams("full").toString()}`,
     { retryWithoutAuth: true },
   );
+
+  if (!response?.ok) {
+    response = await fetchWithOptionalAuth(
+      `/api/bt-events/${cleanId}?${buildParams("safe").toString()}`,
+      { retryWithoutAuth: true },
+    );
+  }
 
   if (!response?.ok) return null;
 
