@@ -209,14 +209,13 @@ const fetchTournamentEventSummaryById = async (
     params.set("populate[event_stages][fields][2]", "is_final");
     params.set("populate[event_stages][fields][3]", "documentId");
 
-    params.set("populate[tournament][fields][0]", "title");
-    params.set("populate[tournament][fields][1]", "organizer_type");
-    params.set("populate[tournament][fields][2]", "startDate");
-    params.set("populate[tournament][fields][3]", "endDate");
-    params.set("populate[tournament][fields][4]", "start_date");
-    params.set("populate[tournament][fields][5]", "end_date");
-
     if (mode === "full") {
+      params.set("populate[tournament][fields][0]", "title");
+      params.set("populate[tournament][fields][1]", "organizer_type");
+      params.set("populate[tournament][fields][2]", "startDate");
+      params.set("populate[tournament][fields][3]", "endDate");
+      params.set("populate[tournament][fields][4]", "start_date");
+      params.set("populate[tournament][fields][5]", "end_date");
       params.set("populate[tournament][populate][club][fields][0]", "documentId");
       params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
