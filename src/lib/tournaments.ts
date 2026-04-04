@@ -258,48 +258,59 @@ const fetchTournamentEventSummaryBySlug = async (
   const cleanSlug = slugify(String(slug || "").trim());
   if (!cleanSlug) return null;
 
-  const params = new URLSearchParams();
-  params.set("fields[0]", "title");
-  params.set("fields[1]", "documentId");
-  params.set("fields[2]", "season");
-  params.set("pagination[pageSize]", "500");
-  params.set("sort[0]", "updatedAt:desc");
+  const pageSize = 500;
+  const maxPages = 20;
 
-  const response = await fetch(`${STRAPI_URL}/api/bt-events?${params.toString()}`, {
-    headers: buildHeaders(),
-    cache: IS_DEVELOPMENT ? "no-store" : undefined,
-    next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
-  }).catch(() => null);
+  for (let page = 1; page <= maxPages; page += 1) {
+    const params = new URLSearchParams();
+    params.set("fields[0]", "title");
+    params.set("fields[1]", "documentId");
+    params.set("fields[2]", "season");
+    params.set("pagination[pageSize]", String(pageSize));
+    params.set("pagination[page]", String(page));
+    params.set("sort[0]", "updatedAt:desc");
 
-  if (!response?.ok) return null;
+    const response = await fetch(`${STRAPI_URL}/api/bt-events?${params.toString()}`, {
+      headers: buildHeaders(),
+      cache: IS_DEVELOPMENT ? "no-store" : undefined,
+      next: IS_DEVELOPMENT ? undefined : { revalidate: 60 },
+    }).catch(() => null);
 
-  const json = await response.json().catch(() => null);
-  const items: unknown[] = Array.isArray(json?.data) ? json.data : [];
-  const match = items.find((item: unknown) => {
-    const itemRecord = item && typeof item === "object" ? (item as Record<string, unknown>) : null;
-    const attributes =
-      itemRecord?.attributes && typeof itemRecord.attributes === "object"
-        ? (itemRecord.attributes as Record<string, unknown>)
-        : null;
-    const source =
-      attributes
-        ? { ...attributes, ...itemRecord }
-        : itemRecord;
-    const title = readString((source as Record<string, unknown>)?.title);
-    const season = toNumber((source as Record<string, unknown>)?.season);
-    return title ? buildTournamentSlug("", title, season) === cleanSlug : false;
-  });
+    if (!response?.ok) return null;
 
-  const matchRecord = match && typeof match === "object" ? (match as Record<string, unknown>) : null;
-  const matchAttributes =
-    matchRecord?.attributes && typeof matchRecord.attributes === "object"
-      ? (matchRecord.attributes as Record<string, unknown>)
-      : null;
-  const documentId = readString(
-    matchAttributes?.documentId ?? matchRecord?.documentId,
-  );
+    const json = await response.json().catch(() => null);
+    const items: unknown[] = Array.isArray(json?.data) ? json.data : [];
+    const match = items.find((item: unknown) => {
+      const itemRecord = item && typeof item === "object" ? (item as Record<string, unknown>) : null;
+      const attributes =
+        itemRecord?.attributes && typeof itemRecord.attributes === "object"
+          ? (itemRecord.attributes as Record<string, unknown>)
+          : null;
+      const source =
+        attributes
+          ? { ...attributes, ...itemRecord }
+          : itemRecord;
+      const title = readString((source as Record<string, unknown>)?.title);
+      const season = toNumber((source as Record<string, unknown>)?.season);
+      return title ? buildTournamentSlug("", title, season) === cleanSlug : false;
+    });
 
-  return documentId ? fetchTournamentEventSummaryById(documentId) : null;
+    if (match) {
+      const matchRecord = match && typeof match === "object" ? (match as Record<string, unknown>) : null;
+      const matchAttributes =
+        matchRecord?.attributes && typeof matchRecord.attributes === "object"
+          ? (matchRecord.attributes as Record<string, unknown>)
+          : null;
+      const documentId = readString(
+        matchAttributes?.documentId ?? matchRecord?.documentId,
+      );
+      return documentId ? fetchTournamentEventSummaryById(documentId) : null;
+    }
+
+    if (items.length < pageSize) break;
+  }
+
+  return null;
 };
 
 export const resolveTournamentEventSummary = async (
