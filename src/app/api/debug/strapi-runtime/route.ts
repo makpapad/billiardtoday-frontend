@@ -47,6 +47,12 @@ export async function GET() {
     "/api/bt-events?fields[0]=title&fields[1]=documentId&fields[2]=season&pagination[pageSize]=1&sort[0]=updatedAt:desc";
   const btEventsFilterPath =
     "/api/bt-events?filters[title][$containsi]=LONGONI&pagination[pageSize]=5";
+  const btEventTournamentDatesPath =
+    "/api/bt-events/v8nc64onx1l242seiui2wjng?fields[0]=title&fields[1]=documentId&fields[2]=season&populate[tournament][fields][0]=title&populate[tournament][fields][1]=startDate&populate[tournament][fields][2]=endDate&populate[tournament][fields][3]=start_date&populate[tournament][fields][4]=end_date";
+  const btEventTournamentFieldsPath =
+    "/api/bt-events/v8nc64onx1l242seiui2wjng?fields[0]=title&fields[1]=documentId&fields[2]=season&populate[tournament][fields][0]=title&populate[tournament][fields][1]=organizer_type&populate[tournament][fields][2]=startDate&populate[tournament][fields][3]=endDate&populate[tournament][fields][4]=start_date&populate[tournament][fields][5]=end_date";
+  const btEventTournamentClubPath =
+    "/api/bt-events/v8nc64onx1l242seiui2wjng?fields[0]=title&fields[1]=documentId&fields[2]=season&populate[tournament][fields][0]=title&populate[tournament][populate][club][fields][0]=documentId";
 
   return NextResponse.json({
     cwd: process.cwd(),
@@ -68,6 +74,9 @@ export async function GET() {
       btEventsFieldsWithoutAuth: await test(btEventsFieldsPath, false),
       btEventsFilterWithAuth: await test(btEventsFilterPath, true),
       btEventsFilterWithoutAuth: await test(btEventsFilterPath, false),
+      btEventTournamentDatesWithAuth: await test(btEventTournamentDatesPath, true),
+      btEventTournamentFieldsWithAuth: await test(btEventTournamentFieldsPath, true),
+      btEventTournamentClubWithAuth: await test(btEventTournamentClubPath, true),
     },
     tournamentSummary: await resolveTournamentEventSummary(slug).catch((error) => ({
       error: error instanceof Error ? error.message : String(error),
