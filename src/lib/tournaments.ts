@@ -164,6 +164,10 @@ const fetchTournamentEventSummaryById = async (
   params.set("fields[5]", "documentId");
   params.set("populate[tournament][fields][0]", "title");
   params.set("populate[tournament][fields][1]", "organizer_type");
+  params.set("populate[tournament][fields][2]", "startDate");
+  params.set("populate[tournament][fields][3]", "endDate");
+  params.set("populate[tournament][fields][4]", "start_date");
+  params.set("populate[tournament][fields][5]", "end_date");
   params.set("populate[tournament][populate][club][fields][0]", "documentId");
   params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
   params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
@@ -204,6 +208,12 @@ const fetchTournamentEventSummaryById = async (
   const organizerFederationSource = unwrapEntitySource(tournamentSource.organizer_federation);
   const organizerFederationLogoSource = unwrapEntitySource(organizerFederationSource.logo);
   const organizerType = readString((tournamentSource as Record<string, unknown>).organizer_type);
+  const tournamentStartDate =
+    readString((tournamentSource as Record<string, unknown>).startDate) ??
+    readString((tournamentSource as Record<string, unknown>).start_date);
+  const tournamentEndDate =
+    readString((tournamentSource as Record<string, unknown>).endDate) ??
+    readString((tournamentSource as Record<string, unknown>).end_date);
   const preferredLogoSource =
     organizerType === "federation"
       ? organizerFederationLogoSource
@@ -230,8 +240,8 @@ const fetchTournamentEventSummaryById = async (
     documentId: readString(event.documentId) || cleanId,
     title: readString(event.title) || "Tournament Event",
     season: toNumber(event.season),
-    startDate: readString(event.start_date),
-    endDate: readString(event.end_date),
+    startDate: tournamentStartDate ?? readString(event.start_date),
+    endDate: tournamentEndDate ?? readString(event.end_date),
     gameType: readString(event.game_type),
     tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
     clubDocumentId: readString((tournamentClubSource as Record<string, unknown>).documentId),
