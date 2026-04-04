@@ -2,8 +2,13 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { EventApiResponse, StrapiEventStage, StrapiGroup } from "../types";
-import { normalizeEntity, toNumber, toRelationArray } from "../utils";
+import type { EventApiResponse, StrapiEventStage } from "../types";
+import { normalizeEntity, toRelationArray } from "../utils";
+import {
+  buildFullPyramidColumns,
+  buildDrawMatches,
+  type DrawMatch,
+} from "./flowchartModel";
 
 type DrawStage = {
   id: string;
@@ -11,20 +16,6 @@ type DrawStage = {
   title: string;
   stageType: string | null;
   raw: StrapiEventStage & { id: string; documentId: string };
-};
-
-type DrawMatch = {
-  id: string;
-  documentId: string;
-  bracketType: "winners" | "losers" | "final";
-  roundLabel: string;
-  roundIndex: number;
-  matchIndex: number;
-  globalMatchNumber: number | null;
-  winnerToGlobalMatchNumber: number | null;
-  winnerToSlot: number | null;
-  loserToGlobalMatchNumber: number | null;
-  loserToSlot: number | null;
 };
 
 type PositionedMatch = DrawMatch & {
@@ -38,7 +29,7 @@ type ConnectorPath = {
 };
 
 const CARD_WIDTH = 118;
-const CARD_HEIGHT = 46;
+const CARD_HEIGHT = 78;
 const COLUMN_GAP = 140;
 const ROW_GAP = 54;
 const BASE_MATCH_GAP = 34;
@@ -53,35 +44,6 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   }
   return response.json();
 };
-
-function getRoundIndex(label: string): number {
-  const upper = label.toUpperCase().trim();
-  if (upper.startsWith("WINNERS R")) {
-    return Number(upper.replace("WINNERS R", "")) || 999;
-  }
-  if (upper === "WINNERS FINAL") return 999;
-  if (upper.startsWith("LOSERS R")) {
-    return Number(upper.replace("LOSERS R", "")) || 999;
-  }
-  if (upper === "LOSERS FINAL") return 999;
-  if (upper === "GRAND FINAL") return 1000;
-  if (upper === "GRAND FINAL RESET") return 1001;
-  return 9999;
-}
-
-function getBracketType(
-  rawBracketType: unknown,
-  roundLabel: string,
-): "winners" | "losers" | "final" {
-  const bracket =
-    typeof rawBracketType === "string" ? rawBracketType.toLowerCase().trim() : "";
-  if (bracket === "winners" || bracket === "losers") return bracket;
-  const upper = roundLabel.toUpperCase();
-  if (upper.includes("GRAND FINAL")) return "final";
-  if (upper.includes("WINNERS")) return "winners";
-  if (upper.includes("LOSERS")) return "losers";
-  return "final";
-}
 
 function normalizeSpacing(values: number[], minimumGap: number) {
   if (!values.length) return values;
@@ -114,6 +76,13 @@ function MatchNode({
   match: PositionedMatch;
   assignRef: (id: string, element: HTMLDivElement | null) => void;
 }) {
+  const winnerLabel = match.winnerToGlobalMatchNumber
+    ? `W -> M${match.winnerToGlobalMatchNumber}${match.winnerToSlot ? ` (${match.winnerToSlot})` : ""}`
+    : "W -> End";
+  const loserLabel = match.loserToGlobalMatchNumber
+    ? `L -> M${match.loserToGlobalMatchNumber}${match.loserToSlot ? ` (${match.loserToSlot})` : ""}`
+    : "L -> End";
+
   return (
     <div
       ref={(element) => assignRef(match.documentId, element)}
@@ -142,6 +111,10 @@ function MatchNode({
       </div>
       <div className="mt-0.5 text-xl font-black tracking-tight">
         M{match.globalMatchNumber ?? "?"}
+      </div>
+      <div className="mt-2 space-y-1 text-[10px] font-semibold leading-tight text-sky-50/90">
+        <div>{winnerLabel}</div>
+        <div className="text-sky-100/75">{loserLabel}</div>
       </div>
     </div>
   );
@@ -216,129 +189,28 @@ export default function DoubleElimDrawPage() {
   }, [activeStageId, stages]);
 
   const drawMatches = useMemo(() => {
-    if (!activeStage) return [] as DrawMatch[];
-    const groups = toRelationArray((activeStage.raw as StrapiEventStage).groups);
-    return groups
-      .map((group, index) => {
-        const normalized = normalizeEntity<StrapiGroup>(group, `match-${index}`);
-        const normalizedRecord = normalized as Record<string, unknown>;
-        const roundLabel =
-          typeof normalizedRecord.round === "string" &&
-          normalizedRecord.round.trim()
-            ? normalizedRecord.round.trim()
-            : "Round";
-        return {
-          id: normalized.id,
-          documentId: normalized.documentId,
-          bracketType: getBracketType(normalizedRecord.bracket_type, roundLabel),
-          roundLabel,
-          roundIndex: getRoundIndex(roundLabel),
-          matchIndex:
-            toNumber((normalized as { match_number?: unknown }).match_number) ??
-            index + 1,
-          globalMatchNumber: toNumber(normalized.global_match_number),
-          winnerToGlobalMatchNumber: toNumber(
-            normalized.winner_to_global_match_number,
-          ),
-          winnerToSlot: toNumber(normalized.winner_to_slot),
-          loserToGlobalMatchNumber: toNumber(
-            normalized.loser_to_global_match_number,
-          ),
-          loserToSlot: toNumber(normalized.loser_to_slot),
-        } as DrawMatch;
-      })
-      .filter((match) => match.globalMatchNumber)
-      .sort(
-        (a, b) =>
-          (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999),
-      );
+    return buildDrawMatches(activeStage?.raw ?? null);
   }, [activeStage]);
 
   const layout = useMemo(() => {
-    const byGlobal = new Map<number, DrawMatch>();
-    const sourceMap = new Map<number, number[]>();
-    drawMatches.forEach((match) => {
-      const from = match.globalMatchNumber;
-      if (!from) return;
-      byGlobal.set(from, match);
-      const winnerTarget = match.winnerToGlobalMatchNumber;
-      const loserTarget = match.loserToGlobalMatchNumber;
-      if (winnerTarget) {
-        const current = sourceMap.get(winnerTarget) ?? [];
-        current.push(from);
-        sourceMap.set(winnerTarget, current);
-      }
-      if (loserTarget) {
-        const current = sourceMap.get(loserTarget) ?? [];
-        current.push(from);
-        sourceMap.set(loserTarget, current);
-      }
-    });
-
-    const depthCache = new Map<number, number>();
-    const computeDepth = (globalMatchNumber: number): number => {
-      if (depthCache.has(globalMatchNumber)) {
-        return depthCache.get(globalMatchNumber)!;
-      }
-      const match = byGlobal.get(globalMatchNumber);
-      if (!match) return 0;
-      const targets = [
-        match.winnerToGlobalMatchNumber,
-        match.loserToGlobalMatchNumber,
-      ].filter((value): value is number => typeof value === "number" && value > 0);
-      if (!targets.length) {
-        depthCache.set(globalMatchNumber, 0);
-        return 0;
-      }
-      const depth = 1 + Math.max(...targets.map((target) => computeDepth(target)));
-      depthCache.set(globalMatchNumber, depth);
-      return depth;
-    };
-
-    drawMatches.forEach((match) => {
-      if (match.globalMatchNumber) computeDepth(match.globalMatchNumber);
-    });
-
-    const maxDepth = Math.max(...Array.from(depthCache.values()), 0);
-    const layerMap = new Map<number, DrawMatch[]>();
-    drawMatches.forEach((match) => {
-      const global = match.globalMatchNumber;
-      if (!global) return;
-      const depth = depthCache.get(global) ?? 0;
-      const layer = maxDepth - depth;
-      const current = layerMap.get(layer) ?? [];
-      current.push(match);
-      layerMap.set(layer, current);
-    });
-
+    const columns = buildFullPyramidColumns(drawMatches);
     const placed = new Map<number, PositionedMatch>();
-    const columns = Array.from(layerMap.entries()).sort((a, b) => a[0] - b[0]);
+    const baseSlot = CARD_HEIGHT + 18;
+    const maxMatchesInColumn = Math.max(
+      ...columns.map((column) => column.matches.length),
+      1,
+    );
 
-    columns.forEach(([layer, matches]) => {
-      const x = LEFT_PADDING + layer * COLUMN_GAP;
-      const desiredYs = matches.map((match, index) => {
-        const global = match.globalMatchNumber!;
-        const incoming = sourceMap.get(global) ?? [];
-        if (!incoming.length) {
-          return TOP_PADDING + index * BASE_MATCH_GAP;
-        }
-        const sourceYs = incoming
-          .map((number) => placed.get(number)?.y)
-          .filter((value): value is number => typeof value === "number");
-        if (!sourceYs.length) {
-          return TOP_PADDING + index * BASE_MATCH_GAP;
-        }
-        return sourceYs.reduce((sum, value) => sum + value, 0) / sourceYs.length;
-      });
-      const orderedMatches = matches
-        .slice()
-        .sort((a, b) => {
-          const aGlobal = a.globalMatchNumber ?? 9999;
-          const bGlobal = b.globalMatchNumber ?? 9999;
-          return aGlobal - bGlobal;
-        });
-      const normalizedYs = normalizeSpacing(desiredYs, ROW_GAP);
-      orderedMatches.forEach((match, index) => {
+    columns.forEach((column, columnIndex) => {
+      const x = LEFT_PADDING + columnIndex * COLUMN_GAP;
+      const slotsPerMatch = Math.max(1, maxMatchesInColumn / column.matches.length);
+      const stride = baseSlot * slotsPerMatch;
+      const offset = ((slotsPerMatch - 1) * baseSlot) / 2;
+      const yValues = column.matches.map(
+        (_, index) => TOP_PADDING + index * stride + offset,
+      );
+      const normalizedYs = normalizeSpacing(yValues, ROW_GAP);
+      column.matches.forEach((match, index) => {
         placed.set(match.globalMatchNumber!, {
           ...match,
           x,
@@ -348,18 +220,10 @@ export default function DoubleElimDrawPage() {
     });
 
     const allMatches = Array.from(placed.values());
-    const labels = columns.map(([layer, matches]) => {
-      const x = LEFT_PADDING + layer * COLUMN_GAP;
-      const uniqueLabels = Array.from(
-        new Set(
-          matches
-            .slice()
-            .sort((a, b) => getRoundIndex(a.roundLabel) - getRoundIndex(b.roundLabel))
-            .map((match) => match.roundLabel),
-        ),
-      );
-      return { x, labels: uniqueLabels };
-    });
+    const labels = columns.map((column, columnIndex) => ({
+      x: LEFT_PADDING + columnIndex * COLUMN_GAP,
+      labels: [column.label],
+    }));
     const maxY = allMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING);
 
     return {
