@@ -50,15 +50,6 @@ type BoardMember = {
   imagePosition?: string;
 };
 
-type CebPartner = {
-  name: string;
-  website: string;
-  imageUrl: string;
-  description?: string | null;
-  category: "Sponsor" | "Partner";
-  order: number;
-};
-
 const CEB_BOARD_MEMBERS: BoardMember[] = [
   {
     role: "President",
@@ -143,73 +134,6 @@ const CEB_BOARD_MEMBERS: BoardMember[] = [
     imageUrl: "https://www.eurobillard.org/medias/pages/board/ninad-vardam-700x980.jpg",
   },
 ];
-
-const CEB_PARTNERS: CebPartner[] = [
-  {
-    name: "Simonis",
-    website: "https://iwansimonis.com/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/simonis-logo-pour-website-2.jpg",
-    description: "Exclusive supplier of cloths for all CEB competitions",
-    category: "Sponsor" as const,
-    order: 1,
-  },
-  {
-    name: "Aramith",
-    website: "https://www.aramith.com/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/aramith-logo-pour-website-4.jpg",
-    description: "Exclusive supplier of balls for all CEB competitions",
-    category: "Sponsor" as const,
-    order: 2,
-  },
-  {
-    name: "Kozoom",
-    website: "https://www.kozoom.com/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/kozoom-5.jpg",
-    description: null,
-    category: "Partner" as const,
-    order: 98,
-  },
-  {
-    name: "TOUCH",
-    website: "https://billard1.net/home-1/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/touch-billard-1-logo-10.jpg",
-    description: null,
-    category: "Partner" as const,
-    order: 99,
-  },
-  {
-    name: "Longoni",
-    website: "https://www.longonicues.com/players/longoni-next-gen",
-    imageUrl: "https://www.eurobillard.org/medias/partners/longoni-logo-pour-website-6.jpg",
-    description: "Exclusive partner for youth activities",
-    category: "Sponsor" as const,
-    order: 3,
-  },
-  {
-    name: "Predator",
-    website: "https://www.predatorgroup.com/b2b-homepage",
-    imageUrl: "https://www.eurobillard.org/medias/partners/predator-logo-pour-website-8.jpg",
-    description: "Official partner for GP Women competitions",
-    category: "Sponsor" as const,
-    order: 4,
-  },
-  {
-    name: "TAOM",
-    website: "https://taombilliards.com/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/8-taom-pour-website-12.jpg",
-    description: "Official chalk partner",
-    category: "Sponsor" as const,
-    order: 5,
-  },
-  {
-    name: "MIN",
-    website: "https://www.facebook.com/share/1H5dKcKjVL/",
-    imageUrl: "https://www.eurobillard.org/medias/partners/min-pour-website-copie-7.jpg",
-    description: "Official CEB Sponsor",
-    category: "Sponsor" as const,
-    order: 6,
-  },
-].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, "en"));
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
   if (!value?.url) return null;
@@ -1022,45 +946,6 @@ export function CebFederationExperience({ federation, members, embedded = false 
         </section>
       ) : null}
 
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
-        <SectionHeading
-          eyebrow="Sponsors"
-          title="CEB Sponsors & Partners"
-          description="Official sponsors and partners supporting CEB competitions, youth activities, media coverage, and equipment standards."
-        />
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {CEB_PARTNERS.map((partner) => (
-            <a
-              key={partner.name}
-              href={partner.website}
-              target="_blank"
-              rel="noreferrer"
-              className="group rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-                  {partner.category}
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 transition group-hover:text-sky-700">
-                  Visit
-                </span>
-              </div>
-
-              <div className="mt-5 flex h-24 items-center justify-center rounded-[22px] border border-slate-100 bg-white p-4">
-                <img src={partner.imageUrl} alt={`${partner.name} logo`} className="max-h-14 w-auto max-w-full object-contain" />
-              </div>
-
-              <h3 className="mt-5 text-xl font-semibold tracking-tight text-slate-950">{partner.name}</h3>
-              {partner.description ? (
-                <p className="mt-2 text-sm leading-7 text-slate-600">{partner.description}</p>
-              ) : (
-                <p className="mt-2 text-sm leading-7 text-slate-500">Official CEB commercial partner.</p>
-              )}
-            </a>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
