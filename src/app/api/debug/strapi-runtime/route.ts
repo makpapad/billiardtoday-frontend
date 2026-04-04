@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerEnv } from "@/lib/serverEnv";
+import { resolveTournamentEventSummary } from "@/lib/tournaments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,7 @@ async function test(path: string, useAuth: boolean) {
 }
 
 export async function GET() {
+  const slug = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
   const clubPath =
     "/api/clubs?filters[documentId][$eq]=m3m5jxpr74fgvq3yk2bewmrn&pagination[pageSize]=1";
   const siteSettingPath = "/api/site-setting?populate=*";
@@ -56,6 +58,9 @@ export async function GET() {
       siteSettingWithAuth: await test(siteSettingPath, true),
       siteSettingWithoutAuth: await test(siteSettingPath, false),
     },
+    tournamentSummary: await resolveTournamentEventSummary(slug).catch((error) => ({
+      error: error instanceof Error ? error.message : String(error),
+    })),
   });
 }
 
