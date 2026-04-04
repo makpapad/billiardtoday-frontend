@@ -2606,7 +2606,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     </span>
                                   </div>
                                 ) : publicMatchLabel ? (
-                                  <span className="font-medium text-slate-500">
+                                  <span className="w-full pl-0 text-center font-semibold text-slate-700">
                                     {highlightText(
                                       publicMatchLabel,
                                       timetableSearchQuery,
