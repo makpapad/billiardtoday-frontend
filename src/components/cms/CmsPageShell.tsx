@@ -59,6 +59,13 @@ const resolveShadowValue = (value?: string) =>
 const resolveCellPaddingValue = (value?: string) =>
   value === "sm" ? "0.75rem" : value === "lg" ? "1.5rem" : "1rem";
 
+const resolveContextHref = (href: string, embedded = false) => {
+  if (!embedded) return href;
+  if (!href.startsWith("/")) return href;
+  if (href.startsWith("/embed")) return href;
+  return `/embed${href}`;
+};
+
 const layoutPresetColumns: Record<string, string> = {
   single: "minmax(0,1fr)",
   halves: "repeat(2,minmax(0,1fr))",
@@ -175,7 +182,7 @@ export function CmsLayoutRenderer({
 
       return (
         <div key={key} className={`flex flex-col gap-2 ${alignClass}`}>
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={resolveContextHref("/", embedded)} className="flex items-center gap-3">
             {customLogoUrl ? (
               <img src={customLogoUrl} alt={customLogoAlt} className="shrink-0 object-contain" style={logoImageStyle} />
             ) : (
@@ -231,7 +238,7 @@ export function CmsLayoutRenderer({
           {menuItems.map((item) => (
             <Link
               key={`${item.label}-${item.url}`}
-              href={item.url || "#"}
+              href={resolveContextHref(item.url || "#", embedded)}
               target={item.openInNewTab ? "_blank" : undefined}
               rel={item.openInNewTab ? "noreferrer" : undefined}
               className={linkClass}
@@ -275,7 +282,7 @@ export function CmsLayoutRenderer({
             return (
               <Link
                 key={`${label}-${url}-${index}`}
-                href={url}
+                href={resolveContextHref(url, embedded)}
                 className={className}
                 style={
                   variant === "secondary"
@@ -318,7 +325,7 @@ export function CmsLayoutRenderer({
       return (
         <div key={key} className={wrapperClass}>
           <Link
-            href={url}
+            href={resolveContextHref(url, embedded)}
             className={className}
             style={{
               width: widthMode === "full" ? "100%" : undefined,
@@ -538,7 +545,7 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
                   {settings.footerLinks.map((link) => (
                     <Link
                       key={`${link.label}-${link.url}`}
-                      href={link.url || "#"}
+                      href={resolveContextHref(link.url || "#", false)}
                       target={link.openInNewTab ? "_blank" : undefined}
                       rel={link.openInNewTab ? "noreferrer" : undefined}
                       className={`text-sm transition ${

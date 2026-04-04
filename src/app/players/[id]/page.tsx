@@ -342,7 +342,7 @@ export default function PlayerProfilePage() {
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
     const buildPlayerUrl = (id: string, name: string) => {
-        const baseUrl = `/players/${buildPlayerSlug(id, name)}`
+        const baseUrl = `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(id, name)}`
         return tournamentContextSlug
             ? `${baseUrl}?tournament=${encodeURIComponent(tournamentContextSlug)}`
             : baseUrl
@@ -354,7 +354,7 @@ export default function PlayerProfilePage() {
             return
         }
 
-        router.push('/players')
+        router.push(`${isEmbedMode ? '/embed' : ''}/players`)
     }
 
     const navigateToPlayer = async (opponentId: string, displayName: string) => {
@@ -1958,7 +1958,7 @@ export default function PlayerProfilePage() {
                                             <div>
                                                 <h3 className="text-2xl font-bold flex items-center gap-2">
                                                     <a
-                                                        href={`/tournaments/${buildTournamentSlug('', participation.tournament, participation.year)}`}
+                                                        href={`${isEmbedMode ? '/embed' : ''}/tournaments/${buildTournamentSlug('', participation.tournament, participation.year)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 hover:text-blue-100 transition-colors"

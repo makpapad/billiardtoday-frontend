@@ -16,6 +16,13 @@ const shouldRenderSection = (section: CmsSection, embedded: boolean) => {
   return true;
 };
 
+const resolveContextHref = (href: string, embedded = false) => {
+  if (!embedded) return href;
+  if (!href.startsWith("/")) return href;
+  if (href.startsWith("/embed")) return href;
+  return `/embed${href}`;
+};
+
 const resolveContentContainer = (appearance: CmsAppearance, value?: string | null) =>
   getCmsContainerStyle(
     appearance,
@@ -203,7 +210,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
             {section.eyebrow ? <div className="inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ background: `${tokens.accent}22`, color: tokens.primary }}>{section.eyebrow}</div> : null}
             <h3 className="text-xl font-semibold tracking-tight text-slate-950" style={{ fontFamily: tokens.headingFont }}>{section.title}</h3>
             {section.content ? <p className="text-sm leading-7 text-slate-600">{section.content}</p> : null}
-            {section.buttonLabel && section.buttonUrl ? <Link href={section.buttonUrl} className="inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.buttonLabel}</Link> : null}
+            {section.buttonLabel && section.buttonUrl ? <Link href={resolveContextHref(section.buttonUrl, embedded)} className="inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.buttonLabel}</Link> : null}
           </div>
         </article>
       </section>
@@ -226,8 +233,8 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
               {section.subtitle ? <p className={`max-w-2xl text-slate-600 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`}>{section.subtitle}</p> : null}
             </div>
             <div className={`flex flex-wrap gap-3 ${resolveResponsiveJustifyClass(section.contentAlign, section.mobileContentAlign)}`}>
-              {section.primaryCtaLabel && section.primaryCtaUrl ? <Link href={section.primaryCtaUrl} className="rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.primaryCtaLabel}</Link> : null}
-              {section.secondaryCtaLabel && section.secondaryCtaUrl ? <Link href={section.secondaryCtaUrl} className="rounded-full border px-6 py-3 text-sm font-semibold transition hover:bg-slate-50" style={{ borderColor: `${tokens.primary}33`, color: tokens.text }}>{section.secondaryCtaLabel}</Link> : null}
+              {section.primaryCtaLabel && section.primaryCtaUrl ? <Link href={resolveContextHref(section.primaryCtaUrl, embedded)} className="rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.primaryCtaLabel}</Link> : null}
+              {section.secondaryCtaLabel && section.secondaryCtaUrl ? <Link href={resolveContextHref(section.secondaryCtaUrl, embedded)} className="rounded-full border px-6 py-3 text-sm font-semibold transition hover:bg-slate-50" style={{ borderColor: `${tokens.primary}33`, color: tokens.text }}>{section.secondaryCtaLabel}</Link> : null}
             </div>
           </div>
           <div className="relative min-h-[280px]">
@@ -355,7 +362,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
             {section.eyebrow ? <div className="inline-flex rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]" style={{ background: `${tokens.accent}22`, color: tokens.primary }}>{section.eyebrow}</div> : null}
             <h2 className={`${resolveResponsiveSectionTitleClass(section.titleSize, section.mobileTitleSize)} font-semibold tracking-tight`} style={{ fontFamily: tokens.headingFont }}>{section.title}</h2>
             <div className={`cms-richtext prose prose-slate max-w-none ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`} dangerouslySetInnerHTML={{ __html: section.content }} />
-            {section.buttonLabel && section.buttonUrl ? <Link href={section.buttonUrl} className="inline-flex rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.buttonLabel}</Link> : null}
+            {section.buttonLabel && section.buttonUrl ? <Link href={resolveContextHref(section.buttonUrl, embedded)} className="inline-flex rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ background: tokens.primary }}>{section.buttonLabel}</Link> : null}
           </div>
         </div>
       </section>
@@ -409,7 +416,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
               <h2 className={`${resolveResponsiveSectionTitleClass(section.titleSize, section.mobileTitleSize)} font-semibold tracking-tight`} style={{ fontFamily: tokens.headingFont }}>{section.title}</h2>
               {section.description ? <p className={`mt-3 opacity-90 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`}>{section.description}</p> : null}
             </div>
-            {section.buttonLabel && section.buttonUrl ? <Link href={section.buttonUrl} className="inline-flex rounded-full px-6 py-3 text-sm font-semibold transition hover:opacity-90" style={{ background: isSecondary ? tokens.primary : "#ffffff", color: isSecondary ? "#ffffff" : tokens.primary }}>{section.buttonLabel}</Link> : null}
+            {section.buttonLabel && section.buttonUrl ? <Link href={resolveContextHref(section.buttonUrl, embedded)} className="inline-flex rounded-full px-6 py-3 text-sm font-semibold transition hover:opacity-90" style={{ background: isSecondary ? tokens.primary : "#ffffff", color: isSecondary ? "#ffffff" : tokens.primary }}>{section.buttonLabel}</Link> : null}
           </div>
         </div>
       </section>
