@@ -12,6 +12,14 @@ const STRAPI_URLS = Array.from(new Set([PRIMARY_STRAPI_URL, FALLBACK_STRAPI_URL]
 const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
 const STRAPI_FETCH_TIMEOUT_MS = Math.max(1000, Number(getServerEnv("STRAPI_FETCH_TIMEOUT_MS") || 7000));
 
+const FEDERATION_SLUG_ALIASES: Record<string, string> = {
+  "confederation europeenne de billard": "ceb",
+  "confederation europeene de billard": "ceb",
+  "confédération européenne de billard": "ceb",
+  "confédération européene de billard": "ceb",
+  "union mondiale de billard": "union-mondiale-de-billard",
+};
+
 type Club = {
   id: number;
   documentId: string;
@@ -140,6 +148,9 @@ const buildFederationSlug = (entity: Record<string, unknown>) => {
 
   const name = readString(entity.name);
   if (!name) return null;
+
+  const alias = FEDERATION_SLUG_ALIASES[name.trim().toLocaleLowerCase("fr")];
+  if (alias) return alias;
 
   return name
     .toLowerCase()
@@ -426,41 +437,11 @@ export async function getClubByIdentifier(identifier: string): Promise<Club | nu
 export async function getFederations(): Promise<Federation[]> {
   const params = new URLSearchParams();
   params.set("sort[0]", "name:asc");
-  params.set("fields[0]", "name");
-  params.set("fields[1]", "country");
-  params.set("fields[2]", "documentId");
-  params.set("fields[3]", "slug");
-  params.set("fields[4]", "level");
-  params.set("fields[5]", "acronym");
-  params.set("fields[6]", "office");
-  params.set("fields[7]", "address");
-  params.set("fields[8]", "addressLine2");
-  params.set("fields[9]", "addressLine3");
-  params.set("fields[10]", "postalCode");
-  params.set("fields[11]", "city");
-  params.set("fields[12]", "website");
-  params.set("fields[13]", "contactEmail");
-  params.set("fields[14]", "contactPhone");
-  params.set("fields[15]", "mobilePhone");
-  params.set("fields[16]", "fax");
-  params.set("fields[17]", "googleMapsUrl");
-  params.set("fields[18]", "contactPerson");
-  params.set("fields[19]", "president");
-  params.set("fields[20]", "sportsDirector");
-  params.set("fields[21]", "youthDirector");
   params.set("populate[logo][fields][0]", "url");
   params.set("populate[logo][fields][1]", "name");
   params.set("populate[clubs][fields][0]", "name");
   params.set("populate[clubs][fields][1]", "slug");
   params.set("populate[clubs][fields][2]", "documentId");
-  params.set("populate[children][fields][0]", "name");
-  params.set("populate[children][fields][1]", "slug");
-  params.set("populate[children][fields][2]", "documentId");
-  params.set("populate[children][fields][3]", "country");
-  params.set("populate[children][fields][4]", "level");
-  params.set("populate[parent][fields][0]", "name");
-  params.set("populate[parent][fields][1]", "documentId");
-  params.set("populate[parent][fields][2]", "slug");
 
   try {
     const rows = await fetchCollectionRows("/api/federations", params, 40);
@@ -472,49 +453,9 @@ export async function getFederations(): Promise<Federation[]> {
 }
 
 export async function getFederationBySlug(slug: string): Promise<Federation | null> {
-  const params = new URLSearchParams();
-  params.set("filters[slug][$eq]", slug);
-  params.set("pagination[pageSize]", "1");
-  params.set("fields[0]", "name");
-  params.set("fields[1]", "country");
-  params.set("fields[2]", "documentId");
-  params.set("fields[3]", "slug");
-  params.set("fields[4]", "level");
-  params.set("fields[5]", "acronym");
-  params.set("fields[6]", "office");
-  params.set("fields[7]", "address");
-  params.set("fields[8]", "addressLine2");
-  params.set("fields[9]", "addressLine3");
-  params.set("fields[10]", "postalCode");
-  params.set("fields[11]", "city");
-  params.set("fields[12]", "website");
-  params.set("fields[13]", "contactEmail");
-  params.set("fields[14]", "contactPhone");
-  params.set("fields[15]", "mobilePhone");
-  params.set("fields[16]", "fax");
-  params.set("fields[17]", "googleMapsUrl");
-  params.set("fields[18]", "contactPerson");
-  params.set("fields[19]", "president");
-  params.set("fields[20]", "sportsDirector");
-  params.set("fields[21]", "youthDirector");
-  params.set("populate[logo][fields][0]", "url");
-  params.set("populate[logo][fields][1]", "name");
-  params.set("populate[clubs][fields][0]", "name");
-  params.set("populate[clubs][fields][1]", "slug");
-  params.set("populate[clubs][fields][2]", "documentId");
-  params.set("populate[children][fields][0]", "name");
-  params.set("populate[children][fields][1]", "slug");
-  params.set("populate[children][fields][2]", "documentId");
-  params.set("populate[children][fields][3]", "country");
-  params.set("populate[children][fields][4]", "level");
-  params.set("populate[parent][fields][0]", "name");
-  params.set("populate[parent][fields][1]", "documentId");
-  params.set("populate[parent][fields][2]", "slug");
-
   try {
-    const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
-    const row = Array.isArray(json?.data) ? json.data[0] || null : null;
-    return mapFederation(row);
+    const all = await getFederations();
+    return all.find((item) => item.slug === slug) || null;
   } catch (error) {
     console.error("[directory][getFederationBySlug]", error);
     return null;
@@ -528,49 +469,9 @@ export async function getFederationByIdentifier(identifier: string): Promise<Fed
   const bySlug = await getFederationBySlug(clean);
   if (bySlug) return bySlug;
 
-  const params = new URLSearchParams();
-  params.set("filters[documentId][$eq]", clean);
-  params.set("pagination[pageSize]", "1");
-  params.set("fields[0]", "name");
-  params.set("fields[1]", "country");
-  params.set("fields[2]", "documentId");
-  params.set("fields[3]", "slug");
-  params.set("fields[4]", "level");
-  params.set("fields[5]", "acronym");
-  params.set("fields[6]", "office");
-  params.set("fields[7]", "address");
-  params.set("fields[8]", "addressLine2");
-  params.set("fields[9]", "addressLine3");
-  params.set("fields[10]", "postalCode");
-  params.set("fields[11]", "city");
-  params.set("fields[12]", "website");
-  params.set("fields[13]", "contactEmail");
-  params.set("fields[14]", "contactPhone");
-  params.set("fields[15]", "mobilePhone");
-  params.set("fields[16]", "fax");
-  params.set("fields[17]", "googleMapsUrl");
-  params.set("fields[18]", "contactPerson");
-  params.set("fields[19]", "president");
-  params.set("fields[20]", "sportsDirector");
-  params.set("fields[21]", "youthDirector");
-  params.set("populate[logo][fields][0]", "url");
-  params.set("populate[logo][fields][1]", "name");
-  params.set("populate[clubs][fields][0]", "name");
-  params.set("populate[clubs][fields][1]", "slug");
-  params.set("populate[clubs][fields][2]", "documentId");
-  params.set("populate[children][fields][0]", "name");
-  params.set("populate[children][fields][1]", "slug");
-  params.set("populate[children][fields][2]", "documentId");
-  params.set("populate[children][fields][3]", "country");
-  params.set("populate[children][fields][4]", "level");
-  params.set("populate[parent][fields][0]", "name");
-  params.set("populate[parent][fields][1]", "documentId");
-  params.set("populate[parent][fields][2]", "slug");
-
   try {
-    const json = await fetchStrapiJson(`/api/federations?${params.toString()}`);
-    const row = Array.isArray(json?.data) ? json.data[0] || null : null;
-    return mapFederation(row);
+    const all = await getFederations();
+    return all.find((item) => item.documentId === clean) || null;
   } catch (error) {
     console.error("[directory][getFederationByIdentifier]", error);
     return null;
