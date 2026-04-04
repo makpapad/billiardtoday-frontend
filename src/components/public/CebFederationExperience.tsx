@@ -282,8 +282,13 @@ async function fetchAllFederationTournaments(federationId: string): Promise<Tour
   const allItems: TournamentItem[] = [];
 
   while (page <= pageCount) {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      federationId,
+    });
     const response = await fetch(
-      `/api/tournaments?page=${page}&pageSize=${pageSize}&federationId=${encodeURIComponent(federationId)}`,
+      `/api/tournaments?${params.toString()}`,
       { cache: "no-store" },
     );
     const payload = (await response.json().catch(() => ({ data: [], meta: {} }))) as TournamentPayload;
