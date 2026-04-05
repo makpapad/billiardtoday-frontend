@@ -113,6 +113,9 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 };
 
 function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
+  const losersR2 = matches
+    .filter((match) => match.roundLabel.trim().toUpperCase() === "LOSERS R2")
+    .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
   const round1Matches = matches
     .filter((match) => match.roundLabel.trim().toUpperCase() === "WINNERS R1")
     .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
@@ -125,21 +128,27 @@ function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
 
   return [
     {
+      key: "losers-r2",
+      label: "Losers R2",
+      x: LEFT_PADDING,
+      matches: losersR2,
+    },
+    {
       key: "losers-r1",
       label: "Losers R1",
-      x: LEFT_PADDING,
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
       matches: losersR1,
     },
     {
       key: "round-1",
       label: "Round 1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 2,
       matches: round1Matches,
     },
     {
       key: "winners-r1",
       label: "Winners R1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 2,
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 3,
       matches: winnersR1Matches,
     },
   ];
@@ -158,6 +167,15 @@ function buildRoundOnePreviewYMap(columns: PreviewColumn[]) {
     }
 
     if (column.key === "losers-r1") {
+      column.matches.forEach((match, index) => {
+        if (match.globalMatchNumber === null) return;
+        const slotCenter = index * 2 + 0.5;
+        yByMatch.set(match.globalMatchNumber, TOP_PADDING + slotCenter * SOURCE_ROW_GAP);
+      });
+      return;
+    }
+
+    if (column.key === "losers-r2") {
       column.matches.forEach((match, index) => {
         if (match.globalMatchNumber === null) return;
         const slotCenter = index * 2 + 0.5;
@@ -361,6 +379,51 @@ function buildRoundedPolyline(
   return d;
 }
 
+function buildSingleConnectorPath(
+  from: PositionedMatch,
+  to: PositionedMatch,
+  direction: ConnectorDirection,
+  slot: number | null,
+) {
+  const fromY = from.y + CARD_HEIGHT / 2;
+  const targetY =
+    to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * ((slot ?? 1) - 0.5);
+
+  if (direction === "left") {
+    const sourceX = from.x;
+    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
+    const targetX = to.x + CARD_WIDTH;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
+
+    return buildRoundedPolyline(
+      [
+        { x: sourceX, y: fromY },
+        { x: sourceJoinX, y: fromY },
+        { x: sourceJoinX, y: targetY },
+        { x: targetJoinX, y: targetY },
+        { x: targetX, y: targetY },
+      ],
+      CONNECTOR_RADIUS,
+    );
+  }
+
+  const sourceX = from.x + CARD_WIDTH;
+  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB;
+  const targetX = to.x;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB;
+
+  return buildRoundedPolyline(
+    [
+      { x: sourceX, y: fromY },
+      { x: sourceJoinX, y: fromY },
+      { x: sourceJoinX, y: targetY },
+      { x: targetJoinX, y: targetY },
+      { x: targetX, y: targetY },
+    ],
+    CONNECTOR_RADIUS,
+  );
+}
+
 function MatchCard({
   match,
   assignRef,
@@ -546,32 +609,61 @@ export default function CustomFlowchartClient({
       if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
     });
     const visibleTargets = new Set(layout.matches.map((match) => match.globalMatchNumber));
-    const inboundByTarget = new Map<number, number[]>();
+    const visibleEdges = buildDrawEdges(drawMatches).filter(
+      (edge) => visibleTargets.has(edge.from) && visibleTargets.has(edge.to),
+    );
+    const inboundByTarget = new Map<number, typeof visibleEdges>();
 
-    buildDrawEdges(drawMatches).forEach((edge) => {
-      if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
+    visibleEdges.forEach((edge) => {
       const current = inboundByTarget.get(edge.to);
       if (current) {
-        current.push(edge.from);
+        current.push(edge);
         return;
       }
-      inboundByTarget.set(edge.to, [edge.from]);
+      inboundByTarget.set(edge.to, [edge]);
     });
 
     const paths: ConnectorPath[] = [];
-    inboundByTarget.forEach((sources, target) => {
-      if (sources.length < 2) return;
-      const orderedSources = sources.slice().sort((a, b) => a - b);
-      const topMatch = byGlobal.get(orderedSources[0]);
-      const bottomMatch = byGlobal.get(orderedSources[1]);
+    inboundByTarget.forEach((edges, target) => {
       const targetMatch = byGlobal.get(target);
-      if (!topMatch || !bottomMatch || !targetMatch) return;
-      const direction: ConnectorDirection =
-        targetMatch.x < topMatch.x ? "left" : "right";
-      paths.push({
-        key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
-        d: buildConnectorPath(topMatch, bottomMatch, targetMatch, direction),
-      });
+      if (!targetMatch) return;
+      const targetRound = targetMatch.roundLabel.trim().toUpperCase();
+
+      if (targetRound === "LOSERS R1" || targetRound === "WINNERS R2") {
+        if (edges.length < 2) return;
+        const orderedSources = edges
+          .map((edge) => edge.from)
+          .slice()
+          .sort((a, b) => a - b);
+        const topMatch = byGlobal.get(orderedSources[0]);
+        const bottomMatch = byGlobal.get(orderedSources[1]);
+        if (!topMatch || !bottomMatch) return;
+        const direction: ConnectorDirection =
+          targetMatch.x < topMatch.x ? "left" : "right";
+        paths.push({
+          key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
+          d: buildConnectorPath(topMatch, bottomMatch, targetMatch, direction),
+        });
+        return;
+      }
+
+      if (targetRound === "LOSERS R2") {
+        edges.forEach((edge) => {
+          const sourceMatch = byGlobal.get(edge.from);
+          if (!sourceMatch) return;
+          const direction: ConnectorDirection =
+            targetMatch.x < sourceMatch.x ? "left" : "right";
+          paths.push({
+            key: `${edge.from}-to-${target}-slot-${edge.slot ?? "x"}`,
+            d: buildSingleConnectorPath(
+              sourceMatch,
+              targetMatch,
+              direction,
+              edge.slot,
+            ),
+          });
+        });
+      }
     });
     return paths;
   }, [drawMatches, layout]);
