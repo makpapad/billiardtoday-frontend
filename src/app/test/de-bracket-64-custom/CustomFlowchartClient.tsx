@@ -99,8 +99,10 @@ const ROUND_ONE_PREVIEW_GAP = 260;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
-const CONNECTOR_SOURCE_STUB = 2;
-const CONNECTOR_TARGET_STUB = 0;
+const CONNECTOR_SOURCE_STUB_LEFT = 2;
+const CONNECTOR_TARGET_STUB_LEFT = 0;
+const CONNECTOR_SOURCE_STUB_RIGHT = 10;
+const CONNECTOR_TARGET_STUB_RIGHT = 8;
 const CONNECTOR_RADIUS = 8;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
@@ -232,9 +234,9 @@ function buildConnectorPath(
 
   if (direction === "left") {
     const sourceX = fromTop.x;
-    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
+    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
     const targetX = to.x + CARD_WIDTH;
-    const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB_LEFT;
 
     return [
       buildRoundedPolyline(
@@ -280,9 +282,9 @@ function buildConnectorPath(
   }
 
   const sourceX = fromTop.x + CARD_WIDTH;
-  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB;
+  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
   const targetX = to.x;
-  const targetJoinX = targetX - CONNECTOR_TARGET_STUB;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB_RIGHT;
 
   return [
     buildRoundedPolyline(
@@ -391,9 +393,9 @@ function buildSingleConnectorPath(
 
   if (direction === "left") {
     const sourceX = from.x;
-    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
+    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
     const targetX = to.x + CARD_WIDTH;
-    const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB_LEFT;
 
     return buildRoundedPolyline(
       [
@@ -408,9 +410,9 @@ function buildSingleConnectorPath(
   }
 
   const sourceX = from.x + CARD_WIDTH;
-  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB;
+  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
   const targetX = to.x;
-  const targetJoinX = targetX - CONNECTOR_TARGET_STUB;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB_RIGHT;
 
   return buildRoundedPolyline(
     [
