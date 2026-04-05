@@ -177,21 +177,31 @@ function getWinnerSlot(match: DrawMatch) {
 }
 
 function buildConnectorPath(
-  from: DOMRect,
+  fromTop: DOMRect,
+  fromBottom: DOMRect,
   to: DOMRect,
   canvas: DOMRect,
-  slot: number | null,
 ) {
-  const startX = from.right - canvas.left;
-  const startY = from.top - canvas.top + CARD_HEIGHT / 2;
-  const endX = to.left - canvas.left;
-  const endY =
-    to.top -
-    canvas.top +
-    HEADER_HEIGHT +
-    (slot === 2 ? PLAYER_ROW_HEIGHT * 1.5 : PLAYER_ROW_HEIGHT * 0.5);
-  const trunkX = startX + Math.max(18, (endX - startX) / 2);
-  return `M ${startX} ${startY} H ${trunkX} V ${endY} H ${endX}`;
+  const sourceX = fromTop.left - canvas.left;
+  const sourceY1 = fromTop.top - canvas.top + CARD_HEIGHT / 2;
+  const sourceY2 = fromBottom.top - canvas.top + CARD_HEIGHT / 2;
+  const sourceJoinX = sourceX - 16;
+
+  const targetX = to.right - canvas.left;
+  const targetSlot1Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
+  const targetSlot2Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
+  const targetJoinX = targetX + 16;
+  const middleY = (sourceY1 + sourceY2) / 2;
+
+  return [
+    `M ${sourceX} ${sourceY1} H ${sourceJoinX}`,
+    `M ${sourceX} ${sourceY2} H ${sourceJoinX}`,
+    `M ${sourceJoinX} ${sourceY1} V ${sourceY2}`,
+    `M ${sourceJoinX} ${middleY} H ${targetJoinX}`,
+    `M ${targetJoinX} ${targetSlot1Y} V ${targetSlot2Y}`,
+    `M ${targetJoinX} ${targetSlot1Y} H ${targetX}`,
+    `M ${targetJoinX} ${targetSlot2Y} H ${targetX}`,
+  ].join(" ");
 }
 
 function MatchCard({
@@ -381,24 +391,38 @@ export default function CustomFlowchartClient({
         if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
       });
       const visibleTargets = new Set(layout.matches.map((match) => match.globalMatchNumber));
+      const inboundByTarget = new Map<number, number[]>();
 
-      const paths: ConnectorPath[] = [];
       buildDrawEdges(drawMatches).forEach((edge) => {
         if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
         if (edge.type !== "loser") return;
-        const fromMatch = byGlobal.get(edge.from);
-        const toMatch = byGlobal.get(edge.to);
-        if (!fromMatch || !toMatch) return;
-        const fromNode = nodeRefs.current.get(fromMatch.documentId);
-        const toNode = nodeRefs.current.get(toMatch.documentId);
-        if (!fromNode || !toNode) return;
+        const current = inboundByTarget.get(edge.to);
+        if (current) {
+          current.push(edge.from);
+          return;
+        }
+        inboundByTarget.set(edge.to, [edge.from]);
+      });
+
+      const paths: ConnectorPath[] = [];
+      inboundByTarget.forEach((sources, target) => {
+        if (sources.length < 2) return;
+        const orderedSources = sources.slice().sort((a, b) => a - b);
+        const topMatch = byGlobal.get(orderedSources[0]);
+        const bottomMatch = byGlobal.get(orderedSources[1]);
+        const targetMatch = byGlobal.get(target);
+        if (!topMatch || !bottomMatch || !targetMatch) return;
+        const topNode = nodeRefs.current.get(topMatch.documentId);
+        const bottomNode = nodeRefs.current.get(bottomMatch.documentId);
+        const targetNode = nodeRefs.current.get(targetMatch.documentId);
+        if (!topNode || !bottomNode || !targetNode) return;
         paths.push({
-          key: `${edge.from}-${edge.type}-${edge.to}-${edge.slot ?? "x"}`,
+          key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
           d: buildConnectorPath(
-            fromNode.getBoundingClientRect(),
-            toNode.getBoundingClientRect(),
+            topNode.getBoundingClientRect(),
+            bottomNode.getBoundingClientRect(),
+            targetNode.getBoundingClientRect(),
             canvasRect,
-            edge.slot,
           ),
         });
       });
