@@ -93,12 +93,12 @@ const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
 const PLAYER_ROW_HEIGHT = 32;
 const COLUMN_GAP = 285;
-const ROUND_ONE_PREVIEW_GAP = 360;
+const ROUND_ONE_PREVIEW_GAP = 320;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
-const CONNECTOR_STUB = 28;
-const CONNECTOR_RADIUS = 10;
+const CONNECTOR_STUB = 18;
+const CONNECTOR_RADIUS = 8;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
