@@ -95,7 +95,7 @@ const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
 const PLAYER_ROW_HEIGHT = 32;
 const COLUMN_GAP = 285;
-const ROUND_ONE_PREVIEW_GAP = 248;
+const ROUND_ONE_PREVIEW_GAP = 260;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
@@ -439,7 +439,7 @@ export default function CustomFlowchartClient({
   breadcrumbParentHref = "/tournaments",
   showDebugInfo = false,
 }: Props) {
-  const [zoom, setZoom] = useState(0.45);
+  const [zoom, setZoom] = useState(0.5);
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -531,7 +531,11 @@ export default function CustomFlowchartClient({
         x: column.x,
       })),
       matches: allMatches,
-      width: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * Math.max(columns.length - 1, 0) + CARD_WIDTH + 80,
+      width:
+        LEFT_PADDING +
+        ROUND_ONE_PREVIEW_GAP * Math.max(columns.length - 1, 0) +
+        CARD_WIDTH +
+        180,
       height: maxY + CARD_HEIGHT + 80,
     };
   }, [drawMatches]);
