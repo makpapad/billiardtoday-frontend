@@ -21,6 +21,7 @@ a { outline: none; }
 .cs-flowchart-grid { position: relative; width: fit-content; }
 .cs-round-column { position: absolute; top: 0; width: 250px; }
 .cs-round-header { color: #52668f; font-size: 12px; line-height: 16px; padding: 0 0 8px; border-top: 1px solid #b9c5de; border-bottom: 1px solid #b9c5de; white-space: nowrap; }
+.cs-connector-piece { position: absolute; background: #314f98; pointer-events: none; }
 .cs-match { position: absolute; width: 250px; height: 96px; background-color: transparent; }
 .cs-match .cs-matchno { margin-left: 8px; border-radius: 4px 4px 0 0; background: #667cac; color: #fff; font-size: 12px; font-weight: 700; line-height: 16px; padding: 0 6px; display: inline-block; }
 .cs-match .cs-header { display: flex; justify-content: space-between; align-items: center; background-color: white; color: #808CAC; height: 16px; font-size: 12px; overflow: hidden; }
@@ -76,9 +77,13 @@ type PositionedMatch = DrawMatch & {
   y: number;
 };
 
-type ConnectorPath = {
+type ConnectorPiece = {
   key: string;
-  d: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  radius?: string;
 };
 
 type PreviewColumn = {
@@ -441,6 +446,115 @@ function buildSingleConnectorPath(
   );
 }
 
+function addHorizontalPiece(
+  pieces: ConnectorPiece[],
+  key: string,
+  x1: number,
+  x2: number,
+  y: number,
+) {
+  const left = Math.min(x1, x2);
+  const width = Math.max(Math.abs(x2 - x1), 2);
+  pieces.push({ key, x: left, y: y - 1, width, height: 2, radius: "999px" });
+}
+
+function addVerticalPiece(
+  pieces: ConnectorPiece[],
+  key: string,
+  x: number,
+  y1: number,
+  y2: number,
+) {
+  const top = Math.min(y1, y2);
+  const height = Math.max(Math.abs(y2 - y1), 2);
+  pieces.push({ key, x: x - 1, y: top, width: 2, height, radius: "999px" });
+}
+
+function buildPairConnectorPieces(
+  fromTop: PositionedMatch,
+  fromBottom: PositionedMatch,
+  to: PositionedMatch,
+  direction: ConnectorDirection,
+  keyPrefix: string,
+) {
+  const pieces: ConnectorPiece[] = [];
+  const sourceY1 = fromTop.y + CARD_HEIGHT / 2;
+  const sourceY2 = fromBottom.y + CARD_HEIGHT / 2;
+  const middleY = (sourceY1 + sourceY2) / 2;
+  const targetSlot1Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
+  const targetSlot2Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
+
+  if (direction === "left") {
+    const sourceX = fromTop.x;
+    const sourceStubX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
+    const targetX = to.x + CARD_WIDTH;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB_LEFT;
+    const trunkX = targetJoinX + CONNECTOR_PAIR_SPAN_LEFT;
+
+    addHorizontalPiece(pieces, `${keyPrefix}-h1a`, sourceX, sourceStubX, sourceY1);
+    addHorizontalPiece(pieces, `${keyPrefix}-h1b`, sourceStubX, trunkX, sourceY1);
+    addHorizontalPiece(pieces, `${keyPrefix}-h2a`, sourceX, sourceStubX, sourceY2);
+    addHorizontalPiece(pieces, `${keyPrefix}-h2b`, sourceStubX, trunkX, sourceY2);
+    addVerticalPiece(pieces, `${keyPrefix}-vsrc`, trunkX, sourceY1, sourceY2);
+    addHorizontalPiece(pieces, `${keyPrefix}-mid`, trunkX, targetJoinX, middleY);
+    addVerticalPiece(pieces, `${keyPrefix}-vtgt`, targetJoinX, targetSlot1Y, targetSlot2Y);
+    addHorizontalPiece(pieces, `${keyPrefix}-ht1`, targetJoinX, targetX, targetSlot1Y);
+    addHorizontalPiece(pieces, `${keyPrefix}-ht2`, targetJoinX, targetX, targetSlot2Y);
+    return pieces;
+  }
+
+  const sourceX = fromTop.x + CARD_WIDTH;
+  const sourceStubX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
+  const targetX = to.x;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB_RIGHT;
+  const trunkX = targetJoinX - CONNECTOR_PAIR_SPAN_RIGHT;
+
+  addHorizontalPiece(pieces, `${keyPrefix}-h1a`, sourceX, sourceStubX, sourceY1);
+  addHorizontalPiece(pieces, `${keyPrefix}-h1b`, sourceStubX, trunkX, sourceY1);
+  addHorizontalPiece(pieces, `${keyPrefix}-h2a`, sourceX, sourceStubX, sourceY2);
+  addHorizontalPiece(pieces, `${keyPrefix}-h2b`, sourceStubX, trunkX, sourceY2);
+  addVerticalPiece(pieces, `${keyPrefix}-vsrc`, trunkX, sourceY1, sourceY2);
+  addHorizontalPiece(pieces, `${keyPrefix}-mid`, trunkX, targetJoinX, middleY);
+  addVerticalPiece(pieces, `${keyPrefix}-vtgt`, targetJoinX, targetSlot1Y, targetSlot2Y);
+  addHorizontalPiece(pieces, `${keyPrefix}-ht1`, targetJoinX, targetX, targetSlot1Y);
+  addHorizontalPiece(pieces, `${keyPrefix}-ht2`, targetJoinX, targetX, targetSlot2Y);
+  return pieces;
+}
+
+function buildSingleConnectorPieces(
+  from: PositionedMatch,
+  to: PositionedMatch,
+  direction: ConnectorDirection,
+  slot: number | null,
+  keyPrefix: string,
+) {
+  const pieces: ConnectorPiece[] = [];
+  const fromY = from.y + CARD_HEIGHT / 2;
+  const targetY = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * ((slot ?? 1) - 0.5);
+
+  if (direction === "left") {
+    const sourceX = from.x;
+    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
+    const targetX = to.x + CARD_WIDTH;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB_LEFT;
+    addHorizontalPiece(pieces, `${keyPrefix}-h1`, sourceX, sourceJoinX, fromY);
+    addVerticalPiece(pieces, `${keyPrefix}-v`, sourceJoinX, fromY, targetY);
+    addHorizontalPiece(pieces, `${keyPrefix}-h2`, sourceJoinX, targetJoinX, targetY);
+    addHorizontalPiece(pieces, `${keyPrefix}-h3`, targetJoinX, targetX, targetY);
+    return pieces;
+  }
+
+  const sourceX = from.x + CARD_WIDTH;
+  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
+  const targetX = to.x;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB_RIGHT;
+  addHorizontalPiece(pieces, `${keyPrefix}-h1`, sourceX, sourceJoinX, fromY);
+  addVerticalPiece(pieces, `${keyPrefix}-v`, sourceJoinX, fromY, targetY);
+  addHorizontalPiece(pieces, `${keyPrefix}-h2`, sourceJoinX, targetJoinX, targetY);
+  addHorizontalPiece(pieces, `${keyPrefix}-h3`, targetJoinX, targetX, targetY);
+  return pieces;
+}
+
 function MatchCard({
   match,
   assignRef,
@@ -636,7 +750,7 @@ export default function CustomFlowchartClient({
       inboundByTarget.set(edge.to, [edge]);
     });
 
-    const paths: ConnectorPath[] = [];
+    const pieces: ConnectorPiece[] = [];
     inboundByTarget.forEach((edges, target) => {
       const targetMatch = byGlobal.get(target);
       if (!targetMatch) return;
@@ -653,10 +767,15 @@ export default function CustomFlowchartClient({
         if (!topMatch || !bottomMatch) return;
         const direction: ConnectorDirection =
           targetMatch.x < topMatch.x ? "left" : "right";
-        paths.push({
-          key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
-          d: buildConnectorPath(topMatch, bottomMatch, targetMatch, direction),
-        });
+        pieces.push(
+          ...buildPairConnectorPieces(
+            topMatch,
+            bottomMatch,
+            targetMatch,
+            direction,
+            `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
+          ),
+        );
         return;
       }
 
@@ -666,19 +785,19 @@ export default function CustomFlowchartClient({
           if (!sourceMatch) return;
           const direction: ConnectorDirection =
             targetMatch.x < sourceMatch.x ? "left" : "right";
-          paths.push({
-            key: `${edge.from}-to-${target}-slot-${edge.slot ?? "x"}`,
-            d: buildSingleConnectorPath(
+          pieces.push(
+            ...buildSingleConnectorPieces(
               sourceMatch,
               targetMatch,
               direction,
               edge.slot,
+              `${edge.from}-to-${target}-slot-${edge.slot ?? "x"}`,
             ),
-          });
+          );
         });
       }
     });
-    return paths;
+    return pieces;
   }, [drawMatches, layout]);
 
   useEffect(() => {
@@ -797,23 +916,19 @@ export default function CustomFlowchartClient({
               className="cs-flowchart-grid"
               style={{ width: `${layout.width}px`, height: `${layout.height}px` }}
             >
-              <svg
-                className="pointer-events-none absolute inset-0"
-                width={layout.width}
-                height={layout.height}
-              >
-                {connectors.map((path) => (
-                  <path
-                    key={path.key}
-                    d={path.d}
-                    fill="none"
-                    stroke="#314f98"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-              </svg>
+              {connectors.map((piece) => (
+                <div
+                  key={piece.key}
+                  className="cs-connector-piece"
+                  style={{
+                    left: `${piece.x}px`,
+                    top: `${piece.y}px`,
+                    width: `${piece.width}px`,
+                    height: `${piece.height}px`,
+                    borderRadius: piece.radius,
+                  }}
+                />
+              ))}
 
               {layout.columns.map((column) => (
                 <div
