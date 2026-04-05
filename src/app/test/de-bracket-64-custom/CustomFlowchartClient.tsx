@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { EventApiResponse, StrapiEventStage } from "@/app/tournaments/events/types";
 import { normalizeEntity, toRelationArray } from "@/app/tournaments/events/utils";
-import { buildDrawEdges, buildDrawMatches, buildFullPyramidColumns, type DrawMatch } from "@/app/tournaments/events/draw/flowchartModel";
+import { buildDrawEdges, buildDrawMatches, type DrawMatch } from "@/app/tournaments/events/draw/flowchartModel";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 const FLOWCHART_CSS = `
@@ -81,6 +81,13 @@ type ConnectorPath = {
   d: string;
 };
 
+type PreviewColumn = {
+  key: string;
+  label: string;
+  x: number;
+  matches: DrawMatch[];
+};
+
 const CARD_WIDTH = 250;
 const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
@@ -99,40 +106,49 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   return response.json();
 };
 
-function getTemplateRoundFactor(match: DrawMatch): number | null {
-  const label = match.roundLabel.trim().toUpperCase();
-  const winnerRound = label.match(/^WINNER(?:S)?\s+R\s*(\d+)$/) || label.match(/^WINNER(?:S)?\s+ROUND\s*(\d+)$/);
-  if (winnerRound) {
-    return 2 ** (Number(winnerRound[1]) - 1);
-  }
-  if (label === "WINNERS FINAL" || label === "GRAND FINAL" || label === "GRAND FINAL RESET") {
-    return 32;
-  }
-  const loserRound = label.match(/^LOSER(?:S)?\s+R\s*(\d+)$/) || label.match(/^LOSER(?:S)?\s+ROUND\s*(\d+)$/);
-  if (loserRound) {
-    return 2 ** Math.ceil(Number(loserRound[1]) / 2);
-  }
-  return null;
+function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
+  const winnersR1 = matches
+    .filter((match) => match.roundLabel.trim().toUpperCase() === "WINNERS R1")
+    .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
+  const losersR1 = matches
+    .filter((match) => match.roundLabel.trim().toUpperCase() === "LOSERS R1")
+    .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
+
+  return [
+    {
+      key: "losers-r1",
+      label: "Losers R1",
+      x: LEFT_PADDING,
+      matches: losersR1,
+    },
+    {
+      key: "winners-r1",
+      label: "Winners R1",
+      x: LEFT_PADDING + COLUMN_GAP,
+      matches: winnersR1,
+    },
+  ];
 }
 
-function buildTemplateYMap(matches: DrawMatch[], columns: ReturnType<typeof buildFullPyramidColumns>) {
+function buildRoundOnePreviewYMap(columns: PreviewColumn[]) {
   const yByMatch = new Map<number, number>();
 
   columns.forEach((column) => {
-    const ordered = column.matches
-      .slice()
-      .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
-
-    ordered.forEach((match, index) => {
-      if (match.globalMatchNumber === null) return;
-      const factor = getTemplateRoundFactor(match);
-      if (!factor) {
+    if (column.key === "winners-r1") {
+      column.matches.forEach((match, index) => {
+        if (match.globalMatchNumber === null) return;
         yByMatch.set(match.globalMatchNumber, TOP_PADDING + index * SOURCE_ROW_GAP);
-        return;
-      }
-      const slotCenter = index * factor + (factor - 1) / 2;
-      yByMatch.set(match.globalMatchNumber, TOP_PADDING + slotCenter * SOURCE_ROW_GAP);
-    });
+      });
+      return;
+    }
+
+    if (column.key === "losers-r1") {
+      column.matches.forEach((match, index) => {
+        if (match.globalMatchNumber === null) return;
+        const slotCenter = index * 2 + 0.5;
+        yByMatch.set(match.globalMatchNumber, TOP_PADDING + slotCenter * SOURCE_ROW_GAP);
+      });
+    }
   });
 
   return yByMatch;
@@ -325,17 +341,16 @@ export default function CustomFlowchartClient({
   const drawMatches = useMemo(() => buildDrawMatches(activeStage?.raw ?? null), [activeStage]);
 
   const layout = useMemo(() => {
-    const columns = buildFullPyramidColumns(drawMatches);
+    const columns = buildRoundOnePreviewColumns(drawMatches);
     const placed = new Map<number, PositionedMatch>();
-    const yByMatch = buildTemplateYMap(drawMatches, columns);
+    const yByMatch = buildRoundOnePreviewYMap(columns);
 
-    columns.forEach((column, columnIndex) => {
-      const x = LEFT_PADDING + columnIndex * COLUMN_GAP;
+    columns.forEach((column) => {
       column.matches.forEach((match) => {
         if (match.globalMatchNumber === null) return;
         placed.set(match.globalMatchNumber, {
           ...match,
-          x,
+          x: column.x,
           y: yByMatch.get(match.globalMatchNumber) ?? TOP_PADDING,
         });
       });
@@ -345,10 +360,10 @@ export default function CustomFlowchartClient({
     const maxY = TOP_PADDING + 31 * SOURCE_ROW_GAP;
 
     return {
-      columns: columns.map((column, columnIndex) => ({
+      columns: columns.map((column) => ({
         key: column.key,
         label: column.label,
-        x: LEFT_PADDING + columnIndex * COLUMN_GAP,
+        x: column.x,
       })),
       matches: allMatches,
       width: LEFT_PADDING + columns.length * COLUMN_GAP + CARD_WIDTH + 40,
@@ -365,9 +380,12 @@ export default function CustomFlowchartClient({
       layout.matches.forEach((match) => {
         if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
       });
+      const visibleTargets = new Set(layout.matches.map((match) => match.globalMatchNumber));
 
       const paths: ConnectorPath[] = [];
       buildDrawEdges(drawMatches).forEach((edge) => {
+        if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
+        if (edge.type !== "loser") return;
         const fromMatch = byGlobal.get(edge.from);
         const toMatch = byGlobal.get(edge.to);
         if (!fromMatch || !toMatch) return;
