@@ -98,7 +98,7 @@ const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
 const CONNECTOR_SOURCE_STUB = 10;
-const CONNECTOR_TARGET_STUB = 8;
+const CONNECTOR_TARGET_STUB = 0;
 const CONNECTOR_RADIUS = 8;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
