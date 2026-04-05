@@ -3,13 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { EventApiResponse, StrapiEventStage } from "@/app/tournaments/events/types";
 import { normalizeEntity, toRelationArray } from "@/app/tournaments/events/utils";
-import {
-  buildDrawEdges,
-  buildDrawMatches,
-  buildFullPyramidColumns,
-  type DrawEdge,
-  type DrawMatch,
-} from "@/app/tournaments/events/draw/flowchartModel";
+import { buildDrawEdges, buildDrawMatches, buildFullPyramidColumns, type DrawMatch } from "@/app/tournaments/events/draw/flowchartModel";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 const FLOWCHART_CSS = `
@@ -91,9 +85,7 @@ const CARD_WIDTH = 250;
 const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
 const PLAYER_ROW_HEIGHT = 32;
-const FOOTER_HEIGHT = 16;
 const COLUMN_GAP = 285;
-const MIN_ROW_GAP = 18;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
@@ -107,95 +99,43 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   return response.json();
 };
 
-function normalizeSpacing(values: number[], minimumGap: number) {
-  if (!values.length) return values;
-  const result = [...values].sort((a, b) => a - b);
-  for (let i = 1; i < result.length; i += 1) {
-    if (result[i] - result[i - 1] < minimumGap) {
-      result[i] = result[i - 1] + minimumGap;
-    }
+function getTemplateRoundFactor(match: DrawMatch): number | null {
+  const label = match.roundLabel.trim().toUpperCase();
+  const winnerRound = label.match(/^WINNER(?:S)?\s+R\s*(\d+)$/) || label.match(/^WINNER(?:S)?\s+ROUND\s*(\d+)$/);
+  if (winnerRound) {
+    return 2 ** (Number(winnerRound[1]) - 1);
   }
-  return result;
+  if (label === "WINNERS FINAL" || label === "GRAND FINAL" || label === "GRAND FINAL RESET") {
+    return 32;
+  }
+  const loserRound = label.match(/^LOSER(?:S)?\s+R\s*(\d+)$/) || label.match(/^LOSER(?:S)?\s+ROUND\s*(\d+)$/);
+  if (loserRound) {
+    return 2 ** Math.ceil(Number(loserRound[1]) / 2);
+  }
+  return null;
 }
 
-function buildVerticalPositions(
-  matches: DrawMatch[],
-  columns: ReturnType<typeof buildFullPyramidColumns>,
-  edges: DrawEdge[],
-) {
+function buildTemplateYMap(matches: DrawMatch[], columns: ReturnType<typeof buildFullPyramidColumns>) {
   const yByMatch = new Map<number, number>();
-  const inboundByTarget = new Map<number, DrawEdge[]>();
 
-  edges.forEach((edge) => {
-    const current = inboundByTarget.get(edge.to);
-    if (current) {
-      current.push(edge);
-      return;
-    }
-    inboundByTarget.set(edge.to, [edge]);
-  });
-
-  const orderedMatches = matches
-    .filter((match): match is DrawMatch & { globalMatchNumber: number } =>
-      match.globalMatchNumber !== null,
-    )
-    .sort((a, b) => a.globalMatchNumber - b.globalMatchNumber);
-
-  const sourceMatches = orderedMatches.filter(
-    (match) => !inboundByTarget.has(match.globalMatchNumber),
-  );
-
-  sourceMatches.forEach((match, index) => {
-    yByMatch.set(match.globalMatchNumber, TOP_PADDING + index * SOURCE_ROW_GAP);
-  });
-
-  let progress = true;
-  while (progress) {
-    progress = false;
-    orderedMatches.forEach((match) => {
-      if (yByMatch.has(match.globalMatchNumber)) return;
-      const inbound = inboundByTarget.get(match.globalMatchNumber) ?? [];
-      if (!inbound.length) return;
-      const sourceYs = inbound
-        .map((edge) => yByMatch.get(edge.from))
-        .filter((value): value is number => typeof value === "number");
-      if (sourceYs.length !== inbound.length) return;
-      const average = sourceYs.reduce((sum, value) => sum + value, 0) / sourceYs.length;
-      yByMatch.set(match.globalMatchNumber, average);
-      progress = true;
-    });
-  }
-
-  let fallbackY =
-    (sourceMatches.length ? TOP_PADDING + sourceMatches.length * SOURCE_ROW_GAP : TOP_PADDING) +
-    40;
-  orderedMatches.forEach((match) => {
-    if (yByMatch.has(match.globalMatchNumber)) return;
-    yByMatch.set(match.globalMatchNumber, fallbackY);
-    fallbackY += SOURCE_ROW_GAP;
-  });
-
-  const normalized = new Map<number, number>();
   columns.forEach((column) => {
-    const preliminary = column.matches.map(
-      (match) => yByMatch.get(match.globalMatchNumber ?? -1) ?? TOP_PADDING,
-    );
-    const spaced = normalizeSpacing(preliminary, CARD_HEIGHT + MIN_ROW_GAP);
-    column.matches
+    const ordered = column.matches
       .slice()
-      .sort((a, b) => {
-        const left = yByMatch.get(a.globalMatchNumber ?? -1) ?? TOP_PADDING;
-        const right = yByMatch.get(b.globalMatchNumber ?? -1) ?? TOP_PADDING;
-        return left - right;
-      })
-      .forEach((match, index) => {
-        if (match.globalMatchNumber !== null) {
-          normalized.set(match.globalMatchNumber, spaced[index]);
-        }
-      });
+      .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
+
+    ordered.forEach((match, index) => {
+      if (match.globalMatchNumber === null) return;
+      const factor = getTemplateRoundFactor(match);
+      if (!factor) {
+        yByMatch.set(match.globalMatchNumber, TOP_PADDING + index * SOURCE_ROW_GAP);
+        return;
+      }
+      const slotCenter = index * factor + (factor - 1) / 2;
+      yByMatch.set(match.globalMatchNumber, TOP_PADDING + slotCenter * SOURCE_ROW_GAP);
+    });
   });
 
-  return normalized;
+  return yByMatch;
 }
 
 function formatHeaderMeta(value: string | null) {
@@ -386,9 +326,8 @@ export default function CustomFlowchartClient({
 
   const layout = useMemo(() => {
     const columns = buildFullPyramidColumns(drawMatches);
-    const edges = buildDrawEdges(drawMatches);
     const placed = new Map<number, PositionedMatch>();
-    const yByMatch = buildVerticalPositions(drawMatches, columns, edges);
+    const yByMatch = buildTemplateYMap(drawMatches, columns);
 
     columns.forEach((column, columnIndex) => {
       const x = LEFT_PADDING + columnIndex * COLUMN_GAP;
@@ -403,7 +342,7 @@ export default function CustomFlowchartClient({
     });
 
     const allMatches = Array.from(placed.values());
-    const maxY = allMatches.reduce((max, match) => Math.max(max, match.y), TOP_PADDING);
+    const maxY = TOP_PADDING + 31 * SOURCE_ROW_GAP;
 
     return {
       columns: columns.map((column, columnIndex) => ({
