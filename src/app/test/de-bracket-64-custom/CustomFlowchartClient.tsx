@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { EventApiResponse, StrapiEventStage } from "@/app/tournaments/events/types";
 import { normalizeEntity, toRelationArray } from "@/app/tournaments/events/utils";
 import { buildDrawEdges, buildDrawMatches, type DrawMatch } from "@/app/tournaments/events/draw/flowchartModel";
@@ -179,19 +179,18 @@ function getWinnerSlot(match: DrawMatch) {
 }
 
 function buildConnectorPath(
-  fromTop: DOMRect,
-  fromBottom: DOMRect,
-  to: DOMRect,
-  canvas: DOMRect,
+  fromTop: PositionedMatch,
+  fromBottom: PositionedMatch,
+  to: PositionedMatch,
 ) {
-  const sourceX = fromTop.left - canvas.left;
-  const sourceY1 = fromTop.top - canvas.top + CARD_HEIGHT / 2;
-  const sourceY2 = fromBottom.top - canvas.top + CARD_HEIGHT / 2;
+  const sourceX = fromTop.x;
+  const sourceY1 = fromTop.y + CARD_HEIGHT / 2;
+  const sourceY2 = fromBottom.y + CARD_HEIGHT / 2;
   const sourceJoinX = sourceX - CONNECTOR_STUB;
 
-  const targetX = to.right - canvas.left;
-  const targetSlot1Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
-  const targetSlot2Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
+  const targetX = to.x + CARD_WIDTH;
+  const targetSlot1Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
+  const targetSlot2Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
   const targetJoinX = targetX + CONNECTOR_STUB;
   const middleY = (sourceY1 + sourceY2) / 2;
 
@@ -289,8 +288,6 @@ export default function CustomFlowchartClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
-  const [connectors, setConnectors] = useState<ConnectorPath[]>([]);
-  const canvasRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef(new Map<string, HTMLDivElement | null>());
 
   useEffect(() => {
@@ -383,60 +380,39 @@ export default function CustomFlowchartClient({
     };
   }, [drawMatches]);
 
-  useLayoutEffect(() => {
-    const rebuild = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const canvasRect = canvas.getBoundingClientRect();
-      const byGlobal = new Map<number, PositionedMatch>();
-      layout.matches.forEach((match) => {
-        if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
-      });
-      const visibleTargets = new Set(layout.matches.map((match) => match.globalMatchNumber));
-      const inboundByTarget = new Map<number, number[]>();
+  const connectors = useMemo(() => {
+    const byGlobal = new Map<number, PositionedMatch>();
+    layout.matches.forEach((match) => {
+      if (match.globalMatchNumber) byGlobal.set(match.globalMatchNumber, match);
+    });
+    const visibleTargets = new Set(layout.matches.map((match) => match.globalMatchNumber));
+    const inboundByTarget = new Map<number, number[]>();
 
-      buildDrawEdges(drawMatches).forEach((edge) => {
-        if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
-        if (edge.type !== "loser") return;
-        const current = inboundByTarget.get(edge.to);
-        if (current) {
-          current.push(edge.from);
-          return;
-        }
-        inboundByTarget.set(edge.to, [edge.from]);
-      });
+    buildDrawEdges(drawMatches).forEach((edge) => {
+      if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
+      if (edge.type !== "loser") return;
+      const current = inboundByTarget.get(edge.to);
+      if (current) {
+        current.push(edge.from);
+        return;
+      }
+      inboundByTarget.set(edge.to, [edge.from]);
+    });
 
-      const paths: ConnectorPath[] = [];
-      inboundByTarget.forEach((sources, target) => {
-        if (sources.length < 2) return;
-        const orderedSources = sources.slice().sort((a, b) => a - b);
-        const topMatch = byGlobal.get(orderedSources[0]);
-        const bottomMatch = byGlobal.get(orderedSources[1]);
-        const targetMatch = byGlobal.get(target);
-        if (!topMatch || !bottomMatch || !targetMatch) return;
-        const topNode = nodeRefs.current.get(topMatch.documentId);
-        const bottomNode = nodeRefs.current.get(bottomMatch.documentId);
-        const targetNode = nodeRefs.current.get(targetMatch.documentId);
-        if (!topNode || !bottomNode || !targetNode) return;
-        paths.push({
-          key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
-          d: buildConnectorPath(
-            topNode.getBoundingClientRect(),
-            bottomNode.getBoundingClientRect(),
-            targetNode.getBoundingClientRect(),
-            canvasRect,
-          ),
-        });
+    const paths: ConnectorPath[] = [];
+    inboundByTarget.forEach((sources, target) => {
+      if (sources.length < 2) return;
+      const orderedSources = sources.slice().sort((a, b) => a - b);
+      const topMatch = byGlobal.get(orderedSources[0]);
+      const bottomMatch = byGlobal.get(orderedSources[1]);
+      const targetMatch = byGlobal.get(target);
+      if (!topMatch || !bottomMatch || !targetMatch) return;
+      paths.push({
+        key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
+        d: buildConnectorPath(topMatch, bottomMatch, targetMatch),
       });
-      setConnectors(paths);
-    };
-
-    const raf = requestAnimationFrame(rebuild);
-    window.addEventListener("resize", rebuild);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", rebuild);
-    };
+    });
+    return paths;
   }, [drawMatches, layout]);
 
   useEffect(() => {
@@ -548,7 +524,6 @@ export default function CustomFlowchartClient({
         {!loading && !error && drawMatches.length ? (
           <div className="cs-flowchart-shell" style={{ transform: `scale(${zoom})` }}>
             <div
-              ref={canvasRef}
               className="cs-flowchart-grid"
               style={{ width: `${layout.width}px`, height: `${layout.height}px` }}
             >
