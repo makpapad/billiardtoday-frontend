@@ -98,6 +98,7 @@ const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
 const CONNECTOR_STUB = 28;
+const CONNECTOR_RADIUS = 10;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
@@ -195,14 +196,98 @@ function buildConnectorPath(
   const middleY = (sourceY1 + sourceY2) / 2;
 
   return [
-    `M ${sourceX} ${sourceY1} H ${sourceJoinX}`,
-    `M ${sourceX} ${sourceY2} H ${sourceJoinX}`,
-    `M ${sourceJoinX} ${sourceY1} V ${sourceY2}`,
-    `M ${sourceJoinX} ${middleY} H ${targetJoinX}`,
-    `M ${targetJoinX} ${targetSlot1Y} V ${targetSlot2Y}`,
-    `M ${targetJoinX} ${targetSlot1Y} H ${targetX}`,
-    `M ${targetJoinX} ${targetSlot2Y} H ${targetX}`,
+    buildRoundedPolyline(
+      [
+        { x: sourceX, y: sourceY1 },
+        { x: sourceJoinX, y: sourceY1 },
+        { x: sourceJoinX, y: middleY },
+      ],
+      CONNECTOR_RADIUS,
+    ),
+    buildRoundedPolyline(
+      [
+        { x: sourceX, y: sourceY2 },
+        { x: sourceJoinX, y: sourceY2 },
+        { x: sourceJoinX, y: middleY },
+      ],
+      CONNECTOR_RADIUS,
+    ),
+    buildRoundedPolyline(
+      [
+        { x: sourceJoinX, y: middleY },
+        { x: targetJoinX, y: middleY },
+      ],
+      CONNECTOR_RADIUS,
+    ),
+    buildRoundedPolyline(
+      [
+        { x: targetJoinX, y: middleY },
+        { x: targetJoinX, y: targetSlot1Y },
+        { x: targetX, y: targetSlot1Y },
+      ],
+      CONNECTOR_RADIUS,
+    ),
+    buildRoundedPolyline(
+      [
+        { x: targetJoinX, y: middleY },
+        { x: targetJoinX, y: targetSlot2Y },
+        { x: targetX, y: targetSlot2Y },
+      ],
+      CONNECTOR_RADIUS,
+    ),
   ].join(" ");
+}
+
+function buildRoundedPolyline(
+  points: Array<{ x: number; y: number }>,
+  radius: number,
+) {
+  if (points.length < 2) return "";
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
+
+  let d = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const prev = points[index - 1];
+    const current = points[index];
+    const next = points[index + 1];
+
+    const incomingDx = current.x - prev.x;
+    const incomingDy = current.y - prev.y;
+    const outgoingDx = next.x - current.x;
+    const outgoingDy = next.y - current.y;
+
+    const incomingLength = Math.hypot(incomingDx, incomingDy);
+    const outgoingLength = Math.hypot(outgoingDx, outgoingDy);
+
+    if (!incomingLength || !outgoingLength) {
+      d += ` L ${current.x} ${current.y}`;
+      continue;
+    }
+
+    const isCorner =
+      Math.sign(incomingDx) !== Math.sign(outgoingDx) ||
+      Math.sign(incomingDy) !== Math.sign(outgoingDy);
+
+    if (!isCorner) {
+      d += ` L ${current.x} ${current.y}`;
+      continue;
+    }
+
+    const cornerRadius = Math.min(radius, incomingLength / 2, outgoingLength / 2);
+    const entryX = current.x - (incomingDx / incomingLength) * cornerRadius;
+    const entryY = current.y - (incomingDy / incomingLength) * cornerRadius;
+    const exitX = current.x + (outgoingDx / outgoingLength) * cornerRadius;
+    const exitY = current.y + (outgoingDy / outgoingLength) * cornerRadius;
+
+    d += ` L ${entryX} ${entryY} Q ${current.x} ${current.y} ${exitX} ${exitY}`;
+  }
+
+  const last = points[points.length - 1];
+  d += ` L ${last.x} ${last.y}`;
+  return d;
 }
 
 function MatchCard({
