@@ -97,7 +97,8 @@ const ROUND_ONE_PREVIEW_GAP = 320;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
-const CONNECTOR_STUB = 18;
+const CONNECTOR_SOURCE_STUB = 10;
+const CONNECTOR_TARGET_STUB = 8;
 const CONNECTOR_RADIUS = 8;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
@@ -187,12 +188,12 @@ function buildConnectorPath(
   const sourceX = fromTop.x;
   const sourceY1 = fromTop.y + CARD_HEIGHT / 2;
   const sourceY2 = fromBottom.y + CARD_HEIGHT / 2;
-  const sourceJoinX = sourceX - CONNECTOR_STUB;
+  const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
 
   const targetX = to.x + CARD_WIDTH;
   const targetSlot1Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
   const targetSlot2Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
-  const targetJoinX = targetX + CONNECTOR_STUB;
+  const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
   const middleY = (sourceY1 + sourceY2) / 2;
 
   return [
