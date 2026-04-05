@@ -95,7 +95,6 @@ const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
 const PLAYER_ROW_HEIGHT = 32;
 const COLUMN_GAP = 285;
-const ROUND_ONE_PREVIEW_GAP = 260;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
@@ -104,6 +103,9 @@ const CONNECTOR_TARGET_STUB_LEFT = 0;
 const CONNECTOR_SOURCE_STUB_RIGHT = 10;
 const CONNECTOR_TARGET_STUB_RIGHT = 8;
 const CONNECTOR_RADIUS = 8;
+const LOSERS_COMPACT_GAP = 260;
+const CENTER_PREVIEW_GAP = 360;
+const WINNERS_PREVIEW_GAP = 320;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
@@ -128,29 +130,34 @@ function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
     .filter((match) => match.roundLabel.trim().toUpperCase() === "LOSERS R1")
     .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
 
+  const losersR2X = LEFT_PADDING;
+  const losersR1X = losersR2X + LOSERS_COMPACT_GAP;
+  const round1X = losersR1X + CENTER_PREVIEW_GAP;
+  const winnersR1X = round1X + WINNERS_PREVIEW_GAP;
+
   return [
     {
       key: "losers-r2",
       label: "Losers R2",
-      x: LEFT_PADDING,
+      x: losersR2X,
       matches: losersR2,
     },
     {
       key: "losers-r1",
       label: "Losers R1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
+      x: losersR1X,
       matches: losersR1,
     },
     {
       key: "round-1",
       label: "Round 1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 2,
+      x: round1X,
       matches: round1Matches,
     },
     {
       key: "winners-r1",
       label: "Winners R1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 3,
+      x: winnersR1X,
       matches: winnersR1Matches,
     },
   ];
@@ -596,11 +603,7 @@ export default function CustomFlowchartClient({
         x: column.x,
       })),
       matches: allMatches,
-      width:
-        LEFT_PADDING +
-        ROUND_ONE_PREVIEW_GAP * Math.max(columns.length - 1, 0) +
-        CARD_WIDTH +
-        180,
+      width: Math.max(...columns.map((column) => column.x)) + CARD_WIDTH + 180,
       height: maxY + CARD_HEIGHT + 80,
     };
   }, [drawMatches]);
