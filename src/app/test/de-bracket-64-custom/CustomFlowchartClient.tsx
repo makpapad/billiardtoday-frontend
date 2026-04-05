@@ -102,6 +102,8 @@ const CONNECTOR_SOURCE_STUB_LEFT = 2;
 const CONNECTOR_TARGET_STUB_LEFT = 0;
 const CONNECTOR_SOURCE_STUB_RIGHT = 10;
 const CONNECTOR_TARGET_STUB_RIGHT = 8;
+const CONNECTOR_PAIR_SPAN_LEFT = 20;
+const CONNECTOR_PAIR_SPAN_RIGHT = 20;
 const CONNECTOR_RADIUS = 8;
 const LOSERS_COMPACT_GAP = 260;
 const CENTER_PREVIEW_GAP = 360;
@@ -241,30 +243,33 @@ function buildConnectorPath(
 
   if (direction === "left") {
     const sourceX = fromTop.x;
-    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
+    const sourceStubX = sourceX - CONNECTOR_SOURCE_STUB_LEFT;
     const targetX = to.x + CARD_WIDTH;
     const targetJoinX = targetX + CONNECTOR_TARGET_STUB_LEFT;
+    const trunkX = targetJoinX + CONNECTOR_PAIR_SPAN_LEFT;
 
     return [
       buildRoundedPolyline(
         [
           { x: sourceX, y: sourceY1 },
-          { x: sourceJoinX, y: sourceY1 },
-          { x: sourceJoinX, y: middleY },
+          { x: sourceStubX, y: sourceY1 },
+          { x: trunkX, y: sourceY1 },
+          { x: trunkX, y: middleY },
         ],
         CONNECTOR_RADIUS,
       ),
       buildRoundedPolyline(
         [
           { x: sourceX, y: sourceY2 },
-          { x: sourceJoinX, y: sourceY2 },
-          { x: sourceJoinX, y: middleY },
+          { x: sourceStubX, y: sourceY2 },
+          { x: trunkX, y: sourceY2 },
+          { x: trunkX, y: middleY },
         ],
         CONNECTOR_RADIUS,
       ),
       buildRoundedPolyline(
         [
-          { x: sourceJoinX, y: middleY },
+          { x: trunkX, y: middleY },
           { x: targetJoinX, y: middleY },
         ],
         CONNECTOR_RADIUS,
@@ -289,30 +294,33 @@ function buildConnectorPath(
   }
 
   const sourceX = fromTop.x + CARD_WIDTH;
-  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
+  const sourceStubX = sourceX + CONNECTOR_SOURCE_STUB_RIGHT;
   const targetX = to.x;
   const targetJoinX = targetX - CONNECTOR_TARGET_STUB_RIGHT;
+  const trunkX = targetJoinX - CONNECTOR_PAIR_SPAN_RIGHT;
 
   return [
     buildRoundedPolyline(
       [
         { x: sourceX, y: sourceY1 },
-        { x: sourceJoinX, y: sourceY1 },
-        { x: sourceJoinX, y: middleY },
+        { x: sourceStubX, y: sourceY1 },
+        { x: trunkX, y: sourceY1 },
+        { x: trunkX, y: middleY },
       ],
       CONNECTOR_RADIUS,
     ),
     buildRoundedPolyline(
       [
         { x: sourceX, y: sourceY2 },
-        { x: sourceJoinX, y: sourceY2 },
-        { x: sourceJoinX, y: middleY },
+        { x: sourceStubX, y: sourceY2 },
+        { x: trunkX, y: sourceY2 },
+        { x: trunkX, y: middleY },
       ],
       CONNECTOR_RADIUS,
     ),
     buildRoundedPolyline(
       [
-        { x: sourceJoinX, y: middleY },
+        { x: trunkX, y: middleY },
         { x: targetJoinX, y: middleY },
       ],
       CONNECTOR_RADIUS,
