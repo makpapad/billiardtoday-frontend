@@ -707,6 +707,10 @@ export default function CustomFlowchartClient({
     };
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ left: 0, top: 0, behavior: "auto" });
+  }, [activeStageId, layout.width]);
+
   const assignNodeRef = (id: string, element: HTMLDivElement | null) => {
     nodeRefs.current.set(id, element);
   };
