@@ -88,6 +88,8 @@ type PreviewColumn = {
   matches: DrawMatch[];
 };
 
+type ConnectorDirection = "left" | "right";
+
 const CARD_WIDTH = 250;
 const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
@@ -111,8 +113,11 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 };
 
 function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
-  const winnersR1 = matches
+  const round1Matches = matches
     .filter((match) => match.roundLabel.trim().toUpperCase() === "WINNERS R1")
+    .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
+  const winnersR1Matches = matches
+    .filter((match) => match.roundLabel.trim().toUpperCase() === "WINNERS R2")
     .sort((a, b) => (a.globalMatchNumber ?? 9999) - (b.globalMatchNumber ?? 9999));
   const losersR1 = matches
     .filter((match) => match.roundLabel.trim().toUpperCase() === "LOSERS R1")
@@ -126,10 +131,16 @@ function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
       matches: losersR1,
     },
     {
+      key: "round-1",
+      label: "Round 1",
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
+      matches: round1Matches,
+    },
+    {
       key: "winners-r1",
       label: "Winners R1",
-      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
-      matches: winnersR1,
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * 2,
+      matches: winnersR1Matches,
     },
   ];
 }
@@ -138,7 +149,7 @@ function buildRoundOnePreviewYMap(columns: PreviewColumn[]) {
   const yByMatch = new Map<number, number>();
 
   columns.forEach((column) => {
-    if (column.key === "winners-r1") {
+    if (column.key === "round-1") {
       column.matches.forEach((match, index) => {
         if (match.globalMatchNumber === null) return;
         yByMatch.set(match.globalMatchNumber, TOP_PADDING + index * SOURCE_ROW_GAP);
@@ -147,6 +158,15 @@ function buildRoundOnePreviewYMap(columns: PreviewColumn[]) {
     }
 
     if (column.key === "losers-r1") {
+      column.matches.forEach((match, index) => {
+        if (match.globalMatchNumber === null) return;
+        const slotCenter = index * 2 + 0.5;
+        yByMatch.set(match.globalMatchNumber, TOP_PADDING + slotCenter * SOURCE_ROW_GAP);
+      });
+      return;
+    }
+
+    if (column.key === "winners-r1") {
       column.matches.forEach((match, index) => {
         if (match.globalMatchNumber === null) return;
         const slotCenter = index * 2 + 0.5;
@@ -184,17 +204,67 @@ function buildConnectorPath(
   fromTop: PositionedMatch,
   fromBottom: PositionedMatch,
   to: PositionedMatch,
+  direction: ConnectorDirection,
 ) {
-  const sourceX = fromTop.x;
   const sourceY1 = fromTop.y + CARD_HEIGHT / 2;
   const sourceY2 = fromBottom.y + CARD_HEIGHT / 2;
-  const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
-
-  const targetX = to.x + CARD_WIDTH;
+  const middleY = (sourceY1 + sourceY2) / 2;
   const targetSlot1Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
   const targetSlot2Y = to.y + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
-  const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
-  const middleY = (sourceY1 + sourceY2) / 2;
+
+  if (direction === "left") {
+    const sourceX = fromTop.x;
+    const sourceJoinX = sourceX - CONNECTOR_SOURCE_STUB;
+    const targetX = to.x + CARD_WIDTH;
+    const targetJoinX = targetX + CONNECTOR_TARGET_STUB;
+
+    return [
+      buildRoundedPolyline(
+        [
+          { x: sourceX, y: sourceY1 },
+          { x: sourceJoinX, y: sourceY1 },
+          { x: sourceJoinX, y: middleY },
+        ],
+        CONNECTOR_RADIUS,
+      ),
+      buildRoundedPolyline(
+        [
+          { x: sourceX, y: sourceY2 },
+          { x: sourceJoinX, y: sourceY2 },
+          { x: sourceJoinX, y: middleY },
+        ],
+        CONNECTOR_RADIUS,
+      ),
+      buildRoundedPolyline(
+        [
+          { x: sourceJoinX, y: middleY },
+          { x: targetJoinX, y: middleY },
+        ],
+        CONNECTOR_RADIUS,
+      ),
+      buildRoundedPolyline(
+        [
+          { x: targetJoinX, y: middleY },
+          { x: targetJoinX, y: targetSlot1Y },
+          { x: targetX, y: targetSlot1Y },
+        ],
+        CONNECTOR_RADIUS,
+      ),
+      buildRoundedPolyline(
+        [
+          { x: targetJoinX, y: middleY },
+          { x: targetJoinX, y: targetSlot2Y },
+          { x: targetX, y: targetSlot2Y },
+        ],
+        CONNECTOR_RADIUS,
+      ),
+    ].join(" ");
+  }
+
+  const sourceX = fromTop.x + CARD_WIDTH;
+  const sourceJoinX = sourceX + CONNECTOR_SOURCE_STUB;
+  const targetX = to.x;
+  const targetJoinX = targetX - CONNECTOR_TARGET_STUB;
 
   return [
     buildRoundedPolyline(
@@ -461,7 +531,7 @@ export default function CustomFlowchartClient({
         x: column.x,
       })),
       matches: allMatches,
-      width: LEFT_PADDING + columns.length * COLUMN_GAP + CARD_WIDTH + 40,
+      width: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP * Math.max(columns.length - 1, 0) + CARD_WIDTH + 80,
       height: maxY + CARD_HEIGHT + 80,
     };
   }, [drawMatches]);
@@ -476,7 +546,6 @@ export default function CustomFlowchartClient({
 
     buildDrawEdges(drawMatches).forEach((edge) => {
       if (!visibleTargets.has(edge.from) || !visibleTargets.has(edge.to)) return;
-      if (edge.type !== "loser") return;
       const current = inboundByTarget.get(edge.to);
       if (current) {
         current.push(edge.from);
@@ -493,9 +562,11 @@ export default function CustomFlowchartClient({
       const bottomMatch = byGlobal.get(orderedSources[1]);
       const targetMatch = byGlobal.get(target);
       if (!topMatch || !bottomMatch || !targetMatch) return;
+      const direction: ConnectorDirection =
+        targetMatch.x < topMatch.x ? "left" : "right";
       paths.push({
         key: `${orderedSources[0]}-${orderedSources[1]}-to-${target}`,
-        d: buildConnectorPath(topMatch, bottomMatch, targetMatch),
+        d: buildConnectorPath(topMatch, bottomMatch, targetMatch, direction),
       });
     });
     return paths;
