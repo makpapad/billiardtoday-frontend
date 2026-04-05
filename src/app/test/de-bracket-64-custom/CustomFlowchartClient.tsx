@@ -93,9 +93,11 @@ const CARD_HEIGHT = 96;
 const HEADER_HEIGHT = 16;
 const PLAYER_ROW_HEIGHT = 32;
 const COLUMN_GAP = 285;
+const ROUND_ONE_PREVIEW_GAP = 360;
 const LEFT_PADDING = 28;
 const TOP_PADDING = 44;
 const SOURCE_ROW_GAP = CARD_HEIGHT + 14;
+const CONNECTOR_STUB = 28;
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
   const response = await fetch(`/api/events/${eventId}`, { cache: "no-store" });
@@ -124,7 +126,7 @@ function buildRoundOnePreviewColumns(matches: DrawMatch[]): PreviewColumn[] {
     {
       key: "winners-r1",
       label: "Winners R1",
-      x: LEFT_PADDING + COLUMN_GAP,
+      x: LEFT_PADDING + ROUND_ONE_PREVIEW_GAP,
       matches: winnersR1,
     },
   ];
@@ -185,12 +187,12 @@ function buildConnectorPath(
   const sourceX = fromTop.left - canvas.left;
   const sourceY1 = fromTop.top - canvas.top + CARD_HEIGHT / 2;
   const sourceY2 = fromBottom.top - canvas.top + CARD_HEIGHT / 2;
-  const sourceJoinX = sourceX - 16;
+  const sourceJoinX = sourceX - CONNECTOR_STUB;
 
   const targetX = to.right - canvas.left;
   const targetSlot1Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT / 2;
   const targetSlot2Y = to.top - canvas.top + HEADER_HEIGHT + PLAYER_ROW_HEIGHT * 1.5;
-  const targetJoinX = targetX + 16;
+  const targetJoinX = targetX + CONNECTOR_STUB;
   const middleY = (sourceY1 + sourceY2) / 2;
 
   return [
