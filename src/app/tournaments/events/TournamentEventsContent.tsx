@@ -409,6 +409,8 @@ function resolveGroupMatchDisplay(
   if (sorted.length === 6) {
     const first = sorted[0];
     const second = sorted[1];
+    const third = sorted[2];
+    const fourth = sorted[3];
 
     if (matchIndex === 2) {
       return {
@@ -432,6 +434,32 @@ function resolveGroupMatchDisplay(
         bottom: buildGroupDisplayPlayer(
           getGroupLoserPlayer(second),
           "Loser Match 2",
+        ),
+      };
+    }
+
+    if (matchIndex === 4) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupWinnerPlayer(third),
+          "Winner Match 3",
+        ),
+        bottom: buildGroupDisplayPlayer(
+          getGroupLoserPlayer(fourth),
+          "Loser Match 4",
+        ),
+      };
+    }
+
+    if (matchIndex === 5) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupLoserPlayer(third),
+          "Loser Match 3",
+        ),
+        bottom: buildGroupDisplayPlayer(
+          getGroupWinnerPlayer(fourth),
+          "Winner Match 4",
         ),
       };
     }
@@ -3142,6 +3170,12 @@ export function TournamentEventsContent({
                                                               liveSession?.sessionStatus ===
                                                                 "in_progress";
 
+                                                            const displayPlayers =
+                                                              resolveGroupMatchDisplay(
+                                                                group,
+                                                                match,
+                                                              );
+
                                                             return (
                                                               <>
                                                                 <tr
@@ -3154,46 +3188,64 @@ export function TournamentEventsContent({
                                                                   )}
                                                                 >
                                                                   <td className="px-4 py-2 font-medium">
-                                                                    {match.top
+                                                                    {displayPlayers
+                                                                      .top
                                                                       .player
-                                                                      .id ? (
+                                                                      ?.id &&
+                                                                    !displayPlayers
+                                                                      .top
+                                                                      .placeholder ? (
                                                                       <Link
                                                                         href={playerProfileHref(
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
                                                                             .player
                                                                             .id,
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
-                                                                            .player
-                                                                            .name,
+                                                                            .label,
                                                                         )}
                                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                       >
                                                                         <PlayerNameWithFlag
                                                                           name={
-                                                                            match
+                                                                            displayPlayers
                                                                               .top
-                                                                              .player
-                                                                              .name ||
-                                                                            "Unknown"
+                                                                              .label
                                                                           }
                                                                           nativeName={
-                                                                            match
+                                                                            displayPlayers
                                                                               .top
-                                                                              .player
-                                                                              .nativeName
+                                                                              .placeholder
+                                                                              ? null
+                                                                              : displayPlayers
+                                                                                  .top
+                                                                                  .player
+                                                                                  ?.nativeName
                                                                           }
                                                                           country={
-                                                                            match
+                                                                            displayPlayers
                                                                               .top
-                                                                              .player
-                                                                              .country
+                                                                              .placeholder
+                                                                              ? null
+                                                                              : displayPlayers
+                                                                                  .top
+                                                                                  .player
+                                                                                  ?.country
                                                                           }
                                                                           highlight={playerMatchesSearch(
-                                                                            match
+                                                                            displayPlayers
                                                                               .top
-                                                                              .player,
+                                                                              .player ?? {
+                                                                                name:
+                                                                                  displayPlayers
+                                                                                    .top
+                                                                                    .label,
+                                                                                nativeName:
+                                                                                  null,
+                                                                                country:
+                                                                                  null,
+                                                                              },
                                                                             playerSearchTerms,
                                                                           )}
                                                                         />
@@ -3201,28 +3253,43 @@ export function TournamentEventsContent({
                                                                     ) : (
                                                                       <PlayerNameWithFlag
                                                                         name={
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
-                                                                            .player
-                                                                            .name ||
-                                                                          "Unknown"
+                                                                            .label
                                                                         }
                                                                         nativeName={
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
-                                                                            .player
-                                                                            .nativeName
+                                                                            .placeholder
+                                                                            ? null
+                                                                            : displayPlayers
+                                                                                .top
+                                                                                .player
+                                                                                ?.nativeName
                                                                         }
                                                                         country={
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
-                                                                            .player
-                                                                            .country
+                                                                            .placeholder
+                                                                            ? null
+                                                                            : displayPlayers
+                                                                                .top
+                                                                                .player
+                                                                                ?.country
                                                                         }
                                                                         highlight={playerMatchesSearch(
-                                                                          match
+                                                                          displayPlayers
                                                                             .top
-                                                                            .player,
+                                                                            .player ?? {
+                                                                              name:
+                                                                                displayPlayers
+                                                                                  .top
+                                                                                  .label,
+                                                                              nativeName:
+                                                                                null,
+                                                                              country:
+                                                                                null,
+                                                                            },
                                                                           playerSearchTerms,
                                                                         )}
                                                                       />
@@ -3322,47 +3389,64 @@ export function TournamentEventsContent({
                                                                   )}
                                                                 >
                                                                   <td className="px-4 py-2 font-medium">
-                                                                    {match
+                                                                    {displayPlayers
                                                                       .bottom
                                                                       .player
-                                                                      .id ? (
+                                                                      ?.id &&
+                                                                    !displayPlayers
+                                                                      .bottom
+                                                                      .placeholder ? (
                                                                       <Link
                                                                         href={playerProfileHref(
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
                                                                             .player
                                                                             .id,
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
-                                                                            .player
-                                                                            .name,
+                                                                            .label,
                                                                         )}
                                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                                                       >
                                                                         <PlayerNameWithFlag
                                                                           name={
-                                                                            match
+                                                                            displayPlayers
                                                                               .bottom
-                                                                              .player
-                                                                              .name ||
-                                                                            "Unknown"
+                                                                              .label
                                                                           }
                                                                           nativeName={
-                                                                            match
+                                                                            displayPlayers
                                                                               .bottom
-                                                                              .player
-                                                                              .nativeName
+                                                                              .placeholder
+                                                                              ? null
+                                                                              : displayPlayers
+                                                                                  .bottom
+                                                                                  .player
+                                                                                  ?.nativeName
                                                                           }
                                                                           country={
-                                                                            match
+                                                                            displayPlayers
                                                                               .bottom
-                                                                              .player
-                                                                              .country
+                                                                              .placeholder
+                                                                              ? null
+                                                                              : displayPlayers
+                                                                                  .bottom
+                                                                                  .player
+                                                                                  ?.country
                                                                           }
                                                                           highlight={playerMatchesSearch(
-                                                                            match
+                                                                            displayPlayers
                                                                               .bottom
-                                                                              .player,
+                                                                              .player ?? {
+                                                                                name:
+                                                                                  displayPlayers
+                                                                                    .bottom
+                                                                                    .label,
+                                                                                nativeName:
+                                                                                  null,
+                                                                                country:
+                                                                                  null,
+                                                                              },
                                                                             playerSearchTerms,
                                                                           )}
                                                                         />
@@ -3370,28 +3454,43 @@ export function TournamentEventsContent({
                                                                     ) : (
                                                                       <PlayerNameWithFlag
                                                                         name={
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
-                                                                            .player
-                                                                            .name ||
-                                                                          "Unknown"
+                                                                            .label
                                                                         }
                                                                         nativeName={
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
-                                                                            .player
-                                                                            .nativeName
+                                                                            .placeholder
+                                                                            ? null
+                                                                            : displayPlayers
+                                                                                .bottom
+                                                                                .player
+                                                                                ?.nativeName
                                                                         }
                                                                         country={
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
-                                                                            .player
-                                                                            .country
+                                                                            .placeholder
+                                                                            ? null
+                                                                            : displayPlayers
+                                                                                .bottom
+                                                                                .player
+                                                                                ?.country
                                                                         }
                                                                         highlight={playerMatchesSearch(
-                                                                          match
+                                                                          displayPlayers
                                                                             .bottom
-                                                                            .player,
+                                                                            .player ?? {
+                                                                              name:
+                                                                                displayPlayers
+                                                                                  .bottom
+                                                                                  .label,
+                                                                              nativeName:
+                                                                                null,
+                                                                              country:
+                                                                                null,
+                                                                            },
                                                                           playerSearchTerms,
                                                                         )}
                                                                       />
