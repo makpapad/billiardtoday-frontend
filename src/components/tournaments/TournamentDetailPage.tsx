@@ -2919,9 +2919,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         key={`${part}-${index}`}
                         className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? (
-                          <span className="h-3 w-px rounded-full bg-white/30" />
-                        ) : null}
+                        {index > 0 ? <span className="text-white/55">•</span> : null}
                         <span>{part}</span>
                       </span>
                     ))}
