@@ -482,6 +482,20 @@ function compareOptionalNumbers(a: number | null, b: number | null) {
   return 0;
 }
 
+function buildGroupSlotPlaceholderLabel(
+  role: unknown,
+  matchNumber: unknown,
+): string {
+  const roleText =
+    typeof role === "string" && role.trim().length > 0
+      ? role.trim().toLowerCase()
+      : "";
+  const num = toNumber(matchNumber);
+  if (!roleText) return num !== null ? `Match ${num}` : "TBD";
+  const prefix = roleText === "loser" ? "Loser" : "Winner";
+  return num !== null ? `${prefix} Match ${num}` : prefix;
+}
+
 function hasMeaningfulStageResult(
   result: NormalizedStageResult,
 ): boolean {
@@ -1151,6 +1165,39 @@ export function TournamentEventsContent({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+
+  const groupTimetableSlotsByStageGroup = useMemo(() => {
+    const map = new Map<string, NormalizedTimetableSlot[]>();
+    timetableSlots.forEach((slot) => {
+      if (
+        slot.slotType !== "match" ||
+        !slot.stageDocumentId ||
+        slot.groupNumber === null
+      ) {
+        return;
+      }
+      const key = `${slot.stageDocumentId}::${slot.groupNumber}`;
+      const current = map.get(key) ?? [];
+      current.push(slot);
+      map.set(key, current);
+    });
+    map.forEach((value, key) => {
+      map.set(
+        key,
+        [...value].sort((a, b) => {
+          const bySlot = compareOptionalNumbers(a.slotOrder, b.slotOrder);
+          if (bySlot !== 0) return bySlot;
+          const byMatch = compareOptionalNumbers(a.matchNumber, b.matchNumber);
+          if (byMatch !== 0) return byMatch;
+          if (a.dateTime && b.dateTime && a.dateTime !== b.dateTime) {
+            return a.dateTime.localeCompare(b.dateTime);
+          }
+          return a.documentId.localeCompare(b.documentId);
+        }),
+      );
+    });
+    return map;
+  }, [timetableSlots]);
 
   const getEffectiveFinalPoints = useCallback(
     (result: NormalizedFinalResult) => {
@@ -2804,6 +2851,269 @@ export function TournamentEventsContent({
                                                     ),
                                                   )
                                                 : group.matches;
+                                            const timetableGroupKey =
+                                              stage.documentId &&
+                                              group.number !== null
+                                                ? `${stage.documentId}::${group.number}`
+                                                : null;
+                                            const timetableGroupSlots =
+                                              timetableGroupKey
+                                                ? groupTimetableSlotsByStageGroup.get(
+                                                    timetableGroupKey,
+                                                  ) ?? []
+                                                : [];
+                                            const groupMatchByDocumentId =
+                                              new Map(
+                                                group.matches
+                                                  .filter(
+                                                    (
+                                                      match,
+                                                    ): match is typeof match & {
+                                                      matchDocumentId: string;
+                                                    } =>
+                                                      typeof match.matchDocumentId ===
+                                                        "string" &&
+                                                      match.matchDocumentId
+                                                        .trim().length > 0,
+                                                  )
+                                                  .map((match) => [
+                                                    match.matchDocumentId,
+                                                    match,
+                                                  ]),
+                                              );
+                                            const groupMatchByNumber = new Map(
+                                              group.matches
+                                                .filter(
+                                                  (match) =>
+                                                    match.matchNumber !== null,
+                                                )
+                                                .map((match) => [
+                                                  match.matchNumber as number,
+                                                  match,
+                                                ]),
+                                            );
+                                            const tableRows = (() => {
+                                              const buildFallbackPlayer = (
+                                                label: string,
+                                                country: string | null,
+                                                placeholder: boolean,
+                                              ) => ({
+                                                id: null,
+                                                documentId: null,
+                                                name: label,
+                                                nativeName: null,
+                                                country: placeholder
+                                                  ? null
+                                                  : country,
+                                                points: null,
+                                                innings: null,
+                                                highRun: null,
+                                                highRun2: null,
+                                                matchPoints: null,
+                                              });
+
+                                              const buildSlotDisplayPlayers = (
+                                                slot: NormalizedTimetableSlot,
+                                              ) => {
+                                                const metadata =
+                                                  slot.metadata ?? {};
+                                                const topPlaceholder =
+                                                  buildGroupSlotPlaceholderLabel(
+                                                    metadata.placeholderLeftRole,
+                                                    metadata.placeholderLeftMatchNumber,
+                                                  );
+                                                const bottomPlaceholder =
+                                                  buildGroupSlotPlaceholderLabel(
+                                                    metadata.placeholderRightRole,
+                                                    metadata.placeholderRightMatchNumber,
+                                                  );
+                                                const topLabel =
+                                                  slot.matchPlayer1Name ||
+                                                  (typeof metadata
+                                                    .placeholderLabel ===
+                                                    "string" &&
+                                                  metadata.placeholderLabel.includes(
+                                                    " vs ",
+                                                  )
+                                                    ? metadata.placeholderLabel
+                                                        .split(" vs ")[0]
+                                                        ?.trim() || topPlaceholder
+                                                    : topPlaceholder);
+                                                const bottomLabel =
+                                                  slot.matchPlayer2Name ||
+                                                  (typeof metadata
+                                                    .placeholderLabel ===
+                                                    "string" &&
+                                                  metadata.placeholderLabel.includes(
+                                                    " vs ",
+                                                  )
+                                                    ? metadata.placeholderLabel
+                                                        .split(" vs ")[1]
+                                                        ?.trim() ||
+                                                      bottomPlaceholder
+                                                    : bottomPlaceholder);
+
+                                                return {
+                                                  top: {
+                                                    label: topLabel,
+                                                    player:
+                                                      slot.matchPlayer1Name ||
+                                                      slot.matchPlayer1Country
+                                                        ? buildFallbackPlayer(
+                                                            topLabel,
+                                                            slot.matchPlayer1Country,
+                                                            false,
+                                                          )
+                                                        : null,
+                                                    placeholder:
+                                                      !slot.matchPlayer1Name,
+                                                  },
+                                                  bottom: {
+                                                    label: bottomLabel,
+                                                    player:
+                                                      slot.matchPlayer2Name ||
+                                                      slot.matchPlayer2Country
+                                                        ? buildFallbackPlayer(
+                                                            bottomLabel,
+                                                            slot.matchPlayer2Country,
+                                                            false,
+                                                          )
+                                                        : null,
+                                                    placeholder:
+                                                      !slot.matchPlayer2Name,
+                                                  },
+                                                };
+                                              };
+
+                                              const rows =
+                                                timetableGroupSlots.length > 0
+                                                  ? timetableGroupSlots.map(
+                                                      (slot) => {
+                                                        const sourceMatch =
+                                                          (slot.matchDocumentId
+                                                            ? groupMatchByDocumentId.get(
+                                                                slot.matchDocumentId,
+                                                              ) ?? null
+                                                            : null) ??
+                                                          (slot.matchNumber !==
+                                                          null
+                                                            ? groupMatchByNumber.get(
+                                                                slot.matchNumber,
+                                                              ) ?? null
+                                                            : null);
+                                                        const match =
+                                                          sourceMatch
+                                                            ? {
+                                                                ...sourceMatch,
+                                                                dateTime:
+                                                                  slot.dateTime ||
+                                                                  sourceMatch.dateTime,
+                                                              }
+                                                            : {
+                                                                key: `slot-${slot.documentId}`,
+                                                                matchDocumentId:
+                                                                  null,
+                                                                dateTime:
+                                                                  slot.dateTime,
+                                                                top: {
+                                                                  player:
+                                                                    buildFallbackPlayer(
+                                                                      slot.matchPlayer1Name ||
+                                                                        buildGroupSlotPlaceholderLabel(
+                                                                          slot
+                                                                            .metadata
+                                                                            ?.placeholderLeftRole,
+                                                                          slot
+                                                                            .metadata
+                                                                            ?.placeholderLeftMatchNumber,
+                                                                        ),
+                                                                      slot.matchPlayer1Country,
+                                                                      !slot.matchPlayer1Name,
+                                                                    ),
+                                                                  outcome: null,
+                                                                },
+                                                                bottom: {
+                                                                  player:
+                                                                    buildFallbackPlayer(
+                                                                      slot.matchPlayer2Name ||
+                                                                        buildGroupSlotPlaceholderLabel(
+                                                                          slot
+                                                                            .metadata
+                                                                            ?.placeholderRightRole,
+                                                                          slot
+                                                                            .metadata
+                                                                            ?.placeholderRightMatchNumber,
+                                                                        ),
+                                                                      slot.matchPlayer2Country,
+                                                                      !slot.matchPlayer2Name,
+                                                                    ),
+                                                                  outcome: null,
+                                                                },
+                                                              };
+                                                        return {
+                                                          key:
+                                                            sourceMatch?.key ||
+                                                            `slot-${slot.documentId}`,
+                                                          match,
+                                                          sourceMatch,
+                                                          displayPlayers:
+                                                            sourceMatch
+                                                              ? resolveGroupMatchDisplay(
+                                                                  group,
+                                                                  sourceMatch,
+                                                                )
+                                                              : buildSlotDisplayPlayers(
+                                                                  slot,
+                                                                ),
+                                                        };
+                                                      },
+                                                    )
+                                                  : visibleMatches.map(
+                                                      (match) => ({
+                                                        key: match.key,
+                                                        match,
+                                                        sourceMatch: match,
+                                                        displayPlayers:
+                                                          resolveGroupMatchDisplay(
+                                                            group,
+                                                            match,
+                                                          ),
+                                                      }),
+                                                    );
+
+                                              if (
+                                                normalizedPlayerSearchQuery
+                                                  .length > 0 &&
+                                                isLargeGroup &&
+                                                hasSearchMatch
+                                              ) {
+                                                return rows.filter((row) =>
+                                                  [
+                                                    row.displayPlayers.top
+                                                      .player ?? {
+                                                      name: row.displayPlayers
+                                                        .top.label,
+                                                      nativeName: null,
+                                                      country: null,
+                                                    },
+                                                    row.displayPlayers.bottom
+                                                      .player ?? {
+                                                      name: row.displayPlayers
+                                                        .bottom.label,
+                                                      nativeName: null,
+                                                      country: null,
+                                                    },
+                                                  ].some((player) =>
+                                                    playerMatchesSearch(
+                                                      player,
+                                                      playerSearchTerms,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+
+                                              return rows;
+                                            })();
                                             const showGroupStandings =
                                               !(
                                                 normalizedPlayerSearchQuery.length >
@@ -2957,12 +3267,13 @@ export function TournamentEventsContent({
                                                     </tr>
                                                   </thead>
                                                   <tbody>
-                                                    {visibleMatches.map(
-                                                      (match) => (
+                                                    {tableRows.map((row) => (
                                                         <Fragment
-                                                          key={match.key}
+                                                          key={row.key}
                                                         >
                                                           {(() => {
+                                                            const match =
+                                                              row.match;
                                                             const playerIds = [
                                                               match.top.player
                                                                 .documentId,
@@ -2983,6 +3294,7 @@ export function TournamentEventsContent({
                                                             const matchLiveKey =
                                                               playerIds.length ===
                                                                 2 &&
+                                                              row.sourceMatch &&
                                                               stage.documentId &&
                                                               group.number !=
                                                                 null
@@ -2990,6 +3302,11 @@ export function TournamentEventsContent({
                                                                 : null;
                                                             const liveSession =
                                                               (() => {
+                                                                if (
+                                                                  !row.sourceMatch
+                                                                ) {
+                                                                  return null;
+                                                                }
                                                                 if (
                                                                   matchLiveKey
                                                                 ) {
@@ -3171,10 +3488,7 @@ export function TournamentEventsContent({
                                                                 "in_progress";
 
                                                             const displayPlayers =
-                                                              resolveGroupMatchDisplay(
-                                                                group,
-                                                                match,
-                                                              );
+                                                              row.displayPlayers;
 
                                                             return (
                                                               <>
@@ -3560,8 +3874,7 @@ export function TournamentEventsContent({
                                                             );
                                                           })()}
                                                         </Fragment>
-                                                      ),
-                                                    )}
+                                                      ))}
                                                   </tbody>
                                                 </table>
                                               </div>
