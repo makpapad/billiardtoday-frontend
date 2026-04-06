@@ -159,6 +159,66 @@ function resolveBracketWinners(params: {
   return { winner1: false, winner2: false };
 }
 
+function resolveBracketMatchPoints(params: {
+  sourceTag: string;
+  score1: number | null;
+  score2: number | null;
+  tieBreak1: number | null;
+  tieBreak2: number | null;
+  storedMatchPoints1: number | null;
+  storedMatchPoints2: number | null;
+}) {
+  const {
+    sourceTag,
+    score1,
+    score2,
+    tieBreak1,
+    tieBreak2,
+    storedMatchPoints1,
+    storedMatchPoints2,
+  } = params;
+
+  if (storedMatchPoints1 !== null || storedMatchPoints2 !== null) {
+    return {
+      matchPoints1: storedMatchPoints1,
+      matchPoints2: storedMatchPoints2,
+    };
+  }
+
+  if (sourceTag === "ff-1") {
+    return { matchPoints1: 0, matchPoints2: 2 };
+  }
+
+  if (sourceTag === "ff-2") {
+    return { matchPoints1: 2, matchPoints2: 0 };
+  }
+
+  if (sourceTag === "double-ff") {
+    return { matchPoints1: 0, matchPoints2: 0 };
+  }
+
+  const { winner1, winner2 } = resolveBracketWinners({
+    sourceTag,
+    score1,
+    score2,
+    tieBreak1,
+    tieBreak2,
+  });
+
+  if (winner1) return { matchPoints1: 2, matchPoints2: 0 };
+  if (winner2) return { matchPoints1: 0, matchPoints2: 2 };
+
+  if (score1 === 0 && score2 === 0) {
+    return { matchPoints1: 0, matchPoints2: 0 };
+  }
+
+  if (score1 !== null && score2 !== null && score1 === score2) {
+    return { matchPoints1: 1, matchPoints2: 1 };
+  }
+
+  return { matchPoints1: null, matchPoints2: null };
+}
+
 function getPreviewPlayerLabel(player: {
   name?: string | null;
   nativeName?: string | null;
@@ -1284,6 +1344,19 @@ export function TournamentEventsContent({
             tieBreak1,
             tieBreak2,
           });
+          const { matchPoints1, matchPoints2 } = resolveBracketMatchPoints({
+            sourceTag: typeof sourceTag === "string" ? sourceTag : "",
+            score1,
+            score2,
+            tieBreak1,
+            tieBreak2,
+            storedMatchPoints1: toNumber(
+              (m as { player1_match_points?: unknown }).player1_match_points,
+            ),
+            storedMatchPoints2: toNumber(
+              (m as { player2_match_points?: unknown }).player2_match_points,
+            ),
+          });
           return {
             id: String((m as { id?: unknown }).id ?? ""),
             player1: p1.name || "",
@@ -1304,12 +1377,8 @@ export function TournamentEventsContent({
             highRun2: toNumber(
               (m as { player2_high_run?: unknown }).player2_high_run,
             ),
-            matchPoints1: toNumber(
-              (m as { player1_match_points?: unknown }).player1_match_points,
-            ),
-            matchPoints2: toNumber(
-              (m as { player2_match_points?: unknown }).player2_match_points,
-            ),
+            matchPoints1,
+            matchPoints2,
             tieBreak1,
             tieBreak2,
             date:

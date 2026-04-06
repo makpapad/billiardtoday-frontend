@@ -204,8 +204,8 @@ export default function SingleElimBracket({
                         const s1 = typeof m.score1 === 'number' ? m.score1 : null
                         const s2 = typeof m.score2 === 'number' ? m.score2 : null
                         const hasBoth = s1 !== null && s2 !== null
-                        const winnerTop = hasBoth && s1 > s2
-                        const winnerBottom = hasBoth && s2 > s1
+                        const winnerTop = Boolean(m.winner1 ?? (hasBoth && s1 > s2))
+                        const winnerBottom = Boolean(m.winner2 ?? (hasBoth && s2 > s1))
 
                         return (
                             <div
