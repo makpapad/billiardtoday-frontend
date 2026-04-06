@@ -2507,29 +2507,38 @@ export function TournamentEventsContent({
                                       Matches -{" "}
                                       {stage.title || stage.order || ""}
                                     </div>
-                                    {!isBracketStageType(stage.stageType) &&
-                                    (stageMatchGroups[stage.id] ?? []).length >
-                                      0 ? (
+                                    {((!isBracketStageType(stage.stageType) &&
+                                      (stageMatchGroups[stage.id] ?? []).length >
+                                        0) ||
+                                      (onTimezoneChange &&
+                                        timezoneOptions.length > 0)) ? (
                                       <div
                                         className={clsx(
                                           "grid items-center gap-3",
-                                          onTimezoneChange &&
+                                          !isBracketStageType(stage.stageType) &&
+                                            (stageMatchGroups[stage.id] ?? [])
+                                              .length > 0 &&
+                                            onTimezoneChange &&
                                             timezoneOptions.length > 0
                                             ? "md:grid-cols-[minmax(0,1fr)_12rem]"
                                             : "grid-cols-1",
                                         )}
                                       >
-                                        <input
-                                          type="search"
-                                          value={playerSearchQuery}
-                                          onChange={(event) =>
-                                            setPlayerSearchQuery(
-                                              event.target.value,
-                                            )
-                                          }
-                                          placeholder="Search player..."
-                                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
-                                        />
+                                        {!isBracketStageType(stage.stageType) &&
+                                        (stageMatchGroups[stage.id] ?? []).length >
+                                          0 ? (
+                                          <input
+                                            type="search"
+                                            value={playerSearchQuery}
+                                            onChange={(event) =>
+                                              setPlayerSearchQuery(
+                                                event.target.value,
+                                              )
+                                            }
+                                            placeholder="Search player..."
+                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                          />
+                                        ) : null}
                                         {onTimezoneChange &&
                                         timezoneOptions.length > 0 ? (
                                           <select
