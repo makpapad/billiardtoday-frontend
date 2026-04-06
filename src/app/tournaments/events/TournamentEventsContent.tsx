@@ -500,13 +500,16 @@ function formatDateTimeForMatchCell(value: string | null): string {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString("el-GR", {
+  const dateLabel = parsed.toLocaleDateString("el-GR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+  });
+  const timeLabel = parsed.toLocaleTimeString("el-GR", {
     hour: "2-digit",
     minute: "2-digit",
   });
+  return `${dateLabel}\n${timeLabel}`;
 }
 
 function hasMeaningfulStageResult(
@@ -3645,7 +3648,7 @@ export function TournamentEventsContent({
                                                                       </button>
                                                                     ) : (
                                                                       <div className="flex min-h-[72px] items-center justify-center">
-                                                                        <span>
+                                                                        <span className="whitespace-pre-line text-center">
                                                                           {formatDateTimeForMatchCell(
                                                                             match.dateTime,
                                                                           )}
