@@ -225,6 +225,61 @@ function formatTruncatedAverage(value: number | null): string {
   return truncated.toFixed(3);
 }
 
+function getSingleElimSeedOrder(size: number): number[] {
+  const patterns: Record<number, number[]> = {
+    2: [1, 2],
+    4: [1, 4, 2, 3],
+    8: [1, 8, 4, 5, 2, 7, 3, 6],
+    16: [1, 16, 8, 9, 5, 12, 4, 13, 3, 14, 6, 11, 7, 10, 2, 15],
+    32: [
+      1, 32, 16, 17, 8, 25, 9, 24, 5, 28, 12, 21, 4, 29, 13, 20, 6, 27, 11,
+      22, 3, 30, 14, 19, 7, 26, 10, 23, 15, 18, 2, 31,
+    ],
+    64: [
+      1, 64, 32, 33, 16, 49, 17, 48, 8, 57, 25, 40, 9, 56, 24, 41, 4, 61, 29,
+      36, 13, 52, 20, 45, 5, 60, 28, 37, 12, 53, 21, 44, 2, 63, 31, 34, 15,
+      50, 18, 47, 7, 58, 26, 39, 10, 55, 23, 42, 3, 62, 30, 35, 14, 51, 19,
+      46, 6, 59, 27, 38, 11, 54, 22, 43,
+    ],
+  };
+  return patterns[size] ?? [];
+}
+
+function getBracketModalPlaceholder(params: {
+  roundIndex: number;
+  roundMatchIndex: number;
+  side: 1 | 2;
+  firstRoundMatchCount: number;
+  globalMatchNumber?: number | null;
+}): string {
+  const {
+    roundIndex,
+    roundMatchIndex,
+    side,
+    firstRoundMatchCount,
+    globalMatchNumber,
+  } = params;
+  if (roundIndex === 0) {
+    const seedOrder = getSingleElimSeedOrder(firstRoundMatchCount * 2);
+    const seed = seedOrder[roundMatchIndex * 2 + (side === 1 ? 0 : 1)];
+    return typeof seed === "number" ? `Qualifier ${seed}` : "Qualifier";
+  }
+
+  const currentRoundMatchCount = Math.max(
+    1,
+    Math.floor(firstRoundMatchCount / Math.pow(2, roundIndex)),
+  );
+  const previousRoundFirstGlobalMatch =
+    typeof globalMatchNumber === "number"
+      ? globalMatchNumber - currentRoundMatchCount * 2
+      : roundMatchIndex * 2 + 1;
+  const previousMatchOffset = roundMatchIndex * 2 + (side === 1 ? 0 : 1);
+  const fallbackPreviousMatchNumber =
+    previousRoundFirstGlobalMatch + previousMatchOffset;
+
+  return `Winner from Match ${fallbackPreviousMatchNumber}`;
+}
+
 function getPreviewPlayerLabel(player: {
   name?: string | null;
   nativeName?: string | null;
@@ -1467,10 +1522,21 @@ export function TournamentEventsContent({
 
   const selectedBracketMatch = useMemo(() => {
     if (!selectedBracketMatchId) return null;
-    for (const round of activeBracketRounds) {
-      const found = round.matches.find((match) => match.id === selectedBracketMatchId);
+    const firstRoundMatchCount = activeBracketRounds[0]?.matches.length ?? 0;
+    for (let roundIndex = 0; roundIndex < activeBracketRounds.length; roundIndex += 1) {
+      const round = activeBracketRounds[roundIndex];
+      const matchIndex = round.matches.findIndex(
+        (match) => match.id === selectedBracketMatchId,
+      );
+      const found = matchIndex >= 0 ? round.matches[matchIndex] : null;
       if (found) {
-        return { roundLabel: round.label, match: found };
+        return {
+          roundLabel: round.label,
+          roundIndex,
+          matchIndex,
+          firstRoundMatchCount,
+          match: found,
+        };
       }
     }
     return null;
@@ -3220,7 +3286,17 @@ export function TournamentEventsContent({
                   {
                     name:
                       selectedBracketMatch.match.player1 ||
-                      (selectedBracketMatch.match.byeTop ? "BYE" : "Unknown player"),
+                      (selectedBracketMatch.match.byeTop
+                        ? "BYE"
+                        : getBracketModalPlaceholder({
+                            roundIndex: selectedBracketMatch.roundIndex,
+                            roundMatchIndex: selectedBracketMatch.matchIndex,
+                            side: 1,
+                            firstRoundMatchCount:
+                              selectedBracketMatch.firstRoundMatchCount,
+                            globalMatchNumber:
+                              selectedBracketMatch.match.globalMatchNumber,
+                          })),
                     winner: selectedBracketMatch.match.winner1,
                     score: selectedBracketMatch.match.ffTop
                       ? "F.F."
@@ -3244,7 +3320,17 @@ export function TournamentEventsContent({
                   {
                     name:
                       selectedBracketMatch.match.player2 ||
-                      (selectedBracketMatch.match.byeBottom ? "BYE" : "Unknown player"),
+                      (selectedBracketMatch.match.byeBottom
+                        ? "BYE"
+                        : getBracketModalPlaceholder({
+                            roundIndex: selectedBracketMatch.roundIndex,
+                            roundMatchIndex: selectedBracketMatch.matchIndex,
+                            side: 2,
+                            firstRoundMatchCount:
+                              selectedBracketMatch.firstRoundMatchCount,
+                            globalMatchNumber:
+                              selectedBracketMatch.match.globalMatchNumber,
+                          })),
                     winner: selectedBracketMatch.match.winner2,
                     score: selectedBracketMatch.match.ffBottom
                       ? "F.F."
