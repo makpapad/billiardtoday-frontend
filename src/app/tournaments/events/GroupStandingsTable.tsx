@@ -21,13 +21,13 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                         <th className="px-3 py-2 text-left font-medium w-44">Player</th>
                         <th className="px-2 py-2 text-center font-medium w-14">Position</th>
                         <th className="px-2 py-2 text-center font-medium w-20">Record</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Points</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Innings</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Average</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Best AVG</th>
                         <th className="px-2 py-2 text-center font-medium w-16">High Run</th>
                         <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,6 +79,7 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                             </td>
                             <td className="px-2 py-2 text-center font-semibold">{player.place}</td>
                             <td className="px-2 py-2 text-center">{formatRecord(player.record)}</td>
+                            <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.totalPoints)}</td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.totalInnings)}</td>
                             <td className="px-2 py-2 text-center">
@@ -89,7 +90,6 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                             </td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
                         </tr>
                             )
                         })()

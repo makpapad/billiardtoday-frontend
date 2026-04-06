@@ -2753,13 +2753,13 @@ export function TournamentEventsContent({
                                                                     <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                                                       <div>Player</div>
                                                                       <div className="text-center">Winner</div>
-                                                                      <div className="text-center">Points</div>
-                                                                      <div className="text-center">Innings</div>
-                                                                      <div className="text-center">Avg</div>
-                                                                      <div className="text-center">H.R.1</div>
-                                                                      <div className="text-center">H.R.2</div>
-                                                                      <div className="text-center">MP</div>
-                                                                      <div className="text-center">T.B.</div>
+                                                                    <div className="text-center">MP</div>
+                                                                    <div className="text-center">Points</div>
+                                                                    <div className="text-center">Innings</div>
+                                                                    <div className="text-center">Avg</div>
+                                                                    <div className="text-center">H.R.1</div>
+                                                                    <div className="text-center">H.R.2</div>
+                                                                    <div className="text-center">T.B.</div>
                                                                     </div>
                                                                     <div className="mt-3 space-y-2">
                                                                       <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
@@ -2770,6 +2770,10 @@ export function TournamentEventsContent({
                                                                           {match.winner1
                                                                             ? "Yes"
                                                                             : "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.matchPoints1 ??
+                                                                            "-"}
                                                                         </div>
                                                                         <div className="text-center">
                                                                           {match.score1 ??
@@ -2792,10 +2796,6 @@ export function TournamentEventsContent({
                                                                             "-"}
                                                                         </div>
                                                                         <div className="text-center">
-                                                                          {match.matchPoints1 ??
-                                                                            "-"}
-                                                                        </div>
-                                                                        <div className="text-center">
                                                                           {match.tieBreak1 ??
                                                                             "-"}
                                                                         </div>
@@ -2808,6 +2808,10 @@ export function TournamentEventsContent({
                                                                           {match.winner2
                                                                             ? "Yes"
                                                                             : "-"}
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                          {match.matchPoints2 ??
+                                                                            "-"}
                                                                         </div>
                                                                         <div className="text-center">
                                                                           {match.score2 ??
@@ -2827,10 +2831,6 @@ export function TournamentEventsContent({
                                                                         </div>
                                                                         <div className="text-center">
                                                                           {match.highRun2Second ??
-                                                                            "-"}
-                                                                        </div>
-                                                                        <div className="text-center">
-                                                                          {match.matchPoints2 ??
                                                                             "-"}
                                                                         </div>
                                                                         <div className="text-center">
@@ -3346,6 +3346,9 @@ export function TournamentEventsContent({
                                                         Result
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
+                                                        Match Points
+                                                      </th>
+                                                      <th className="px-4 py-2 font-medium">
                                                         Points
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
@@ -3359,9 +3362,6 @@ export function TournamentEventsContent({
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
                                                         High Run 2
-                                                      </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        Match Points
                                                       </th>
                                                     </tr>
                                                   </thead>
@@ -4038,12 +4038,12 @@ export function TournamentEventsContent({
               <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 <div>Player</div>
                 <div className="text-center">Winner</div>
+                <div className="text-center">MP</div>
                 <div className="text-center">Points</div>
                 <div className="text-center">Innings</div>
                 <div className="text-center">Avg</div>
                 <div className="text-center">H.R.1</div>
                 <div className="text-center">H.R.2</div>
-                <div className="text-center">MP</div>
                 <div className="text-center">T.B.</div>
               </div>
               <div className="mt-3 space-y-2">
@@ -4125,6 +4125,7 @@ export function TournamentEventsContent({
                       {row.name}
                     </div>
                     <div className="text-center">{row.winner ? "Yes" : "-"}</div>
+                    <div className="text-center">{row.mp ?? "-"}</div>
                     <div className="text-center">{row.score}</div>
                     <div className="text-center">{row.innings ?? "-"}</div>
                     <div className="text-center">
@@ -4134,7 +4135,6 @@ export function TournamentEventsContent({
                     </div>
                     <div className="text-center">{row.hr1 ?? "-"}</div>
                     <div className="text-center">{row.hr2 ?? "-"}</div>
-                    <div className="text-center">{row.mp ?? "-"}</div>
                     <div className="text-center">{row.tb ?? "-"}</div>
                   </div>
                 ))}

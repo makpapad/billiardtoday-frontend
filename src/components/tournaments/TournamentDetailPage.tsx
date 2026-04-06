@@ -145,13 +145,13 @@ function GroupTooltip({
               <th className="px-2 py-1.5 text-left font-semibold">Player</th>
               <th className="px-2 py-1.5 text-left font-semibold">Date</th>
               <th className="px-2 py-1.5 text-center font-semibold">Res</th>
+              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
               <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
               <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
               <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
               <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
-              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
             </tr>
           </thead>
           <tbody>
@@ -181,6 +181,9 @@ function GroupTooltip({
                     {match.top.outcome ?? "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.top.player.matchPoints)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.top.player.points)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
@@ -197,9 +200,6 @@ function GroupTooltip({
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.top.player.highRun2)}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.top.player.matchPoints)}
                   </td>
                 </tr>
                 <tr
@@ -226,6 +226,9 @@ function GroupTooltip({
                     {match.bottom.outcome ?? "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(match.bottom.player.matchPoints)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.bottom.player.points)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
@@ -243,9 +246,6 @@ function GroupTooltip({
                   <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.bottom.player.highRun2)}
                   </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.bottom.player.matchPoints)}
-                  </td>
                 </tr>
               </>
             ))}
@@ -260,13 +260,13 @@ function GroupTooltip({
               <th className="px-2 py-1.5 text-left font-semibold">Player</th>
               <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
               <th className="px-2 py-1.5 text-center font-semibold">Rec</th>
+              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
               <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
               <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
               <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
               <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
-              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
             </tr>
           </thead>
           <tbody>
@@ -300,6 +300,9 @@ function GroupTooltip({
                   {formatRecord(player.record)}
                 </td>
                 <td className="px-2 py-1.5 text-center">
+                  {formatNumberValue(player.totalMatchPoints)}
+                </td>
+                <td className="px-2 py-1.5 text-center">
                   {formatNumberValue(player.totalPoints)}
                 </td>
                 <td className="px-2 py-1.5 text-center">
@@ -318,9 +321,6 @@ function GroupTooltip({
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   {formatNumberValue(player.highRun2)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.totalMatchPoints)}
                 </td>
               </tr>
             ))}
