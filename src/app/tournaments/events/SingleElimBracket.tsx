@@ -37,6 +37,22 @@ export type BracketRoundView = {
     matches: BracketMatchView[]
 }
 
+const buildIncomingMatchNumbersByTargetId = (rounds: BracketRoundView[]) => {
+    const incoming = new Map<string, number[]>()
+    rounds.forEach((round, roundIdx) => {
+        round.matches.forEach((match, matchIdx) => {
+            const nextRound = rounds[roundIdx + 1]
+            const targetId =
+                match.nextMatchId || nextRound?.matches[Math.floor(matchIdx / 2)]?.id
+            if (!targetId || typeof match.globalMatchNumber !== 'number') return
+            const targetIncoming = incoming.get(targetId) ?? []
+            targetIncoming.push(match.globalMatchNumber)
+            incoming.set(targetId, targetIncoming)
+        })
+    })
+    return incoming
+}
+
 const MATCH_HEIGHT = 92
 const MATCH_META_HEIGHT = 16
 const MATCH_GAP = 16
@@ -148,6 +164,11 @@ export default function SingleElimBracket({
         return map
     }, [rounds])
 
+    const incomingMatchNumbersByTargetId = useMemo(
+        () => buildIncomingMatchNumbersByTargetId(rounds),
+        [rounds],
+    )
+
     const connectors = useMemo(() => {
         const items: Array<{ id: string; path: string }> = []
         rounds.forEach((round, rIdx) => {
@@ -174,16 +195,22 @@ export default function SingleElimBracket({
     }, [rounds, layouts])
 
     const resolvePlaceholder = (
+        matchId: string,
         roundIndex: number,
         matchIndex: number,
         slot: 1 | 2,
         seedValue?: number | null,
         globalMatchNumber?: number | null,
-    ): string => {
+        ): string => {
         if (typeof seedValue === 'number' && roundIndex === 0) {
             return `QUAL ${seedValue}`
         }
         if (roundIndex === 0) return ''
+        const incomingMatchNumbers = incomingMatchNumbersByTargetId.get(matchId) ?? []
+        const linkedMatchNumber = incomingMatchNumbers[slot === 1 ? 0 : 1]
+        if (typeof linkedMatchNumber === 'number') {
+            return `Winner from Match ${linkedMatchNumber}`
+        }
         const currentRoundMatchCount = Math.max(
             1,
             Math.floor((rounds[0]?.matches.length || 1) / Math.pow(2, roundIndex)),
@@ -306,6 +333,7 @@ export default function SingleElimBracket({
                             const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
                             const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
                             const topPlaceholder = resolvePlaceholder(
+                                m.id,
                                 roundIdx,
                                 roundMatchIndex,
                                 1,
@@ -313,6 +341,7 @@ export default function SingleElimBracket({
                                 m.globalMatchNumber,
                             )
                             const bottomPlaceholder = resolvePlaceholder(
+                                m.id,
                                 roundIdx,
                                 roundMatchIndex,
                                 2,

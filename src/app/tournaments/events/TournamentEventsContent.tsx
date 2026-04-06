@@ -254,6 +254,7 @@ function getBracketModalPlaceholder(params: {
   side: 1 | 2;
   firstRoundMatchCount: number;
   globalMatchNumber?: number | null;
+  sourceMatchNumber?: number | null;
 }): string {
   const {
     roundIndex,
@@ -261,11 +262,16 @@ function getBracketModalPlaceholder(params: {
     side,
     firstRoundMatchCount,
     globalMatchNumber,
+    sourceMatchNumber,
   } = params;
   if (roundIndex === 0) {
     const seedOrder = getSingleElimSeedOrder(firstRoundMatchCount * 2);
     const seed = seedOrder[roundMatchIndex * 2 + (side === 1 ? 0 : 1)];
     return typeof seed === "number" ? `Qualifier ${seed}` : "Qualifier";
+  }
+
+  if (typeof sourceMatchNumber === "number") {
+    return `Winner from Match ${sourceMatchNumber}`;
   }
 
   const currentRoundMatchCount = Math.max(
@@ -1881,6 +1887,24 @@ export function TournamentEventsContent({
     }
     return null;
   }, [activeBracketRounds, selectedBracketMatchId]);
+
+  const activeBracketIncomingMatchNumbers = useMemo(() => {
+    const incoming = new Map<string, number[]>();
+    activeBracketRounds.forEach((round, roundIndex) => {
+      round.matches.forEach((match, matchIndex) => {
+        const nextRound = activeBracketRounds[roundIndex + 1];
+        const targetId =
+          match.nextMatchId ||
+          nextRound?.matches[Math.floor(matchIndex / 2)]?.id ||
+          null;
+        if (!targetId || typeof match.globalMatchNumber !== "number") return;
+        const targetIncoming = incoming.get(targetId) ?? [];
+        targetIncoming.push(match.globalMatchNumber);
+        incoming.set(targetId, targetIncoming);
+      });
+    });
+    return incoming;
+  }, [activeBracketRounds]);
 
   const activeDoubleEliminationRounds = useMemo(() => {
     if (!activeStage || activeStage.stageType !== "double_elimination") {
@@ -4061,6 +4085,10 @@ export function TournamentEventsContent({
                               selectedBracketMatch.firstRoundMatchCount,
                             globalMatchNumber:
                               selectedBracketMatch.match.globalMatchNumber,
+                            sourceMatchNumber:
+                              activeBracketIncomingMatchNumbers.get(
+                                selectedBracketMatch.match.id,
+                              )?.[0] ?? null,
                           })),
                     winner: selectedBracketMatch.match.winner1,
                     score: selectedBracketMatch.match.ffTop
@@ -4095,6 +4123,10 @@ export function TournamentEventsContent({
                               selectedBracketMatch.firstRoundMatchCount,
                             globalMatchNumber:
                               selectedBracketMatch.match.globalMatchNumber,
+                            sourceMatchNumber:
+                              activeBracketIncomingMatchNumbers.get(
+                                selectedBracketMatch.match.id,
+                              )?.[1] ?? null,
                           })),
                     winner: selectedBracketMatch.match.winner2,
                     score: selectedBracketMatch.match.ffBottom
