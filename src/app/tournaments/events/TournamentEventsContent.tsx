@@ -1443,6 +1443,13 @@ export function TournamentEventsContent({
             ffBottom,
             winner1,
             winner2,
+            globalMatchNumber: toNumber(
+              (m as { global_match_number?: unknown }).global_match_number,
+            ),
+            winnerToGlobalMatchNumber: toNumber(
+              (m as { winner_to_global_match_number?: unknown })
+                .winner_to_global_match_number,
+            ),
             _shouldDropPlaceholder: shouldDropPlaceholder,
           };
         })

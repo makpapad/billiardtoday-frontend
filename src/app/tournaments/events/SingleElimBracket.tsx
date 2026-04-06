@@ -28,6 +28,8 @@ export type BracketMatchView = {
     winner2?: boolean
     seedTop?: number | null
     seedBottom?: number | null
+    globalMatchNumber?: number | null
+    winnerToGlobalMatchNumber?: number | null
 }
 
 export type BracketRoundView = {
@@ -36,6 +38,7 @@ export type BracketRoundView = {
 }
 
 const MATCH_HEIGHT = 92
+const MATCH_META_HEIGHT = 14
 const MATCH_GAP = 16
 const COLUMN_WIDTH = 264
 const COLUMN_GAP = 32
@@ -112,7 +115,7 @@ export default function SingleElimBracket({
 
     const totalHeight = useMemo(() => {
         const firstCount = rounds[0]?.matches.length || 0
-        return (firstCount - 1) * BLOCK_HEIGHT + MATCH_HEIGHT + TOP_OFFSET
+        return (firstCount - 1) * BLOCK_HEIGHT + MATCH_HEIGHT + MATCH_META_HEIGHT + TOP_OFFSET
     }, [rounds])
 
     const totalWidth = useMemo(
@@ -321,6 +324,24 @@ export default function SingleElimBracket({
                                         </span>
                                     </div>
                                 </button>
+                                {typeof m.globalMatchNumber === 'number' || typeof m.winnerToGlobalMatchNumber === 'number' ? (
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            left: 2,
+                                            top: MATCH_HEIGHT + 2,
+                                            fontSize: 10,
+                                            lineHeight: '12px',
+                                            color: '#6B7280',
+                                            whiteSpace: 'nowrap',
+                                            pointerEvents: 'none',
+                                        }}
+                                    >
+                                        {typeof m.globalMatchNumber === 'number' ? `Match ${m.globalMatchNumber}` : ''}
+                                        {typeof m.globalMatchNumber === 'number' && typeof m.winnerToGlobalMatchNumber === 'number' ? ' · ' : ''}
+                                        {typeof m.winnerToGlobalMatchNumber === 'number' ? `Winner to ${m.winnerToGlobalMatchNumber}` : ''}
+                                    </div>
+                                ) : null}
                             </div>
                         )
                     }),
