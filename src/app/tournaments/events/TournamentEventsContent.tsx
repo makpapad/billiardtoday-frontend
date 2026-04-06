@@ -300,8 +300,158 @@ function getGroupPreviewPlayers(group: StageMatchGroup) {
   );
 }
 
+type GroupDisplayPlayer = {
+  label: string;
+  player: StageMatchGroup["matches"][number]["top"]["player"] | null;
+  placeholder: boolean;
+};
+
+function getGroupDisplayKey(
+  player: StageMatchGroup["matches"][number]["top"]["player"] | null | undefined,
+) {
+  if (!player) return "";
+  return player.documentId || `${player.name}-${player.country || "xx"}`;
+}
+
+function getGroupWinnerPlayer(
+  match: StageMatchGroup["matches"][number] | undefined,
+) {
+  if (!match) return null;
+  if (match.top.outcome === "W") return match.top.player;
+  if (match.bottom.outcome === "W") return match.bottom.player;
+  return null;
+}
+
+function getGroupLoserPlayer(
+  match: StageMatchGroup["matches"][number] | undefined,
+) {
+  if (!match) return null;
+  if (match.top.outcome === "L") return match.top.player;
+  if (match.bottom.outcome === "L") return match.bottom.player;
+  return null;
+}
+
+function buildGroupDisplayPlayer(
+  player: StageMatchGroup["matches"][number]["top"]["player"] | null | undefined,
+  fallbackLabel: string,
+): GroupDisplayPlayer {
+  if (player && (player.name || player.nativeName)) {
+    return {
+      label: player.name || player.nativeName || fallbackLabel,
+      player,
+      placeholder: false,
+    };
+  }
+  return {
+    label: fallbackLabel,
+    player: null,
+    placeholder: true,
+  };
+}
+
+function resolveGroupMatchDisplay(
+  group: StageMatchGroup,
+  match: StageMatchGroup["matches"][number],
+): { top: GroupDisplayPlayer; bottom: GroupDisplayPlayer } {
+  const sorted = [...group.matches].sort((a, b) => {
+    if (
+      a.matchNumber !== null &&
+      b.matchNumber !== null &&
+      a.matchNumber !== b.matchNumber
+    ) {
+      return a.matchNumber - b.matchNumber;
+    }
+    if (a.matchNumber !== null) return -1;
+    if (b.matchNumber !== null) return 1;
+    return 0;
+  });
+
+  const matchIndex = sorted.findIndex((item) => item.key === match.key);
+  if (matchIndex === -1) {
+    return {
+      top: buildGroupDisplayPlayer(match.top.player, "Unknown"),
+      bottom: buildGroupDisplayPlayer(match.bottom.player, "Unknown"),
+    };
+  }
+
+  if (sorted.length === 3) {
+    const first = sorted[0];
+    const firstKeys = new Set([
+      getGroupDisplayKey(first.top.player),
+      getGroupDisplayKey(first.bottom.player),
+    ]);
+    const slotOne =
+      getGroupPreviewPlayers(group).find(
+        (player) => !firstKeys.has(getGroupDisplayKey(player)),
+      ) ?? null;
+
+    if (matchIndex === 1) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupLoserPlayer(first),
+          "Loser Match 1",
+        ),
+        bottom: buildGroupDisplayPlayer(slotOne, "Seed 1"),
+      };
+    }
+
+    if (matchIndex === 2) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupWinnerPlayer(first),
+          "Winner Match 1",
+        ),
+        bottom: buildGroupDisplayPlayer(slotOne, "Seed 1"),
+      };
+    }
+  }
+
+  if (sorted.length === 6) {
+    const first = sorted[0];
+    const second = sorted[1];
+
+    if (matchIndex === 2) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupWinnerPlayer(first),
+          "Winner Match 1",
+        ),
+        bottom: buildGroupDisplayPlayer(
+          getGroupWinnerPlayer(second),
+          "Winner Match 2",
+        ),
+      };
+    }
+
+    if (matchIndex === 3) {
+      return {
+        top: buildGroupDisplayPlayer(
+          getGroupLoserPlayer(first),
+          "Loser Match 1",
+        ),
+        bottom: buildGroupDisplayPlayer(
+          getGroupLoserPlayer(second),
+          "Loser Match 2",
+        ),
+      };
+    }
+  }
+
+  return {
+    top: buildGroupDisplayPlayer(match.top.player, "Unknown"),
+    bottom: buildGroupDisplayPlayer(match.bottom.player, "Unknown"),
+  };
+}
+
 function getGroupKey(stage: NormalizedEventStage, group: StageMatchGroup) {
   return `${stage.documentId || stage.id}-${group.number ?? group.key}`;
+}
+
+function compareOptionalNumbers(a: number | null, b: number | null) {
+  if (a !== null && b !== null && a !== b) return a - b;
+  if (a !== null) return -1;
+  if (b !== null) return 1;
+  return 0;
 }
 
 function hasMeaningfulStageResult(
@@ -812,26 +962,38 @@ export function TournamentEventsContent({
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () => {
+      const normalizedSlots = eventData?.data?.timetable_slots
+        ? toRelationArray(eventData.data.timetable_slots).map((slot, index) =>
+            normalizeTimetableSlot(slot, `slot-${index}`),
+          )
+        : [];
       const autoScheduledMatchIdsByStage = new Map<string, Set<string>>();
-      if (eventData?.data?.timetable_slots) {
-        toRelationArray(eventData.data.timetable_slots)
-          .map((slot, index) => normalizeTimetableSlot(slot, `slot-${index}`))
-          .forEach((slot) => {
-            if (
-              slot.slotType !== "match" ||
-              !slot.stageDocumentId ||
-              !slot.matchDocumentId ||
-              !slot.source.startsWith("auto-generated")
-            ) {
-              return;
-            }
-            const existing =
-              autoScheduledMatchIdsByStage.get(slot.stageDocumentId) ??
-              new Set<string>();
-            existing.add(slot.matchDocumentId);
-            autoScheduledMatchIdsByStage.set(slot.stageDocumentId, existing);
-          });
-      }
+      const slotByMatchDocumentId = new Map<
+        string,
+        { slotOrder: number | null; dateTime: string | null; matchNumber: number | null }
+      >();
+
+      normalizedSlots.forEach((slot) => {
+        if (
+          slot.slotType !== "match" ||
+          !slot.stageDocumentId ||
+          !slot.matchDocumentId
+        ) {
+          return;
+        }
+        if (slot.source.startsWith("auto-generated")) {
+          const existing =
+            autoScheduledMatchIdsByStage.get(slot.stageDocumentId) ??
+            new Set<string>();
+          existing.add(slot.matchDocumentId);
+          autoScheduledMatchIdsByStage.set(slot.stageDocumentId, existing);
+        }
+        slotByMatchDocumentId.set(slot.matchDocumentId, {
+          slotOrder: slot.slotOrder,
+          dateTime: slot.dateTime,
+          matchNumber: slot.matchNumber,
+        });
+      });
 
       return eventStages.reduce<Record<string, StageMatchGroup[]>>(
         (acc, stage) => {
@@ -853,7 +1015,41 @@ export function TournamentEventsContent({
                   return hasPlayed || allowed;
                 })
               : stage.groups;
-          acc[stage.id] = buildStageMatchGroups(visibleGroups);
+          const baseGroups = buildStageMatchGroups(visibleGroups);
+          acc[stage.id] = baseGroups.map((group) => ({
+            ...group,
+            matches: [...group.matches].sort((a, b) => {
+              const slotA = a.matchDocumentId
+                ? slotByMatchDocumentId.get(a.matchDocumentId)
+                : undefined;
+              const slotB = b.matchDocumentId
+                ? slotByMatchDocumentId.get(b.matchDocumentId)
+                : undefined;
+              const bySlot = compareOptionalNumbers(
+                slotA?.slotOrder ?? null,
+                slotB?.slotOrder ?? null,
+              );
+              if (bySlot !== 0) return bySlot;
+              const byMatch = compareOptionalNumbers(
+                slotA?.matchNumber ?? a.matchNumber,
+                slotB?.matchNumber ?? b.matchNumber,
+              );
+              if (byMatch !== 0) return byMatch;
+              const dateA = slotA?.dateTime ?? a.dateTime;
+              const dateB = slotB?.dateTime ?? b.dateTime;
+              if (dateA && dateB && dateA !== dateB) {
+                return dateA.localeCompare(dateB);
+              }
+              return 0;
+            }).map((match) => {
+              const slot = match.matchDocumentId
+                ? slotByMatchDocumentId.get(match.matchDocumentId)
+                : undefined;
+              return slot?.dateTime
+                ? { ...match, dateTime: slot.dateTime }
+                : match;
+            }),
+          }));
           return acc;
         },
         {},
@@ -861,6 +1057,22 @@ export function TournamentEventsContent({
     },
     [eventData, eventStages],
   );
+
+  const groupMatchDisplayByDocumentId = useMemo(() => {
+    const map = new Map<
+      string,
+      ReturnType<typeof resolveGroupMatchDisplay>
+    >();
+    eventStages.forEach((stage) => {
+      (stageMatchGroups[stage.id] ?? []).forEach((group) => {
+        group.matches.forEach((match) => {
+          if (!match.matchDocumentId) return;
+          map.set(match.matchDocumentId, resolveGroupMatchDisplay(group, match));
+        });
+      });
+    });
+    return map;
+  }, [eventStages, stageMatchGroups]);
 
   const publishedFinalResults = useMemo<NormalizedFinalResult[]>(() => {
     if (!eventData?.data?.results_final) return [];
@@ -1986,6 +2198,47 @@ export function TournamentEventsContent({
                                         minute: "2-digit",
                                       })
                                     : slot.time || "-";
+                                const timetableDisplayPlayers =
+                                  slot.matchDocumentId
+                                    ? groupMatchDisplayByDocumentId.get(
+                                        slot.matchDocumentId,
+                                      ) ?? null
+                                    : null;
+                                const timetablePlayers = timetableDisplayPlayers
+                                  ? [
+                                      {
+                                        name: timetableDisplayPlayers.top.label,
+                                        country:
+                                          timetableDisplayPlayers.top.placeholder
+                                            ? null
+                                            : timetableDisplayPlayers.top.player
+                                                ?.country ?? null,
+                                        placeholder:
+                                          timetableDisplayPlayers.top.placeholder,
+                                      },
+                                      {
+                                        name: timetableDisplayPlayers.bottom.label,
+                                        country:
+                                          timetableDisplayPlayers.bottom.placeholder
+                                            ? null
+                                            : timetableDisplayPlayers.bottom.player
+                                                ?.country ?? null,
+                                        placeholder:
+                                          timetableDisplayPlayers.bottom.placeholder,
+                                      },
+                                    ]
+                                  : [
+                                      {
+                                        name: slot.matchPlayer1Name,
+                                        country: slot.matchPlayer1Country,
+                                        placeholder: false,
+                                      },
+                                      {
+                                        name: slot.matchPlayer2Name,
+                                        country: slot.matchPlayer2Country,
+                                        placeholder: false,
+                                      },
+                                    ];
                                 return (
                                   <tr
                                     key={slot.documentId}
@@ -2026,15 +2279,9 @@ export function TournamentEventsContent({
                                             {slot.subtitle}
                                           </span>
                                         ) : null}
-                                        {slot.slotType !== "training" && (slot.matchPlayer1Name || slot.matchPlayer2Name) ? (
+                                        {slot.slotType !== "training" && timetablePlayers.some((player) => player.name) ? (
                                           <div className="grid gap-1">
-                                            {[{
-                                              name: slot.matchPlayer1Name,
-                                              country: slot.matchPlayer1Country,
-                                            }, {
-                                              name: slot.matchPlayer2Name,
-                                              country: slot.matchPlayer2Country,
-                                            }]
+                                            {timetablePlayers
                                               .filter((player) => player.name)
                                               .map((player, index) => {
                                                 const flagSrc = getCountryFlagCdnUrl(player.country ?? null, 40);
@@ -2044,7 +2291,7 @@ export function TournamentEventsContent({
                                                     className="grid grid-cols-[20px_minmax(0,1fr)] items-center justify-center gap-2"
                                                   >
                                                     <div className="flex h-4 w-5 items-center justify-center">
-                                                      {flagSrc ? (
+                                                      {flagSrc && !player.placeholder ? (
                                                         <img
                                                           src={flagSrc}
                                                           alt={player.country || "flag"}
@@ -2054,7 +2301,13 @@ export function TournamentEventsContent({
                                                         />
                                                       ) : null}
                                                     </div>
-                                                    <span className="text-sm font-semibold leading-tight">
+                                                    <span
+                                                      className={clsx(
+                                                        "text-sm font-semibold leading-tight",
+                                                        player.placeholder &&
+                                                          "text-gray-500 dark:text-gray-400",
+                                                      )}
+                                                    >
                                                       {player.name}
                                                     </span>
                                                   </div>
