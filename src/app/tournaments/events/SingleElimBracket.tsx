@@ -115,12 +115,12 @@ export default function SingleElimBracket({ rounds }: { rounds: BracketRoundView
                 if (!a || !b) return
                 const xStart = a.left + COLUMN_WIDTH
                 const xEnd = b.left
+                const xMid = (xStart + xEnd) / 2
                 const yStart = a.top + MATCH_HEIGHT / 2
                 const yEnd = b.top + MATCH_HEIGHT / 2
-                const curveOffset = Math.max(18, (xEnd - xStart) * 0.45)
                 items.push({
                     id: `${m.id}->${targetId}`,
-                    path: `M ${xStart} ${yStart} C ${xStart + curveOffset} ${yStart}, ${xEnd - curveOffset} ${yEnd}, ${xEnd} ${yEnd}`,
+                    path: `M ${xStart} ${yStart} H ${xMid} V ${yEnd} H ${xEnd}`,
                 })
             })
         })
