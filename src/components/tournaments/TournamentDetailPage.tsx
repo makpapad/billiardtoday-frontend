@@ -2897,13 +2897,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   {summary.title}
                 </h1>
                 {venueMetaParts.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold tracking-[0.18em] text-white/58 sm:text-xs">
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
                     {venueMetaParts.map((part, index) => (
                       <span
                         key={`${part}-${index}`}
                         className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? <span className="text-white/38">.</span> : null}
+                        {index > 0 ? <span className="text-white/70">.</span> : null}
                         <span>{part}</span>
                       </span>
                     ))}
