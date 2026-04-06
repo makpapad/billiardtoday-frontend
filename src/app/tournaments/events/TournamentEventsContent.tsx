@@ -42,10 +42,19 @@ import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
-const BRACKET_STAGE_TYPES = new Set(["double_elimination"]);
+const BRACKET_STAGE_TYPES = new Set([
+  "double_elimination",
+  "single_elimination",
+  "brackets",
+  "bracket",
+  "knockout",
+]);
 
 function isBracketStageType(stageType: string | null | undefined): boolean {
-  return typeof stageType === "string" && BRACKET_STAGE_TYPES.has(stageType);
+  return (
+    typeof stageType === "string" &&
+    BRACKET_STAGE_TYPES.has(stageType.trim().toLowerCase())
+  );
 }
 
 type TournamentEventsContentProps = {
@@ -593,7 +602,7 @@ export function TournamentEventsContent({
         const isFinal = Boolean(normalizedStage.is_final);
         const stageType =
           typeof normalizedStage.stage_type === "string"
-            ? normalizedStage.stage_type.trim()
+            ? normalizedStage.stage_type.trim().toLowerCase()
             : null;
 
         const groupsRaw = toRelationArray(normalizedStage.groups);
@@ -1026,6 +1035,7 @@ export function TournamentEventsContent({
     const canonicalizeRound = (raw: string): string => {
       const upper = (raw || "").toUpperCase().trim();
       if (!upper) return "";
+      if (upper === "WINNERS FINAL" || upper === "FINAL") return "F";
       if (upper === "R32" || upper.includes("ROUND OF 32")) return "R32";
       if (
         upper === "R16" ||
@@ -1037,6 +1047,10 @@ export function TournamentEventsContent({
       if (upper === "R4" || upper.includes("SEMI")) return "SF";
       if (upper === "R2" || upper === "F" || upper.includes("FINAL"))
         return "F";
+      const winnersRound = upper.match(/^WINNERS R(\d+)$/);
+      if (winnersRound) return `Round ${Number(winnersRound[1])}`;
+      const roundNumber = upper.match(/^ROUND\s+(\d+)$/);
+      if (roundNumber) return `Round ${Number(roundNumber[1])}`;
       const m = upper.match(/^R(\d+)$/);
       if (m) {
         const n = Number(m[1]);
@@ -1046,6 +1060,25 @@ export function TournamentEventsContent({
         return `R${n}`;
       }
       return upper;
+    };
+
+    const getRoundPriority = (label: string): number => {
+      const upper = label.toUpperCase().trim();
+      const fixedPriority: Record<string, number> = {
+        R128: 0,
+        R64: 1,
+        R32: 2,
+        R16: 3,
+        QF: 4,
+        SF: 5,
+        F: 6,
+      };
+      if (upper in fixedPriority) return fixedPriority[upper];
+
+      const numberedRound = upper.match(/^ROUND\s+(\d+)$/);
+      if (numberedRound) return 100 + Number(numberedRound[1]);
+
+      return 999;
     };
 
     const byRound = new Map<string, unknown[]>();
@@ -1066,16 +1099,9 @@ export function TournamentEventsContent({
       byRound.set(label, arr);
     });
 
-    const roundPriority: Record<string, number> = {
-      R32: 0,
-      R16: 1,
-      QF: 2,
-      SF: 3,
-      F: 4,
-    };
     const orderedLabels = Array.from(byRound.keys()).sort((a, b) => {
-      const pa = roundPriority[a] ?? 100;
-      const pb = roundPriority[b] ?? 100;
+      const pa = getRoundPriority(a);
+      const pb = getRoundPriority(b);
       if (pa !== pb) return pa - pb;
       return (byRound.get(b)?.length ?? 0) - (byRound.get(a)?.length ?? 0);
     });

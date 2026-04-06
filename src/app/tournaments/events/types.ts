@@ -35,6 +35,10 @@ export type StrapiGroup = {
   documentId?: string | null;
   number?: number | string | null;
   date_time?: string | null;
+  source?: string | null;
+  round?: string | null;
+  bracket_type?: string | null;
+  match_number?: number | string | null;
   player1?: unknown;
   player2?: unknown;
   player1_points?: number | string | null;
@@ -42,11 +46,13 @@ export type StrapiGroup = {
   player1_innings?: number | string | null;
   player1_high_run?: number | string | null;
   player1_high_run_2?: number | string | null;
+  player1_tie_break?: number | string | null;
   player2_points?: number | string | null;
   player2_match_points?: number | string | null;
   player2_innings?: number | string | null;
   player2_high_run?: number | string | null;
   player2_high_run_2?: number | string | null;
+  player2_tie_break?: number | string | null;
   global_match_number?: number | string | null;
   winner_to_global_match_number?: number | string | null;
   winner_to_slot?: number | string | null;
