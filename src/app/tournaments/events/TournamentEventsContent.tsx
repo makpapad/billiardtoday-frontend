@@ -516,6 +516,7 @@ function formatDateTimeForMatchCell(
   const timeLabel = parsed.toLocaleTimeString("el-GR", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
   return `${dateLabel}\n${timeLabel}`;
 }
@@ -539,6 +540,7 @@ function formatDateTimeWithOffset(
     time: shifted.toLocaleTimeString("el-GR", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
       timeZone: "UTC",
     }),
   };
@@ -2330,6 +2332,7 @@ export function TournamentEventsContent({
                                     ? parsedDateTime.toLocaleTimeString("el-GR", {
                                         hour: "2-digit",
                                         minute: "2-digit",
+                                        hour12: false,
                                       })
                                     : slot.time || "-";
                                 const timetableDisplayPlayers =
@@ -4143,7 +4146,14 @@ export function TournamentEventsContent({
                         selectedBracketMatch.match.date,
                         timezoneOffsetMinutes,
                       );
-                      return `Date: ${shifted ? `${shifted.date}, ${shifted.time}` : new Date(selectedBracketMatch.match.date).toLocaleString("el-GR")}`;
+                      return `Date: ${shifted ? `${shifted.date}, ${shifted.time}` : new Date(selectedBracketMatch.match.date).toLocaleString("el-GR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}`;
                     })()
                   : "Date: -"}
               </div>

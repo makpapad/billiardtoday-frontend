@@ -112,7 +112,16 @@ export default function PlayerEnrollmentRequestsAdminPage() {
                           {row.mobile} • {row.email}
                         </div>
                         <div className="mt-1 text-xs text-slate-500">
-                          {row.createdAt ? new Date(row.createdAt).toLocaleString("el-GR") : ""}
+                          {row.createdAt
+                            ? new Date(row.createdAt).toLocaleString("el-GR", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              })
+                            : ""}
                         </div>
                       </div>
                       <div className="space-y-3">

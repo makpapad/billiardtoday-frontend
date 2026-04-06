@@ -92,7 +92,11 @@ export default function LiveScoreDisplay({ screenId, screenName, isActive }: Liv
             </span>
             {lastUpdate && (
               <span className="text-gray-500">
-                Last update: {new Date(lastUpdate).toLocaleTimeString('el-GR')}
+                Last update: {new Date(lastUpdate).toLocaleTimeString('el-GR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                })}
               </span>
             )}
           </div>

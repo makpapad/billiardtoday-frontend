@@ -33,7 +33,14 @@ type TrustedDeviceRow = {
 function formatLocalDate(value?: string | null) {
   if (!value) return null;
   try {
-    return new Date(value).toLocaleString("el-GR");
+    return new Date(value).toLocaleString("el-GR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   } catch {
     return value;
   }

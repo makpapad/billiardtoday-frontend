@@ -206,7 +206,7 @@ function LiveTournamentsContent() {
                       <p>Screen ID: {screen.screenId}</p>
                       {screen.lastUpdate && (
                         <p className="mt-1">
-                          Τελευταία ενημέρωση: {new Date(screen.lastUpdate).toLocaleTimeString('el-GR')}
+                          Τελευταία ενημέρωση: {new Date(screen.lastUpdate).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </p>
                       )}
                     </div>

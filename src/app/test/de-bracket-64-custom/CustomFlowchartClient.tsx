@@ -220,7 +220,7 @@ function formatHeaderMeta(value: string | null) {
   const time = parsed.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
+    hour12: false,
   });
   return `${weekday} ${time}`;
 }
