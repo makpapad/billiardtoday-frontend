@@ -2024,6 +2024,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             normalized.metadata && typeof normalized.metadata === "object"
               ? (normalized.metadata as Record<string, unknown>)
               : null,
+          customStageLabel:
+            normalized.metadata &&
+            typeof normalized.metadata === "object" &&
+            typeof (normalized.metadata as Record<string, unknown>).customStageLabel === "string"
+              ? ((normalized.metadata as Record<string, unknown>).customStageLabel as string).trim() || null
+              : null,
           stageTitle:
             typeof stage?.title === "string" && stage.title.trim()
               ? stage.title
@@ -2734,7 +2740,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                                   {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
                                 </td>
-                                <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || "-"}</td>
+                                <td className="px-4 py-3 text-center align-middle">{slot.stageTitle || slot.customStageLabel || "-"}</td>
                               </>
                             ) : null}
                           </tr>

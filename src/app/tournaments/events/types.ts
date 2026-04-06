@@ -221,6 +221,7 @@ export type NormalizedTimetableSlot = {
   isPublished: boolean;
   stageTitle: string | null;
   stageDocumentId: string | null;
+  customStageLabel?: string | null;
   groupNumber: number | null;
   matchNumber: number | null;
   matchLabel: string | null;
