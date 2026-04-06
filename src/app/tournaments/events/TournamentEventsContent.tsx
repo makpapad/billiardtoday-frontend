@@ -496,6 +496,19 @@ function buildGroupSlotPlaceholderLabel(
   return num !== null ? `${prefix} Match ${num}` : prefix;
 }
 
+function formatDateTimeForMatchCell(value: string | null): string {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("el-GR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function hasMeaningfulStageResult(
   result: NormalizedStageResult,
 ): boolean {
@@ -3633,7 +3646,7 @@ export function TournamentEventsContent({
                                                                     ) : (
                                                                       <div className="flex min-h-[72px] items-center justify-center">
                                                                         <span>
-                                                                          {formatDateForTable(
+                                                                          {formatDateTimeForMatchCell(
                                                                             match.dateTime,
                                                                           )}
                                                                         </span>
