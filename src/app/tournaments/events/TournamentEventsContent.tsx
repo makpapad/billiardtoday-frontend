@@ -1685,8 +1685,8 @@ export function TournamentEventsContent({
                   (m as { loser_to_global_match_number?: unknown })
                     .loser_to_global_match_number,
                 ) ?? null,
-              player1: p1.name || "Unknown player",
-              player2: p2.name || "Unknown player",
+              player1: p1.name || "",
+              player2: p2.name || "",
               player1Country: p1.country,
               player2Country: p2.country,
               player1FlagSrc: p1FlagSrc,

@@ -178,13 +178,22 @@ export default function SingleElimBracket({
         matchIndex: number,
         slot: 1 | 2,
         seedValue?: number | null,
+        globalMatchNumber?: number | null,
     ): string => {
         if (typeof seedValue === 'number' && roundIndex === 0) {
             return `QUAL ${seedValue}`
         }
         if (roundIndex === 0) return ''
-        const prevLabel = resolveRoundLabel(rounds[roundIndex - 1]?.label || `R${roundIndex}`)
-        return `W ${prevLabel} ${matchIndex * 2 + slot}`
+        const currentRoundMatchCount = Math.max(
+            1,
+            Math.floor((rounds[0]?.matches.length || 1) / Math.pow(2, roundIndex)),
+        )
+        const previousRoundFirstGlobalMatch =
+            typeof globalMatchNumber === 'number'
+                ? globalMatchNumber - currentRoundMatchCount * 2
+                : matchIndex * 2 + 1
+        const previousMatchOffset = matchIndex * 2 + (slot === 1 ? 0 : 1)
+        return `Winner from Match ${previousRoundFirstGlobalMatch + previousMatchOffset}`
     }
 
     return (
@@ -296,8 +305,20 @@ export default function SingleElimBracket({
                             const isFirstRound = roundIdx === 0
                             const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
                             const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
-                            const topPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 1, m.seedTop ?? stdSeedTop ?? null)
-                            const bottomPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 2, m.seedBottom ?? stdSeedBottom ?? null)
+                            const topPlaceholder = resolvePlaceholder(
+                                roundIdx,
+                                roundMatchIndex,
+                                1,
+                                m.seedTop ?? stdSeedTop ?? null,
+                                m.globalMatchNumber,
+                            )
+                            const bottomPlaceholder = resolvePlaceholder(
+                                roundIdx,
+                                roundMatchIndex,
+                                2,
+                                m.seedBottom ?? stdSeedBottom ?? null,
+                                m.globalMatchNumber,
+                            )
 
                             return (
                                 <div

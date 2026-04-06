@@ -133,6 +133,7 @@ export const normalizeGroup = (
     id: normalized.id,
     documentId: normalized.documentId,
     number: toNumber(normalized.number),
+    matchNumber: toNumber(normalized.match_number),
     dateTime:
       typeof normalized.date_time === "string" ? normalized.date_time : null,
     player1: {
@@ -308,6 +309,7 @@ export const buildStageMatchGroups = (
     grouped[key].matches.push({
       key: match.id ?? `${key}-match-${index}`,
       matchDocumentId: match.documentId ?? null,
+      matchNumber: match.matchNumber,
       dateTime: match.dateTime,
       top: {
         player: match.player1,
@@ -323,9 +325,18 @@ export const buildStageMatchGroups = (
   return Object.values(grouped)
     .map((group) => ({
       ...group,
-      matches: group.matches.sort((a, b) =>
-        compareDateTime(a.dateTime, b.dateTime),
-      ),
+      matches: group.matches.sort((a, b) => {
+        if (
+          a.matchNumber !== null &&
+          b.matchNumber !== null &&
+          a.matchNumber !== b.matchNumber
+        ) {
+          return a.matchNumber - b.matchNumber;
+        }
+        if (a.matchNumber !== null) return -1;
+        if (b.matchNumber !== null) return 1;
+        return compareDateTime(a.dateTime, b.dateTime);
+      }),
     }))
     .sort((a, b) => {
       if (a.number !== null && b.number !== null) return a.number - b.number;

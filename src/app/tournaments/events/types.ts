@@ -160,6 +160,7 @@ export type NormalizedGroupMatch = {
   id: string;
   documentId: string;
   number: number | null;
+  matchNumber: number | null;
   dateTime: string | null;
   player1: NormalizedGroupPlayer;
   player2: NormalizedGroupPlayer;
@@ -240,6 +241,7 @@ export type StageMatchGroup = {
   matches: {
     key: string;
     matchDocumentId: string | null;
+    matchNumber: number | null;
     dateTime: string | null;
     top: {
       player: NormalizedGroupPlayer;
