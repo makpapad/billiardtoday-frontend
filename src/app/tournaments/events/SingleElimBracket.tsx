@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 export type BracketMatchView = {
     id: string
@@ -38,7 +38,7 @@ export type BracketRoundView = {
 }
 
 const MATCH_HEIGHT = 92
-const MATCH_META_HEIGHT = 14
+const MATCH_META_HEIGHT = 16
 const MATCH_GAP = 16
 const COLUMN_WIDTH = 264
 const COLUMN_GAP = 32
@@ -63,7 +63,9 @@ const abbreviateName = (name: string): string => {
     if (!name) return ''
     const parts = name.split(' ').filter(Boolean)
     if (parts.length === 0) return name
-    if (parts.length === 1) return parts[0].length > 14 ? `${parts[0].slice(0, 12)}...` : parts[0]
+    if (parts.length === 1) {
+        return parts[0].length > 14 ? `${parts[0].slice(0, 12)}...` : parts[0]
+    }
     const surname = parts[0].length > 14 ? `${parts[0].slice(0, 12)}...` : parts[0]
     const given = parts[1].length > 3 ? `${parts[1].slice(0, 3)}.` : parts[1]
     return `${surname} ${given}`
@@ -101,7 +103,8 @@ export default function SingleElimBracket({
     rounds: BracketRoundView[]
     onMatchClick?: (matchId: string) => void
 }) {
-    const scale = rounds.length >= 4 ? 0.75 : 1
+    const baseScale = rounds.length >= 4 ? 0.75 : 1
+    const [scale, setScale] = useState(baseScale)
     const firstRoundSeeds = useMemo(
         () => getFirstRoundSeeds(rounds[0]?.matches.length || 0),
         [rounds],
@@ -115,7 +118,12 @@ export default function SingleElimBracket({
 
     const totalHeight = useMemo(() => {
         const firstCount = rounds[0]?.matches.length || 0
-        return (firstCount - 1) * BLOCK_HEIGHT + MATCH_HEIGHT + MATCH_META_HEIGHT + TOP_OFFSET
+        return (
+            (firstCount - 1) * BLOCK_HEIGHT +
+            MATCH_HEIGHT +
+            MATCH_META_HEIGHT +
+            TOP_OFFSET
+        )
     }, [rounds])
 
     const totalWidth = useMemo(
@@ -126,6 +134,8 @@ export default function SingleElimBracket({
             40,
         [rounds.length],
     )
+    const scaledWidth = totalWidth * scale
+    const scaledHeight = totalHeight * scale
 
     const layouts = useMemo(() => {
         const map = new Map<string, { left: number; top: number }>()
@@ -179,173 +189,221 @@ export default function SingleElimBracket({
 
     return (
         <div className="overflow-x-auto overflow-y-hidden">
+            <div className="mb-3 flex items-center justify-end gap-2">
+                <button
+                    type="button"
+                    onClick={() =>
+                        setScale((current) =>
+                            Math.max(0.55, Number((current - 0.1).toFixed(2))),
+                        )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 bg-white text-base font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                    aria-label="Zoom out bracket"
+                >
+                    -
+                </button>
+                <div className="min-w-14 text-center text-xs font-medium text-gray-500">
+                    {Math.round(scale * 100)}%
+                </div>
+                <button
+                    type="button"
+                    onClick={() =>
+                        setScale((current) =>
+                            Math.min(1.4, Number((current + 0.1).toFixed(2))),
+                        )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 bg-white text-base font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                    aria-label="Zoom in bracket"
+                >
+                    +
+                </button>
+            </div>
+
             <div
                 style={{
                     display: 'inline-block',
                     position: 'relative',
-                    width: totalWidth,
-                    height: totalHeight,
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'top left',
+                    width: scaledWidth,
+                    minWidth: scaledWidth,
+                    height: scaledHeight,
+                    minHeight: scaledHeight,
                 }}
             >
-                <svg
-                    width={totalWidth}
-                    height={totalHeight}
-                    style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }}
+                <div
+                    style={{
+                        display: 'inline-block',
+                        position: 'relative',
+                        width: totalWidth,
+                        height: totalHeight,
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top left',
+                    }}
                 >
-                    {connectors.map((c) => (
-                        <path
-                            key={c.id}
-                            d={c.path}
-                            stroke="#D1D5DB"
-                            strokeWidth={1.25}
-                            strokeOpacity={0.9}
-                            fill="none"
-                            strokeLinecap="round"
-                        />
-                    ))}
-                </svg>
+                    <svg
+                        width={totalWidth}
+                        height={totalHeight}
+                        style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }}
+                    >
+                        {connectors.map((c) => (
+                            <path
+                                key={c.id}
+                                d={c.path}
+                                stroke="#D1D5DB"
+                                strokeWidth={1.25}
+                                strokeOpacity={0.9}
+                                fill="none"
+                                strokeLinecap="round"
+                            />
+                        ))}
+                    </svg>
 
-                {rounds.map((round, roundIdx) => {
-                    const left = LEFT_GUTTER + roundIdx * (COLUMN_WIDTH + COLUMN_GAP)
-                    return (
-                        <div
-                            key={`lbl-${round.label}-${roundIdx}`}
-                            style={{
-                                position: 'absolute',
-                                top: 8,
-                                left,
-                                width: COLUMN_WIDTH,
-                                height: TOP_OFFSET - 12,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: '#0E2666',
-                                color: '#FFFFFF',
-                                borderRadius: 4,
-                                fontWeight: 600,
-                                fontSize: 14,
-                            }}
-                        >
-                            {resolveRoundLabel(round.label)}
-                        </div>
-                    )
-                })}
-
-                {rounds.map((round, roundIdx) =>
-                    round.matches.map((m) => {
-                        const layout = layouts.get(m.id)
-                        if (!layout) return null
-                        const s1 = typeof m.score1 === 'number' ? m.score1 : null
-                        const s2 = typeof m.score2 === 'number' ? m.score2 : null
-                        const hasBoth = s1 !== null && s2 !== null
-                        const winnerTop = Boolean(m.winner1 ?? (hasBoth && s1 > s2))
-                        const winnerBottom = Boolean(m.winner2 ?? (hasBoth && s2 > s1))
-                        const roundMatchIndex = round.matches.findIndex((candidate) => candidate.id === m.id)
-                        const isFirstRound = roundIdx === 0
-                        const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
-                        const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
-                        const topPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 1, m.seedTop ?? stdSeedTop ?? null)
-                        const bottomPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 2, m.seedBottom ?? stdSeedBottom ?? null)
-
+                    {rounds.map((round, roundIdx) => {
+                        const left = LEFT_GUTTER + roundIdx * (COLUMN_WIDTH + COLUMN_GAP)
                         return (
                             <div
-                                key={`${round.label}-${m.id}`}
+                                key={`lbl-${round.label}-${roundIdx}`}
                                 style={{
                                     position: 'absolute',
-                                    left: layout.left,
-                                    top: layout.top,
-                                    zIndex: 1,
+                                    top: 8,
+                                    left,
                                     width: COLUMN_WIDTH,
-                                    height: MATCH_HEIGHT,
+                                    height: TOP_OFFSET - 12,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#0E2666',
+                                    color: '#FFFFFF',
+                                    borderRadius: 4,
+                                    fontWeight: 600,
+                                    fontSize: 14,
                                 }}
                             >
-                                <button
-                                    type="button"
-                                    onClick={() => onMatchClick?.(m.id)}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        borderRadius: 12,
-                                        border: '1px solid #D1D5DB',
-                                        backgroundColor: '#FFFFFF',
-                                        boxShadow: '0 4px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(14,38,102,0.10)',
-                                        padding: 8,
-                                        textAlign: 'left',
-                                        position: 'relative',
-                                        overflow: 'hidden',
-                                        cursor: onMatchClick ? 'pointer' : 'default',
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
-                                        <span
-                                            title={m.player1 || (m.byeTop ? 'BYE' : topPlaceholder)}
-                                            style={{
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                color: winnerTop ? '#059669' : m.player1 ? '#111827' : '#6B7280',
-                                            }}
-                                        >
-                                            {m.player1 ? abbreviateName(m.player1) : m.byeTop ? 'BYE' : topPlaceholder}
-                                        </span>
-                                        <span>
-                                            {m.ffTop ? 'F.F.' : s1 ?? ''}
-                                            {typeof m.innings1 === 'number' ? ` | ${m.innings1}` : ''}
-                                            {typeof m.tieBreak1 === 'number' ? ` | ${m.tieBreak1}` : ''}
-                                        </span>
-                                    </div>
-
-                                    {m.date ? (
-                                        <div style={{ textAlign: 'center', color: '#6B7280', fontSize: 11, marginBottom: 4 }}>
-                                            {formatDateTime(m.date)}
-                                        </div>
-                                    ) : (
-                                        <div style={{ height: 15 }} />
-                                    )}
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-                                        <span
-                                            title={m.player2 || (m.byeBottom ? 'BYE' : bottomPlaceholder)}
-                                            style={{
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                color: winnerBottom ? '#059669' : m.player2 ? '#111827' : '#6B7280',
-                                            }}
-                                        >
-                                            {m.player2 ? abbreviateName(m.player2) : m.byeBottom ? 'BYE' : bottomPlaceholder}
-                                        </span>
-                                        <span>
-                                            {m.ffBottom ? 'F.F.' : s2 ?? ''}
-                                            {typeof m.innings2 === 'number' ? ` | ${m.innings2}` : ''}
-                                            {typeof m.tieBreak2 === 'number' ? ` | ${m.tieBreak2}` : ''}
-                                        </span>
-                                    </div>
-                                </button>
-                                {typeof m.globalMatchNumber === 'number' || typeof m.winnerToGlobalMatchNumber === 'number' ? (
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            left: 2,
-                                            top: MATCH_HEIGHT + 2,
-                                            fontSize: 10,
-                                            lineHeight: '12px',
-                                            color: '#6B7280',
-                                            whiteSpace: 'nowrap',
-                                            pointerEvents: 'none',
-                                        }}
-                                    >
-                                        {typeof m.globalMatchNumber === 'number' ? `Match ${m.globalMatchNumber}` : ''}
-                                        {typeof m.globalMatchNumber === 'number' && typeof m.winnerToGlobalMatchNumber === 'number' ? ' · ' : ''}
-                                        {typeof m.winnerToGlobalMatchNumber === 'number' ? `Winner to ${m.winnerToGlobalMatchNumber}` : ''}
-                                    </div>
-                                ) : null}
+                                {resolveRoundLabel(round.label)}
                             </div>
                         )
-                    }),
-                )}
+                    })}
+
+                    {rounds.map((round, roundIdx) =>
+                        round.matches.map((m) => {
+                            const layout = layouts.get(m.id)
+                            if (!layout) return null
+                            const s1 = typeof m.score1 === 'number' ? m.score1 : null
+                            const s2 = typeof m.score2 === 'number' ? m.score2 : null
+                            const hasBoth = s1 !== null && s2 !== null
+                            const winnerTop = Boolean(m.winner1 ?? (hasBoth && s1 > s2))
+                            const winnerBottom = Boolean(m.winner2 ?? (hasBoth && s2 > s1))
+                            const roundMatchIndex = round.matches.findIndex((candidate) => candidate.id === m.id)
+                            const isFirstRound = roundIdx === 0
+                            const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
+                            const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
+                            const topPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 1, m.seedTop ?? stdSeedTop ?? null)
+                            const bottomPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 2, m.seedBottom ?? stdSeedBottom ?? null)
+
+                            return (
+                                <div
+                                    key={`${round.label}-${m.id}`}
+                                    style={{
+                                        position: 'absolute',
+                                        left: layout.left,
+                                        top: layout.top,
+                                        zIndex: 1,
+                                        width: COLUMN_WIDTH,
+                                        height: MATCH_HEIGHT,
+                                    }}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => onMatchClick?.(m.id)}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: 12,
+                                            border: '1px solid #D1D5DB',
+                                            backgroundColor: '#FFFFFF',
+                                            boxShadow: '0 4px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(14,38,102,0.10)',
+                                            padding: 8,
+                                            textAlign: 'left',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            cursor: onMatchClick ? 'pointer' : 'default',
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
+                                            <span
+                                                title={m.player1 || (m.byeTop ? 'BYE' : topPlaceholder)}
+                                                style={{
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    color: winnerTop ? '#059669' : m.player1 ? '#111827' : '#6B7280',
+                                                }}
+                                            >
+                                                {m.player1 ? abbreviateName(m.player1) : m.byeTop ? 'BYE' : topPlaceholder}
+                                            </span>
+                                            <span>
+                                                {m.ffTop ? 'F.F.' : s1 ?? ''}
+                                                {typeof m.innings1 === 'number' ? ` | ${m.innings1}` : ''}
+                                                {typeof m.tieBreak1 === 'number' ? ` | ${m.tieBreak1}` : ''}
+                                            </span>
+                                        </div>
+
+                                        {m.date ? (
+                                            <div style={{ textAlign: 'center', color: '#6B7280', fontSize: 11, marginBottom: 4 }}>
+                                                {formatDateTime(m.date)}
+                                            </div>
+                                        ) : (
+                                            <div style={{ height: 15 }} />
+                                        )}
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                            <span
+                                                title={m.player2 || (m.byeBottom ? 'BYE' : bottomPlaceholder)}
+                                                style={{
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    color: winnerBottom ? '#059669' : m.player2 ? '#111827' : '#6B7280',
+                                                }}
+                                            >
+                                                {m.player2 ? abbreviateName(m.player2) : m.byeBottom ? 'BYE' : bottomPlaceholder}
+                                            </span>
+                                            <span>
+                                                {m.ffBottom ? 'F.F.' : s2 ?? ''}
+                                                {typeof m.innings2 === 'number' ? ` | ${m.innings2}` : ''}
+                                                {typeof m.tieBreak2 === 'number' ? ` | ${m.tieBreak2}` : ''}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    {typeof m.globalMatchNumber === 'number' || typeof m.winnerToGlobalMatchNumber === 'number' ? (
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: 2,
+                                                top: MATCH_HEIGHT + 2,
+                                                width: COLUMN_WIDTH - 4,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 8,
+                                                fontSize: 10,
+                                                lineHeight: '12px',
+                                                color: '#6B7280',
+                                                pointerEvents: 'none',
+                                            }}
+                                        >
+                                            <span style={{ whiteSpace: 'nowrap' }}>
+                                                {typeof m.globalMatchNumber === 'number' ? `Match ${m.globalMatchNumber}` : ''}
+                                            </span>
+                                            <span style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                                                {typeof m.winnerToGlobalMatchNumber === 'number' ? `Winner to ${m.winnerToGlobalMatchNumber}` : ''}
+                                            </span>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )
+                        }),
+                    )}
+                </div>
             </div>
         </div>
     )
