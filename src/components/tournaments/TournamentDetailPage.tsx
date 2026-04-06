@@ -125,9 +125,11 @@ function PlayerWithFlag({
 function GroupTooltip({
   data,
   embedded,
+  locale,
 }: {
   data: GroupPopoverData;
   embedded: boolean;
+  locale?: string;
 }) {
   return (
     <div className="absolute left-0 top-[-12px] z-30 w-[min(760px,calc(100vw-2rem))] -translate-y-full rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
@@ -174,7 +176,7 @@ function GroupTooltip({
                   </td>
                   <td className="px-2 py-1.5 text-xs text-slate-600">
                     {match.dateTime
-                      ? new Date(match.dateTime).toLocaleDateString("el-GR")
+                      ? new Date(match.dateTime).toLocaleDateString(locale)
                       : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center font-semibold">
@@ -219,7 +221,7 @@ function GroupTooltip({
                   </td>
                   <td className="px-2 py-1.5 text-xs text-slate-600">
                     {match.dateTime
-                      ? new Date(match.dateTime).toLocaleDateString("el-GR")
+                      ? new Date(match.dateTime).toLocaleDateString(locale)
                       : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center font-semibold">
@@ -428,20 +430,24 @@ type TournamentLiveScreensResponse = {
   error?: string;
 };
 
-const formatDate = (value: string | null) => {
+const formatDate = (value: string | null, locale?: string) => {
   if (!value) return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString("el-GR", {
+  return parsed.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 };
 
-const formatDateRange = (start: string | null, end: string | null) => {
-  const startText = formatDate(start);
-  const endText = formatDate(end);
+const formatDateRange = (
+  start: string | null,
+  end: string | null,
+  locale?: string,
+) => {
+  const startText = formatDate(start, locale);
+  const endText = formatDate(end, locale);
   if (startText && endText) {
     return startText === endText ? startText : `${startText} - ${endText}`;
   }
@@ -605,8 +611,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     summary.season,
     false,
   );
+  const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const stageCount = summary.stages.length;
-  const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
+  const scheduleLabel = formatDateRange(
+    summary.startDate,
+    summary.endDate,
+    browserLocale ?? undefined,
+  );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const venueMetaParts = useMemo(() => {
     const uniquePush = (parts: string[], value: string) => {
@@ -754,6 +765,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     summary.clubDocumentId ||
     eventLiveSessions.find((session) => session.clubId)?.clubId ||
     null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nextLocale =
+      window.navigator.languages?.find(
+        (value) => typeof value === "string" && value.trim(),
+      ) ||
+      window.navigator.language ||
+      null;
+    setBrowserLocale(nextLocale);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -2819,6 +2841,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     <GroupTooltip
                       data={groupPopoverBySessionId.get(session.sessionId)!}
                       embedded={embedded}
+                      locale={browserLocale ?? undefined}
                     />
                   ) : null}
                   <div
