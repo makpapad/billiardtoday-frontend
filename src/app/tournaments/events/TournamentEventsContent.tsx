@@ -133,6 +133,32 @@ function PlayerNameWithFlag({
   );
 }
 
+function resolveBracketWinners(params: {
+  sourceTag: string;
+  score1: number | null;
+  score2: number | null;
+  tieBreak1: number | null;
+  tieBreak2: number | null;
+}) {
+  const { sourceTag, score1, score2, tieBreak1, tieBreak2 } = params;
+
+  if (sourceTag === "ff-2") return { winner1: true, winner2: false };
+  if (sourceTag === "ff-1") return { winner1: false, winner2: true };
+  if (sourceTag === "double-ff") return { winner1: false, winner2: false };
+
+  if (score1 !== null && score2 !== null) {
+    if (score1 > score2) return { winner1: true, winner2: false };
+    if (score2 > score1) return { winner1: false, winner2: true };
+  }
+
+  if (tieBreak1 !== null && tieBreak2 !== null) {
+    if (tieBreak1 > tieBreak2) return { winner1: true, winner2: false };
+    if (tieBreak2 > tieBreak1) return { winner1: false, winner2: true };
+  }
+
+  return { winner1: false, winner2: false };
+}
+
 function getPreviewPlayerLabel(player: {
   name?: string | null;
   nativeName?: string | null;
@@ -1221,36 +1247,51 @@ export function TournamentEventsContent({
           const p2 = normalizeBracketPlayer(
             (m as { player2?: unknown }).player2,
           );
+          const score1 =
+            toNumber(
+              (
+                m as {
+                  player1_points?: unknown;
+                  player1_match_points?: unknown;
+                }
+              ).player1_points,
+            ) ??
+            toNumber(
+              (m as { player1_match_points?: unknown }).player1_match_points,
+            );
+          const score2 =
+            toNumber(
+              (
+                m as {
+                  player2_points?: unknown;
+                  player2_match_points?: unknown;
+                }
+              ).player2_points,
+            ) ??
+            toNumber(
+              (m as { player2_match_points?: unknown }).player2_match_points,
+            );
+          const tieBreak1 = toNumber(
+            (m as { player1_tie_break?: unknown }).player1_tie_break,
+          );
+          const tieBreak2 = toNumber(
+            (m as { player2_tie_break?: unknown }).player2_tie_break,
+          );
+          const { winner1, winner2 } = resolveBracketWinners({
+            sourceTag: typeof sourceTag === "string" ? sourceTag : "",
+            score1,
+            score2,
+            tieBreak1,
+            tieBreak2,
+          });
           return {
             id: String((m as { id?: unknown }).id ?? ""),
             player1: p1.name || "",
             player2: p2.name || "",
             player1Country: p1.country,
             player2Country: p2.country,
-            score1:
-              toNumber(
-                (
-                  m as {
-                    player1_points?: unknown;
-                    player1_match_points?: unknown;
-                  }
-                ).player1_points,
-              ) ??
-              toNumber(
-                (m as { player1_match_points?: unknown }).player1_match_points,
-              ),
-            score2:
-              toNumber(
-                (
-                  m as {
-                    player2_points?: unknown;
-                    player2_match_points?: unknown;
-                  }
-                ).player2_points,
-              ) ??
-              toNumber(
-                (m as { player2_match_points?: unknown }).player2_match_points,
-              ),
+            score1,
+            score2,
             innings1: toNumber(
               (m as { player1_innings?: unknown }).player1_innings,
             ),
@@ -1269,12 +1310,8 @@ export function TournamentEventsContent({
             matchPoints2: toNumber(
               (m as { player2_match_points?: unknown }).player2_match_points,
             ),
-            tieBreak1: toNumber(
-              (m as { player1_tie_break?: unknown }).player1_tie_break,
-            ),
-            tieBreak2: toNumber(
-              (m as { player2_tie_break?: unknown }).player2_tie_break,
-            ),
+            tieBreak1,
+            tieBreak2,
             date:
               typeof (m as { date_time?: unknown }).date_time === "string"
                 ? (m as { date_time: string }).date_time
@@ -1287,14 +1324,8 @@ export function TournamentEventsContent({
             byeBottom: sourceTag === "bye-2",
             ffTop: sourceTag === "ff-1" || sourceTag === "double-ff",
             ffBottom: sourceTag === "ff-2" || sourceTag === "double-ff",
-            winner1:
-              sourceTag === "ff-2" ||
-              ((toNumber((m as { player1_points?: unknown }).player1_points) ?? -1) >
-                (toNumber((m as { player2_points?: unknown }).player2_points) ?? -1)),
-            winner2:
-              sourceTag === "ff-1" ||
-              ((toNumber((m as { player2_points?: unknown }).player2_points) ?? -1) >
-                (toNumber((m as { player1_points?: unknown }).player1_points) ?? -1)),
+            winner1,
+            winner2,
           };
         }),
       };
@@ -1413,6 +1444,29 @@ export function TournamentEventsContent({
             const p2FlagSrc = p2.country
               ? getCountryFlagCdnUrl(p2.country, 40)
               : null;
+            const score1 =
+              toNumber((m as { player1_points?: unknown }).player1_points) ??
+              toNumber((m as { player1_match_points?: unknown }).player1_match_points);
+            const score2 =
+              toNumber((m as { player2_points?: unknown }).player2_points) ??
+              toNumber((m as { player2_match_points?: unknown }).player2_match_points);
+            const tieBreak1 = toNumber(
+              (m as { player1_tie_break?: unknown }).player1_tie_break,
+            );
+            const tieBreak2 = toNumber(
+              (m as { player2_tie_break?: unknown }).player2_tie_break,
+            );
+            const sourceTag =
+              typeof (m as { source?: unknown }).source === "string"
+                ? ((m as { source: string }).source as string)
+                : "";
+            const { winner1, winner2 } = resolveBracketWinners({
+              sourceTag,
+              score1,
+              score2,
+              tieBreak1,
+              tieBreak2,
+            });
             return {
               id: String((m as { id?: unknown }).id ?? ""),
               matchNumber:
@@ -1438,20 +1492,8 @@ export function TournamentEventsContent({
               player2Country: p2.country,
               player1FlagSrc: p1FlagSrc,
               player2FlagSrc: p2FlagSrc,
-              score1:
-                toNumber(
-                  (m as { player1_points?: unknown }).player1_points,
-                ) ??
-                toNumber(
-                  (m as { player1_match_points?: unknown }).player1_match_points,
-                ),
-              score2:
-                toNumber(
-                  (m as { player2_points?: unknown }).player2_points,
-                ) ??
-                toNumber(
-                  (m as { player2_match_points?: unknown }).player2_match_points,
-                ),
+              score1,
+              score2,
               innings1: toNumber(
                 (m as { player1_innings?: unknown }).player1_innings,
               ),
@@ -1476,28 +1518,14 @@ export function TournamentEventsContent({
               matchPoints2: toNumber(
                 (m as { player2_match_points?: unknown }).player2_match_points,
               ),
-              tieBreak1: toNumber(
-                (m as { player1_tie_break?: unknown }).player1_tie_break,
-              ),
-              tieBreak2: toNumber(
-                (m as { player2_tie_break?: unknown }).player2_tie_break,
-              ),
+              tieBreak1,
+              tieBreak2,
               dateTime:
                 typeof (m as { date_time?: unknown }).date_time === "string"
                   ? (m as { date_time: string }).date_time
                   : null,
-              winner1:
-                String((m as { source?: unknown }).source ?? "") === "ff-2" ||
-                (toNumber((m as { player1_points?: unknown }).player1_points) ??
-                  -1) >
-                  (toNumber((m as { player2_points?: unknown }).player2_points) ??
-                    -1),
-              winner2:
-                String((m as { source?: unknown }).source ?? "") === "ff-1" ||
-                (toNumber((m as { player2_points?: unknown }).player2_points) ??
-                  -1) >
-                  (toNumber((m as { player1_points?: unknown }).player1_points) ??
-                    -1),
+              winner1,
+              winner2,
             };
           }),
       }));
