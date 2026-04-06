@@ -583,9 +583,7 @@ const buildPlaceholderSideLabel = (
   const sourceNodeLabel = matchNodeLabelByNumber.get(resolvedMatchNumber);
   if (
     sourceNodeLabel &&
-    (sourceNodeLabel === "FINAL" ||
-      sourceNodeLabel.startsWith("QUAL ") ||
-      sourceNodeLabel.startsWith("L16"))
+    (sourceNodeLabel === "FINAL" || sourceNodeLabel.startsWith("QUAL "))
   ) {
     return sourceNodeLabel;
   }
@@ -2577,7 +2575,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         <th className="px-4 py-3 text-center font-semibold">Date</th>
                         <th className="px-4 py-3 text-center font-semibold">Time</th>
                         <th className="px-4 py-3 text-center font-semibold">Table</th>
-                        <th className="px-6 py-3 text-left font-semibold">Players</th>
+                        <th className="px-6 py-3 text-center font-semibold">Players</th>
                         {timetableViewMode === "matches" ? (
                           <>
                             <th className="px-4 py-3 text-center font-semibold">Group</th>
@@ -2664,9 +2662,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{timeLabel}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-center align-middle">{slot.tableLabel || "-"}</td>
                             <td className="px-6 py-3 align-middle">
-                              <div className="flex flex-col items-start gap-1 pl-2 text-left">
+                              <div className="flex flex-col items-center gap-1 text-center">
                                 {slot.slotType === "training" && slot.trainingPlayerName ? (
-                                  <span className="grid grid-cols-[20px_minmax(0,max-content)] items-center justify-start gap-2 font-semibold text-slate-950">
+                                  <span className="grid grid-cols-[20px_minmax(0,max-content)] items-center justify-center gap-2 font-semibold text-slate-950">
                                     <span className="flex h-4 w-5 items-center justify-center">
                                       {trainingPlayerFlag ? (
                                         <img
@@ -2678,7 +2676,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                         />
                                       ) : null}
                                     </span>
-                                    <span className="text-left">{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
+                                    <span className="text-center">{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
                                   </span>
                                 ) : hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
@@ -2711,7 +2709,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                                     </span>
                                   </div>
                                 ) : publicMatchLabel ? (
-                                  <span className="w-full pl-0 text-center font-medium text-slate-500">
+                                  <span className="w-full text-center font-medium text-slate-500">
                                     {highlightText(
                                       publicMatchLabel,
                                       timetableSearchQuery,
