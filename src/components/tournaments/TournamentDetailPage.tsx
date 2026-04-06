@@ -603,23 +603,63 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const venueMetaParts = useMemo(() => {
-    const rawParts = [
-      summary.venueCountry ?? summary.clubCountry,
-      summary.venueCity ?? summary.clubCity,
-      summary.venueName ?? summary.clubName,
-    ]
-      .map((value) => String(value || "").trim())
-      .filter(Boolean);
+    const uniquePush = (parts: string[], value: string) => {
+      const normalizedValue = value.trim();
+      if (!normalizedValue) {
+        return;
+      }
 
-    return rawParts.filter(
-      (value, index) =>
-        rawParts.findIndex(
-          (candidate) =>
-            candidate.localeCompare(value, undefined, {
-              sensitivity: "accent",
-            }) === 0,
-        ) === index,
-    );
+      const exists = parts.some(
+        (candidate) =>
+          candidate.localeCompare(normalizedValue, undefined, {
+            sensitivity: "accent",
+          }) === 0,
+      );
+
+      if (!exists) {
+        parts.push(normalizedValue);
+      }
+    };
+
+    const country = String(
+      summary.venueCountry ?? summary.clubCountry ?? "",
+    ).trim();
+    const city = String(summary.venueCity ?? summary.clubCity ?? "").trim();
+    const venueName = String(summary.venueName ?? summary.clubName ?? "").trim();
+
+    const cityParts: string[] = [];
+    if (city) {
+      const countryPattern = country
+        ? new RegExp(`\\b${country.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi")
+        : null;
+      const cityWithoutCountry = (countryPattern ? city.replace(countryPattern, " ") : city)
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const segmentedCityParts = cityWithoutCountry
+        .split(/\s*[.,/|•-]\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      if (segmentedCityParts.length > 1) {
+        segmentedCityParts.forEach((part) => uniquePush(cityParts, part));
+      } else if (cityWithoutCountry) {
+        const athensMatch = cityWithoutCountry.match(/^(.*?)(?:\s+)?(Athens)$/i);
+        if (athensMatch) {
+          uniquePush(cityParts, athensMatch[2]);
+          uniquePush(cityParts, athensMatch[1]);
+        } else {
+          uniquePush(cityParts, cityWithoutCountry);
+        }
+      }
+    }
+
+    const resolvedParts: string[] = [];
+    uniquePush(resolvedParts, country);
+    cityParts.forEach((part) => uniquePush(resolvedParts, part));
+    uniquePush(resolvedParts, venueName);
+
+    return resolvedParts;
   }, [
     summary.clubCity,
     summary.clubCountry,
@@ -2857,15 +2897,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   {summary.title}
                 </h1>
                 {venueMetaParts.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white/68 sm:text-sm">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold tracking-[0.18em] text-white/58 sm:text-xs">
                     {venueMetaParts.map((part, index) => (
                       <span
                         key={`${part}-${index}`}
-                        className="inline-flex items-center gap-3"
+                        className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? (
-                          <span className="h-1 w-1 rounded-full bg-white/35" />
-                        ) : null}
+                        {index > 0 ? <span className="text-white/38">.</span> : null}
                         <span>{part}</span>
                       </span>
                     ))}
