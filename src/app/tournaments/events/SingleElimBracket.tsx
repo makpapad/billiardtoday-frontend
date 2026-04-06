@@ -6,10 +6,16 @@ export type BracketMatchView = {
     id: string
     player1: string
     player2: string
+    player1Country?: string | null
+    player2Country?: string | null
     score1: number | null
     score2: number | null
     innings1?: number | null
     innings2?: number | null
+    highRun1?: number | null
+    highRun2?: number | null
+    matchPoints1?: number | null
+    matchPoints2?: number | null
     tieBreak1?: number | null
     tieBreak2?: number | null
     date?: string | null
@@ -18,6 +24,8 @@ export type BracketMatchView = {
     byeBottom?: boolean
     ffTop?: boolean
     ffBottom?: boolean
+    winner1?: boolean
+    winner2?: boolean
 }
 
 export type BracketRoundView = {
@@ -68,7 +76,13 @@ const formatDateTime = (iso?: string | null): string => {
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`
 }
 
-export default function SingleElimBracket({ rounds }: { rounds: BracketRoundView[] }) {
+export default function SingleElimBracket({
+    rounds,
+    onMatchClick,
+}: {
+    rounds: BracketRoundView[]
+    onMatchClick?: (matchId: string) => void
+}) {
     const scale = rounds.length >= 4 ? 0.75 : 1
 
     const getMatchTop = (roundIndex: number, matchIndex: number) => {
@@ -205,7 +219,9 @@ export default function SingleElimBracket({ rounds }: { rounds: BracketRoundView
                                     height: MATCH_HEIGHT,
                                 }}
                             >
-                                <div
+                                <button
+                                    type="button"
+                                    onClick={() => onMatchClick?.(m.id)}
                                     style={{
                                         width: '100%',
                                         height: '100%',
@@ -217,6 +233,7 @@ export default function SingleElimBracket({ rounds }: { rounds: BracketRoundView
                                         textAlign: 'left',
                                         position: 'relative',
                                         overflow: 'hidden',
+                                        cursor: onMatchClick ? 'pointer' : 'default',
                                     }}
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
@@ -264,7 +281,7 @@ export default function SingleElimBracket({ rounds }: { rounds: BracketRoundView
                                             {typeof m.tieBreak2 === 'number' ? ` | ${m.tieBreak2}` : ''}
                                         </span>
                                     </div>
-                                </div>
+                                </button>
                             </div>
                         )
                     }),

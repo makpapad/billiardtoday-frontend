@@ -463,6 +463,9 @@ export function TournamentEventsContent({
   const [deExpandedMatchId, setDeExpandedMatchId] = useState<string | null>(
     null,
   );
+  const [selectedBracketMatchId, setSelectedBracketMatchId] = useState<string | null>(
+    null,
+  );
   const [liveSessions, setLiveSessions] = useState<EventLiveSession[]>([]);
   const [brMatchesByStage, setBrMatchesByStage] = useState<
     Record<string, unknown[]>
@@ -1222,6 +1225,8 @@ export function TournamentEventsContent({
             id: String((m as { id?: unknown }).id ?? ""),
             player1: p1.name || "",
             player2: p2.name || "",
+            player1Country: p1.country,
+            player2Country: p2.country,
             score1:
               toNumber(
                 (
@@ -1252,6 +1257,18 @@ export function TournamentEventsContent({
             innings2: toNumber(
               (m as { player2_innings?: unknown }).player2_innings,
             ),
+            highRun1: toNumber(
+              (m as { player1_high_run?: unknown }).player1_high_run,
+            ),
+            highRun2: toNumber(
+              (m as { player2_high_run?: unknown }).player2_high_run,
+            ),
+            matchPoints1: toNumber(
+              (m as { player1_match_points?: unknown }).player1_match_points,
+            ),
+            matchPoints2: toNumber(
+              (m as { player2_match_points?: unknown }).player2_match_points,
+            ),
             tieBreak1: toNumber(
               (m as { player1_tie_break?: unknown }).player1_tie_break,
             ),
@@ -1270,11 +1287,30 @@ export function TournamentEventsContent({
             byeBottom: sourceTag === "bye-2",
             ffTop: sourceTag === "ff-1" || sourceTag === "double-ff",
             ffBottom: sourceTag === "ff-2" || sourceTag === "double-ff",
+            winner1:
+              sourceTag === "ff-2" ||
+              ((toNumber((m as { player1_points?: unknown }).player1_points) ?? -1) >
+                (toNumber((m as { player2_points?: unknown }).player2_points) ?? -1)),
+            winner2:
+              sourceTag === "ff-1" ||
+              ((toNumber((m as { player2_points?: unknown }).player2_points) ?? -1) >
+                (toNumber((m as { player1_points?: unknown }).player1_points) ?? -1)),
           };
         }),
       };
     });
   }, [activeStage, brMatchesByStage, normalizeBracketPlayer]);
+
+  const selectedBracketMatch = useMemo(() => {
+    if (!selectedBracketMatchId) return null;
+    for (const round of activeBracketRounds) {
+      const found = round.matches.find((match) => match.id === selectedBracketMatchId);
+      if (found) {
+        return { roundLabel: round.label, match: found };
+      }
+    }
+    return null;
+  }, [activeBracketRounds, selectedBracketMatchId]);
 
   const activeDoubleEliminationRounds = useMemo(() => {
     if (!activeStage || activeStage.stageType !== "double_elimination") {
@@ -1478,6 +1514,7 @@ export function TournamentEventsContent({
     setDeBracketType("winners");
     setDeSelectedRound("all");
     setDeExpandedMatchId(null);
+    setSelectedBracketMatchId(null);
   }, [activeStage?.documentId]);
 
   const eventInfo = useMemo(() => {
@@ -2190,6 +2227,7 @@ export function TournamentEventsContent({
                                       ) : activeBracketRounds.length > 0 ? (
                                         <SingleElimBracket
                                           rounds={activeBracketRounds}
+                                          onMatchClick={setSelectedBracketMatchId}
                                         />
                                       ) : (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -2978,6 +3016,122 @@ export function TournamentEventsContent({
             )}
         </div>
       </div>
+      {selectedBracketMatch ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedBracketMatchId(null)}
+        >
+          <div
+            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+              <div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Match Details
+                </div>
+                <div className="text-xs uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                  {selectedBracketMatch.roundLabel}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBracketMatchId(null)}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Close
+              </button>
+            </div>
+            <div className="overflow-x-auto p-5">
+              <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div>Player</div>
+                <div className="text-center">Winner</div>
+                <div className="text-center">Points</div>
+                <div className="text-center">Innings</div>
+                <div className="text-center">Avg</div>
+                <div className="text-center">H.R.1</div>
+                <div className="text-center">H.R.2</div>
+                <div className="text-center">MP</div>
+                <div className="text-center">T.B.</div>
+              </div>
+              <div className="mt-3 space-y-2">
+                {[
+                  {
+                    name:
+                      selectedBracketMatch.match.player1 ||
+                      (selectedBracketMatch.match.byeTop ? "BYE" : "Unknown player"),
+                    winner: selectedBracketMatch.match.winner1,
+                    score: selectedBracketMatch.match.ffTop
+                      ? "F.F."
+                      : (selectedBracketMatch.match.score1 ?? "-"),
+                    innings: selectedBracketMatch.match.innings1,
+                    avg:
+                      selectedBracketMatch.match.score1 !== null &&
+                      selectedBracketMatch.match.innings1 &&
+                      selectedBracketMatch.match.innings1 > 0
+                        ? Math.trunc(
+                            (selectedBracketMatch.match.score1 /
+                              selectedBracketMatch.match.innings1) *
+                              1000,
+                          ) / 1000
+                        : null,
+                    hr1: selectedBracketMatch.match.highRun1,
+                    hr2: null,
+                    mp: selectedBracketMatch.match.matchPoints1,
+                    tb: selectedBracketMatch.match.tieBreak1,
+                  },
+                  {
+                    name:
+                      selectedBracketMatch.match.player2 ||
+                      (selectedBracketMatch.match.byeBottom ? "BYE" : "Unknown player"),
+                    winner: selectedBracketMatch.match.winner2,
+                    score: selectedBracketMatch.match.ffBottom
+                      ? "F.F."
+                      : (selectedBracketMatch.match.score2 ?? "-"),
+                    innings: selectedBracketMatch.match.innings2,
+                    avg:
+                      selectedBracketMatch.match.score2 !== null &&
+                      selectedBracketMatch.match.innings2 &&
+                      selectedBracketMatch.match.innings2 > 0
+                        ? Math.trunc(
+                            (selectedBracketMatch.match.score2 /
+                              selectedBracketMatch.match.innings2) *
+                              1000,
+                          ) / 1000
+                        : null,
+                    hr1: selectedBracketMatch.match.highRun2,
+                    hr2: null,
+                    mp: selectedBracketMatch.match.matchPoints2,
+                    tb: selectedBracketMatch.match.tieBreak2,
+                  },
+                ].map((row) => (
+                  <div
+                    key={row.name}
+                    className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 rounded-xl border border-gray-100 px-3 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200"
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">
+                      {row.name}
+                    </div>
+                    <div className="text-center">{row.winner ? "Yes" : "-"}</div>
+                    <div className="text-center">{row.score}</div>
+                    <div className="text-center">{row.innings ?? "-"}</div>
+                    <div className="text-center">{row.avg ?? "-"}</div>
+                    <div className="text-center">{row.hr1 ?? "-"}</div>
+                    <div className="text-center">{row.hr2 ?? "-"}</div>
+                    <div className="text-center">{row.mp ?? "-"}</div>
+                    <div className="text-center">{row.tb ?? "-"}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 border-t border-gray-100 pt-3 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                {selectedBracketMatch.match.date
+                  ? `Date: ${new Date(selectedBracketMatch.match.date).toLocaleString("el-GR")}`
+                  : "Date: -"}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
