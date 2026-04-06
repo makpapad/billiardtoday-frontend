@@ -579,9 +579,17 @@ const buildPlaceholderSideLabel = (
   if (!role || !Number.isFinite(matchNumber ?? NaN)) return null;
   const normalizedRole = role.toLowerCase();
   if (normalizedRole === "qual") return `QUAL ${matchNumber}`;
-  const sourceNodeLabel = matchNodeLabelByNumber.get(Number(matchNumber));
-  if (sourceNodeLabel) return sourceNodeLabel;
-  return `${normalizedRole === "loser" ? "Loser" : "Winner"} M${matchNumber}`;
+  const resolvedMatchNumber = Number(matchNumber);
+  const sourceNodeLabel = matchNodeLabelByNumber.get(resolvedMatchNumber);
+  if (
+    sourceNodeLabel &&
+    (sourceNodeLabel === "FINAL" ||
+      sourceNodeLabel.startsWith("QUAL ") ||
+      sourceNodeLabel.startsWith("L16"))
+  ) {
+    return sourceNodeLabel;
+  }
+  return `${normalizedRole === "loser" ? "Loser" : "Winner"} from Match ${resolvedMatchNumber}`;
 };
 
 const resolveMediaUrl = (url: string | null) => {
@@ -2627,7 +2635,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         const hasPlayerGrid =
                           !isFinalPlaceholderRow &&
                           (hasResolvedPlayers ||
-                            (!placeholderLabel && Boolean(leftLabel || rightLabel)));
+                            Boolean(leftLabel || rightLabel));
                         const leftResolved = Boolean(slot.matchPlayer1Name);
                         const rightResolved = Boolean(slot.matchPlayer2Name);
                         const matchPlayer1Flag = leftResolved
