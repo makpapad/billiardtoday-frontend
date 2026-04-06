@@ -60,6 +60,7 @@ function isBracketStageType(stageType: string | null | undefined): boolean {
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   preferredStageDocumentId?: string | null;
+  timezoneOffsetMinutes?: number | null;
   onStageSelect?: (stageDocumentId: string) => void;
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
@@ -496,8 +497,13 @@ function buildGroupSlotPlaceholderLabel(
   return num !== null ? `${prefix} Match ${num}` : prefix;
 }
 
-function formatDateTimeForMatchCell(value: string | null): string {
+function formatDateTimeForMatchCell(
+  value: string | null,
+  offsetMinutes?: number | null,
+): string {
   if (!value) return "-";
+  const shifted = formatDateTimeWithOffset(value, offsetMinutes);
+  if (shifted) return `${shifted.date}\n${shifted.time}`;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   const dateLabel = parsed.toLocaleDateString("el-GR", {
@@ -510,6 +516,30 @@ function formatDateTimeForMatchCell(value: string | null): string {
     minute: "2-digit",
   });
   return `${dateLabel}\n${timeLabel}`;
+}
+
+function formatDateTimeWithOffset(
+  value: string | null,
+  offsetMinutes: number | null | undefined,
+): { date: string; time: string } | null {
+  if (!value || offsetMinutes === null || offsetMinutes === undefined)
+    return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const shifted = new Date(parsed.getTime() + offsetMinutes * 60 * 1000);
+  return {
+    date: shifted.toLocaleDateString("el-GR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "UTC",
+    }),
+    time: shifted.toLocaleTimeString("el-GR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    }),
+  };
 }
 
 function hasMeaningfulStageResult(
@@ -793,6 +823,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 export function TournamentEventsContent({
   eventIdOverride = null,
   preferredStageDocumentId = null,
+  timezoneOffsetMinutes = null,
   onStageSelect,
   showPublishedFinalResults = false,
   showTimetable = true,
@@ -2278,12 +2309,20 @@ export function TournamentEventsContent({
                             <tbody>
                               {timetableSlots.map((slot) => {
                                 const parsedDateTime = slot.dateTime ? new Date(slot.dateTime) : null;
+                                const shiftedSlotDateTime = formatDateTimeWithOffset(
+                                  slot.dateTime,
+                                  timezoneOffsetMinutes,
+                                );
                                 const dateLabel =
-                                  slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
+                                  shiftedSlotDateTime
+                                    ? shiftedSlotDateTime.date
+                                    : slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
                                     ? formatDateForTable(slot.dateTime)
                                     : slot.date || "-";
                                 const timeLabel =
-                                  slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
+                                  shiftedSlotDateTime
+                                    ? shiftedSlotDateTime.time
+                                    : slot.dateTime && parsedDateTime && !Number.isNaN(parsedDateTime.getTime())
                                     ? parsedDateTime.toLocaleTimeString("el-GR", {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -2654,12 +2693,11 @@ export function TournamentEventsContent({
                                                                     </span>
                                                                   </div>
                                                                 </div>
-                                                                <div className="text-right text-[11px] text-slate-500 dark:text-slate-400">
+                                                                <div className="whitespace-pre-line text-right text-[11px] text-slate-500 dark:text-slate-400">
                                                                   {match.dateTime
-                                                                    ? new Date(
+                                                                    ? formatDateTimeForMatchCell(
                                                                         match.dateTime,
-                                                                      ).toLocaleString(
-                                                                        "el-GR",
+                                                                        timezoneOffsetMinutes,
                                                                       )
                                                                     : "Date"}
                                                                 </div>
@@ -3651,6 +3689,7 @@ export function TournamentEventsContent({
                                                                         <span className="whitespace-pre-line text-center">
                                                                           {formatDateTimeForMatchCell(
                                                                             match.dateTime,
+                                                                            timezoneOffsetMinutes,
                                                                           )}
                                                                         </span>
                                                                       </div>
@@ -4057,7 +4096,13 @@ export function TournamentEventsContent({
               </div>
               <div className="mt-4 border-t border-gray-100 pt-3 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
                 {selectedBracketMatch.match.date
-                  ? `Date: ${new Date(selectedBracketMatch.match.date).toLocaleString("el-GR")}`
+                  ? (() => {
+                      const shifted = formatDateTimeWithOffset(
+                        selectedBracketMatch.match.date,
+                        timezoneOffsetMinutes,
+                      );
+                      return `Date: ${shifted ? `${shifted.date}, ${shifted.time}` : new Date(selectedBracketMatch.match.date).toLocaleString("el-GR")}`;
+                    })()
                   : "Date: -"}
               </div>
             </div>

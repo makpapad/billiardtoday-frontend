@@ -467,6 +467,8 @@ const normalizeLookupText = (value: string | null | undefined) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+const PUBLIC_TIMEZONE_STORAGE_KEY = "bt-public-timezone-offset-minutes";
+
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
@@ -2031,8 +2033,27 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [timetableSlots]);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
+      return;
+    }
+    const stored = window.localStorage.getItem(PUBLIC_TIMEZONE_STORAGE_KEY);
+    const parsed = stored !== null ? Number(stored) : Number.NaN;
+    if (Number.isFinite(parsed)) {
+      setSelectedTimezoneOffsetMinutes(parsed);
+      return;
+    }
     setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
   }, [eventTimezoneOffsetMinutes]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (selectedTimezoneOffsetMinutes === null) return;
+    window.localStorage.setItem(
+      PUBLIC_TIMEZONE_STORAGE_KEY,
+      String(selectedTimezoneOffsetMinutes),
+    );
+  }, [selectedTimezoneOffsetMinutes]);
 
   const timezoneOptions = useMemo(
     () =>
@@ -2643,6 +2664,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
           eventIdOverride={summary.documentId}
           preferredStageDocumentId={selectedStageDocumentId}
+          timezoneOffsetMinutes={
+            selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
+          }
           onStageSelect={(stageDocumentId) => {
             setTournamentPanelMode("stages");
             setSelectedStageDocumentId(stageDocumentId);
