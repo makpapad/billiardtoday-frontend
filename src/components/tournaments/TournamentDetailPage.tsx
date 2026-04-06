@@ -602,6 +602,32 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(summary.startDate, summary.endDate);
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
+  const venueMetaParts = useMemo(() => {
+    const rawParts = [
+      summary.venueCountry ?? summary.clubCountry,
+      summary.venueCity ?? summary.clubCity,
+      summary.venueName ?? summary.clubName,
+    ]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+
+    return rawParts.filter(
+      (value, index) =>
+        rawParts.findIndex(
+          (candidate) =>
+            candidate.localeCompare(value, undefined, {
+              sensitivity: "accent",
+            }) === 0,
+        ) === index,
+    );
+  }, [
+    summary.clubCity,
+    summary.clubCountry,
+    summary.clubName,
+    summary.venueCity,
+    summary.venueCountry,
+    summary.venueName,
+  ]);
   const finalStageDocumentId =
     summary.stages.find((stage) => stage.isFinal)?.documentId ??
     summary.stages[summary.stages.length - 1]?.documentId ??
@@ -2830,6 +2856,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
                   {summary.title}
                 </h1>
+                {venueMetaParts.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white/68 sm:text-sm">
+                    {venueMetaParts.map((part, index) => (
+                      <span
+                        key={`${part}-${index}`}
+                        className="inline-flex items-center gap-3"
+                      >
+                        {index > 0 ? (
+                          <span className="h-1 w-1 rounded-full bg-white/35" />
+                        ) : null}
+                        <span>{part}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <p className="max-w-3xl text-sm leading-7 text-white/75 sm:text-base">
                   Follow every stage, match, and final standing in one polished
                   tournament view built for players, organizers, and fans.

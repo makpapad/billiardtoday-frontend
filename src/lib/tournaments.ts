@@ -14,6 +14,12 @@ export type TournamentEventSummary = {
   gameType: string | null;
   tournamentTitle: string | null;
   clubDocumentId: string | null;
+  clubName: string | null;
+  clubCity: string | null;
+  clubCountry: string | null;
+  venueName: string | null;
+  venueCity: string | null;
+  venueCountry: string | null;
   organizerType: string | null;
   organizerLogoUrl: string | null;
   organizerLogoName: string | null;
@@ -214,6 +220,12 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][1]", "organizer_type");
       params.set("populate[tournament][fields][2]", "startDate");
       params.set("populate[tournament][fields][3]", "endDate");
+      params.set("populate[tournament][populate][venue][fields][0]", "name");
+      params.set("populate[tournament][populate][venue][fields][1]", "city");
+      params.set("populate[tournament][populate][venue][fields][2]", "country");
+      params.set("populate[tournament][populate][club][fields][1]", "name");
+      params.set("populate[tournament][populate][club][fields][2]", "city");
+      params.set("populate[tournament][populate][club][fields][3]", "country");
       params.set("populate[tournament][populate][club][fields][0]", "documentId");
       params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
@@ -253,6 +265,7 @@ const fetchTournamentEventSummaryById = async (
   const event = source as Record<string, unknown>;
   const tournamentSource = unwrapEntitySource(event.tournament);
   const tournamentClubSource = unwrapEntitySource(tournamentSource.club);
+  const venueSource = unwrapEntitySource(tournamentSource.venue);
   const federationSource = unwrapEntitySource(tournamentClubSource.federation);
   const clubLogoSource = unwrapEntitySource(tournamentClubSource.logo);
   const federationLogoSource = unwrapEntitySource(federationSource.logo);
@@ -296,6 +309,14 @@ const fetchTournamentEventSummaryById = async (
     gameType: readString(event.game_type),
     tournamentTitle: readString((tournamentSource as Record<string, unknown>).title),
     clubDocumentId: readString((tournamentClubSource as Record<string, unknown>).documentId),
+    clubName:
+      readString((tournamentClubSource as Record<string, unknown>).name) ??
+      readString((tournamentClubSource as Record<string, unknown>).title),
+    clubCity: readString((tournamentClubSource as Record<string, unknown>).city),
+    clubCountry: readString((tournamentClubSource as Record<string, unknown>).country),
+    venueName: readString((venueSource as Record<string, unknown>).name),
+    venueCity: readString((venueSource as Record<string, unknown>).city),
+    venueCountry: readString((venueSource as Record<string, unknown>).country),
     organizerType,
     organizerLogoUrl: readString((organizerLogoSource as Record<string, unknown>).url),
     organizerLogoName: readString((organizerLogoSource as Record<string, unknown>).name),
