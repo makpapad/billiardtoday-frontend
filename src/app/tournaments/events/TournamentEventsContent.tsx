@@ -1109,13 +1109,71 @@ export function TournamentEventsContent({
     const idByRoundAndNumber = new Map<string, Map<number, string>>();
     orderedLabels.forEach((label) => {
       const inner = new Map<number, string>();
-      const arr = (byRound.get(label) ?? [])
+      let arr = (byRound.get(label) ?? [])
         .slice()
         .sort(
           (a, b) =>
             (toNumber((a as { match_number?: unknown }).match_number) ?? 0) -
             (toNumber((b as { match_number?: unknown }).match_number) ?? 0),
         );
+
+      if ((label || "").toUpperCase().trim() === "F" && arr.length > 1) {
+        const onlyPrimaryFinal = arr.filter(
+          (m) =>
+            (toNumber((m as { match_number?: unknown }).match_number) ?? 0) <= 1,
+        );
+        arr =
+          onlyPrimaryFinal.length > 0
+            ? onlyPrimaryFinal.slice(0, 1)
+            : arr.slice(0, 1);
+      }
+
+      if (arr.length > 1) {
+        const byNumber = new Map<number, unknown>();
+        const scoreOf = (match: unknown) => {
+          const matchRecord =
+            match && typeof match === "object"
+              ? (match as Record<string, unknown>)
+              : {};
+          const p1 = normalizeBracketPlayer(matchRecord.player1);
+          const p2 = normalizeBracketPlayer(matchRecord.player2);
+          const s1 =
+            toNumber(matchRecord.player1_points) ??
+            toNumber(matchRecord.player1_match_points);
+          const s2 =
+            toNumber(matchRecord.player2_points) ??
+            toNumber(matchRecord.player2_match_points);
+          const hasScores = s1 !== null || s2 !== null;
+          const hasDate =
+            typeof matchRecord.date_time === "string" &&
+            matchRecord.date_time.trim().length > 0;
+          const source = typeof matchRecord.source === "string" ? matchRecord.source : "";
+          const hasForfeit =
+            source === "ff-1" || source === "ff-2" || source === "double-ff";
+          let score = 0;
+          if (p1.name && p2.name) score += 4;
+          if (hasScores) score += 3;
+          if (hasDate) score += 2;
+          if (hasForfeit) score += 1;
+          return score;
+        };
+
+        arr.forEach((match) => {
+          const number =
+            toNumber((match as { match_number?: unknown }).match_number) ?? 0;
+          const existing = byNumber.get(number);
+          if (!existing || scoreOf(match) >= scoreOf(existing)) {
+            byNumber.set(number, match);
+          }
+        });
+
+        arr = Array.from(byNumber.values()).sort(
+          (a, b) =>
+            (toNumber((a as { match_number?: unknown }).match_number) ?? 0) -
+            (toNumber((b as { match_number?: unknown }).match_number) ?? 0),
+        );
+      }
+
       arr.forEach((m) => {
         const num =
           toNumber((m as { match_number?: unknown }).match_number) ?? 0;
@@ -1129,13 +1187,24 @@ export function TournamentEventsContent({
     return orderedLabels.map((label, idx) => {
       const nextLabel = orderedLabels[idx + 1] || null;
       const nextMap = nextLabel ? idByRoundAndNumber.get(nextLabel) : undefined;
-      const arr = (byRound.get(label) ?? [])
+      let arr = (byRound.get(label) ?? [])
         .slice()
         .sort(
           (a, b) =>
             (toNumber((a as { match_number?: unknown }).match_number) ?? 0) -
             (toNumber((b as { match_number?: unknown }).match_number) ?? 0),
         );
+
+      if ((label || "").toUpperCase().trim() === "F" && arr.length > 1) {
+        const onlyPrimaryFinal = arr.filter(
+          (m) =>
+            (toNumber((m as { match_number?: unknown }).match_number) ?? 0) <= 1,
+        );
+        arr =
+          onlyPrimaryFinal.length > 0
+            ? onlyPrimaryFinal.slice(0, 1)
+            : arr.slice(0, 1);
+      }
 
       return {
         label,
