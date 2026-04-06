@@ -26,6 +26,8 @@ export type BracketMatchView = {
     ffBottom?: boolean
     winner1?: boolean
     winner2?: boolean
+    seedTop?: number | null
+    seedBottom?: number | null
 }
 
 export type BracketRoundView = {
@@ -76,6 +78,19 @@ const formatDateTime = (iso?: string | null): string => {
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`
 }
 
+const getFirstRoundSeeds = (matchCount: number): number[] => {
+    const size = matchCount * 2
+    const seedingPatterns: Record<number, number[]> = {
+        2: [1, 2],
+        4: [1, 4, 2, 3],
+        8: [1, 8, 4, 5, 2, 7, 3, 6],
+        16: [1, 16, 8, 9, 5, 12, 4, 13, 3, 14, 6, 11, 7, 10, 2, 15],
+        32: [1, 32, 16, 17, 8, 25, 9, 24, 5, 28, 12, 21, 4, 29, 13, 20, 6, 27, 11, 22, 3, 30, 14, 19, 7, 26, 10, 23, 15, 18, 2, 31],
+        64: [1, 64, 32, 33, 16, 49, 17, 48, 8, 57, 25, 40, 9, 56, 24, 41, 4, 61, 29, 36, 13, 52, 20, 45, 5, 60, 28, 37, 12, 53, 21, 44, 2, 63, 31, 34, 15, 50, 18, 47, 7, 58, 26, 39, 10, 55, 23, 42, 3, 62, 30, 35, 14, 51, 19, 46, 6, 59, 27, 38, 11, 54, 22, 43],
+    }
+    return seedingPatterns[size] || []
+}
+
 export default function SingleElimBracket({
     rounds,
     onMatchClick,
@@ -84,6 +99,10 @@ export default function SingleElimBracket({
     onMatchClick?: (matchId: string) => void
 }) {
     const scale = rounds.length >= 4 ? 0.75 : 1
+    const firstRoundSeeds = useMemo(
+        () => getFirstRoundSeeds(rounds[0]?.matches.length || 0),
+        [rounds],
+    )
 
     const getMatchTop = (roundIndex: number, matchIndex: number) => {
         const spacing = Math.pow(2, roundIndex)
@@ -140,6 +159,20 @@ export default function SingleElimBracket({
         })
         return items
     }, [rounds, layouts])
+
+    const resolvePlaceholder = (
+        roundIndex: number,
+        matchIndex: number,
+        slot: 1 | 2,
+        seedValue?: number | null,
+    ): string => {
+        if (typeof seedValue === 'number' && roundIndex === 0) {
+            return `QUAL ${seedValue}`
+        }
+        if (roundIndex === 0) return ''
+        const prevLabel = resolveRoundLabel(rounds[roundIndex - 1]?.label || `R${roundIndex}`)
+        return `W ${prevLabel} ${matchIndex * 2 + slot}`
+    }
 
     return (
         <div className="overflow-x-auto overflow-y-hidden">
@@ -206,6 +239,12 @@ export default function SingleElimBracket({
                         const hasBoth = s1 !== null && s2 !== null
                         const winnerTop = Boolean(m.winner1 ?? (hasBoth && s1 > s2))
                         const winnerBottom = Boolean(m.winner2 ?? (hasBoth && s2 > s1))
+                        const roundMatchIndex = round.matches.findIndex((candidate) => candidate.id === m.id)
+                        const isFirstRound = roundIdx === 0
+                        const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
+                        const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
+                        const topPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 1, m.seedTop ?? stdSeedTop ?? null)
+                        const bottomPlaceholder = resolvePlaceholder(roundIdx, roundMatchIndex, 2, m.seedBottom ?? stdSeedBottom ?? null)
 
                         return (
                             <div
@@ -238,7 +277,7 @@ export default function SingleElimBracket({
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
                                         <span
-                                            title={m.player1 || (m.byeTop ? 'BYE' : '')}
+                                            title={m.player1 || (m.byeTop ? 'BYE' : topPlaceholder)}
                                             style={{
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',
@@ -246,7 +285,7 @@ export default function SingleElimBracket({
                                                 color: winnerTop ? '#059669' : m.player1 ? '#111827' : '#6B7280',
                                             }}
                                         >
-                                            {m.player1 ? abbreviateName(m.player1) : m.byeTop ? 'BYE' : ''}
+                                            {m.player1 ? abbreviateName(m.player1) : m.byeTop ? 'BYE' : topPlaceholder}
                                         </span>
                                         <span>
                                             {m.ffTop ? 'F.F.' : s1 ?? ''}
@@ -265,7 +304,7 @@ export default function SingleElimBracket({
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
                                         <span
-                                            title={m.player2 || (m.byeBottom ? 'BYE' : '')}
+                                            title={m.player2 || (m.byeBottom ? 'BYE' : bottomPlaceholder)}
                                             style={{
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',
@@ -273,7 +312,7 @@ export default function SingleElimBracket({
                                                 color: winnerBottom ? '#059669' : m.player2 ? '#111827' : '#6B7280',
                                             }}
                                         >
-                                            {m.player2 ? abbreviateName(m.player2) : m.byeBottom ? 'BYE' : ''}
+                                            {m.player2 ? abbreviateName(m.player2) : m.byeBottom ? 'BYE' : bottomPlaceholder}
                                         </span>
                                         <span>
                                             {m.ffBottom ? 'F.F.' : s2 ?? ''}
