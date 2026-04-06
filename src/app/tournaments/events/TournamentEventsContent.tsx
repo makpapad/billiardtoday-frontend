@@ -219,6 +219,12 @@ function resolveBracketMatchPoints(params: {
   return { matchPoints1: null, matchPoints2: null };
 }
 
+function formatTruncatedAverage(value: number | null): string {
+  if (value === null || Number.isNaN(value)) return "-";
+  const truncated = Math.trunc(value * 1000) / 1000;
+  return truncated.toFixed(3);
+}
+
 function getPreviewPlayerLabel(player: {
   name?: string | null;
   nativeName?: string | null;
@@ -3212,7 +3218,11 @@ export function TournamentEventsContent({
                     <div className="text-center">{row.winner ? "Yes" : "-"}</div>
                     <div className="text-center">{row.score}</div>
                     <div className="text-center">{row.innings ?? "-"}</div>
-                    <div className="text-center">{row.avg ?? "-"}</div>
+                    <div className="text-center">
+                      {typeof row.avg === "number"
+                        ? formatTruncatedAverage(row.avg)
+                        : "-"}
+                    </div>
                     <div className="text-center">{row.hr1 ?? "-"}</div>
                     <div className="text-center">{row.hr2 ?? "-"}</div>
                     <div className="text-center">{row.mp ?? "-"}</div>
