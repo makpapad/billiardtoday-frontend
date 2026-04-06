@@ -624,39 +624,55 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const country = String(
       summary.venueCountry ?? summary.clubCountry ?? "",
     ).trim();
-    const city = String(summary.venueCity ?? summary.clubCity ?? "").trim();
-    const venueName = String(summary.venueName ?? summary.clubName ?? "").trim();
+    const rawLocation = String(
+      summary.venueCity ?? summary.clubCity ?? "",
+    ).trim();
+    const venueName = String(
+      summary.venueName ?? summary.clubName ?? "",
+    ).trim();
 
-    const cityParts: string[] = [];
-    if (city) {
+    let cityName = "";
+    let districtName = "";
+
+    if (rawLocation) {
       const countryPattern = country
-        ? new RegExp(`\\b${country.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi")
+        ? new RegExp(
+            `\\b${country.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+            "gi",
+          )
         : null;
-      const cityWithoutCountry = (countryPattern ? city.replace(countryPattern, " ") : city)
+      const locationWithoutCountry = (
+        countryPattern ? rawLocation.replace(countryPattern, " ") : rawLocation
+      )
         .replace(/\s+/g, " ")
         .trim();
 
-      const segmentedCityParts = cityWithoutCountry
-        .split(/\s*[.,/|•-]\s*/)
+      const segmentedLocationParts = locationWithoutCountry
+        .split(/\s*[,/|]\s*/)
         .map((part) => part.trim())
         .filter(Boolean);
 
-      if (segmentedCityParts.length > 1) {
-        segmentedCityParts.forEach((part) => uniquePush(cityParts, part));
-      } else if (cityWithoutCountry) {
-        const athensMatch = cityWithoutCountry.match(/^(.*?)(?:\s+)?(Athens)$/i);
+      if (segmentedLocationParts.length >= 2) {
+        cityName = segmentedLocationParts[0] ?? "";
+        districtName = segmentedLocationParts.slice(1).join(" ");
+      } else if (locationWithoutCountry) {
+        const athensMatch = locationWithoutCountry.match(
+          /^(.*?)(?:\s+)?(Athens)$/i,
+        );
+
         if (athensMatch) {
-          uniquePush(cityParts, athensMatch[2]);
-          uniquePush(cityParts, athensMatch[1]);
+          cityName = athensMatch[2]?.trim() ?? "";
+          districtName = athensMatch[1]?.trim() ?? "";
         } else {
-          uniquePush(cityParts, cityWithoutCountry);
+          cityName = locationWithoutCountry;
         }
       }
     }
 
     const resolvedParts: string[] = [];
     uniquePush(resolvedParts, country);
-    cityParts.forEach((part) => uniquePush(resolvedParts, part));
+    uniquePush(resolvedParts, cityName);
+    uniquePush(resolvedParts, districtName);
     uniquePush(resolvedParts, venueName);
 
     return resolvedParts;
@@ -2903,7 +2919,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         key={`${part}-${index}`}
                         className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? <span className="text-white/70">.</span> : null}
+                        {index > 0 ? (
+                          <span className="h-3 w-px rounded-full bg-white/30" />
+                        ) : null}
                         <span>{part}</span>
                       </span>
                     ))}
@@ -3113,3 +3131,4 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     </div>
   );
 }
+
