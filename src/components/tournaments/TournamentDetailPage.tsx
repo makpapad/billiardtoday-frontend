@@ -2667,6 +2667,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           timezoneOffsetMinutes={
             selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
           }
+          timezoneOptions={timezoneOptions}
+          onTimezoneChange={setSelectedTimezoneOffsetMinutes}
           onStageSelect={(stageDocumentId) => {
             setTournamentPanelMode("stages");
             setSelectedStageDocumentId(stageDocumentId);

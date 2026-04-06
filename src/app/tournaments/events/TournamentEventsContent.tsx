@@ -61,6 +61,8 @@ type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   preferredStageDocumentId?: string | null;
   timezoneOffsetMinutes?: number | null;
+  timezoneOptions?: Array<{ value: number; label: string }>;
+  onTimezoneChange?: (offsetMinutes: number) => void;
   onStageSelect?: (stageDocumentId: string) => void;
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
@@ -824,6 +826,8 @@ export function TournamentEventsContent({
   eventIdOverride = null,
   preferredStageDocumentId = null,
   timezoneOffsetMinutes = null,
+  timezoneOptions = [],
+  onTimezoneChange,
   onStageSelect,
   showPublishedFinalResults = false,
   showTimetable = true,
@@ -2506,7 +2510,15 @@ export function TournamentEventsContent({
                                     {!isBracketStageType(stage.stageType) &&
                                     (stageMatchGroups[stage.id] ?? []).length >
                                       0 ? (
-                                      <div className="flex items-center">
+                                      <div
+                                        className={clsx(
+                                          "grid items-center gap-3",
+                                          onTimezoneChange &&
+                                            timezoneOptions.length > 0
+                                            ? "md:grid-cols-[minmax(0,1fr)_12rem]"
+                                            : "grid-cols-1",
+                                        )}
+                                      >
                                         <input
                                           type="search"
                                           value={playerSearchQuery}
@@ -2518,6 +2530,27 @@ export function TournamentEventsContent({
                                           placeholder="Search player..."
                                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
                                         />
+                                        {onTimezoneChange &&
+                                        timezoneOptions.length > 0 ? (
+                                          <select
+                                            value={timezoneOffsetMinutes ?? 180}
+                                            onChange={(event) =>
+                                              onTimezoneChange(
+                                                Number(event.target.value),
+                                              )
+                                            }
+                                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                          >
+                                            {timezoneOptions.map((option) => (
+                                              <option
+                                                key={option.value}
+                                                value={option.value}
+                                              >
+                                                {option.label}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        ) : null}
                                       </div>
                                     ) : null}
                                     {isBracketStageType(stage.stageType) ? (
