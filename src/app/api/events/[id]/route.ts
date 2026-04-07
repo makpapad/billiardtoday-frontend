@@ -110,11 +110,12 @@ export async function GET(
         queryParams.set('populate[event_stages][populate][results][fields][0]', 'match_points')
         queryParams.set('populate[event_stages][populate][results][fields][1]', 'points')
         queryParams.set('populate[event_stages][populate][results][fields][2]', 'innings')
-        queryParams.set('populate[event_stages][populate][results][fields][3]', 'high_run')
-        queryParams.set('populate[event_stages][populate][results][fields][4]', 'group_number')
-        queryParams.set('populate[event_stages][populate][results][fields][5]', 'group_position')
-        queryParams.set('populate[event_stages][populate][results][fields][6]', 'final_position')
-        queryParams.set('populate[event_stages][populate][results][fields][7]', 'documentId')
+        queryParams.set('populate[event_stages][populate][results][fields][3]', 'best_average')
+        queryParams.set('populate[event_stages][populate][results][fields][4]', 'high_run')
+        queryParams.set('populate[event_stages][populate][results][fields][5]', 'group_number')
+        queryParams.set('populate[event_stages][populate][results][fields][6]', 'group_position')
+        queryParams.set('populate[event_stages][populate][results][fields][7]', 'final_position')
+        queryParams.set('populate[event_stages][populate][results][fields][8]', 'documentId')
 
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][0]', 'full_name')
         queryParams.set('populate[event_stages][populate][results][populate][player][fields][1]', 'documentId')
@@ -216,6 +217,7 @@ export async function GET(
                 )
 
                 const stageMatchPoints = new Map<string, number>()
+                const stageBestGame = new Map<string, number>()
 
                 stages.forEach((stage) => {
                     asArray(stage.results).forEach((result) => {
@@ -223,13 +225,24 @@ export async function GET(
                         const playerDocumentId =
                             typeof player?.documentId === 'string' ? player.documentId : null
                         const matchPoints = toNumber(result.match_points)
-                        if (!playerDocumentId || matchPoints === null) return
-                        stageMatchPoints.set(
-                            playerDocumentId,
-                            (stageMatchPoints.get(playerDocumentId) ?? 0) + matchPoints,
-                        )
+                        const bestAverage = toNumber(result.best_average)
+                        if (playerDocumentId && matchPoints !== null) {
+                            stageMatchPoints.set(
+                                playerDocumentId,
+                                (stageMatchPoints.get(playerDocumentId) ?? 0) + matchPoints,
+                            )
+                        }
+                        if (playerDocumentId && bestAverage !== null) {
+                            stageBestGame.set(
+                                playerDocumentId,
+                                Math.max(stageBestGame.get(playerDocumentId) ?? 0, bestAverage),
+                            )
+                        }
                     })
                 })
+
+                const eventGameType =
+                    typeof event.game_type === 'string' ? event.game_type.trim().toLowerCase() : null
 
                 const enrichedFinalResults = asArray(event.results_final).map((result) => {
                     const player = asObject(result.player)
@@ -237,13 +250,20 @@ export async function GET(
                         typeof player?.documentId === 'string' ? player.documentId : null
                     const derivedMatchPoints =
                         playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null
+                    const derivedBestGame =
+                        eventGameType === 'artistic' && playerDocumentId
+                            ? (stageBestGame.get(playerDocumentId) ?? null)
+                            : null
 
-                    return derivedMatchPoints === null
-                        ? result
-                        : {
-                              ...result,
-                              match_points: derivedMatchPoints,
-                          }
+                    if (derivedMatchPoints === null && derivedBestGame === null) {
+                        return result
+                    }
+
+                    return {
+                        ...result,
+                        ...(derivedMatchPoints === null ? {} : { match_points: derivedMatchPoints }),
+                        ...(derivedBestGame === null ? {} : { best_game: derivedBestGame }),
+                    }
                 })
 
                 payload.data = {

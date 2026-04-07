@@ -836,6 +836,11 @@ function StageRankingTable({
             <th className="px-4 py-3 text-center font-semibold">
               {artistic ? "Best run" : "H.R."}
             </th>
+            {artistic && (
+              <th className="px-4 py-3 text-center font-semibold">
+                Best game
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -892,6 +897,13 @@ function StageRankingTable({
               <td className="px-4 py-3 text-center">
                 {formatNumberValue(result.highRun)}
               </td>
+              {artistic && (
+                <td className="px-4 py-3 text-center">
+                  {result.bestAverage !== null
+                    ? formatTruncatedAverage(result.bestAverage)
+                    : "-"}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -2339,6 +2351,11 @@ export function TournamentEventsContent({
                                 <th className="px-4 py-3 text-center font-semibold">
                                   {isArtisticEvent ? "Best run" : "Best AVG"}
                                 </th>
+                                {isArtisticEvent && (
+                                  <th className="px-4 py-3 text-center font-semibold">
+                                    Best game
+                                  </th>
+                                )}
                                 {!isArtisticEvent && (
                                   <th className="px-4 py-3 text-center font-semibold">
                                     H.R.
@@ -2423,6 +2440,15 @@ export function TournamentEventsContent({
                                           )
                                         : "-"}
                                   </td>
+                                  {isArtisticEvent && (
+                                    <td className="px-4 py-3 text-center">
+                                      {result.bestGame !== null
+                                        ? formatTruncatedAverage(
+                                            result.bestGame,
+                                          )
+                                        : "-"}
+                                    </td>
+                                  )}
                                   {!isArtisticEvent && (
                                     <td className="px-4 py-3 text-center">
                                       {formatNumberValue(result.highRun)}

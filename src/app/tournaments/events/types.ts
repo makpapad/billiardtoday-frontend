@@ -66,6 +66,7 @@ export type StrapiResult = {
   match_points?: number | string | null;
   points?: number | string | null;
   innings?: number | string | null;
+  best_average?: number | string | null;
   high_run?: number | string | null;
   group_number?: number | string | null;
   group_position?: number | string | null;
@@ -78,6 +79,7 @@ export type StrapiFinalResult = {
   documentId?: string | null;
   position?: number | string | null;
   best_average?: number | string | null;
+  best_game?: number | string | null;
   caroms?: number | string | null;
   match_points?: number | string | null;
   points?: number | string | null;
@@ -180,6 +182,7 @@ export type NormalizedStageResult = {
   matchPoints: number | null;
   points: number | null;
   innings: number | null;
+  bestAverage: number | null;
   highRun: number | null;
   groupNumber: number | null;
   groupPosition: number | null;
@@ -196,6 +199,7 @@ export type NormalizedFinalResult = {
   playerCountry: string | null;
   matchPoints: number | null;
   bestAverage: number | null;
+  bestGame: number | null;
   caroms: number | null;
   points: number | null;
   innings: number | null;
