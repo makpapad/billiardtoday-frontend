@@ -87,15 +87,31 @@ const abbreviateName = (name: string): string => {
     return `${surname} ${given}`
 }
 
-const formatDateTime = (iso?: string | null): string => {
+const normalizeLookupText = (value: string | null | undefined) =>
+    (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+
+const formatDateTime = (
+    iso?: string | null,
+    offsetMinutes?: number | null,
+): string => {
     if (!iso) return ''
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ''
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yyyy = d.getFullYear()
-    const hh = String(d.getHours()).padStart(2, '0')
-    const min = String(d.getMinutes()).padStart(2, '0')
+    const shifted =
+        typeof offsetMinutes === 'number' && Number.isFinite(offsetMinutes)
+            ? new Date(d.getTime() + offsetMinutes * 60 * 1000)
+            : d
+    const useUtc = typeof offsetMinutes === 'number' && Number.isFinite(offsetMinutes)
+    const dd = String(useUtc ? shifted.getUTCDate() : shifted.getDate()).padStart(2, '0')
+    const mm = String((useUtc ? shifted.getUTCMonth() : shifted.getMonth()) + 1).padStart(2, '0')
+    const yyyy = useUtc ? shifted.getUTCFullYear() : shifted.getFullYear()
+    const hh = String(useUtc ? shifted.getUTCHours() : shifted.getHours()).padStart(2, '0')
+    const min = String(useUtc ? shifted.getUTCMinutes() : shifted.getMinutes()).padStart(2, '0')
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`
 }
 
@@ -115,9 +131,13 @@ const getFirstRoundSeeds = (matchCount: number): number[] => {
 export default function SingleElimBracket({
     rounds,
     onMatchClick,
+    timezoneOffsetMinutes = null,
+    searchQuery = '',
 }: {
     rounds: BracketRoundView[]
     onMatchClick?: (matchId: string) => void
+    timezoneOffsetMinutes?: number | null
+    searchQuery?: string
 }) {
     const baseScale = rounds.length >= 4 ? 0.75 : 1
     const [scale, setScale] = useState(baseScale)
@@ -167,6 +187,14 @@ export default function SingleElimBracket({
     const incomingMatchNumbersByTargetId = useMemo(
         () => buildIncomingMatchNumbersByTargetId(rounds),
         [rounds],
+    )
+    const normalizedSearchTerms = useMemo(
+        () =>
+            normalizeLookupText(searchQuery)
+                .split(' ')
+                .map((term) => term.trim())
+                .filter((term) => term.length > 0),
+        [searchQuery],
     )
 
     const connectors = useMemo(() => {
@@ -223,8 +251,59 @@ export default function SingleElimBracket({
         return `Winner from Match ${previousRoundFirstGlobalMatch + previousMatchOffset}`
     }
 
+    const matchedMatchIds = useMemo(() => {
+        if (normalizedSearchTerms.length === 0) return null
+        const matches = new Set<string>()
+        rounds.forEach((round, roundIdx) => {
+            round.matches.forEach((m) => {
+                const roundMatchIndex = round.matches.findIndex((candidate) => candidate.id === m.id)
+                const isFirstRound = roundIdx === 0
+                const stdSeedTop = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2] : undefined
+                const stdSeedBottom = isFirstRound ? firstRoundSeeds[roundMatchIndex * 2 + 1] : undefined
+                const topPlaceholder = resolvePlaceholder(
+                    m.id,
+                    roundIdx,
+                    roundMatchIndex,
+                    1,
+                    m.seedTop ?? stdSeedTop ?? null,
+                    m.globalMatchNumber,
+                )
+                const bottomPlaceholder = resolvePlaceholder(
+                    m.id,
+                    roundIdx,
+                    roundMatchIndex,
+                    2,
+                    m.seedBottom ?? stdSeedBottom ?? null,
+                    m.globalMatchNumber,
+                )
+                const haystack = normalizeLookupText(
+                    [
+                        m.player1,
+                        m.player2,
+                        m.player1Country,
+                        m.player2Country,
+                        topPlaceholder,
+                        bottomPlaceholder,
+                        typeof m.globalMatchNumber === 'number' ? `match ${m.globalMatchNumber}` : '',
+                    ].filter(Boolean).join(' '),
+                )
+                if (normalizedSearchTerms.every((term) => haystack.includes(term))) {
+                    matches.add(m.id)
+                }
+            })
+        })
+        return matches
+    }, [firstRoundSeeds, normalizedSearchTerms, rounds])
+    const hasActiveSearch = normalizedSearchTerms.length > 0
+    const hasSearchMatches = !matchedMatchIds || matchedMatchIds.size > 0
+
     return (
         <div className="overflow-x-auto overflow-y-hidden">
+            {hasActiveSearch && !hasSearchMatches ? (
+                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                    No bracket matches found for this search.
+                </div>
+            ) : null}
             <div className="mb-3 flex items-center justify-end gap-2">
                 <button
                     type="button"
@@ -361,6 +440,10 @@ export default function SingleElimBracket({
                                         height: MATCH_HEIGHT,
                                     }}
                                 >
+                                    {(() => {
+                                        const isMatched =
+                                            !matchedMatchIds || matchedMatchIds.has(m.id)
+                                        return (
                                     <button
                                         type="button"
                                         onClick={() => onMatchClick?.(m.id)}
@@ -376,6 +459,8 @@ export default function SingleElimBracket({
                                             position: 'relative',
                                             overflow: 'hidden',
                                             cursor: onMatchClick ? 'pointer' : 'default',
+                                            opacity: hasActiveSearch && !isMatched ? 0.26 : 1,
+                                            filter: hasActiveSearch && !isMatched ? 'grayscale(0.2)' : 'none',
                                         }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
@@ -399,7 +484,7 @@ export default function SingleElimBracket({
 
                                         {m.date ? (
                                             <div style={{ textAlign: 'center', color: '#6B7280', fontSize: 11, marginBottom: 4 }}>
-                                                {formatDateTime(m.date)}
+                                                {formatDateTime(m.date, timezoneOffsetMinutes)}
                                             </div>
                                         ) : (
                                             <div style={{ height: 15 }} />
@@ -424,6 +509,8 @@ export default function SingleElimBracket({
                                             </span>
                                         </div>
                                     </button>
+                                        )
+                                    })()}
                                     {typeof m.globalMatchNumber === 'number' || typeof m.winnerToGlobalMatchNumber === 'number' ? (
                                         <div
                                             style={{

@@ -2523,6 +2523,17 @@ export function TournamentEventsContent({
                           stage.startDate,
                           stage.endDate,
                         );
+                        const showStageSearch =
+                          ((!isBracketStageType(stage.stageType) &&
+                            (stageMatchGroups[stage.id] ?? []).length > 0) ||
+                            isBracketStageType(stage.stageType));
+                        const showStageControls =
+                          showStageSearch ||
+                          (onTimezoneChange && timezoneOptions.length > 0);
+                        const showCompactFilters =
+                          showStageSearch &&
+                          onTimezoneChange &&
+                          timezoneOptions.length > 0;
 
                         return (
                           <div key={stage.id} className="flex flex-col gap-4">
@@ -2550,37 +2561,48 @@ export function TournamentEventsContent({
                                       Matches -{" "}
                                       {stage.title || stage.order || ""}
                                     </div>
-                                    {((!isBracketStageType(stage.stageType) &&
-                                      (stageMatchGroups[stage.id] ?? []).length >
-                                        0) ||
-                                      (onTimezoneChange &&
-                                        timezoneOptions.length > 0)) ? (
+                                    {showStageControls ? (
                                       <div
                                         className={clsx(
                                           "grid items-center gap-3",
-                                          !isBracketStageType(stage.stageType) &&
-                                            (stageMatchGroups[stage.id] ?? [])
-                                              .length > 0 &&
-                                            onTimezoneChange &&
-                                            timezoneOptions.length > 0
-                                            ? "md:grid-cols-[minmax(0,1fr)_12rem]"
+                                          showCompactFilters
+                                            ? "md:grid-cols-[minmax(0,1fr)_9rem]"
                                             : "grid-cols-1",
                                         )}
                                       >
-                                        {!isBracketStageType(stage.stageType) &&
-                                        (stageMatchGroups[stage.id] ?? []).length >
-                                          0 ? (
-                                          <input
-                                            type="search"
-                                            value={playerSearchQuery}
-                                            onChange={(event) =>
-                                              setPlayerSearchQuery(
-                                                event.target.value,
-                                              )
-                                            }
-                                            placeholder="Search player..."
-                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
-                                          />
+                                        {showStageSearch ? (
+                                          <div className="relative">
+                                            <input
+                                              type="search"
+                                              value={playerSearchQuery}
+                                              onChange={(event) =>
+                                                setPlayerSearchQuery(
+                                                  event.target.value,
+                                                )
+                                              }
+                                              placeholder={
+                                                isBracketStageType(
+                                                  stage.stageType,
+                                                )
+                                                  ? "Search player or match..."
+                                                  : "Search player..."
+                                              }
+                                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                            />
+                                            {playerSearchQuery ? (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  setPlayerSearchQuery("")
+                                                }
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                                                aria-label="Clear search"
+                                                title="Clear search"
+                                              >
+                                                X
+                                              </button>
+                                            ) : null}
+                                          </div>
                                         ) : null}
                                         {onTimezoneChange &&
                                         timezoneOptions.length > 0 ? (
@@ -2591,7 +2613,7 @@ export function TournamentEventsContent({
                                                 Number(event.target.value),
                                               )
                                             }
-                                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 md:w-auto"
                                           >
                                             {timezoneOptions.map((option) => (
                                               <option
@@ -2922,6 +2944,10 @@ export function TournamentEventsContent({
                                         <SingleElimBracket
                                           rounds={activeBracketRounds}
                                           onMatchClick={setSelectedBracketMatchId}
+                                          timezoneOffsetMinutes={
+                                            timezoneOffsetMinutes
+                                          }
+                                          searchQuery={playerSearchQuery}
                                         />
                                       ) : (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
