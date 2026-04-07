@@ -3915,6 +3915,13 @@ export function TournamentEventsContent({
                                                                     {formatNumberValue(
                                                                       match.top
                                                                         .player
+                                                                        .matchPoints,
+                                                                    )}
+                                                                  </td>
+                                                                  <td className="px-4 py-2 text-center">
+                                                                    {formatNumberValue(
+                                                                      match.top
+                                                                        .player
                                                                         .points,
                                                                     )}
                                                                   </td>
@@ -3947,13 +3954,6 @@ export function TournamentEventsContent({
                                                                       match.top
                                                                         .player
                                                                         .highRun2,
-                                                                    )}
-                                                                  </td>
-                                                                  <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .matchPoints,
                                                                     )}
                                                                   </td>
                                                                 </tr>
@@ -4087,6 +4087,14 @@ export function TournamentEventsContent({
                                                                       match
                                                                         .bottom
                                                                         .player
+                                                                        .matchPoints,
+                                                                    )}
+                                                                  </td>
+                                                                  <td className="px-4 py-2 text-center">
+                                                                    {formatNumberValue(
+                                                                      match
+                                                                        .bottom
+                                                                        .player
                                                                         .points,
                                                                     )}
                                                                   </td>
@@ -4124,14 +4132,6 @@ export function TournamentEventsContent({
                                                                         .bottom
                                                                         .player
                                                                         .highRun2,
-                                                                    )}
-                                                                  </td>
-                                                                  <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .matchPoints,
                                                                     )}
                                                                   </td>
                                                                 </tr>
