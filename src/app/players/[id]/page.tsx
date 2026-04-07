@@ -935,7 +935,7 @@ export default function PlayerProfilePage() {
     const stats = calculateFilteredStats()
     const isSelectedArtisticGameType =
         selectedGameType !== 'all' &&
-        normalizeGameTypeOrFallback(selectedGameType) === 'artistic'
+        String(selectedGameType).trim().toLowerCase() === 'artistic'
     const overallMatches = stats.totalMatches
     const overallWins = stats.totalWins
     const overallLosses = stats.totalLosses
@@ -1098,6 +1098,11 @@ export default function PlayerProfilePage() {
             highestRun,
         }
     })()
+
+    const artisticH2hAverageDisplay =
+        h2hStats && isSelectedArtisticGameType
+            ? formatArtisticPercentage(h2hStats.avgPerInning)
+            : null
 
     // Performance chart data (per year) for selected game type
     const performanceData =
@@ -1755,15 +1760,21 @@ export default function PlayerProfilePage() {
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            {t('players.profile.h2h.avg')}
+                                            {isSelectedArtisticGameType
+                                                ? '%'
+                                                : t('players.profile.h2h.avg')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400">
-                                            {formatSafeDecimal(Number(h2hStats.avgPerInning), 3)}
+                                            {isSelectedArtisticGameType
+                                                ? artisticH2hAverageDisplay
+                                                : formatSafeDecimal(Number(h2hStats.avgPerInning), 3)}
                                         </div>
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                            {t('players.profile.h2h.highRunShort')}
+                                            {isSelectedArtisticGameType
+                                                ? 'Best run'
+                                                : t('players.profile.h2h.highRunShort')}
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-orange-600 dark:text-orange-400">
                                             {h2hStats.highestRun}
@@ -1861,19 +1872,27 @@ export default function PlayerProfilePage() {
                                                             {match.scoreFor} -{' '}
                                                             {match.scoreAgainst}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 space-x-2 mt-1">
-                                                            <span>
-                                                                {t('players.profile.h2h.innings').replace('{innings}', String(match.innings))}
-                                                            </span>
-                                                            <span>
-                                                                {t('players.profile.h2h.avgValue').replace(
-                                                                    '{avg}',
-                                                                    formatSafeAverage(
-                                                                        match.scoreFor,
-                                                                        match.innings,
-                                                                    ),
-                                                                )}
-                                                            </span>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400 space-x-2 mt-1">
+                                                                <span>
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `Possible points: ${String(match.innings)}`
+                                                                        : t('players.profile.h2h.innings').replace('{innings}', String(match.innings))}
+                                                                </span>
+                                                                <span>
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `%: ${formatArtisticPercentage(
+                                                                              match.innings > 0
+                                                                                  ? match.scoreFor / match.innings
+                                                                                  : null,
+                                                                          )}`
+                                                                        : t('players.profile.h2h.avgValue').replace(
+                                                                              '{avg}',
+                                                                              formatSafeAverage(
+                                                                                  match.scoreFor,
+                                                                                  match.innings,
+                                                                              ),
+                                                                          )}
+                                                                </span>
                                                             {typeof match.highRun === 'number' && (
                                                                 <span>
                                                                     {t('players.profile.h2h.highRun').replace('{value}', String(match.highRun))}
@@ -2131,18 +2150,27 @@ export default function PlayerProfilePage() {
                                                             </div>
                                                             <div className="text-xs text-gray-500 dark:text-gray-400 space-x-2 mt-1">
                                                                 <span>
-                                                                    Innings: {match.innings}
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `Possible points: ${match.innings}`
+                                                                        : `Innings: ${match.innings}`}
                                                                 </span>
                                                                 <span>
-                                                                    AVG:{' '}
-                                                                    {formatSafeAverage(
-                                                                        match.scoreFor,
-                                                                        match.innings,
-                                                                    )}
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `%: ${formatArtisticPercentage(
+                                                                              match.innings > 0
+                                                                                  ? match.scoreFor / match.innings
+                                                                                  : null,
+                                                                          )}`
+                                                                        : `AVG: ${formatSafeAverage(
+                                                                              match.scoreFor,
+                                                                              match.innings,
+                                                                          )}`}
                                                                 </span>
                                                                 {typeof match.highRun === 'number' && (
                                                                     <span>
-                                                                        H.R.: {match.highRun}
+                                                                        {isSelectedArtisticGameType
+                                                                            ? `Best run: ${match.highRun}`
+                                                                            : `H.R.: ${match.highRun}`}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -2333,12 +2361,23 @@ export default function PlayerProfilePage() {
                                     <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                                         {selectedMatch.scoreFor}
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('players.profile.modal.avgLabel')}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                        {isSelectedArtisticGameType
+                                            ? '%'
+                                            : t('players.profile.modal.avgLabel')}
+                                    </div>
                                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                        {formatSafeAverage(
-                                            selectedMatch.scoreFor,
-                                            selectedMatch.innings,
-                                        )}
+                                        {isSelectedArtisticGameType
+                                            ? formatArtisticPercentage(
+                                                  selectedMatch.innings > 0
+                                                      ? selectedMatch.scoreFor /
+                                                            selectedMatch.innings
+                                                      : null,
+                                              )
+                                            : formatSafeAverage(
+                                                  selectedMatch.scoreFor,
+                                                  selectedMatch.innings,
+                                              )}
                                     </div>
                                 </div>
                             </div>
@@ -2347,7 +2386,11 @@ export default function PlayerProfilePage() {
                                 <div className="text-2xl font-bold text-gray-400 dark:text-gray-500 mb-2">
                                     VS
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{t('players.profile.modal.inningsLabel')}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {isSelectedArtisticGameType
+                                        ? 'Possible points'
+                                        : t('players.profile.modal.inningsLabel')}
+                                </div>
                                 <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                     {selectedMatch.innings}
                                 </div>
@@ -2380,16 +2423,25 @@ export default function PlayerProfilePage() {
                                     }`}>
                                         {selectedMatch.scoreAgainst}
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">AVG</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                        {isSelectedArtisticGameType ? '%' : 'AVG'}
+                                    </div>
                                     <div className={`text-2xl font-bold ${
                                         selectedMatch.scoreFor === selectedMatch.scoreAgainst
                                             ? 'text-yellow-600 dark:text-yellow-400'
                                             : 'text-gray-600 dark:text-gray-400'
                                     }`}>
-                                        {formatSafeAverage(
-                                            selectedMatch.scoreAgainst,
-                                            selectedMatch.innings,
-                                        )}
+                                        {isSelectedArtisticGameType
+                                            ? formatArtisticPercentage(
+                                                  selectedMatch.innings > 0
+                                                      ? selectedMatch.scoreAgainst /
+                                                            selectedMatch.innings
+                                                      : null,
+                                              )
+                                            : formatSafeAverage(
+                                                  selectedMatch.scoreAgainst,
+                                                  selectedMatch.innings,
+                                              )}
                                     </div>
                                 </div>
                             </div>
