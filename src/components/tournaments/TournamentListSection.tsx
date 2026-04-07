@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import type { CmsAppearance, CmsTournamentListSection } from '@/lib/cms/types'
 import { getCmsContainerStyle } from '@/lib/cms/layout'
 import { getCmsSectionPaddingClass, getCmsSectionSurfaceStyle } from '@/lib/cms/sectionStyles'
@@ -73,6 +73,7 @@ export function TournamentListSection({
     clubSlug,
     federationId,
 }: Props) {
+    const pathname = usePathname()
     const searchParams = useSearchParams()
     const [items, setItems] = useState<Tournament[]>([])
     const [pagination, setPagination] = useState(EMPTY_PAGINATION)
@@ -89,6 +90,7 @@ export function TournamentListSection({
     const [debouncedSeason, setDebouncedSeason] = useState(initialSeason)
     const [debouncedQuery, setDebouncedQuery] = useState(initialQuery)
     const isCards = section.layout === 'cards'
+    const useTitleLink = (pathname === '/tournaments' || pathname === '/embed/tournaments') && section.showResultsLink
     const { tokens } = appearance
 
     useEffect(() => {
@@ -298,7 +300,16 @@ export function TournamentListSection({
                                                 className="text-xl font-semibold tracking-tight text-slate-950"
                                                 style={{ fontFamily: tokens.headingFont }}
                                             >
-                                                {item.title}
+                                                {useTitleLink ? (
+                                                    <Link
+                                                        href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                        className="transition hover:text-sky-700"
+                                                    >
+                                                        {item.title}
+                                                    </Link>
+                                                ) : (
+                                                    item.title
+                                                )}
                                             </h3>
                                             <p className="mt-1 text-sm text-slate-500">
                                                 {item.game_type || '-'}
@@ -319,7 +330,7 @@ export function TournamentListSection({
                                             <div>End: {formatDate(item.end_date)}</div>
                                         </div>
                                     ) : null}
-                                    {section.showResultsLink ? (
+                                    {section.showResultsLink && !useTitleLink ? (
                                         <div className="mt-5">
                                             <Link
                                                 href={tournamentEventHref(item.documentId, item.title, item.season)}
@@ -363,7 +374,7 @@ export function TournamentListSection({
                                                 Status
                                             </th>
                                         ) : null}
-                                        {section.showResultsLink ? (
+                                        {section.showResultsLink && !useTitleLink ? (
                                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                                                 Action
                                             </th>
@@ -376,7 +387,16 @@ export function TournamentListSection({
                                         return (
                                             <tr key={item.documentId} className="hover:bg-slate-50">
                                                 <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                                                    {item.title}
+                                                    {useTitleLink ? (
+                                                        <Link
+                                                            href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                            className="transition hover:text-sky-700"
+                                                        >
+                                                            {item.title}
+                                                        </Link>
+                                                    ) : (
+                                                        item.title
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-slate-600">
                                                     {item.game_type || '-'}
@@ -401,7 +421,7 @@ export function TournamentListSection({
                                                         </span>
                                                     </td>
                                                 ) : null}
-                                                {section.showResultsLink ? (
+                                                {section.showResultsLink && !useTitleLink ? (
                                                     <td className="px-6 py-4 text-sm">
                                                         <Link
                                                             href={tournamentEventHref(item.documentId, item.title, item.season)}
