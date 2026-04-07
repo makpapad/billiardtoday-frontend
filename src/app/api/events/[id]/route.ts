@@ -27,6 +27,35 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
         ? value.map((item) => asObject(item)).filter((item): item is Record<string, unknown> => Boolean(item))
         : []
 
+const fetchStageStandings = async (
+    stageId: string,
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[] | null> => {
+    const url = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
+    const res = await fetch(url, {
+        cache: 'no-store',
+        headers,
+    })
+
+    if (!res.ok) {
+        return null
+    }
+
+    const text = await res.text()
+    try {
+        const payload = JSON.parse(text) as Record<string, unknown>
+        const rows =
+            asArray(payload.results).length > 0
+                ? asArray(payload.results)
+                : asArray(payload.data).length > 0
+                  ? asArray(payload.data)
+                  : asArray(payload.standings)
+        return rows
+    } catch {
+        return null
+    }
+}
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -169,8 +198,23 @@ export async function GET(
             const event = asObject(payload?.data)
 
             if (event) {
+                const stages = await Promise.all(
+                    asArray(event.event_stages).map(async (stage) => {
+                        const stageDocumentId =
+                            typeof stage.documentId === 'string' ? stage.documentId : null
+                        if (!stageDocumentId) return stage
+
+                        const liveStandings = await fetchStageStandings(stageDocumentId, headers)
+                        if (!liveStandings) return stage
+
+                        return {
+                            ...stage,
+                            results: liveStandings,
+                        }
+                    }),
+                )
+
                 const stageMatchPoints = new Map<string, number>()
-                const stages = asArray(event.event_stages)
 
                 stages.forEach((stage) => {
                     asArray(stage.results).forEach((result) => {
@@ -203,6 +247,7 @@ export async function GET(
 
                 payload.data = {
                     ...event,
+                    event_stages: stages,
                     results_final: enrichedFinalResults,
                 }
             }
