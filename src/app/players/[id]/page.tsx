@@ -229,6 +229,23 @@ const formatSafeAverage = (
     return formatSafeDecimal(validScore / validInnings, 3)
 }
 
+const formatArtisticPercentage = (
+    value: number | string | null | undefined,
+): string => {
+    const numericValue =
+        typeof value === 'number'
+            ? value
+            : typeof value === 'string'
+              ? Number(value.replace(',', '.'))
+              : NaN
+
+    if (!Number.isFinite(numericValue)) {
+        return '0,000'
+    }
+
+    return formatSafeDecimal(numericValue * 100, 3)
+}
+
 const normalizeCareerStats = (
     stats:
         | {
@@ -916,6 +933,9 @@ export default function PlayerProfilePage() {
 
     const effectiveCareerStats = careerStats ?? preloadedCareerStats
     const stats = calculateFilteredStats()
+    const isSelectedArtisticGameType =
+        selectedGameType !== 'all' &&
+        normalizeGameTypeOrFallback(selectedGameType) === 'artistic'
     const overallMatches = stats.totalMatches
     const overallWins = stats.totalWins
     const overallLosses = stats.totalLosses
@@ -926,7 +946,11 @@ export default function PlayerProfilePage() {
     const overallHighestRun = stats.highestRun
     const overallEvents = stats.eventsCount
     const shouldShowRateStats = selectedGameType !== 'all'
-    const displayedOverallAvg = shouldShowRateStats ? overallAvg : '-'
+    const displayedOverallAvg = shouldShowRateStats
+        ? isSelectedArtisticGameType
+            ? formatArtisticPercentage(overallAvg)
+            : overallAvg
+        : '-'
     const displayedOverallHighestRun = shouldShowRateStats
         ? overallHighestRun
         : '-'
@@ -990,7 +1014,9 @@ export default function PlayerProfilePage() {
             })
         })
         return {
-            bestAverageFromWins: formatSafeDecimal(bestAverageFromWins, 3),
+            bestAverageFromWins: isSelectedArtisticGameType
+                ? formatArtisticPercentage(bestAverageFromWins)
+                : formatSafeDecimal(bestAverageFromWins, 3),
             highestRun,
             topFourFinishes: topFourScopedParticipations.length,
         }
@@ -1310,7 +1336,9 @@ export default function PlayerProfilePage() {
                             <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px] lg:grid-cols-3">
                                 <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
                                     <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                                        Best Average (wins only)
+                                        {isSelectedArtisticGameType
+                                            ? 'Best game'
+                                            : 'Best Average (wins only)'}
                                     </div>
                                     <div className="text-2xl md:text-3xl font-extrabold text-purple-700 dark:text-purple-300 leading-none">
                                         {gameTypeCareerBoxes.bestAverageFromWins}
@@ -1318,7 +1346,9 @@ export default function PlayerProfilePage() {
                                 </div>
                                 <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
                                     <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                                        Highest Run
+                                        {isSelectedArtisticGameType
+                                            ? 'Best run'
+                                            : 'Highest Run'}
                                     </div>
                                     <div className="text-2xl md:text-3xl font-extrabold text-orange-700 dark:text-orange-300 leading-none">
                                         {gameTypeCareerBoxes.highestRun}
@@ -1432,7 +1462,9 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('players.profile.stats.avg')}
+                                {isSelectedArtisticGameType
+                                    ? '%'
+                                    : t('players.profile.stats.avg')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {effectiveCareerStats ? (
@@ -1444,7 +1476,9 @@ export default function PlayerProfilePage() {
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('players.profile.stats.highRunShort')}
+                                {isSelectedArtisticGameType
+                                    ? 'Best run'
+                                    : t('players.profile.stats.highRunShort')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 {effectiveCareerStats ? (
