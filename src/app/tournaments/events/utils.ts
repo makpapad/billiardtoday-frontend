@@ -377,9 +377,26 @@ export const aggregateRecord = (
   return record;
 };
 
+export const hasPlayedStageMatch = (
+  match: StageMatchGroup["matches"][number],
+): boolean =>
+  [match.top, match.bottom].some(
+    (entry) =>
+      entry.outcome !== null ||
+      (entry.player.points ?? 0) > 0 ||
+      (entry.player.innings ?? 0) > 0 ||
+      (entry.player.highRun ?? 0) > 0 ||
+      (entry.player.highRun2 ?? 0) > 0 ||
+      (entry.player.matchPoints ?? 0) > 0,
+  );
+
 export const buildGroupStandings = (
   matches: StageMatchGroup["matches"],
 ): GroupStanding[] => {
+  if (!matches.some(hasPlayedStageMatch)) {
+    return [];
+  }
+
   const players = matches.reduce<Record<string, GroupStanding>>(
     (acc, match) => {
       const applyEntry = (

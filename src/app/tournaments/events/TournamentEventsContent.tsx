@@ -37,6 +37,7 @@ import {
   getDateCellClass,
   buildStageMatchGroups,
   buildGroupStandings,
+  hasPlayedStageMatch,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
@@ -556,10 +557,24 @@ function hasMeaningfulStageResult(
   result: NormalizedStageResult,
 ): boolean {
   return (
-    (result.matchPoints ?? 0) > 0 ||
     (result.points ?? 0) > 0 ||
     (result.innings ?? 0) > 0 ||
     (result.highRun ?? 0) > 0
+  );
+}
+
+function hasMeaningfulFinalResult(
+  result: NormalizedFinalResult,
+): boolean {
+  return (
+    (result.matchPoints ?? 0) > 0 ||
+    (result.caroms ?? result.points ?? 0) > 0 ||
+    (result.innings ?? 0) > 0 ||
+    (result.highRun ?? 0) > 0 ||
+    (result.bestAverage ?? 0) > 0 ||
+    result.rankingPoints !== null ||
+    result.penalty !== null ||
+    result.finalPoints !== null
   );
 }
 
@@ -1184,6 +1199,7 @@ export function TournamentEventsContent({
       .map((result, index) =>
         normalizeFinalResult(result, `final-result-${index}`),
       )
+      .filter(hasMeaningfulFinalResult)
       .sort((a, b) => {
         if (a.position !== null && b.position !== null)
           return a.position - b.position;
@@ -3238,6 +3254,9 @@ export function TournamentEventsContent({
                                               return rows;
                                             })();
                                             const showGroupStandings =
+                                              group.matches.some(
+                                                hasPlayedStageMatch,
+                                              ) &&
                                               !(
                                                 normalizedPlayerSearchQuery.length >
                                                   0 &&
