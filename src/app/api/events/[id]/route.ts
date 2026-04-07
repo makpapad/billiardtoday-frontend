@@ -10,6 +10,23 @@ const STRAPI_URL =
     'http://localhost:1337'
 const STRAPI_API_TOKEN = getServerEnv('STRAPI_API_TOKEN') || process.env.STRAPI_API_TOKEN
 
+const toNumber = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value)
+        return Number.isFinite(parsed) ? parsed : null
+    }
+    return null
+}
+
+const asObject = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+
+const asArray = (value: unknown): Record<string, unknown>[] =>
+    Array.isArray(value)
+        ? value.map((item) => asObject(item)).filter((item): item is Record<string, unknown> => Boolean(item))
+        : []
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -147,10 +164,56 @@ export async function GET(
             return NextResponse.json({ error: text || 'Failed to fetch event' }, { status: res.status })
         }
 
-        return new NextResponse(text, {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        })
+        try {
+            const payload = JSON.parse(text) as { data?: Record<string, unknown> | null }
+            const event = asObject(payload?.data)
+
+            if (event) {
+                const stageMatchPoints = new Map<string, number>()
+                const stages = asArray(event.event_stages)
+
+                stages.forEach((stage) => {
+                    asArray(stage.results).forEach((result) => {
+                        const player = asObject(result.player)
+                        const playerDocumentId =
+                            typeof player?.documentId === 'string' ? player.documentId : null
+                        const matchPoints = toNumber(result.match_points)
+                        if (!playerDocumentId || matchPoints === null) return
+                        stageMatchPoints.set(
+                            playerDocumentId,
+                            (stageMatchPoints.get(playerDocumentId) ?? 0) + matchPoints,
+                        )
+                    })
+                })
+
+                const enrichedFinalResults = asArray(event.results_final).map((result) => {
+                    const player = asObject(result.player)
+                    const playerDocumentId =
+                        typeof player?.documentId === 'string' ? player.documentId : null
+                    const derivedMatchPoints =
+                        playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null
+
+                    return derivedMatchPoints === null
+                        ? result
+                        : {
+                              ...result,
+                              match_points: derivedMatchPoints,
+                          }
+                })
+
+                payload.data = {
+                    ...event,
+                    results_final: enrichedFinalResults,
+                }
+            }
+
+            return NextResponse.json(payload, { status: 200 })
+        } catch {
+            return new NextResponse(text, {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        }
     } catch (error) {
         console.error('[events.id][GET]', error)
         return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
