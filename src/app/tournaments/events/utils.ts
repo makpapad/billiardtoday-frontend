@@ -394,7 +394,9 @@ export const hasPlayedStageMatch = (
 
 export const buildGroupStandings = (
   matches: StageMatchGroup["matches"],
+  options?: { artistic?: boolean },
 ): GroupStanding[] => {
+  const artistic = options?.artistic === true;
   if (!matches.some(hasPlayedStageMatch)) {
     return [];
   }
@@ -435,7 +437,15 @@ export const buildGroupStandings = (
           (entry.player.highRun2 ?? 0) > 0 ||
           (entry.player.matchPoints ?? 0) > 0;
         const entryAverage =
-          entry.outcome === "W" &&
+          typeof entry.player.points === "number" &&
+          typeof entry.player.innings === "number" &&
+          entry.player.innings > 0
+            ? entry.player.points / entry.player.innings
+            : null;
+        const bestAverageCandidate =
+          artistic
+            ? entryAverage
+            : entry.outcome === "W" &&
           typeof entry.player.points === "number" &&
           typeof entry.player.innings === "number" &&
           entry.player.innings > 0
@@ -450,9 +460,9 @@ export const buildGroupStandings = (
           totalPoints: current.totalPoints + (entry.player.points ?? 0),
           totalInnings: current.totalInnings + (entry.player.innings ?? 0),
           bestAverage:
-            entryAverage === null
+            bestAverageCandidate === null
               ? current.bestAverage
-              : Math.max(current.bestAverage ?? 0, entryAverage),
+              : Math.max(current.bestAverage ?? 0, bestAverageCandidate),
           highRun: Math.max(current.highRun ?? 0, entry.player.highRun ?? 0),
           highRun2: Math.max(current.highRun2 ?? 0, entry.player.highRun2 ?? 0),
         };
@@ -489,15 +499,17 @@ export const buildGroupStandings = (
     const avgA = a.average ?? -1;
     const avgB = b.average ?? -1;
     if (avgA !== avgB) return avgB - avgA;
-    const bestAvgA = a.bestAverage ?? -1;
-    const bestAvgB = b.bestAverage ?? -1;
-    if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
     const highRunA = a.highRun ?? -1;
     const highRunB = b.highRun ?? -1;
     if (highRunA !== highRunB) return highRunB - highRunA;
-    const highRun2A = a.highRun2 ?? -1;
-    const highRun2B = b.highRun2 ?? -1;
-    if (highRun2A !== highRun2B) return highRun2B - highRun2A;
+    const bestAvgA = a.bestAverage ?? -1;
+    const bestAvgB = b.bestAverage ?? -1;
+    if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
+    if (!artistic) {
+      const highRun2A = a.highRun2 ?? -1;
+      const highRun2B = b.highRun2 ?? -1;
+      if (highRun2A !== highRun2B) return highRun2B - highRun2A;
+    }
     return a.playerName.localeCompare(b.playerName);
   });
 

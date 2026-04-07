@@ -4216,6 +4216,9 @@ export function TournamentEventsContent({
                                                 <GroupStandingsTable
                                                   standings={buildGroupStandings(
                                                     group.matches,
+                                                    {
+                                                      artistic: isArtisticEvent,
+                                                    },
                                                   )}
                                                   embedded={embedded}
                                                   artistic={isArtisticEvent}
