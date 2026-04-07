@@ -79,7 +79,6 @@ export type StrapiFinalResult = {
   position?: number | string | null;
   best_average?: number | string | null;
   caroms?: number | string | null;
-  match_points?: number | string | null;
   points?: number | string | null;
   innings?: number | string | null;
   high_run?: number | string | null;
