@@ -174,6 +174,7 @@ export async function GET(
         queryParams.set('fields[3]', 'start_date')
         queryParams.set('fields[4]', 'end_date')
         queryParams.set('fields[5]', 'timetable_config')
+        queryParams.set('fields[6]', 'game_type')
         const url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
 
         const headers: HeadersInit = {}

@@ -115,6 +115,7 @@ export type StrapiEvent = {
   id?: number | string | null;
   documentId?: string | null;
   title?: string | null;
+  game_type?: string | null;
   season?: number | string | null;
   start_date?: string | null;
   end_date?: string | null;

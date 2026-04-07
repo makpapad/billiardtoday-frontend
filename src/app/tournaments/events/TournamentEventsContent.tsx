@@ -629,6 +629,12 @@ function hasMeaningfulFinalResult(
   );
 }
 
+function normalizeEventGameType(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.toLowerCase() : null;
+}
+
 function normalizeTimetableSlot(
   slot: unknown,
   fallbackId: string,
@@ -781,10 +787,12 @@ function StageRankingTable({
   stage,
   embedded,
   playerProfileHref,
+  artistic = false,
 }: {
   stage: NormalizedEventStage;
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
+  artistic?: boolean;
 }) {
   const visibleResults = stage.results.filter(hasMeaningfulStageResult);
   const showGroupColumn = visibleResults.some(
@@ -819,9 +827,15 @@ function StageRankingTable({
             )}
             <th className="px-4 py-3 text-center font-semibold">MP</th>
             <th className="px-4 py-3 text-center font-semibold">Points</th>
-            <th className="px-4 py-3 text-center font-semibold">Innings</th>
-            <th className="px-4 py-3 text-center font-semibold">AVG</th>
-            <th className="px-4 py-3 text-center font-semibold">H.R.</th>
+            <th className="px-4 py-3 text-center font-semibold">
+              {artistic ? "Possible points" : "Innings"}
+            </th>
+            <th className="px-4 py-3 text-center font-semibold">
+              {artistic ? "%" : "AVG"}
+            </th>
+            <th className="px-4 py-3 text-center font-semibold">
+              {artistic ? "Best run" : "H.R."}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -1259,6 +1273,12 @@ export function TournamentEventsContent({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+
+  const eventGameType = useMemo(
+    () => normalizeEventGameType(eventData?.data?.game_type ?? null),
+    [eventData],
+  );
+  const isArtisticEvent = eventGameType === "artistic";
 
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
@@ -2308,20 +2328,22 @@ export function TournamentEventsContent({
                                   Match Pts
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  Caroms
+                                  {isArtisticEvent ? "Points" : "Caroms"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  Innings
+                                  {isArtisticEvent ? "Possible points" : "Innings"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  AVG
+                                  {isArtisticEvent ? "%" : "AVG"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  Best AVG
+                                  {isArtisticEvent ? "Best run" : "Best AVG"}
                                 </th>
-                                <th className="px-4 py-3 text-center font-semibold">
-                                  H.R.
-                                </th>
+                                {!isArtisticEvent && (
+                                  <th className="px-4 py-3 text-center font-semibold">
+                                    H.R.
+                                  </th>
+                                )}
                                 {showRankPointsColumn && (
                                   <th className="px-4 py-3 text-center font-semibold">
                                     Rank Pts
@@ -2381,23 +2403,31 @@ export function TournamentEventsContent({
                                     {formatNumberValue(result.innings)}
                                   </td>
                                   <td className="px-4 py-3 text-center">
-                                    {formatAverage(
-                                      result.caroms ?? result.points,
-                                      result.innings,
-                                    )}
+                                    {isArtisticEvent
+                                      ? (result.bestAverage !== null
+                                          ? formatTruncatedAverage(
+                                              result.bestAverage,
+                                            )
+                                          : "-")
+                                      : formatAverage(
+                                          result.caroms ?? result.points,
+                                          result.innings,
+                                        )}
                                   </td>
                                   <td className="px-4 py-3 text-center">
-                                    {result.bestAverage !== null
-                                      ? (() => {
-                                          const factor = Math.pow(10, 3);
-                                          const truncated = Math.floor(result.bestAverage * factor) / factor;
-                                          return truncated.toFixed(3);
-                                        })()
-                                      : "-"}
+                                    {isArtisticEvent
+                                      ? formatNumberValue(result.highRun)
+                                      : result.bestAverage !== null
+                                        ? formatTruncatedAverage(
+                                            result.bestAverage,
+                                          )
+                                        : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-center">
-                                    {formatNumberValue(result.highRun)}
-                                  </td>
+                                  {!isArtisticEvent && (
+                                    <td className="px-4 py-3 text-center">
+                                      {formatNumberValue(result.highRun)}
+                                    </td>
+                                  )}
                                   {showRankPointsColumn && (
                                     <td className="px-4 py-3 text-center">
                                       {formatNumberValue(result.rankingPoints)}
@@ -2646,6 +2676,7 @@ export function TournamentEventsContent({
                                   stage={stage}
                                   embedded={embedded}
                                   playerProfileHref={playerProfileHref}
+                                  artistic={isArtisticEvent}
                                 />
                               </div>
                             ) : (
@@ -3517,17 +3548,25 @@ export function TournamentEventsContent({
                                                         Points
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
-                                                        Innings
+                                                        {isArtisticEvent
+                                                          ? "Possible points"
+                                                          : "Innings"}
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
-                                                        Average
+                                                        {isArtisticEvent
+                                                          ? "%"
+                                                          : "Average"}
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
-                                                        High Run
+                                                        {isArtisticEvent
+                                                          ? "Best run"
+                                                          : "High Run"}
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        High Run 2
-                                                      </th>
+                                                      {!isArtisticEvent && (
+                                                        <th className="px-4 py-2 font-medium">
+                                                          High Run 2
+                                                        </th>
+                                                      )}
                                                     </tr>
                                                   </thead>
                                                   <tbody>
@@ -3949,13 +3988,15 @@ export function TournamentEventsContent({
                                                                         .highRun,
                                                                     )}
                                                                   </td>
-                                                                  <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .highRun2,
-                                                                    )}
-                                                                  </td>
+                                                                  {!isArtisticEvent && (
+                                                                    <td className="px-4 py-2 text-center">
+                                                                      {formatNumberValue(
+                                                                        match.top
+                                                                          .player
+                                                                          .highRun2,
+                                                                      )}
+                                                                    </td>
+                                                                  )}
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
@@ -4126,14 +4167,16 @@ export function TournamentEventsContent({
                                                                         .highRun,
                                                                     )}
                                                                   </td>
-                                                                  <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .highRun2,
-                                                                    )}
-                                                                  </td>
+                                                                  {!isArtisticEvent && (
+                                                                    <td className="px-4 py-2 text-center">
+                                                                      {formatNumberValue(
+                                                                        match
+                                                                          .bottom
+                                                                          .player
+                                                                          .highRun2,
+                                                                      )}
+                                                                    </td>
+                                                                  )}
                                                                 </tr>
                                                               </>
                                                             );
@@ -4149,6 +4192,7 @@ export function TournamentEventsContent({
                                                     group.matches,
                                                   )}
                                                   embedded={embedded}
+                                                  artistic={isArtisticEvent}
                                                 />
                                               ) : null}
                                               </>

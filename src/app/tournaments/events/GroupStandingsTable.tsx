@@ -6,9 +6,10 @@ import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
 type GroupStandingsTableProps = {
     standings: GroupStanding[]
     embedded?: boolean
+    artistic?: boolean
 }
 
-export default function GroupStandingsTable({ standings, embedded = false }: GroupStandingsTableProps) {
+export default function GroupStandingsTable({ standings, embedded = false, artistic = false }: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
     }
@@ -23,11 +24,11 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                         <th className="px-2 py-2 text-center font-medium w-20">Record</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Points</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Innings</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Average</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Best AVG</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">High Run</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Possible points' : 'Innings'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? '%' : 'Average'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best game' : 'Best AVG'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best run' : 'High Run'}</th>
+                        {!artistic && <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -89,7 +90,9 @@ export default function GroupStandingsTable({ standings, embedded = false }: Gro
                                 {typeof player.bestAverage === 'number' ? player.bestAverage.toFixed(3) : '-'}
                             </td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
+                            {!artistic && (
+                                <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
+                            )}
                         </tr>
                             )
                         })()
