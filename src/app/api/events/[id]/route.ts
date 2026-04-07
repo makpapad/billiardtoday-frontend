@@ -216,6 +216,9 @@ export async function GET(
                     }),
                 )
 
+                const eventGameType =
+                    typeof event.game_type === 'string' ? event.game_type.trim().toLowerCase() : null
+                const isArtisticEvent = eventGameType === 'artistic'
                 const stageMatchPoints = new Map<string, number>()
                 const stageBestGame = new Map<string, number>()
 
@@ -239,10 +242,47 @@ export async function GET(
                             )
                         }
                     })
-                })
+                    if (isArtisticEvent) {
+                        asArray(stage.groups).forEach((match) => {
+                            const player1 = asObject(match.player1)
+                            const player2 = asObject(match.player2)
+                            const player1DocumentId =
+                                typeof player1?.documentId === 'string' ? player1.documentId : null
+                            const player2DocumentId =
+                                typeof player2?.documentId === 'string' ? player2.documentId : null
+                            const player1Points = toNumber(match.player1_points)
+                            const player2Points = toNumber(match.player2_points)
+                            const player1Innings = toNumber(match.player1_innings)
+                            const player2Innings = toNumber(match.player2_innings)
 
-                const eventGameType =
-                    typeof event.game_type === 'string' ? event.game_type.trim().toLowerCase() : null
+                            if (
+                                player1DocumentId &&
+                                player1Points !== null &&
+                                player1Innings !== null &&
+                                player1Innings > 0
+                            ) {
+                                const percentage = Math.trunc((player1Points / player1Innings) * 100000) / 1000
+                                stageBestGame.set(
+                                    player1DocumentId,
+                                    Math.max(stageBestGame.get(player1DocumentId) ?? 0, percentage),
+                                )
+                            }
+
+                            if (
+                                player2DocumentId &&
+                                player2Points !== null &&
+                                player2Innings !== null &&
+                                player2Innings > 0
+                            ) {
+                                const percentage = Math.trunc((player2Points / player2Innings) * 100000) / 1000
+                                stageBestGame.set(
+                                    player2DocumentId,
+                                    Math.max(stageBestGame.get(player2DocumentId) ?? 0, percentage),
+                                )
+                            }
+                        })
+                    }
+                })
 
                 const enrichedFinalResults = asArray(event.results_final).map((result) => {
                     const player = asObject(result.player)
@@ -251,7 +291,7 @@ export async function GET(
                     const derivedMatchPoints =
                         playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null
                     const derivedBestGame =
-                        eventGameType === 'artistic' && playerDocumentId
+                        isArtisticEvent && playerDocumentId
                             ? (stageBestGame.get(playerDocumentId) ?? null)
                             : null
 
