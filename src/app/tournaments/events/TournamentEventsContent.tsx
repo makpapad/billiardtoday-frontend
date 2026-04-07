@@ -58,6 +58,46 @@ function isBracketStageType(stageType: string | null | undefined): boolean {
   );
 }
 
+function canRenderBracketPyramid(
+  stageType: string | null | undefined,
+  matches: unknown[],
+): boolean {
+  if (!isBracketStageType(stageType)) return false;
+  if (stageType === "double_elimination") return true;
+  if (!Array.isArray(matches) || matches.length === 0) return false;
+
+  const minimumCoverage = Math.max(1, Math.ceil(matches.length * 0.6));
+  let withRound = 0;
+  let withMatchNumber = 0;
+  let withBracketLinks = 0;
+
+  matches.forEach((match) => {
+    if (!match || typeof match !== "object") return;
+    const record = match as Record<string, unknown>;
+    if (
+      typeof record.round === "string" &&
+      record.round.trim().length > 0
+    ) {
+      withRound += 1;
+    }
+    if (typeof toNumber(record.match_number) === "number") {
+      withMatchNumber += 1;
+    }
+    if (
+      typeof toNumber(record.global_match_number) === "number" ||
+      typeof toNumber(record.winner_to_global_match_number) === "number" ||
+      typeof toNumber(record.loser_to_global_match_number) === "number"
+    ) {
+      withBracketLinks += 1;
+    }
+  });
+
+  return (
+    withRound >= minimumCoverage &&
+    (withMatchNumber >= minimumCoverage || withBracketLinks >= minimumCoverage)
+  );
+}
+
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   preferredStageDocumentId?: string | null;
@@ -1549,8 +1589,30 @@ export function TournamentEventsContent({
     void fetchBracketMatches(activeStage.documentId);
   }, [activeStage, brMatchesByStage, fetchBracketMatches]);
 
+  const activeStageUsesBracketView = useMemo(() => {
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) {
+      return false;
+    }
+    if (brLoadingByStage[activeStage.documentId]) {
+      return true;
+    }
+
+    const sourceRaw = brMatchesByStage[activeStage.documentId];
+    if (typeof sourceRaw === "undefined") {
+      return true;
+    }
+
+    return canRenderBracketPyramid(activeStage.stageType, sourceRaw);
+  }, [activeStage, brLoadingByStage, brMatchesByStage]);
+
   const activeBracketRounds = useMemo<BracketRoundView[]>(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
+    if (
+      !activeStage ||
+      !isBracketStageType(activeStage.stageType) ||
+      !activeStageUsesBracketView
+    ) {
+      return [];
+    }
     const sourceRaw = brMatchesByStage[activeStage.documentId];
     const source = Array.isArray(sourceRaw) ? sourceRaw : [];
     if (source.length === 0) return [];
@@ -1891,7 +1953,12 @@ export function TournamentEventsContent({
           .map(({ _shouldDropPlaceholder, ...match }) => match),
       };
     });
-  }, [activeStage, brMatchesByStage, normalizeBracketPlayer]);
+  }, [
+    activeStage,
+    activeStageUsesBracketView,
+    brMatchesByStage,
+    normalizeBracketPlayer,
+  ]);
 
   const selectedBracketMatch = useMemo(() => {
     if (!selectedBracketMatchId) return null;
@@ -1934,7 +2001,11 @@ export function TournamentEventsContent({
   }, [activeBracketRounds]);
 
   const activeDoubleEliminationRounds = useMemo(() => {
-    if (!activeStage || activeStage.stageType !== "double_elimination") {
+    if (
+      !activeStage ||
+      activeStage.stageType !== "double_elimination" ||
+      !activeStageUsesBracketView
+    ) {
       return [] as Array<{
         label: string;
         matches: Array<{
@@ -2119,7 +2190,13 @@ export function TournamentEventsContent({
             };
           }),
       }));
-  }, [activeStage, brMatchesByStage, deBracketType, normalizeBracketPlayer]);
+  }, [
+    activeStage,
+    activeStageUsesBracketView,
+    brMatchesByStage,
+    deBracketType,
+    normalizeBracketPlayer,
+  ]);
 
   const displayedDoubleEliminationRounds = useMemo(() => {
     if (deSelectedRound === "all") return activeDoubleEliminationRounds;
@@ -2534,10 +2611,17 @@ export function TournamentEventsContent({
                           stage.startDate,
                           stage.endDate,
                         );
+                        const stageUsesBracketView =
+                          stage.documentId === activeStage?.documentId
+                            ? activeStageUsesBracketView
+                            : isBracketStageType(stage.stageType);
+                        const isLegacyBracketFallback =
+                          isBracketStageType(stage.stageType) &&
+                          !stageUsesBracketView;
                         const showStageSearch =
-                          ((!isBracketStageType(stage.stageType) &&
+                          ((!stageUsesBracketView &&
                             (stageMatchGroups[stage.id] ?? []).length > 0) ||
-                            isBracketStageType(stage.stageType));
+                            stageUsesBracketView);
                         const showStageControls =
                           showStageSearch ||
                           (onTimezoneChange && timezoneOptions.length > 0);
@@ -2592,9 +2676,7 @@ export function TournamentEventsContent({
                                                 )
                                               }
                                               placeholder={
-                                                isBracketStageType(
-                                                  stage.stageType,
-                                                )
+                                                stageUsesBracketView
                                                   ? "Search player or match..."
                                                   : "Search player..."
                                               }
@@ -2638,7 +2720,7 @@ export function TournamentEventsContent({
                                         ) : null}
                                       </div>
                                     ) : null}
-                                    {isBracketStageType(stage.stageType) ? (
+                                    {stageUsesBracketView ? (
                                       brLoadingByStage[stage.documentId] ? (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
                                           Loading bracket...
@@ -3294,6 +3376,7 @@ export function TournamentEventsContent({
                                               group.matches.some(
                                                 hasPlayedStageMatch,
                                               ) &&
+                                              !isLegacyBracketFallback &&
                                               !(
                                                 normalizedPlayerSearchQuery.length >
                                                   0 &&
@@ -3346,7 +3429,9 @@ export function TournamentEventsContent({
                                                       />
                                                     </svg>
                                                     <div className="font-semibold text-gray-700 dark:text-gray-200">
-                                                      Group {group.number ?? "?"}
+                                                      {isLegacyBracketFallback
+                                                        ? `Match ${group.number ?? groupIndex + 1}`
+                                                        : `Group ${group.number ?? "?"}`}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
