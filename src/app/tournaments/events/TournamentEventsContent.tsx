@@ -363,6 +363,17 @@ function resolveGroupMatchDisplay(
   group: StageMatchGroup,
   match: StageMatchGroup["matches"][number],
 ): { top: GroupDisplayPlayer; bottom: GroupDisplayPlayer } {
+  const hasConcretePlayers =
+    Boolean(match.top.player.name || match.top.player.nativeName) &&
+    Boolean(match.bottom.player.name || match.bottom.player.nativeName);
+
+  if (hasConcretePlayers) {
+    return {
+      top: buildGroupDisplayPlayer(match.top.player, "Unknown"),
+      bottom: buildGroupDisplayPlayer(match.bottom.player, "Unknown"),
+    };
+  }
+
   const sorted = [...group.matches].sort((a, b) => {
     if (
       a.matchNumber !== null &&
