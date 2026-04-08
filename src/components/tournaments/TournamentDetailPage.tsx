@@ -541,6 +541,8 @@ const normalizeLookupText = (value: string | null | undefined) =>
     .trim();
 
 const PUBLIC_TIMEZONE_STORAGE_KEY = "bt-public-timezone-offset-minutes";
+const buildDismissedLiveStorageKey = (eventDocumentId: string) =>
+  `bt-dismissed-live-sessions:${eventDocumentId}`;
 
 const formatDateTimeWithOffset = (
   dateTime: string | null,
@@ -2427,6 +2429,39 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
     return result;
   }, [eventStages, liveCards, stageMatchGroups]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
+    try {
+      const raw = window.sessionStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      setDismissedLiveSessionKeys(
+        new Set(
+          parsed
+            .map((value) => String(value || "").trim())
+            .filter((value) => value.length > 0),
+        ),
+      );
+    } catch {
+      // ignore corrupt storage
+    }
+  }, [summary.documentId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
+    try {
+      window.sessionStorage.setItem(
+        storageKey,
+        JSON.stringify(Array.from(dismissedLiveSessionKeys)),
+      );
+    } catch {
+      // ignore storage failures
+    }
+  }, [dismissedLiveSessionKeys, summary.documentId]);
 
   useEffect(() => {
     const valid = new Set(liveCards.map((item) => item.sessionId));
