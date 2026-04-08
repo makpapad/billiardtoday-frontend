@@ -119,6 +119,18 @@ type GroupPopoverData = {
   matches: StageMatchGroup["matches"];
 };
 
+type InningDetailEntry = {
+  inning: number;
+  player1?: { pt: number; tot: number };
+  player2?: { pt: number; tot: number };
+};
+
+type SessionSnapshot = {
+  innings: number;
+  player1Points: number;
+  player2Points: number;
+};
+
 const isPlaceholderPlayerName = (value?: string | null) => {
   const normalized = (value || "").trim().toLowerCase();
   return !normalized || normalized === "player 1" || normalized === "player 2";
@@ -534,6 +546,33 @@ const mergeLiveSessions = (
   return Array.from(merged.values());
 };
 
+function buildInningsDetailFromSnapshots(snapshots: SessionSnapshot[]): InningDetailEntry[] {
+  if (!Array.isArray(snapshots) || snapshots.length < 2) return [];
+  const map = new Map<number, InningDetailEntry>();
+  for (let i = 1; i < snapshots.length; i++) {
+    const prev = snapshots[i - 1];
+    const curr = snapshots[i];
+    const inning = Math.max(1, Number.isFinite(prev.innings) ? prev.innings : i);
+    if (!map.has(inning)) map.set(inning, { inning });
+    const entry = map.get(inning)!;
+    const prevP1 = Number(entry.player1?.pt ?? 0);
+    const prevP2 = Number(entry.player2?.pt ?? 0);
+    const deltaP1 = Math.max(0, (curr.player1Points ?? 0) - (prev.player1Points ?? 0));
+    const deltaP2 = Math.max(0, (curr.player2Points ?? 0) - (prev.player2Points ?? 0));
+    entry.player1 = {
+      pt: prevP1 + deltaP1,
+      tot: Math.max(0, curr.player1Points ?? 0),
+    };
+    entry.player2 = {
+      pt: prevP2 + deltaP2,
+      tot: Math.max(0, curr.player2Points ?? 0),
+    };
+  }
+  return Array.from(map.values())
+    .filter((entry) => (entry.player1?.tot ?? 0) > 0 || (entry.player2?.tot ?? 0) > 0)
+    .sort((a, b) => a.inning - b.inning);
+}
+
 type TournamentLiveScreensResponse = {
   success: boolean;
   data: Array<{
@@ -857,6 +896,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   );
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
+  const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
+  const sessionDetailsRef = useRef<Map<string, InningDetailEntry[]>>(new Map());
   const lastClosedHighlightRef = useRef<{
     sessionId?: string;
     screenId?: string;
@@ -878,6 +919,23 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     summary.clubDocumentId ||
     eventLiveSessions.find((session) => session.clubId)?.clubId ||
     null;
+
+  const recordSnapshot = (sessionKey: string | undefined | null, snapshot: SessionSnapshot) => {
+    if (!sessionKey) return;
+    const map = sessionSnapshotsRef.current;
+    const prev = map.get(sessionKey) ?? [];
+    const next = [...prev, snapshot];
+    if (next.length > 300) next.splice(0, next.length - 300);
+    map.set(sessionKey, next);
+  };
+
+  const resolveFallbackInningsDetail = (sessionKey: string | undefined | null) => {
+    if (!sessionKey) return undefined;
+    const snapshots = sessionSnapshotsRef.current.get(sessionKey);
+    if (!snapshots) return undefined;
+    const detail = buildInningsDetailFromSnapshots(snapshots);
+    return detail.length > 0 ? detail : undefined;
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1049,7 +1107,27 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           throw new Error("Failed to load event live sessions.");
         }
         if (!cancelled) {
-          setEventLiveSessions(Array.isArray(payload.data) ? payload.data : []);
+          const nextSessions = Array.isArray(payload.data) ? payload.data : [];
+          nextSessions.forEach((session) => {
+            const sessionKey = String(session.sessionId || session.screenId || "").trim();
+            const state = session.state || {};
+            recordSnapshot(sessionKey, {
+              innings:
+                (state.inningsCount ?? state.inningsA ?? state.inningsB ?? 0) || 1,
+              player1Points: state.scoreA ?? 0,
+              player2Points: state.scoreB ?? 0,
+            });
+            if (!state.inningsDetail || state.inningsDetail.length === 0) {
+              const cached = sessionDetailsRef.current.get(sessionKey) ?? resolveFallbackInningsDetail(sessionKey);
+              if (cached?.length) {
+                state.inningsDetail = cached;
+              }
+            }
+            if (state.inningsDetail && state.inningsDetail.length > 0) {
+              sessionDetailsRef.current.set(sessionKey, state.inningsDetail);
+            }
+          });
+          setEventLiveSessions(nextSessions);
         }
       } catch {
         if (!cancelled) {
@@ -1490,11 +1568,34 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   );
                 }),
               );
-              return;
-            }
+            return;
+          }
 
-            setWsLiveSessions((prev) => {
-              const next = mergeLiveSessions(
+          const lifecycleSnapshotKey =
+            lifecycleSessionId || lifecycleScreenId || screenId;
+          recordSnapshot(lifecycleSnapshotKey, {
+            innings: Math.max(
+              Number(sessionObj.player1_innings ?? baseSession?.state?.inningsA ?? 0) || 0,
+              Number(sessionObj.player2_innings ?? baseSession?.state?.inningsB ?? 0) || 0,
+              1,
+            ),
+            player1Points:
+              Number(sessionObj.player1_points ?? baseSession?.state?.scoreA ?? 0) || 0,
+            player2Points:
+              Number(sessionObj.player2_points ?? baseSession?.state?.scoreB ?? 0) || 0,
+          });
+          const lifecycleFallbackDetail =
+            sessionDetailsRef.current.get(lifecycleSnapshotKey) ??
+            resolveFallbackInningsDetail(lifecycleSnapshotKey);
+          if (lifecycleFallbackDetail?.length) {
+            sessionDetailsRef.current.set(
+              lifecycleSnapshotKey,
+              lifecycleFallbackDetail,
+            );
+          }
+
+          setWsLiveSessions((prev) => {
+            const next = mergeLiveSessions(
                 [
                   {
                     id: lifecycleSessionId || lifecycleScreenId || screenId,
@@ -1721,7 +1822,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         typeof sessionObj.gameDurationSeconds === "number"
                           ? sessionObj.gameDurationSeconds
                           : baseSession?.state?.gameDurationSeconds,
-                      inningsDetail: baseSession?.state?.inningsDetail,
+                      inningsDetail:
+                        baseSession?.state?.inningsDetail ??
+                        lifecycleFallbackDetail,
                       tournamentName:
                         typeof sessionObj.eventTitle === "string"
                           ? sessionObj.eventTitle
@@ -1792,6 +1895,26 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               : payload.activePlayer === 2
                 ? "B"
                 : undefined);
+
+          const scoreUpdateSnapshotKey = sessionId || screenId;
+          recordSnapshot(scoreUpdateSnapshotKey, {
+            innings: Math.max(
+              Number(playerA.innings ?? 0) || 0,
+              Number(playerB.innings ?? 0) || 0,
+              1,
+            ),
+            player1Points: Number(playerA.points ?? 0) || 0,
+            player2Points: Number(playerB.points ?? 0) || 0,
+          });
+          const scoreUpdateFallbackDetail =
+            sessionDetailsRef.current.get(scoreUpdateSnapshotKey) ??
+            resolveFallbackInningsDetail(scoreUpdateSnapshotKey);
+          if (scoreUpdateFallbackDetail?.length) {
+            sessionDetailsRef.current.set(
+              scoreUpdateSnapshotKey,
+              scoreUpdateFallbackDetail,
+            );
+          }
 
           setWsLiveSessions((prev) => {
             const next = mergeLiveSessions(
@@ -1985,7 +2108,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       typeof payload.gameDurationSeconds === "number"
                         ? payload.gameDurationSeconds
                         : baseSession?.state?.gameDurationSeconds,
-                    inningsDetail: baseSession?.state?.inningsDetail,
+                    inningsDetail:
+                      baseSession?.state?.inningsDetail ??
+                      scoreUpdateFallbackDetail,
                     current,
                   },
                 },
