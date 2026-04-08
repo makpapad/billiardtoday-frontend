@@ -552,13 +552,19 @@ function buildInningsDetailFromSnapshots(snapshots: SessionSnapshot[]): InningDe
   for (let i = 1; i < snapshots.length; i++) {
     const prev = snapshots[i - 1];
     const curr = snapshots[i];
-    const inning = Math.max(1, Number.isFinite(prev.innings) ? prev.innings : i);
+    const inning = Math.max(
+      1,
+      Number.isFinite(curr.innings) && curr.innings ? curr.innings : i,
+    );
+    const deltaP1 = Math.max(0, (curr.player1Points ?? 0) - (prev.player1Points ?? 0));
+    const deltaP2 = Math.max(0, (curr.player2Points ?? 0) - (prev.player2Points ?? 0));
+    const inningChanged = (curr.innings ?? 0) !== (prev.innings ?? 0);
+    const scoreChanged = deltaP1 > 0 || deltaP2 > 0;
+    if (!inningChanged && !scoreChanged) continue;
     if (!map.has(inning)) map.set(inning, { inning });
     const entry = map.get(inning)!;
     const prevP1 = Number(entry.player1?.pt ?? 0);
     const prevP2 = Number(entry.player2?.pt ?? 0);
-    const deltaP1 = Math.max(0, (curr.player1Points ?? 0) - (prev.player1Points ?? 0));
-    const deltaP2 = Math.max(0, (curr.player2Points ?? 0) - (prev.player2Points ?? 0));
     entry.player1 = {
       pt: prevP1 + deltaP1,
       tot: Math.max(0, curr.player1Points ?? 0),
