@@ -26,6 +26,7 @@ import {
   formatDateForTable,
   formatNumberValue,
   formatRecord,
+  hasPlayedStageMatch,
   normalizeEntity,
   normalizeGroup,
   normalizeResult,
@@ -182,8 +183,9 @@ function GroupTooltip({
   embedded: boolean;
   locale?: string;
 }) {
+  const hasStandings = data.standings.length > 0;
   return (
-    <div className="absolute left-0 top-[-12px] z-30 w-[min(760px,calc(100vw-2rem))] -translate-y-full rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+    <div className="absolute left-0 bottom-full z-30 mb-2 w-[min(760px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="text-sm font-semibold">{data.title}</div>
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -306,80 +308,82 @@ function GroupTooltip({
         </table>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200">
-        <table className="min-w-full text-[11px]">
-          <thead className="bg-emerald-700 text-white">
-            <tr>
-              <th className="px-2 py-1.5 text-left font-semibold">Player</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Rec</th>
-              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
-              <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
-              <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.standings.map((player) => (
-              <tr
-                key={player.key}
-                className="border-t border-slate-200 bg-white text-slate-700"
-              >
-                <td className="px-2 py-1.5 font-medium">
-                  {player.playerId ? (
-                    <Link
-                      href={`${embedded ? "/embed" : ""}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, "-")}`}
-                      className="text-blue-600 hover:underline"
-                    >
+      {hasStandings ? (
+        <div className="overflow-hidden rounded-xl border border-slate-200">
+          <table className="min-w-full text-[11px]">
+            <thead className="bg-emerald-700 text-white">
+              <tr>
+                <th className="px-2 py-1.5 text-left font-semibold">Player</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Rec</th>
+                <th className="px-2 py-1.5 text-center font-semibold">MP</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
+                <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
+                <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
+                <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.standings.map((player) => (
+                <tr
+                  key={player.key}
+                  className="border-t border-slate-200 bg-white text-slate-700"
+                >
+                  <td className="px-2 py-1.5 font-medium">
+                    {player.playerId ? (
+                      <Link
+                        href={`${embedded ? "/embed" : ""}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, "-")}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        <PlayerWithFlag
+                          name={player.playerName}
+                          country={player.playerCountry}
+                        />
+                      </Link>
+                    ) : (
                       <PlayerWithFlag
                         name={player.playerName}
                         country={player.playerCountry}
                       />
-                    </Link>
-                  ) : (
-                    <PlayerWithFlag
-                      name={player.playerName}
-                      country={player.playerCountry}
-                    />
-                  )}
-                </td>
-                <td className="px-2 py-1.5 text-center font-semibold">
-                  {player.place}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatRecord(player.record)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.totalMatchPoints)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.totalPoints)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.totalInnings)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatAverage(player.totalPoints, player.totalInnings)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {typeof player.bestAverage === "number"
-                    ? player.bestAverage.toFixed(3)
-                    : "-"}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.highRun)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {formatNumberValue(player.highRun2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    )}
+                  </td>
+                  <td className="px-2 py-1.5 text-center font-semibold">
+                    {player.place}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatRecord(player.record)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(player.totalMatchPoints)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(player.totalPoints)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(player.totalInnings)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatAverage(player.totalPoints, player.totalInnings)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {typeof player.bestAverage === "number"
+                      ? player.bestAverage.toFixed(3)
+                      : "-"}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(player.highRun)}
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {formatNumberValue(player.highRun2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -426,6 +430,17 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   if (namePairKey) keys.add(`name:${namePairKey}`);
 
   return keys;
+};
+
+const createGroupPopoverData = (group: StageMatchGroup): GroupPopoverData | null => {
+  const playedMatches = group.matches.filter(hasPlayedStageMatch);
+  const standings = buildGroupStandings(group.matches);
+  if (playedMatches.length === 0 && standings.length === 0) return null;
+  return {
+    title: `Group ${group.number ?? group.key}`,
+    standings,
+    matches: playedMatches,
+  };
 };
 
 const mergeLiveSessions = (
@@ -2363,11 +2378,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             return false;
           });
           if (hit) {
-            return {
-              title: `Group ${group.number ?? group.key}`,
-              standings: buildGroupStandings(group.matches),
-              matches: group.matches,
-            };
+            return createGroupPopoverData(group);
           }
         }
       }
@@ -2384,11 +2395,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             (entry) => entry.number === session.groupNumber,
           ) ?? null;
         if (group) {
-          popover = {
-            title: `Group ${group.number ?? group.key}`,
-            standings: buildGroupStandings(group.matches),
-            matches: group.matches,
-          };
+          popover = createGroupPopoverData(group);
         }
       }
 
