@@ -120,6 +120,29 @@ function readPositiveNumber(value: unknown): number | null {
   return Number.isFinite(num) && num > 0 ? Math.floor(num) : null;
 }
 
+function readPreferredPlayerName(player: UnknownRecord | null | undefined, fallback?: unknown): string | null {
+  const fullNameEn =
+    typeof player?.full_name_en === "string"
+      ? player.full_name_en.trim()
+      : typeof player?.fullNameEn === "string"
+        ? player.fullNameEn.trim()
+        : "";
+  if (fullNameEn) return fullNameEn;
+
+  const fullName =
+    typeof player?.full_name === "string"
+      ? player.full_name.trim()
+      : typeof player?.fullName === "string"
+        ? player.fullName.trim()
+        : "";
+  if (fullName) return fullName;
+
+  const plainName = typeof player?.name === "string" ? player.name.trim() : "";
+  if (plainName) return plainName;
+
+  return typeof fallback === "string" && fallback.trim() ? fallback.trim() : null;
+}
+
 function extractTargetPointsFromSource(source: unknown): number | null {
   if (!source) return null;
 
@@ -214,8 +237,8 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       inningsCount: Number(attrs?.innings ?? Math.max(inningsA, inningsB, 0)),
       bestRunA: Number(playerA?.hr ?? attrs?.bestRunA ?? 0),
       bestRunB: Number(playerB?.hr ?? attrs?.bestRunB ?? 0),
-      playerAName: playerA?.name ?? attrs?.player1Name ?? null,
-      playerBName: playerB?.name ?? attrs?.player2Name ?? null,
+      playerAName: readPreferredPlayerName(playerA, attrs?.player1Name),
+      playerBName: readPreferredPlayerName(playerB, attrs?.player2Name),
       playerACountry: playerA?.country ?? attrs?.player1Country ?? null,
       playerBCountry: playerB?.country ?? attrs?.player2Country ?? null,
       playerAPhotoUrl: normalizeMediaUrl(playerA?.photoUrl ?? attrs?.player1PhotoUrl),

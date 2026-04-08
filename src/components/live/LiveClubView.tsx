@@ -104,6 +104,29 @@ const SHEET_GROUP_KEY = "scoreboard.sheet.group";
 const SHEET_TABLE_KEY = "scoreboard.sheet.table";
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
+function resolveLivePlayerDisplayName(player: any, fallback?: string | null): string | null {
+  const englishName =
+    typeof player?.full_name_en === "string"
+      ? player.full_name_en.trim()
+      : typeof player?.fullNameEn === "string"
+        ? player.fullNameEn.trim()
+        : "";
+  if (englishName) return englishName;
+
+  const nativeName =
+    typeof player?.full_name === "string"
+      ? player.full_name.trim()
+      : typeof player?.fullName === "string"
+        ? player.fullName.trim()
+        : "";
+  if (nativeName) return nativeName;
+
+  const plainName = typeof player?.name === "string" ? player.name.trim() : "";
+  if (plainName) return plainName;
+
+  return typeof fallback === "string" && fallback.trim() ? fallback.trim() : null;
+}
+
 function normalizeMetaValue(value: any): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value === "number") return `${value}`.trim();
@@ -487,12 +510,14 @@ export function LiveClubView({ club, embedded = false }: Props) {
             prev.find((item) => item.sessionId === sessionId);
           if (!existing) return prev;
 
-          const nextPlayerAName = isPlaceholderPlayerName(players[0]?.name)
+          const incomingPlayerAName = resolveLivePlayerDisplayName(players[0], existing.state?.playerAName ?? "Player A");
+          const incomingPlayerBName = resolveLivePlayerDisplayName(players[1], existing.state?.playerBName ?? "Player B");
+          const nextPlayerAName = isPlaceholderPlayerName(incomingPlayerAName)
             ? (existing.state?.playerAName ?? "Player A")
-            : players[0]?.name ?? existing.state?.playerAName ?? "Player A";
-          const nextPlayerBName = isPlaceholderPlayerName(players[1]?.name)
+            : incomingPlayerAName ?? existing.state?.playerAName ?? "Player A";
+          const nextPlayerBName = isPlaceholderPlayerName(incomingPlayerBName)
             ? (existing.state?.playerBName ?? "Player B")
-            : players[1]?.name ?? existing.state?.playerBName ?? "Player B";
+            : incomingPlayerBName ?? existing.state?.playerBName ?? "Player B";
 
           return prev.map((item) =>
             item === existing
@@ -715,8 +740,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
           bestRunA: players[0]?.hr ?? 0,
           bestRunB: players[1]?.hr ?? 0,
           ended: false,
-          playerAName: players[0]?.name,
-          playerBName: players[1]?.name,
+          playerAName: resolveLivePlayerDisplayName(players[0]) ?? undefined,
+          playerBName: resolveLivePlayerDisplayName(players[1]) ?? undefined,
           playerACountry: session.player1Country ?? players[0]?.country ?? null,
           playerBCountry: session.player2Country ?? players[1]?.country ?? null,
           playerAPhotoUrl:
@@ -1139,12 +1164,14 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const existing =
             itemsSnapshot.find((x) => x.screenId === payload.screenId) ??
             itemsSnapshot.find((x) => x.sessionId === sessionKey);
-          const nextPlayerAName = isPlaceholderPlayerName(payload.players?.[0]?.name)
+          const incomingPlayerAName = resolveLivePlayerDisplayName(payload.players?.[0], existing?.state?.playerAName);
+          const incomingPlayerBName = resolveLivePlayerDisplayName(payload.players?.[1], existing?.state?.playerBName);
+          const nextPlayerAName = isPlaceholderPlayerName(incomingPlayerAName)
             ? existing?.state?.playerAName
-            : payload.players?.[0]?.name;
-          const nextPlayerBName = isPlaceholderPlayerName(payload.players?.[1]?.name)
+            : incomingPlayerAName;
+          const nextPlayerBName = isPlaceholderPlayerName(incomingPlayerBName)
             ? existing?.state?.playerBName
-            : payload.players?.[1]?.name;
+            : incomingPlayerBName;
           const state: LiveScoreState = {
             scoreA: payload.players?.[0]?.points,
             scoreB: payload.players?.[1]?.points,
@@ -1159,8 +1186,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
             bestRunA: payload.players?.[0]?.hr,
             bestRunB: payload.players?.[1]?.hr,
             ended: !!payload.ended,
-            playerAName: nextPlayerAName,
-            playerBName: nextPlayerBName,
+            playerAName: nextPlayerAName ?? undefined,
+            playerBName: nextPlayerBName ?? undefined,
             playerACountry:
               (payload as any)?.player1Country ??
               payload.players?.[0]?.country ??
