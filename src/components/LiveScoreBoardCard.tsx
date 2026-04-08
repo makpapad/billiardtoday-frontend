@@ -69,14 +69,14 @@ export function LiveScoreBoardCard({
   openSignal,
   topLeftControl,
 }: LiveScoreBoardCardProps) {
-  const dismissedStorageKey = `bt-live-card-dismissed:${sessionId}`;
+  const expandedStorageKey = `bt-live-card-expanded:${sessionId}`;
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
-  const [internalExpanded, setInternalExpanded] = React.useState(false);
-  const [dismissed, setDismissed] = React.useState(() => {
+  const isControlled = typeof expanded === "boolean";
+  const [internalExpanded, setInternalExpanded] = React.useState(() => {
     if (typeof window === "undefined") return false;
     try {
-      return window.sessionStorage.getItem(dismissedStorageKey) === "1";
+      return window.sessionStorage.getItem(expandedStorageKey) === "1";
     } catch {
       return false;
     }
@@ -85,32 +85,28 @@ export function LiveScoreBoardCard({
   const hideSummaryTimerRef = React.useRef<number | null>(null);
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
-  const externallyExpanded = typeof expanded === "boolean" ? expanded : internalExpanded;
-  const isExpanded = dismissed ? false : externallyExpanded;
-
-  React.useEffect(() => {
-    if (expanded === true) {
-      setDismissed(false);
-    }
-  }, [expanded]);
+  const isExpanded = isControlled ? Boolean(expanded) : internalExpanded;
 
   React.useEffect(() => {
     if (typeof openSignal !== "number" || !Number.isFinite(openSignal)) return;
-    setDismissed(false);
-    if (typeof expanded !== "boolean") {
+    if (!isControlled) {
       setInternalExpanded(true);
     }
-  }, [expanded, openSignal]);
+  }, [isControlled, openSignal]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
+    if (isControlled) return;
     try {
-      if (dismissed) window.sessionStorage.setItem(dismissedStorageKey, "1");
-      else window.sessionStorage.removeItem(dismissedStorageKey);
+      if (internalExpanded) {
+        window.sessionStorage.setItem(expandedStorageKey, "1");
+      } else {
+        window.sessionStorage.removeItem(expandedStorageKey);
+      }
     } catch {
       // ignore storage failures
     }
-  }, [dismissed, dismissedStorageKey]);
+  }, [expandedStorageKey, internalExpanded, isControlled]);
 
   const resolveDisplayName = (player: Player) => {
     const englishName = typeof player.full_name_en === "string" ? player.full_name_en.trim() : "";
@@ -125,7 +121,7 @@ export function LiveScoreBoardCard({
 
   const setExpanded = (next: boolean) => {
     if (onExpandedChange) onExpandedChange(next, sessionId);
-    if (typeof expanded !== "boolean") setInternalExpanded(next);
+    if (!isControlled) setInternalExpanded(next);
   };
 
   const handleClick = () => {
@@ -135,7 +131,6 @@ export function LiveScoreBoardCard({
   };
 
   const handleExpand = () => {
-    setDismissed(false);
     setExpanded(true);
     requestAnimationFrame(() => {
       expandedCardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -144,7 +139,6 @@ export function LiveScoreBoardCard({
 
   const handleCollapse = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    setDismissed(true);
     setExpanded(false);
   };
 
