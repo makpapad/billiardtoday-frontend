@@ -105,6 +105,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
                       scoreFor: Number(m?.scoreFor) || 0,
                       scoreAgainst: Number(m?.scoreAgainst) || 0,
                       innings: Number(m?.innings) || 0,
+                      playerPossiblePoints: Number(m?.playerPossiblePoints) || 0,
+                      opponentPossiblePoints: Number(m?.opponentPossiblePoints) || 0,
                       highRun: Number(m?.highRun) || 0,
                   }))
                 : []
