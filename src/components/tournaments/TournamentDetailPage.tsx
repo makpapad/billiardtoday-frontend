@@ -810,7 +810,23 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   );
   const [dismissedLiveSessionKeys, setDismissedLiveSessionKeys] = useState<
     Set<string>
-  >(new Set());
+  >(() => {
+    if (typeof window === "undefined") return new Set();
+    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
+    try {
+      const raw = window.sessionStorage.getItem(storageKey);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return new Set();
+      return new Set(
+        parsed
+          .map((value) => String(value || "").trim())
+          .filter((value) => value.length > 0),
+      );
+    } catch {
+      return new Set();
+    }
+  });
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
     null,
   );
@@ -2429,26 +2445,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
     return result;
   }, [eventStages, liveCards, stageMatchGroups]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
-    try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return;
-      setDismissedLiveSessionKeys(
-        new Set(
-          parsed
-            .map((value) => String(value || "").trim())
-            .filter((value) => value.length > 0),
-        ),
-      );
-    } catch {
-      // ignore corrupt storage
-    }
-  }, [summary.documentId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
