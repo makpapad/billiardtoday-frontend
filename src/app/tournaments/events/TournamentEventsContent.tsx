@@ -3818,6 +3818,46 @@ export function TournamentEventsContent({
 
                                                             const displayPlayers =
                                                               row.displayPlayers;
+                                                            const matchPlayed =
+                                                              [match.top, match.bottom].some(
+                                                                (entry) =>
+                                                                  entry.outcome !==
+                                                                    null ||
+                                                                  (entry.player
+                                                                    .points ?? 0) >
+                                                                    0 ||
+                                                                  (entry.player
+                                                                    .innings ?? 0) >
+                                                                    0 ||
+                                                                  (entry.player
+                                                                    .highRun ?? 0) >
+                                                                    0 ||
+                                                                  (entry.player
+                                                                    .highRun2 ?? 0) >
+                                                                    0 ||
+                                                                  (entry.player
+                                                                    .matchPoints ??
+                                                                    0) > 0,
+                                                              );
+                                                            const displayMatchValue = (
+                                                              value: number | null,
+                                                            ) =>
+                                                              matchPlayed
+                                                                ? formatNumberValue(
+                                                                    value,
+                                                                  )
+                                                                : "-";
+                                                            const displayMatchAverage =
+                                                              (
+                                                                points: number | null,
+                                                                innings: number | null,
+                                                              ) =>
+                                                                matchPlayed
+                                                                  ? formatAverage(
+                                                                      points,
+                                                                      innings,
+                                                                    )
+                                                                  : "-";
 
                                                             return (
                                                               <>
@@ -3977,28 +4017,28 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match.top
                                                                         .player
                                                                         .matchPoints,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match.top
                                                                         .player
                                                                         .points,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match.top
                                                                         .player
                                                                         .innings,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatAverage(
+                                                                    {displayMatchAverage(
                                                                       match.top
                                                                         .player
                                                                         .points,
@@ -4008,7 +4048,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match.top
                                                                         .player
                                                                         .highRun,
@@ -4016,7 +4056,7 @@ export function TournamentEventsContent({
                                                                   </td>
                                                                   {!isArtisticEvent && (
                                                                     <td className="px-4 py-2 text-center">
-                                                                      {formatNumberValue(
+                                                                      {displayMatchValue(
                                                                         match.top
                                                                           .player
                                                                           .highRun2,
@@ -4150,7 +4190,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match
                                                                         .bottom
                                                                         .player
@@ -4158,7 +4198,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match
                                                                         .bottom
                                                                         .player
@@ -4166,7 +4206,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match
                                                                         .bottom
                                                                         .player
@@ -4174,7 +4214,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatAverage(
+                                                                    {displayMatchAverage(
                                                                       match
                                                                         .bottom
                                                                         .player
@@ -4186,7 +4226,7 @@ export function TournamentEventsContent({
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
-                                                                    {formatNumberValue(
+                                                                    {displayMatchValue(
                                                                       match
                                                                         .bottom
                                                                         .player
@@ -4195,7 +4235,7 @@ export function TournamentEventsContent({
                                                                   </td>
                                                                   {!isArtisticEvent && (
                                                                     <td className="px-4 py-2 text-center">
-                                                                      {formatNumberValue(
+                                                                      {displayMatchValue(
                                                                         match
                                                                           .bottom
                                                                           .player
