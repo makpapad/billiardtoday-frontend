@@ -85,6 +85,9 @@ type WsTournamentPayload = {
     hr?: number | null;
     avgFormatted?: string | null;
     accPercent?: number | null;
+    timeoutsUsed?: number | null;
+    timeouts?: number | null;
+    maxTimeouts?: number | null;
   }>;
 };
 
@@ -1592,6 +1595,34 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         Number(sessionObj.progress ?? baseSession?.state?.progress ?? 0) || 0,
                       totalBlocks: 40,
                       isRunning: lifecycleIsRunning,
+                      timeoutsA:
+                        Number(
+                          sessionObj.player1_timeouts_used ??
+                            sessionObj.timeoutsA ??
+                            baseSession?.state?.timeoutsA ??
+                            0,
+                        ) || 0,
+                      timeoutsB:
+                        Number(
+                          sessionObj.player2_timeouts_used ??
+                            sessionObj.timeoutsB ??
+                            baseSession?.state?.timeoutsB ??
+                            0,
+                        ) || 0,
+                      maxTimeoutsA:
+                        Number(
+                          sessionObj.player1_max_timeouts ??
+                            sessionObj.maxTimeoutsA ??
+                            baseSession?.state?.maxTimeoutsA ??
+                            3,
+                        ) || 3,
+                      maxTimeoutsB:
+                        Number(
+                          sessionObj.player2_max_timeouts ??
+                            sessionObj.maxTimeoutsB ??
+                            baseSession?.state?.maxTimeoutsB ??
+                            3,
+                        ) || 3,
                       tournamentName:
                         typeof sessionObj.eventTitle === "string"
                           ? sessionObj.eventTitle
@@ -1756,6 +1787,32 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     progress: Number(payload.progress ?? 0) || 0,
                     totalBlocks: 40,
                     isRunning: scoreUpdateIsRunning,
+                    timeoutsA:
+                      Number(
+                        playerA.timeoutsUsed ??
+                          playerA.timeouts ??
+                          baseSession?.state?.timeoutsA ??
+                          0,
+                      ) || 0,
+                    timeoutsB:
+                      Number(
+                        playerB.timeoutsUsed ??
+                          playerB.timeouts ??
+                          baseSession?.state?.timeoutsB ??
+                          0,
+                      ) || 0,
+                    maxTimeoutsA:
+                      Number(
+                        playerA.maxTimeouts ??
+                          baseSession?.state?.maxTimeoutsA ??
+                          3,
+                      ) || 3,
+                    maxTimeoutsB:
+                      Number(
+                        playerB.maxTimeouts ??
+                          baseSession?.state?.maxTimeoutsB ??
+                          3,
+                      ) || 3,
                     current,
                   },
                 },
