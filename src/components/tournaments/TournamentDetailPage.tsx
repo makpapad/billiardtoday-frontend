@@ -3030,17 +3030,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
-                      expanded={
-                        !dismissedLiveSessionKeys.has(stableSessionKey) &&
-                        expandedSessions.has(session.sessionId)
-                      }
-                      onExpandedChange={(expanded) =>
-                        handleExpandedChange(
-                          expanded,
-                          session.sessionId,
-                          stableSessionKey,
-                        )
-                      }
                       topLeftControl={
                         <button
                           type="button"
