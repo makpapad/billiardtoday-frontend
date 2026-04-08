@@ -87,6 +87,12 @@ export function LiveScoreBoardCard({
   const isExpanded = dismissed ? false : externallyExpanded;
 
   React.useEffect(() => {
+    if (expanded === true) {
+      setDismissed(false);
+    }
+  }, [expanded]);
+
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       if (dismissed) window.sessionStorage.setItem(dismissedStorageKey, "1");
