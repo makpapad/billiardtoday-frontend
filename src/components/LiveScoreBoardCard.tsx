@@ -45,6 +45,7 @@ interface LiveScoreBoardCardProps {
   gameDurationSeconds?: number;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean, sessionId: string) => void;
+  openSignal?: number | null;
   topLeftControl?: ReactNode;
 }
 
@@ -65,6 +66,7 @@ export function LiveScoreBoardCard({
   gameDurationSeconds,
   expanded,
   onExpandedChange,
+  openSignal,
   topLeftControl,
 }: LiveScoreBoardCardProps) {
   const dismissedStorageKey = `bt-live-card-dismissed:${sessionId}`;
@@ -91,6 +93,14 @@ export function LiveScoreBoardCard({
       setDismissed(false);
     }
   }, [expanded]);
+
+  React.useEffect(() => {
+    if (typeof openSignal !== "number" || !Number.isFinite(openSignal)) return;
+    setDismissed(false);
+    if (typeof expanded !== "boolean") {
+      setInternalExpanded(true);
+    }
+  }, [expanded, openSignal]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;

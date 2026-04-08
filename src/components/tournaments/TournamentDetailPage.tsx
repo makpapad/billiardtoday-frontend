@@ -805,6 +805,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
+  const [requestedLiveOpenSessionId, setRequestedLiveOpenSessionId] = useState<
+    string | null
+  >(null);
+  const [requestedLiveOpenNonce, setRequestedLiveOpenNonce] = useState<
+    number | null
+  >(null);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
     new Set(),
   );
@@ -2916,12 +2922,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           showEventHeader={false}
           emptyStateMessage="This tournament page is missing event data."
           liveSessionsOverride={mergedEventLiveSessions}
-            onLiveMatchOpen={(sessionId) => {
-              setHighlightedLiveSessionId(sessionId);
-              setExpandedSessions(new Set([sessionId]));
-              const target = mergedEventLiveSessions.find(
-                (session) => session.sessionId === sessionId,
-              );
+          onLiveMatchOpen={(sessionId) => {
+            setHighlightedLiveSessionId(sessionId);
+            setRequestedLiveOpenSessionId(sessionId);
+            setRequestedLiveOpenNonce(Date.now());
+            const target = mergedEventLiveSessions.find(
+              (session) => session.sessionId === sessionId,
+            );
               if (target) {
                 const stableKey = getStableLiveSessionKey(target);
                 if (stableKey) {
@@ -3030,16 +3037,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
-                      expanded={
-                        !dismissedLiveSessionKeys.has(stableSessionKey) &&
-                        expandedSessions.has(session.sessionId)
-                      }
-                      onExpandedChange={(expanded) =>
-                        handleExpandedChange(
-                          expanded,
-                          session.sessionId,
-                          stableSessionKey,
-                        )
+                      openSignal={
+                        requestedLiveOpenSessionId === session.sessionId
+                          ? requestedLiveOpenNonce
+                          : null
                       }
                       topLeftControl={
                         <button
