@@ -2946,6 +2946,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     <LiveScoreBoardCard
                       sessionId={session.sessionId}
                       inlineExpandable={false}
+                      expanded={false}
                       clubName={session.clubName}
                       clubCity={session.clubCity}
                       updatedAt={session.updatedAt}
