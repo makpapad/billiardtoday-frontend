@@ -507,7 +507,7 @@ export function LiveScoreBoardCard({
   };
 
   const renderCollapsedSummary = () => (
-    <div className="mt-2">
+    <div className="mt-0.5">
       <button
         type="button"
         onClick={inlineExpandable ? handleExpand : handleClick}
@@ -530,7 +530,7 @@ export function LiveScoreBoardCard({
   );
 
   const renderExpandedBoard = () => (
-    <div className="mt-2">
+    <div className="mt-0.5">
       <div
         ref={expandedCardRef}
         onClick={handleClick}
