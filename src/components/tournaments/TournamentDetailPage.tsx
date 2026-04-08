@@ -184,6 +184,16 @@ function GroupTooltip({
   locale?: string;
 }) {
   const hasStandings = data.standings.length > 0;
+  const hasStandingActivity = (player: GroupStanding) =>
+    player.record.wins > 0 ||
+    player.record.draws > 0 ||
+    player.record.losses > 0 ||
+    player.totalMatchPoints > 0 ||
+    player.totalPoints > 0 ||
+    player.totalInnings > 0 ||
+    (player.highRun ?? 0) > 0 ||
+    (player.highRun2 ?? 0) > 0 ||
+    (player.bestAverage ?? 0) > 0;
   return (
     <div className="absolute left-0 bottom-full z-30 mb-2 w-[min(760px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -353,30 +363,43 @@ function GroupTooltip({
                     {player.place}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatRecord(player.record)}
+                    {hasStandingActivity(player) ? formatRecord(player.record) : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(player.totalMatchPoints)}
+                    {hasStandingActivity(player)
+                      ? formatNumberValue(player.totalMatchPoints)
+                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(player.totalPoints)}
+                    {hasStandingActivity(player)
+                      ? formatNumberValue(player.totalPoints)
+                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(player.totalInnings)}
+                    {hasStandingActivity(player)
+                      ? formatNumberValue(player.totalInnings)
+                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatAverage(player.totalPoints, player.totalInnings)}
+                    {hasStandingActivity(player)
+                      ? formatAverage(player.totalPoints, player.totalInnings)
+                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {typeof player.bestAverage === "number"
+                    {hasStandingActivity(player) &&
+                    typeof player.bestAverage === "number"
                       ? player.bestAverage.toFixed(3)
                       : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(player.highRun)}
+                    {hasStandingActivity(player)
+                      ? formatNumberValue(player.highRun)
+                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(player.highRun2)}
+                    {hasStandingActivity(player)
+                      ? formatNumberValue(player.highRun2)
+                      : "-"}
                   </td>
                 </tr>
               ))}
