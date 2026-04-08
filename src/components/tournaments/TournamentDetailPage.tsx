@@ -2463,10 +2463,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   useEffect(() => {
     const validSessionIds = new Set(liveCards.map((session) => session.sessionId));
     setExpandedSessions((prev) => {
-      if (validSessionIds.size === 0) {
-        hasAutoExpandedLiveCardsRef.current = false;
-        return new Set();
-      }
+      if (validSessionIds.size === 0) return new Set();
 
       const next = new Set(
         Array.from(prev).filter((sessionId) => validSessionIds.has(sessionId)),
