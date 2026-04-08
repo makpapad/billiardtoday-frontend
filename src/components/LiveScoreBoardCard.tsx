@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 
 interface Player {
   name?: string;
+  full_name?: string;
+  full_name_en?: string;
   photoUrl?: string | null;
   country?: string | null;
   points?: number;
@@ -73,6 +75,17 @@ export function LiveScoreBoardCard({
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
   const isExpanded = typeof expanded === "boolean" ? expanded : internalExpanded;
+
+  const resolveDisplayName = (player: Player) => {
+    const englishName = typeof player.full_name_en === "string" ? player.full_name_en.trim() : "";
+    if (englishName) return englishName;
+    const nativeName = typeof player.full_name === "string" ? player.full_name.trim() : "";
+    if (nativeName) return nativeName;
+    return typeof player.name === "string" ? player.name.trim() : "";
+  };
+
+  const player1Name = resolveDisplayName(player1);
+  const player2Name = resolveDisplayName(player2);
 
   const setExpanded = (next: boolean) => {
     if (onExpandedChange) onExpandedChange(next, sessionId);
@@ -228,7 +241,7 @@ export function LiveScoreBoardCard({
     compact?: boolean;
   }) => {
     const src = normalizePhotoUrl(player.photoUrl);
-    const initials = initialsFor(player.name) || fallback;
+    const initials = initialsFor(resolveDisplayName(player)) || fallback;
     const outerSize = compact ? "w-10 h-10" : "w-16 h-16";
     const innerSize = compact ? "w-9 h-9" : "w-14 h-14";
     const textSize = compact ? "text-xs" : "text-sm";
@@ -237,7 +250,7 @@ export function LiveScoreBoardCard({
         {src ? (
           <img
             src={src}
-            alt={player.name || fallback}
+            alt={resolveDisplayName(player) || fallback}
             className={`${innerSize} rounded-full object-cover border border-white/40`}
             loading="lazy"
             referrerPolicy="no-referrer"
@@ -272,7 +285,7 @@ export function LiveScoreBoardCard({
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
     return (
-      <div className="w-8 h-5 rounded-[4px] overflow-hidden border border-white/40 shadow-inner bg-black/20 flex items-center justify-center">
+      <div className="w-10 h-6 rounded-[5px] overflow-hidden border border-white/40 shadow-inner bg-black/20 flex items-center justify-center">
         {flagSrc ? (
           <img
             src={flagSrc}
@@ -282,30 +295,30 @@ export function LiveScoreBoardCard({
             referrerPolicy="no-referrer"
           />
         ) : (
-          <span className="text-[10px] font-semibold text-white">{initial}</span>
+          <span className="text-[11px] font-semibold text-white">{initial}</span>
         )}
       </div>
     );
   };
 
-  const p1Flag = <FlagBadge name={player1.name} country={player1.country} />;
-  const p2Flag = <FlagBadge name={player2.name} country={player2.country} />;
+  const p1Flag = <FlagBadge name={player1Name} country={player1.country} />;
+  const p2Flag = <FlagBadge name={player2Name} country={player2.country} />;
   const MobileFlagCircle = ({ name, country }: { name?: string; country?: string | null }) => {
     const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w80/${iso}.png` : null;
     return (
-      <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden">
+      <div className="w-11 h-11 rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden">
         {flagSrc ? (
           <img
             src={flagSrc}
             alt={country ?? "flag"}
-            className="w-9 h-9 rounded-full object-cover border border-white/40"
+            className="w-10 h-10 rounded-full object-cover border border-white/40"
             loading="lazy"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-9 h-9 rounded-full bg-white/10 border border-white/40 flex items-center justify-center text-xs font-semibold">
+          <div className="w-10 h-10 rounded-full bg-white/10 border border-white/40 flex items-center justify-center text-xs font-semibold">
             {initial}
           </div>
         )}
@@ -355,7 +368,7 @@ export function LiveScoreBoardCard({
     compact?: boolean;
   }) => (
     <div
-      className={`ml-0 mr-0 h-[44px] flex items-center gap-2 rounded-xl border px-2.5 py-2 shadow-sm ${
+      className={`ml-0 mr-0 h-[48px] flex items-center gap-2.5 rounded-xl border px-3 py-2 shadow-sm ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -364,16 +377,15 @@ export function LiveScoreBoardCard({
       {!compact ? <div className="flex items-center justify-center">{flag}</div> : null}
       <div className="flex-1 min-w-0 text-center">
         <div
-          className={`${compact ? "text-[13px] sm:text-[14px]" : "text-[15px] sm:text-[17px]"} truncate font-semibold leading-tight`}
+          className={`${compact ? "text-[14px] sm:text-[15px]" : "text-[17px] sm:text-[19px]"} truncate font-semibold leading-tight`}
           title={name || ""}
         >
           {compact ? compactDisplayName(name, 16) : (name || "")}
         </div>
       </div>
       {isActive ? (
-        <div className={`rounded-md leading-none text-center bg-slate-900 text-white ${compact ? "px-1 py-0.5" : "px-1.5 py-1"}`}>
-          <div className="text-[8px] font-black tracking-[0.14em]">RUN</div>
-          <div className={`${compact ? "text-[11px]" : "text-[12px]"} font-bold mt-0.5 tabular-nums`}>
+        <div className={`rounded-md leading-none text-center bg-slate-900 text-white ${compact ? "px-1.5 py-1" : "px-2 py-1.5"}`}>
+          <div className={`${compact ? "text-[12px]" : "text-[14px]"} font-bold tabular-nums`}>
             {run ?? 0}
           </div>
         </div>
@@ -584,11 +596,11 @@ export function LiveScoreBoardCard({
             <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
           </div>
           <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
-            <span className="truncate text-left flex-1">{player1.name || "Player 1"}</span>
+            <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
             <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
             <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
             <span className="min-w-[30px] text-center text-[32px] leading-none font-black text-amber-300">{player2.points ?? 0}</span>
-            <span className="truncate text-right flex-1 text-amber-300">{player2.name || "Player 2"}</span>
+            <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
           </div>
         </button>
       </div>
@@ -628,11 +640,11 @@ export function LiveScoreBoardCard({
 
       <div className="relative z-10 sm:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          <MobileFlagCircle name={player1.name} country={player1.country} />
+          <MobileFlagCircle name={player1Name} country={player1.country} />
           <NamePlate
             variant="top"
             flag={p1Flag}
-            name={player1.name}
+            name={player1Name}
             run={player1.liveRun ?? player1.run ?? 0}
             isActive={isPlayer1Active}
             compact
@@ -665,11 +677,11 @@ export function LiveScoreBoardCard({
           <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          <MobileFlagCircle name={player2.name} country={player2.country} />
+          <MobileFlagCircle name={player2Name} country={player2.country} />
           <NamePlate
             variant="bottom"
             flag={p2Flag}
-            name={player2.name}
+            name={player2Name}
             run={player2.liveRun ?? player2.run ?? 0}
             isActive={isPlayer2Active}
             compact
@@ -702,7 +714,7 @@ export function LiveScoreBoardCard({
             <NamePlate
               variant="top"
               flag={p1Flag}
-              name={player1.name}
+              name={player1Name}
               run={player1.liveRun ?? player1.run ?? 0}
               isActive={isPlayer1Active}
             />
@@ -724,7 +736,7 @@ export function LiveScoreBoardCard({
             <NamePlate
               variant="bottom"
               flag={p2Flag}
-              name={player2.name}
+              name={player2Name}
               run={player2.liveRun ?? player2.run ?? 0}
               isActive={isPlayer2Active}
             />
