@@ -504,6 +504,168 @@ export function LiveScoreBoardCard({
     );
   };
 
+  const renderCollapsedSummary = () => (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={handleExpand}
+        className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-r from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] px-3 py-2 text-white shadow-xl transition hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40"
+        aria-label="Expand live scoreboard"
+      >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
+          <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
+        </div>
+        <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
+          <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
+          <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
+          <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
+          <span className="min-w-[30px] text-center text-[32px] leading-none font-black text-amber-300">{player2.points ?? 0}</span>
+          <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
+        </div>
+      </button>
+    </div>
+  );
+
+  const renderExpandedBoard = () => (
+    <div className="mt-2">
+      <div
+        ref={expandedCardRef}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 sm:p-2 text-white shadow-2xl hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer"
+        style={{ minHeight: "180px" }}
+      >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="live-bg-orb-a absolute -left-[22%] -top-[70%] h-[220%] w-[48%] rounded-full bg-cyan-300/20 blur-3xl" />
+          <span className="live-bg-orb-b absolute right-[-20%] bottom-[-86%] h-[230%] w-[50%] rounded-full bg-indigo-300/20 blur-3xl" />
+          <span className="live-bg-sweep absolute left-[-35%] top-0 h-full w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </div>
+        <button
+          type="button"
+          onClick={handleCollapse}
+          className="absolute right-2 top-2 z-20 rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
+        >
+          Close
+        </button>
+        {topLeftControl ? <div className="absolute left-2 top-2 z-20">{topLeftControl}</div> : null}
+
+        <div className="relative z-10 sm:hidden space-y-1">
+          <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
+            <MobileFlagCircle name={player1Name} country={player1.country} />
+            <NamePlate
+              variant="top"
+              flag={p1Flag}
+              name={player1Name}
+              run={player1.liveRun ?? player1.run ?? 0}
+              isActive={isPlayer1Active}
+              compact
+            />
+            <div className="h-[36px] rounded-lg border border-white/70 bg-white/95 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
+              {player1.points ?? 0}
+            </div>
+          </div>
+          <div className="px-1">
+            <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+          </div>
+          <div className="grid grid-cols-[52px_1fr_52px] gap-1.5 text-center">
+            <div className="rounded-lg border border-white/20 bg-white/10 py-1">
+              <div className="text-[9px] uppercase text-white/70">AVG</div>
+              <div className="text-xs font-semibold">{buildPlayerStats(player1)[0]?.value}</div>
+            </div>
+            <div className="rounded-lg border border-white/70 bg-white/95 text-slate-900 py-1">
+              <div className="text-[9px] uppercase tracking-[0.2em] text-slate-600">INN</div>
+              <div className="text-lg font-black leading-none">{formatStat(inningsDisplay, 0)}</div>
+            </div>
+            <div className="rounded-lg border border-amber-200 bg-amber-300 text-slate-900 py-1">
+              <div className="text-[9px] uppercase text-slate-700">AVG</div>
+              <div className="text-xs font-semibold">{buildPlayerStats(player2)[0]?.value}</div>
+            </div>
+          </div>
+          <div className="px-1">
+            <TimerBar />
+          </div>
+          <div className="px-1">
+            <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+          </div>
+          <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
+            <MobileFlagCircle name={player2Name} country={player2.country} />
+            <NamePlate
+              variant="bottom"
+              flag={p2Flag}
+              name={player2Name}
+              run={player2.liveRun ?? player2.run ?? 0}
+              isActive={isPlayer2Active}
+              compact
+            />
+            <div className="h-[36px] rounded-lg border border-amber-200 bg-amber-300 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
+              {player2.points ?? 0}
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="relative z-10 hidden sm:grid gap-1"
+          style={{
+            gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
+          }}
+        >
+          <div className="flex flex-col h-full justify-center gap-4 items-center py-1 pl-3">
+            <div className="flex flex-col items-center gap-2 translate-y-0">
+              <AvatarCircle player={player1} fallback="P1" />
+              <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+            </div>
+            <div className="flex flex-col items-center gap-2 translate-y-0">
+              <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+              <AvatarCircle player={player2} fallback="P2" />
+            </div>
+          </div>
+
+          <div className="flex flex-col h-full px-1.5 justify-center">
+            <div className="pb-0.5">
+              <NamePlate
+                variant="top"
+                flag={p1Flag}
+                name={player1Name}
+                run={player1.liveRun ?? player1.run ?? 0}
+                isActive={isPlayer1Active}
+              />
+            </div>
+
+            <div className="pt-0 pb-1">
+              <StatsRow player={player1} variant="top" />
+            </div>
+
+            <div className="py-0.5 ml-0 mr-0">
+              <TimerBar />
+            </div>
+
+            <div className="pt-1 pb-0">
+              <StatsRow player={player2} variant="bottom" />
+            </div>
+
+            <div className="pt-0.5">
+              <NamePlate
+                variant="bottom"
+                flag={p2Flag}
+                name={player2Name}
+                run={player2.liveRun ?? player2.run ?? 0}
+                isActive={isPlayer2Active}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col h-full gap-1 items-start justify-center pr-0 -ml-1">
+            <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
+            <InningsCard />
+            <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const buildPlayerStats = (player: Player) => {
     const innings = Math.max(0, Number(player.innings) || 0);
     const points = Math.max(0, Number(player.points) || 0);
@@ -583,6 +745,35 @@ export function LiveScoreBoardCard({
       </div>
     );
   };
+
+  if (isControlled) {
+    return (
+      <div className="w-full relative">
+        {isExpanded ? renderExpandedBoard() : renderCollapsedSummary()}
+        <style jsx>{`
+          @keyframes liveFloatA {
+            0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.35; }
+            50% { transform: translate3d(18px, 10px, 0) scale(1.08); opacity: 0.55; }
+            100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.35; }
+          }
+          @keyframes liveFloatB {
+            0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.28; }
+            50% { transform: translate3d(-20px, -12px, 0) scale(1.12); opacity: 0.5; }
+            100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.28; }
+          }
+          @keyframes liveSweep {
+            0% { transform: translateX(-10%); opacity: 0; }
+            20% { opacity: 0.35; }
+            60% { opacity: 0.2; }
+            100% { transform: translateX(280%); opacity: 0; }
+          }
+          .live-bg-orb-a { animation: liveFloatA 8s ease-in-out infinite; }
+          .live-bg-orb-b { animation: liveFloatB 10s ease-in-out infinite; }
+          .live-bg-sweep { animation: liveSweep 6.5s ease-in-out infinite; }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full relative">
