@@ -47,6 +47,7 @@ interface LiveScoreBoardCardProps {
   onExpandedChange?: (expanded: boolean, sessionId: string) => void;
   openSignal?: number | null;
   topLeftControl?: ReactNode;
+  inlineExpandable?: boolean;
 }
 
 export function LiveScoreBoardCard({
@@ -68,6 +69,7 @@ export function LiveScoreBoardCard({
   onExpandedChange,
   openSignal,
   topLeftControl,
+  inlineExpandable = true,
 }: LiveScoreBoardCardProps) {
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
@@ -508,9 +510,9 @@ export function LiveScoreBoardCard({
     <div className="mt-2">
       <button
         type="button"
-        onClick={handleExpand}
+        onClick={inlineExpandable ? handleExpand : handleClick}
         className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-r from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] px-3 py-2 text-white shadow-xl transition hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40"
-        aria-label="Expand live scoreboard"
+        aria-label={inlineExpandable ? "Expand live scoreboard" : "Open live scoreboard details"}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
@@ -749,7 +751,7 @@ export function LiveScoreBoardCard({
   if (isControlled) {
     return (
       <div className="w-full relative">
-        {isExpanded ? renderExpandedBoard() : renderCollapsedSummary()}
+        {inlineExpandable && isExpanded ? renderExpandedBoard() : renderCollapsedSummary()}
         <style jsx>{`
           @keyframes liveFloatA {
             0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.35; }

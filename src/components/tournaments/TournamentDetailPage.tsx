@@ -786,9 +786,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
-  const [expandedLiveSessionId, setExpandedLiveSessionId] = useState<
-    string | null
-  >(null);
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
     null,
   );
@@ -1753,13 +1750,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [activeView, highlightedLiveSessionId, eventLiveSessions]);
-
-  const handleTournamentLiveExpandedChange = (
-    expanded: boolean,
-    sessionId: string,
-  ) => {
-    setExpandedLiveSessionId(expanded ? sessionId : null);
-  };
 
   const tournamentLiveScreens = useMemo(
     () =>
@@ -2868,8 +2858,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   >
                     <LiveScoreBoardCard
                       sessionId={session.sessionId}
-                      expanded={expandedLiveSessionId === session.sessionId}
-                      onExpandedChange={handleTournamentLiveExpandedChange}
+                      inlineExpandable={false}
                       clubName={session.clubName}
                       clubCity={session.clubCity}
                       updatedAt={session.updatedAt}
