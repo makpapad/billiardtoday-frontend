@@ -385,7 +385,7 @@ export function LiveScoreBoardCard({
       </div>
       {isActive ? (
         <div className={`self-stretch rounded-md leading-none text-center bg-slate-900 text-white flex items-center justify-center ${compact ? "min-w-[28px] px-1.5" : "min-w-[34px] px-2"}`}>
-          <div className={`${compact ? "text-[14px]" : "text-[18px]"} font-black tabular-nums leading-none`}>
+          <div className={`${compact ? "text-[15px]" : "text-[20px]"} font-black tabular-nums leading-none`}>
             {run ?? 0}
           </div>
         </div>
