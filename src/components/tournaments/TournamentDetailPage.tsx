@@ -98,6 +98,57 @@ const isPlaceholderPlayerName = (value?: string | null) => {
   return !normalized || normalized === "player 1" || normalized === "player 2";
 };
 
+const resolveTournamentPayloadPlayerName = (
+  player:
+    | {
+        name?: string | null;
+        full_name?: string | null;
+        full_name_en?: string | null;
+        fullName?: string | null;
+        fullNameEn?: string | null;
+      }
+    | null
+    | undefined,
+  fallback?: string | null,
+) => {
+  const englishName =
+    typeof player?.full_name_en === "string"
+      ? player.full_name_en.trim()
+      : typeof (player as any)?.fullNameEn === "string"
+        ? (player as any).fullNameEn.trim()
+        : "";
+  if (englishName) return englishName;
+
+  const nativeName =
+    typeof (player as any)?.full_name === "string"
+      ? (player as any).full_name.trim()
+      : typeof (player as any)?.fullName === "string"
+        ? (player as any).fullName.trim()
+        : "";
+  if (nativeName) return nativeName;
+
+  const plainName = typeof player?.name === "string" ? player.name.trim() : "";
+  if (plainName) return plainName;
+
+  return typeof fallback === "string" && fallback.trim() ? fallback.trim() : null;
+};
+
+const resolveEventSessionPlayerName = (
+  sessionObj: any,
+  side: "A" | "B",
+  fallback?: string | null,
+) => {
+  const stateName =
+    side === "A" ? sessionObj?.state?.playerAName : sessionObj?.state?.playerBName;
+  if (typeof stateName === "string" && stateName.trim()) return stateName.trim();
+
+  const topLevelName =
+    side === "A" ? sessionObj?.player1Name : sessionObj?.player2Name;
+  if (typeof topLevelName === "string" && topLevelName.trim()) return topLevelName.trim();
+
+  return typeof fallback === "string" && fallback.trim() ? fallback.trim() : null;
+};
+
 function PlayerWithFlag({
   name,
   country,
@@ -1086,14 +1137,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               typeof sessionObj.player2DocumentId === "string"
                 ? sessionObj.player2DocumentId
                 : null,
-            player1Name:
-              typeof sessionObj.player1Name === "string"
-                ? sessionObj.player1Name
-                : null,
-            player2Name:
-              typeof sessionObj.player2Name === "string"
-                ? sessionObj.player2Name
-                : null,
+            player1Name: resolveEventSessionPlayerName(sessionObj, "A"),
+            player2Name: resolveEventSessionPlayerName(sessionObj, "B"),
             sessionStatus: lifecycleStatus,
             state: {
               scoreA: Number(sessionObj.player1_points ?? 0) || 0,
@@ -1107,13 +1152,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
               bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
               playerAName:
-                typeof sessionObj.player1Name === "string"
-                  ? sessionObj.player1Name
-                  : "Player A",
+                resolveEventSessionPlayerName(sessionObj, "A", "Player A") ?? "Player A",
               playerBName:
-                typeof sessionObj.player2Name === "string"
-                  ? sessionObj.player2Name
-                  : "Player B",
+                resolveEventSessionPlayerName(sessionObj, "B", "Player B") ?? "Player B",
               playerACountry:
                 typeof sessionObj.player1Country === "string"
                   ? sessionObj.player1Country
@@ -1189,24 +1230,24 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             : payload.activePlayer === 2
               ? "B"
               : undefined);
-        const nextPlayerAName = isPlaceholderPlayerName(
-          typeof playerA.name === "string" ? playerA.name : null,
-        )
+        const incomingPlayerAName = resolveTournamentPayloadPlayerName(
+          playerA,
+          existingSession?.state?.playerAName ?? existingSession?.player1Name ?? null,
+        );
+        const incomingPlayerBName = resolveTournamentPayloadPlayerName(
+          playerB,
+          existingSession?.state?.playerBName ?? existingSession?.player2Name ?? null,
+        );
+        const nextPlayerAName = isPlaceholderPlayerName(incomingPlayerAName)
           ? (existingSession?.state?.playerAName ??
             existingSession?.player1Name ??
             null)
-          : typeof playerA.name === "string"
-            ? playerA.name
-            : null;
-        const nextPlayerBName = isPlaceholderPlayerName(
-          typeof playerB.name === "string" ? playerB.name : null,
-        )
+          : incomingPlayerAName;
+        const nextPlayerBName = isPlaceholderPlayerName(incomingPlayerBName)
           ? (existingSession?.state?.playerBName ??
             existingSession?.player2Name ??
             null)
-          : typeof playerB.name === "string"
-            ? playerB.name
-            : null;
+          : incomingPlayerBName;
         upsertLiveSession({
           id: sessionId || screenId || "unknown-session",
           documentId: sessionId || screenId || "unknown-session",
@@ -1443,13 +1484,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ? sessionObj.player2DocumentId
                         : baseSession?.player2DocumentId ?? null,
                     player1Name:
-                      typeof sessionObj.player1Name === "string"
-                        ? sessionObj.player1Name
-                        : baseSession?.player1Name ?? null,
+                      resolveEventSessionPlayerName(
+                        sessionObj,
+                        "A",
+                        baseSession?.player1Name ?? null,
+                      ),
                     player2Name:
-                      typeof sessionObj.player2Name === "string"
-                        ? sessionObj.player2Name
-                        : baseSession?.player2Name ?? null,
+                      resolveEventSessionPlayerName(
+                        sessionObj,
+                        "B",
+                        baseSession?.player2Name ?? null,
+                      ),
                     sessionStatus: lifecycleStatus,
                     state: {
                       ...baseSession?.state,
@@ -1478,17 +1523,21 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       bestRunB:
                         Number(sessionObj.player2_high_run ?? baseSession?.state?.bestRunB ?? 0) || 0,
                       playerAName:
-                        typeof sessionObj.player1Name === "string"
-                          ? sessionObj.player1Name
-                          : baseSession?.state?.playerAName ??
+                        resolveEventSessionPlayerName(
+                          sessionObj,
+                          "A",
+                          baseSession?.state?.playerAName ??
                             baseSession?.player1Name ??
                             "Player A",
+                        ) ?? "Player A",
                       playerBName:
-                        typeof sessionObj.player2Name === "string"
-                          ? sessionObj.player2Name
-                          : baseSession?.state?.playerBName ??
+                        resolveEventSessionPlayerName(
+                          sessionObj,
+                          "B",
+                          baseSession?.state?.playerBName ??
                             baseSession?.player2Name ??
                             "Player B",
+                        ) ?? "Player B",
                       playerACountry:
                         typeof sessionObj.player1Country === "string"
                           ? sessionObj.player1Country
@@ -3164,4 +3213,3 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     </div>
   );
 }
-
