@@ -428,22 +428,6 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   return keys;
 };
 
-const getStableLiveSessionKey = (session: {
-  documentId?: string | null;
-  sessionId?: string | null;
-  screenIdentifier?: string | null;
-  screenId?: string | null;
-  id?: string | null;
-}) =>
-  String(
-    session.documentId ||
-      session.sessionId ||
-      session.screenIdentifier ||
-      session.screenId ||
-      session.id ||
-      "",
-  ).trim();
-
 const mergeLiveSessions = (
   primary: EventLiveSession[],
   secondary: EventLiveSession[],
@@ -541,9 +525,6 @@ const normalizeLookupText = (value: string | null | undefined) =>
     .trim();
 
 const PUBLIC_TIMEZONE_STORAGE_KEY = "bt-public-timezone-offset-minutes";
-const buildDismissedLiveStorageKey = (eventDocumentId: string) =>
-  `bt-dismissed-live-sessions:${eventDocumentId}`;
-
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
@@ -805,34 +786,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
-  const [requestedLiveOpenSessionId, setRequestedLiveOpenSessionId] = useState<
-    string | null
-  >(null);
-  const [requestedLiveOpenNonce, setRequestedLiveOpenNonce] = useState<
-    number | null
-  >(null);
-  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
-    new Set(),
-  );
-  const [dismissedLiveSessionKeys, setDismissedLiveSessionKeys] = useState<
-    Set<string>
-  >(() => {
-    if (typeof window === "undefined") return new Set();
-    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
-    try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) return new Set();
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return new Set();
-      return new Set(
-        parsed
-          .map((value) => String(value || "").trim())
-          .filter((value) => value.length > 0),
-      );
-    } catch {
-      return new Set();
-    }
-  });
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
     null,
   );
@@ -2452,45 +2405,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [eventStages, liveCards, stageMatchGroups]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storageKey = buildDismissedLiveStorageKey(summary.documentId);
-    try {
-      window.sessionStorage.setItem(
-        storageKey,
-        JSON.stringify(Array.from(dismissedLiveSessionKeys)),
-      );
-    } catch {
-      // ignore storage failures
-    }
-  }, [dismissedLiveSessionKeys, summary.documentId]);
-
-  useEffect(() => {
-    const valid = new Set(liveCards.map((item) => item.sessionId));
-    setExpandedSessions((prev) => {
-      const next = new Set<string>();
-      prev.forEach((id) => {
-        if (valid.has(id)) next.add(id);
-      });
-      return next;
-    });
-  }, [liveCards]);
-
-  useEffect(() => {
-    const validKeys = new Set(
-      liveCards
-        .map((session) => getStableLiveSessionKey(session))
-        .filter((value) => value.length > 0),
-    );
-    setDismissedLiveSessionKeys((prev) => {
-      const next = new Set<string>();
-      prev.forEach((key) => {
-        if (validKeys.has(key)) next.add(key);
-      });
-      return next;
-    });
-  }, [liveCards]);
-
-  useEffect(() => {
     if (!highlightItem) return;
     const recentlyClosed = lastClosedHighlightRef.current;
     if (
@@ -2520,37 +2434,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       state: fresh.state as any,
     });
   }, [liveCards, highlightItem]);
-
-  const handleExpandedChange = (
-    expanded: boolean,
-    sessionId: string,
-    stableKey?: string,
-  ) => {
-    setExpandedSessions((prev) => {
-      const next = new Set(prev);
-      if (expanded) next.add(sessionId);
-      else next.delete(sessionId);
-      return next;
-    });
-    if (!stableKey) return;
-    setDismissedLiveSessionKeys((prev) => {
-      const next = new Set(prev);
-      if (expanded) next.delete(stableKey);
-      else next.add(stableKey);
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    const validSessionIds = new Set(liveCards.map((session) => session.sessionId));
-    setExpandedSessions((prev) => {
-      if (validSessionIds.size === 0) return new Set();
-
-      return new Set(
-        Array.from(prev).filter((sessionId) => validSessionIds.has(sessionId)),
-      );
-    });
-  }, [liveCards]);
 
   const handleCardClick = (session: EventLiveSession) => {
     if (Date.now() - lastModalCloseAtRef.current < 250) return;
@@ -2924,23 +2807,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           liveSessionsOverride={mergedEventLiveSessions}
           onLiveMatchOpen={(sessionId) => {
             setHighlightedLiveSessionId(sessionId);
-            setRequestedLiveOpenSessionId(sessionId);
-            setRequestedLiveOpenNonce(Date.now());
-            const target = mergedEventLiveSessions.find(
-              (session) => session.sessionId === sessionId,
-            );
-              if (target) {
-                const stableKey = getStableLiveSessionKey(target);
-                if (stableKey) {
-                  setDismissedLiveSessionKeys((prev) => {
-                    const next = new Set(prev);
-                    next.delete(stableKey);
-                    return next;
-                  });
-                }
-              }
-              switchToLive();
-            }}
+            switchToLive();
+          }}
         />
       )
     ) : (
@@ -2961,7 +2829,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
-              const stableSessionKey = getStableLiveSessionKey(session);
               const boardInteractionDisabled = Boolean(
                 highlightItem || suppressLiveGridClicks,
               );
@@ -3037,11 +2904,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
-                      openSignal={
-                        requestedLiveOpenSessionId === session.sessionId
-                          ? requestedLiveOpenNonce
-                          : null
-                      }
                       topLeftControl={
                         <button
                           type="button"
