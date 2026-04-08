@@ -794,6 +794,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     null,
   );
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
+  const hasAutoExpandedLiveCardsRef = useRef(false);
   const lastModalCloseAtRef = useRef(0);
   const lastClosedHighlightRef = useRef<{
     sessionId?: string;
@@ -2462,14 +2463,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   useEffect(() => {
     const validSessionIds = new Set(liveCards.map((session) => session.sessionId));
     setExpandedSessions((prev) => {
-      if (validSessionIds.size === 0) return new Set();
+      if (validSessionIds.size === 0) {
+        hasAutoExpandedLiveCardsRef.current = false;
+        return new Set();
+      }
 
       const next = new Set(
         Array.from(prev).filter((sessionId) => validSessionIds.has(sessionId)),
       );
 
-      if (next.size === 0) {
+      if (!hasAutoExpandedLiveCardsRef.current && next.size === 0) {
         liveCards.forEach((session) => next.add(session.sessionId));
+        hasAutoExpandedLiveCardsRef.current = next.size > 0;
       }
 
       return next;
