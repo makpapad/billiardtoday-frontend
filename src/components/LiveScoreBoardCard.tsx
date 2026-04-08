@@ -69,18 +69,10 @@ export function LiveScoreBoardCard({
   openSignal,
   topLeftControl,
 }: LiveScoreBoardCardProps) {
-  const expandedStorageKey = `bt-live-card-expanded:${sessionId}`;
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
   const isControlled = typeof expanded === "boolean";
-  const [internalExpanded, setInternalExpanded] = React.useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem(expandedStorageKey) === "1";
-    } catch {
-      return false;
-    }
-  });
+  const [internalExpanded, setInternalExpanded] = React.useState(false);
   const [hideSummaryBar, setHideSummaryBar] = React.useState(false);
   const hideSummaryTimerRef = React.useRef<number | null>(null);
   const wasExpandedRef = React.useRef(false);
@@ -93,20 +85,6 @@ export function LiveScoreBoardCard({
       setInternalExpanded(true);
     }
   }, [isControlled, openSignal]);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isControlled) return;
-    try {
-      if (internalExpanded) {
-        window.sessionStorage.setItem(expandedStorageKey, "1");
-      } else {
-        window.sessionStorage.removeItem(expandedStorageKey);
-      }
-    } catch {
-      // ignore storage failures
-    }
-  }, [expandedStorageKey, internalExpanded, isControlled]);
 
   const resolveDisplayName = (player: Player) => {
     const englishName = typeof player.full_name_en === "string" ? player.full_name_en.trim() : "";
