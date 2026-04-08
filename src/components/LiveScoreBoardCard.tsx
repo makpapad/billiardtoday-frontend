@@ -67,14 +67,34 @@ export function LiveScoreBoardCard({
   onExpandedChange,
   topLeftControl,
 }: LiveScoreBoardCardProps) {
+  const dismissedStorageKey = `bt-live-card-dismissed:${sessionId}`;
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
   const [internalExpanded, setInternalExpanded] = React.useState(false);
+  const [dismissed, setDismissed] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem(dismissedStorageKey) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [hideSummaryBar, setHideSummaryBar] = React.useState(false);
   const hideSummaryTimerRef = React.useRef<number | null>(null);
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
-  const isExpanded = typeof expanded === "boolean" ? expanded : internalExpanded;
+  const externallyExpanded = typeof expanded === "boolean" ? expanded : internalExpanded;
+  const isExpanded = dismissed ? false : externallyExpanded;
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (dismissed) window.sessionStorage.setItem(dismissedStorageKey, "1");
+      else window.sessionStorage.removeItem(dismissedStorageKey);
+    } catch {
+      // ignore storage failures
+    }
+  }, [dismissed, dismissedStorageKey]);
 
   const resolveDisplayName = (player: Player) => {
     const englishName = typeof player.full_name_en === "string" ? player.full_name_en.trim() : "";
@@ -99,6 +119,7 @@ export function LiveScoreBoardCard({
   };
 
   const handleExpand = () => {
+    setDismissed(false);
     setExpanded(true);
     requestAnimationFrame(() => {
       expandedCardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -107,6 +128,7 @@ export function LiveScoreBoardCard({
 
   const handleCollapse = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    setDismissed(true);
     setExpanded(false);
   };
 
