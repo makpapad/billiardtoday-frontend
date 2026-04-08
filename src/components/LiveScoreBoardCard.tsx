@@ -368,7 +368,7 @@ export function LiveScoreBoardCard({
     compact?: boolean;
   }) => (
     <div
-      className={`ml-0 mr-0 h-[48px] flex items-center gap-2.5 rounded-xl border px-3 py-2 shadow-sm ${
+      className={`ml-0 mr-0 h-[44px] flex items-center gap-2.5 rounded-xl border px-3 py-2 shadow-sm ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -384,8 +384,8 @@ export function LiveScoreBoardCard({
         </div>
       </div>
       {isActive ? (
-        <div className={`rounded-md leading-none text-center bg-slate-900 text-white ${compact ? "px-1.5 py-1" : "px-2 py-1.5"}`}>
-          <div className={`${compact ? "text-[12px]" : "text-[14px]"} font-bold tabular-nums`}>
+        <div className={`self-stretch rounded-md leading-none text-center bg-slate-900 text-white flex items-center justify-center ${compact ? "min-w-[28px] px-1.5" : "min-w-[34px] px-2"}`}>
+          <div className={`${compact ? "text-[14px]" : "text-[18px]"} font-black tabular-nums leading-none`}>
             {run ?? 0}
           </div>
         </div>
