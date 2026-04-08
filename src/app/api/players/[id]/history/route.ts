@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
                     useAuth && STRAPI_API_TOKEN && allowAuth
                         ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
                         : undefined,
-                next: { revalidate: 120 },
+                cache: 'no-store',
             })
 
         const runRequest = async (baseUrl: string, allowAuth = true) => {
