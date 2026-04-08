@@ -183,6 +183,50 @@ function extractTargetPointsFromSource(source: unknown): number | null {
   return null;
 }
 
+function extractInningsDetail(source: unknown) {
+  const resolve = (
+    value: unknown,
+  ):
+    | Array<{
+        inning: number;
+        player1?: { pt: number; tot: number };
+        player2?: { pt: number; tot: number };
+      }>
+    | undefined => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value as Array<{
+      inning: number;
+      player1?: { pt: number; tot: number };
+      player2?: { pt: number; tot: number };
+    }>;
+    const node = unwrapStrapiNode(value);
+    if (Array.isArray(node?.inningsDetail)) {
+      return node.inningsDetail as Array<{
+        inning: number;
+        player1?: { pt: number; tot: number };
+        player2?: { pt: number; tot: number };
+      }>;
+    }
+    if (typeof value === "string") {
+      try {
+        return resolve(JSON.parse(value));
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  };
+
+  const node = unwrapStrapiNode(source) || source;
+  return (
+    resolve(node) ||
+    resolve((node as UnknownRecord)?.matchSheet) ||
+    resolve((node as UnknownRecord)?.matchSheetJson) ||
+    resolve((node as UnknownRecord)?.match_sheet) ||
+    undefined
+  );
+}
+
 export function normalizeLiveSessionRow(row: UnknownRecord) {
   const attrs = unwrapStrapiNode(row?.attributes) || row;
   const club = unwrapStrapiNode(attrs?.club) || {};
@@ -242,7 +286,13 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       playerACountry: playerA?.country ?? attrs?.player1Country ?? null,
       playerBCountry: playerB?.country ?? attrs?.player2Country ?? null,
       playerAPhotoUrl: normalizeMediaUrl(playerA?.photoUrl ?? attrs?.player1PhotoUrl),
+      playerAPhotoMainUrl: normalizeMediaUrl(
+        playerA?.photoMainUrl ?? playerA?.photo_main ?? attrs?.player1PhotoMainUrl,
+      ),
       playerBPhotoUrl: normalizeMediaUrl(playerB?.photoUrl ?? attrs?.player2PhotoUrl),
+      playerBPhotoMainUrl: normalizeMediaUrl(
+        playerB?.photoMainUrl ?? playerB?.photo_main ?? attrs?.player2PhotoMainUrl,
+      ),
       progress: Number(attrs?.progress ?? 0),
       totalBlocks: Number(attrs?.totalBlocks ?? 0),
       isRunning: Boolean(attrs?.isRunning),
@@ -254,9 +304,26 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       avgFormattedB: playerB?.avgFormatted ?? null,
       accPercentA: typeof playerA?.accPercent === "number" ? playerA.accPercent : undefined,
       accPercentB: typeof playerB?.accPercent === "number" ? playerB.accPercent : undefined,
+      playerATimeSeconds:
+        typeof playerA?.playerTimeSeconds === "number"
+          ? playerA.playerTimeSeconds
+          : undefined,
+      playerBTimeSeconds:
+        typeof playerB?.playerTimeSeconds === "number"
+          ? playerB.playerTimeSeconds
+          : undefined,
+      secondsPerInningA:
+        typeof playerA?.secondsPerInning === "number"
+          ? playerA.secondsPerInning
+          : undefined,
+      secondsPerInningB:
+        typeof playerB?.secondsPerInning === "number"
+          ? playerB.secondsPerInning
+          : undefined,
       targetPointsA: targetA,
       targetPointsB: targetB,
       gameDurationSeconds: typeof attrs?.gameDurationSeconds === "number" ? attrs.gameDurationSeconds : undefined,
+      inningsDetail: extractInningsDetail(row),
       tournamentName: attrs?.tournamentName ?? attrs?.eventTitle ?? null,
       stageName: attrs?.stageName ?? attrs?.stageTitle ?? null,
       groupName: attrs?.groupName ?? attrs?.groupLabel ?? null,

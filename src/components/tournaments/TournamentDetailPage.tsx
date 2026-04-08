@@ -73,10 +73,22 @@ type WsTournamentPayload = {
   activePlayer?: number | null;
   current?: "A" | "B" | null;
   progress?: number;
+  innings?: number | null;
+  totalBlocks?: number | null;
+  gameDurationSeconds?: number | null;
+  targetPoints?: number | null;
+  targetPointsP1?: number | null;
+  targetPointsP2?: number | null;
+  matchSheet?: unknown;
+  matchSheetJson?: unknown;
+  sheet?: unknown;
+  inningsDetail?: unknown;
   ts?: number;
   session?: Record<string, any>;
   players?: Array<{
     name?: string | null;
+    full_name?: string | null;
+    full_name_en?: string | null;
     country?: string | null;
     points?: number | null;
     run?: number | null;
@@ -85,6 +97,16 @@ type WsTournamentPayload = {
     hr?: number | null;
     avgFormatted?: string | null;
     accPercent?: number | null;
+    playerTimeSeconds?: number | null;
+    secondsPerInning?: number | null;
+    targetPoints?: number | null;
+    target_points?: number | null;
+    photoUrl?: string | null;
+    photo?: string | null;
+    avatarUrl?: string | null;
+    imageUrl?: string | null;
+    photoMainUrl?: string | null;
+    photo_main?: string | null;
     timeoutsUsed?: number | null;
     timeouts?: number | null;
     maxTimeouts?: number | null;
@@ -1590,13 +1612,22 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         typeof sessionObj.player1PhotoUrl === "string"
                           ? sessionObj.player1PhotoUrl
                           : baseSession?.state?.playerAPhotoUrl ?? null,
+                      playerAPhotoMainUrl:
+                        typeof sessionObj.player1PhotoMainUrl === "string"
+                          ? sessionObj.player1PhotoMainUrl
+                          : baseSession?.state?.playerAPhotoMainUrl ?? null,
                       playerBPhotoUrl:
                         typeof sessionObj.player2PhotoUrl === "string"
                           ? sessionObj.player2PhotoUrl
                           : baseSession?.state?.playerBPhotoUrl ?? null,
+                      playerBPhotoMainUrl:
+                        typeof sessionObj.player2PhotoMainUrl === "string"
+                          ? sessionObj.player2PhotoMainUrl
+                          : baseSession?.state?.playerBPhotoMainUrl ?? null,
                       progress:
                         Number(sessionObj.progress ?? baseSession?.state?.progress ?? 0) || 0,
-                      totalBlocks: 40,
+                      totalBlocks:
+                        Number(sessionObj.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
                       isRunning: lifecycleIsRunning,
                       timeoutsA:
                         Number(
@@ -1626,6 +1657,71 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             baseSession?.state?.maxTimeoutsB ??
                             3,
                         ) || 3,
+                      avgFormattedA:
+                        typeof sessionObj.player1_avg_formatted === "string"
+                          ? sessionObj.player1_avg_formatted
+                          : typeof sessionObj.player1AvgFormatted === "string"
+                            ? sessionObj.player1AvgFormatted
+                            : baseSession?.state?.avgFormattedA,
+                      avgFormattedB:
+                        typeof sessionObj.player2_avg_formatted === "string"
+                          ? sessionObj.player2_avg_formatted
+                          : typeof sessionObj.player2AvgFormatted === "string"
+                            ? sessionObj.player2AvgFormatted
+                            : baseSession?.state?.avgFormattedB,
+                      accPercentA:
+                        typeof sessionObj.player1_acc_percent === "number"
+                          ? sessionObj.player1_acc_percent
+                          : typeof sessionObj.player1AccPercent === "number"
+                            ? sessionObj.player1AccPercent
+                            : baseSession?.state?.accPercentA,
+                      accPercentB:
+                        typeof sessionObj.player2_acc_percent === "number"
+                          ? sessionObj.player2_acc_percent
+                          : typeof sessionObj.player2AccPercent === "number"
+                            ? sessionObj.player2AccPercent
+                            : baseSession?.state?.accPercentB,
+                      playerATimeSeconds:
+                        typeof sessionObj.player1_time_seconds === "number"
+                          ? sessionObj.player1_time_seconds
+                          : typeof sessionObj.player1TimeSeconds === "number"
+                            ? sessionObj.player1TimeSeconds
+                            : baseSession?.state?.playerATimeSeconds,
+                      playerBTimeSeconds:
+                        typeof sessionObj.player2_time_seconds === "number"
+                          ? sessionObj.player2_time_seconds
+                          : typeof sessionObj.player2TimeSeconds === "number"
+                            ? sessionObj.player2TimeSeconds
+                            : baseSession?.state?.playerBTimeSeconds,
+                      secondsPerInningA:
+                        typeof sessionObj.player1_seconds_per_inning === "number"
+                          ? sessionObj.player1_seconds_per_inning
+                          : typeof sessionObj.player1SecondsPerInning === "number"
+                            ? sessionObj.player1SecondsPerInning
+                            : baseSession?.state?.secondsPerInningA,
+                      secondsPerInningB:
+                        typeof sessionObj.player2_seconds_per_inning === "number"
+                          ? sessionObj.player2_seconds_per_inning
+                          : typeof sessionObj.player2SecondsPerInning === "number"
+                            ? sessionObj.player2SecondsPerInning
+                            : baseSession?.state?.secondsPerInningB,
+                      targetPointsA:
+                        typeof sessionObj.targetPointsP1 === "number"
+                          ? sessionObj.targetPointsP1
+                          : typeof sessionObj.target_points_p1 === "number"
+                            ? sessionObj.target_points_p1
+                            : baseSession?.state?.targetPointsA ?? null,
+                      targetPointsB:
+                        typeof sessionObj.targetPointsP2 === "number"
+                          ? sessionObj.targetPointsP2
+                          : typeof sessionObj.target_points_p2 === "number"
+                            ? sessionObj.target_points_p2
+                            : baseSession?.state?.targetPointsB ?? null,
+                      gameDurationSeconds:
+                        typeof sessionObj.gameDurationSeconds === "number"
+                          ? sessionObj.gameDurationSeconds
+                          : baseSession?.state?.gameDurationSeconds,
+                      inningsDetail: baseSession?.state?.inningsDetail,
                       tournamentName:
                         typeof sessionObj.eventTitle === "string"
                           ? sessionObj.eventTitle
@@ -1763,6 +1859,22 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       typeof playerB.accPercent === "number"
                         ? playerB.accPercent
                         : baseSession?.state?.accPercentB,
+                    playerATimeSeconds:
+                      typeof playerA.playerTimeSeconds === "number"
+                        ? playerA.playerTimeSeconds
+                        : baseSession?.state?.playerATimeSeconds,
+                    playerBTimeSeconds:
+                      typeof playerB.playerTimeSeconds === "number"
+                        ? playerB.playerTimeSeconds
+                        : baseSession?.state?.playerBTimeSeconds,
+                    secondsPerInningA:
+                      typeof playerA.secondsPerInning === "number"
+                        ? playerA.secondsPerInning
+                        : baseSession?.state?.secondsPerInningA,
+                    secondsPerInningB:
+                      typeof playerB.secondsPerInning === "number"
+                        ? playerB.secondsPerInning
+                        : baseSession?.state?.secondsPerInningB,
                     playerAName:
                       typeof playerA.name === "string" &&
                       !isPlaceholderPlayerName(playerA.name)
@@ -1787,8 +1899,41 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ? playerB.country
                         : baseSession?.state?.playerBCountry ??
                           null,
+                    playerAPhotoUrl:
+                      typeof playerA.photoUrl === "string"
+                        ? playerA.photoUrl
+                        : typeof playerA.photo === "string"
+                          ? playerA.photo
+                          : typeof playerA.avatarUrl === "string"
+                            ? playerA.avatarUrl
+                            : typeof playerA.imageUrl === "string"
+                              ? playerA.imageUrl
+                              : baseSession?.state?.playerAPhotoUrl ?? null,
+                    playerBPhotoUrl:
+                      typeof playerB.photoUrl === "string"
+                        ? playerB.photoUrl
+                        : typeof playerB.photo === "string"
+                          ? playerB.photo
+                          : typeof playerB.avatarUrl === "string"
+                            ? playerB.avatarUrl
+                            : typeof playerB.imageUrl === "string"
+                              ? playerB.imageUrl
+                              : baseSession?.state?.playerBPhotoUrl ?? null,
+                    playerAPhotoMainUrl:
+                      typeof playerA.photoMainUrl === "string"
+                        ? playerA.photoMainUrl
+                        : typeof playerA.photo_main === "string"
+                          ? playerA.photo_main
+                          : baseSession?.state?.playerAPhotoMainUrl ?? null,
+                    playerBPhotoMainUrl:
+                      typeof playerB.photoMainUrl === "string"
+                        ? playerB.photoMainUrl
+                        : typeof playerB.photo_main === "string"
+                          ? playerB.photo_main
+                          : baseSession?.state?.playerBPhotoMainUrl ?? null,
                     progress: Number(payload.progress ?? 0) || 0,
-                    totalBlocks: 40,
+                    totalBlocks:
+                      Number(payload.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
                     isRunning: scoreUpdateIsRunning,
                     timeoutsA:
                       Number(
@@ -1816,6 +1961,31 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           baseSession?.state?.maxTimeoutsB ??
                           3,
                       ) || 3,
+                    targetPointsA:
+                      typeof playerA.targetPoints === "number"
+                        ? playerA.targetPoints
+                        : typeof playerA.target_points === "number"
+                          ? playerA.target_points
+                          : typeof payload.targetPointsP1 === "number"
+                            ? payload.targetPointsP1
+                            : typeof payload.targetPoints === "number"
+                              ? payload.targetPoints
+                              : baseSession?.state?.targetPointsA ?? null,
+                    targetPointsB:
+                      typeof playerB.targetPoints === "number"
+                        ? playerB.targetPoints
+                        : typeof playerB.target_points === "number"
+                          ? playerB.target_points
+                          : typeof payload.targetPointsP2 === "number"
+                            ? payload.targetPointsP2
+                            : typeof payload.targetPoints === "number"
+                              ? payload.targetPoints
+                              : baseSession?.state?.targetPointsB ?? null,
+                    gameDurationSeconds:
+                      typeof payload.gameDurationSeconds === "number"
+                        ? payload.gameDurationSeconds
+                        : baseSession?.state?.gameDurationSeconds,
+                    inningsDetail: baseSession?.state?.inningsDetail,
                     current,
                   },
                 },

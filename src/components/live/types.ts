@@ -17,6 +17,8 @@ export type LiveScoreState = {
   playerBCountry?: string | null;
   playerAPhotoUrl?: string | null;
   playerBPhotoUrl?: string | null;
+  playerAPhotoMainUrl?: string | null;
+  playerBPhotoMainUrl?: string | null;
   progress?: number;
   totalBlocks?: number;
   isRunning?: boolean;
@@ -28,9 +30,18 @@ export type LiveScoreState = {
   avgFormattedB?: string;
   accPercentA?: number;
   accPercentB?: number;
+  playerATimeSeconds?: number;
+  playerBTimeSeconds?: number;
+  secondsPerInningA?: number;
+  secondsPerInningB?: number;
   targetPointsA?: number | null;
   targetPointsB?: number | null;
   gameDurationSeconds?: number;
+  inningsDetail?: Array<{
+    inning: number;
+    player1?: { pt: number; tot: number };
+    player2?: { pt: number; tot: number };
+  }>;
   tournamentName?: string | null;
   stageName?: string | null;
   groupName?: string | null;
