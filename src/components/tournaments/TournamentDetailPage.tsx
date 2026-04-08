@@ -823,6 +823,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     EventLiveSession[]
   >([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
+  const [expandedLiveSessionId, setExpandedLiveSessionId] = useState<
+    string | null
+  >(null);
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
@@ -2542,6 +2545,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     }, 0);
   };
 
+  const handleInlineCardExpandedChange = (
+    expanded: boolean,
+    sessionId: string,
+  ) => {
+    setExpandedLiveSessionId(expanded ? sessionId : null);
+  };
+
   const toggleGroupPopover = (sessionId: string) => {
     setOpenGroupSessionId((prev) => (prev === sessionId ? null : sessionId));
   };
@@ -2945,8 +2955,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   >
                     <LiveScoreBoardCard
                       sessionId={session.sessionId}
-                      inlineExpandable={false}
-                      expanded={false}
+                      inlineExpandable
+                      expanded={expandedLiveSessionId === session.sessionId}
+                      onExpandedChange={handleInlineCardExpandedChange}
                       clubName={session.clubName}
                       clubCity={session.clubCity}
                       updatedAt={session.updatedAt}
