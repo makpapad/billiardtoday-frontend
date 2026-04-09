@@ -3012,7 +3012,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 placeholder={
                   timetableViewMode === "training"
                     ? "Search training slots..."
-                    : "Search player, group or match..."
+                    : "Search player, group (e.g. g1) or match..."
                 }
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
               />
