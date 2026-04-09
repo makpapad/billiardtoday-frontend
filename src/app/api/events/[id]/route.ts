@@ -56,6 +56,48 @@ const fetchStageStandings = async (
     }
 }
 
+const fetchStageMatches = async (
+    stageId: string,
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[] | null> => {
+    const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/matches`
+    let res = await fetch(directUrl, {
+        cache: 'no-store',
+        headers,
+    })
+
+    if (!res.ok && res.status === 404) {
+        const resolveUrl = `${STRAPI_URL}/api/bt-event-stages?filters[documentId][$eq]=${encodeURIComponent(stageId)}&fields[0]=id&pagination[limit]=1`
+        const resolveRes = await fetch(resolveUrl, {
+            cache: 'no-store',
+            headers,
+        })
+        if (resolveRes.ok) {
+            const resolvePayload = (await resolveRes.json().catch(() => null)) as { data?: Array<{ id?: number | string }> } | null
+            const numericId = resolvePayload?.data?.[0]?.id
+            if (numericId !== undefined && numericId !== null) {
+                const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/matches`
+                res = await fetch(fallbackUrl, {
+                    cache: 'no-store',
+                    headers,
+                })
+            }
+        }
+    }
+
+    if (!res.ok) {
+        return null
+    }
+
+    const text = await res.text()
+    try {
+        const payload = JSON.parse(text) as Record<string, unknown>
+        return asArray(payload.matches)
+    } catch {
+        return null
+    }
+}
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -206,12 +248,14 @@ export async function GET(
                             typeof stage.documentId === 'string' ? stage.documentId : null
                         if (!stageDocumentId) return stage
 
+                        const liveMatches = await fetchStageMatches(stageDocumentId, headers)
                         const liveStandings = await fetchStageStandings(stageDocumentId, headers)
-                        if (!liveStandings) return stage
+                        if (!liveStandings && !liveMatches) return stage
 
                         return {
                             ...stage,
-                            results: liveStandings,
+                            ...(liveMatches ? { groups: liveMatches } : {}),
+                            ...(liveStandings ? { results: liveStandings } : {}),
                         }
                     }),
                 )
