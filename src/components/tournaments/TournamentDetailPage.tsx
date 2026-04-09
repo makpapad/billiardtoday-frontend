@@ -2339,6 +2339,35 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       ),
     [filteredEventLiveSessions, filteredWsLiveSessionsByPair],
   );
+  const apiPhotoFallbackBySessionId = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        playerAPhotoUrl: string | null;
+        playerAPhotoMainUrl: string | null;
+        playerBPhotoUrl: string | null;
+        playerBPhotoMainUrl: string | null;
+      }
+    >();
+    eventLiveSessions.forEach((session) => {
+      const key = String(
+        session.sessionId ||
+          session.documentId ||
+          session.screenIdentifier ||
+          session.screenId ||
+          session.id ||
+          "",
+      ).trim();
+      if (!key) return;
+      map.set(key, {
+        playerAPhotoUrl: session.state?.playerAPhotoUrl ?? null,
+        playerAPhotoMainUrl: session.state?.playerAPhotoMainUrl ?? null,
+        playerBPhotoUrl: session.state?.playerBPhotoUrl ?? null,
+        playerBPhotoMainUrl: session.state?.playerBPhotoMainUrl ?? null,
+      });
+    });
+    return map;
+  }, [eventLiveSessions]);
 
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
     if (!eventData?.data?.event_stages) return [];
@@ -3351,6 +3380,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
+              const photoFallback =
+                apiPhotoFallbackBySessionId.get(
+                  String(
+                    session.sessionId ||
+                      session.documentId ||
+                      session.screenIdentifier ||
+                      session.screenId ||
+                      session.id ||
+                      "",
+                  ).trim(),
+                ) ?? null;
               const boardInteractionDisabled = Boolean(
                 highlightItem || suppressLiveGridClicks,
               );
@@ -3398,8 +3438,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player1={{
                         name: state.playerAName || "Player A",
                         country: state.playerACountry ?? null,
-                        photoUrl: state.playerAPhotoUrl ?? null,
-                        photoMainUrl: state.playerAPhotoMainUrl ?? null,
+                        photoUrl:
+                          state.playerAPhotoUrl ??
+                          photoFallback?.playerAPhotoUrl ??
+                          null,
+                        photoMainUrl:
+                          state.playerAPhotoMainUrl ??
+                          photoFallback?.playerAPhotoMainUrl ??
+                          null,
                         points: state.scoreA ?? 0,
                         run: state.runA ?? 0,
                         liveRun: state.liveRunA ?? 0,
@@ -3415,8 +3461,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player2={{
                         name: state.playerBName || "Player B",
                         country: state.playerBCountry ?? null,
-                        photoUrl: state.playerBPhotoUrl ?? null,
-                        photoMainUrl: state.playerBPhotoMainUrl ?? null,
+                        photoUrl:
+                          state.playerBPhotoUrl ??
+                          photoFallback?.playerBPhotoUrl ??
+                          null,
+                        photoMainUrl:
+                          state.playerBPhotoMainUrl ??
+                          photoFallback?.playerBPhotoMainUrl ??
+                          null,
                         points: state.scoreB ?? 0,
                         run: state.runB ?? 0,
                         liveRun: state.liveRunB ?? 0,
