@@ -988,6 +988,11 @@ export function TournamentEventsContent({
         50% { opacity: 1; background-color: #ffea72; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.28); }
     }`;
 
+  const fetchEventPayload = useCallback(async () => {
+    if (!eventId) return null;
+    return fetchEvent(eventId);
+  }, [eventId]);
+
   // Fetch event data
   useEffect(() => {
     if (!eventId) {
@@ -1000,7 +1005,7 @@ export function TournamentEventsContent({
     setIsLoading(true);
     setError(null);
 
-    fetchEvent(eventId)
+    fetchEventPayload()
       .then((data) => {
         console.log("[TournamentEvents] Event data received:", data);
         setEventData(data);
@@ -1011,7 +1016,37 @@ export function TournamentEventsContent({
         setError(err instanceof Error ? err.message : "Failed to fetch event");
         setIsLoading(false);
       });
-  }, [eventId]);
+  }, [eventId, fetchEventPayload]);
+
+  useEffect(() => {
+    if (!eventId) return;
+
+    let cancelled = false;
+
+    const refreshEventData = async () => {
+      try {
+        const payload = await fetchEventPayload();
+        if (cancelled) return;
+        setEventData((current) => {
+          const currentSerialized = JSON.stringify(current);
+          const nextSerialized = JSON.stringify(payload);
+          return currentSerialized === nextSerialized ? current : payload;
+        });
+      } catch {
+        // Keep current UI state on transient polling failures.
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void refreshEventData();
+    }, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [eventId, fetchEventPayload]);
 
   useEffect(() => {
     if (!eventId) {
