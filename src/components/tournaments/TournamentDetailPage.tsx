@@ -232,7 +232,7 @@ function GroupTooltip({
     (player.highRun2 ?? 0) > 0 ||
     (player.bestAverage ?? 0) > 0;
   return (
-    <div className="absolute left-0 bottom-full z-30 mb-0.5 w-[min(760px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+    <div className="absolute left-0 bottom-full z-30 -mb-1 w-[min(760px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white px-3 pb-2 pt-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="text-sm font-semibold">{data.title}</div>
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
