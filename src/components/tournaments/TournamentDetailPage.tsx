@@ -1358,21 +1358,41 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               playerBName:
                 resolveEventSessionPlayerName(sessionObj, "B", "Player B") ?? "Player B",
               playerACountry:
-                typeof sessionObj.player1Country === "string"
+                typeof sessionObj.state?.playerACountry === "string"
+                  ? sessionObj.state.playerACountry
+                  : typeof sessionObj.player1Country === "string"
                   ? sessionObj.player1Country
                   : null,
               playerBCountry:
-                typeof sessionObj.player2Country === "string"
+                typeof sessionObj.state?.playerBCountry === "string"
+                  ? sessionObj.state.playerBCountry
+                  : typeof sessionObj.player2Country === "string"
                   ? sessionObj.player2Country
                   : null,
               playerAPhotoUrl:
-                typeof sessionObj.player1PhotoUrl === "string"
+                typeof sessionObj.state?.playerAPhotoUrl === "string"
+                  ? sessionObj.state.playerAPhotoUrl
+                  : typeof sessionObj.player1PhotoUrl === "string"
                   ? sessionObj.player1PhotoUrl
                   : null,
+              playerAPhotoMainUrl:
+                typeof sessionObj.state?.playerAPhotoMainUrl === "string"
+                  ? sessionObj.state.playerAPhotoMainUrl
+                  : typeof sessionObj.player1PhotoMainUrl === "string"
+                    ? sessionObj.player1PhotoMainUrl
+                    : null,
               playerBPhotoUrl:
-                typeof sessionObj.player2PhotoUrl === "string"
+                typeof sessionObj.state?.playerBPhotoUrl === "string"
+                  ? sessionObj.state.playerBPhotoUrl
+                  : typeof sessionObj.player2PhotoUrl === "string"
                   ? sessionObj.player2PhotoUrl
                   : null,
+              playerBPhotoMainUrl:
+                typeof sessionObj.state?.playerBPhotoMainUrl === "string"
+                  ? sessionObj.state.playerBPhotoMainUrl
+                  : typeof sessionObj.player2PhotoMainUrl === "string"
+                    ? sessionObj.player2PhotoMainUrl
+                    : null,
               progress: Number(sessionObj.progress ?? 0) || 0,
               totalBlocks: 40,
               isRunning: lifecycleStatus === "in_progress",
@@ -1764,27 +1784,39 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                             "Player B",
                         ) ?? "Player B",
                       playerACountry:
-                        typeof sessionObj.player1Country === "string"
+                        typeof sessionObj.state?.playerACountry === "string"
+                          ? sessionObj.state.playerACountry
+                          : typeof sessionObj.player1Country === "string"
                           ? sessionObj.player1Country
                           : baseSession?.state?.playerACountry ?? null,
                       playerBCountry:
-                        typeof sessionObj.player2Country === "string"
+                        typeof sessionObj.state?.playerBCountry === "string"
+                          ? sessionObj.state.playerBCountry
+                          : typeof sessionObj.player2Country === "string"
                           ? sessionObj.player2Country
                           : baseSession?.state?.playerBCountry ?? null,
                       playerAPhotoUrl:
-                        typeof sessionObj.player1PhotoUrl === "string"
+                        typeof sessionObj.state?.playerAPhotoUrl === "string"
+                          ? sessionObj.state.playerAPhotoUrl
+                          : typeof sessionObj.player1PhotoUrl === "string"
                           ? sessionObj.player1PhotoUrl
                           : baseSession?.state?.playerAPhotoUrl ?? null,
                       playerAPhotoMainUrl:
-                        typeof sessionObj.player1PhotoMainUrl === "string"
+                        typeof sessionObj.state?.playerAPhotoMainUrl === "string"
+                          ? sessionObj.state.playerAPhotoMainUrl
+                          : typeof sessionObj.player1PhotoMainUrl === "string"
                           ? sessionObj.player1PhotoMainUrl
                           : baseSession?.state?.playerAPhotoMainUrl ?? null,
                       playerBPhotoUrl:
-                        typeof sessionObj.player2PhotoUrl === "string"
+                        typeof sessionObj.state?.playerBPhotoUrl === "string"
+                          ? sessionObj.state.playerBPhotoUrl
+                          : typeof sessionObj.player2PhotoUrl === "string"
                           ? sessionObj.player2PhotoUrl
                           : baseSession?.state?.playerBPhotoUrl ?? null,
                       playerBPhotoMainUrl:
-                        typeof sessionObj.player2PhotoMainUrl === "string"
+                        typeof sessionObj.state?.playerBPhotoMainUrl === "string"
+                          ? sessionObj.state.playerBPhotoMainUrl
+                          : typeof sessionObj.player2PhotoMainUrl === "string"
                           ? sessionObj.player2PhotoMainUrl
                           : baseSession?.state?.playerBPhotoMainUrl ?? null,
                       progress:
