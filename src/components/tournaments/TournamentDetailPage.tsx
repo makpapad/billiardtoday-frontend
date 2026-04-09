@@ -507,6 +507,14 @@ const mergeLiveSessions = (
   primary: EventLiveSession[],
   secondary: EventLiveSession[],
 ) => {
+  const preferText = (
+    nextValue: string | null | undefined,
+    fallbackValue: string | null | undefined,
+  ): string | null | undefined => {
+    if (typeof nextValue === "string" && nextValue.trim()) return nextValue;
+    if (typeof fallbackValue === "string" && fallbackValue.trim()) return fallbackValue;
+    return nextValue ?? fallbackValue;
+  };
   const merged = new Map<string, EventLiveSession>();
   for (const session of [...secondary, ...primary]) {
     const key =
@@ -537,6 +545,22 @@ const mergeLiveSessions = (
       state: {
         ...existing.state,
         ...session.state,
+        playerAPhotoUrl: preferText(
+          session.state?.playerAPhotoUrl,
+          existing.state?.playerAPhotoUrl,
+        ),
+        playerAPhotoMainUrl: preferText(
+          session.state?.playerAPhotoMainUrl,
+          existing.state?.playerAPhotoMainUrl,
+        ),
+        playerBPhotoUrl: preferText(
+          session.state?.playerBPhotoUrl,
+          existing.state?.playerBPhotoUrl,
+        ),
+        playerBPhotoMainUrl: preferText(
+          session.state?.playerBPhotoMainUrl,
+          existing.state?.playerBPhotoMainUrl,
+        ),
         isRunning: preserveRunningState
           ? existing.state?.isRunning
           : session.state?.isRunning,
