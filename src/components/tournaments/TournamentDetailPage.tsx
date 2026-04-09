@@ -3075,6 +3075,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     expanded: boolean,
     sessionId: string,
   ) => {
+    if (!expanded && openGroupSessionId === sessionId) {
+      setOpenGroupSessionId(null);
+    }
     setExpandedLiveSessionId(expanded ? sessionId : null);
   };
 
@@ -3082,10 +3085,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const willOpen = openGroupSessionId !== sessionId;
     if (!willOpen) {
       setOpenGroupSessionId(null);
-      setExpandedLiveSessionId(null);
       return;
     }
-    setExpandedLiveSessionId(sessionId);
     setOpenGroupSessionId(null);
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
