@@ -51,6 +51,13 @@ export default function ClaimPage() {
   const [trustedPlayerName, setTrustedPlayerName] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [debugLines, setDebugLines] = React.useState<string[]>([]);
+
+  const pushDebug = React.useCallback((label: string, payload?: Record<string, unknown>) => {
+    const line = payload ? `${label} ${JSON.stringify(payload)}` : label;
+    console.log("[claim-debug]", line);
+    setDebugLines((prev) => [...prev.slice(-7), line]);
+  }, []);
 
   const presentClaimError = React.useCallback((message?: unknown) => {
     const text = extractErrorText(message);
@@ -72,7 +79,7 @@ export default function ClaimPage() {
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.fullName ?? null);
-    console.log("[claim] page opened", {
+    pushDebug("page opened", {
       slot,
       screenId,
       nonce8: shortNonce(nonce),
@@ -80,12 +87,12 @@ export default function ClaimPage() {
       trustedPlayerDocumentId: trusted?.documentId ?? null,
       trustedEnrollmentRequestId: trusted?.enrollmentRequestId ?? null,
     });
-  }, []);
+  }, [nonce, pushDebug, screenId, slot]);
 
   const claimWithToken = React.useCallback(async (deviceToken: string) => {
     setBusy(true);
     setStatus(null);
-    console.log("[claim] attempting trusted-device claim", {
+    pushDebug("attempting trusted-device claim", {
       slot,
       screenId,
       nonce8: shortNonce(nonce),
@@ -99,7 +106,7 @@ export default function ClaimPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        console.log("[claim] claim failed", {
+        pushDebug("claim failed", {
           slot,
           screenId,
           nonce8: shortNonce(nonce),
@@ -109,7 +116,7 @@ export default function ClaimPage() {
         setStatus(presentClaimError(data || "Claim failed."));
         return;
       }
-      console.log("[claim] claim succeeded", {
+      pushDebug("claim succeeded", {
         slot,
         screenId,
         nonce8: shortNonce(nonce),
@@ -122,7 +129,7 @@ export default function ClaimPage() {
         }, 700);
       }
     } catch (err) {
-      console.log("[claim] claim exception", {
+      pushDebug("claim exception", {
         slot,
         screenId,
         nonce8: shortNonce(nonce),
@@ -132,7 +139,7 @@ export default function ClaimPage() {
     } finally {
       setBusy(false);
     }
-  }, [nonce, presentClaimError, screenId]);
+  }, [nonce, presentClaimError, pushDebug, screenId, slot]);
 
   React.useEffect(() => {
     try {
@@ -141,7 +148,7 @@ export default function ClaimPage() {
         if (deviceToken) {
           void claimWithToken(deviceToken);
         } else if (typeof window !== "undefined") {
-          console.log("[claim] no trusted device token, redirecting to enroll", {
+          pushDebug("no trusted device token, redirecting to enroll", {
             slot,
             screenId,
             nonce8: shortNonce(nonce),
@@ -152,7 +159,7 @@ export default function ClaimPage() {
         }
       }
     } catch (err) {
-      console.log("[claim] flow exception", {
+      pushDebug("flow exception", {
         slot,
         screenId,
         nonce8: shortNonce(nonce),
@@ -161,7 +168,7 @@ export default function ClaimPage() {
       setStatus(presentClaimError(err instanceof Error ? err.message : "Claim flow failed."));
       setBusy(false);
     }
-  }, [claimWithToken, nonce, presentClaimError, screenId, slot]);
+  }, [claimWithToken, nonce, presentClaimError, pushDebug, screenId, slot]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1e293b,#020617_60%)] px-5 py-8 text-white">
@@ -186,6 +193,14 @@ export default function ClaimPage() {
         {status ? <div className="mt-5 rounded-2xl bg-white/10 px-4 py-3 text-sm">{status}</div> : null}
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/75">
           {busy ? "Checking trusted device..." : "Waiting for automatic claim or redirect to enrollment."}
+        </div>
+        <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+          <div>debug nonce8={shortNonce(nonce) ?? "none"} slot={slot} screenId={screenId || "none"}</div>
+          {debugLines.map((line, index) => (
+            <div key={`${index}-${line}`} className="mt-1 break-all font-mono text-[11px] text-amber-50/90">
+              {line}
+            </div>
+          ))}
         </div>
         {!busy && status && /scoreboard link|phone is not linked/i.test(status) ? (
           <div className="mt-4 text-sm text-white/70">
