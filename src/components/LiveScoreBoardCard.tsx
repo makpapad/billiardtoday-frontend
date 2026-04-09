@@ -254,19 +254,24 @@ export function LiveScoreBoardCard({
     compact?: boolean;
   }) => {
     const src = normalizePhotoUrl(player.photoMainUrl ?? player.photoUrl);
+    const [imageFailed, setImageFailed] = React.useState(false);
+    React.useEffect(() => {
+      setImageFailed(false);
+    }, [src]);
     const initials = initialsFor(resolveDisplayName(player)) || fallback;
     const outerSize = compact ? "w-10 h-10" : "w-16 h-16";
     const innerSize = compact ? "w-9 h-9" : "w-14 h-14";
     const textSize = compact ? "text-xs" : "text-sm";
     return (
       <div className={`${outerSize} rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden`}>
-        {src ? (
+        {src && !imageFailed ? (
           <img
             src={src}
             alt={resolveDisplayName(player) || fallback}
             className={`${innerSize} rounded-full object-cover border border-white/40`}
             loading="eager"
             referrerPolicy="no-referrer"
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className={`${innerSize} rounded-full bg-white/10 border border-white/40 flex items-center justify-center ${textSize} font-semibold`}>
