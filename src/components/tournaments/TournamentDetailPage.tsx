@@ -3008,8 +3008,20 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const toggleGroupPopover = (sessionId: string) => {
     const willOpen = openGroupSessionId !== sessionId;
-    setOpenGroupSessionId(willOpen ? sessionId : null);
-    setExpandedLiveSessionId(willOpen ? sessionId : null);
+    if (!willOpen) {
+      setOpenGroupSessionId(null);
+      setExpandedLiveSessionId(null);
+      return;
+    }
+    setExpandedLiveSessionId(sessionId);
+    setOpenGroupSessionId(null);
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        setOpenGroupSessionId(sessionId);
+      });
+    } else {
+      setOpenGroupSessionId(sessionId);
+    }
   };
 
   const switchToLive = () => {
