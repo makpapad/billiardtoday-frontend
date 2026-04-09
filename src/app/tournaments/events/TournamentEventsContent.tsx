@@ -1475,6 +1475,33 @@ export function TournamentEventsContent({
     },
     [normalizeLiveName],
   );
+  const groupMatchesSearch = useCallback(
+    (
+      group: {
+        key?: string | null;
+        number?: number | null;
+      },
+      searchTerms: string[],
+    ) => {
+      if (searchTerms.length === 0) return false;
+
+      const groupNumber =
+        typeof group.number === "number" && Number.isFinite(group.number)
+          ? String(group.number)
+          : "";
+      const haystack = [
+        group.key,
+        groupNumber,
+        groupNumber ? `group ${groupNumber}` : "",
+      ]
+        .map((value) => normalizeLiveName(value))
+        .filter((value): value is string => value.length > 0)
+        .join(" ");
+
+      return searchTerms.every((term) => haystack.includes(term));
+    },
+    [normalizeLiveName],
+  );
   const filteredActiveStageGroups = useMemo(() => {
     if (!activeStage) return [];
 
@@ -1483,6 +1510,7 @@ export function TournamentEventsContent({
     if (playerSearchTerms.length === 0) return groups;
 
     return groups.filter((group) =>
+      groupMatchesSearch(group, playerSearchTerms) ||
       group.matches.some((match) =>
         [match.top.player, match.bottom.player].some((player) => {
           return playerMatchesSearch(player, playerSearchTerms);
@@ -1491,6 +1519,7 @@ export function TournamentEventsContent({
     );
   }, [
     activeStage,
+    groupMatchesSearch,
     normalizedPlayerSearchQuery,
     playerMatchesSearch,
     playerSearchTerms,
@@ -2735,7 +2764,7 @@ export function TournamentEventsContent({
                                               placeholder={
                                                 stageUsesBracketView
                                                   ? "Search player or match..."
-                                                  : "Search player..."
+                                                  : "Search player or group..."
                                               }
                                               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
                                             />
