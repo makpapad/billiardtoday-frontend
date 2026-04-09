@@ -8,6 +8,7 @@ interface Player {
   full_name?: string;
   full_name_en?: string;
   photoUrl?: string | null;
+  photoMainUrl?: string | null;
   country?: string | null;
   points?: number;
   run?: number;
@@ -252,7 +253,7 @@ export function LiveScoreBoardCard({
     fallback: string;
     compact?: boolean;
   }) => {
-    const src = normalizePhotoUrl(player.photoUrl);
+    const src = normalizePhotoUrl(player.photoMainUrl ?? player.photoUrl);
     const initials = initialsFor(resolveDisplayName(player)) || fallback;
     const outerSize = compact ? "w-10 h-10" : "w-16 h-16";
     const innerSize = compact ? "w-9 h-9" : "w-14 h-14";
@@ -264,7 +265,7 @@ export function LiveScoreBoardCard({
             src={src}
             alt={resolveDisplayName(player) || fallback}
             className={`${innerSize} rounded-full object-cover border border-white/40`}
-            loading="lazy"
+            loading="eager"
             referrerPolicy="no-referrer"
           />
         ) : (
@@ -326,7 +327,7 @@ export function LiveScoreBoardCard({
             src={flagSrc}
             alt={country ?? "flag"}
             className="w-10 h-10 rounded-full object-cover border border-white/40"
-            loading="lazy"
+            loading="eager"
             referrerPolicy="no-referrer"
           />
         ) : (
