@@ -3,6 +3,7 @@
 import React from "react";
 import { useSearchParams } from "next/navigation";
 import {
+  clearTrustedDeviceToken,
   getTrustedDevicePlayer,
   getTrustedDeviceToken,
 } from "@/lib/trusted-device";
@@ -76,6 +77,13 @@ export default function ClaimPage() {
     return text;
   }, []);
 
+  const redirectToEnroll = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.location.replace(
+      `/enroll?next=${encodeURIComponent("/me")}&nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`,
+    );
+  }, [nonce, screenId, slot]);
+
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.fullName ?? null);
@@ -113,6 +121,23 @@ export default function ClaimPage() {
           status: res.status,
           payload: data,
         });
+        const errorText = extractErrorText(data);
+        if (/device not found/i.test(errorText)) {
+          pushDebug("clearing stale trusted device token", {
+            slot,
+            screenId,
+            nonce8: shortNonce(nonce),
+          });
+          clearTrustedDeviceToken();
+          setTrustedPlayerName(null);
+          setStatus("This phone is no longer linked on the server. Redirecting to enrollment.");
+          if (typeof window !== "undefined") {
+            window.setTimeout(() => {
+              redirectToEnroll();
+            }, 600);
+          }
+          return;
+        }
         setStatus(presentClaimError(data || "Claim failed."));
         return;
       }
@@ -139,7 +164,7 @@ export default function ClaimPage() {
     } finally {
       setBusy(false);
     }
-  }, [nonce, presentClaimError, pushDebug, screenId, slot]);
+  }, [nonce, presentClaimError, pushDebug, redirectToEnroll, screenId, slot]);
 
   React.useEffect(() => {
     try {
@@ -153,9 +178,7 @@ export default function ClaimPage() {
             screenId,
             nonce8: shortNonce(nonce),
           });
-          window.location.replace(
-            `/enroll?next=${encodeURIComponent("/me")}&nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`,
-          );
+          redirectToEnroll();
         }
       }
     } catch (err) {
@@ -168,7 +191,7 @@ export default function ClaimPage() {
       setStatus(presentClaimError(err instanceof Error ? err.message : "Claim flow failed."));
       setBusy(false);
     }
-  }, [claimWithToken, nonce, presentClaimError, pushDebug, screenId, slot]);
+  }, [claimWithToken, nonce, presentClaimError, pushDebug, redirectToEnroll, screenId, slot]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1e293b,#020617_60%)] px-5 py-8 text-white">
