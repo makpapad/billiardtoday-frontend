@@ -128,6 +128,16 @@ type EventLiveSession = {
   player1Name: string | null;
   player2Name: string | null;
   sessionStatus: string | null;
+  state?: {
+    scoreA?: number | null;
+    scoreB?: number | null;
+    inningsA?: number | null;
+    inningsB?: number | null;
+    bestRunA?: number | null;
+    bestRunB?: number | null;
+    playerAName?: string | null;
+    playerBName?: string | null;
+  } | null;
 };
 
 function PlayerNameWithFlag({
@@ -534,6 +544,45 @@ function resolveGroupMatchDisplay(
 
 function getGroupKey(stage: NormalizedEventStage, group: StageMatchGroup) {
   return `${stage.documentId || stage.id}-${group.number ?? group.key}`;
+}
+
+function resolveLivePlayerSide(params: {
+  playerDocumentId: string | null | undefined;
+  playerName: string | null | undefined;
+  playerNativeName: string | null | undefined;
+  session: EventLiveSession | null;
+  normalizeLiveName: (value: string | null | undefined) => string;
+}): "A" | "B" | null {
+  const { playerDocumentId, playerName, playerNativeName, session, normalizeLiveName } =
+    params;
+  if (!session) return null;
+  const playerDoc = typeof playerDocumentId === "string" ? playerDocumentId.trim() : "";
+  if (playerDoc) {
+    if (playerDoc === session.player1DocumentId) return "A";
+    if (playerDoc === session.player2DocumentId) return "B";
+  }
+
+  const candidates = [playerName, playerNativeName]
+    .map((value) => normalizeLiveName(value))
+    .filter((value): value is string => value.length > 0);
+  if (candidates.length === 0) return null;
+
+  const playerAKeys = [
+    session.state?.playerAName,
+    session.player1Name,
+  ]
+    .map((value) => normalizeLiveName(value))
+    .filter((value): value is string => value.length > 0);
+  const playerBKeys = [
+    session.state?.playerBName,
+    session.player2Name,
+  ]
+    .map((value) => normalizeLiveName(value))
+    .filter((value): value is string => value.length > 0);
+
+  if (candidates.some((value) => playerAKeys.includes(value))) return "A";
+  if (candidates.some((value) => playerBKeys.includes(value))) return "B";
+  return null;
 }
 
 function compareOptionalNumbers(a: number | null, b: number | null) {
@@ -3962,6 +4011,124 @@ export function TournamentEventsContent({
                                                               liveSession?.sessionStatus ===
                                                                 "in_progress";
 
+                                                            const topLiveSide =
+                                                              resolveLivePlayerSide({
+                                                                playerDocumentId:
+                                                                  match.top.player.documentId,
+                                                                playerName:
+                                                                  match.top.player.name,
+                                                                playerNativeName:
+                                                                  match.top.player.nativeName,
+                                                                session: liveSession,
+                                                                normalizeLiveName,
+                                                              });
+                                                            const bottomLiveSide =
+                                                              resolveLivePlayerSide({
+                                                                playerDocumentId:
+                                                                  match.bottom.player.documentId,
+                                                                playerName:
+                                                                  match.bottom.player.name,
+                                                                playerNativeName:
+                                                                  match.bottom.player.nativeName,
+                                                                session: liveSession,
+                                                                normalizeLiveName,
+                                                              });
+
+                                                            const getLiveValue = (
+                                                              side: "A" | "B" | null,
+                                                              keyA:
+                                                                | "scoreA"
+                                                                | "inningsA"
+                                                                | "bestRunA",
+                                                              keyB:
+                                                                | "scoreB"
+                                                                | "inningsB"
+                                                                | "bestRunB",
+                                                            ) => {
+                                                              if (
+                                                                !hasActiveLiveSession ||
+                                                                !liveSession?.state ||
+                                                                !side
+                                                              ) {
+                                                                return null;
+                                                              }
+                                                              return side === "A"
+                                                                ? toNumber(
+                                                                    liveSession.state[keyA],
+                                                                  )
+                                                                : toNumber(
+                                                                    liveSession.state[keyB],
+                                                                  );
+                                                            };
+
+                                                            const topLivePoints =
+                                                              getLiveValue(
+                                                                topLiveSide,
+                                                                "scoreA",
+                                                                "scoreB",
+                                                              );
+                                                            const bottomLivePoints =
+                                                              getLiveValue(
+                                                                bottomLiveSide,
+                                                                "scoreA",
+                                                                "scoreB",
+                                                              );
+                                                            const topLiveInnings =
+                                                              getLiveValue(
+                                                                topLiveSide,
+                                                                "inningsA",
+                                                                "inningsB",
+                                                              );
+                                                            const bottomLiveInnings =
+                                                              getLiveValue(
+                                                                bottomLiveSide,
+                                                                "inningsA",
+                                                                "inningsB",
+                                                              );
+                                                            const topLiveHighRun =
+                                                              getLiveValue(
+                                                                topLiveSide,
+                                                                "bestRunA",
+                                                                "bestRunB",
+                                                              );
+                                                            const bottomLiveHighRun =
+                                                              getLiveValue(
+                                                                bottomLiveSide,
+                                                                "bestRunA",
+                                                                "bestRunB",
+                                                              );
+
+                                                            const topDisplayPoints =
+                                                              hasActiveLiveSession &&
+                                                              topLivePoints !== null
+                                                                ? topLivePoints
+                                                                : match.top.player.points;
+                                                            const bottomDisplayPoints =
+                                                              hasActiveLiveSession &&
+                                                              bottomLivePoints !== null
+                                                                ? bottomLivePoints
+                                                                : match.bottom.player.points;
+                                                            const topDisplayInnings =
+                                                              hasActiveLiveSession &&
+                                                              topLiveInnings !== null
+                                                                ? topLiveInnings
+                                                                : match.top.player.innings;
+                                                            const bottomDisplayInnings =
+                                                              hasActiveLiveSession &&
+                                                              bottomLiveInnings !== null
+                                                                ? bottomLiveInnings
+                                                                : match.bottom.player.innings;
+                                                            const topDisplayHighRun =
+                                                              hasActiveLiveSession &&
+                                                              topLiveHighRun !== null
+                                                                ? topLiveHighRun
+                                                                : match.top.player.highRun;
+                                                            const bottomDisplayHighRun =
+                                                              hasActiveLiveSession &&
+                                                              bottomLiveHighRun !== null
+                                                                ? bottomLiveHighRun
+                                                                : match.bottom.player.highRun;
+
                                                             const displayPlayers =
                                                               row.displayPlayers;
                                                             const matchPlayed =
@@ -3985,10 +4152,13 @@ export function TournamentEventsContent({
                                                                     .matchPoints ??
                                                                     0) > 0,
                                                               );
+                                                            const matchHasLiveOverlay =
+                                                              hasActiveLiveSession;
                                                             const displayMatchValue = (
                                                               value: number | null,
                                                             ) =>
-                                                              matchPlayed
+                                                              matchPlayed ||
+                                                              matchHasLiveOverlay
                                                                 ? formatNumberValue(
                                                                     value,
                                                                   )
@@ -3998,7 +4168,8 @@ export function TournamentEventsContent({
                                                                 points: number | null,
                                                                 innings: number | null,
                                                               ) =>
-                                                                matchPlayed
+                                                                matchPlayed ||
+                                                                matchHasLiveOverlay
                                                                   ? formatAverage(
                                                                       points,
                                                                       innings,
@@ -4171,33 +4342,23 @@ export function TournamentEventsContent({
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .points,
+                                                                      topDisplayPoints,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .innings,
+                                                                      topDisplayInnings,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchAverage(
-                                                                      match.top
-                                                                        .player
-                                                                        .points,
-                                                                      match.top
-                                                                        .player
-                                                                        .innings,
+                                                                      topDisplayPoints,
+                                                                      topDisplayInnings,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match.top
-                                                                        .player
-                                                                        .highRun,
+                                                                      topDisplayHighRun,
                                                                     )}
                                                                   </td>
                                                                   {!isArtisticEvent && (
@@ -4345,38 +4506,23 @@ export function TournamentEventsContent({
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .points,
+                                                                      bottomDisplayPoints,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .innings,
+                                                                      bottomDisplayInnings,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchAverage(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .points,
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .innings,
+                                                                      bottomDisplayPoints,
+                                                                      bottomDisplayInnings,
                                                                     )}
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center">
                                                                     {displayMatchValue(
-                                                                      match
-                                                                        .bottom
-                                                                        .player
-                                                                        .highRun,
+                                                                      bottomDisplayHighRun,
                                                                     )}
                                                                   </td>
                                                                   {!isArtisticEvent && (
