@@ -1493,6 +1493,7 @@ export function TournamentEventsContent({
         group.key,
         groupNumber,
         groupNumber ? `group ${groupNumber}` : "",
+        groupNumber ? `g${groupNumber}` : "",
       ]
         .map((value) => normalizeLiveName(value))
         .filter((value): value is string => value.length > 0)

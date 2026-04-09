@@ -2678,6 +2678,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         placeholder,
         groupNumber,
         groupNumber ? `group ${groupNumber}` : "",
+        groupNumber ? `g${groupNumber}` : "",
         matchNumber,
         matchNumber ? `match ${matchNumber}` : "",
       ]
