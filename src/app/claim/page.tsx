@@ -7,6 +7,37 @@ import {
   getTrustedDeviceToken,
 } from "@/lib/trusted-device";
 
+function extractErrorText(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const text = extractErrorText(item);
+      if (text) return text;
+    }
+    return "";
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const directCandidates = [
+      record.message,
+      record.error,
+      record.details,
+      record.data,
+    ];
+
+    for (const candidate of directCandidates) {
+      const text = extractErrorText(candidate);
+      if (text) return text;
+    }
+  }
+
+  return "";
+}
+
 export default function ClaimPage() {
   const params = useSearchParams();
   const nonce = params?.get("nonce") || "";
@@ -16,8 +47,8 @@ export default function ClaimPage() {
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
-  const presentClaimError = React.useCallback((message?: string | null) => {
-    const text = (message || "").trim();
+  const presentClaimError = React.useCallback((message?: unknown) => {
+    const text = extractErrorText(message);
     if (!text) {
       return "The scoreboard link could not be completed. Return to the scoreboard and scan a new QR code.";
     }
@@ -49,7 +80,7 @@ export default function ClaimPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setStatus(presentClaimError(data?.error || data?.message || "Claim failed."));
+        setStatus(presentClaimError(data || "Claim failed."));
         return;
       }
       setStatus("The scoreboard link was completed.");
