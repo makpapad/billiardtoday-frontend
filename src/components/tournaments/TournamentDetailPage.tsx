@@ -492,9 +492,72 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   return keys;
 };
 
-const createGroupPopoverData = (group: StageMatchGroup): GroupPopoverData | null => {
-  const playedMatches = group.matches.filter(hasPlayedStageMatch);
-  const standings = buildGroupStandings(group.matches);
+const createGroupPopoverData = (
+  group: StageMatchGroup,
+  session?: EventLiveSession | null,
+): GroupPopoverData | null => {
+  const sessionPairKey = buildPairKey(
+    normalizeNameForMatch(
+      session?.state?.playerAName ?? session?.player1Name ?? null,
+    ),
+    normalizeNameForMatch(
+      session?.state?.playerBName ?? session?.player2Name ?? null,
+    ),
+  );
+
+  const patchedMatches = group.matches.map((match) => {
+    if (!session || !sessionPairKey) return match;
+    const matchPairKey = buildPairKey(
+      normalizeNameForMatch(match.top.player.name || match.top.player.nativeName),
+      normalizeNameForMatch(
+        match.bottom.player.name || match.bottom.player.nativeName,
+      ),
+    );
+    if (!matchPairKey || matchPairKey !== sessionPairKey) return match;
+
+    return {
+      ...match,
+      top: {
+        ...match.top,
+        player: {
+          ...match.top.player,
+          points:
+            typeof session.state?.scoreA === "number"
+              ? session.state.scoreA
+              : match.top.player.points,
+          innings:
+            typeof session.state?.inningsA === "number"
+              ? session.state.inningsA
+              : match.top.player.innings,
+          highRun:
+            typeof session.state?.bestRunA === "number"
+              ? session.state.bestRunA
+              : match.top.player.highRun,
+        },
+      },
+      bottom: {
+        ...match.bottom,
+        player: {
+          ...match.bottom.player,
+          points:
+            typeof session.state?.scoreB === "number"
+              ? session.state.scoreB
+              : match.bottom.player.points,
+          innings:
+            typeof session.state?.inningsB === "number"
+              ? session.state.inningsB
+              : match.bottom.player.innings,
+          highRun:
+            typeof session.state?.bestRunB === "number"
+              ? session.state.bestRunB
+              : match.bottom.player.highRun,
+        },
+      },
+    };
+  });
+
+  const playedMatches = patchedMatches.filter(hasPlayedStageMatch);
+  const standings = buildGroupStandings(patchedMatches);
   if (playedMatches.length === 0 && standings.length === 0) return null;
   return {
     title: `Group ${group.number ?? group.key}`,
@@ -568,6 +631,15 @@ const mergeLiveSessions = (
     });
   }
   return Array.from(merged.values());
+};
+
+const resolvePreferredPhotoValue = (
+  ...values: Array<string | null | undefined>
+): string | null => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
 };
 
 function buildInningsDetailFromSnapshots(snapshots: SessionSnapshot[]): InningDetailEntry[] {
@@ -2915,7 +2987,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             return false;
           });
           if (hit) {
-            return createGroupPopoverData(group);
+            return createGroupPopoverData(group, session);
           }
         }
       }
@@ -2932,7 +3004,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             (entry) => entry.number === session.groupNumber,
           ) ?? null;
         if (group) {
-          popover = createGroupPopoverData(group);
+          popover = createGroupPopoverData(group, session);
         }
       }
 
@@ -3418,23 +3490,25 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       : "relative"
                   }
                 >
-                  <div className="absolute left-2 top-2 z-30">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        toggleGroupPopover(session.sessionId);
-                      }}
-                      className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
-                        groupPopoverBySessionId.has(session.sessionId)
-                          ? "border-white/20 bg-slate-900/35"
-                          : "border-white/10 bg-slate-900/18 opacity-55"
-                      }`}
-                    >
-                      Groups
-                    </button>
-                  </div>
+                  {expandedLiveSessionId === session.sessionId ? (
+                    <div className="absolute left-2 top-2 z-30">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          toggleGroupPopover(session.sessionId);
+                        }}
+                        className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
+                          groupPopoverBySessionId.has(session.sessionId)
+                            ? "border-white/20 bg-slate-900/35"
+                            : "border-white/10 bg-slate-900/18 opacity-55"
+                        }`}
+                      >
+                        Groups
+                      </button>
+                    </div>
+                  ) : null}
                   {!highlightItem &&
                   groupPopoverBySessionId.has(session.sessionId) &&
                   openGroupSessionId === session.sessionId ? (
@@ -3469,14 +3543,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player1={{
                         name: state.playerAName || "Player A",
                         country: state.playerACountry ?? null,
-                        photoUrl:
-                          state.playerAPhotoUrl ??
-                          photoFallback?.playerAPhotoUrl ??
-                          null,
-                        photoMainUrl:
-                          state.playerAPhotoMainUrl ??
-                          photoFallback?.playerAPhotoMainUrl ??
-                          null,
+                        photoUrl: resolvePreferredPhotoValue(
+                          state.playerAPhotoUrl,
+                          photoFallback?.playerAPhotoUrl,
+                        ),
+                        photoMainUrl: resolvePreferredPhotoValue(
+                          state.playerAPhotoMainUrl,
+                          photoFallback?.playerAPhotoMainUrl,
+                        ),
                         points: state.scoreA ?? 0,
                         run: state.runA ?? 0,
                         liveRun: state.liveRunA ?? 0,
@@ -3492,14 +3566,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player2={{
                         name: state.playerBName || "Player B",
                         country: state.playerBCountry ?? null,
-                        photoUrl:
-                          state.playerBPhotoUrl ??
-                          photoFallback?.playerBPhotoUrl ??
-                          null,
-                        photoMainUrl:
-                          state.playerBPhotoMainUrl ??
-                          photoFallback?.playerBPhotoMainUrl ??
-                          null,
+                        photoUrl: resolvePreferredPhotoValue(
+                          state.playerBPhotoUrl,
+                          photoFallback?.playerBPhotoUrl,
+                        ),
+                        photoMainUrl: resolvePreferredPhotoValue(
+                          state.playerBPhotoMainUrl,
+                          photoFallback?.playerBPhotoMainUrl,
+                        ),
                         points: state.scoreB ?? 0,
                         run: state.runB ?? 0,
                         liveRun: state.liveRunB ?? 0,
