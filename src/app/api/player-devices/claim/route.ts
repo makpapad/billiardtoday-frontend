@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
-import { API_URL } from "@/lib/api";
 import { getScoreboardApiToken } from "@/lib/server-token";
+import { getServerEnv } from "@/lib/serverEnv";
 
 export const dynamic = "force-dynamic";
+
+const IS_PRODUCTION =
+  (getServerEnv("NODE_ENV") || process.env.NODE_ENV || "").trim() === "production";
+const STRAPI_BASE_URL = (
+  getServerEnv("STRAPI_API_URL") ||
+  (IS_PRODUCTION ? "http://127.0.0.1:1337" : getServerEnv("NEXT_PUBLIC_STRAPI_URL")) ||
+  "https://app.billiardtoday.com"
+).replace(/\/$/, "");
 
 export async function POST(req: Request) {
   let body: any = {};
@@ -21,7 +29,7 @@ export async function POST(req: Request) {
   const token = getScoreboardApiToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}/api/player-devices/claim-scoreboard`, {
+  const res = await fetch(`${STRAPI_BASE_URL}/api/player-devices/claim-scoreboard`, {
     method: "POST",
     cache: "no-store",
     headers,
