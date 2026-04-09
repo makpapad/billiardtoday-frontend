@@ -18,13 +18,6 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {}
 
-  console.log("[api/player-devices/claim] incoming", {
-    nonce8: typeof body?.nonce === "string" ? body.nonce.slice(0, 8) : null,
-    screenIdentifier: body?.screenIdentifier ?? null,
-    deviceTokenLast4:
-      typeof body?.deviceToken === "string" ? body.deviceToken.slice(-4) : null,
-  });
-
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getScoreboardApiToken();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -37,11 +30,6 @@ export async function POST(req: Request) {
   });
 
   const text = await res.text();
-  console.log("[api/player-devices/claim] upstream", {
-    status: res.status,
-    statusText: res.statusText,
-    bodyPreview: text.slice(0, 500),
-  });
   return new NextResponse(text || "{}", {
     status: res.status,
     headers: { "Content-Type": "application/json" },
