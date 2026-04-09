@@ -214,7 +214,13 @@ export function LiveScoreBoardCard({
     if (!trimmed) return null;
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
     if (trimmed.startsWith("/")) {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
+      const apiBase = (
+        process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
+        "https://app.billiardtoday.com"
+      )
+        .trim()
+        .replace(/\/$/, "");
       if (apiBase && trimmed.startsWith("/uploads/")) return `${apiBase}${trimmed}`;
       return trimmed;
     }
@@ -525,7 +531,11 @@ export function LiveScoreBoardCard({
           <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
         </div>
         {topLeftControl ? (
-          <div className="absolute left-2 top-2 z-20" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="absolute left-2 top-2 z-20"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
             {topLeftControl}
           </div>
         ) : null}
@@ -562,7 +572,15 @@ export function LiveScoreBoardCard({
         >
           Close
         </button>
-        {topLeftControl ? <div className="absolute left-2 top-2 z-20">{topLeftControl}</div> : null}
+        {topLeftControl ? (
+          <div
+            className="absolute left-2 top-2 z-20"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {topLeftControl}
+          </div>
+        ) : null}
 
         <div className="relative z-10 sm:hidden space-y-1">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">

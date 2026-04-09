@@ -35,6 +35,7 @@ import {
 } from "@/app/tournaments/events/utils";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { normalizeMediaUrl } from "@/lib/liveSessions";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -637,7 +638,9 @@ const resolvePreferredPhotoValue = (
   ...values: Array<string | null | undefined>
 ): string | null => {
   for (const value of values) {
-    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "string" && value.trim()) {
+      return normalizeMediaUrl(value.trim()) ?? value.trim();
+    }
   }
   return null;
 };
