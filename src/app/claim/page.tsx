@@ -7,6 +7,11 @@ import {
   getTrustedDeviceToken,
 } from "@/lib/trusted-device";
 
+function shortNonce(value: string | null | undefined) {
+  if (!value) return null;
+  return value.slice(0, 8);
+}
+
 function extractErrorText(value: unknown): string {
   if (typeof value === "string") {
     return value.trim();
@@ -67,11 +72,25 @@ export default function ClaimPage() {
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.fullName ?? null);
+    console.log("[claim] page opened", {
+      slot,
+      screenId,
+      nonce8: shortNonce(nonce),
+      trustedPlayerName: trusted?.fullName ?? null,
+      trustedPlayerDocumentId: trusted?.documentId ?? null,
+      trustedEnrollmentRequestId: trusted?.enrollmentRequestId ?? null,
+    });
   }, []);
 
   const claimWithToken = React.useCallback(async (deviceToken: string) => {
     setBusy(true);
     setStatus(null);
+    console.log("[claim] attempting trusted-device claim", {
+      slot,
+      screenId,
+      nonce8: shortNonce(nonce),
+      deviceTokenLast4: deviceToken.slice(-4),
+    });
     try {
       const res = await fetch("/api/player-devices/claim", {
         method: "POST",
@@ -80,9 +99,22 @@ export default function ClaimPage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
+        console.log("[claim] claim failed", {
+          slot,
+          screenId,
+          nonce8: shortNonce(nonce),
+          status: res.status,
+          payload: data,
+        });
         setStatus(presentClaimError(data || "Claim failed."));
         return;
       }
+      console.log("[claim] claim succeeded", {
+        slot,
+        screenId,
+        nonce8: shortNonce(nonce),
+        payload: data,
+      });
       setStatus("The scoreboard link was completed.");
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
@@ -90,6 +122,12 @@ export default function ClaimPage() {
         }, 700);
       }
     } catch (err) {
+      console.log("[claim] claim exception", {
+        slot,
+        screenId,
+        nonce8: shortNonce(nonce),
+        error: err instanceof Error ? err.message : err,
+      });
       setStatus(presentClaimError(err instanceof Error ? err.message : "Claim failed."));
     } finally {
       setBusy(false);
@@ -103,12 +141,23 @@ export default function ClaimPage() {
         if (deviceToken) {
           void claimWithToken(deviceToken);
         } else if (typeof window !== "undefined") {
+          console.log("[claim] no trusted device token, redirecting to enroll", {
+            slot,
+            screenId,
+            nonce8: shortNonce(nonce),
+          });
           window.location.replace(
             `/enroll?next=${encodeURIComponent("/me")}&nonce=${encodeURIComponent(nonce)}&slot=${encodeURIComponent(slot)}&screenId=${encodeURIComponent(screenId)}`,
           );
         }
       }
     } catch (err) {
+      console.log("[claim] flow exception", {
+        slot,
+        screenId,
+        nonce8: shortNonce(nonce),
+        error: err instanceof Error ? err.message : err,
+      });
       setStatus(presentClaimError(err instanceof Error ? err.message : "Claim flow failed."));
       setBusy(false);
     }
