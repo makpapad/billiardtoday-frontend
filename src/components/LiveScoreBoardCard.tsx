@@ -524,6 +524,11 @@ export function LiveScoreBoardCard({
           <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
           <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
         </div>
+        {topLeftControl ? (
+          <div className="absolute left-2 top-2 z-20" onClick={(event) => event.stopPropagation()}>
+            {topLeftControl}
+          </div>
+        ) : null}
         <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
           <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
           <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
