@@ -2628,9 +2628,25 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   );
 
   const visibleTimetableSlots = useMemo(() => {
-    const trimmedQuery = timetableSearchQuery.trim().toLowerCase();
+    const trimmedQuery = normalizeLookupText(timetableSearchQuery);
     if (timetableViewMode === "training") {
-      return timetableSlots.filter((slot) => slot.slotType === "training");
+      return timetableSlots.filter((slot) => {
+        if (slot.slotType !== "training") return false;
+        if (!trimmedQuery) return true;
+        const haystack = [
+          slot.title,
+          slot.subtitle,
+          slot.description,
+          slot.trainingPlayerName,
+          slot.stageTitle,
+          slot.customStageLabel,
+          slot.tableLabel,
+        ]
+          .map((value) => normalizeLookupText(value))
+          .filter(Boolean)
+          .join(" ");
+        return haystack.includes(trimmedQuery);
+      });
     }
     return timetableSlots.filter((slot) => {
       if (slot.slotType === "training") return false;
@@ -2639,17 +2655,36 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         typeof slot.metadata?.placeholderLabel === "string"
           ? slot.metadata.placeholderLabel
           : "";
+      const groupNumber =
+        typeof slot.groupNumber === "number" && Number.isFinite(slot.groupNumber)
+          ? String(slot.groupNumber)
+          : "";
+      const matchNumber =
+        typeof slot.matchNumber === "number" && Number.isFinite(slot.matchNumber)
+          ? String(slot.matchNumber)
+          : "";
       const haystack = [
         slot.title,
         slot.subtitle,
         slot.description,
         slot.matchLabel,
         slot.stageTitle,
+        slot.customStageLabel,
+        slot.matchPlayer1Name,
+        slot.matchPlayer1Country,
+        slot.matchPlayer2Name,
+        slot.matchPlayer2Country,
+        slot.tableLabel,
         placeholder,
+        groupNumber,
+        groupNumber ? `group ${groupNumber}` : "",
+        matchNumber,
+        matchNumber ? `match ${matchNumber}` : "",
       ]
+        .map((value) => normalizeLookupText(value))
         .filter(Boolean)
         .join(" ")
-        .toLowerCase();
+        .trim();
       return haystack.includes(trimmedQuery);
     });
   }, [timetableSearchQuery, timetableSlots, timetableViewMode]);
