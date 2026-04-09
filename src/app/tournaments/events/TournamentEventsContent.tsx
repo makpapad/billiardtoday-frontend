@@ -1525,6 +1525,58 @@ export function TournamentEventsContent({
     playerSearchTerms,
     stageMatchGroups,
   ]);
+  const timetableSlotMatchesSearch = useCallback(
+    (slot: NormalizedTimetableSlot, searchTerms: string[]) => {
+      if (searchTerms.length === 0) return true;
+
+      const groupNumber =
+        typeof slot.groupNumber === "number" && Number.isFinite(slot.groupNumber)
+          ? String(slot.groupNumber)
+          : "";
+      const matchNumber =
+        typeof slot.matchNumber === "number" && Number.isFinite(slot.matchNumber)
+          ? String(slot.matchNumber)
+          : "";
+
+      const haystack = [
+        slot.title,
+        slot.subtitle,
+        slot.description,
+        slot.stageTitle,
+        slot.customStageLabel,
+        slot.matchLabel,
+        slot.trainingPlayerName,
+        slot.matchPlayer1Name,
+        slot.matchPlayer1Country,
+        slot.matchPlayer2Name,
+        slot.matchPlayer2Country,
+        groupNumber,
+        groupNumber ? `group ${groupNumber}` : "",
+        matchNumber,
+        matchNumber ? `match ${matchNumber}` : "",
+        slot.tableLabel,
+      ]
+        .map((value) => normalizeLiveName(value))
+        .filter((value): value is string => value.length > 0)
+        .join(" ");
+
+      return searchTerms.every((term) => haystack.includes(term));
+    },
+    [normalizeLiveName],
+  );
+  const filteredTimetableSlots = useMemo(() => {
+    if (!normalizedPlayerSearchQuery || playerSearchTerms.length === 0) {
+      return timetableSlots;
+    }
+    return timetableSlots.filter((slot) =>
+      timetableSlotMatchesSearch(slot, playerSearchTerms),
+    );
+  }, [
+    normalizedPlayerSearchQuery,
+    playerSearchTerms,
+    timetableSlotMatchesSearch,
+    timetableSlots,
+  ]);
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
 
@@ -2512,6 +2564,28 @@ export function TournamentEventsContent({
                       <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                         Time table
                       </div>
+                      <div className="relative max-w-md">
+                        <input
+                          type="search"
+                          value={playerSearchQuery}
+                          onChange={(event) =>
+                            setPlayerSearchQuery(event.target.value)
+                          }
+                          placeholder="Search player, group or match..."
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                        />
+                        {playerSearchQuery ? (
+                          <button
+                            type="button"
+                            onClick={() => setPlayerSearchQuery("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                            aria-label="Clear search"
+                            title="Clear search"
+                          >
+                            X
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
                         <div className="overflow-x-auto">
                           <table className="min-w-full border-collapse text-sm">
@@ -2526,7 +2600,7 @@ export function TournamentEventsContent({
                               </tr>
                             </thead>
                             <tbody>
-                              {timetableSlots.map((slot) => {
+                              {filteredTimetableSlots.map((slot) => {
                                 const parsedDateTime = slot.dateTime ? new Date(slot.dateTime) : null;
                                 const shiftedSlotDateTime = formatDateTimeWithOffset(
                                   slot.dateTime,
@@ -2680,6 +2754,13 @@ export function TournamentEventsContent({
                                   </tr>
                                 );
                               })}
+                              {filteredTimetableSlots.length === 0 && (
+                                <tr className="border-t border-gray-200 bg-white text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                                  <td colSpan={6} className="px-4 py-6 text-center">
+                                    No timetable entries match your search.
+                                  </td>
+                                </tr>
+                              )}
                             </tbody>
                           </table>
                         </div>
