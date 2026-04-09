@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
   LiveStatsHighlightModal,
@@ -954,21 +954,23 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     setBrowserLocale(nextLocale);
   }, []);
 
+  const fetchEventPayload = useCallback(async () => {
+    const response = await fetch(
+      `/api/events/${encodeURIComponent(summary.documentId)}`,
+      {
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) throw new Error("Failed to load event data.");
+    return (await response.json().catch(() => null)) as EventApiResponse | null;
+  }, [summary.documentId]);
+
   useEffect(() => {
     let cancelled = false;
 
     const fetchEventData = async () => {
       try {
-        const response = await fetch(
-          `/api/events/${encodeURIComponent(summary.documentId)}`,
-          {
-            cache: "no-store",
-          },
-        );
-        if (!response.ok) throw new Error("Failed to load event data.");
-        const payload = (await response
-          .json()
-          .catch(() => null)) as EventApiResponse | null;
+        const payload = await fetchEventPayload();
         if (!cancelled) {
           setEventData(payload);
         }
@@ -983,7 +985,37 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [summary.documentId]);
+  }, [fetchEventPayload]);
+
+  useEffect(() => {
+    if (activeView !== "tournament") return;
+
+    let cancelled = false;
+
+    const refreshEventData = async () => {
+      try {
+        const payload = await fetchEventPayload();
+        if (cancelled) return;
+        setEventData((current) => {
+          const currentSerialized = JSON.stringify(current);
+          const nextSerialized = JSON.stringify(payload);
+          return currentSerialized === nextSerialized ? current : payload;
+        });
+      } catch {
+        // Keep current UI state and data on transient polling failures.
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void refreshEventData();
+    }, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [activeView, fetchEventPayload]);
 
   useEffect(() => {
     if (previousViewRef.current === "tournament" && activeView === "live") {
