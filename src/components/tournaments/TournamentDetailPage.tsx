@@ -3007,7 +3007,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   };
 
   const toggleGroupPopover = (sessionId: string) => {
-    setOpenGroupSessionId((prev) => (prev === sessionId ? null : sessionId));
+    const willOpen = openGroupSessionId !== sessionId;
+    setOpenGroupSessionId(willOpen ? sessionId : null);
+    setExpandedLiveSessionId(willOpen ? sessionId : null);
   };
 
   const switchToLive = () => {
