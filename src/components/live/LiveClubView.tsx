@@ -471,6 +471,58 @@ function resolveDisplayCurrent(existing?: LiveScoreState, incoming?: LiveScoreSt
   return previousCurrent === "A" ? "B" : "A";
 }
 
+function resolveDisplayLiveRuns(
+  existing?: LiveScoreState,
+  incoming?: LiveScoreState,
+): Pick<LiveScoreState, "liveRunA" | "liveRunB"> {
+  const incomingLiveRunA = Math.max(0, toFiniteNumber(incoming?.liveRunA) ?? 0);
+  const incomingLiveRunB = Math.max(0, toFiniteNumber(incoming?.liveRunB) ?? 0);
+
+  if (!existing) {
+    return {
+      liveRunA: incomingLiveRunA,
+      liveRunB: incomingLiveRunB,
+    };
+  }
+
+  if (incoming?.ended) {
+    return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
+  }
+
+  if (incomingLiveRunA > 0 || incomingLiveRunB > 0) {
+    return {
+      liveRunA: incomingLiveRunA,
+      liveRunB: incomingLiveRunB,
+    };
+  }
+
+  const previousCurrent = existing.current;
+  const incomingCurrent = incoming?.current;
+  if (previousCurrent !== "A" && previousCurrent !== "B") {
+    return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
+  }
+  if (!incomingCurrent || incomingCurrent !== previousCurrent) {
+    return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
+  }
+
+  const prevScoreA = toFiniteNumber(existing.scoreA) ?? 0;
+  const prevScoreB = toFiniteNumber(existing.scoreB) ?? 0;
+  const nextScoreA = toFiniteNumber(incoming.scoreA) ?? prevScoreA;
+  const nextScoreB = toFiniteNumber(incoming.scoreB) ?? prevScoreB;
+
+  const deltaA = Math.max(0, nextScoreA - prevScoreA);
+  const deltaB = Math.max(0, nextScoreB - prevScoreB);
+
+  if (previousCurrent === "A" && deltaA > 0) {
+    return { liveRunA: deltaA, liveRunB: 0 };
+  }
+  if (previousCurrent === "B" && deltaB > 0) {
+    return { liveRunA: 0, liveRunB: deltaB };
+  }
+
+  return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
+}
+
 export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
@@ -1343,6 +1395,9 @@ export function LiveClubView({ club, embedded = false }: Props) {
             const itemSessionId = payload.sessionId?.toString() || payload.screenId;
             const existing = prev.find((x) => x.screenId === payload.screenId) ?? prev.find((x) => x.sessionId === itemSessionId);
             if (existing) {
+              const mergedForResolution: LiveScoreState = { ...existing.state, ...state };
+              const displayCurrent = resolveDisplayCurrent(existing.state, mergedForResolution);
+              const displayLiveRuns = resolveDisplayLiveRuns(existing.state, mergedForResolution);
               const mergedState: LiveScoreState = {
                 ...existing.state,
                 ...state,
@@ -1354,7 +1409,9 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 playerBPhotoMainUrl: state.playerBPhotoMainUrl ?? existing.state?.playerBPhotoMainUrl ?? null,
                 targetPointsA: state.targetPointsA ?? existing.state?.targetPointsA ?? null,
                 targetPointsB: state.targetPointsB ?? existing.state?.targetPointsB ?? null,
-                current: resolveDisplayCurrent(existing.state, { ...existing.state, ...state }),
+                current: displayCurrent,
+                liveRunA: displayLiveRuns.liveRunA,
+                liveRunB: displayLiveRuns.liveRunB,
               };
               const mergedItem: LiveScoreItem = { ...item, state: mergedState };
               console.log('[live view] Updating existing item with new scores:', {
