@@ -221,7 +221,6 @@ function GroupTooltip({
   embedded: boolean;
   locale?: string;
 }) {
-  const hasStandings = data.standings.length > 0;
   const hasStandingActivity = (player: GroupStanding) =>
     player.record.wins > 0 ||
     player.record.draws > 0 ||
@@ -232,8 +231,10 @@ function GroupTooltip({
     (player.highRun ?? 0) > 0 ||
     (player.highRun2 ?? 0) > 0 ||
     (player.bestAverage ?? 0) > 0;
+  const visibleStandings = data.standings.filter(hasStandingActivity);
+  const hasStandings = visibleStandings.length > 0;
   return (
-    <div className="absolute left-0 bottom-full z-30 -mb-1 w-[min(760px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white px-3 pb-2 pt-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+    <div className="absolute left-0 bottom-full z-30 -mb-1 w-full max-w-full rounded-2xl border border-slate-200 bg-white px-3 pb-2 pt-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="text-sm font-semibold">{data.title}</div>
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -254,11 +255,27 @@ function GroupTooltip({
             </tr>
           </thead>
           <tbody>
-            {data.matches.map((match) => (
+            {data.matches.map((match) => {
+              const topPoints = Number(match.top.player.points ?? 0) || 0;
+              const bottomPoints = Number(match.bottom.player.points ?? 0) || 0;
+              const topRowClass =
+                topPoints === bottomPoints
+                  ? "border-t border-slate-200 bg-slate-50"
+                  : topPoints > bottomPoints
+                    ? "border-t border-slate-200 bg-emerald-50/80"
+                    : "border-t border-slate-200 bg-rose-50/80";
+              const bottomRowClass =
+                topPoints === bottomPoints
+                  ? "border-t border-slate-200 bg-slate-50"
+                  : bottomPoints > topPoints
+                    ? "border-t border-slate-200 bg-emerald-50/80"
+                    : "border-t border-slate-200 bg-rose-50/80";
+
+              return (
               <>
                 <tr
                   key={`${match.key}-top`}
-                  className="border-t border-slate-200 bg-emerald-50/80"
+                  className={topRowClass}
                 >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
@@ -292,7 +309,7 @@ function GroupTooltip({
                 </tr>
                 <tr
                   key={`${match.key}-bottom`}
-                  className="border-t border-slate-200 bg-rose-50/80"
+                  className={bottomRowClass}
                 >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
@@ -325,7 +342,8 @@ function GroupTooltip({
                   </td>
                 </tr>
               </>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -344,7 +362,7 @@ function GroupTooltip({
               </tr>
             </thead>
             <tbody>
-              {data.standings.map((player) => (
+              {visibleStandings.map((player) => (
                 <tr
                   key={player.key}
                   className="border-t border-slate-200 bg-white text-slate-700"
