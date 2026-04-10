@@ -899,7 +899,7 @@ function StageRankingTable({
               className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             >
               <td className="px-4 py-3 font-semibold">
-                {formatNumberValue(result.finalPosition ?? index + 1)}
+                {formatNumberValue(index + 1)}
               </td>
               <td className="px-4 py-3 font-medium">
                 {result.playerId ? (
@@ -959,6 +959,51 @@ function StageRankingTable({
       </table>
     </div>
   );
+}
+
+function getStageResultIdentity(result: NormalizedStageResult) {
+  if (result.playerDocumentId) return `doc:${result.playerDocumentId}`;
+  if (result.playerId !== null) return `id:${result.playerId}`;
+  return `name:${(result.playerName || "").trim().toLowerCase()}`;
+}
+
+function compareStageResults(
+  a: NormalizedStageResult,
+  b: NormalizedStageResult,
+) {
+  if (a.finalPosition !== null && b.finalPosition !== null && a.finalPosition !== b.finalPosition) {
+    return a.finalPosition - b.finalPosition;
+  }
+  if (a.finalPosition !== null) return -1;
+  if (b.finalPosition !== null) return 1;
+  if (a.groupNumber !== null && b.groupNumber !== null && a.groupNumber !== b.groupNumber) {
+    return a.groupNumber - b.groupNumber;
+  }
+  if (a.groupNumber !== null) return -1;
+  if (b.groupNumber !== null) return 1;
+  if (a.groupPosition !== null && b.groupPosition !== null && a.groupPosition !== b.groupPosition) {
+    return a.groupPosition - b.groupPosition;
+  }
+  if (a.groupPosition !== null) return -1;
+  if (b.groupPosition !== null) return 1;
+  if (a.matchPoints !== null && b.matchPoints !== null && a.matchPoints !== b.matchPoints) {
+    return b.matchPoints - a.matchPoints;
+  }
+  if (a.matchPoints !== null) return -1;
+  if (b.matchPoints !== null) return 1;
+  return a.id.localeCompare(b.id);
+}
+
+function dedupeStageResults(results: NormalizedStageResult[]) {
+  const byPlayer = new Map<string, NormalizedStageResult>();
+  for (const result of results) {
+    const key = getStageResultIdentity(result);
+    const existing = byPlayer.get(key);
+    if (!existing || compareStageResults(result, existing) < 0) {
+      byPlayer.set(key, result);
+    }
+  }
+  return Array.from(byPlayer.values()).sort(compareStageResults);
 }
 
 const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
@@ -1197,24 +1242,15 @@ export function TournamentEventsContent({
             return a.id.localeCompare(b.id);
           });
 
-        const results = resultsRaw
+        const results = dedupeStageResults(
+          resultsRaw
           .map((result, resultIndex) =>
             normalizeResult(
               result,
               `${normalizedStage.id}-result-${resultIndex}`,
             ),
           )
-          .sort((a, b) => {
-            if (a.finalPosition !== null && b.finalPosition !== null)
-              return a.finalPosition - b.finalPosition;
-            if (a.finalPosition !== null) return -1;
-            if (b.finalPosition !== null) return 1;
-            if (a.groupNumber !== null && b.groupNumber !== null)
-              return a.groupNumber - b.groupNumber;
-            if (a.groupNumber !== null) return -1;
-            if (b.groupNumber !== null) return 1;
-            return a.id.localeCompare(b.id);
-          });
+        );
 
         return {
           id: normalizedStage.id,
