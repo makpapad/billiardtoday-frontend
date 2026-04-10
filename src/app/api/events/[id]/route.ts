@@ -27,6 +27,63 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
         ? value.map((item) => asObject(item)).filter((item): item is Record<string, unknown> => Boolean(item))
         : []
 
+const isMissingStat = (value: unknown) => value === undefined || value === null || value === ''
+
+const buildStageMatchKey = (match: Record<string, unknown>) => {
+    const documentId =
+        typeof match.documentId === 'string' && match.documentId.trim()
+            ? match.documentId.trim()
+            : null
+    if (documentId) return `doc:${documentId}`
+
+    const matchNumber = toNumber(match.match_number)
+    const groupNumber = toNumber(match.number)
+    const player1 =
+        asObject(match.player1) &&
+        typeof asObject(match.player1)?.documentId === 'string'
+            ? (asObject(match.player1)?.documentId as string)
+            : ''
+    const player2 =
+        asObject(match.player2) &&
+        typeof asObject(match.player2)?.documentId === 'string'
+            ? (asObject(match.player2)?.documentId as string)
+            : ''
+
+    if (matchNumber !== null || groupNumber !== null || player1 || player2) {
+        return `meta:${matchNumber ?? ''}:${groupNumber ?? ''}:${player1}:${player2}`
+    }
+
+    return null
+}
+
+const mergeLiveStageMatches = (
+    baseMatches: Record<string, unknown>[],
+    liveMatches: Record<string, unknown>[],
+): Record<string, unknown>[] => {
+    if (baseMatches.length === 0 || liveMatches.length === 0) return liveMatches
+
+    const baseByKey = new Map<string, Record<string, unknown>>()
+    for (const match of baseMatches) {
+        const key = buildStageMatchKey(match)
+        if (key) baseByKey.set(key, match)
+    }
+
+    return liveMatches.map((match) => {
+        const key = buildStageMatchKey(match)
+        const baseMatch = key ? baseByKey.get(key) : null
+        if (!baseMatch) return match
+
+        const nextMatch = { ...match }
+        if (isMissingStat(nextMatch.player1_high_run_2) && !isMissingStat(baseMatch.player1_high_run_2)) {
+            nextMatch.player1_high_run_2 = baseMatch.player1_high_run_2
+        }
+        if (isMissingStat(nextMatch.player2_high_run_2) && !isMissingStat(baseMatch.player2_high_run_2)) {
+            nextMatch.player2_high_run_2 = baseMatch.player2_high_run_2
+        }
+        return nextMatch
+    })
+}
+
 const fetchStageStandings = async (
     stageId: string,
     headers: HeadersInit,
@@ -252,9 +309,14 @@ export async function GET(
                         const liveStandings = await fetchStageStandings(stageDocumentId, headers)
                         if (!liveStandings && !liveMatches) return stage
 
+                        const baseGroups = asArray(stage.groups)
+                        const mergedGroups = liveMatches
+                            ? mergeLiveStageMatches(baseGroups, liveMatches)
+                            : null
+
                         return {
                             ...stage,
-                            ...(liveMatches ? { groups: liveMatches } : {}),
+                            ...(mergedGroups ? { groups: mergedGroups } : {}),
                             ...(liveStandings ? { results: liveStandings } : {}),
                         }
                     }),

@@ -11,6 +11,8 @@ export type LiveScoreState = {
   inningsCount?: number;
   bestRunA?: number;
   bestRunB?: number;
+  bestRun2A?: number;
+  bestRun2B?: number;
   playerAName?: string;
   playerBName?: string;
   playerACountry?: string | null;

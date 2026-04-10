@@ -54,6 +54,8 @@ type LiveScoreState = {
   inningsCount?: number;
   bestRunA?: number;
   bestRunB?: number;
+  bestRun2A?: number;
+  bestRun2B?: number;
   ended?: boolean;
   playerAName?: string;
   playerBName?: string;
@@ -1114,6 +1116,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
               ),
               bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
               bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
+              bestRun2A: Number(sessionObj.player1_high_run_2 ?? 0) || 0,
+              bestRun2B: Number(sessionObj.player2_high_run_2 ?? 0) || 0,
               ended: false,
               playerAName: sessionObj.player1Name ?? "Player A",
               playerBName: sessionObj.player2Name ?? "Player B",
@@ -1268,6 +1272,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
             inningsCount: payload.innings,
             bestRunA: payload.players?.[0]?.hr,
             bestRunB: payload.players?.[1]?.hr,
+            bestRun2A: (payload.players?.[0] as { hr2?: number | null } | undefined)?.hr2 ?? undefined,
+            bestRun2B: (payload.players?.[1] as { hr2?: number | null } | undefined)?.hr2 ?? undefined,
             ended: !!payload.ended,
             playerAName: nextPlayerAName ?? undefined,
             playerBName: nextPlayerBName ?? undefined,

@@ -96,6 +96,7 @@ type WsTournamentPayload = {
     liveRun?: number | null;
     innings?: number | null;
     hr?: number | null;
+    hr2?: number | null;
     avgFormatted?: string | null;
     accPercent?: number | null;
     playerTimeSeconds?: number | null;
@@ -503,6 +504,10 @@ const createGroupPopoverData = (
             typeof session.state?.bestRunA === "number"
               ? session.state.bestRunA
               : match.top.player.highRun,
+          highRun2:
+            typeof session.state?.bestRun2A === "number"
+              ? session.state.bestRun2A
+              : match.top.player.highRun2,
         },
       },
       bottom: {
@@ -521,6 +526,10 @@ const createGroupPopoverData = (
             typeof session.state?.bestRunB === "number"
               ? session.state.bestRunB
               : match.bottom.player.highRun,
+          highRun2:
+            typeof session.state?.bestRun2B === "number"
+              ? session.state.bestRun2B
+              : match.bottom.player.highRun2,
         },
       },
     };
@@ -1397,6 +1406,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               ),
               bestRunA: Number(sessionObj.player1_high_run ?? 0) || 0,
               bestRunB: Number(sessionObj.player2_high_run ?? 0) || 0,
+              bestRun2A: Number(sessionObj.player1_high_run_2 ?? 0) || 0,
+              bestRun2B: Number(sessionObj.player2_high_run_2 ?? 0) || 0,
               playerAName:
                 resolveEventSessionPlayerName(sessionObj, "A", "Player A") ?? "Player A",
               playerBName:
@@ -1548,6 +1559,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ),
             bestRunA: Number(playerA.hr ?? 0) || 0,
             bestRunB: Number(playerB.hr ?? 0) || 0,
+            bestRun2A: Number(playerA.hr2 ?? 0) || 0,
+            bestRun2B: Number(playerB.hr2 ?? 0) || 0,
             avgFormattedA:
               typeof playerA.avgFormatted === "string"
                 ? playerA.avgFormatted
@@ -1811,6 +1824,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         Number(sessionObj.player1_high_run ?? baseSession?.state?.bestRunA ?? 0) || 0,
                       bestRunB:
                         Number(sessionObj.player2_high_run ?? baseSession?.state?.bestRunB ?? 0) || 0,
+                      bestRun2A:
+                        Number(sessionObj.player1_high_run_2 ?? baseSession?.state?.bestRun2A ?? 0) || 0,
+                      bestRun2B:
+                        Number(sessionObj.player2_high_run_2 ?? baseSession?.state?.bestRun2B ?? 0) || 0,
                       playerAName:
                         resolveEventSessionPlayerName(
                           sessionObj,
@@ -2104,6 +2121,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     ),
                     bestRunA: Number(playerA.hr ?? 0) || 0,
                     bestRunB: Number(playerB.hr ?? 0) || 0,
+                    bestRun2A: Number(playerA.hr2 ?? 0) || 0,
+                    bestRun2B: Number(playerB.hr2 ?? 0) || 0,
                     avgFormattedA:
                       typeof playerA.avgFormatted === "string"
                         ? playerA.avgFormatted
