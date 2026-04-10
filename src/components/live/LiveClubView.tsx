@@ -440,6 +440,37 @@ const isPlaceholderPlayerName = (value?: string | null) => {
   return !normalized || normalized === "player 1" || normalized === "player 2";
 };
 
+function toFiniteNumber(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function resolveDisplayCurrent(existing?: LiveScoreState, incoming?: LiveScoreState): "A" | "B" | undefined {
+  const incomingCurrent = incoming?.current;
+  if (!existing || !incomingCurrent) return incomingCurrent;
+
+  const liveRunA = toFiniteNumber(incoming.liveRunA) ?? 0;
+  const liveRunB = toFiniteNumber(incoming.liveRunB) ?? 0;
+  if (liveRunA > 0 || liveRunB > 0) return incomingCurrent;
+  if (incoming.ended) return incomingCurrent;
+
+  const previousCurrent = existing.current;
+  if (previousCurrent !== "A" && previousCurrent !== "B") return incomingCurrent;
+  if (incomingCurrent !== previousCurrent) return incomingCurrent;
+
+  const prevScoreA = toFiniteNumber(existing.scoreA) ?? 0;
+  const prevScoreB = toFiniteNumber(existing.scoreB) ?? 0;
+  const nextScoreA = toFiniteNumber(incoming.scoreA) ?? prevScoreA;
+  const nextScoreB = toFiniteNumber(incoming.scoreB) ?? prevScoreB;
+
+  const scoreIncreasedForActive =
+    (previousCurrent === "A" && nextScoreA > prevScoreA) ||
+    (previousCurrent === "B" && nextScoreB > prevScoreB);
+
+  if (!scoreIncreasedForActive) return incomingCurrent;
+  return previousCurrent === "A" ? "B" : "A";
+}
+
 export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
@@ -1323,6 +1354,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 playerBPhotoMainUrl: state.playerBPhotoMainUrl ?? existing.state?.playerBPhotoMainUrl ?? null,
                 targetPointsA: state.targetPointsA ?? existing.state?.targetPointsA ?? null,
                 targetPointsB: state.targetPointsB ?? existing.state?.targetPointsB ?? null,
+                current: resolveDisplayCurrent(existing.state, { ...existing.state, ...state }),
               };
               const mergedItem: LiveScoreItem = { ...item, state: mergedState };
               console.log('[live view] Updating existing item with new scores:', {
