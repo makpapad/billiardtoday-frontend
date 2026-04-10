@@ -281,6 +281,8 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       inningsCount: Number(attrs?.innings ?? Math.max(inningsA, inningsB, 0)),
       bestRunA: Number(playerA?.hr ?? attrs?.bestRunA ?? 0),
       bestRunB: Number(playerB?.hr ?? attrs?.bestRunB ?? 0),
+      bestRun2A: Number(playerA?.hr2 ?? attrs?.player1_high_run_2 ?? attrs?.bestRun2A ?? 0),
+      bestRun2B: Number(playerB?.hr2 ?? attrs?.player2_high_run_2 ?? attrs?.bestRun2B ?? 0),
       playerAName: readPreferredPlayerName(playerA, attrs?.player1Name),
       playerBName: readPreferredPlayerName(playerB, attrs?.player2Name),
       playerACountry: playerA?.country ?? attrs?.player1Country ?? null,

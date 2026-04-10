@@ -45,6 +45,18 @@ const normalizeSession = (row: RawSession) => ({
   player2DocumentId: asString(getRowValue(row, "player2DocumentId")),
   player1Name: asString(getRowValue(row, "player1Name")),
   player2Name: asString(getRowValue(row, "player2Name")),
+  player1_high_run_2:
+    typeof getRowValue(row, "player1_high_run_2") === "number"
+      ? (getRowValue(row, "player1_high_run_2") as number)
+      : typeof getRowValue(row, "player1_high_run_2") === "string"
+        ? Number(getRowValue(row, "player1_high_run_2"))
+        : null,
+  player2_high_run_2:
+    typeof getRowValue(row, "player2_high_run_2") === "number"
+      ? (getRowValue(row, "player2_high_run_2") as number)
+      : typeof getRowValue(row, "player2_high_run_2") === "string"
+        ? Number(getRowValue(row, "player2_high_run_2"))
+        : null,
   sessionStatus: asString(getRowValue(row, "sessionStatus")),
 });
 
