@@ -3494,25 +3494,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       : "relative"
                   }
                 >
-                  {expandedLiveSessionId === session.sessionId ? (
-                    <div className="absolute left-2 top-2 z-30">
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          toggleGroupPopover(session.sessionId);
-                        }}
-                        className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
-                          groupPopoverBySessionId.has(session.sessionId)
-                            ? "border-white/20 bg-slate-900/35"
-                            : "border-white/10 bg-slate-900/18 opacity-55"
-                        }`}
-                      >
-                        Groups
-                      </button>
-                    </div>
-                  ) : null}
                   {!highlightItem &&
                   groupPopoverBySessionId.has(session.sessionId) &&
                   openGroupSessionId === session.sessionId ? (
@@ -3592,6 +3573,25 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
+                      topLeftControl={
+                        expandedLiveSessionId === session.sessionId ? (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              toggleGroupPopover(session.sessionId);
+                            }}
+                            className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
+                              groupPopoverBySessionId.has(session.sessionId)
+                                ? "border-white/20 bg-slate-900/35"
+                                : "border-white/10 bg-slate-900/18 opacity-55"
+                            }`}
+                          >
+                            Groups
+                          </button>
+                        ) : null
+                      }
                     />
                   </div>
                 </div>
