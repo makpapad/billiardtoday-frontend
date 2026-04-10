@@ -133,6 +133,51 @@ type SessionSnapshot = {
   player2Points: number;
 };
 
+const deriveSecondHighRunFromInnings = (
+  entries: InningDetailEntry[] | undefined,
+  side: "A" | "B",
+) => {
+  if (!Array.isArray(entries) || entries.length === 0) return null;
+  const runs = entries
+    .map((entry) =>
+      side === "A" ? entry.player1?.pt ?? null : entry.player2?.pt ?? null,
+    )
+    .filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value) && value > 0,
+    )
+    .sort((a, b) => b - a);
+
+  if (runs.length >= 2) return runs[1];
+  return runs.length === 1 ? 0 : null;
+};
+
+const resolveLiveHighRun2 = (
+  session: EventLiveSession | null | undefined,
+  side: "A" | "B",
+  fallback: number | null,
+) => {
+  const explicit =
+    side === "A" ? session?.state?.bestRun2A : session?.state?.bestRun2B;
+  if (
+    typeof explicit === "number" &&
+    Number.isFinite(explicit) &&
+    explicit > 0
+  ) {
+    return explicit;
+  }
+
+  const derived = deriveSecondHighRunFromInnings(
+    session?.state?.inningsDetail,
+    side,
+  );
+  if (typeof derived === "number" && Number.isFinite(derived)) {
+    return derived;
+  }
+
+  return fallback;
+};
+
 const isPlaceholderPlayerName = (value?: string | null) => {
   const normalized = (value || "").trim().toLowerCase();
   return !normalized || normalized === "player 1" || normalized === "player 2";
@@ -504,10 +549,7 @@ const createGroupPopoverData = (
             typeof session.state?.bestRunA === "number"
               ? session.state.bestRunA
               : match.top.player.highRun,
-          highRun2:
-            typeof session.state?.bestRun2A === "number"
-              ? session.state.bestRun2A
-              : match.top.player.highRun2,
+          highRun2: resolveLiveHighRun2(session, "A", match.top.player.highRun2),
         },
       },
       bottom: {
@@ -526,10 +568,7 @@ const createGroupPopoverData = (
             typeof session.state?.bestRunB === "number"
               ? session.state.bestRunB
               : match.bottom.player.highRun,
-          highRun2:
-            typeof session.state?.bestRun2B === "number"
-              ? session.state.bestRun2B
-              : match.bottom.player.highRun2,
+          highRun2: resolveLiveHighRun2(session, "B", match.bottom.player.highRun2),
         },
       },
     };
@@ -1586,6 +1625,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             progress: Number(payload.progress ?? 0) || 0,
             totalBlocks: 40,
             isRunning: Boolean(payload.isRunning),
+            inningsDetail: Array.isArray(payload.inningsDetail)
+              ? (payload.inningsDetail as InningDetailEntry[])
+              : undefined,
             current,
           },
         });
@@ -2266,6 +2308,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ? payload.gameDurationSeconds
                         : baseSession?.state?.gameDurationSeconds,
                     inningsDetail:
+                      (Array.isArray(payload.inningsDetail)
+                        ? (payload.inningsDetail as InningDetailEntry[])
+                        : undefined) ??
                       baseSession?.state?.inningsDetail ??
                       scoreUpdateFallbackDetail,
                     current,
