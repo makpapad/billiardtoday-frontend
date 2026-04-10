@@ -99,6 +99,11 @@ export function LiveScoreBoardCard({
 
   const player1Name = resolveDisplayName(player1);
   const player2Name = resolveDisplayName(player2);
+  const resolveDisplayedRun = (player: Player) => {
+    const live = Number(player.liveRun ?? 0) || 0;
+    if (live > 0) return live;
+    return Number(player.run ?? 0) || 0;
+  };
 
   const setExpanded = (next: boolean) => {
     if (onExpandedChange) onExpandedChange(next, sessionId);
@@ -589,7 +594,7 @@ export function LiveScoreBoardCard({
               variant="top"
               flag={p1Flag}
               name={player1Name}
-              run={player1.liveRun ?? player1.run ?? 0}
+              run={resolveDisplayedRun(player1)}
               isActive={isPlayer1Active}
               compact
             />
@@ -626,7 +631,7 @@ export function LiveScoreBoardCard({
               variant="bottom"
               flag={p2Flag}
               name={player2Name}
-              run={player2.liveRun ?? player2.run ?? 0}
+              run={resolveDisplayedRun(player2)}
               isActive={isPlayer2Active}
               compact
             />
@@ -659,7 +664,7 @@ export function LiveScoreBoardCard({
                 variant="top"
                 flag={p1Flag}
                 name={player1Name}
-                run={player1.liveRun ?? player1.run ?? 0}
+                run={resolveDisplayedRun(player1)}
                 isActive={isPlayer1Active}
               />
             </div>
@@ -681,7 +686,7 @@ export function LiveScoreBoardCard({
                 variant="bottom"
                 flag={p2Flag}
                 name={player2Name}
-                run={player2.liveRun ?? player2.run ?? 0}
+                run={resolveDisplayedRun(player2)}
                 isActive={isPlayer2Active}
               />
             </div>
@@ -873,14 +878,14 @@ export function LiveScoreBoardCard({
       <div className="relative z-10 sm:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
           <MobileFlagCircle name={player1Name} country={player1.country} />
-          <NamePlate
-            variant="top"
-            flag={p1Flag}
-            name={player1Name}
-            run={player1.liveRun ?? player1.run ?? 0}
-            isActive={isPlayer1Active}
-            compact
-          />
+            <NamePlate
+              variant="top"
+              flag={p1Flag}
+              name={player1Name}
+              run={resolveDisplayedRun(player1)}
+              isActive={isPlayer1Active}
+              compact
+            />
           <div className="h-[36px] rounded-lg border border-white/70 bg-white/95 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
             {player1.points ?? 0}
           </div>
@@ -910,14 +915,14 @@ export function LiveScoreBoardCard({
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
           <MobileFlagCircle name={player2Name} country={player2.country} />
-          <NamePlate
-            variant="bottom"
-            flag={p2Flag}
-            name={player2Name}
-            run={player2.liveRun ?? player2.run ?? 0}
-            isActive={isPlayer2Active}
-            compact
-          />
+            <NamePlate
+              variant="bottom"
+              flag={p2Flag}
+              name={player2Name}
+              run={resolveDisplayedRun(player2)}
+              isActive={isPlayer2Active}
+              compact
+            />
           <div className="h-[36px] rounded-lg border border-amber-200 bg-amber-300 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
             {player2.points ?? 0}
           </div>
@@ -943,13 +948,13 @@ export function LiveScoreBoardCard({
 
         <div className="flex flex-col h-full px-1.5 justify-center">
           <div className="pb-0.5">
-            <NamePlate
-              variant="top"
-              flag={p1Flag}
-              name={player1Name}
-              run={player1.liveRun ?? player1.run ?? 0}
-              isActive={isPlayer1Active}
-            />
+              <NamePlate
+                variant="top"
+                flag={p1Flag}
+                name={player1Name}
+                run={resolveDisplayedRun(player1)}
+                isActive={isPlayer1Active}
+              />
           </div>
 
           <div className="pt-0 pb-1">
@@ -965,13 +970,13 @@ export function LiveScoreBoardCard({
           </div>
 
           <div className="pt-0.5">
-            <NamePlate
-              variant="bottom"
-              flag={p2Flag}
-              name={player2Name}
-              run={player2.liveRun ?? player2.run ?? 0}
-              isActive={isPlayer2Active}
-            />
+              <NamePlate
+                variant="bottom"
+                flag={p2Flag}
+                name={player2Name}
+                run={resolveDisplayedRun(player2)}
+                isActive={isPlayer2Active}
+              />
           </div>
         </div>
 

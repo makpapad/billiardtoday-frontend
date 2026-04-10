@@ -64,6 +64,8 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
   const { state } = item;
   const playerAActive = state.current === "A";
   const playerBActive = state.current === "B";
+  const displayRunA = (Number(state.liveRunA ?? 0) || 0) > 0 ? Number(state.liveRunA ?? 0) || 0 : Number(state.runA ?? 0) || 0;
+  const displayRunB = (Number(state.liveRunB ?? 0) || 0) > 0 ? Number(state.liveRunB ?? 0) || 0 : Number(state.runB ?? 0) || 0;
   const innings =
     state.inningsCount ??
     Math.max(state.inningsA || 0, state.inningsB || 0, 0);
@@ -110,7 +112,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
               <div className="mt-1 text-5xl font-black leading-none text-slate-950">{state.scoreA ?? 0}</div>
             </div>
             <div className="text-right text-sm text-slate-600">
-              <div>Run: {state.liveRunA ?? state.runA ?? 0}</div>
+              <div>Run: {displayRunA}</div>
               <div>Best: {state.bestRunA ?? "--"}</div>
             </div>
           </div>
@@ -136,7 +138,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
               <div className="mt-1 text-5xl font-black leading-none text-slate-950">{state.scoreB ?? 0}</div>
             </div>
             <div className="text-right text-sm text-slate-600">
-              <div>Run: {state.liveRunB ?? state.runB ?? 0}</div>
+              <div>Run: {displayRunB}</div>
               <div>Best: {state.bestRunB ?? "--"}</div>
             </div>
           </div>
