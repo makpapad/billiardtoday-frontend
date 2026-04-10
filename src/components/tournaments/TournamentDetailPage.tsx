@@ -246,13 +246,9 @@ function GroupTooltip({
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-2 py-1.5 text-left font-semibold">Player</th>
-              <th className="px-2 py-1.5 text-left font-semibold">Date</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Res</th>
-              <th className="px-2 py-1.5 text-center font-semibold">MP</th>
               <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
               <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
               <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
               <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
             </tr>
@@ -274,17 +270,6 @@ function GroupTooltip({
                         country={match.top.player.country}
                       />
                     </Link>
-                  </td>
-                  <td className="px-2 py-1.5 text-xs text-slate-600">
-                    {match.dateTime
-                      ? new Date(match.dateTime).toLocaleDateString(locale)
-                      : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center font-semibold">
-                    {match.top.outcome ?? "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.top.player.matchPoints)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.top.player.points)}
@@ -319,17 +304,6 @@ function GroupTooltip({
                         country={match.bottom.player.country}
                       />
                     </Link>
-                  </td>
-                  <td className="px-2 py-1.5 text-xs text-slate-600">
-                    {match.dateTime
-                      ? new Date(match.dateTime).toLocaleDateString(locale)
-                      : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center font-semibold">
-                    {match.bottom.outcome ?? "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.bottom.player.matchPoints)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     {formatNumberValue(match.bottom.player.points)}
