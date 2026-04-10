@@ -540,7 +540,7 @@ export function LiveScoreBoardCard({
         </div>
         {topLeftControl ? (
           <div
-            className="absolute left-2 top-2 z-20"
+            className="absolute left-2 top-2 z-20 hidden sm:block"
             onMouseDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
