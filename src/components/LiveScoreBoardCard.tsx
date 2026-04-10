@@ -335,7 +335,7 @@ export function LiveScoreBoardCard({
   const MobileFlagCircle = ({ name, country }: { name?: string; country?: string | null }) => {
     const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
     const iso = resolveCountryCode(country)?.toLowerCase();
-    const flagSrc = iso ? `https://flagcdn.com/w80/${iso}.png` : null;
+    const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
     return (
       <div className="w-11 h-11 rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden">
         {flagSrc ? (
@@ -343,7 +343,7 @@ export function LiveScoreBoardCard({
             src={flagSrc}
             alt={country ?? "flag"}
             className="w-10 h-10 rounded-full object-cover border border-white/40"
-            loading="eager"
+            loading="lazy"
             referrerPolicy="no-referrer"
           />
         ) : (
