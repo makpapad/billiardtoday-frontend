@@ -320,7 +320,8 @@ export function LiveScoreBoardCard({
             src={flagSrc}
             alt={country ?? "flag"}
             className="w-full h-full object-cover"
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
             referrerPolicy="no-referrer"
           />
         ) : (
