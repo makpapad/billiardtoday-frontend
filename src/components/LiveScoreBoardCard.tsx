@@ -606,6 +606,13 @@ export function LiveScoreBoardCard({
             </div>
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
+            <div className="flex justify-center">
+              <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+            </div>
+            <div />
+            <div />
+          </div>
+          <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
             <div />
             <div className="flex items-center justify-center gap-1 text-center">
               <div className="w-[38px] rounded-md border border-white/70 bg-white/95 px-0.5 py-0.5 text-slate-900">
@@ -631,21 +638,14 @@ export function LiveScoreBoardCard({
             </div>
             <div />
           </div>
-          <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
-            <div />
-            <div className="px-0.5">
-              <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
-            </div>
-            <div />
-          </div>
           <div className="px-1">
             <TimerBar />
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
-            <div />
-            <div className="px-0.5">
+            <div className="flex justify-center">
               <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
             </div>
+            <div />
             <div />
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
@@ -918,8 +918,12 @@ export function LiveScoreBoardCard({
             {player1.points ?? 0}
           </div>
         </div>
-        <div className="px-1">
-          <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+        <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
+          <div className="flex justify-center">
+            <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+          </div>
+          <div />
+          <div />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
           <div />
@@ -950,8 +954,12 @@ export function LiveScoreBoardCard({
         <div className="px-1">
           <TimerBar />
         </div>
-        <div className="px-1">
-          <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+        <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
+          <div className="flex justify-center">
+            <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+          </div>
+          <div />
+          <div />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
           <MobileFlagCircle name={player2Name} country={player2.country} />
