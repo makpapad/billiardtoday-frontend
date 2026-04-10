@@ -309,7 +309,7 @@ export function LiveScoreBoardCard({
   const timerLabel = remainingSegments < 100 ? remainingSegments.toString().padStart(2, "0") : remainingSegments.toString();
   const timerCritical = remainingSegments <= 10;
   const timerActive = Boolean(timerRunning);
-  const FlagBadge = ({ name, country }: { name?: string; country?: string | null }) => {
+  const renderFlagBadge = ({ name, country }: { name?: string; country?: string | null }) => {
     const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
@@ -330,9 +330,9 @@ export function LiveScoreBoardCard({
     );
   };
 
-  const p1Flag = <FlagBadge name={player1Name} country={player1.country} />;
-  const p2Flag = <FlagBadge name={player2Name} country={player2.country} />;
-  const MobileFlagCircle = ({ name, country }: { name?: string; country?: string | null }) => {
+  const p1Flag = renderFlagBadge({ name: player1Name, country: player1.country });
+  const p2Flag = renderFlagBadge({ name: player2Name, country: player2.country });
+  const renderMobileFlagCircle = ({ name, country }: { name?: string; country?: string | null }) => {
     const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
@@ -593,7 +593,7 @@ export function LiveScoreBoardCard({
 
         <div className="relative z-10 sm:hidden space-y-1">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-            <MobileFlagCircle name={player1Name} country={player1.country} />
+            {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
             <NamePlate
               variant="top"
               flag={p1Flag}
@@ -671,7 +671,7 @@ export function LiveScoreBoardCard({
             <div />
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-            <MobileFlagCircle name={player2Name} country={player2.country} />
+            {renderMobileFlagCircle({ name: player2Name, country: player2.country })}
             <NamePlate
               variant="bottom"
               flag={p2Flag}
@@ -927,7 +927,7 @@ export function LiveScoreBoardCard({
 
       <div className="relative z-10 sm:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          <MobileFlagCircle name={player1Name} country={player1.country} />
+          {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
             <NamePlate
               variant="top"
               flag={p1Flag}
@@ -1005,7 +1005,7 @@ export function LiveScoreBoardCard({
           <div />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          <MobileFlagCircle name={player2Name} country={player2.country} />
+          {renderMobileFlagCircle({ name: player2Name, country: player2.country })}
             <NamePlate
               variant="bottom"
               flag={p2Flag}
