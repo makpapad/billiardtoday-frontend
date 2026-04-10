@@ -343,7 +343,8 @@ export function LiveScoreBoardCard({
             src={flagSrc}
             alt={country ?? "flag"}
             className="w-10 h-10 rounded-full object-cover border border-white/40"
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
             referrerPolicy="no-referrer"
           />
         ) : (
