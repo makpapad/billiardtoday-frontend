@@ -100,6 +100,33 @@ type SessionMeta = {
   tableName?: string | null;
 };
 
+function deriveSecondHighRunFromInnings(
+  entries: InningDetailEntry[] | undefined,
+  side: "A" | "B",
+) {
+  if (!Array.isArray(entries) || entries.length === 0) return 0;
+
+  const runs = entries
+    .map((entry) => (side === "A" ? entry.player1?.pt ?? null : entry.player2?.pt ?? null))
+    .filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value) && value > 0,
+    )
+    .sort((a, b) => b - a);
+
+  return runs.length >= 2 ? runs[1] : 0;
+}
+
+function resolveLiveHighRun2(
+  explicit: unknown,
+  entries: InningDetailEntry[] | undefined,
+  side: "A" | "B",
+) {
+  const parsed = Number(explicit);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return deriveSecondHighRunFromInnings(entries, side);
+}
+
 const SHEET_TOURNAMENT_KEY = "scoreboard.sheet.tournamentName";
 const SHEET_STAGE_KEY = "scoreboard.sheet.stage";
 const SHEET_GROUP_KEY = "scoreboard.sheet.group";
@@ -1259,6 +1286,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const nextPlayerBName = isPlaceholderPlayerName(incomingPlayerBName)
             ? existing?.state?.playerBName
             : incomingPlayerBName;
+          const resolvedDetail =
+            detailFromPayload ?? existing?.state?.inningsDetail ?? undefined;
           const state: LiveScoreState = {
             scoreA: payload.players?.[0]?.points,
             scoreB: payload.players?.[1]?.points,
@@ -1272,8 +1301,16 @@ export function LiveClubView({ club, embedded = false }: Props) {
             inningsCount: payload.innings,
             bestRunA: payload.players?.[0]?.hr,
             bestRunB: payload.players?.[1]?.hr,
-            bestRun2A: (payload.players?.[0] as { hr2?: number | null } | undefined)?.hr2 ?? undefined,
-            bestRun2B: (payload.players?.[1] as { hr2?: number | null } | undefined)?.hr2 ?? undefined,
+            bestRun2A: resolveLiveHighRun2(
+              (payload.players?.[0] as { hr2?: number | null } | undefined)?.hr2,
+              resolvedDetail,
+              "A",
+            ),
+            bestRun2B: resolveLiveHighRun2(
+              (payload.players?.[1] as { hr2?: number | null } | undefined)?.hr2,
+              resolvedDetail,
+              "B",
+            ),
             ended: !!payload.ended,
             playerAName: nextPlayerAName ?? undefined,
             playerBName: nextPlayerBName ?? undefined,
@@ -1349,7 +1386,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
               extractTargetPointsFromSource(payload.sheet) ??
               null,
             gameDurationSeconds: payload.gameDurationSeconds,
-            inningsDetail: detailFromPayload,
+            inningsDetail: resolvedDetail,
             tournamentName: metaFromPayload.tournamentName ?? null,
             stageName: metaFromPayload.stageName ?? null,
             groupName: metaFromPayload.groupName ?? null,

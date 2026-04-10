@@ -227,6 +227,45 @@ function extractInningsDetail(source: unknown) {
   );
 }
 
+function deriveSecondHighRunFromInnings(
+  entries:
+    | Array<{
+        inning: number;
+        player1?: { pt: number; tot: number };
+        player2?: { pt: number; tot: number };
+      }>
+    | undefined,
+  side: "A" | "B",
+) {
+  if (!Array.isArray(entries) || entries.length === 0) return 0;
+
+  const runs = entries
+    .map((entry) => (side === "A" ? entry.player1?.pt ?? null : entry.player2?.pt ?? null))
+    .filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value) && value > 0,
+    )
+    .sort((a, b) => b - a);
+
+  return runs.length >= 2 ? runs[1] : 0;
+}
+
+function resolveHighRun2(
+  explicit: unknown,
+  entries:
+    | Array<{
+        inning: number;
+        player1?: { pt: number; tot: number };
+        player2?: { pt: number; tot: number };
+      }>
+    | undefined,
+  side: "A" | "B",
+) {
+  const parsed = Number(explicit);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return deriveSecondHighRunFromInnings(entries, side);
+}
+
 export function normalizeLiveSessionRow(row: UnknownRecord) {
   const attrs = unwrapStrapiNode(row?.attributes) || row;
   const club = unwrapStrapiNode(attrs?.club) || {};
@@ -258,6 +297,7 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
     extractTargetPointsFromSource(attrs?.matchSheet) ??
     extractTargetPointsFromSource(attrs?.matchSheetJson) ??
     extractTargetPointsFromSource(attrs?.sheet);
+  const inningsDetail = extractInningsDetail(row);
 
   return {
     id: sessionId,
@@ -281,8 +321,16 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       inningsCount: Number(attrs?.innings ?? Math.max(inningsA, inningsB, 0)),
       bestRunA: Number(playerA?.hr ?? attrs?.bestRunA ?? 0),
       bestRunB: Number(playerB?.hr ?? attrs?.bestRunB ?? 0),
-      bestRun2A: Number(playerA?.hr2 ?? attrs?.player1_high_run_2 ?? attrs?.bestRun2A ?? 0),
-      bestRun2B: Number(playerB?.hr2 ?? attrs?.player2_high_run_2 ?? attrs?.bestRun2B ?? 0),
+      bestRun2A: resolveHighRun2(
+        playerA?.hr2 ?? attrs?.player1_high_run_2 ?? attrs?.bestRun2A,
+        inningsDetail,
+        "A",
+      ),
+      bestRun2B: resolveHighRun2(
+        playerB?.hr2 ?? attrs?.player2_high_run_2 ?? attrs?.bestRun2B,
+        inningsDetail,
+        "B",
+      ),
       playerAName: readPreferredPlayerName(playerA, attrs?.player1Name),
       playerBName: readPreferredPlayerName(playerB, attrs?.player2Name),
       playerACountry: playerA?.country ?? attrs?.player1Country ?? null,
@@ -325,7 +373,7 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       targetPointsA: targetA,
       targetPointsB: targetB,
       gameDurationSeconds: typeof attrs?.gameDurationSeconds === "number" ? attrs.gameDurationSeconds : undefined,
-      inningsDetail: extractInningsDetail(row),
+      inningsDetail,
       tournamentName: attrs?.tournamentName ?? attrs?.eventTitle ?? null,
       stageName: attrs?.stageName ?? attrs?.stageTitle ?? null,
       groupName: attrs?.groupName ?? attrs?.groupLabel ?? null,

@@ -1564,6 +1564,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             existingSession?.player2Name ??
             null)
           : incomingPlayerBName;
+        const liveInningsDetail = Array.isArray(payload.inningsDetail)
+          ? (payload.inningsDetail as InningDetailEntry[])
+          : undefined;
         upsertLiveSession({
           id: sessionId || screenId || "unknown-session",
           documentId: sessionId || screenId || "unknown-session",
@@ -1598,8 +1601,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             ),
             bestRunA: Number(playerA.hr ?? 0) || 0,
             bestRunB: Number(playerB.hr ?? 0) || 0,
-            bestRun2A: Number(playerA.hr2 ?? 0) || 0,
-            bestRun2B: Number(playerB.hr2 ?? 0) || 0,
+            bestRun2A:
+              Number(
+                playerA.hr2 ??
+                  deriveSecondHighRunFromInnings(liveInningsDetail, "A") ??
+                  0,
+              ) || 0,
+            bestRun2B:
+              Number(
+                playerB.hr2 ??
+                  deriveSecondHighRunFromInnings(liveInningsDetail, "B") ??
+                  0,
+              ) || 0,
             avgFormattedA:
               typeof playerA.avgFormatted === "string"
                 ? playerA.avgFormatted
@@ -1625,9 +1638,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             progress: Number(payload.progress ?? 0) || 0,
             totalBlocks: 40,
             isRunning: Boolean(payload.isRunning),
-            inningsDetail: Array.isArray(payload.inningsDetail)
-              ? (payload.inningsDetail as InningDetailEntry[])
-              : undefined,
+            inningsDetail: liveInningsDetail,
             current,
           },
         });
@@ -2112,6 +2123,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               scoreUpdateFallbackDetail,
             );
           }
+          const scoreUpdateDetail =
+            (Array.isArray(payload.inningsDetail)
+              ? (payload.inningsDetail as InningDetailEntry[])
+              : undefined) ??
+            scoreUpdateFallbackDetail;
 
           setWsLiveSessions((prev) => {
             const next = mergeLiveSessions(
@@ -2163,8 +2179,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     ),
                     bestRunA: Number(playerA.hr ?? 0) || 0,
                     bestRunB: Number(playerB.hr ?? 0) || 0,
-                    bestRun2A: Number(playerA.hr2 ?? 0) || 0,
-                    bestRun2B: Number(playerB.hr2 ?? 0) || 0,
+                    bestRun2A:
+                      Number(
+                        playerA.hr2 ??
+                          deriveSecondHighRunFromInnings(scoreUpdateDetail, "A") ??
+                          0,
+                      ) || 0,
+                    bestRun2B:
+                      Number(
+                        playerB.hr2 ??
+                          deriveSecondHighRunFromInnings(scoreUpdateDetail, "B") ??
+                          0,
+                      ) || 0,
                     avgFormattedA:
                       typeof playerA.avgFormatted === "string"
                         ? playerA.avgFormatted
@@ -2308,11 +2334,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ? payload.gameDurationSeconds
                         : baseSession?.state?.gameDurationSeconds,
                     inningsDetail:
-                      (Array.isArray(payload.inningsDetail)
-                        ? (payload.inningsDetail as InningDetailEntry[])
-                        : undefined) ??
-                      baseSession?.state?.inningsDetail ??
-                      scoreUpdateFallbackDetail,
+                      scoreUpdateDetail ??
+                      baseSession?.state?.inningsDetail,
                     current,
                   },
                 },
