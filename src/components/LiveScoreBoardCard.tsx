@@ -576,13 +576,13 @@ export function LiveScoreBoardCard({
         <button
           type="button"
           onClick={handleCollapse}
-          className="absolute right-2 top-2 z-20 rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
+          className="absolute right-2 top-2 z-20 hidden sm:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
         >
           Close
         </button>
         {topLeftControl ? (
           <div
-            className="absolute left-2 top-2 z-20"
+            className="absolute left-2 top-2 z-20 hidden sm:block"
             onMouseDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
@@ -613,7 +613,17 @@ export function LiveScoreBoardCard({
             <div />
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
-            <div />
+            <div className="flex items-center justify-center">
+              {topLeftControl ? (
+                <div
+                  className="flex items-center justify-center"
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {topLeftControl}
+                </div>
+              ) : null}
+            </div>
             <div className="flex items-center justify-center gap-1 text-center">
               <div className="w-[38px] rounded-md border border-white/70 bg-white/95 px-0.5 py-0.5 text-slate-900">
                 <div className="text-[8px] uppercase leading-none text-slate-600">HR</div>
@@ -636,7 +646,18 @@ export function LiveScoreBoardCard({
                 <div className="text-xs font-semibold leading-tight tabular-nums">{player2Hr}</div>
               </div>
             </div>
-            <div />
+            <div className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleCollapse(event);
+                }}
+                className="rounded-md border border-white/30 bg-slate-900/50 px-1.5 py-0.5 text-[9px] font-semibold text-white"
+              >
+                Close
+              </button>
+            </div>
           </div>
           <div className="px-1">
             <TimerBar />
@@ -893,12 +914,12 @@ export function LiveScoreBoardCard({
           <button
             type="button"
             onClick={handleCollapse}
-            className="absolute right-2 top-2 z-20 rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
+            className="absolute right-2 top-2 z-20 hidden sm:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
           >
             Close
           </button>
           {topLeftControl ? (
-            <div className="absolute left-2 top-2 z-20">
+            <div className="absolute left-2 top-2 z-20 hidden sm:block">
               {topLeftControl}
             </div>
           ) : null}
@@ -926,7 +947,17 @@ export function LiveScoreBoardCard({
           <div />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
-          <div />
+          <div className="flex items-center justify-center">
+            {topLeftControl ? (
+              <div
+                className="flex items-center justify-center"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {topLeftControl}
+              </div>
+            ) : null}
+          </div>
           <div className="flex items-center justify-center gap-1 text-center">
             <div className="w-[38px] rounded-md border border-white/70 bg-white/95 px-0.5 py-0.5 text-slate-900">
               <div className="text-[8px] uppercase leading-none text-slate-600">HR</div>
@@ -949,7 +980,18 @@ export function LiveScoreBoardCard({
               <div className="text-xs font-semibold leading-tight tabular-nums">{player2Hr}</div>
             </div>
           </div>
-          <div />
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                handleCollapse(event);
+              }}
+              className="rounded-md border border-white/30 bg-slate-900/50 px-1.5 py-0.5 text-[9px] font-semibold text-white"
+            >
+              Close
+            </button>
+          </div>
         </div>
         <div className="px-1">
           <TimerBar />
