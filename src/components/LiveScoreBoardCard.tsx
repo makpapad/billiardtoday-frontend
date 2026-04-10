@@ -453,6 +453,9 @@ export function LiveScoreBoardCard({
     typeof inningsCount === "number" && Number.isFinite(inningsCount)
       ? inningsCount
       : Math.max(Number(player1.innings) || 0, Number(player2.innings) || 0);
+  const inningsMobileClasses = isPlayer2Active
+    ? "border-amber-200 bg-amber-300 text-slate-900"
+    : "border-white/70 bg-white/95 text-slate-900";
 
   const InningsCard = () => (
     <div
@@ -605,18 +608,26 @@ export function LiveScoreBoardCard({
           <div className="px-1">
             <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
           </div>
-          <div className="grid grid-cols-[52px_1fr_52px] gap-1.5 text-center">
-            <div className="rounded-lg border border-white/20 bg-white/10 py-1">
-              <div className="text-[9px] uppercase text-white/70">AVG</div>
-              <div className="text-xs font-semibold">{buildPlayerStats(player1)[0]?.value}</div>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_68px_minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-1.5 text-center">
+            <div className="rounded-lg border border-white/70 bg-white/95 px-1 py-1 text-slate-900">
+              <div className="text-[9px] uppercase text-slate-600">HR</div>
+              <div className="text-xs font-semibold tabular-nums">{player1Hr}</div>
             </div>
-            <div className="rounded-lg border border-white/70 bg-white/95 text-slate-900 py-1">
+            <div className="rounded-lg border border-white/70 bg-white/95 px-1 py-1 text-slate-900">
+              <div className="text-[9px] uppercase text-slate-600">AVG</div>
+              <div className="text-xs font-semibold tabular-nums">{player1Avg}</div>
+            </div>
+            <div className={`rounded-full border px-1 py-1 ${inningsMobileClasses}`}>
               <div className="text-[9px] uppercase tracking-[0.2em] text-slate-600">INN</div>
-              <div className="text-lg font-black leading-none">{formatStat(inningsDisplay, 0)}</div>
+              <div className="text-lg font-black leading-none tabular-nums">{formatStat(inningsDisplay, 0)}</div>
             </div>
-            <div className="rounded-lg border border-amber-200 bg-amber-300 text-slate-900 py-1">
+            <div className="rounded-lg border border-amber-200 bg-amber-300 px-1 py-1 text-slate-900">
               <div className="text-[9px] uppercase text-slate-700">AVG</div>
-              <div className="text-xs font-semibold">{buildPlayerStats(player2)[0]?.value}</div>
+              <div className="text-xs font-semibold tabular-nums">{player2Avg}</div>
+            </div>
+            <div className="rounded-lg border border-amber-200 bg-amber-300 px-1 py-1 text-slate-900">
+              <div className="text-[9px] uppercase text-slate-700">HR</div>
+              <div className="text-xs font-semibold tabular-nums">{player2Hr}</div>
             </div>
           </div>
           <div className="px-1">
@@ -756,6 +767,12 @@ export function LiveScoreBoardCard({
       { label: "Target", value: targetLabel },
     ];
   };
+  const player1Stats = buildPlayerStats(player1);
+  const player2Stats = buildPlayerStats(player2);
+  const player1Avg = player1Stats[0]?.value ?? "--";
+  const player1Hr = player1Stats[1]?.value ?? "--";
+  const player2Avg = player2Stats[0]?.value ?? "--";
+  const player2Hr = player2Stats[1]?.value ?? "--";
 
   const StatsRow = ({
     player,
@@ -893,18 +910,26 @@ export function LiveScoreBoardCard({
         <div className="px-1">
           <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
         </div>
-        <div className="grid grid-cols-[52px_1fr_52px] gap-1.5 text-center">
-          <div className="rounded-lg border border-white/20 bg-white/10 py-1">
-            <div className="text-[9px] uppercase text-white/70">AVG</div>
-            <div className="text-xs font-semibold">{buildPlayerStats(player1)[0]?.value}</div>
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_68px_minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-1.5 text-center">
+          <div className="rounded-lg border border-white/70 bg-white/95 px-1 py-1 text-slate-900">
+            <div className="text-[9px] uppercase text-slate-600">HR</div>
+            <div className="text-xs font-semibold tabular-nums">{player1Hr}</div>
           </div>
-          <div className="rounded-lg border border-white/70 bg-white/95 text-slate-900 py-1">
+          <div className="rounded-lg border border-white/70 bg-white/95 px-1 py-1 text-slate-900">
+            <div className="text-[9px] uppercase text-slate-600">AVG</div>
+            <div className="text-xs font-semibold tabular-nums">{player1Avg}</div>
+          </div>
+          <div className={`rounded-full border px-1 py-1 ${inningsMobileClasses}`}>
             <div className="text-[9px] uppercase tracking-[0.2em] text-slate-600">INN</div>
-            <div className="text-lg font-black leading-none">{formatStat(inningsDisplay, 0)}</div>
+            <div className="text-lg font-black leading-none tabular-nums">{formatStat(inningsDisplay, 0)}</div>
           </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-300 text-slate-900 py-1">
+          <div className="rounded-lg border border-amber-200 bg-amber-300 px-1 py-1 text-slate-900">
             <div className="text-[9px] uppercase text-slate-700">AVG</div>
-            <div className="text-xs font-semibold">{buildPlayerStats(player2)[0]?.value}</div>
+            <div className="text-xs font-semibold tabular-nums">{player2Avg}</div>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-300 px-1 py-1 text-slate-900">
+            <div className="text-[9px] uppercase text-slate-700">HR</div>
+            <div className="text-xs font-semibold tabular-nums">{player2Hr}</div>
           </div>
         </div>
         <div className="px-1">
