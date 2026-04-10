@@ -337,14 +337,10 @@ function GroupTooltip({
               <tr>
                 <th className="px-2 py-1.5 text-left font-semibold">Player</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
-                <th className="px-2 py-1.5 text-center font-semibold">Rec</th>
-                <th className="px-2 py-1.5 text-center font-semibold">MP</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
-                <th className="px-2 py-1.5 text-center font-semibold">Best AVG</th>
                 <th className="px-2 py-1.5 text-center font-semibold">H.R</th>
-                <th className="px-2 py-1.5 text-center font-semibold">H.R2</th>
               </tr>
             </thead>
             <tbody>
@@ -375,14 +371,6 @@ function GroupTooltip({
                     {player.place}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {hasStandingActivity(player) ? formatRecord(player.record) : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {hasStandingActivity(player)
-                      ? formatNumberValue(player.totalMatchPoints)
-                      : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
                     {hasStandingActivity(player)
                       ? formatNumberValue(player.totalPoints)
                       : "-"}
@@ -398,19 +386,8 @@ function GroupTooltip({
                       : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {hasStandingActivity(player) &&
-                    typeof player.bestAverage === "number"
-                      ? player.bestAverage.toFixed(3)
-                      : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
                     {hasStandingActivity(player)
                       ? formatNumberValue(player.highRun)
-                      : "-"}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {hasStandingActivity(player)
-                      ? formatNumberValue(player.highRun2)
                       : "-"}
                   </td>
                 </tr>
