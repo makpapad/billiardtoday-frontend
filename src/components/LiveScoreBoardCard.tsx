@@ -551,9 +551,11 @@ export function LiveScoreBoardCard({
         ) : null}
         <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
           <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
+          <span className="flex min-w-[40px] items-center justify-center">{p1Flag}</span>
           <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
           <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
           <span className="min-w-[30px] text-center text-[32px] leading-none font-black text-amber-300">{player2.points ?? 0}</span>
+          <span className="flex min-w-[40px] items-center justify-center">{p2Flag}</span>
           <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
         </div>
       </button>
@@ -825,7 +827,7 @@ export function LiveScoreBoardCard({
           {items.map((item) => (
             <div key={`${variant}-${item.label}`} className="px-0.5 py-0.5 text-center">
               <div className={`${labelClasses} leading-none text-center`}>{item.label}</div>
-              <div className="font-semibold tabular-nums leading-tight mt-0.5 text-center">{item.value}</div>
+              <div className="mt-0.5 text-center text-[18px] font-bold leading-tight tabular-nums">{item.value}</div>
             </div>
           ))}
         </div>
