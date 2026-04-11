@@ -1025,12 +1025,12 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden sm:grid gap-1"
         style={{
           gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
-          gridTemplateRows: "42px auto auto auto 42px",
+          gridTemplateRows: "64px auto auto auto 64px",
         }}
       >
         <div
-          className="grid h-full items-center justify-items-center py-1 pl-3"
-          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+          className="grid h-full items-center justify-items-center pl-3"
+          style={{ gridTemplateRows: "64px auto auto auto 64px" }}
         >
           <div className="self-center">
             <AvatarCircle player={player1} fallback="P1" />
@@ -1049,7 +1049,7 @@ export function LiveScoreBoardCard({
 
         <div
           className="grid h-full px-1"
-          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+          style={{ gridTemplateRows: "64px auto auto auto 64px" }}
         >
           <div className="self-center">
               <NamePlate
@@ -1086,7 +1086,7 @@ export function LiveScoreBoardCard({
 
         <div
           className="grid h-full items-start pr-0 -ml-1"
-          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+          style={{ gridTemplateRows: "64px auto auto auto 64px" }}
         >
           <div className="self-center">
             <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
