@@ -422,10 +422,14 @@ export function LiveScoreBoardCard({
       <div
         className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
           compact ? "min-w-[26px] px-1" : "min-w-[32px] px-1.5"
-        } ${isActive ? "live-run-flash bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
+        } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
         aria-hidden={!isActive}
       >
-        <div className={`${compact ? "text-[17px]" : "text-[22px]"} font-black tabular-nums leading-none`}>
+        <div
+          className={`${compact ? "text-[17px]" : "text-[22px]"} font-black tabular-nums leading-none ${
+            isActive ? "animate-pulse" : ""
+          }`}
+        >
           {run ?? 0}
         </div>
       </div>
@@ -889,15 +893,9 @@ export function LiveScoreBoardCard({
             60% { opacity: 0.2; }
             100% { transform: translateX(280%); opacity: 0; }
           }
-          @keyframes liveRunFlash {
-            0% { opacity: 0.82; box-shadow: 0 0 0 rgba(34,211,238,0); }
-            50% { opacity: 1; box-shadow: 0 0 16px rgba(34,211,238,0.3); }
-            100% { opacity: 0.82; box-shadow: 0 0 0 rgba(34,211,238,0); }
-          }
           .live-bg-orb-a { animation: liveFloatA 8s ease-in-out infinite; }
           .live-bg-orb-b { animation: liveFloatB 10s ease-in-out infinite; }
           .live-bg-sweep { animation: liveSweep 6.5s ease-in-out infinite; }
-          .live-run-flash { animation: liveRunFlash 2.8s ease-in-out infinite; }
         `}</style>
       </div>
     );
@@ -1154,15 +1152,9 @@ export function LiveScoreBoardCard({
           60% { opacity: 0.2; }
           100% { transform: translateX(280%); opacity: 0; }
         }
-        @keyframes liveRunFlash {
-          0% { opacity: 0.82; box-shadow: 0 0 0 rgba(34,211,238,0); }
-          50% { opacity: 1; box-shadow: 0 0 16px rgba(34,211,238,0.3); }
-          100% { opacity: 0.82; box-shadow: 0 0 0 rgba(34,211,238,0); }
-        }
         .live-bg-orb-a { animation: liveFloatA 8s ease-in-out infinite; }
         .live-bg-orb-b { animation: liveFloatB 10s ease-in-out infinite; }
         .live-bg-sweep { animation: liveSweep 6.5s ease-in-out infinite; }
-        .live-run-flash { animation: liveRunFlash 2.8s ease-in-out infinite; }
       `}</style>
     </div>
   );
