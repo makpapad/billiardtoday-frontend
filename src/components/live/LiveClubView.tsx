@@ -2058,10 +2058,13 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
           <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] gap-3 items-center bg-white/5 rounded-2xl p-3 md:p-4 border border-white/10">
             <PlayerHighlightCard player={players[0]} isLeading={(state.scoreA ?? 0) >= (state.scoreB ?? 0)} isDraw={isDraw} tone="light" />
             <div className="text-center px-2">
-              <div className="text-4xl font-black text-white/70 mb-2">VS</div>
-              <div className="text-sm text-white/60">Innings: {state.inningsCount ?? state.inningsA ?? state.inningsB ?? "--"}</div>
-              <div className="mt-1 text-[11px] text-white/45 uppercase tracking-[0.2em]">Total time</div>
-              <div className="text-sm text-white/70 font-semibold leading-tight">{formatHHMM(totalTime)}</div>
+              <div className="text-[11px] text-white/45 uppercase tracking-[0.2em]">Total time</div>
+              <div className="text-lg font-semibold text-white/80 leading-tight">{formatHHMM(totalTime)}</div>
+              <div className="mt-2 text-4xl font-black text-white/70">VS</div>
+              <div className="mt-2 text-[11px] text-white/45 uppercase tracking-[0.2em]">Innings</div>
+              <div className="text-3xl font-black text-white/85 leading-tight">
+                {state.inningsCount ?? state.inningsA ?? state.inningsB ?? "--"}
+              </div>
             </div>
             <PlayerHighlightCard player={players[1]} isLeading={(state.scoreB ?? 0) > (state.scoreA ?? 0)} isDraw={isDraw} tone="yellow" />
           </div>
