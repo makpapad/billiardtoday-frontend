@@ -25,6 +25,7 @@ interface Player {
 
 const SCORE_BOX_WIDTH = 94;
 const AVATAR_COLUMN_WIDTH = 66;
+const DESKTOP_SCORE_GUTTER = 18;
 
 interface LiveScoreBoardCardProps {
   player1: Player;
@@ -270,8 +271,8 @@ export function LiveScoreBoardCard({
       setImageFailed(false);
     }, [src]);
     const initials = initialsFor(resolveDisplayName(player)) || fallback;
-    const outerSize = compact ? "w-10 h-10" : "w-16 h-16";
-    const innerSize = compact ? "w-9 h-9" : "w-14 h-14";
+    const outerSize = compact ? "w-10 h-10" : "w-[60px] h-[60px]";
+    const innerSize = compact ? "w-9 h-9" : "w-[52px] h-[52px]";
     const textSize = compact ? "text-xs" : "text-sm";
     return (
       <div className={`${outerSize} rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden`}>
@@ -390,6 +391,7 @@ export function LiveScoreBoardCard({
     run,
     isActive,
     compact = false,
+    className = "",
   }: {
     variant: "top" | "bottom";
     flag: ReactNode;
@@ -397,13 +399,14 @@ export function LiveScoreBoardCard({
     run?: number;
     isActive?: boolean;
     compact?: boolean;
+    className?: string;
   }) => (
     <div
       className={`ml-0 mr-0 h-[42px] flex items-center gap-2 rounded-xl border px-1.5 py-1 shadow-sm ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
-      }`}
+      } ${className}`}
     >
       {!compact ? <div className="flex items-center justify-center">{flag}</div> : null}
       <div className="flex-1 min-w-0 text-center">
@@ -438,7 +441,7 @@ export function LiveScoreBoardCard({
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
-      } ${isActive ? "ring-2 ring-inset ring-cyan-200/80" : ""}`}
+      } ${isActive ? "ring-2 ring-cyan-200/80" : ""}`}
       style={{ width: SCORE_BOX_WIDTH }}
     >
       <div className="w-full flex items-center justify-center">
@@ -472,6 +475,15 @@ export function LiveScoreBoardCard({
       >
         {formatStat(inningsDisplay, 0)}
       </div>
+    </div>
+  );
+
+  const DesktopInningsOverlay = () => (
+    <div
+      className="pointer-events-none absolute inset-y-0 hidden sm:flex items-center justify-center"
+      style={{ right: -4, width: SCORE_BOX_WIDTH }}
+    >
+      <InningsCard />
     </div>
   );
 
@@ -688,62 +700,78 @@ export function LiveScoreBoardCard({
         </div>
 
         <div
-          className="relative z-10 hidden sm:grid gap-1"
+          className="relative z-10 hidden sm:grid gap-y-1"
           style={{
             gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
+            gridTemplateRows: "60px 28px 18px 28px 60px",
           }}
         >
-          <div className="flex flex-col h-full justify-center gap-4 items-center py-1 pl-3">
-            <div className="flex flex-col items-center gap-2 translate-y-0">
-              <AvatarCircle player={player1} fallback="P1" />
-              <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
-            </div>
-            <div className="flex flex-col items-center gap-2 translate-y-0">
-              <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
-              <AvatarCircle player={player2} fallback="P2" />
-            </div>
+          <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
+            <AvatarCircle player={player1} fallback="P1" />
+          </div>
+          <div className="row-start-2 row-end-3 flex items-center justify-center pl-3">
+            <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+          </div>
+          <div className="row-start-4 row-end-5 flex items-center justify-center pl-3">
+            <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+          </div>
+          <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
+            <AvatarCircle player={player2} fallback="P2" />
           </div>
 
-          <div className="flex flex-col h-full px-1.5 justify-center">
-            <div className="pb-0.5">
-              <NamePlate
-                variant="top"
-                flag={p1Flag}
-                name={player1Name}
-                run={resolveDisplayedRun(player1)}
-                isActive={isPlayer1Active}
-              />
-            </div>
-
-            <div className="pt-0 pb-1">
-              <StatsRow player={player1} variant="top" />
-            </div>
-
-            <div className="py-0.5 ml-0 mr-0">
-              <TimerBar />
-            </div>
-
-            <div className="pt-1 pb-0">
-              <StatsRow player={player2} variant="bottom" />
-            </div>
-
-            <div className="pt-0.5">
-              <NamePlate
-                variant="bottom"
-                flag={p2Flag}
-                name={player2Name}
-                run={resolveDisplayedRun(player2)}
-                isActive={isPlayer2Active}
-              />
-            </div>
+          <div
+            className="row-start-1 row-end-2 col-start-2 col-end-4 flex items-center px-1"
+            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          >
+            <NamePlate
+              variant="top"
+              flag={p1Flag}
+              name={player1Name}
+              run={resolveDisplayedRun(player1)}
+              isActive={isPlayer1Active}
+              className="w-full"
+            />
+          </div>
+          <div
+            className="row-start-2 row-end-3 col-start-2 col-end-4 flex items-center px-1"
+            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          >
+            <StatsRow player={player1} variant="top" className="w-full" />
+          </div>
+          <div
+            className="row-start-3 row-end-4 col-start-2 col-end-4 flex items-center px-1"
+            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          >
+            <TimerBar />
+          </div>
+          <div
+            className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
+            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          >
+            <StatsRow player={player2} variant="bottom" className="w-full" />
+          </div>
+          <div
+            className="row-start-5 row-end-6 col-start-2 col-end-4 flex items-center px-1"
+            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          >
+            <NamePlate
+              variant="bottom"
+              flag={p2Flag}
+              name={player2Name}
+              run={resolveDisplayedRun(player2)}
+              isActive={isPlayer2Active}
+              className="w-full"
+            />
           </div>
 
-          <div className="flex flex-col h-full gap-1 items-start justify-center pr-0 -ml-1">
+          <div className="row-start-1 row-end-2 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
             <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
-            <InningsCard />
+          </div>
+          <div className="row-start-5 row-end-6 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
             <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
           </div>
         </div>
+        <DesktopInningsOverlay />
       </div>
     </div>
   );
@@ -811,16 +839,18 @@ export function LiveScoreBoardCard({
   const StatsRow = ({
     player,
     variant,
+    className = "",
   }: {
     player: Player;
     variant: "top" | "bottom";
+    className?: string;
   }) => {
     const items = buildPlayerStats(player);
     const rowClasses = variant === "top" ? "text-white" : "text-amber-100";
     const labelClasses = variant === "top" ? "text-white/65" : "text-amber-100/70";
 
     return (
-      <div className={`${rowClasses} ml-0 mr-0`}>
+      <div className={`${rowClasses} ml-0 mr-0 ${className}`}>
         <div className="grid grid-cols-5 gap-0.5 text-[10px]">
           {items.map((item) => (
             <div key={`${variant}-${item.label}`} className="px-0.5 py-0 text-center">
@@ -1022,85 +1052,78 @@ export function LiveScoreBoardCard({
       </div>
 
       <div
-        className="relative z-10 hidden sm:grid gap-1"
+        className="relative z-10 hidden sm:grid gap-y-1"
         style={{
           gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
-          gridTemplateRows: "72px 38px 18px 38px 72px",
+          gridTemplateRows: "60px 28px 18px 28px 60px",
         }}
       >
-        <div
-          className="grid h-full justify-items-center pl-3"
-          style={{ gridTemplateRows: "72px 38px 18px 38px 72px" }}
-        >
-          <div className="flex h-full items-center justify-center">
-            <AvatarCircle player={player1} fallback="P1" />
-          </div>
-          <div className="flex h-full items-center justify-center">
-            <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
-          </div>
-          <div />
-          <div className="flex h-full items-center justify-center">
-            <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
-          </div>
-          <div className="flex h-full items-center justify-center">
-            <AvatarCircle player={player2} fallback="P2" />
-          </div>
+        <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
+          <AvatarCircle player={player1} fallback="P1" />
+        </div>
+        <div className="row-start-2 row-end-3 flex items-center justify-center pl-3">
+          <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
+        </div>
+        <div className="row-start-4 row-end-5 flex items-center justify-center pl-3">
+          <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+        </div>
+        <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
+          <AvatarCircle player={player2} fallback="P2" />
         </div>
 
         <div
-          className="grid h-full px-1"
-          style={{ gridTemplateRows: "72px 38px 18px 38px 72px" }}
+          className="row-start-1 row-end-2 col-start-2 col-end-4 flex items-center px-1"
+          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
         >
-          <div className="flex h-full items-center">
-              <NamePlate
-                variant="top"
-                flag={p1Flag}
-                name={player1Name}
-                run={resolveDisplayedRun(player1)}
-                isActive={isPlayer1Active}
-              />
-          </div>
-
-          <div className="flex h-full items-center">
-            <StatsRow player={player1} variant="top" />
-          </div>
-
-          <div className="flex h-full items-center py-0 ml-0 mr-0">
-            <TimerBar />
-          </div>
-
-          <div className="flex h-full items-center">
-            <StatsRow player={player2} variant="bottom" />
-          </div>
-
-          <div className="flex h-full items-center">
-              <NamePlate
-                variant="bottom"
-                flag={p2Flag}
-                name={player2Name}
-                run={resolveDisplayedRun(player2)}
-                isActive={isPlayer2Active}
-              />
-          </div>
+          <NamePlate
+            variant="top"
+            flag={p1Flag}
+            name={player1Name}
+            run={resolveDisplayedRun(player1)}
+            isActive={isPlayer1Active}
+            className="w-full"
+          />
+        </div>
+        <div
+          className="row-start-2 row-end-3 col-start-2 col-end-4 flex items-center px-1"
+          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+        >
+          <StatsRow player={player1} variant="top" className="w-full" />
+        </div>
+        <div
+          className="row-start-3 row-end-4 col-start-2 col-end-4 flex items-center px-1"
+          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+        >
+          <TimerBar />
+        </div>
+        <div
+          className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
+          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+        >
+          <StatsRow player={player2} variant="bottom" className="w-full" />
+        </div>
+        <div
+          className="row-start-5 row-end-6 col-start-2 col-end-4 flex items-center px-1"
+          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+        >
+          <NamePlate
+            variant="bottom"
+            flag={p2Flag}
+            name={player2Name}
+            run={resolveDisplayedRun(player2)}
+            isActive={isPlayer2Active}
+            className="w-full"
+          />
         </div>
 
-        <div
-          className="grid h-full pr-0 -ml-1"
-          style={{ gridTemplateRows: "72px 38px 18px 38px 72px" }}
-        >
-          <div className="flex h-full items-center">
-            <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
-          </div>
-          <div />
-          <div className="flex h-full items-center">
-            <InningsCard />
-          </div>
-          <div />
-          <div className="flex h-full items-center">
-            <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
-          </div>
+        <div className="row-start-1 row-end-2 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
+          <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
+        </div>
+        <div className="row-start-5 row-end-6 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
+          <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
         </div>
       </div>
+      <DesktopInningsOverlay />
         </div>
       </div>
       <style jsx>{`
