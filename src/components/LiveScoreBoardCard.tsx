@@ -1025,21 +1025,33 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden sm:grid gap-1"
         style={{
           gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
+          gridTemplateRows: "42px auto auto auto 42px",
         }}
       >
-        <div className="flex flex-col h-full justify-center gap-3 items-center py-1 pl-3">
-          <div className="flex flex-col items-center gap-1.5">
+        <div
+          className="grid h-full items-center justify-items-center py-1 pl-3"
+          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+        >
+          <div className="self-center">
             <AvatarCircle player={player1} fallback="P1" />
+          </div>
+          <div className="self-center">
             <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
           </div>
-          <div className="flex flex-col items-center gap-1.5">
+          <div />
+          <div className="self-center">
             <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+          </div>
+          <div className="self-center">
             <AvatarCircle player={player2} fallback="P2" />
           </div>
         </div>
 
-        <div className="flex flex-col h-full px-1 justify-center">
-          <div className="pb-0">
+        <div
+          className="grid h-full px-1"
+          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+        >
+          <div className="self-center">
               <NamePlate
                 variant="top"
                 flag={p1Flag}
@@ -1049,19 +1061,19 @@ export function LiveScoreBoardCard({
               />
           </div>
 
-          <div className="pt-0 pb-0">
+          <div className="self-center">
             <StatsRow player={player1} variant="top" />
           </div>
 
-          <div className="py-0 ml-0 mr-0">
+          <div className="self-center py-0 ml-0 mr-0">
             <TimerBar />
           </div>
 
-          <div className="pt-0 pb-0">
+          <div className="self-center">
             <StatsRow player={player2} variant="bottom" />
           </div>
 
-          <div className="pt-0">
+          <div className="self-center">
               <NamePlate
                 variant="bottom"
                 flag={p2Flag}
@@ -1072,10 +1084,21 @@ export function LiveScoreBoardCard({
           </div>
         </div>
 
-        <div className="flex flex-col h-full gap-1 items-start justify-center pr-0 -ml-1">
-          <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
-          <InningsCard />
-          <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
+        <div
+          className="grid h-full items-start pr-0 -ml-1"
+          style={{ gridTemplateRows: "42px auto auto auto 42px" }}
+        >
+          <div className="self-center">
+            <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
+          </div>
+          <div />
+          <div className="self-center">
+            <InningsCard />
+          </div>
+          <div />
+          <div className="self-center">
+            <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
+          </div>
         </div>
       </div>
         </div>
