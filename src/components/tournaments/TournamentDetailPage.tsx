@@ -2482,6 +2482,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const map = new Map<
       string,
       {
+        playerAName: string | null;
+        playerBName: string | null;
         playerAPhotoUrl: string | null;
         playerAPhotoMainUrl: string | null;
         playerBPhotoUrl: string | null;
@@ -2499,6 +2501,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       ).trim();
       if (!key) return;
       map.set(key, {
+        playerAName:
+          typeof session.state?.playerAName === "string"
+            ? session.state.playerAName
+            : session.player1Name ?? null,
+        playerBName:
+          typeof session.state?.playerBName === "string"
+            ? session.state.playerBName
+            : session.player2Name ?? null,
         playerAPhotoUrl: session.state?.playerAPhotoUrl ?? null,
         playerAPhotoMainUrl: session.state?.playerAPhotoMainUrl ?? null,
         playerBPhotoUrl: session.state?.playerBPhotoUrl ?? null,
@@ -2507,6 +2517,28 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     });
     return map;
   }, [eventLiveSessions]);
+
+  const resolveSessionMatchedPhotoValue = useCallback(
+    (
+      preferred: string | null | undefined,
+      fallback: string | null | undefined,
+      currentPlayerName: string | null | undefined,
+      fallbackPlayerName: string | null | undefined,
+    ) => {
+      if (typeof preferred === "string" && preferred.trim()) {
+        return resolvePreferredPhotoValue(preferred);
+      }
+      if (
+        normalizeNameForMatch(currentPlayerName) &&
+        normalizeNameForMatch(currentPlayerName) ===
+          normalizeNameForMatch(fallbackPlayerName)
+      ) {
+        return resolvePreferredPhotoValue(fallback);
+      }
+      return null;
+    },
+    [],
+  );
 
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
     if (!eventData?.data?.event_stages) return [];
@@ -3592,13 +3624,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player1={{
                         name: state.playerAName || "Player A",
                         country: state.playerACountry ?? null,
-                        photoUrl: resolvePreferredPhotoValue(
+                        photoUrl: resolveSessionMatchedPhotoValue(
                           state.playerAPhotoUrl,
                           photoFallback?.playerAPhotoUrl,
+                          state.playerAName,
+                          photoFallback?.playerAName,
                         ),
-                        photoMainUrl: resolvePreferredPhotoValue(
+                        photoMainUrl: resolveSessionMatchedPhotoValue(
                           state.playerAPhotoMainUrl,
                           photoFallback?.playerAPhotoMainUrl,
+                          state.playerAName,
+                          photoFallback?.playerAName,
                         ),
                         points: state.scoreA ?? 0,
                         run: state.runA ?? 0,
@@ -3615,13 +3651,17 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       player2={{
                         name: state.playerBName || "Player B",
                         country: state.playerBCountry ?? null,
-                        photoUrl: resolvePreferredPhotoValue(
+                        photoUrl: resolveSessionMatchedPhotoValue(
                           state.playerBPhotoUrl,
                           photoFallback?.playerBPhotoUrl,
+                          state.playerBName,
+                          photoFallback?.playerBName,
                         ),
-                        photoMainUrl: resolvePreferredPhotoValue(
+                        photoMainUrl: resolveSessionMatchedPhotoValue(
                           state.playerBPhotoMainUrl,
                           photoFallback?.playerBPhotoMainUrl,
+                          state.playerBName,
+                          photoFallback?.playerBName,
                         ),
                         points: state.scoreB ?? 0,
                         run: state.runB ?? 0,
