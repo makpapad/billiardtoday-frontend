@@ -399,7 +399,7 @@ export function LiveScoreBoardCard({
     compact?: boolean;
   }) => (
     <div
-      className={`ml-0 mr-0 h-[44px] flex items-center gap-2 rounded-xl border px-2 py-1.5 shadow-sm ${
+      className={`ml-0 mr-0 h-[42px] flex items-center gap-2 rounded-xl border px-1.5 py-1 shadow-sm ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -823,11 +823,11 @@ export function LiveScoreBoardCard({
 
     return (
       <div className={`${rowClasses} ml-0 mr-0`}>
-        <div className="grid grid-cols-5 gap-1 text-[10px]">
+        <div className="grid grid-cols-5 gap-0.5 text-[10px]">
           {items.map((item) => (
-            <div key={`${variant}-${item.label}`} className="px-0.5 py-0.5 text-center">
+            <div key={`${variant}-${item.label}`} className="px-0.5 py-0 text-center">
               <div className={`${labelClasses} leading-none text-center`}>{item.label}</div>
-              <div className="mt-0.5 text-center text-[18px] font-bold leading-tight tabular-nums">{item.value}</div>
+              <div className="mt-0 text-center text-[17px] font-semibold leading-tight tabular-nums">{item.value}</div>
             </div>
           ))}
         </div>
@@ -1040,8 +1040,8 @@ export function LiveScoreBoardCard({
           </div>
         </div>
 
-        <div className="flex flex-col h-full px-1.5 justify-center">
-          <div className="pb-0.5">
+        <div className="flex flex-col h-full px-1 justify-center">
+          <div className="pb-0">
               <NamePlate
                 variant="top"
                 flag={p1Flag}
@@ -1051,19 +1051,19 @@ export function LiveScoreBoardCard({
               />
           </div>
 
-          <div className="pt-0 pb-1">
+          <div className="pt-0 pb-0">
             <StatsRow player={player1} variant="top" />
           </div>
 
-          <div className="py-0.5 ml-0 mr-0">
+          <div className="py-0 ml-0 mr-0">
             <TimerBar />
           </div>
 
-          <div className="pt-1 pb-0">
+          <div className="pt-0 pb-0">
             <StatsRow player={player2} variant="bottom" />
           </div>
 
-          <div className="pt-0.5">
+          <div className="pt-0">
               <NamePlate
                 variant="bottom"
                 flag={p2Flag}
