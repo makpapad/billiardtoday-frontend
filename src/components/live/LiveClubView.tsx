@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
+import { buildLiveScoreChartRows, LiveSheetScoreChart } from "@/components/live/LiveSheetScoreChart";
 const STALE_TTL_MS = 60 * 60 * 1000; // 60 minutes
 const LiveScoreBoardCard = dynamic(() => import('@/components/LiveScoreBoardCard').then(mod => mod.LiveScoreBoardCard), { ssr: false });
 
@@ -27,12 +28,6 @@ type InningDetailEntry = {
   inning: number;
   player1?: { pt: number; tot: number };
   player2?: { pt: number; tot: number };
-};
-
-type PlayerChartPoint = {
-  inning: number;
-  run: number;
-  total: number;
 };
 
 type SessionSnapshot = {
@@ -342,58 +337,6 @@ function extractInningsDetail(source: any): InningDetailEntry[] | undefined {
     resolve(source.data?.attributes) ??
     undefined
   );
-}
-
-function buildPlayerChartSeries(
-  entries: InningDetailEntry[],
-  playerKey: "player1" | "player2",
-  fallbackScore: number,
-  fallbackInnings: number,
-): PlayerChartPoint[] {
-  const sorted = Array.isArray(entries) ? [...entries].sort((a, b) => a.inning - b.inning) : [];
-  const series: PlayerChartPoint[] = [];
-  let lastTotal = 0;
-
-  for (const entry of sorted) {
-    if (!Number.isFinite(entry.inning)) continue;
-    const playerEntry = entry[playerKey];
-    const run = Math.max(0, Number(playerEntry?.pt) || 0);
-    const nextTotalFromEntry = Number(playerEntry?.tot);
-    lastTotal = Number.isFinite(nextTotalFromEntry)
-      ? Math.max(0, nextTotalFromEntry)
-      : Math.max(0, lastTotal + run);
-
-    series.push({
-      inning: Math.max(1, entry.inning),
-      run,
-      total: lastTotal,
-    });
-  }
-
-  const fallbackTotal = Math.max(lastTotal, Math.max(0, Number(fallbackScore) || 0));
-  const lastSeriesInning = series.length > 0 ? series[series.length - 1].inning : 1;
-  const fallbackInningsSafe =
-    Math.max(1, Number.isFinite(fallbackInnings) && fallbackInnings ? fallbackInnings : lastSeriesInning || 1) || 1;
-
-  if (series.length === 0) {
-    if (fallbackTotal <= 0) return [];
-    series.push({
-      inning: fallbackInningsSafe,
-      run: fallbackTotal,
-      total: fallbackTotal,
-    });
-  } else {
-    const lastPoint = series[series.length - 1];
-    if (fallbackTotal > lastPoint.total || fallbackInningsSafe > lastPoint.inning) {
-      series.push({
-        inning: Math.max(fallbackInningsSafe, lastPoint.inning + 1),
-        run: Math.max(0, fallbackTotal - lastPoint.total),
-        total: fallbackTotal,
-      });
-    }
-  }
-
-  return series;
 }
 
 export type LiveScoreItem = {
@@ -1888,7 +1831,6 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
     },
   ];
   const isDraw = (state.scoreA ?? 0) === (state.scoreB ?? 0);
-  const maxPoints = Math.max(players[0].score ?? 0, players[1].score ?? 0, 1);
   const inferredInnings =
     state.inningsCount ?? state.inningsA ?? state.inningsB ?? Math.max(players[0].score ?? 0, players[1].score ?? 0, 1);
   const maxInnings = Math.max(
@@ -1900,20 +1842,15 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
     1,
   );
   const detailEntries = Array.isArray(state.inningsDetail) ? state.inningsDetail : [];
-  const chartSeries = [
-    buildPlayerChartSeries(detailEntries, "player1", players[0].score ?? 0, state.inningsA ?? inferredInnings),
-    buildPlayerChartSeries(detailEntries, "player2", players[1].score ?? 0, state.inningsB ?? inferredInnings),
-  ];
-  const chartMaxInnings = Math.max(
-    maxInnings,
-    ...chartSeries.map((series) => (series.length ? series[series.length - 1]?.inning ?? 1 : 1)),
-    1,
-  );
-  const chartMaxPoints = Math.max(
-    maxPoints,
-    ...chartSeries.map((series) => series.reduce((acc, pt) => Math.max(acc, pt.total), 0)),
-    1,
-  );
+  const chartRows = buildLiveScoreChartRows({
+    inningsDetail: detailEntries,
+    inningsCount: maxInnings,
+    inningsA: state.inningsA,
+    inningsB: state.inningsB,
+    scoreA: players[0].score ?? 0,
+    scoreB: players[1].score ?? 0,
+    ended: state.ended,
+  });
 
   const normalizePhotoUrl = (value?: string | null): string | null => {
     if (!value || typeof value !== "string") return null;
@@ -2166,13 +2103,11 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
             ))}
           </div>
           <div className="hidden md:block">
-            <CombinedProgressChart
-            seriesA={chartSeries[0]}
-            seriesB={chartSeries[1]}
-            maxPoints={chartMaxPoints}
-            maxInnings={chartMaxInnings}
-            playerAName={players[0].name}
-            playerBName={players[1].name}
+            <LiveSheetScoreChart
+              data={chartRows}
+              height={320}
+              playerAName={players[0].name}
+              playerBName={players[1].name}
             />
           </div>
         </div>
@@ -2215,313 +2150,6 @@ function StatPill({ label, value }: { label: string; value: string }) {
     <div className="bg-white/5 rounded-lg px-2 py-2 border border-white/10 text-center">
       <p className="text-[9px] uppercase tracking-[0.35em] text-white/50">{label}</p>
       <p className="text-2xl md:text-3xl font-semibold leading-tight">{value ?? "--"}</p>
-    </div>
-  );
-}
-
-function CombinedProgressChart({
-  seriesA,
-  seriesB,
-  maxPoints,
-  maxInnings,
-  playerAName,
-  playerBName,
-}: {
-  seriesA: PlayerChartPoint[];
-  seriesB: PlayerChartPoint[];
-  maxPoints: number;
-  maxInnings: number;
-  playerAName: string;
-  playerBName: string;
-}) {
-  const width = 900;
-  const height = 220;
-  const padding = 12;
-  const xStart = padding;
-  const xEnd = width - padding;
-  const yStart = height - padding;
-  const yEnd = padding;
-  const chartWidth = xEnd - xStart;
-  const chartHeight = yStart - yEnd;
-
-  const safeSeriesA = seriesA.filter((point) => Number.isFinite(point.total) && Number.isFinite(point.inning));
-  const safeSeriesB = seriesB.filter((point) => Number.isFinite(point.total) && Number.isFinite(point.inning));
-  const inningsDomain = [...safeSeriesA, ...safeSeriesB].map((p) => p.inning);
-  const minInning = inningsDomain.length ? Math.min(...inningsDomain) : 1;
-  const maxInningInData = inningsDomain.length ? Math.max(...inningsDomain) : maxInnings;
-  const inningSpan = Math.max(1, maxInningInData - minInning);
-  const viewBox = `0 0 ${width} ${height}`;
-  const [hoveredPoint, setHoveredPoint] = React.useState<
-    | {
-        x: number;
-        y: number;
-        inning: number;
-        run: number;
-        total: number;
-        player: "A" | "B";
-      }
-    | null
-  >(null);
-
-  if ((safeSeriesA.length === 0 && safeSeriesB.length === 0) || maxPoints <= 0 || maxInnings <= 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 text-sm h-56">
-        No progression yet
-      </div>
-    );
-  }
-
-  const mapPoint = (point: PlayerChartPoint) => {
-    const xRatio = Math.min(Math.max((point.inning - minInning) / inningSpan, 0), 1);
-    const yRatio = Math.min(Math.max(point.total / maxPoints, 0), 1);
-    const x = xStart + xRatio * chartWidth;
-    const y = yStart - yRatio * chartHeight;
-    return { x, y };
-  };
-  const yTicks = Array.from(
-    { length: Math.max(0, Math.floor((maxPoints - 1) / 10)) },
-    (_, idx) => (idx + 1) * 10,
-  ).filter((val) => val < maxPoints);
-  const yMinorTicks = Array.from(
-    { length: Math.max(0, Math.floor((maxPoints - 1) / 5)) },
-    (_, idx) => (idx + 1) * 5,
-  ).filter((val) => val < maxPoints && val % 10 !== 0);
-  const firstXTick = Math.ceil(minInning / 10) * 10;
-  const xTicks: number[] = [];
-  for (let tick = firstXTick; tick < maxInningInData; tick += 10) {
-    xTicks.push(tick);
-  }
-  const firstXMinorTick = Math.ceil(minInning / 5) * 5;
-  const xMinorTicks: number[] = [];
-  for (let tick = firstXMinorTick; tick < maxInningInData; tick += 5) {
-    if (tick % 10 !== 0) xMinorTicks.push(tick);
-  }
-
-  const buildPlot = (source: PlayerChartPoint[], player: "A" | "B") => {
-    const points = source.map((point) => {
-      const coords = mapPoint(point);
-      return {
-        ...coords,
-        total: point.total ?? 0,
-        inning: point.inning ?? 0,
-        run: point.run ?? 0,
-        projected: false,
-        player,
-      };
-    });
-
-    const lastActualPoint = source[source.length - 1];
-    if (lastActualPoint && lastActualPoint.inning < maxInningInData) {
-      const projectedPoint = {
-        inning: maxInningInData,
-        total: lastActualPoint.total ?? 0,
-        run: 0,
-        projected: true,
-      };
-      const coords = mapPoint(projectedPoint);
-      points.push({
-        ...coords,
-        total: projectedPoint.total,
-        inning: projectedPoint.inning,
-        run: projectedPoint.run,
-        projected: true,
-        player,
-      });
-    }
-
-    const path = points.map((point, idx) => `${idx === 0 ? "M" : "L"}${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
-    return { points, path };
-  };
-
-  const plottedA = buildPlot(safeSeriesA, "A");
-  const plottedB = buildPlot(safeSeriesB, "B");
-
-  return (
-    <div className="w-full rounded-2xl bg-gradient-to-br from-white/5 via-white/0 to-white/5 border border-white/10 p-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[11px] uppercase tracking-[0.4em] text-white/50">Points vs Innings</div>
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-white/70">
-          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-white" />{playerAName}</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-yellow-300" />{playerBName}</span>
-        </div>
-      </div>
-      <div className="relative h-56">
-        <svg viewBox={viewBox} className="absolute inset-0 w-full h-full">
-          {/* Axes */}
-          <line
-            x1={xStart}
-            y1={yStart}
-            x2={xEnd}
-            y2={yStart}
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth={1}
-          />
-          <line
-            x1={xStart}
-            y1={yEnd}
-            x2={xStart}
-            y2={yStart}
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth={1}
-          />
-          {/* Grid */}
-          {yMinorTicks.map((tick) => {
-            const y = yStart - (tick / maxPoints) * chartHeight;
-            return (
-              <g key={`h-minor-${tick}`}>
-                <line
-                  x1={xStart}
-                  x2={xEnd}
-                  y1={y}
-                  y2={y}
-                  stroke="rgba(255,255,255,0.045)"
-                  strokeWidth={1}
-                  strokeDasharray="2 6"
-                />
-                <text
-                  x={xStart - 6}
-                  y={y + 3}
-                  textAnchor="end"
-                  fill="rgba(255,255,255,0.45)"
-                  fontSize="8"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
-          {yTicks.map((tick) => {
-            const y = yStart - (tick / maxPoints) * chartHeight;
-            return (
-              <g key={`h-${tick}`}>
-                <line
-                  x1={xStart}
-                  x2={xEnd}
-                  y1={y}
-                  y2={y}
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth={1}
-                  strokeDasharray="4 6"
-                />
-                <text
-                  x={xStart - 6}
-                  y={y + 3}
-                  textAnchor="end"
-                  fill="rgba(255,255,255,0.65)"
-                  fontSize="9"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
-          {xMinorTicks.map((tick) => {
-            const x = xStart + ((tick - minInning) / inningSpan) * chartWidth;
-            return (
-              <g key={`v-minor-${tick}`}>
-                <line
-                  x1={x}
-                  x2={x}
-                  y1={yEnd}
-                  y2={yStart}
-                  stroke="rgba(255,255,255,0.045)"
-                  strokeWidth={1}
-                  strokeDasharray="2 6"
-                />
-                <text
-                  x={x}
-                  y={yStart + 12}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.45)"
-                  fontSize="8"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
-          {xTicks.map((tick) => {
-            const x = xStart + ((tick - minInning) / inningSpan) * chartWidth;
-            return (
-              <g key={`v-${tick}`}>
-                <line
-                  x1={x}
-                  x2={x}
-                  y1={yEnd}
-                  y2={yStart}
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth={1}
-                  strokeDasharray="4 6"
-                />
-                <text
-                  x={x}
-                  y={yStart + 12}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.65)"
-                  fontSize="9"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Player A line */}
-          {plottedA.path ? <path d={plottedA.path} fill="none" stroke="#ffffff" strokeWidth={3} strokeLinecap="round" /> : null}
-          {/* Player B line */}
-          {plottedB.path ? <path d={plottedB.path} fill="none" stroke="#facc15" strokeWidth={3} strokeLinecap="round" /> : null}
-          {/* Points */}
-          {[...plottedA.points, ...plottedB.points].map((point, idx) => (
-            <g key={`pt-${idx}`}>
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r={point.projected ? 4 : 3}
-                fill={
-                  point.projected
-                    ? point.player === "A"
-                      ? "rgba(255,255,255,0.12)"
-                      : "rgba(250,204,21,0.12)"
-                    : point.player === "A"
-                      ? "#ffffff"
-                      : "#facc15"
-                }
-                stroke={point.projected ? (point.player === "A" ? "#ffffff" : "#facc15") : "#0f172a"}
-                strokeWidth={point.projected ? 2 : 1.5}
-                strokeDasharray={point.projected ? "3 2" : undefined}
-                onMouseEnter={() => setHoveredPoint(point)}
-                onMouseLeave={() => setHoveredPoint(null)}
-              />
-            </g>
-          ))}
-        </svg>
-        <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-white/60 pointer-events-none">
-          <div className="flex justify-between px-2">
-            <span>Points</span>
-            <span>{maxPoints}</span>
-          </div>
-          <div className="flex justify-between px-2">
-            <span>Innings</span>
-            <span>{maxInningInData}</span>
-          </div>
-        </div>
-        {hoveredPoint && (
-          <div
-            className="absolute pointer-events-none bg-slate-900/90 text-[11px] text-white px-3 py-2 rounded-lg border border-white/15 shadow-lg"
-            style={{
-              left: `calc(${(hoveredPoint.x / width) * 100}% + 6px)`,
-              top: `calc(${(hoveredPoint.y / height) * 100}% - 6px)`,
-              transform: "translate(-50%, -100%)",
-            }}
-          >
-            <div className={`font-semibold tracking-wide ${hoveredPoint.player === "A" ? "text-amber-200" : "text-white"}`}>
-              {hoveredPoint.player === "A" ? playerAName : playerBName} β€Ά Inning {hoveredPoint.inning}
-            </div>
-            <div>+{Math.max(0, hoveredPoint.run)} pts</div>
-            <div className="text-white/70 text-[10px]">Total {hoveredPoint.total}</div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
