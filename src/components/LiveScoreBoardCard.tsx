@@ -434,13 +434,11 @@ export function LiveScoreBoardCard({
     isActive: boolean;
   }) => (
     <div
-      className={`mr-0 h-[44px] rounded-xl border px-2 py-2 shadow-md flex items-center justify-center ${
+      className={`mr-0 h-[42px] rounded-xl border px-2 py-1.5 shadow-md flex items-center justify-center ${
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
-      } ${isActive ? "ring-2 ring-inset ring-cyan-200/80" : ""} ${
-        variant === "top" ? "-translate-y-4" : "translate-y-4"
-      }`}
+      } ${isActive ? "ring-2 ring-inset ring-cyan-200/80" : ""}`}
       style={{ width: SCORE_BOX_WIDTH }}
     >
       <div className="w-full flex items-center justify-center">
@@ -1029,12 +1027,12 @@ export function LiveScoreBoardCard({
           gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
         }}
       >
-        <div className="flex flex-col h-full justify-center gap-4 items-center py-1 pl-3">
-          <div className="flex flex-col items-center gap-2 translate-y-0">
+        <div className="flex flex-col h-full justify-center gap-3 items-center py-1 pl-3">
+          <div className="flex flex-col items-center gap-1.5">
             <AvatarCircle player={player1} fallback="P1" />
             <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
           </div>
-          <div className="flex flex-col items-center gap-2 translate-y-0">
+          <div className="flex flex-col items-center gap-1.5">
             <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
             <AvatarCircle player={player2} fallback="P2" />
           </div>
