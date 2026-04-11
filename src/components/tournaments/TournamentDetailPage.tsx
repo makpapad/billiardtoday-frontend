@@ -617,6 +617,14 @@ const mergeLiveSessions = (
       Boolean(session.state?.isRunning) ||
       session.sessionStatus === "in_progress";
     const preserveRunningState = existingIsRunning && !nextIsRunning;
+    const nextPlayerAName =
+      session.state?.playerAName ?? session.player1Name ?? null;
+    const nextPlayerBName =
+      session.state?.playerBName ?? session.player2Name ?? null;
+    const existingPlayerAName =
+      existing.state?.playerAName ?? existing.player1Name ?? null;
+    const existingPlayerBName =
+      existing.state?.playerBName ?? existing.player2Name ?? null;
     merged.set(key, {
       ...existing,
       ...session,
@@ -628,19 +636,27 @@ const mergeLiveSessions = (
         ...session.state,
         playerAPhotoUrl: preferText(
           session.state?.playerAPhotoUrl,
-          existing.state?.playerAPhotoUrl,
+          shouldReusePlayerPhoto(nextPlayerAName, existingPlayerAName)
+            ? existing.state?.playerAPhotoUrl
+            : null,
         ),
         playerAPhotoMainUrl: preferText(
           session.state?.playerAPhotoMainUrl,
-          existing.state?.playerAPhotoMainUrl,
+          shouldReusePlayerPhoto(nextPlayerAName, existingPlayerAName)
+            ? existing.state?.playerAPhotoMainUrl
+            : null,
         ),
         playerBPhotoUrl: preferText(
           session.state?.playerBPhotoUrl,
-          existing.state?.playerBPhotoUrl,
+          shouldReusePlayerPhoto(nextPlayerBName, existingPlayerBName)
+            ? existing.state?.playerBPhotoUrl
+            : null,
         ),
         playerBPhotoMainUrl: preferText(
           session.state?.playerBPhotoMainUrl,
-          existing.state?.playerBPhotoMainUrl,
+          shouldReusePlayerPhoto(nextPlayerBName, existingPlayerBName)
+            ? existing.state?.playerBPhotoMainUrl
+            : null,
         ),
         isRunning: preserveRunningState
           ? existing.state?.isRunning
@@ -660,6 +676,16 @@ const resolvePreferredPhotoValue = (
     }
   }
   return null;
+};
+
+const shouldReusePlayerPhoto = (
+  nextName: string | null | undefined,
+  previousName: string | null | undefined,
+) => {
+  const next = normalizeNameForMatch(nextName);
+  const prev = normalizeNameForMatch(previousName);
+  if (!next || !prev) return true;
+  return next === prev;
 };
 
 function buildInningsDetailFromSnapshots(snapshots: SessionSnapshot[]): InningDetailEntry[] {
@@ -1914,25 +1940,77 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           ? sessionObj.state.playerAPhotoUrl
                           : typeof sessionObj.player1PhotoUrl === "string"
                           ? sessionObj.player1PhotoUrl
-                          : baseSession?.state?.playerAPhotoUrl ?? null,
+                          : shouldReusePlayerPhoto(
+                              resolveEventSessionPlayerName(
+                                sessionObj,
+                                "A",
+                                baseSession?.state?.playerAName ??
+                                  baseSession?.player1Name ??
+                                  null,
+                              ),
+                              baseSession?.state?.playerAName ??
+                                baseSession?.player1Name ??
+                                null,
+                            )
+                          ? baseSession?.state?.playerAPhotoUrl ?? null
+                          : null,
                       playerAPhotoMainUrl:
                         typeof sessionObj.state?.playerAPhotoMainUrl === "string"
                           ? sessionObj.state.playerAPhotoMainUrl
                           : typeof sessionObj.player1PhotoMainUrl === "string"
                           ? sessionObj.player1PhotoMainUrl
-                          : baseSession?.state?.playerAPhotoMainUrl ?? null,
+                          : shouldReusePlayerPhoto(
+                              resolveEventSessionPlayerName(
+                                sessionObj,
+                                "A",
+                                baseSession?.state?.playerAName ??
+                                  baseSession?.player1Name ??
+                                  null,
+                              ),
+                              baseSession?.state?.playerAName ??
+                                baseSession?.player1Name ??
+                                null,
+                            )
+                          ? baseSession?.state?.playerAPhotoMainUrl ?? null
+                          : null,
                       playerBPhotoUrl:
                         typeof sessionObj.state?.playerBPhotoUrl === "string"
                           ? sessionObj.state.playerBPhotoUrl
                           : typeof sessionObj.player2PhotoUrl === "string"
                           ? sessionObj.player2PhotoUrl
-                          : baseSession?.state?.playerBPhotoUrl ?? null,
+                          : shouldReusePlayerPhoto(
+                              resolveEventSessionPlayerName(
+                                sessionObj,
+                                "B",
+                                baseSession?.state?.playerBName ??
+                                  baseSession?.player2Name ??
+                                  null,
+                              ),
+                              baseSession?.state?.playerBName ??
+                                baseSession?.player2Name ??
+                                null,
+                            )
+                          ? baseSession?.state?.playerBPhotoUrl ?? null
+                          : null,
                       playerBPhotoMainUrl:
                         typeof sessionObj.state?.playerBPhotoMainUrl === "string"
                           ? sessionObj.state.playerBPhotoMainUrl
                           : typeof sessionObj.player2PhotoMainUrl === "string"
                           ? sessionObj.player2PhotoMainUrl
-                          : baseSession?.state?.playerBPhotoMainUrl ?? null,
+                          : shouldReusePlayerPhoto(
+                              resolveEventSessionPlayerName(
+                                sessionObj,
+                                "B",
+                                baseSession?.state?.playerBName ??
+                                  baseSession?.player2Name ??
+                                  null,
+                              ),
+                              baseSession?.state?.playerBName ??
+                                baseSession?.player2Name ??
+                                null,
+                            )
+                          ? baseSession?.state?.playerBPhotoMainUrl ?? null
+                          : null,
                       progress:
                         Number(sessionObj.progress ?? baseSession?.state?.progress ?? 0) || 0,
                       totalBlocks:
