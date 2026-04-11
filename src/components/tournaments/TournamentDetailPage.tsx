@@ -2019,12 +2019,20 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           ? sessionObj.targetPointsP1
                           : typeof sessionObj.target_points_p1 === "number"
                             ? sessionObj.target_points_p1
+                            : typeof sessionObj.targetPoints === "number"
+                              ? sessionObj.targetPoints
+                              : typeof sessionObj.target_points === "number"
+                                ? sessionObj.target_points
                             : baseSession?.state?.targetPointsA ?? null,
                       targetPointsB:
                         typeof sessionObj.targetPointsP2 === "number"
                           ? sessionObj.targetPointsP2
                           : typeof sessionObj.target_points_p2 === "number"
                             ? sessionObj.target_points_p2
+                            : typeof sessionObj.targetPoints === "number"
+                              ? sessionObj.targetPoints
+                              : typeof sessionObj.target_points === "number"
+                                ? sessionObj.target_points
                             : baseSession?.state?.targetPointsB ?? null,
                       gameDurationSeconds:
                         typeof sessionObj.gameDurationSeconds === "number"
