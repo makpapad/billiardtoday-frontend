@@ -13,6 +13,12 @@ const formatAverage = (value?: string | number | null) => {
   return "--";
 };
 
+const formatTargetPercent = (score?: number | null, target?: number | null) => {
+  if (typeof target !== "number" || !Number.isFinite(target) || target <= 0) return "--";
+  const points = typeof score === "number" && Number.isFinite(score) ? score : 0;
+  return `${Math.min(100, Math.max(0, (points / target) * 100)).toFixed(0)}%`;
+};
+
 const formatUpdatedAt = (value?: string | null) => {
   if (!value) return "Unknown";
   const date = new Date(value);
@@ -66,6 +72,8 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
   const playerBActive = state.current === "B";
   const displayRunA = (Number(state.liveRunA ?? 0) || 0) > 0 ? Number(state.liveRunA ?? 0) || 0 : Number(state.runA ?? 0) || 0;
   const displayRunB = (Number(state.liveRunB ?? 0) || 0) > 0 ? Number(state.liveRunB ?? 0) || 0 : Number(state.runB ?? 0) || 0;
+  const targetPctA = formatTargetPercent(state.scoreA, state.targetPointsA);
+  const targetPctB = formatTargetPercent(state.scoreB, state.targetPointsB);
   const innings =
     state.inningsCount ??
     Math.max(state.inningsA || 0, state.inningsB || 0, 0);
@@ -114,6 +122,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
             <div className="text-right text-sm text-slate-600">
               <div>Run: {displayRunA}</div>
               <div>Best: {state.bestRunA ?? "--"}</div>
+              <div>Target: {targetPctA}</div>
             </div>
           </div>
         </div>
@@ -140,6 +149,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
             <div className="text-right text-sm text-slate-600">
               <div>Run: {displayRunB}</div>
               <div>Best: {state.bestRunB ?? "--"}</div>
+              <div>Target: {targetPctB}</div>
             </div>
           </div>
         </div>
