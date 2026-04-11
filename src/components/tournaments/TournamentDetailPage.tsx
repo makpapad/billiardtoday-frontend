@@ -2618,6 +2618,111 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     [],
   );
 
+  const buildHighlightItem = useCallback(
+    (session: {
+      id?: string | number | null;
+      sessionId?: string | null;
+      documentId?: string | null;
+      screenId?: string | null;
+      screenIdentifier?: string | null;
+      updatedAt?: string | null;
+      clubId?: string | number | null;
+      clubName?: string | null;
+      clubCity?: string | null;
+      clubFederationName?: string | null;
+      state?: Record<string, any> | null;
+    }): LiveScoreItem => {
+      const key = String(
+        session.sessionId ||
+          session.documentId ||
+          session.screenIdentifier ||
+          session.screenId ||
+          session.id ||
+          "",
+      ).trim();
+      const photoFallback = key
+        ? apiPhotoFallbackBySessionId.get(key) ?? null
+        : null;
+      const state = (session.state ?? {}) as Record<string, any>;
+
+      return {
+        id: session.id ?? key,
+        sessionId: String(session.sessionId ?? key),
+        screenId: session.screenId ?? undefined,
+        updatedAt: session.updatedAt ?? undefined,
+        clubId: session.clubId ?? undefined,
+        clubName: session.clubName ?? undefined,
+        clubCity: session.clubCity ?? undefined,
+        clubFederationName: session.clubFederationName ?? undefined,
+        state: {
+          ...state,
+          playerAPhotoUrl: resolveSessionMatchedPhotoValue(
+            state.playerAPhotoUrl,
+            photoFallback?.playerAPhotoUrl,
+            state.playerAName,
+            photoFallback?.playerAName,
+          ),
+          playerAPhotoMainUrl: resolveSessionMatchedPhotoValue(
+            state.playerAPhotoMainUrl,
+            photoFallback?.playerAPhotoMainUrl,
+            state.playerAName,
+            photoFallback?.playerAName,
+          ),
+          playerBPhotoUrl: resolveSessionMatchedPhotoValue(
+            state.playerBPhotoUrl,
+            photoFallback?.playerBPhotoUrl,
+            state.playerBName,
+            photoFallback?.playerBName,
+          ),
+          playerBPhotoMainUrl: resolveSessionMatchedPhotoValue(
+            state.playerBPhotoMainUrl,
+            photoFallback?.playerBPhotoMainUrl,
+            state.playerBName,
+            photoFallback?.playerBName,
+          ),
+        } as any,
+      };
+    },
+    [apiPhotoFallbackBySessionId, resolveSessionMatchedPhotoValue],
+  );
+
+  const getHighlightItemSignature = useCallback((item: LiveScoreItem | null) => {
+    if (!item) return null;
+    const state = (item.state ?? {}) as Record<string, any>;
+    return JSON.stringify({
+      sessionId: item.sessionId ?? null,
+      screenId: item.screenId ?? null,
+      updatedAt: item.updatedAt ?? null,
+      scoreA: state.scoreA ?? null,
+      scoreB: state.scoreB ?? null,
+      runA: state.runA ?? null,
+      runB: state.runB ?? null,
+      liveRunA: state.liveRunA ?? null,
+      liveRunB: state.liveRunB ?? null,
+      inningsA: state.inningsA ?? null,
+      inningsB: state.inningsB ?? null,
+      inningsCount: state.inningsCount ?? null,
+      current: state.current ?? null,
+      playerAPhotoUrl: state.playerAPhotoUrl ?? null,
+      playerAPhotoMainUrl: state.playerAPhotoMainUrl ?? null,
+      playerBPhotoUrl: state.playerBPhotoUrl ?? null,
+      playerBPhotoMainUrl: state.playerBPhotoMainUrl ?? null,
+      bestRunA: state.bestRunA ?? null,
+      bestRunB: state.bestRunB ?? null,
+      avgFormattedA: state.avgFormattedA ?? null,
+      avgFormattedB: state.avgFormattedB ?? null,
+      accPercentA: state.accPercentA ?? null,
+      accPercentB: state.accPercentB ?? null,
+      secondsPerInningA: state.secondsPerInningA ?? null,
+      secondsPerInningB: state.secondsPerInningB ?? null,
+      playerATimeSeconds: state.playerATimeSeconds ?? null,
+      playerBTimeSeconds: state.playerBTimeSeconds ?? null,
+      targetPointsA: state.targetPointsA ?? null,
+      targetPointsB: state.targetPointsB ?? null,
+      gameDurationSeconds: state.gameDurationSeconds ?? null,
+    });
+  }, []);
+
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
     if (!eventData?.data?.event_stages) return [];
 
@@ -3215,18 +3320,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         (x) => x.screenId && x.screenId === highlightItem.screenId,
       );
     if (!fresh) return;
-    setHighlightItem({
-      id: fresh.id,
-      sessionId: fresh.sessionId,
-      screenId: fresh.screenId ?? undefined,
-      updatedAt: fresh.updatedAt ?? undefined,
-      clubId: fresh.clubId ?? undefined,
-      clubName: fresh.clubName ?? undefined,
-      clubCity: fresh.clubCity ?? undefined,
-      clubFederationName: fresh.clubFederationName ?? undefined,
-      state: fresh.state as any,
-    });
-  }, [liveCards, highlightItem]);
+    const nextHighlightItem = buildHighlightItem(fresh as any);
+    if (
+      getHighlightItemSignature(highlightItem) ===
+      getHighlightItemSignature(nextHighlightItem)
+    ) {
+      return;
+    }
+    setHighlightItem(nextHighlightItem);
+  }, [buildHighlightItem, getHighlightItemSignature, liveCards, highlightItem]);
 
   const handleCardClick = (session: EventLiveSession) => {
     if (Date.now() - lastModalCloseAtRef.current < 250) return;
@@ -3234,17 +3336,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
     window.setTimeout(() => {
-      setHighlightItem({
-        id: session.id,
-        sessionId: session.sessionId,
-        screenId: session.screenId ?? undefined,
-        updatedAt: session.updatedAt ?? undefined,
-        clubId: session.clubId ?? undefined,
-        clubName: session.clubName ?? undefined,
-        clubCity: session.clubCity ?? undefined,
-        clubFederationName: session.clubFederationName ?? undefined,
-        state: session.state as any,
-      });
+      setHighlightItem(buildHighlightItem(session));
     }, 0);
   };
 

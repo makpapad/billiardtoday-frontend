@@ -275,18 +275,20 @@ export function LiveScoreBoardCard({
     const innerSize = compact ? "w-9 h-9" : "w-[52px] h-[52px]";
     const textSize = compact ? "text-xs" : "text-sm";
     return (
-      <div className={`${outerSize} rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden`}>
+      <div className={`${outerSize} rounded-full flex items-center justify-center`}>
         {src && !imageFailed ? (
           <img
             src={src}
             alt={resolveDisplayName(player) || fallback}
-            className={`${innerSize} rounded-full object-cover border border-white/40`}
+            className={`${innerSize} rounded-full object-cover ring-1 ring-white/20 shadow-[0_8px_18px_rgba(15,23,42,0.28)]`}
             loading="eager"
             referrerPolicy="no-referrer"
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <div className={`${innerSize} rounded-full bg-white/10 border border-white/40 flex items-center justify-center ${textSize} font-semibold`}>
+          <div
+            className={`${innerSize} ${textSize} rounded-full bg-white/10 ring-1 ring-white/20 shadow-[0_8px_18px_rgba(15,23,42,0.22)] flex items-center justify-center font-semibold`}
+          >
             {initials}
           </div>
         )}
@@ -417,13 +419,16 @@ export function LiveScoreBoardCard({
           {compact ? compactDisplayName(name, 16) : (name || "")}
         </div>
       </div>
-      {isActive ? (
-        <div className={`self-stretch rounded-md leading-none text-center bg-slate-900 text-white flex items-center justify-center ${compact ? "min-w-[26px] px-1" : "min-w-[32px] px-1.5"}`}>
-          <div className={`${compact ? "text-[17px]" : "text-[22px]"} font-black tabular-nums leading-none`}>
-            {run ?? 0}
-          </div>
+      <div
+        className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
+          compact ? "min-w-[26px] px-1" : "min-w-[32px] px-1.5"
+        } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
+        aria-hidden={!isActive}
+      >
+        <div className={`${compact ? "text-[17px]" : "text-[22px]"} font-black tabular-nums leading-none`}>
+          {run ?? 0}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 
