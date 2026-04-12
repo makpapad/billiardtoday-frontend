@@ -121,6 +121,48 @@ type GroupPopoverData = {
   matches: StageMatchGroup["matches"];
 };
 
+type HeroMenuButtonProps = {
+  label: string;
+  iconSrc: string;
+  active: boolean;
+  onClick: () => void;
+};
+
+function HeroMenuButton({
+  label,
+  iconSrc,
+  active,
+  onClick,
+}: HeroMenuButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={`group relative inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[78px] sm:w-[78px] ${
+        active
+          ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
+          : "border-white/15 bg-white/10 hover:bg-white/15"
+      }`}
+    >
+      <Image
+        src={iconSrc}
+        alt={label}
+        width={72}
+        height={72}
+        className={`h-[62px] w-[62px] object-contain transition duration-200 sm:h-[68px] sm:w-[68px] ${
+          active ? "scale-105" : "opacity-95 group-hover:scale-105"
+        }`}
+        unoptimized
+      />
+      <span className="pointer-events-none absolute -bottom-11 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(15,23,42,0.38)] group-hover:block group-focus-visible:block">
+        {label}
+      </span>
+    </button>
+  );
+}
+
 type InningDetailEntry = {
   inning: number;
   player1?: { pt: number; tot: number };
@@ -3917,71 +3959,42 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
+              <HeroMenuButton
+                label="Live"
+                iconSrc="/icons%20webp/live3.webp"
+                active={activeView === "live"}
                 onClick={switchToLive}
-                className={
-                  activeView === "live"
-                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-                }
-              >
-                Live
-              </button>
-              <button
-                type="button"
+              />
+              <HeroMenuButton
+                label="Tournament"
+                iconSrc="/icons%20webp/Tournament1.webp"
+                active={activeView === "tournament" && tournamentPanelMode === "stages"}
                 onClick={switchToTournament}
-                className={
-                  activeView === "tournament" &&
-                  tournamentPanelMode === "stages"
-                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-                }
-              >
-                Tournament
-              </button>
-              <button
-                type="button"
+              />
+              <HeroMenuButton
+                label="Time Table"
+                iconSrc="/icons%20webp/schedule1.webp"
+                active={activeView === "tournament" && tournamentPanelMode === "timetable"}
                 onClick={() => {
                   setTournamentPanelMode("timetable");
                   setActiveView("tournament");
                 }}
-                className={
-                  activeView === "tournament" &&
-                  tournamentPanelMode === "timetable"
-                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                }
-              >
-                Time table
-              </button>
-              <button
-                type="button"
+              />
+              <HeroMenuButton
+                label="Final standings"
+                iconSrc="/icons%20webp/finalrank1.webp"
+                active={activeView === "tournament" && tournamentPanelMode === "finals"}
                 onClick={openFinalStandings}
-                className={
-                  activeView === "tournament" &&
-                  tournamentPanelMode === "finals"
-                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                }
-              >
-                Final standings
-              </button>
-              <button
-                type="button"
+              />
+              <HeroMenuButton
+                label="Photo gallery"
+                iconSrc="/icons%20webp/photo%20gallery1.webp"
+                active={activeView === "tournament" && tournamentPanelMode === "gallery"}
                 onClick={() => {
                   setTournamentPanelMode("gallery");
                   setActiveView("tournament");
                 }}
-                className={
-                  activeView === "tournament" &&
-                  tournamentPanelMode === "gallery"
-                    ? "inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-                    : "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                }
-              >
-                Photo gallery
-              </button>
+              />
             </div>
           </div>
 
