@@ -168,14 +168,14 @@ export function LiveVideoDrawer({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-[110] bg-slate-950/55 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[110] bg-slate-950/75"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {launchOrigin ? (
         <div
-          className="pointer-events-none fixed z-[118] flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/60 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.25)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="pointer-events-none fixed z-[118] flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
             left: launchActive ? launchTargetLeft : launchOrigin.left,
             top: launchActive ? launchTargetTop : launchOrigin.top,
@@ -185,7 +185,11 @@ export function LiveVideoDrawer({
             opacity: launchActive ? 0 : 1,
           }}
         >
-          <img src={LIVE_ICON_SRC} alt="" className="h-8 w-8 object-contain" />
+          <img
+            src={LIVE_ICON_SRC}
+            alt=""
+            className="h-8 w-8 object-contain drop-shadow-[0_10px_22px_rgba(15,23,42,0.38)]"
+          />
         </div>
       ) : null}
 
@@ -390,4 +394,3 @@ export function LiveVideoDrawer({
 }
 
 export type { DrawerLaunchOrigin, LiveVideoDrawerSession };
-

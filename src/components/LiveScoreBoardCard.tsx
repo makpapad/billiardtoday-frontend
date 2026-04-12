@@ -470,14 +470,14 @@ export function LiveScoreBoardCard({
       <button
         type="button"
         onClick={handleOpenLiveVideos}
-        className={`inline-flex items-center justify-center rounded-full border border-cyan-200/55 bg-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.22)] transition hover:scale-[1.04] hover:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
+        className={`inline-flex items-center justify-center rounded-full border border-transparent bg-transparent shadow-none transition hover:scale-[1.04] focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
         aria-label="Open live videos"
         title="Open live videos"
       >
         <img
           src="/icons%20webp/live4.webp"
           alt=""
-          className={compact ? "h-6 w-6 object-contain" : "h-7 w-7 object-contain"}
+          className={compact ? "h-7 w-7 object-contain drop-shadow-[0_8px_18px_rgba(15,23,42,0.35)]" : "h-8 w-8 object-contain drop-shadow-[0_10px_22px_rgba(15,23,42,0.38)]"}
         />
       </button>
     );
@@ -613,11 +613,6 @@ export function LiveScoreBoardCard({
             onClick={(event) => event.stopPropagation()}
           >
             {topLeftControl}
-          </div>
-        ) : null}
-        {hasLiveVideos && onOpenLiveVideos ? (
-          <div className="absolute right-2 top-2 z-20">
-            <LiveVideoButton />
           </div>
         ) : null}
         <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
@@ -979,11 +974,6 @@ export function LiveScoreBoardCard({
             <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
             <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
           </div>
-          {hasLiveVideos && onOpenLiveVideos ? (
-            <div className="absolute right-2 top-2 z-20">
-              <LiveVideoButton />
-            </div>
-          ) : null}
           <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
             <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
             <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
