@@ -1,3 +1,5 @@
+import type { LiveVideoEntry } from "@/lib/liveVideos";
+
 export type LiveScoreState = {
   scoreA?: number;
   scoreB?: number;
@@ -48,12 +50,14 @@ export type LiveScoreState = {
   stageName?: string | null;
   groupName?: string | null;
   tableName?: string | null;
+  liveVideos?: LiveVideoEntry[];
 };
 
 export type LiveSessionItem = {
   id: string;
   sessionId: string;
   screenId?: string | null;
+  liveVideos?: LiveVideoEntry[];
   updatedAt?: string | null;
   clubId?: string | null;
   clubName?: string | null;

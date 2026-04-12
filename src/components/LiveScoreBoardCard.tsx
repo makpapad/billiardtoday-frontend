@@ -50,6 +50,11 @@ interface LiveScoreBoardCardProps {
   openSignal?: number | null;
   topLeftControl?: ReactNode;
   inlineExpandable?: boolean;
+  hasLiveVideos?: boolean;
+  onOpenLiveVideos?: (
+    sessionId: string,
+    origin?: { left: number; top: number; width: number; height: number } | null,
+  ) => void;
 }
 
 export function LiveScoreBoardCard({
@@ -72,6 +77,8 @@ export function LiveScoreBoardCard({
   openSignal,
   topLeftControl,
   inlineExpandable = true,
+  hasLiveVideos = false,
+  onOpenLiveVideos,
 }: LiveScoreBoardCardProps) {
   const isPlayer1Active = current === "A";
   const isPlayer2Active = current === "B";
@@ -127,6 +134,21 @@ export function LiveScoreBoardCard({
   const handleCollapse = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setExpanded(false);
+  };
+
+  const handleOpenLiveVideos = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!hasLiveVideos || !onOpenLiveVideos) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    onOpenLiveVideos(sessionId, {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    });
   };
 
   React.useEffect(() => {
@@ -436,6 +458,31 @@ export function LiveScoreBoardCard({
     </div>
   );
 
+  const LiveVideoButton = ({
+    compact = false,
+    className = "",
+  }: {
+    compact?: boolean;
+    className?: string;
+  }) => {
+    if (!hasLiveVideos || !onOpenLiveVideos) return null;
+    return (
+      <button
+        type="button"
+        onClick={handleOpenLiveVideos}
+        className={`inline-flex items-center justify-center rounded-full border border-cyan-200/55 bg-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.22)] transition hover:scale-[1.04] hover:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
+        aria-label="Open live videos"
+        title="Open live videos"
+      >
+        <img
+          src="/icons%20webp/live4.webp"
+          alt=""
+          className={compact ? "h-6 w-6 object-contain" : "h-7 w-7 object-contain"}
+        />
+      </button>
+    );
+  };
+
   const PointsBox = ({
     player,
     variant,
@@ -568,6 +615,11 @@ export function LiveScoreBoardCard({
             {topLeftControl}
           </div>
         ) : null}
+        {hasLiveVideos && onOpenLiveVideos ? (
+          <div className="absolute right-2 top-2 z-20">
+            <LiveVideoButton />
+          </div>
+        ) : null}
         <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
           <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
           <span className="flex min-w-[40px] items-center justify-center">{p1Flag}</span>
@@ -637,7 +689,9 @@ export function LiveScoreBoardCard({
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
             <div className="flex items-center justify-center">
-              {topLeftControl ? (
+              {hasLiveVideos && onOpenLiveVideos ? (
+                <LiveVideoButton compact />
+              ) : topLeftControl ? (
                 <div
                   className="flex items-center justify-center"
                   onMouseDown={(event) => event.stopPropagation()}
@@ -723,6 +777,9 @@ export function LiveScoreBoardCard({
           </div>
           <div className="row-start-4 row-end-5 flex items-center justify-center pl-3">
             <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+          </div>
+          <div className="row-start-3 row-end-4 flex items-center justify-center pl-3">
+            <LiveVideoButton />
           </div>
           <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
             <AvatarCircle player={player2} fallback="P2" />
@@ -922,6 +979,11 @@ export function LiveScoreBoardCard({
             <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
             <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
           </div>
+          {hasLiveVideos && onOpenLiveVideos ? (
+            <div className="absolute right-2 top-2 z-20">
+              <LiveVideoButton />
+            </div>
+          ) : null}
           <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
             <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
             <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
@@ -964,6 +1026,11 @@ export function LiveScoreBoardCard({
               {topLeftControl}
             </div>
           ) : null}
+          {hasLiveVideos && onOpenLiveVideos ? (
+            <div className="absolute right-12 top-2 z-20 hidden sm:block">
+              <LiveVideoButton />
+            </div>
+          ) : null}
 
       <div className="relative z-10 sm:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
@@ -989,7 +1056,9 @@ export function LiveScoreBoardCard({
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
           <div className="flex items-center justify-center">
-            {topLeftControl ? (
+            {hasLiveVideos && onOpenLiveVideos ? (
+              <LiveVideoButton compact />
+            ) : topLeftControl ? (
               <div
                 className="flex items-center justify-center"
                 onMouseDown={(event) => event.stopPropagation()}
@@ -1075,6 +1144,9 @@ export function LiveScoreBoardCard({
         </div>
         <div className="row-start-4 row-end-5 flex items-center justify-center pl-3">
           <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
+        </div>
+        <div className="row-start-3 row-end-4 flex items-center justify-center pl-3">
+          <LiveVideoButton />
         </div>
         <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
           <AvatarCircle player={player2} fallback="P2" />

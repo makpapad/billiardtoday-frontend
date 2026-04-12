@@ -8,6 +8,11 @@ import {
   LiveStatsHighlightModal,
   type LiveScoreItem,
 } from "@/components/live/LiveClubView";
+import {
+  LiveVideoDrawer,
+  type DrawerLaunchOrigin,
+  type LiveVideoDrawerSession,
+} from "@/components/live/LiveVideoDrawer";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { TournamentEventSummary } from "@/lib/tournaments";
@@ -36,6 +41,7 @@ import {
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
+import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -84,6 +90,7 @@ type WsTournamentPayload = {
   matchSheetJson?: unknown;
   sheet?: unknown;
   inningsDetail?: unknown;
+  liveVideos?: unknown;
   ts?: number;
   session?: Record<string, any>;
   players?: Array<{
@@ -670,12 +677,18 @@ const mergeLiveSessions = (
     merged.set(key, {
       ...existing,
       ...session,
+      liveVideos: normalizeLiveVideoEntries(
+        session.liveVideos ?? session.state?.liveVideos ?? existing.liveVideos ?? existing.state?.liveVideos,
+      ),
       sessionStatus: preserveRunningState
         ? existing.sessionStatus
         : session.sessionStatus,
       state: {
         ...existing.state,
         ...session.state,
+        liveVideos: normalizeLiveVideoEntries(
+          session.state?.liveVideos ?? session.liveVideos ?? existing.state?.liveVideos ?? existing.liveVideos,
+        ),
         playerAPhotoUrl: preferText(
           session.state?.playerAPhotoUrl,
           shouldReusePlayerPhoto(nextPlayerAName, existingPlayerAName)
@@ -1084,6 +1097,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
     null,
   );
+  const [videoDrawerOpen, setVideoDrawerOpen] = useState(false);
+  const [videoDrawerSessionId, setVideoDrawerSessionId] = useState<string | null>(null);
+  const [videoDrawerVideoId, setVideoDrawerVideoId] = useState<string | null>(null);
+  const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
+    useState<DrawerLaunchOrigin | null>(null);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
@@ -1475,6 +1493,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
               lifecycleSessionId || lifecycleScreenId || "unknown-session",
             screenId: lifecycleScreenId || null,
             screenIdentifier: lifecycleScreenId || null,
+            liveVideos: normalizeLiveVideoEntries(
+              sessionObj.liveVideos ??
+                sessionObj.live_videos ??
+                sessionObj.youtubeVideoId ??
+                sessionObj.videoId,
+            ),
             updatedAt: new Date().toISOString(),
             clubId: derivedClubDocumentId,
             eventId:
@@ -1878,6 +1902,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       lifecycleScreenId ||
                       baseSession?.screenIdentifier ||
                       screenId,
+                    liveVideos: normalizeLiveVideoEntries(
+                      sessionObj.liveVideos ??
+                        sessionObj.live_videos ??
+                        sessionObj.youtubeVideoId ??
+                        sessionObj.videoId ??
+                        baseSession?.liveVideos ??
+                        baseSession?.state?.liveVideos,
+                    ),
                     updatedAt: new Date().toISOString(),
                     clubId: baseSession?.clubId ?? derivedClubDocumentId ?? null,
                     clubName: baseSession?.clubName ?? null,
@@ -2269,6 +2301,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   screenId,
                   screenIdentifier:
                     baseSession?.screenIdentifier || screenId,
+                  liveVideos: normalizeLiveVideoEntries(
+                    payload.session?.liveVideos ??
+                      payload.session?.live_videos ??
+                      payload.session?.youtubeVideoId ??
+                      payload.session?.videoId ??
+                      baseSession?.liveVideos ??
+                      baseSession?.state?.liveVideos,
+                  ),
                   updatedAt:
                     typeof payload.ts === "number" &&
                     Number.isFinite(payload.ts)
@@ -3221,6 +3261,49 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       ),
     [mergedEventLiveSessions],
   );
+  const tournamentVideoSessions = useMemo<LiveVideoDrawerSession[]>(
+    () =>
+      liveCards.reduce<LiveVideoDrawerSession[]>((acc, session) => {
+        const liveVideos = normalizeLiveVideoEntries(
+          session.liveVideos ?? session.state?.liveVideos,
+        );
+        if (liveVideos.length === 0) return acc;
+        acc.push({
+          sessionId: session.sessionId,
+          screenId: session.screenId ?? session.screenIdentifier ?? null,
+          title:
+            session.state?.tournamentName?.trim() ||
+            summary.title ||
+            "Live match",
+          subtitle:
+            [session.state?.stageName, session.state?.groupName, session.state?.tableName]
+              .filter(Boolean)
+              .join(" • ") || null,
+          playerAName: session.state?.playerAName ?? session.player1Name ?? null,
+          playerBName: session.state?.playerBName ?? session.player2Name ?? null,
+          liveVideos,
+        });
+        return acc;
+      }, []),
+    [liveCards, summary.title],
+  );
+
+  const handleOpenLiveVideos = useCallback(
+    (
+      session: EventLiveSession,
+      origin?: { left: number; top: number; width: number; height: number } | null,
+    ) => {
+      const liveVideos = normalizeLiveVideoEntries(
+        session.liveVideos ?? session.state?.liveVideos,
+      );
+      if (liveVideos.length === 0) return;
+      setVideoDrawerSessionId(session.sessionId);
+      setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+      setVideoDrawerLaunchOrigin(origin ?? null);
+      setVideoDrawerOpen(true);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (activeView !== "live") return;
@@ -3889,6 +3972,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                       }}
                       current={state.current}
                       onNavigate={() => handleCardClick(session)}
+                      hasLiveVideos={
+                        normalizeLiveVideoEntries(
+                          session.liveVideos ?? state.liveVideos,
+                        ).length > 0
+                      }
+                      onOpenLiveVideos={(_sessionId, origin) =>
+                        handleOpenLiveVideos(session, origin)
+                      }
                       topLeftControl={
                         expandedLiveSessionId === session.sessionId ? (
                           <button
@@ -3918,6 +4009,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         <LiveStatsHighlightModal
           item={highlightItem}
           onClose={handleHighlightClose}
+        />
+        <LiveVideoDrawer
+          open={videoDrawerOpen}
+          sessions={tournamentVideoSessions}
+          initialSessionId={videoDrawerSessionId}
+          initialVideoId={videoDrawerVideoId}
+          launchOrigin={videoDrawerLaunchOrigin}
+          heading={summary.title || "Tournament live videos"}
+          onClose={() => {
+            setVideoDrawerOpen(false);
+            setVideoDrawerLaunchOrigin(null);
+          }}
         />
       </section>
     );

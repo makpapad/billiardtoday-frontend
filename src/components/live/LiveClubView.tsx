@@ -6,6 +6,15 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { buildLiveScoreChartRows, LiveSheetScoreChart } from "@/components/live/LiveSheetScoreChart";
+import {
+  LiveVideoDrawer,
+  type DrawerLaunchOrigin,
+  type LiveVideoDrawerSession,
+} from "@/components/live/LiveVideoDrawer";
+import {
+  normalizeLiveVideoEntries,
+  type LiveVideoEntry,
+} from "@/lib/liveVideos";
 const STALE_TTL_MS = 60 * 60 * 1000; // 60 minutes
 const LiveScoreBoardCard = dynamic(() => import('@/components/LiveScoreBoardCard').then(mod => mod.LiveScoreBoardCard), { ssr: false });
 
@@ -86,6 +95,7 @@ type LiveScoreState = {
   matchSheet?: unknown;
   matchSheetJson?: unknown;
   sheet?: unknown;
+  liveVideos?: LiveVideoEntry[];
 };
 
 type SessionMeta = {
@@ -343,6 +353,7 @@ export type LiveScoreItem = {
   id: string | number;
   sessionId: string;
   screenId?: string;
+  liveVideos?: LiveVideoEntry[];
   state: LiveScoreState;
   updatedAt?: string;
   clubId?: string | number | null;
@@ -405,6 +416,7 @@ type LiveScorePayload = {
   matchSheet?: unknown;
   matchSheetJson?: unknown;
   sheet?: unknown;
+  liveVideos?: unknown;
 };
 
 const isPlaceholderPlayerName = (value?: string | null) => {
@@ -500,6 +512,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const [items, setItems] = useState<LiveScoreItem[]>([]);
   const [expandedSessions, setExpandedSessions] = React.useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
+  const [videoDrawerOpen, setVideoDrawerOpen] = React.useState(false);
+  const [videoDrawerSessionId, setVideoDrawerSessionId] = React.useState<string | null>(null);
+  const [videoDrawerVideoId, setVideoDrawerVideoId] = React.useState<string | null>(null);
+  const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
+    React.useState<DrawerLaunchOrigin | null>(null);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -823,6 +840,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
             players[1]?.photoMainUrl ??
             players[1]?.photo_main ??
             null,
+          liveVideos: normalizeLiveVideoEntries(
+            session.liveVideos ??
+              session.live_videos ??
+              session.youtubeVideoId ??
+              session.videoId,
+          ),
           progress: session.progress ?? 0,
           totalBlocks: session.totalBlocks ?? 40,
           isRunning: Boolean(session.isRunning),
@@ -891,11 +914,15 @@ export function LiveClubView({ club, embedded = false }: Props) {
         const clubName = session.clubName ?? session.club?.name ?? null;
         const clubCity = session.clubCity ?? session.club?.city ?? null;
         const clubFederationName = session.clubFederationName ?? session.club?.federation?.name ?? null;
+        const liveVideos = normalizeLiveVideoEntries(
+          session.liveVideos ?? state.liveVideos,
+        );
         
         return {
           id: session.id || session.documentId,
           sessionId: session.id || session.documentId,
           screenId: session.screenId ?? session.screenIdentifier ?? null,
+          liveVideos,
           state,
           updatedAt: new Date().toISOString(),
           clubId,
@@ -1062,10 +1089,17 @@ export function LiveClubView({ club, embedded = false }: Props) {
           }
 
           const meta = mergeSessionMeta(sessionObj, sessionObj.metadata, sessionObj.meta);
+          const liveVideos = normalizeLiveVideoEntries(
+            sessionObj.liveVideos ??
+              sessionObj.live_videos ??
+              sessionObj.youtubeVideoId ??
+              sessionObj.videoId,
+          );
           const item: LiveScoreItem = {
             id: lifecycleSessionId,
             sessionId: lifecycleSessionId,
             screenId: lifecycleScreenId,
+            liveVideos,
             updatedAt: new Date().toISOString(),
             clubId: sessionObj.clubId ?? payload.clubId ?? null,
             clubName: sessionObj.clubName ?? club.name ?? null,
@@ -1097,6 +1131,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
               stageName: meta.stageName ?? sessionObj.stageTitle ?? null,
               groupName: meta.groupName ?? sessionObj.groupLabel ?? null,
               tableName: meta.tableName ?? sessionObj.tableNumber ?? null,
+              liveVideos,
               playerACountry: sessionObj.player1Country ?? null,
               playerBCountry: sessionObj.player2Country ?? null,
               playerAPhotoUrl: sessionObj.player1PhotoUrl ?? null,
@@ -1289,6 +1324,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
               (payload.players as any)?.[1]?.photoMainUrl ??
               (payload.players as any)?.[1]?.photo_main ??
               null,
+            liveVideos: normalizeLiveVideoEntries(
+              payload.liveVideos ??
+                payload.session?.liveVideos ??
+                payload.session?.live_videos ??
+                payload.session?.youtubeVideoId ??
+                payload.session?.videoId,
+            ),
             progress: payload.progress,
             totalBlocks: payload.totalBlocks,
             isRunning: payload.isRunning,
@@ -1364,6 +1406,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
             id: payload.sessionId?.toString() || payload.screenId,
             sessionId: payload.sessionId?.toString() || payload.screenId,
             screenId: payload.screenId,
+            liveVideos: normalizeLiveVideoEntries(
+              payload.liveVideos ??
+                payload.session?.liveVideos ??
+                payload.session?.live_videos ??
+                payload.session?.youtubeVideoId ??
+                payload.session?.videoId,
+            ),
             state,
             updatedAt: new Date().toISOString(),
             clubId: payload.clubId,
@@ -1467,6 +1516,44 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const label = typeof raw === "string" && raw.trim() ? raw.trim() : "Unknown Tournament";
           return label === selectedTournament;
         });
+
+  const videoDrawerSessions = React.useMemo<LiveVideoDrawerSession[]>(() => {
+    return filteredItems.reduce<LiveVideoDrawerSession[]>((acc, item) => {
+      const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
+      if (liveVideos.length === 0) return acc;
+      acc.push({
+        sessionId: item.sessionId,
+        screenId: item.screenId ?? null,
+        title:
+          item.state?.tournamentName?.trim() ||
+          item.clubName ||
+          "Live match",
+        subtitle:
+          [item.state?.stageName, item.state?.groupName, item.state?.tableName]
+            .filter(Boolean)
+            .join(" • ") || null,
+        playerAName: item.state?.playerAName ?? null,
+        playerBName: item.state?.playerBName ?? null,
+        liveVideos,
+      });
+      return acc;
+    }, []);
+  }, [filteredItems]);
+
+  const handleOpenLiveVideos = React.useCallback(
+    (
+      item: LiveScoreItem,
+      origin?: { left: number; top: number; width: number; height: number } | null,
+    ) => {
+      const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
+      if (liveVideos.length === 0) return;
+      setVideoDrawerSessionId(item.sessionId);
+      setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+      setVideoDrawerLaunchOrigin(origin ?? null);
+      setVideoDrawerOpen(true);
+    },
+    [],
+  );
 
   React.useEffect(() => {
     setExpandedSessions((prev) => {
@@ -1607,6 +1694,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
                   }}
                   current={st.current}
                   onNavigate={() => handleCardClick(s)}
+                  hasLiveVideos={
+                    normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
+                  }
+                  onOpenLiveVideos={(_sessionId, origin) =>
+                    handleOpenLiveVideos(s, origin)
+                  }
                   expanded={expandedSessions.has(s.sessionId)}
                   onExpandedChange={handleExpandedChange}
                 />
@@ -1616,6 +1709,18 @@ export function LiveClubView({ club, embedded = false }: Props) {
         )}
       </div>
       <LiveStatsHighlightModal item={highlightItem} onClose={() => setHighlightItem(null)} />
+      <LiveVideoDrawer
+        open={videoDrawerOpen}
+        sessions={videoDrawerSessions}
+        initialSessionId={videoDrawerSessionId}
+        initialVideoId={videoDrawerVideoId}
+        launchOrigin={videoDrawerLaunchOrigin}
+        heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
+        onClose={() => {
+          setVideoDrawerOpen(false);
+          setVideoDrawerLaunchOrigin(null);
+        }}
+      />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { API_URL } from "@/lib/api";
+import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 
 type UnknownRecord = Record<string, any>;
 
@@ -303,6 +304,9 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
     id: sessionId,
     sessionId,
     screenId: attrs?.screenIdentifier ?? null,
+    liveVideos: normalizeLiveVideoEntries(
+      attrs?.liveVideos ?? attrs?.live_videos ?? attrs?.youtubeVideoId ?? attrs?.videoId,
+    ),
     updatedAt: attrs?.updatedAt ?? row?.updatedAt ?? null,
     clubId: club?.documentId ?? club?.id ?? attrs?.clubId ?? null,
     clubName: club?.name ?? attrs?.clubName ?? null,
@@ -378,6 +382,9 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       stageName: attrs?.stageName ?? attrs?.stageTitle ?? null,
       groupName: attrs?.groupName ?? attrs?.groupLabel ?? null,
       tableName: attrs?.tableName ?? attrs?.tableNumber ?? null,
+      liveVideos: normalizeLiveVideoEntries(
+        attrs?.liveVideos ?? attrs?.live_videos ?? attrs?.youtubeVideoId ?? attrs?.videoId,
+      ),
     },
   };
 }
