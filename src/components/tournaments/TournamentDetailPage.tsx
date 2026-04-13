@@ -3860,15 +3860,14 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         />
       )
     ) : (
-      <section
-        ref={liveContentRef}
-        className={`space-y-6 ${
-          videoDrawerOpen
-            ? "xl:relative xl:left-1/2 xl:w-[min(1680px,calc(100vw-48px))] xl:-translate-x-1/2"
-            : ""
-        }`}
-      >
-        <div className={`flex flex-col gap-6 ${videoDrawerOpen ? "xl:flex-row xl:items-start" : ""}`}>
+      <section ref={liveContentRef} className="space-y-6">
+        <div
+          className={`flex flex-col gap-6 ${
+            videoDrawerOpen
+              ? "xl:ml-[calc(50%-50vw+24px)] xl:grid xl:w-[calc(100vw-48px)] xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start"
+              : ""
+          }`}
+        >
           <div className="min-w-0 flex-1">
         {isLiveLoading && liveCards.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">

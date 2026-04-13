@@ -1579,13 +1579,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     <main
       className={`bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] px-4 ${embedded ? "py-4 sm:px-6 sm:py-5" : "py-8 sm:px-8 min-h-screen"}`}
     >
-      <div
-        className={`mx-auto w-full ${
-          videoDrawerOpen
-            ? "max-w-[min(1680px,calc(100vw-48px))]"
-            : "max-w-6xl"
-        }`}
-      >
+      <div className="max-w-6xl mx-auto">
         {embedded ? (
           <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
@@ -1642,7 +1636,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
           </header>
         )}
 
-        <div className={`flex flex-col gap-6 ${videoDrawerOpen ? "xl:flex-row xl:items-start" : ""}`}>
+        <div
+          className={`flex flex-col gap-6 ${
+            videoDrawerOpen
+              ? "xl:ml-[calc(50%-50vw+24px)] xl:grid xl:w-[calc(100vw-48px)] xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start"
+              : ""
+          }`}
+        >
           <div className="min-w-0 flex-1">
             {filteredItems.length === 0 ? (
               <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-white/70">
