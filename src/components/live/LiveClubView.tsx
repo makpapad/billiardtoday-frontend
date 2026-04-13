@@ -1487,9 +1487,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
   }
 
   const handleCardClick = (item: LiveScoreItem) => {
-    const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
-    setVideoDrawerSessionId(item.sessionId);
-    setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+    if (isWideDesktop) {
+      const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
+      setVideoDrawerSessionId(item.sessionId);
+      setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+    }
     setHighlightItem(item);
   };
 
@@ -1769,6 +1771,25 @@ export function LiveClubView({ club, embedded = false }: Props) {
             </div>
           ) : null}
         </div>
+        {videoDrawerSessionId ? (
+          <div className="mt-6 xl:hidden">
+            <LiveVideoDrawer
+              open
+              sessions={videoDrawerSessions}
+              initialSessionId={videoDrawerSessionId}
+              initialVideoId={videoDrawerVideoId}
+              launchOrigin={videoDrawerLaunchOrigin}
+              heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
+              onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
+              onClose={() => {
+                setVideoDrawerSessionId(null);
+                setVideoDrawerVideoId(null);
+                setVideoDrawerLaunchOrigin(null);
+                setVideoDrawerSelectedSessionIds([]);
+              }}
+            />
+          </div>
+        ) : null}
       </div>
       <LiveStatsHighlightModal item={highlightItem} onClose={() => setHighlightItem(null)} />
     </main>

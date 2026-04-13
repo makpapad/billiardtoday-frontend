@@ -3492,11 +3492,13 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     lastClosedHighlightRef.current = null;
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
-    const liveVideos = normalizeLiveVideoEntries(
-      session.liveVideos ?? session.state?.liveVideos,
-    );
-    setVideoDrawerSessionId(session.sessionId);
-    setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+    if (isWideDesktop) {
+      const liveVideos = normalizeLiveVideoEntries(
+        session.liveVideos ?? session.state?.liveVideos,
+      );
+      setVideoDrawerSessionId(session.sessionId);
+      setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
+    }
     window.setTimeout(() => {
       setHighlightItem(buildHighlightItem(session));
     }, 0);
@@ -4086,6 +4088,25 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             </div>
           ) : null}
         </div>
+        {videoDrawerSessionId ? (
+          <div className="mt-6 xl:hidden">
+            <LiveVideoDrawer
+              open
+              sessions={tournamentVideoSessions}
+              initialSessionId={videoDrawerSessionId}
+              initialVideoId={videoDrawerVideoId}
+              launchOrigin={videoDrawerLaunchOrigin}
+              heading={summary.title || "Tournament live videos"}
+              onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
+              onClose={() => {
+                setVideoDrawerSessionId(null);
+                setVideoDrawerVideoId(null);
+                setVideoDrawerLaunchOrigin(null);
+                setVideoDrawerSelectedSessionIds([]);
+              }}
+            />
+          </div>
+        ) : null}
         <LiveStatsHighlightModal
           item={highlightItem}
           onClose={handleHighlightClose}
