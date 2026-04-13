@@ -1105,6 +1105,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [isWideDesktop, setIsWideDesktop] = useState(false);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const mobileVideoDrawerRef = useRef<HTMLDivElement | null>(null);
+  const skipNextLiveTopScrollRef = useRef(false);
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -3348,6 +3349,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       setVideoDrawerSessionId(session.sessionId);
       setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
       setVideoDrawerLaunchOrigin(origin ?? null);
+      skipNextLiveTopScrollRef.current = true;
       scrollMobileVideoDrawerIntoView();
     },
     [scrollMobileVideoDrawerIntoView],
@@ -3358,6 +3360,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (highlightedLiveSessionId) return;
     if (typeof window === "undefined") return;
     if (window.innerWidth >= 768) return;
+    if (skipNextLiveTopScrollRef.current) {
+      skipNextLiveTopScrollRef.current = false;
+      return;
+    }
 
     const scrollToLiveTop = () => {
       liveContentRef.current?.scrollIntoView({
