@@ -665,7 +665,7 @@ export function LiveScoreBoardCard({
         role="button"
         tabIndex={0}
         className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 md:p-2 text-white shadow-2xl hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer"
-        style={{ minHeight: "180px" }}
+        style={{ minHeight: compactExpandedLayout ? "138px" : "180px" }}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <span className="live-bg-orb-a absolute -left-[22%] -top-[70%] h-[220%] w-[48%] rounded-full bg-cyan-300/20 blur-3xl" />
@@ -1037,7 +1037,7 @@ export function LiveScoreBoardCard({
           className={`relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 md:p-2 text-white shadow-2xl transition-all duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer ${
             isExpanded ? "scale-100 opacity-100" : "scale-[0.975] opacity-0"
           }`}
-          style={{ minHeight: "180px" }}
+          style={{ minHeight: compactExpandedLayout ? "138px" : "180px" }}
         >
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <span className="live-bg-orb-a absolute -left-[22%] -top-[70%] h-[220%] w-[48%] rounded-full bg-cyan-300/20 blur-3xl" />
