@@ -1572,6 +1572,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
   }, [filteredItems]);
 
   const videoDrawerOpen = filteredItems.length > 0;
+  const mobileVideoDrawerSessionId =
+    videoDrawerSessionId ?? videoDrawerSessions[0]?.sessionId ?? null;
+  const mobileVideoDrawerVideoId =
+    videoDrawerVideoId ??
+    videoDrawerSessions.find((session) => session.sessionId === mobileVideoDrawerSessionId)?.liveVideos[0]
+      ?.videoId ??
+    null;
   const videoDrawerShellStyle = videoDrawerOpen
     ? ({
         width: "min(1680px, calc(100vw - 48px))",
@@ -1771,22 +1778,17 @@ export function LiveClubView({ club, embedded = false }: Props) {
             </div>
           ) : null}
         </div>
-        {videoDrawerSessionId ? (
+        {mobileVideoDrawerSessionId ? (
           <div className="mt-6 xl:hidden">
             <LiveVideoDrawer
               open
               sessions={videoDrawerSessions}
-              initialSessionId={videoDrawerSessionId}
-              initialVideoId={videoDrawerVideoId}
+              initialSessionId={mobileVideoDrawerSessionId}
+              initialVideoId={mobileVideoDrawerVideoId}
               launchOrigin={videoDrawerLaunchOrigin}
               heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
               onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
-              onClose={() => {
-                setVideoDrawerSessionId(null);
-                setVideoDrawerVideoId(null);
-                setVideoDrawerLaunchOrigin(null);
-                setVideoDrawerSelectedSessionIds([]);
-              }}
+              onClose={() => undefined}
             />
           </div>
         ) : null}
