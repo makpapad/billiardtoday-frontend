@@ -413,8 +413,7 @@ export function LiveVideoDrawer({
             <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
               Live video
             </div>
-            <h2 className="mt-2 text-lg font-semibold leading-tight text-white truncate">{heading}</h2>
-            <p className="mt-1 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-slate-300">
               Select up to {MAX_SELECTED_SESSIONS} live matches and launch a
               multiple view wall.
             </p>
