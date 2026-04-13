@@ -156,7 +156,7 @@ function HeroMenuButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`group relative inline-flex h-[64px] w-[64px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[70px] sm:w-[70px] ${
+      className={`group relative inline-flex h-[60px] w-[60px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[66px] sm:w-[66px] ${
         active
           ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
           : "border-white/15 bg-white/10 hover:bg-white/15"
@@ -165,9 +165,9 @@ function HeroMenuButton({
       <Image
         src={iconSrc}
         alt={label}
-        width={64}
-        height={64}
-        className={`h-[54px] w-[54px] object-contain transition duration-200 sm:h-[60px] sm:w-[60px] ${
+        width={60}
+        height={60}
+        className={`h-[48px] w-[48px] object-contain transition duration-200 sm:h-[54px] sm:w-[54px] ${
           active ? "scale-105" : "opacity-95 group-hover:scale-105"
         }`}
         unoptimized
@@ -4400,8 +4400,8 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                 </p>
               </div>
             </div>
-            <div className="flex w-full overflow-x-auto pb-1">
-              <div className="flex min-w-max flex-nowrap items-center gap-3">
+            <div className="flex w-full overflow-visible pb-1">
+              <div className="flex flex-nowrap items-center gap-2 sm:gap-3">
                 <HeroMenuButton
                   label="Live"
                   iconSrc="/icons%20webp/live3.webp"
