@@ -91,6 +91,7 @@ type VideoTileProps = {
   video: LiveVideoEntry | null;
   muted?: boolean;
   compact?: boolean;
+  fillHeight?: boolean;
   onSelectVideo?: (videoId: string) => void;
 };
 
@@ -99,10 +100,15 @@ function VideoTile({
   video,
   muted = false,
   compact = false,
+  fillHeight = false,
   onSelectVideo,
 }: VideoTileProps) {
   return (
-    <div className="overflow-hidden rounded-[24px] border border-cyan-300/20 bg-slate-950/80 shadow-[0_18px_50px_rgba(8,47,73,0.28)]">
+    <div
+      className={`overflow-hidden rounded-[24px] border border-cyan-300/20 bg-slate-950/80 shadow-[0_18px_50px_rgba(8,47,73,0.28)] ${
+        fillHeight ? "flex h-full min-h-0 flex-col" : ""
+      }`}
+    >
       <div className="border-b border-white/10 px-4 py-3">
         <div className="truncate text-sm font-semibold text-white">{session.title}</div>
         <div className="mt-1 truncate text-xs text-slate-300">
@@ -111,7 +117,7 @@ function VideoTile({
       </div>
 
       {video ? (
-        <div className="aspect-video bg-black">
+        <div className={fillHeight ? "min-h-0 flex-1 bg-black" : "aspect-video bg-black"}>
           <iframe
             src={embedUrlForVideo(video.videoId, { muted })}
             title={video.title || session.title || "Live video"}
@@ -163,6 +169,12 @@ type VideoWallProps = {
 };
 
 function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps) {
+  const visibleSessions = sessions.slice(0, MAX_SELECTED_SESSIONS);
+  const gridClass =
+    visibleSessions.length >= 3
+      ? "grid-cols-1 xl:grid-cols-2"
+      : "grid-cols-1";
+
   return createPortal(
     <div className="fixed inset-0 z-[140] bg-black/95 px-4 py-4 sm:px-6 sm:py-6">
       <div className="flex h-full flex-col">
@@ -185,14 +197,15 @@ function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps
         </div>
 
         <div className="min-h-0 flex-1">
-          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2">
-            {sessions.slice(0, MAX_SELECTED_SESSIONS).map((session) => (
+          <div className={`grid h-full auto-rows-fr gap-4 ${gridClass}`}>
+            {visibleSessions.map((session) => (
               <VideoTile
                 key={`wall-${session.sessionId}`}
                 session={session}
                 video={resolveVideoForSession(session)}
                 muted
                 compact
+                fillHeight
               />
             ))}
           </div>
