@@ -1102,6 +1102,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [videoDrawerVideoId, setVideoDrawerVideoId] = useState<string | null>(null);
   const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
     useState<DrawerLaunchOrigin | null>(null);
+  const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = useState<string[]>([]);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
@@ -4009,6 +4010,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           session.liveVideos ?? state.liveVideos,
                         ).length > 0
                       }
+                      liveVideosSelected={videoDrawerSelectedSessionIds.includes(session.sessionId)}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
                       }
@@ -4048,9 +4050,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 initialVideoId={videoDrawerVideoId}
                 launchOrigin={videoDrawerLaunchOrigin}
                 heading={summary.title || "Tournament live videos"}
+                onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
                 onClose={() => {
                   setVideoDrawerOpen(false);
                   setVideoDrawerLaunchOrigin(null);
+                  setVideoDrawerSelectedSessionIds([]);
                 }}
               />
             </div>

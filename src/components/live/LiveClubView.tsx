@@ -517,6 +517,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const [videoDrawerVideoId, setVideoDrawerVideoId] = React.useState<string | null>(null);
   const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
     React.useState<DrawerLaunchOrigin | null>(null);
+  const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = React.useState<string[]>([]);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -1713,6 +1714,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                       hasLiveVideos={
                         normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
                       }
+                      liveVideosSelected={videoDrawerSelectedSessionIds.includes(s.sessionId)}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(s, origin)
                       }
@@ -1733,9 +1735,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 initialVideoId={videoDrawerVideoId}
                 launchOrigin={videoDrawerLaunchOrigin}
                 heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
+                onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
                 onClose={() => {
                   setVideoDrawerOpen(false);
                   setVideoDrawerLaunchOrigin(null);
+                  setVideoDrawerSelectedSessionIds([]);
                 }}
               />
             </div>

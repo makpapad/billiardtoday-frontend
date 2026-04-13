@@ -51,6 +51,7 @@ interface LiveScoreBoardCardProps {
   topLeftControl?: ReactNode;
   inlineExpandable?: boolean;
   hasLiveVideos?: boolean;
+  liveVideosSelected?: boolean;
   onOpenLiveVideos?: (
     sessionId: string,
     origin?: { left: number; top: number; width: number; height: number } | null,
@@ -78,6 +79,7 @@ export function LiveScoreBoardCard({
   topLeftControl,
   inlineExpandable = true,
   hasLiveVideos = false,
+  liveVideosSelected = false,
   onOpenLiveVideos,
 }: LiveScoreBoardCardProps) {
   const isPlayer1Active = current === "A";
@@ -470,14 +472,18 @@ export function LiveScoreBoardCard({
       <button
         type="button"
         onClick={handleOpenLiveVideos}
-        className={`inline-flex items-center justify-center rounded-full border border-transparent bg-transparent shadow-none transition hover:scale-[1.04] focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
+        className={`inline-flex items-center justify-center rounded-full border shadow-none transition hover:scale-[1.04] focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${
+          liveVideosSelected
+            ? "border-cyan-200/70 bg-cyan-300/18 shadow-[0_10px_28px_rgba(34,211,238,0.3)]"
+            : "border-transparent bg-transparent"
+        } ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
         aria-label="Open live videos"
         title="Open live videos"
       >
         <img
           src="/icons%20webp/live4.webp"
           alt=""
-          className={compact ? "h-7 w-7 object-contain drop-shadow-[0_8px_18px_rgba(15,23,42,0.35)]" : "h-8 w-8 object-contain drop-shadow-[0_10px_22px_rgba(15,23,42,0.38)]"}
+          className={compact ? `h-7 w-7 object-contain ${liveVideosSelected ? "drop-shadow-[0_8px_22px_rgba(34,211,238,0.45)]" : "drop-shadow-[0_8px_18px_rgba(15,23,42,0.35)]"}` : `h-8 w-8 object-contain ${liveVideosSelected ? "drop-shadow-[0_10px_26px_rgba(34,211,238,0.48)]" : "drop-shadow-[0_10px_22px_rgba(15,23,42,0.38)]"}`}
         />
       </button>
     );

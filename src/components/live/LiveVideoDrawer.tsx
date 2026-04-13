@@ -28,6 +28,7 @@ type LiveVideoDrawerProps = {
   initialVideoId?: string | null;
   launchOrigin?: DrawerLaunchOrigin | null;
   heading?: string;
+  onSelectedSessionsChange?: (sessionIds: string[]) => void;
   onClose: () => void;
 };
 
@@ -257,6 +258,7 @@ export function LiveVideoDrawer({
   initialSessionId,
   initialVideoId,
   heading = "Live videos",
+  onSelectedSessionsChange,
   onClose,
 }: LiveVideoDrawerProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -372,42 +374,6 @@ export function LiveVideoDrawer({
   const selectedCount = selectedSessions.length;
   const panelWidthClass = "w-full xl:w-[420px]";
 
-  const replaceWithSession = React.useCallback((session: LiveVideoDrawerSession) => {
-    const nextVideo = resolveInitialVideo(session, null);
-    setFocusedSessionId(session.sessionId);
-    setSelectedSessionIds([session.sessionId]);
-    if (nextVideo) {
-      setSelectedVideoBySession((prev) => ({
-        ...prev,
-        [session.sessionId]: prev[session.sessionId] ?? nextVideo.videoId,
-      }));
-    }
-  }, []);
-
-  const addSession = React.useCallback((session: LiveVideoDrawerSession) => {
-    const nextVideo = resolveInitialVideo(session, null);
-    setFocusedSessionId(session.sessionId);
-    setSelectedSessionIds((prev) => {
-      if (prev.includes(session.sessionId)) return prev;
-      if (prev.length >= MAX_SELECTED_SESSIONS) return prev;
-      return [...prev, session.sessionId];
-    });
-    if (nextVideo) {
-      setSelectedVideoBySession((prev) => ({
-        ...prev,
-        [session.sessionId]: prev[session.sessionId] ?? nextVideo.videoId,
-      }));
-    }
-  }, []);
-
-  const removeSession = React.useCallback((sessionId: string) => {
-    setSelectedSessionIds((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((id) => id !== sessionId);
-    });
-    setFocusedSessionId((prev) => (prev === sessionId ? null : prev));
-  }, []);
-
   const setSessionVideo = React.useCallback((sessionId: string, videoId: string) => {
     setFocusedSessionId(sessionId);
     setSelectedVideoBySession((prev) => ({
@@ -429,6 +395,10 @@ export function LiveVideoDrawer({
     if (focusedSessionId && selectedSessionIds.includes(focusedSessionId)) return;
     setFocusedSessionId(selectedSessionIds[0] ?? null);
   }, [focusedSessionId, open, selectedSessionIds]);
+
+  React.useEffect(() => {
+    onSelectedSessionsChange?.(selectedSessionIds);
+  }, [onSelectedSessionsChange, selectedSessionIds]);
 
   if (!mounted || !open) return null;
 
@@ -524,95 +494,6 @@ export function LiveVideoDrawer({
           )}
         </div>
 
-        <div className="max-h-[52vh] overflow-y-auto px-4 py-4">
-          <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Available live matches
-          </div>
-          <div className="space-y-3">
-            {sessions.map((session) => {
-              const sessionSelected = selectedSessionIds.includes(session.sessionId);
-              const canAdd =
-                !sessionSelected && selectedSessionIds.length < MAX_SELECTED_SESSIONS;
-              const activeVideo = resolveVideoForSession(session);
-
-              return (
-                <div
-                  key={session.sessionId}
-                  className={`rounded-[22px] border p-4 transition ${
-                    sessionSelected
-                      ? "border-cyan-300/45 bg-cyan-300/10 shadow-[0_16px_40px_rgba(8,47,73,0.22)]"
-                      : "border-white/10 bg-white/5"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (sessionSelected) setFocusedSessionId(session.sessionId);
-                        else replaceWithSession(session);
-                      }}
-                      className="min-w-0 flex-1 text-left"
-                    >
-                      <div className="truncate text-sm font-semibold text-white">
-                        {session.title}
-                      </div>
-                      <div className="mt-1 truncate text-xs text-slate-300">
-                        {session.subtitle || sessionPairLabel(session) || "Live match"}
-                      </div>
-                    </button>
-
-                    <div className="flex shrink-0 items-center gap-2">
-                      <div className="rounded-full border border-cyan-300/40 bg-cyan-300/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-100">
-                        {session.liveVideos.length}
-                      </div>
-                      {sessionSelected ? (
-                        <button
-                          type="button"
-                          onClick={() => removeSession(session.sessionId)}
-                          disabled={selectedCount <= 1}
-                          className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Remove
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => addSession(session)}
-                          disabled={!canAdd}
-                          className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Add
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {sessionSelected && session.liveVideos.length > 1 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {session.liveVideos.map((entry, index) => {
-                        const active = entry.videoId === activeVideo?.videoId;
-                        return (
-                          <button
-                            key={`${session.sessionId}-${entry.videoId}`}
-                            type="button"
-                            onClick={() => setSessionVideo(session.sessionId, entry.videoId)}
-                            className={`rounded-xl border px-2.5 py-1 text-[11px] font-semibold transition ${
-                              active
-                                ? "border-cyan-300/55 bg-cyan-300/15 text-white"
-                                : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                            }`}
-                          >
-                            {entry.label || entry.title || `Video ${index + 1}`}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </aside>
 
       {wallOpen && selectedSessions.length > 0 ? (
