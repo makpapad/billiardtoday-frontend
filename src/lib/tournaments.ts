@@ -8,6 +8,7 @@ export type TournamentEventStageSummary = {
 export type TournamentEventSummary = {
   documentId: string;
   title: string;
+  description: string | null;
   season: number | null;
   startDate: string | null;
   endDate: string | null;
@@ -220,6 +221,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][1]", "organizer_type");
       params.set("populate[tournament][fields][2]", "startDate");
       params.set("populate[tournament][fields][3]", "endDate");
+      params.set("populate[tournament][fields][4]", "description");
       params.set("populate[tournament][populate][venue][fields][0]", "name");
       params.set("populate[tournament][populate][venue][fields][1]", "city");
       params.set("populate[tournament][populate][venue][fields][2]", "country");
@@ -303,6 +305,7 @@ const fetchTournamentEventSummaryById = async (
   return {
     documentId: readString(event.documentId) || cleanId,
     title: readString(event.title) || "Tournament Event",
+    description: readString((tournamentSource as Record<string, unknown>).description),
     season: toNumber(event.season),
     startDate: tournamentStartDate ?? readString(event.start_date),
     endDate: tournamentEndDate ?? readString(event.end_date),

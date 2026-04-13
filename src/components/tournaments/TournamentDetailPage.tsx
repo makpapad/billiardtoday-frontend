@@ -979,6 +979,9 @@ const resolveMediaUrl = (url: string | null) => {
 };
 
 export function TournamentDetailPage({ summary, embedded = false, initialEventData = null }: Props) {
+  const hasInfoDescription =
+    typeof summary.description === "string" && summary.description.trim().length > 0;
+
   const fullPageHref = buildTournamentHref(
     summary.documentId,
     summary.title,
@@ -3831,6 +3834,16 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                 Tournament details
               </h2>
             </div>
+            {hasInfoDescription ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Description
+                </div>
+                <div className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
+                  {summary.description}
+                </div>
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 { label: "Tournament", value: summary.title || "-" },
@@ -4447,15 +4460,17 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                     setActiveView("tournament");
                   }}
                 />
-                <HeroMenuButton
-                  label="Info"
-                  iconSrc="/icons%20webp/info.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "info"}
-                  onClick={() => {
-                    setTournamentPanelMode("info");
-                    setActiveView("tournament");
-                  }}
-                />
+                {hasInfoDescription ? (
+                  <HeroMenuButton
+                    label="Info"
+                    iconSrc="/icons%20webp/info.webp"
+                    active={activeView === "tournament" && tournamentPanelMode === "info"}
+                    onClick={() => {
+                      setTournamentPanelMode("info");
+                      setActiveView("tournament");
+                    }}
+                  />
+                ) : null}
               </div>
             </div>
           </div>
