@@ -310,13 +310,6 @@ function VideoTile({
         fillHeight ? "flex h-full min-h-0 flex-col" : ""
       }`}
     >
-      <div className="border-b border-white/10 px-4 py-3">
-        <div className="truncate text-sm font-semibold text-white">{session.title}</div>
-        <div className="mt-1 truncate text-xs text-slate-300">
-          {session.subtitle || sessionPairLabel(session) || "Live match"}
-        </div>
-      </div>
-
       {video ? (
         <div className={fillHeight ? "min-h-0 flex-1 bg-black" : "aspect-video bg-black"}>
           <iframe
@@ -650,6 +643,12 @@ export function LiveVideoDrawer({
             </div>
           ) : (
             <>
+              <div className="mb-4">
+                <div className="truncate text-lg font-semibold text-white">{focusedSession.title}</div>
+                <div className="mt-1 truncate text-sm text-slate-300">
+                  {focusedSession.subtitle || sessionPairLabel(focusedSession) || "Live match"}
+                </div>
+              </div>
               <div className="mb-3 inline-flex rounded-2xl border border-white/10 bg-white/[0.05] p-1">
                 {focusedHasVideo ? (
                   <button
@@ -677,11 +676,34 @@ export function LiveVideoDrawer({
                 </button>
               </div>
               {activeTab === "video" && focusedHasVideo ? (
-                <VideoTile
-                  session={focusedSession}
-                  video={focusedVideo}
-                  onSelectVideo={(videoId) => setSessionVideo(focusedSession.sessionId, videoId)}
-                />
+                <>
+                  <VideoTile
+                    session={focusedSession}
+                    video={focusedVideo}
+                    onSelectVideo={(videoId) => setSessionVideo(focusedSession.sessionId, videoId)}
+                  />
+                  <div className="mt-4 border-t border-white/10 pt-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
+                          Live video
+                        </div>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Select up to {MAX_SELECTED_SESSIONS} live matches and launch a
+                          multiple view wall.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setWallOpen(true)}
+                        disabled={selectedVideoSessions.length === 0}
+                        className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-3 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Multiple view
+                      </button>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <MatchSheetView session={focusedSession} />
               )}
