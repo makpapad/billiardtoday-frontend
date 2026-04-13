@@ -4351,8 +4351,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 </p>
               </div>
             </div>
-            <div className="flex w-full flex-col gap-3">
-              <div className="flex flex-wrap gap-3">
+            <div className="flex w-full items-center gap-3 overflow-x-auto pb-1">
+              <div className="flex min-w-max flex-nowrap gap-3">
                 <HeroMenuButton
                   label="Live"
                   iconSrc="/icons%20webp/live3.webp"
@@ -4390,7 +4390,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   }}
                 />
               </div>
-              <div className="flex w-full flex-wrap justify-end gap-3">
+              <div className="ml-auto flex min-w-max flex-nowrap gap-3">
                 <HeroMenuButton
                   label="Participants"
                   iconSrc="/icons%20webp/participants1.webp"
