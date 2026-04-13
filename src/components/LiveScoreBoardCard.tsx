@@ -644,14 +644,18 @@ export function LiveScoreBoardCard({
             {topLeftControl}
           </div>
         ) : null}
-        <div className="relative flex items-center justify-between gap-2 text-sm md:text-base font-semibold tabular-nums">
-          <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
-          <span className="flex min-w-[40px] items-center justify-center">{p1Flag}</span>
-          <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
-          <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
-          <span className="min-w-[30px] text-center text-[32px] leading-none font-black text-amber-300">{player2.points ?? 0}</span>
-          <span className="flex min-w-[40px] items-center justify-center">{p2Flag}</span>
-          <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
+        <div
+          className={`relative flex items-center justify-between font-semibold tabular-nums ${
+            compactExpandedLayout ? "gap-0.5 text-[8px] md:text-[9px]" : "gap-2 text-sm md:text-base"
+          }`}
+        >
+          <span className={`truncate text-left flex-1 ${compactExpandedLayout ? "text-[8px] md:text-[9px]" : ""}`}>{player1Name || "Player 1"}</span>
+          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[28px] scale-90" : "min-w-[40px]"}`}>{p1Flag}</span>
+          <span className={`text-center leading-none font-black ${compactExpandedLayout ? "min-w-[16px] text-[16px]" : "min-w-[30px] text-[32px]"}`}>{player1.points ?? 0}</span>
+          <span className={`text-center text-cyan-100 ${compactExpandedLayout ? "min-w-[10px] text-[8px]" : "min-w-[26px]"}`}>{formatStat(inningsDisplay, 0)}</span>
+          <span className={`text-center leading-none font-black text-amber-300 ${compactExpandedLayout ? "min-w-[16px] text-[16px]" : "min-w-[30px] text-[32px]"}`}>{player2.points ?? 0}</span>
+          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[28px] scale-90" : "min-w-[40px]"}`}>{p2Flag}</span>
+          <span className={`truncate text-right flex-1 text-amber-300 ${compactExpandedLayout ? "text-[8px] md:text-[9px]" : ""}`}>{player2Name || "Player 2"}</span>
         </div>
       </button>
     </div>
