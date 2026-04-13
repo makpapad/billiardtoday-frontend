@@ -651,7 +651,7 @@ export function LiveVideoDrawer({
                     type="button"
                     onClick={() => setWallOpen(true)}
                     disabled={selectedVideoSessions.length === 0}
-                    className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-3 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Multiple view
                   </button>
