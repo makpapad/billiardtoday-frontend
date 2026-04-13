@@ -646,16 +646,16 @@ export function LiveScoreBoardCard({
         ) : null}
         <div
           className={`relative flex items-center justify-between font-semibold tabular-nums ${
-            compactExpandedLayout ? "gap-0.5 text-[8px] md:text-[9px]" : "gap-2 text-sm md:text-base"
+            compactExpandedLayout ? "gap-1 text-[9px] md:text-[10px]" : "gap-2 text-sm md:text-base"
           }`}
         >
-          <span className={`truncate text-left flex-1 ${compactExpandedLayout ? "text-[8px] md:text-[9px]" : ""}`}>{player1Name || "Player 1"}</span>
-          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[28px] scale-90" : "min-w-[40px]"}`}>{p1Flag}</span>
-          <span className={`text-center leading-none font-black ${compactExpandedLayout ? "min-w-[16px] text-[16px]" : "min-w-[30px] text-[32px]"}`}>{player1.points ?? 0}</span>
-          <span className={`text-center text-cyan-100 ${compactExpandedLayout ? "min-w-[10px] text-[8px]" : "min-w-[26px]"}`}>{formatStat(inningsDisplay, 0)}</span>
-          <span className={`text-center leading-none font-black text-amber-300 ${compactExpandedLayout ? "min-w-[16px] text-[16px]" : "min-w-[30px] text-[32px]"}`}>{player2.points ?? 0}</span>
-          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[28px] scale-90" : "min-w-[40px]"}`}>{p2Flag}</span>
-          <span className={`truncate text-right flex-1 text-amber-300 ${compactExpandedLayout ? "text-[8px] md:text-[9px]" : ""}`}>{player2Name || "Player 2"}</span>
+          <span className={`truncate text-left flex-1 ${compactExpandedLayout ? "text-[9px] md:text-[10px]" : ""}`}>{player1Name || "Player 1"}</span>
+          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[32px] scale-95" : "min-w-[40px]"}`}>{p1Flag}</span>
+          <span className={`text-center leading-none font-black ${compactExpandedLayout ? "min-w-[18px] text-[18px]" : "min-w-[30px] text-[32px]"}`}>{player1.points ?? 0}</span>
+          <span className={`text-center text-cyan-100 ${compactExpandedLayout ? "min-w-[12px] text-[9px]" : "min-w-[26px]"}`}>{formatStat(inningsDisplay, 0)}</span>
+          <span className={`text-center leading-none font-black text-amber-300 ${compactExpandedLayout ? "min-w-[18px] text-[18px]" : "min-w-[30px] text-[32px]"}`}>{player2.points ?? 0}</span>
+          <span className={`flex items-center justify-center ${compactExpandedLayout ? "min-w-[32px] scale-95" : "min-w-[40px]"}`}>{p2Flag}</span>
+          <span className={`truncate text-right flex-1 text-amber-300 ${compactExpandedLayout ? "text-[9px] md:text-[10px]" : ""}`}>{player2Name || "Player 2"}</span>
         </div>
       </button>
     </div>
