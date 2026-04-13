@@ -138,20 +138,16 @@ function PlayerMatchSheetCard({
   name,
   country,
   score,
-  innings,
   avg,
   firstHr,
-  secondHr,
   align = "left",
   active = false,
 }: {
   name?: string | null;
   country?: string | null;
   score?: number | null;
-  innings?: number | null;
   avg?: string | null;
   firstHr?: number | null;
-  secondHr?: number | null;
   align?: "left" | "right";
   active?: boolean;
 }) {
@@ -185,13 +181,11 @@ function PlayerMatchSheetCard({
           />
         ) : null}
       </div>
-      <div className="mt-3 grid grid-cols-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05]">
+      <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05]">
         {[
           { label: "Score", value: normalizeStat(score) },
-          { label: "Inn", value: normalizeStat(innings) },
-          { label: "Avg", value: formatAvg(avg, score, innings) },
+          { label: "Avg", value: formatAvg(avg, score) },
           { label: "1st HR", value: normalizeStat(firstHr) },
-          { label: "2nd HR", value: normalizeStat(secondHr) },
         ].map((item) => (
           <div key={item.label} className="min-w-0 border-r border-white/10 px-1.5 py-2 last:border-r-0">
             <div className="text-center text-[10px] font-medium text-slate-300">{item.label}</div>
@@ -209,30 +203,23 @@ function MatchSheetView({
   session: LiveVideoDrawerSession;
 }) {
   const rows = getSessionInningRows(session);
-  const inningsDisplay = typeof session.inningsCount === "number" && Number.isFinite(session.inningsCount)
-    ? Math.max(1, Math.trunc(session.inningsCount))
-    : null;
   return (
     <div className="space-y-4">
-      <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <PlayerMatchSheetCard
           name={session.playerAName}
           country={session.playerACountry}
           score={session.scoreA}
-          innings={inningsDisplay}
           avg={session.avgFormattedA}
           firstHr={session.bestRunA}
-          secondHr={session.bestRun2A}
           active={session.current === "A"}
         />
         <PlayerMatchSheetCard
           name={session.playerBName}
           country={session.playerBCountry}
           score={session.scoreB}
-          innings={inningsDisplay}
           avg={session.avgFormattedB}
           firstHr={session.bestRunB}
-          secondHr={session.bestRun2B}
           align="right"
           active={session.current === "B"}
         />
