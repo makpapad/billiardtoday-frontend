@@ -29,6 +29,11 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
 
 const isMissingStat = (value: unknown) => value === undefined || value === null || value === ''
 
+const looksLikeHtmlError = (value: string) => {
+    const normalized = value.trim().toLowerCase()
+    return normalized.startsWith('<!doctype html') || normalized.startsWith('<html')
+}
+
 const buildStageMatchKey = (match: Record<string, unknown>) => {
     const documentId =
         typeof match.documentId === 'string' && match.documentId.trim()
@@ -301,7 +306,10 @@ export async function GET(
 
         let text = await res.text()
 
-        if (!res.ok && res.status === 403) {
+        if (
+            (!res.ok && res.status === 403) ||
+            (looksLikeHtmlError(text) && text.toLowerCase().includes('forbidden'))
+        ) {
             queryParams = buildQueryParams(false)
             url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
             res = await fetch(url, {
@@ -443,10 +451,11 @@ export async function GET(
 
             return NextResponse.json(payload, { status: 200 })
         } catch {
-            return new NextResponse(text, {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            })
+            console.error('[events.id][GET] Non-JSON upstream payload:', text.slice(0, 400))
+            return NextResponse.json(
+                { error: 'Invalid upstream event payload' },
+                { status: 502 },
+            )
         }
     } catch (error) {
         console.error('[events.id][GET]', error)
