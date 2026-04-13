@@ -168,7 +168,7 @@ export async function GET(
         const params = await context.params
         const documentId = params.id
 
-        const buildQueryParams = (includePlayers: boolean) => {
+        const buildQueryParams = () => {
             const queryParams = new URLSearchParams()
             queryParams.set('populate[event_stages][sort][0]', 'order:asc')
             queryParams.set('populate[event_stages][fields][0]', 'title')
@@ -274,13 +274,6 @@ export async function GET(
             queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][2]', 'documentId')
             queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][3]', 'country')
 
-            if (includePlayers) {
-                queryParams.set('populate[players][fields][0]', 'full_name')
-                queryParams.set('populate[players][fields][1]', 'full_name_en')
-                queryParams.set('populate[players][fields][2]', 'country')
-                queryParams.set('populate[players][fields][3]', 'documentId')
-            }
-
             queryParams.set('fields[0]', 'documentId')
             queryParams.set('fields[1]', 'title')
             queryParams.set('fields[2]', 'season')
@@ -297,7 +290,7 @@ export async function GET(
             headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`
         }
 
-        let queryParams = buildQueryParams(true)
+        let queryParams = buildQueryParams()
         let url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
         let res = await fetch(url, {
             cache: 'no-store',
@@ -305,19 +298,6 @@ export async function GET(
         })
 
         let text = await res.text()
-
-        if (
-            (!res.ok && res.status === 403) ||
-            (looksLikeHtmlError(text) && text.toLowerCase().includes('forbidden'))
-        ) {
-            queryParams = buildQueryParams(false)
-            url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
-            res = await fetch(url, {
-                cache: 'no-store',
-                headers,
-            })
-            text = await res.text()
-        }
 
         if (!res.ok) {
             console.error('[events.id][GET] Error response:', text)

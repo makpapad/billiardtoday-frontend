@@ -4,6 +4,7 @@ import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailP
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
+import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -50,9 +51,20 @@ export default async function TournamentPage({ params }: Props) {
     permanentRedirect(`/tournaments/${canonicalSlug}`);
   }
 
+  let initialEventData: EventApiResponse | null = null;
+  try {
+    const eventDataUrl = `http://127.0.0.1:3022/event-data/${encodeURIComponent(summary.documentId)}`;
+    const response = await fetch(eventDataUrl, { cache: "no-store" });
+    if (response.ok) {
+      initialEventData = (await response.json().catch(() => null)) as EventApiResponse | null;
+    }
+  } catch {
+    initialEventData = null;
+  }
+
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
-      <TournamentDetailPage summary={summary} />
+      <TournamentDetailPage summary={summary} initialEventData={initialEventData} />
     </CmsPageShell>
   );
 }

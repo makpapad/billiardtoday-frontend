@@ -46,6 +46,7 @@ import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
+  initialEventData?: EventApiResponse | null;
 };
 
 type TournamentLiveScreen = {
@@ -977,7 +978,7 @@ const resolveMediaUrl = (url: string | null) => {
   return `${base}${url.startsWith("/") ? url : `/${url}`}`;
 };
 
-export function TournamentDetailPage({ summary, embedded = false }: Props) {
+export function TournamentDetailPage({ summary, embedded = false, initialEventData = null }: Props) {
   const fullPageHref = buildTournamentHref(
     summary.documentId,
     summary.title,
@@ -1108,7 +1109,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [expandedLiveSessionIds, setExpandedLiveSessionIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [eventData, setEventData] = useState<EventApiResponse | null>(null);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(initialEventData);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
@@ -1189,6 +1190,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [summary.documentId]);
 
   useEffect(() => {
+    if (initialEventData?.data) {
+      return;
+    }
     let cancelled = false;
 
     const fetchEventData = async () => {
@@ -1208,7 +1212,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [fetchEventPayload]);
+  }, [fetchEventPayload, initialEventData]);
 
   useEffect(() => {
     if (activeView !== "tournament") return;
@@ -3147,36 +3151,81 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   }, [eventData, timetableTrainingPlayers]);
 
   const tournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
-    if (!eventData?.data?.players) return [];
+    if (eventData?.data?.players) {
+      return toRelationArray(eventData.data.players).map((player, index) => {
+        const normalized = normalizeEntity<{
+          full_name?: unknown;
+          full_name_en?: unknown;
+          country?: unknown;
+          status?: unknown;
+        }>(player, `participant-${index + 1}`);
 
-    return toRelationArray(eventData.data.players).map((player, index) => {
-      const normalized = normalizeEntity<{
-        full_name?: unknown;
-        full_name_en?: unknown;
-        country?: unknown;
-        status?: unknown;
-      }>(player, `participant-${index + 1}`);
+        const name =
+          typeof normalized.full_name_en === "string" && normalized.full_name_en.trim()
+            ? normalized.full_name_en.trim()
+            : typeof normalized.full_name === "string" && normalized.full_name.trim()
+              ? normalized.full_name.trim()
+              : `Player ${index + 1}`;
 
-      const name =
-        typeof normalized.full_name_en === "string" && normalized.full_name_en.trim()
-          ? normalized.full_name_en.trim()
-          : typeof normalized.full_name === "string" && normalized.full_name.trim()
-            ? normalized.full_name.trim()
-            : `Player ${index + 1}`;
+        const country =
+          typeof normalized.country === "string" && normalized.country.trim()
+            ? normalized.country.trim()
+            : null;
 
-      const country =
-        typeof normalized.country === "string" && normalized.country.trim()
-          ? normalized.country.trim()
-          : null;
+        return {
+          id: normalized.id,
+          documentId: normalized.documentId ?? null,
+          name,
+          country,
+          status: formatParticipantStatus(normalized.status),
+        };
+      });
+    }
 
-      return {
-        id: normalized.id,
-        documentId: normalized.documentId ?? null,
-        name,
-        country,
-        status: formatParticipantStatus(normalized.status),
-      };
+    const uniquePlayers = new Map<string, TournamentParticipantRow>();
+    const stages = toRelationArray(eventData?.data?.event_stages);
+
+    stages.forEach((stage, stageIndex) => {
+      const normalizedStage = normalizeEntity<{ groups?: unknown }>(
+        stage,
+        `participant-stage-${stageIndex + 1}`,
+      );
+      const groups = toRelationArray(normalizedStage.groups);
+      groups.forEach((group, groupIndex) => {
+        const normalizedGroup = normalizeEntity<{ player1?: unknown; player2?: unknown }>(
+          group,
+          `participant-group-${groupIndex + 1}`,
+        );
+        [normalizedGroup.player1, normalizedGroup.player2].forEach((player, playerIndex) => {
+          if (!player) return;
+          const normalizedPlayer = normalizeEntity<{
+            full_name?: unknown;
+            full_name_en?: unknown;
+            country?: unknown;
+          }>(player, `derived-participant-${groupIndex + 1}-${playerIndex + 1}`);
+          if (uniquePlayers.has(normalizedPlayer.id)) return;
+          const name =
+            typeof normalizedPlayer.full_name_en === "string" && normalizedPlayer.full_name_en.trim()
+              ? normalizedPlayer.full_name_en.trim()
+              : typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
+                ? normalizedPlayer.full_name.trim()
+                : `Player ${uniquePlayers.size + 1}`;
+          const country =
+            typeof normalizedPlayer.country === "string" && normalizedPlayer.country.trim()
+              ? normalizedPlayer.country.trim()
+              : null;
+          uniquePlayers.set(normalizedPlayer.id, {
+            id: normalizedPlayer.id,
+            documentId: normalizedPlayer.documentId ?? null,
+            name,
+            country,
+            status: "Registered",
+          });
+        });
+      });
     });
+
+    return Array.from(uniquePlayers.values());
   }, [eventData]);
 
   const eventTimezoneOffsetMinutes = useMemo(() => {
