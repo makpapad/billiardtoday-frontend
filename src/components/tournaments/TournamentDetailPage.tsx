@@ -155,7 +155,7 @@ function HeroMenuButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`group relative inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[78px] sm:w-[78px] ${
+      className={`group relative inline-flex h-[64px] w-[64px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[70px] sm:w-[70px] ${
         active
           ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
           : "border-white/15 bg-white/10 hover:bg-white/15"
@@ -164,9 +164,9 @@ function HeroMenuButton({
       <Image
         src={iconSrc}
         alt={label}
-        width={72}
-        height={72}
-        className={`h-[62px] w-[62px] object-contain transition duration-200 sm:h-[68px] sm:w-[68px] ${
+        width={64}
+        height={64}
+        className={`h-[54px] w-[54px] object-contain transition duration-200 sm:h-[60px] sm:w-[60px] ${
           active ? "scale-105" : "opacity-95 group-hover:scale-105"
         }`}
         unoptimized
@@ -1179,7 +1179,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const fetchEventPayload = useCallback(async () => {
     const response = await fetch(
-      `/api/events/${encodeURIComponent(summary.documentId)}`,
+      `/api/tournaments/${encodeURIComponent(summary.documentId)}/event`,
       {
         cache: "no-store",
       },
