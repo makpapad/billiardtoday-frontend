@@ -169,14 +169,49 @@ type VideoWallProps = {
 };
 
 function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps) {
+  const wallRef = React.useRef<HTMLDivElement | null>(null);
   const visibleSessions = sessions.slice(0, MAX_SELECTED_SESSIONS);
   const gridClass =
     visibleSessions.length >= 3
       ? "grid-cols-1 xl:grid-cols-2"
       : "grid-cols-1";
 
+  React.useEffect(() => {
+    const wallElement = wallRef.current;
+    if (!wallElement || typeof document === "undefined") return;
+
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) return;
+      onClose();
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    const openFullscreen = async () => {
+      if (document.fullscreenElement === wallElement) return;
+      if (typeof wallElement.requestFullscreen !== "function") return;
+      try {
+        await wallElement.requestFullscreen();
+      } catch {
+        // Keep the wall open as a normal overlay when fullscreen is denied.
+      }
+    };
+
+    void openFullscreen();
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      if (document.fullscreenElement === wallElement) {
+        void document.exitFullscreen().catch(() => undefined);
+      }
+    };
+  }, [onClose]);
+
   return createPortal(
-    <div className="fixed inset-0 z-[140] bg-black/95 px-4 py-4 sm:px-6 sm:py-6">
+    <div
+      ref={wallRef}
+      className="fixed inset-0 z-[140] bg-black/95 px-4 py-4 sm:px-6 sm:py-6"
+    >
       <div className="flex h-full flex-col">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
