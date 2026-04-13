@@ -1179,7 +1179,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const fetchEventPayload = useCallback(async () => {
     const response = await fetch(
-      `/api/tournaments/${encodeURIComponent(summary.documentId)}/event`,
+      `/event-data/${encodeURIComponent(summary.documentId)}`,
       {
         cache: "no-store",
       },

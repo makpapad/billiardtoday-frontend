@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { GET as getEventById, runtime } from "@/app/api/events/[id]/route";
+import { GET as getEventById } from "@/app/api/events/[id]/route";
 
-export { runtime };
+export const runtime = "nodejs";
 
 export function GET(
   req: NextRequest,
