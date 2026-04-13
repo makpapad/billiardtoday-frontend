@@ -3327,10 +3327,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     const panel = mobileVideoDrawerRef.current;
     if (!panel) return;
     window.requestAnimationFrame(() => {
-      panel.scrollIntoView({ behavior: "smooth", block: "start" });
-      window.setTimeout(() => {
-        window.scrollBy({ top: -20, behavior: "smooth" });
-      }, 40);
+      const top = Math.max(0, panel.getBoundingClientRect().top + window.scrollY - 20);
+      window.scrollTo({ top, behavior: "smooth" });
     });
   }, [isWideDesktop]);
 
