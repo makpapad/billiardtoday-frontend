@@ -93,8 +93,8 @@ export function LiveScoreBoardCard({
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
   const isExpanded = isControlled ? Boolean(expanded) : internalExpanded;
-  const desktopAvatarColumnWidth = compactExpandedLayout ? 54 : AVATAR_COLUMN_WIDTH;
-  const desktopScoreBoxWidth = compactExpandedLayout ? 76 : SCORE_BOX_WIDTH - 6;
+  const desktopAvatarColumnWidth = compactExpandedLayout ? 42 : AVATAR_COLUMN_WIDTH;
+  const desktopScoreBoxWidth = compactExpandedLayout ? 60 : SCORE_BOX_WIDTH - 6;
   const desktopScoreReserve = desktopScoreBoxWidth + DESKTOP_SCORE_GUTTER;
 
   React.useEffect(() => {
@@ -436,7 +436,7 @@ export function LiveScoreBoardCard({
   }) => (
     <div
       className={`ml-0 mr-0 flex items-center rounded-xl border shadow-sm ${
-        dense ? "h-[34px] gap-1 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
+        dense ? "h-[28px] gap-1 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
       } ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
@@ -450,7 +450,7 @@ export function LiveScoreBoardCard({
             compact
               ? "text-[14px] md:text-[15px]"
               : dense
-                ? "text-[13px] md:text-[15px]"
+                ? "text-[11px] md:text-[12px]"
                 : "text-[17px] md:text-[19px]"
           } truncate font-semibold leading-tight`}
           title={name || ""}
@@ -460,13 +460,13 @@ export function LiveScoreBoardCard({
       </div>
       <div
         className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
-          compact ? "min-w-[26px] px-1" : dense ? "min-w-[24px] px-1" : "min-w-[32px] px-1.5"
+          compact ? "min-w-[26px] px-1" : dense ? "min-w-[20px] px-1" : "min-w-[32px] px-1.5"
         } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
         aria-hidden={!isActive}
       >
         <div
           className={`${
-            compact ? "text-[17px]" : dense ? "text-[17px]" : "text-[22px]"
+            compact ? "text-[17px]" : dense ? "text-[14px]" : "text-[22px]"
           } font-black tabular-nums leading-none ${
             isActive ? "animate-pulse" : ""
           }`}
@@ -518,7 +518,7 @@ export function LiveScoreBoardCard({
     dense?: boolean;
   }) => (
     <div
-      className={`mr-0 ${dense ? "h-[34px] px-1 py-0.5" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
+      className={`mr-0 ${dense ? "h-[28px] px-1 py-0" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -526,7 +526,7 @@ export function LiveScoreBoardCard({
       style={{ width: dense ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH }}
     >
       <div className="w-full flex items-center justify-center">
-        <div className={`${dense ? "text-[33px]" : "text-[44px]"} font-black leading-none tabular-nums text-center`}>
+        <div className={`${dense ? "text-[25px]" : "text-[44px]"} font-black leading-none tabular-nums text-center`}>
           {player.points ?? 0}
         </div>
       </div>
@@ -543,14 +543,14 @@ export function LiveScoreBoardCard({
 
   const InningsCard = () => (
     <div
-      className={`mx-auto ${compactExpandedLayout ? "h-[36px] gap-0" : "h-[44px] gap-0.5"} rounded-[999px] border border-white/70 px-2 py-1 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center`}
-      style={{ width: compactExpandedLayout ? 36 : 44 }}
+      className={`mx-auto ${compactExpandedLayout ? "h-[28px] gap-0" : "h-[44px] gap-0.5"} rounded-[999px] border border-white/70 px-1 py-0.5 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center`}
+      style={{ width: compactExpandedLayout ? 28 : 44 }}
     >
-      <div className={`${compactExpandedLayout ? "text-[6px]" : "text-[8px]"} font-black uppercase tracking-[0.18em] text-slate-600 leading-none`}>
+      <div className={`${compactExpandedLayout ? "text-[5px]" : "text-[8px]"} font-black uppercase tracking-[0.16em] text-slate-600 leading-none`}>
         INN
       </div>
       <div
-        className={`${compactExpandedLayout ? "text-[16px]" : "text-[20px]"} font-black tabular-nums text-slate-900 leading-none`}
+        className={`${compactExpandedLayout ? "text-[13px]" : "text-[20px]"} font-black tabular-nums text-slate-900 leading-none`}
         style={{ fontVariantNumeric: "tabular-nums" }}
         aria-label="Current inning"
       >
@@ -786,7 +786,7 @@ export function LiveScoreBoardCard({
           className="relative z-10 hidden md:grid gap-y-1"
           style={{
             gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "56px 24px 16px 24px 56px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "36px 12px 10px 12px 36px" : "60px 28px 18px 28px 60px",
           }}
         >
           <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
@@ -941,11 +941,11 @@ export function LiveScoreBoardCard({
 
     return (
       <div className={`${rowClasses} ml-0 mr-0 ${className}`}>
-        <div className={`grid grid-cols-5 ${dense ? "gap-0 text-[8px]" : "gap-0.5 text-[10px]"}`}>
+        <div className={`grid grid-cols-5 ${dense ? "gap-0 text-[6px]" : "gap-0.5 text-[10px]"}`}>
           {items.map((item) => (
             <div key={`${variant}-${item.label}`} className={`${dense ? "px-0 py-0" : "px-0.5 py-0"} text-center`}>
               <div className={`${labelClasses} leading-none text-center`}>{item.label}</div>
-              <div className={`mt-0 text-center ${dense ? "text-[13px]" : "text-[17px]"} font-semibold leading-tight tabular-nums`}>{item.value}</div>
+              <div className={`mt-0 text-center ${dense ? "text-[10px]" : "text-[17px]"} font-semibold leading-tight tabular-nums`}>{item.value}</div>
             </div>
           ))}
         </div>
@@ -996,18 +996,22 @@ export function LiveScoreBoardCard({
         <button
           type="button"
           onClick={handleExpand}
-          className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-r from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] px-3 py-2 text-white shadow-xl transition hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40"
+          className={`relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-r from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] text-white shadow-xl transition hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 ${
+            compactExpandedLayout ? "px-1.5 py-1" : "px-3 py-2"
+          }`}
           aria-label="Expand live scoreboard"
         >
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
             <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
           </div>
-          <div className="relative flex items-center justify-between gap-2 text-sm md:text-base font-semibold tabular-nums">
+          <div className={`relative flex items-center justify-between font-semibold tabular-nums ${
+            compactExpandedLayout ? "gap-1 text-[11px] md:text-[12px]" : "gap-2 text-sm md:text-base"
+          }`}>
             <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
-            <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
-            <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
-            <span className="min-w-[30px] text-center text-[32px] leading-none font-black text-amber-300">{player2.points ?? 0}</span>
+            <span className={`text-center leading-none font-black ${compactExpandedLayout ? "min-w-[20px] text-[20px]" : "min-w-[30px] text-[32px]"}`}>{player1.points ?? 0}</span>
+            <span className={`text-center text-cyan-100 ${compactExpandedLayout ? "min-w-[14px] text-[10px]" : "min-w-[26px]"}`}>{formatStat(inningsDisplay, 0)}</span>
+            <span className={`text-center leading-none font-black text-amber-300 ${compactExpandedLayout ? "min-w-[20px] text-[20px]" : "min-w-[30px] text-[32px]"}`}>{player2.points ?? 0}</span>
             <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
           </div>
         </button>
@@ -1152,7 +1156,7 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden md:grid gap-y-1"
         style={{
           gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "50px 20px 14px 20px 50px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "36px 12px 10px 12px 36px" : "60px 28px 18px 28px 60px",
         }}
       >
         <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
