@@ -4011,6 +4011,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ).length > 0
                       }
                       liveVideosSelected={videoDrawerSelectedSessionIds.includes(session.sessionId)}
+                      compactExpandedLayout={videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
                       }

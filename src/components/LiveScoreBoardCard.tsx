@@ -52,6 +52,7 @@ interface LiveScoreBoardCardProps {
   inlineExpandable?: boolean;
   hasLiveVideos?: boolean;
   liveVideosSelected?: boolean;
+  compactExpandedLayout?: boolean;
   onOpenLiveVideos?: (
     sessionId: string,
     origin?: { left: number; top: number; width: number; height: number } | null,
@@ -80,6 +81,7 @@ export function LiveScoreBoardCard({
   inlineExpandable = true,
   hasLiveVideos = false,
   liveVideosSelected = false,
+  compactExpandedLayout = false,
   onOpenLiveVideos,
 }: LiveScoreBoardCardProps) {
   const isPlayer1Active = current === "A";
@@ -91,6 +93,9 @@ export function LiveScoreBoardCard({
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
   const isExpanded = isControlled ? Boolean(expanded) : internalExpanded;
+  const desktopAvatarColumnWidth = compactExpandedLayout ? 58 : AVATAR_COLUMN_WIDTH;
+  const desktopScoreBoxWidth = compactExpandedLayout ? 82 : SCORE_BOX_WIDTH - 6;
+  const desktopScoreReserve = desktopScoreBoxWidth + DESKTOP_SCORE_GUTTER;
 
   React.useEffect(() => {
     if (typeof openSignal !== "number" || !Number.isFinite(openSignal)) return;
@@ -417,6 +422,7 @@ export function LiveScoreBoardCard({
     run,
     isActive,
     compact = false,
+    dense = false,
     className = "",
   }: {
     variant: "top" | "bottom";
@@ -425,10 +431,13 @@ export function LiveScoreBoardCard({
     run?: number;
     isActive?: boolean;
     compact?: boolean;
+    dense?: boolean;
     className?: string;
   }) => (
     <div
-      className={`ml-0 mr-0 h-[42px] flex items-center gap-2 rounded-xl border px-1.5 py-1 shadow-sm ${
+      className={`ml-0 mr-0 flex items-center rounded-xl border shadow-sm ${
+        dense ? "h-[38px] gap-1.5 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
+      } ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -437,7 +446,13 @@ export function LiveScoreBoardCard({
       {!compact ? <div className="flex items-center justify-center">{flag}</div> : null}
       <div className="flex-1 min-w-0 text-center">
         <div
-          className={`${compact ? "text-[14px] sm:text-[15px]" : "text-[17px] sm:text-[19px]"} truncate font-semibold leading-tight`}
+          className={`${
+            compact
+              ? "text-[14px] md:text-[15px]"
+              : dense
+                ? "text-[15px] md:text-[17px]"
+                : "text-[17px] md:text-[19px]"
+          } truncate font-semibold leading-tight`}
           title={name || ""}
         >
           {compact ? compactDisplayName(name, 16) : (name || "")}
@@ -445,12 +460,14 @@ export function LiveScoreBoardCard({
       </div>
       <div
         className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
-          compact ? "min-w-[26px] px-1" : "min-w-[32px] px-1.5"
+          compact ? "min-w-[26px] px-1" : dense ? "min-w-[28px] px-1" : "min-w-[32px] px-1.5"
         } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
         aria-hidden={!isActive}
       >
         <div
-          className={`${compact ? "text-[17px]" : "text-[22px]"} font-black tabular-nums leading-none ${
+          className={`${
+            compact ? "text-[17px]" : dense ? "text-[19px]" : "text-[22px]"
+          } font-black tabular-nums leading-none ${
             isActive ? "animate-pulse" : ""
           }`}
         >
@@ -493,21 +510,23 @@ export function LiveScoreBoardCard({
     player,
     variant,
     isActive,
+    dense = false,
   }: {
     player: Player;
     variant: "top" | "bottom";
     isActive: boolean;
+    dense?: boolean;
   }) => (
     <div
-      className={`mr-0 h-[42px] rounded-xl border px-2 py-1.5 shadow-md flex items-center justify-center ${
+      className={`mr-0 ${dense ? "h-[38px] px-1.5 py-1" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
       } ${isActive ? "ring-2 ring-cyan-200/80" : ""}`}
-      style={{ width: SCORE_BOX_WIDTH }}
+      style={{ width: dense ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH }}
     >
       <div className="w-full flex items-center justify-center">
-        <div className="text-[44px] font-black leading-none tabular-nums text-center">
+        <div className={`${dense ? "text-[38px]" : "text-[44px]"} font-black leading-none tabular-nums text-center`}>
           {player.points ?? 0}
         </div>
       </div>
@@ -524,14 +543,14 @@ export function LiveScoreBoardCard({
 
   const InningsCard = () => (
     <div
-      className="mx-auto h-[44px] rounded-[999px] border border-white/70 px-2 py-1.5 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center gap-0.5"
-      style={{ width: 44 }}
+      className={`mx-auto ${compactExpandedLayout ? "h-[40px] gap-0" : "h-[44px] gap-0.5"} rounded-[999px] border border-white/70 px-2 py-1.5 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center`}
+      style={{ width: compactExpandedLayout ? 40 : 44 }}
     >
-      <div className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 leading-none">
+      <div className={`${compactExpandedLayout ? "text-[7px]" : "text-[8px]"} font-black uppercase tracking-[0.2em] text-slate-600 leading-none`}>
         INN
       </div>
       <div
-        className="text-[20px] font-black tabular-nums text-slate-900 leading-none"
+        className={`${compactExpandedLayout ? "text-[18px]" : "text-[20px]"} font-black tabular-nums text-slate-900 leading-none`}
         style={{ fontVariantNumeric: "tabular-nums" }}
         aria-label="Current inning"
       >
@@ -542,8 +561,8 @@ export function LiveScoreBoardCard({
 
   const DesktopInningsOverlay = () => (
     <div
-      className="pointer-events-none absolute inset-y-0 hidden sm:flex items-center justify-center"
-      style={{ right: -4, width: SCORE_BOX_WIDTH }}
+      className="pointer-events-none absolute inset-y-0 hidden md:flex items-center justify-center"
+      style={{ right: compactExpandedLayout ? -1 : -4, width: compactExpandedLayout ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH }}
     >
       <InningsCard />
     </div>
@@ -614,14 +633,14 @@ export function LiveScoreBoardCard({
         </div>
         {topLeftControl ? (
           <div
-            className="absolute left-2 top-2 z-20 hidden sm:block"
+            className="absolute left-2 top-2 z-20 hidden md:block"
             onMouseDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
             {topLeftControl}
           </div>
         ) : null}
-        <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
+        <div className="relative flex items-center justify-between gap-2 text-sm md:text-base font-semibold tabular-nums">
           <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
           <span className="flex min-w-[40px] items-center justify-center">{p1Flag}</span>
           <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
@@ -641,7 +660,7 @@ export function LiveScoreBoardCard({
         onClick={handleClick}
         role="button"
         tabIndex={0}
-        className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 sm:p-2 text-white shadow-2xl hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer"
+        className="relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 md:p-2 text-white shadow-2xl hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer"
         style={{ minHeight: "180px" }}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -652,13 +671,13 @@ export function LiveScoreBoardCard({
         <button
           type="button"
           onClick={handleCollapse}
-          className="absolute right-2 top-2 z-20 hidden sm:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
+          className="absolute right-2 top-2 z-20 hidden md:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
         >
           Close
         </button>
         {topLeftControl ? (
           <div
-            className="absolute left-2 top-2 z-20 hidden sm:block"
+            className="absolute left-2 top-2 z-20 hidden md:block"
             onMouseDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
@@ -666,7 +685,7 @@ export function LiveScoreBoardCard({
           </div>
         ) : null}
 
-        <div className="relative z-10 sm:hidden space-y-1">
+        <div className="relative z-10 md:hidden space-y-1">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
             {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
             <NamePlate
@@ -764,10 +783,10 @@ export function LiveScoreBoardCard({
         </div>
 
         <div
-          className="relative z-10 hidden sm:grid gap-y-1"
+          className="relative z-10 hidden md:grid gap-y-1"
           style={{
-            gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
-            gridTemplateRows: "60px 28px 18px 28px 60px",
+            gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
+            gridTemplateRows: compactExpandedLayout ? "56px 24px 16px 24px 56px" : "60px 28px 18px 28px 60px",
           }}
         >
           <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
@@ -788,7 +807,7 @@ export function LiveScoreBoardCard({
 
           <div
             className="row-start-1 row-end-2 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+            style={{ paddingRight: desktopScoreReserve }}
           >
             <NamePlate
               variant="top"
@@ -796,30 +815,31 @@ export function LiveScoreBoardCard({
               name={player1Name}
               run={resolveDisplayedRun(player1)}
               isActive={isPlayer1Active}
+              dense={compactExpandedLayout}
               className="w-full"
             />
           </div>
           <div
             className="row-start-2 row-end-3 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+            style={{ paddingRight: desktopScoreReserve }}
           >
-            <StatsRow player={player1} variant="top" className="w-full" />
+            <StatsRow player={player1} variant="top" dense={compactExpandedLayout} className="w-full" />
           </div>
           <div
             className="row-start-3 row-end-4 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+            style={{ paddingRight: desktopScoreReserve }}
           >
             <TimerBar />
           </div>
           <div
             className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+            style={{ paddingRight: desktopScoreReserve }}
           >
-            <StatsRow player={player2} variant="bottom" className="w-full" />
+            <StatsRow player={player2} variant="bottom" dense={compactExpandedLayout} className="w-full" />
           </div>
           <div
             className="row-start-5 row-end-6 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+            style={{ paddingRight: desktopScoreReserve }}
           >
             <NamePlate
               variant="bottom"
@@ -827,15 +847,16 @@ export function LiveScoreBoardCard({
               name={player2Name}
               run={resolveDisplayedRun(player2)}
               isActive={isPlayer2Active}
+              dense={compactExpandedLayout}
               className="w-full"
             />
           </div>
 
           <div className="row-start-1 row-end-2 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
-            <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
+            <PointsBox player={player1} variant="top" isActive={isPlayer1Active} dense={compactExpandedLayout} />
           </div>
           <div className="row-start-5 row-end-6 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
-            <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
+            <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} dense={compactExpandedLayout} />
           </div>
         </div>
         <DesktopInningsOverlay />
@@ -907,10 +928,12 @@ export function LiveScoreBoardCard({
     player,
     variant,
     className = "",
+    dense = false,
   }: {
     player: Player;
     variant: "top" | "bottom";
     className?: string;
+    dense?: boolean;
   }) => {
     const items = buildPlayerStats(player);
     const rowClasses = variant === "top" ? "text-white" : "text-amber-100";
@@ -918,11 +941,11 @@ export function LiveScoreBoardCard({
 
     return (
       <div className={`${rowClasses} ml-0 mr-0 ${className}`}>
-        <div className="grid grid-cols-5 gap-0.5 text-[10px]">
+        <div className={`grid grid-cols-5 ${dense ? "gap-0 text-[9px]" : "gap-0.5 text-[10px]"}`}>
           {items.map((item) => (
-            <div key={`${variant}-${item.label}`} className="px-0.5 py-0 text-center">
+            <div key={`${variant}-${item.label}`} className={`${dense ? "px-0 py-0" : "px-0.5 py-0"} text-center`}>
               <div className={`${labelClasses} leading-none text-center`}>{item.label}</div>
-              <div className="mt-0 text-center text-[17px] font-semibold leading-tight tabular-nums">{item.value}</div>
+              <div className={`mt-0 text-center ${dense ? "text-[15px]" : "text-[17px]"} font-semibold leading-tight tabular-nums`}>{item.value}</div>
             </div>
           ))}
         </div>
@@ -980,7 +1003,7 @@ export function LiveScoreBoardCard({
             <span className="live-bg-orb-a absolute -left-[20%] -top-[80%] h-[220%] w-[46%] rounded-full bg-cyan-300/20 blur-3xl" />
             <span className="live-bg-orb-b absolute right-[-18%] bottom-[-90%] h-[230%] w-[48%] rounded-full bg-indigo-300/20 blur-3xl" />
           </div>
-          <div className="relative flex items-center justify-between gap-2 text-sm sm:text-base font-semibold tabular-nums">
+          <div className="relative flex items-center justify-between gap-2 text-sm md:text-base font-semibold tabular-nums">
             <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
             <span className="min-w-[30px] text-center text-[32px] leading-none font-black">{player1.points ?? 0}</span>
             <span className="min-w-[26px] text-center text-cyan-100">{formatStat(inningsDisplay, 0)}</span>
@@ -1000,7 +1023,7 @@ export function LiveScoreBoardCard({
           onClick={handleClick}
           role="button"
           tabIndex={0}
-          className={`relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 sm:p-2 text-white shadow-2xl transition-all duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer ${
+          className={`relative overflow-hidden w-full rounded-[18px] border border-cyan-200/30 bg-gradient-to-br from-[#0d3ef2] via-[#0b2ed1] to-[#091f8e] p-1.5 md:p-2 text-white shadow-2xl transition-all duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-cyan-900/40 focus:outline-none focus:ring-4 focus:ring-cyan-200/40 cursor-pointer ${
             isExpanded ? "scale-100 opacity-100" : "scale-[0.975] opacity-0"
           }`}
           style={{ minHeight: "180px" }}
@@ -1013,22 +1036,22 @@ export function LiveScoreBoardCard({
           <button
             type="button"
             onClick={handleCollapse}
-            className="absolute right-2 top-2 z-20 hidden sm:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
+            className="absolute right-2 top-2 z-20 hidden md:inline-flex rounded-md border border-white/30 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white"
           >
             Close
           </button>
           {topLeftControl ? (
-            <div className="absolute left-2 top-2 z-20 hidden sm:block">
+            <div className="absolute left-2 top-2 z-20 hidden md:block">
               {topLeftControl}
             </div>
           ) : null}
           {hasLiveVideos && onOpenLiveVideos ? (
-            <div className="absolute right-12 top-2 z-20 hidden sm:block">
+            <div className="absolute right-12 top-2 z-20 hidden md:block">
               <LiveVideoButton />
             </div>
           ) : null}
 
-      <div className="relative z-10 sm:hidden space-y-1">
+      <div className="relative z-10 md:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
           {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
             <NamePlate
@@ -1126,10 +1149,10 @@ export function LiveScoreBoardCard({
       </div>
 
       <div
-        className="relative z-10 hidden sm:grid gap-y-1"
+        className="relative z-10 hidden md:grid gap-y-1"
         style={{
-          gridTemplateColumns: `${AVATAR_COLUMN_WIDTH}px minmax(0,1fr) ${SCORE_BOX_WIDTH - 6}px`,
-          gridTemplateRows: "60px 28px 18px 28px 60px",
+          gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
+          gridTemplateRows: compactExpandedLayout ? "56px 24px 16px 24px 56px" : "60px 28px 18px 28px 60px",
         }}
       >
         <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
@@ -1150,7 +1173,7 @@ export function LiveScoreBoardCard({
 
         <div
           className="row-start-1 row-end-2 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          style={{ paddingRight: desktopScoreReserve }}
         >
           <NamePlate
             variant="top"
@@ -1158,30 +1181,31 @@ export function LiveScoreBoardCard({
             name={player1Name}
             run={resolveDisplayedRun(player1)}
             isActive={isPlayer1Active}
+            dense={compactExpandedLayout}
             className="w-full"
           />
         </div>
         <div
           className="row-start-2 row-end-3 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          style={{ paddingRight: desktopScoreReserve }}
         >
-          <StatsRow player={player1} variant="top" className="w-full" />
+          <StatsRow player={player1} variant="top" dense={compactExpandedLayout} className="w-full" />
         </div>
         <div
           className="row-start-3 row-end-4 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          style={{ paddingRight: desktopScoreReserve }}
         >
           <TimerBar />
         </div>
         <div
           className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          style={{ paddingRight: desktopScoreReserve }}
         >
-          <StatsRow player={player2} variant="bottom" className="w-full" />
+          <StatsRow player={player2} variant="bottom" dense={compactExpandedLayout} className="w-full" />
         </div>
         <div
           className="row-start-5 row-end-6 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: SCORE_BOX_WIDTH + DESKTOP_SCORE_GUTTER }}
+          style={{ paddingRight: desktopScoreReserve }}
         >
           <NamePlate
             variant="bottom"
@@ -1189,15 +1213,16 @@ export function LiveScoreBoardCard({
             name={player2Name}
             run={resolveDisplayedRun(player2)}
             isActive={isPlayer2Active}
+            dense={compactExpandedLayout}
             className="w-full"
           />
         </div>
 
         <div className="row-start-1 row-end-2 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
-          <PointsBox player={player1} variant="top" isActive={isPlayer1Active} />
+          <PointsBox player={player1} variant="top" isActive={isPlayer1Active} dense={compactExpandedLayout} />
         </div>
         <div className="row-start-5 row-end-6 col-start-3 col-end-4 z-10 flex items-center justify-end -ml-1">
-          <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} />
+          <PointsBox player={player2} variant="bottom" isActive={isPlayer2Active} dense={compactExpandedLayout} />
         </div>
       </div>
       <DesktopInningsOverlay />

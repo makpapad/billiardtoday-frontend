@@ -1715,6 +1715,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                         normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
                       }
                       liveVideosSelected={videoDrawerSelectedSessionIds.includes(s.sessionId)}
+                      compactExpandedLayout={videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(s, origin)
                       }
