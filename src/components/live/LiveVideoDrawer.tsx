@@ -2,7 +2,9 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveVideoEntry } from "@/lib/liveVideos";
+import type { LiveScoreState } from "@/components/live/types";
 
 type LiveVideoDrawerSession = {
   sessionId: string;
@@ -11,6 +13,23 @@ type LiveVideoDrawerSession = {
   subtitle?: string | null;
   playerAName?: string | null;
   playerBName?: string | null;
+  playerACountry?: string | null;
+  playerBCountry?: string | null;
+  scoreA?: number | null;
+  scoreB?: number | null;
+  runA?: number | null;
+  runB?: number | null;
+  avgFormattedA?: string | null;
+  avgFormattedB?: string | null;
+  accPercentA?: number | null;
+  accPercentB?: number | null;
+  bestRunA?: number | null;
+  bestRunB?: number | null;
+  bestRun2A?: number | null;
+  bestRun2B?: number | null;
+  inningsCount?: number | null;
+  inningsDetail?: LiveScoreState["inningsDetail"];
+  current?: "A" | "B";
   liveVideos: LiveVideoEntry[];
 };
 
@@ -85,6 +104,200 @@ function resolveInitialVideo(
 
 function sessionPairLabel(session: LiveVideoDrawerSession) {
   return [session.playerAName, session.playerBName].filter(Boolean).join(" vs ");
+}
+
+function formatAvg(value?: string | null, score?: number | null, innings?: number | null) {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  const safeScore = Number(score ?? 0);
+  const safeInnings = Number(innings ?? 0);
+  if (!Number.isFinite(safeScore) || !Number.isFinite(safeInnings) || safeInnings <= 0) {
+    return "--";
+  }
+  return (safeScore / safeInnings).toFixed(3);
+}
+
+function formatPercent(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "--";
+  return `${value.toFixed(1)}%`;
+}
+
+function normalizeStat(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "--";
+  return String(Math.max(0, Math.trunc(value)));
+}
+
+function getSessionInningRows(session: LiveVideoDrawerSession) {
+  const entries = Array.isArray(session.inningsDetail) ? session.inningsDetail : [];
+  return [...entries]
+    .filter((entry) => Number.isFinite(entry?.inning) && (entry?.inning ?? 0) > 0)
+    .sort((a, b) => a.inning - b.inning)
+    .slice(-8);
+}
+
+function PlayerMatchSheetCard({
+  name,
+  country,
+  score,
+  innings,
+  avg,
+  firstHr,
+  secondHr,
+  align = "left",
+  active = false,
+}: {
+  name?: string | null;
+  country?: string | null;
+  score?: number | null;
+  innings?: number | null;
+  avg?: string | null;
+  firstHr?: number | null;
+  secondHr?: number | null;
+  align?: "left" | "right";
+  active?: boolean;
+}) {
+  const flagUrl = getCountryFlagCdnUrl(country ?? null, 40);
+  return (
+    <div className={`rounded-[20px] border px-3 py-3 shadow-[0_16px_40px_rgba(2,12,27,0.24)] ${
+      active
+        ? "border-cyan-300/35 bg-cyan-300/10"
+        : "border-white/10 bg-white/[0.04]"
+    }`}>
+      <div className={`flex items-center gap-2 ${align === "right" ? "justify-end text-right" : "justify-start text-left"}`}>
+        {align === "right" ? null : flagUrl ? (
+          <img
+            src={flagUrl}
+            alt={country ?? ""}
+            className="h-5 w-8 rounded-sm object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-white">{name || "Player"}</div>
+        </div>
+        {align === "right" && flagUrl ? (
+          <img
+            src={flagUrl}
+            alt={country ?? ""}
+            className="h-5 w-8 rounded-sm object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
+      </div>
+      <div className="mt-3 grid grid-cols-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05]">
+        {[
+          { label: "Score", value: normalizeStat(score) },
+          { label: "Inn", value: normalizeStat(innings) },
+          { label: "Avg", value: formatAvg(avg, score, innings) },
+          { label: "1st HR", value: normalizeStat(firstHr) },
+          { label: "2nd HR", value: normalizeStat(secondHr) },
+        ].map((item) => (
+          <div key={item.label} className="min-w-0 border-r border-white/10 px-1.5 py-2 last:border-r-0">
+            <div className="text-center text-[10px] font-medium text-slate-300">{item.label}</div>
+            <div className="mt-2 truncate text-center text-[13px] font-semibold text-white">{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchSheetView({
+  session,
+}: {
+  session: LiveVideoDrawerSession;
+}) {
+  const rows = getSessionInningRows(session);
+  const inningsDisplay = typeof session.inningsCount === "number" && Number.isFinite(session.inningsCount)
+    ? Math.max(1, Math.trunc(session.inningsCount))
+    : null;
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3">
+        <PlayerMatchSheetCard
+          name={session.playerAName}
+          country={session.playerACountry}
+          score={session.scoreA}
+          innings={inningsDisplay}
+          avg={session.avgFormattedA}
+          firstHr={session.bestRunA}
+          secondHr={session.bestRun2A}
+          active={session.current === "A"}
+        />
+        <PlayerMatchSheetCard
+          name={session.playerBName}
+          country={session.playerBCountry}
+          score={session.scoreB}
+          innings={inningsDisplay}
+          avg={session.avgFormattedB}
+          firstHr={session.bestRunB}
+          secondHr={session.bestRun2B}
+          align="right"
+          active={session.current === "B"}
+        />
+      </div>
+
+      <div className="overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04]">
+        <div className="grid grid-cols-[1fr_1fr_84px_1fr_1fr] border-b border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] font-medium text-slate-300">
+          <div className="text-center">Point</div>
+          <div className="text-center">Score</div>
+          <div className="text-center">Inn</div>
+          <div className="text-center">Point</div>
+          <div className="text-center">Score</div>
+        </div>
+        {rows.length > 0 ? (
+          <div>
+            {rows.map((row, index) => (
+              <div
+                key={`inn-row-${row.inning}`}
+                className={`grid grid-cols-[1fr_1fr_84px_1fr_1fr] items-center px-3 py-2.5 text-sm ${
+                  index === 0 ? "" : "border-t border-white/10"
+                }`}
+              >
+                <div className="text-center font-semibold text-white">{normalizeStat(row.player1?.pt)}</div>
+                <div className="text-center font-semibold text-white">{normalizeStat(row.player1?.tot)}</div>
+                <div className="mx-auto w-full max-w-[72px] rounded-xl bg-white/[0.05] px-2 py-1 text-center font-semibold text-cyan-100">
+                  {normalizeStat(row.inning)}
+                </div>
+                <div className="text-center font-semibold text-white">{normalizeStat(row.player2?.pt)}</div>
+                <div className="text-center font-semibold text-white">{normalizeStat(row.player2?.tot)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-10 text-center text-sm text-slate-300">
+            No live inning detail yet.
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-3">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">Accuracy</div>
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm font-semibold text-white">
+            <span className="truncate">{session.playerAName || "A"}</span>
+            <span>{formatPercent(session.accPercentA)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm font-semibold text-amber-200">
+            <span className="truncate">{session.playerBName || "B"}</span>
+            <span>{formatPercent(session.accPercentB)}</span>
+          </div>
+        </div>
+        <div className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-3">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">Current run</div>
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm font-semibold text-white">
+            <span className="truncate">{session.playerAName || "A"}</span>
+            <span>{normalizeStat(session.runA)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm font-semibold text-amber-200">
+            <span className="truncate">{session.playerBName || "B"}</span>
+            <span>{normalizeStat(session.runB)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type VideoTileProps = {
@@ -268,6 +481,7 @@ export function LiveVideoDrawer({
     Record<string, string>
   >({});
   const [wallOpen, setWallOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"video" | "sheet">("video");
   const handleWallClose = React.useCallback(() => {
     setWallOpen(false);
   }, []);
@@ -370,6 +584,7 @@ export function LiveVideoDrawer({
   );
 
   const focusedVideo = focusedSession ? resolveVideoForSession(focusedSession) : null;
+  const focusedHasVideo = Boolean(focusedSession && focusedSession.liveVideos.length > 0 && focusedVideo);
 
   const selectedCount = selectedSessions.length;
   const panelWidthClass = "w-full xl:w-[420px]";
@@ -399,6 +614,11 @@ export function LiveVideoDrawer({
   React.useEffect(() => {
     onSelectedSessionsChange?.(selectedSessionIds);
   }, [onSelectedSessionsChange, selectedSessionIds]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setActiveTab(focusedHasVideo ? "video" : "sheet");
+  }, [focusedHasVideo, focusedSession?.sessionId, open]);
 
   if (!mounted || !open) return null;
 
@@ -444,18 +664,48 @@ export function LiveVideoDrawer({
             </div>
           ) : (
             <>
-              <VideoTile
-                session={focusedSession}
-                video={focusedVideo}
-                onSelectVideo={(videoId) => setSessionVideo(focusedSession.sessionId, videoId)}
-              />
+              <div className="mb-3 inline-flex rounded-2xl border border-white/10 bg-white/[0.05] p-1">
+                {focusedHasVideo ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("video")}
+                    className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                      activeTab === "video"
+                        ? "bg-cyan-300/15 text-white"
+                        : "text-slate-300 hover:bg-white/5"
+                    }`}
+                  >
+                    Video
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sheet")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                    activeTab === "sheet"
+                      ? "bg-cyan-300/15 text-white"
+                      : "text-slate-300 hover:bg-white/5"
+                  }`}
+                >
+                  Match sheet
+                </button>
+              </div>
+              {activeTab === "video" && focusedHasVideo ? (
+                <VideoTile
+                  session={focusedSession}
+                  video={focusedVideo}
+                  onSelectVideo={(videoId) => setSessionVideo(focusedSession.sessionId, videoId)}
+                />
+              ) : (
+                <MatchSheetView session={focusedSession} />
+              )}
               <div className="mt-3 flex items-center justify-between gap-3">
                 <div className="text-xs text-slate-300">
                   {selectedCount === 1
                     ? "1 match selected"
                     : `${selectedCount} matches selected for multiple view`}
                 </div>
-                {focusedVideo ? (
+                {activeTab === "video" && focusedVideo ? (
                   <a
                     href={watchUrlForVideo(focusedVideo.videoId)}
                     target="_blank"
