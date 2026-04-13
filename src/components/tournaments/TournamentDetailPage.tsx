@@ -3876,7 +3876,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             Waiting for live scores...
           </div>
         ) : (
-          <div className={`grid grid-cols-1 gap-6 ${videoDrawerOpen ? "" : "md:grid-cols-2"}`}>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
               const photoFallback =

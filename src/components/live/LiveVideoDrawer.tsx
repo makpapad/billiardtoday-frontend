@@ -319,10 +319,7 @@ export function LiveVideoDrawer({
   const focusedVideo = focusedSession ? resolveVideoForSession(focusedSession) : null;
 
   const selectedCount = selectedSessions.length;
-  const isWideMode = selectedCount >= 3;
-  const panelWidthClass = isWideMode
-    ? "w-full xl:w-[900px]"
-    : "w-full xl:w-[460px]";
+  const panelWidthClass = "w-full xl:w-[420px]";
 
   const replaceWithSession = React.useCallback((session: LiveVideoDrawerSession) => {
     const nextVideo = resolveInitialVideo(session, null);
@@ -421,19 +418,24 @@ export function LiveVideoDrawer({
         </div>
 
         <div className="border-b border-white/10 px-4 py-4">
-          {selectedCount === 0 ? (
+          {selectedCount === 0 || !focusedSession ? (
             <div className="rounded-[24px] border border-dashed border-white/15 bg-white/5 px-4 py-10 text-center text-sm text-slate-300">
               Pick live matches from the cards to add them here.
             </div>
-          ) : selectedCount === 1 && focusedSession ? (
+          ) : (
             <>
               <VideoTile
                 session={focusedSession}
                 video={focusedVideo}
                 onSelectVideo={(videoId) => setSessionVideo(focusedSession.sessionId, videoId)}
               />
-              {focusedVideo ? (
-                <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="text-xs text-slate-300">
+                  {selectedCount === 1
+                    ? "1 match selected"
+                    : `${selectedCount} matches selected for multiple view`}
+                </div>
+                {focusedVideo ? (
                   <a
                     href={watchUrlForVideo(focusedVideo.videoId)}
                     target="_blank"
@@ -442,22 +444,32 @@ export function LiveVideoDrawer({
                   >
                     YouTube
                   </a>
+                ) : null}
+              </div>
+              {selectedSessions.length > 1 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedSessions.map((session) => {
+                    const active = session.sessionId === focusedSession.sessionId;
+                    return (
+                      <button
+                        key={`selected-${session.sessionId}`}
+                        type="button"
+                        onClick={() => setFocusedSessionId(session.sessionId)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                          active
+                            ? "border-cyan-300/55 bg-cyan-300/15 text-white"
+                            : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
+                      >
+                        {session.playerAName && session.playerBName
+                          ? `${session.playerAName} vs ${session.playerBName}`
+                          : session.title}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : null}
             </>
-          ) : (
-            <div className={selectedCount >= 3 ? "grid grid-cols-1 gap-4 md:grid-cols-2" : "space-y-4"}>
-              {selectedSessions.map((session) => (
-                <VideoTile
-                  key={`drawer-${session.sessionId}`}
-                  session={session}
-                  video={resolveVideoForSession(session)}
-                  muted
-                  compact
-                  onSelectVideo={(videoId) => setSessionVideo(session.sessionId, videoId)}
-                />
-              ))}
-            </div>
           )}
         </div>
 

@@ -1643,7 +1643,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 Waiting for live scores...
               </div>
             ) : (
-              <div className={`grid grid-cols-1 gap-6 ${videoDrawerOpen ? "" : "md:grid-cols-2"}`}>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {filteredItems.map((s) => {
                   const st = s.state || {};
                   return (
