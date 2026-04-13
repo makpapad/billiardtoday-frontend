@@ -790,7 +790,7 @@ export function LiveScoreBoardCard({
           className="relative z-10 hidden md:grid gap-y-1"
           style={{
             gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "44px 12px 10px 12px 44px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 40px" : "60px 28px 18px 28px 60px",
           }}
         >
           <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
@@ -1163,7 +1163,7 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden md:grid gap-y-1"
         style={{
           gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "44px 12px 10px 12px 44px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 40px" : "60px 28px 18px 28px 60px",
         }}
       >
         <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
