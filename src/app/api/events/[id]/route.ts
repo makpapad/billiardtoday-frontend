@@ -267,6 +267,11 @@ export async function GET(
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][1]', 'full_name_en')
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][2]', 'documentId')
         queryParams.set('populate[timetable_slots][populate][match][populate][player2][fields][3]', 'country')
+        queryParams.set('populate[players][fields][0]', 'full_name')
+        queryParams.set('populate[players][fields][1]', 'full_name_en')
+        queryParams.set('populate[players][fields][2]', 'country')
+        queryParams.set('populate[players][fields][3]', 'documentId')
+        queryParams.set('populate[players][fields][4]', 'status')
 
         queryParams.set('fields[0]', 'documentId')
         queryParams.set('fields[1]', 'title')

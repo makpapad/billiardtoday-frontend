@@ -122,6 +122,7 @@ export type StrapiEvent = {
   start_date?: string | null;
   end_date?: string | null;
   timetable_config?: TimetableConfig | null;
+  players?: unknown;
   event_stages?: StrapiEventStage[] | null;
   results_final?: StrapiFinalResult[] | null;
   timetable_slots?: StrapiEventTimetableSlot[] | null;

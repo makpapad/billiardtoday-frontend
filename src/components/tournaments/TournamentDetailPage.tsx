@@ -135,6 +135,14 @@ type HeroMenuButtonProps = {
   onClick: () => void;
 };
 
+type TournamentParticipantRow = {
+  id: string;
+  documentId: string | null;
+  name: string;
+  country: string | null;
+  status: string;
+};
+
 function HeroMenuButton({
   label,
   iconSrc,
@@ -169,6 +177,16 @@ function HeroMenuButton({
     </button>
   );
 }
+
+const formatParticipantStatus = (value: unknown) => {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "Registered";
+  return normalized
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 type InningDetailEntry = {
   inning: number;
@@ -1064,7 +1082,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     "tournament",
   );
   const [tournamentPanelMode, setTournamentPanelMode] = useState<
-    "stages" | "finals" | "gallery" | "timetable"
+    "stages" | "finals" | "gallery" | "timetable" | "participants" | "info"
   >("stages");
   const [timetableViewMode, setTimetableViewMode] = useState<
     "matches" | "training"
@@ -3128,6 +3146,39 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       });
   }, [eventData, timetableTrainingPlayers]);
 
+  const tournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
+    if (!eventData?.data?.players) return [];
+
+    return toRelationArray(eventData.data.players).map((player, index) => {
+      const normalized = normalizeEntity<{
+        full_name?: unknown;
+        full_name_en?: unknown;
+        country?: unknown;
+        status?: unknown;
+      }>(player, `participant-${index + 1}`);
+
+      const name =
+        typeof normalized.full_name_en === "string" && normalized.full_name_en.trim()
+          ? normalized.full_name_en.trim()
+          : typeof normalized.full_name === "string" && normalized.full_name.trim()
+            ? normalized.full_name.trim()
+            : `Player ${index + 1}`;
+
+      const country =
+        typeof normalized.country === "string" && normalized.country.trim()
+          ? normalized.country.trim()
+          : null;
+
+      return {
+        id: normalized.id,
+        documentId: normalized.documentId ?? null,
+        name,
+        country,
+        status: formatParticipantStatus(normalized.status),
+      };
+    });
+  }, [eventData]);
+
   const eventTimezoneOffsetMinutes = useMemo(() => {
     const raw =
       eventData?.data?.timetable_config &&
@@ -3182,6 +3233,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       }),
     [],
   );
+
+  const playerProfileHref = (playerId: string, playerName: string) =>
+    `${embedded ? "/embed" : ""}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, "-")}`;
 
   const visibleTimetableSlots = useMemo(() => {
     const trimmedQuery = normalizeLookupText(timetableSearchQuery);
@@ -3639,7 +3693,125 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const mainContent =
     activeView === "tournament" ? (
-      tournamentPanelMode === "gallery" ? (
+      tournamentPanelMode === "participants" ? (
+        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+          <div className="flex flex-col gap-4">
+            <div>
+              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Participants
+              </div>
+              <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Registered players
+              </h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Listed in the same order they were registered for this event.
+              </p>
+            </div>
+            {tournamentParticipants.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                No participants have been published yet.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-sm">
+                    <thead className="bg-slate-900 text-white">
+                      <tr>
+                        <th className="px-5 py-3 text-left font-semibold">Player</th>
+                        <th className="px-4 py-3 text-left font-semibold">Country</th>
+                        <th className="px-4 py-3 text-left font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tournamentParticipants.map((player) => {
+                        const flagSrc = getCountryFlagCdnUrl(player.country, 40);
+                        return (
+                          <tr
+                            key={player.id}
+                            className="border-t border-slate-200 bg-white text-slate-700"
+                          >
+                            <td className="px-5 py-3 align-middle">
+                              {player.documentId ? (
+                                <Link
+                                  href={playerProfileHref(player.documentId, player.name)}
+                                  className="font-semibold text-slate-950 transition hover:text-cyan-700"
+                                >
+                                  {player.name}
+                                </Link>
+                              ) : (
+                                <span className="font-semibold text-slate-950">{player.name}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 align-middle">
+                              <span className="inline-flex items-center gap-2">
+                                {flagSrc ? (
+                                  <img
+                                    src={flagSrc}
+                                    alt={player.country || "flag"}
+                                    className="h-3.5 w-5 rounded-[2px] object-cover"
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : null}
+                                <span>{player.country || "-"}</span>
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 align-middle">
+                              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                                {player.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : tournamentPanelMode === "info" ? (
+        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+          <div className="flex flex-col gap-4">
+            <div>
+              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Event Info
+              </div>
+              <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Tournament details
+              </h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {[
+                { label: "Tournament", value: summary.title || "-" },
+                { label: "Season", value: summary.season ? String(summary.season) : "-" },
+                { label: "Game type", value: summary.gameType || "-" },
+                { label: "Schedule", value: scheduleLabel || "To be announced" },
+                { label: "Venue", value: summary.venueName || summary.clubName || "-" },
+                {
+                  label: "Location",
+                  value:
+                    [summary.venueCity || summary.clubCity, summary.venueCountry || summary.clubCountry]
+                      .filter(Boolean)
+                      .join(", ") || "-",
+                },
+                { label: "Organizer", value: summary.organizerType || "-" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {item.label}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-950">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : tournamentPanelMode === "gallery" ? (
         <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-16 text-center shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-10">
           <div className="mx-auto max-w-2xl">
             <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -4179,43 +4351,65 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <HeroMenuButton
-                label="Live"
-                iconSrc="/icons%20webp/live3.webp"
-                active={activeView === "live"}
-                onClick={switchToLive}
-              />
-              <HeroMenuButton
-                label="Tournament"
-                iconSrc="/icons%20webp/Tournament1.webp"
-                active={activeView === "tournament" && tournamentPanelMode === "stages"}
-                onClick={switchToTournament}
-              />
-              <HeroMenuButton
-                label="Time Table"
-                iconSrc="/icons%20webp/schedule1.webp"
-                active={activeView === "tournament" && tournamentPanelMode === "timetable"}
-                onClick={() => {
-                  setTournamentPanelMode("timetable");
-                  setActiveView("tournament");
-                }}
-              />
-              <HeroMenuButton
-                label="Final standings"
-                iconSrc="/icons%20webp/finalrank1.webp"
-                active={activeView === "tournament" && tournamentPanelMode === "finals"}
-                onClick={openFinalStandings}
-              />
-              <HeroMenuButton
-                label="Photo gallery"
-                iconSrc="/icons%20webp/photo%20gallery1.webp"
-                active={activeView === "tournament" && tournamentPanelMode === "gallery"}
-                onClick={() => {
-                  setTournamentPanelMode("gallery");
-                  setActiveView("tournament");
-                }}
-              />
+            <div className="flex w-full flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-3">
+                <HeroMenuButton
+                  label="Live"
+                  iconSrc="/icons%20webp/live3.webp"
+                  active={activeView === "live"}
+                  onClick={switchToLive}
+                />
+                <HeroMenuButton
+                  label="Tournament"
+                  iconSrc="/icons%20webp/Tournament1.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "stages"}
+                  onClick={switchToTournament}
+                />
+                <HeroMenuButton
+                  label="Time Table"
+                  iconSrc="/icons%20webp/schedule1.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "timetable"}
+                  onClick={() => {
+                    setTournamentPanelMode("timetable");
+                    setActiveView("tournament");
+                  }}
+                />
+                <HeroMenuButton
+                  label="Final standings"
+                  iconSrc="/icons%20webp/finalrank1.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "finals"}
+                  onClick={openFinalStandings}
+                />
+                <HeroMenuButton
+                  label="Photo gallery"
+                  iconSrc="/icons%20webp/photo%20gallery1.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "gallery"}
+                  onClick={() => {
+                    setTournamentPanelMode("gallery");
+                    setActiveView("tournament");
+                  }}
+                />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <HeroMenuButton
+                  label="Participants"
+                  iconSrc="/icons%20webp/participants1.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "participants"}
+                  onClick={() => {
+                    setTournamentPanelMode("participants");
+                    setActiveView("tournament");
+                  }}
+                />
+                <HeroMenuButton
+                  label="Info"
+                  iconSrc="/icons%20webp/info.webp"
+                  active={activeView === "tournament" && tournamentPanelMode === "info"}
+                  onClick={() => {
+                    setTournamentPanelMode("info");
+                    setActiveView("tournament");
+                  }}
+                />
+              </div>
             </div>
           </div>
 
