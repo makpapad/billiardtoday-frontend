@@ -1104,6 +1104,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = useState<string[]>([]);
   const [isWideDesktop, setIsWideDesktop] = useState(false);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
+  const mobileVideoDrawerRef = useRef<HTMLDivElement | null>(null);
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -3321,6 +3322,18 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       } as React.CSSProperties)
     : undefined;
 
+  useEffect(() => {
+    if (typeof window === "undefined" || isWideDesktop || !videoDrawerSessionId) return;
+    const panel = mobileVideoDrawerRef.current;
+    if (!panel) return;
+    window.requestAnimationFrame(() => {
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(() => {
+        window.scrollBy({ top: -20, behavior: "smooth" });
+      }, 40);
+    });
+  }, [isWideDesktop, videoDrawerSessionId]);
+
   const handleOpenLiveVideos = useCallback(
     (
       session: EventLiveSession,
@@ -4049,7 +4062,10 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                           session.liveVideos ?? state.liveVideos,
                         ).length > 0
                       }
-                      liveVideosSelected={videoDrawerSelectedSessionIds.includes(session.sessionId)}
+                      liveVideosSelected={
+                        videoDrawerSelectedSessionIds.includes(session.sessionId) ||
+                        (!isWideDesktop && mobileVideoDrawerSessionId === session.sessionId)
+                      }
                       compactExpandedLayout={isWideDesktop && videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
@@ -4097,7 +4113,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
           ) : null}
         </div>
         {mobileVideoDrawerSessionId ? (
-          <div className="mt-6 xl:hidden">
+          <div ref={mobileVideoDrawerRef} className="mt-6 xl:hidden">
             <LiveVideoDrawer
               open
               sessions={tournamentVideoSessions}

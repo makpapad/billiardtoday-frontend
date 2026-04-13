@@ -518,6 +518,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     React.useState<DrawerLaunchOrigin | null>(null);
   const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = React.useState<string[]>([]);
   const [isWideDesktop, setIsWideDesktop] = React.useState(false);
+  const mobileVideoDrawerRef = React.useRef<HTMLDivElement | null>(null);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -1586,6 +1587,18 @@ export function LiveClubView({ club, embedded = false }: Props) {
       } as React.CSSProperties)
     : undefined;
 
+  React.useEffect(() => {
+    if (typeof window === "undefined" || isWideDesktop || !videoDrawerSessionId) return;
+    const panel = mobileVideoDrawerRef.current;
+    if (!panel) return;
+    window.requestAnimationFrame(() => {
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(() => {
+        window.scrollBy({ top: -20, behavior: "smooth" });
+      }, 40);
+    });
+  }, [isWideDesktop, videoDrawerSessionId]);
+
   const handleOpenLiveVideos = React.useCallback(
     (
       item: LiveScoreItem,
@@ -1750,7 +1763,10 @@ export function LiveClubView({ club, embedded = false }: Props) {
                       hasLiveVideos={
                         normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
                       }
-                      liveVideosSelected={videoDrawerSelectedSessionIds.includes(s.sessionId)}
+                      liveVideosSelected={
+                        videoDrawerSelectedSessionIds.includes(s.sessionId) ||
+                        (!isWideDesktop && mobileVideoDrawerSessionId === s.sessionId)
+                      }
                       compactExpandedLayout={isWideDesktop && videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(s, origin)
@@ -1779,7 +1795,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
           ) : null}
         </div>
         {mobileVideoDrawerSessionId ? (
-          <div className="mt-6 xl:hidden">
+          <div ref={mobileVideoDrawerRef} className="mt-6 xl:hidden">
             <LiveVideoDrawer
               open
               sessions={videoDrawerSessions}
