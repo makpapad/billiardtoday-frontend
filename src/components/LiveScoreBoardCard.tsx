@@ -93,7 +93,7 @@ export function LiveScoreBoardCard({
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
   const isExpanded = isControlled ? Boolean(expanded) : internalExpanded;
-  const desktopAvatarColumnWidth = compactExpandedLayout ? 42 : AVATAR_COLUMN_WIDTH;
+  const desktopAvatarColumnWidth = compactExpandedLayout ? 48 : AVATAR_COLUMN_WIDTH;
   const desktopScoreBoxWidth = compactExpandedLayout ? 60 : SCORE_BOX_WIDTH - 6;
   const desktopScoreReserve = desktopScoreBoxWidth + DESKTOP_SCORE_GUTTER;
 
@@ -786,11 +786,11 @@ export function LiveScoreBoardCard({
           className="relative z-10 hidden md:grid gap-y-1"
           style={{
             gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "36px 12px 10px 12px 36px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 12px 10px 12px 44px" : "60px 28px 18px 28px 60px",
           }}
         >
-          <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
-            <AvatarCircle player={player1} fallback="P1" />
+          <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
+            <AvatarCircle player={player1} fallback="P1" compact={compactExpandedLayout} />
           </div>
           <div className="row-start-2 row-end-3 flex items-center justify-center pl-3">
             <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
@@ -801,8 +801,8 @@ export function LiveScoreBoardCard({
           <div className="row-start-3 row-end-4 flex items-center justify-center pl-3">
             <LiveVideoButton />
           </div>
-          <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
-            <AvatarCircle player={player2} fallback="P2" />
+          <div className="row-start-5 row-end-6 flex items-center justify-center pl-2">
+            <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} />
           </div>
 
           <div
@@ -1156,11 +1156,11 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden md:grid gap-y-1"
         style={{
           gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "36px 12px 10px 12px 36px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 12px 10px 12px 44px" : "60px 28px 18px 28px 60px",
         }}
       >
-        <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
-          <AvatarCircle player={player1} fallback="P1" />
+        <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
+          <AvatarCircle player={player1} fallback="P1" compact={compactExpandedLayout} />
         </div>
         <div className="row-start-2 row-end-3 flex items-center justify-center pl-3">
           <TimeoutDots used={timeoutsUsed1} max={maxTimeouts1} />
@@ -1171,8 +1171,8 @@ export function LiveScoreBoardCard({
         <div className="row-start-3 row-end-4 flex items-center justify-center pl-3">
           <LiveVideoButton />
         </div>
-        <div className="row-start-5 row-end-6 flex items-center justify-center pl-3">
-          <AvatarCircle player={player2} fallback="P2" />
+        <div className="row-start-5 row-end-6 flex items-center justify-center pl-2">
+          <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} />
         </div>
 
         <div
