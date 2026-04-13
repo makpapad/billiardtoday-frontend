@@ -4351,7 +4351,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 </p>
               </div>
             </div>
-            <div className="flex w-full flex-wrap items-center justify-between gap-3">
+            <div className="flex w-full flex-col gap-3">
               <div className="flex flex-wrap gap-3">
                 <HeroMenuButton
                   label="Live"
@@ -4390,7 +4390,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                   }}
                 />
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex w-full flex-wrap justify-end gap-3">
                 <HeroMenuButton
                   label="Participants"
                   iconSrc="/icons%20webp/participants1.webp"
