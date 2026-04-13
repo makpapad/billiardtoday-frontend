@@ -494,21 +494,23 @@ export function LiveVideoDrawer({
     }
 
     const requestedSession = resolveInitialSession(sessions, initialSessionId);
+    if (!requestedSession) return;
     const requestedVideo = resolveInitialVideo(requestedSession, initialVideoId);
-    if (!requestedSession || !requestedVideo) return;
 
-    const requestKey = `${requestedSession.sessionId}:${requestedVideo.videoId}`;
+    const requestKey = `${requestedSession.sessionId}:${requestedVideo?.videoId ?? "sheet"}`;
     const firstOpen = !wasOpenRef.current;
     const requestChanged = lastRequestKeyRef.current !== requestKey;
 
     if (!firstOpen && !requestChanged) return;
 
     setFocusedSessionId(requestedSession.sessionId);
-    setSelectedVideoBySession((prev) => ({
-      ...prev,
-      [requestedSession.sessionId]:
-        prev[requestedSession.sessionId] ?? requestedVideo.videoId,
-    }));
+    if (requestedVideo) {
+      setSelectedVideoBySession((prev) => ({
+        ...prev,
+        [requestedSession.sessionId]:
+          prev[requestedSession.sessionId] ?? requestedVideo.videoId,
+      }));
+    }
     setSelectedSessionIds((prev) => {
       if (firstOpen) return [requestedSession.sessionId];
       if (prev.includes(requestedSession.sessionId)) return prev;
@@ -572,6 +574,10 @@ export function LiveVideoDrawer({
 
   const focusedVideo = focusedSession ? resolveVideoForSession(focusedSession) : null;
   const focusedHasVideo = Boolean(focusedSession && focusedSession.liveVideos.length > 0 && focusedVideo);
+  const selectedVideoSessions = React.useMemo(
+    () => selectedSessions.filter((session) => session.liveVideos.length > 0 && resolveVideoForSession(session)),
+    [resolveVideoForSession, selectedSessions],
+  );
 
   const selectedCount = selectedSessions.length;
   const panelWidthClass = "w-full xl:w-[420px]";
@@ -629,17 +635,10 @@ export function LiveVideoDrawer({
             <button
               type="button"
               onClick={() => setWallOpen(true)}
-              disabled={selectedCount === 0}
+              disabled={selectedVideoSessions.length === 0}
               className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-3 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Multiple view
-            </button>
-            <button
-              type="button"
-              onClick={clearAll}
-              className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-white/15"
-            >
-              Close
             </button>
           </div>
         </div>
@@ -732,9 +731,9 @@ export function LiveVideoDrawer({
 
       </aside>
 
-      {wallOpen && selectedSessions.length > 0 ? (
+      {wallOpen && selectedVideoSessions.length > 0 ? (
         <VideoWall
-          sessions={selectedSessions}
+          sessions={selectedVideoSessions}
           resolveVideoForSession={resolveVideoForSession}
           onClose={handleWallClose}
         />

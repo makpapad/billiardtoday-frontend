@@ -512,12 +512,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const [items, setItems] = useState<LiveScoreItem[]>([]);
   const [expandedSessions, setExpandedSessions] = React.useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
-  const [videoDrawerOpen, setVideoDrawerOpen] = React.useState(false);
   const [videoDrawerSessionId, setVideoDrawerSessionId] = React.useState<string | null>(null);
   const [videoDrawerVideoId, setVideoDrawerVideoId] = React.useState<string | null>(null);
   const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
     React.useState<DrawerLaunchOrigin | null>(null);
   const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = React.useState<string[]>([]);
+  const [isWideDesktop, setIsWideDesktop] = React.useState(false);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
@@ -1487,6 +1487,9 @@ export function LiveClubView({ club, embedded = false }: Props) {
   }
 
   const handleCardClick = (item: LiveScoreItem) => {
+    const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
+    setVideoDrawerSessionId(item.sessionId);
+    setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
     setHighlightItem(item);
   };
 
@@ -1509,6 +1512,15 @@ export function LiveClubView({ club, embedded = false }: Props) {
     if (!exists) setSelectedTournament("all");
   }, [selectedTournament, tournamentOptions]);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1280px)");
+    const update = () => setIsWideDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   const filteredItems =
     selectedTournament === "all"
       ? items
@@ -1521,7 +1533,6 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const videoDrawerSessions = React.useMemo<LiveVideoDrawerSession[]>(() => {
     return filteredItems.reduce<LiveVideoDrawerSession[]>((acc, item) => {
       const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
-      if (liveVideos.length === 0) return acc;
       acc.push({
         sessionId: item.sessionId,
         screenId: item.screenId ?? null,
@@ -1558,6 +1569,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     }, []);
   }, [filteredItems]);
 
+  const videoDrawerOpen = filteredItems.length > 0;
   const videoDrawerShellStyle = videoDrawerOpen
     ? ({
         width: "min(1680px, calc(100vw - 48px))",
@@ -1571,11 +1583,9 @@ export function LiveClubView({ club, embedded = false }: Props) {
       origin?: { left: number; top: number; width: number; height: number } | null,
     ) => {
       const liveVideos = normalizeLiveVideoEntries(item.liveVideos ?? item.state?.liveVideos);
-      if (liveVideos.length === 0) return;
       setVideoDrawerSessionId(item.sessionId);
       setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
       setVideoDrawerLaunchOrigin(origin ?? null);
-      setVideoDrawerOpen(true);
     },
     [],
   );
@@ -1732,7 +1742,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                         normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
                       }
                       liveVideosSelected={videoDrawerSelectedSessionIds.includes(s.sessionId)}
-                      compactExpandedLayout={videoDrawerOpen}
+                      compactExpandedLayout={isWideDesktop && videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(s, origin)
                       }
@@ -1745,7 +1755,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
             )}
           </div>
           {videoDrawerOpen ? (
-            <div className="w-full shrink-0 xl:sticky xl:top-6">
+            <div className="hidden w-full shrink-0 xl:sticky xl:top-6 xl:block">
               <LiveVideoDrawer
                 open={videoDrawerOpen}
                 sessions={videoDrawerSessions}
@@ -1754,11 +1764,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 launchOrigin={videoDrawerLaunchOrigin}
                 heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
                 onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
-                onClose={() => {
-                  setVideoDrawerOpen(false);
-                  setVideoDrawerLaunchOrigin(null);
-                  setVideoDrawerSelectedSessionIds([]);
-                }}
+                onClose={() => undefined}
               />
             </div>
           ) : null}

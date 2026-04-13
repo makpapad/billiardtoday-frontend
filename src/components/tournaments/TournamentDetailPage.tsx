@@ -1097,12 +1097,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(
     null,
   );
-  const [videoDrawerOpen, setVideoDrawerOpen] = useState(false);
   const [videoDrawerSessionId, setVideoDrawerSessionId] = useState<string | null>(null);
   const [videoDrawerVideoId, setVideoDrawerVideoId] = useState<string | null>(null);
   const [videoDrawerLaunchOrigin, setVideoDrawerLaunchOrigin] =
     useState<DrawerLaunchOrigin | null>(null);
   const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = useState<string[]>([]);
+  const [isWideDesktop, setIsWideDesktop] = useState(false);
   const [suppressLiveGridClicks, setSuppressLiveGridClicks] = useState(false);
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
@@ -3268,7 +3268,6 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         const liveVideos = normalizeLiveVideoEntries(
           session.liveVideos ?? session.state?.liveVideos,
         );
-        if (liveVideos.length === 0) return acc;
         acc.push({
           sessionId: session.sessionId,
           screenId: session.screenId ?? session.screenIdentifier ?? null,
@@ -3306,6 +3305,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     [liveCards, summary.title],
   );
 
+  const videoDrawerOpen = liveCards.length > 0;
   const videoDrawerShellStyle = videoDrawerOpen
     ? ({
         width: "min(1680px, calc(100vw - 48px))",
@@ -3321,11 +3321,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       const liveVideos = normalizeLiveVideoEntries(
         session.liveVideos ?? session.state?.liveVideos,
       );
-      if (liveVideos.length === 0) return;
       setVideoDrawerSessionId(session.sessionId);
       setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
       setVideoDrawerLaunchOrigin(origin ?? null);
-      setVideoDrawerOpen(true);
     },
     [],
   );
@@ -3356,6 +3354,15 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       window.clearTimeout(timeout);
     };
   }, [activeView, highlightedLiveSessionId, liveCards.length]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1280px)");
+    const update = () => setIsWideDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   const groupPopoverBySessionId = useMemo(() => {
     const result = new Map<string, GroupPopoverData>();
@@ -3485,6 +3492,11 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     lastClosedHighlightRef.current = null;
     setHoveredGroupSessionId(null);
     setOpenGroupSessionId(null);
+    const liveVideos = normalizeLiveVideoEntries(
+      session.liveVideos ?? session.state?.liveVideos,
+    );
+    setVideoDrawerSessionId(session.sessionId);
+    setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
     window.setTimeout(() => {
       setHighlightItem(buildHighlightItem(session));
     }, 0);
@@ -4028,7 +4040,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         ).length > 0
                       }
                       liveVideosSelected={videoDrawerSelectedSessionIds.includes(session.sessionId)}
-                      compactExpandedLayout={videoDrawerOpen}
+                      compactExpandedLayout={isWideDesktop && videoDrawerOpen}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
                       }
@@ -4060,7 +4072,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         )}
           </div>
           {videoDrawerOpen ? (
-            <div className="w-full shrink-0 xl:sticky xl:top-6">
+            <div className="hidden w-full shrink-0 xl:sticky xl:top-6 xl:block">
               <LiveVideoDrawer
                 open={videoDrawerOpen}
                 sessions={tournamentVideoSessions}
@@ -4069,11 +4081,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                 launchOrigin={videoDrawerLaunchOrigin}
                 heading={summary.title || "Tournament live videos"}
                 onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
-                onClose={() => {
-                  setVideoDrawerOpen(false);
-                  setVideoDrawerLaunchOrigin(null);
-                  setVideoDrawerSelectedSessionIds([]);
-                }}
+                onClose={() => undefined}
               />
             </div>
           ) : null}
