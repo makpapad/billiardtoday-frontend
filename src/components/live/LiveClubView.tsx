@@ -1579,7 +1579,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
     <main
       className={`bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] px-4 ${embedded ? "py-4 sm:px-6 sm:py-5" : "py-8 sm:px-8 min-h-screen"}`}
     >
-      <div className="max-w-6xl mx-auto">
+      <div
+        className={`mx-auto w-full ${
+          videoDrawerOpen
+            ? "max-w-[min(1680px,calc(100vw-48px))]"
+            : "max-w-6xl"
+        }`}
+      >
         {embedded ? (
           <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
