@@ -3290,9 +3290,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
 
   const videoDrawerShellStyle = videoDrawerOpen
     ? ({
-        "--live-shell-left": "max(24px, calc(50vw - 640px))",
-        "--live-shell-width":
-          "calc(100vw - max(24px, calc(50vw - 640px)) - 24px)",
+        width: "min(1680px, calc(100vw - 48px))",
+        maxWidth: "100%",
       } as React.CSSProperties)
     : undefined;
 
@@ -3872,7 +3871,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         <div
           className={`flex flex-col gap-6 ${
             videoDrawerOpen
-              ? "xl:ml-[var(--live-shell-left)] xl:grid xl:w-[var(--live-shell-width)] xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start"
+              ? "xl:mx-auto xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start"
               : ""
           }`}
           style={videoDrawerShellStyle}
