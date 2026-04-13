@@ -450,7 +450,7 @@ export function LiveScoreBoardCard({
             compact
               ? "text-[14px] md:text-[15px]"
               : dense
-                ? "text-[11px] md:text-[12px]"
+                ? "text-[10px] md:text-[11px]"
                 : "text-[17px] md:text-[19px]"
           } truncate font-semibold leading-tight`}
           title={name || ""}
@@ -1015,11 +1015,11 @@ export function LiveScoreBoardCard({
           <div className={`relative flex items-center justify-between font-semibold tabular-nums ${
             compactExpandedLayout ? "gap-1 text-[11px] md:text-[12px]" : "gap-2 text-sm md:text-base"
           }`}>
-            <span className="truncate text-left flex-1">{player1Name || "Player 1"}</span>
+            <span className={`truncate text-left flex-1 ${compactExpandedLayout ? "text-[10px] md:text-[11px]" : ""}`}>{player1Name || "Player 1"}</span>
             <span className={`text-center leading-none font-black ${compactExpandedLayout ? "min-w-[20px] text-[20px]" : "min-w-[30px] text-[32px]"}`}>{player1.points ?? 0}</span>
             <span className={`text-center text-cyan-100 ${compactExpandedLayout ? "min-w-[14px] text-[10px]" : "min-w-[26px]"}`}>{formatStat(inningsDisplay, 0)}</span>
             <span className={`text-center leading-none font-black text-amber-300 ${compactExpandedLayout ? "min-w-[20px] text-[20px]" : "min-w-[30px] text-[32px]"}`}>{player2.points ?? 0}</span>
-            <span className="truncate text-right flex-1 text-amber-300">{player2Name || "Player 2"}</span>
+            <span className={`truncate text-right flex-1 text-amber-300 ${compactExpandedLayout ? "text-[10px] md:text-[11px]" : ""}`}>{player2Name || "Player 2"}</span>
           </div>
         </button>
       </div>
