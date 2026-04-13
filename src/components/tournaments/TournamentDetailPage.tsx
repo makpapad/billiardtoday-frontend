@@ -1087,9 +1087,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     EventLiveSession[]
   >([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
-  const [expandedLiveSessionId, setExpandedLiveSessionId] = useState<
-    string | null
-  >(null);
+  const [expandedLiveSessionIds, setExpandedLiveSessionIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [eventData, setEventData] = useState<EventApiResponse | null>(null);
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
@@ -3472,8 +3472,24 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
     if (!expanded && openGroupSessionId === sessionId) {
       setOpenGroupSessionId(null);
     }
-    setExpandedLiveSessionId(expanded ? sessionId : null);
+    setExpandedLiveSessionIds((prev) => {
+      const next = new Set(prev);
+      if (expanded) next.add(sessionId);
+      else next.delete(sessionId);
+      return next;
+    });
   };
+
+  useEffect(() => {
+    setExpandedLiveSessionIds((prev) => {
+      const valid = new Set(liveCards.map((session) => session.sessionId));
+      const next = new Set<string>();
+      prev.forEach((sessionId) => {
+        if (valid.has(sessionId)) next.add(sessionId);
+      });
+      return next;
+    });
+  }, [liveCards]);
 
   const toggleGroupPopover = (sessionId: string) => {
     const willOpen = openGroupSessionId !== sessionId;
@@ -3902,7 +3918,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                     <LiveScoreBoardCard
                       sessionId={session.sessionId}
                       inlineExpandable
-                      expanded={expandedLiveSessionId === session.sessionId}
+                      expanded={expandedLiveSessionIds.has(session.sessionId)}
                       onExpandedChange={handleInlineCardExpandedChange}
                       clubName={session.clubName}
                       clubCity={session.clubCity}
@@ -3981,7 +3997,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
                         handleOpenLiveVideos(session, origin)
                       }
                       topLeftControl={
-                        expandedLiveSessionId === session.sessionId ? (
+                        expandedLiveSessionIds.has(session.sessionId) ? (
                           <button
                             type="button"
                             onClick={(event) => {
