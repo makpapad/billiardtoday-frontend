@@ -266,6 +266,9 @@ export function LiveVideoDrawer({
     Record<string, string>
   >({});
   const [wallOpen, setWallOpen] = React.useState(false);
+  const handleWallClose = React.useCallback(() => {
+    setWallOpen(false);
+  }, []);
 
   const wasOpenRef = React.useRef(false);
   const lastRequestKeyRef = React.useRef("");
@@ -616,7 +619,7 @@ export function LiveVideoDrawer({
         <VideoWall
           sessions={selectedSessions}
           resolveVideoForSession={resolveVideoForSession}
-          onClose={() => setWallOpen(false)}
+          onClose={handleWallClose}
         />
       ) : null}
     </>
