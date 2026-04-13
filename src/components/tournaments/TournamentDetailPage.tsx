@@ -3322,8 +3322,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       } as React.CSSProperties)
     : undefined;
 
-  useEffect(() => {
-    if (typeof window === "undefined" || isWideDesktop || !videoDrawerSessionId) return;
+  const scrollMobileVideoDrawerIntoView = useCallback(() => {
+    if (typeof window === "undefined" || isWideDesktop) return;
     const panel = mobileVideoDrawerRef.current;
     if (!panel) return;
     window.requestAnimationFrame(() => {
@@ -3332,7 +3332,12 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
         window.scrollBy({ top: -20, behavior: "smooth" });
       }, 40);
     });
-  }, [isWideDesktop, videoDrawerSessionId]);
+  }, [isWideDesktop]);
+
+  useEffect(() => {
+    if (!videoDrawerSessionId) return;
+    scrollMobileVideoDrawerIntoView();
+  }, [scrollMobileVideoDrawerIntoView, videoDrawerSessionId]);
 
   const handleOpenLiveVideos = useCallback(
     (
@@ -3345,8 +3350,9 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       setVideoDrawerSessionId(session.sessionId);
       setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
       setVideoDrawerLaunchOrigin(origin ?? null);
+      scrollMobileVideoDrawerIntoView();
     },
-    [],
+    [scrollMobileVideoDrawerIntoView],
   );
 
   useEffect(() => {

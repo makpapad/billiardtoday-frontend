@@ -1587,8 +1587,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
       } as React.CSSProperties)
     : undefined;
 
-  React.useEffect(() => {
-    if (typeof window === "undefined" || isWideDesktop || !videoDrawerSessionId) return;
+  const scrollMobileVideoDrawerIntoView = React.useCallback(() => {
+    if (typeof window === "undefined" || isWideDesktop) return;
     const panel = mobileVideoDrawerRef.current;
     if (!panel) return;
     window.requestAnimationFrame(() => {
@@ -1597,7 +1597,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
         window.scrollBy({ top: -20, behavior: "smooth" });
       }, 40);
     });
-  }, [isWideDesktop, videoDrawerSessionId]);
+  }, [isWideDesktop]);
+
+  React.useEffect(() => {
+    if (!videoDrawerSessionId) return;
+    scrollMobileVideoDrawerIntoView();
+  }, [scrollMobileVideoDrawerIntoView, videoDrawerSessionId]);
 
   const handleOpenLiveVideos = React.useCallback(
     (
@@ -1608,8 +1613,9 @@ export function LiveClubView({ club, embedded = false }: Props) {
       setVideoDrawerSessionId(item.sessionId);
       setVideoDrawerVideoId(liveVideos[0]?.videoId ?? null);
       setVideoDrawerLaunchOrigin(origin ?? null);
+      scrollMobileVideoDrawerIntoView();
     },
-    [],
+    [scrollMobileVideoDrawerIntoView],
   );
 
   React.useEffect(() => {
