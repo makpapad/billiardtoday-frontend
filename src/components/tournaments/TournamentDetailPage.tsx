@@ -156,7 +156,7 @@ function HeroMenuButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`group relative inline-flex h-[60px] w-[60px] items-center justify-center rounded-2xl border transition duration-200 sm:h-[66px] sm:w-[66px] ${
+      className={`group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
         active
           ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
           : "border-white/15 bg-white/10 hover:bg-white/15"
@@ -165,9 +165,9 @@ function HeroMenuButton({
       <Image
         src={iconSrc}
         alt={label}
-        width={60}
-        height={60}
-        className={`h-[48px] w-[48px] object-contain transition duration-200 sm:h-[54px] sm:w-[54px] ${
+        width={56}
+        height={56}
+        className={`h-[44px] w-[44px] object-contain transition duration-200 sm:h-[50px] sm:w-[50px] ${
           active ? "scale-105" : "opacity-95 group-hover:scale-105"
         }`}
         unoptimized
@@ -4370,8 +4370,8 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
-        <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.85fr] lg:px-10 lg:py-10">
-          <div className="flex flex-col justify-between gap-8">
+        <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
+          <div className="min-w-0 flex flex-col justify-between gap-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
                 {summary.season ? <span>Season {summary.season}</span> : null}
@@ -4400,8 +4400,8 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                 </p>
               </div>
             </div>
-            <div className="flex w-full overflow-visible pb-1">
-              <div className="flex flex-nowrap items-center gap-2 sm:gap-3">
+            <div className="w-full overflow-hidden pb-1">
+              <div className="flex max-w-full flex-nowrap items-center gap-2">
                 <HeroMenuButton
                   label="Live"
                   iconSrc="/icons%20webp/live3.webp"
