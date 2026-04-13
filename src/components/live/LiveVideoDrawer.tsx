@@ -409,11 +409,11 @@ export function LiveVideoDrawer({
         aria-label={heading}
       >
         <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 pt-1">
             <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
               Live video
             </div>
-            <h2 className="mt-1 text-lg font-semibold text-white truncate">{heading}</h2>
+            <h2 className="mt-2 text-lg font-semibold leading-tight text-white truncate">{heading}</h2>
             <p className="mt-1 text-sm text-slate-300">
               Select up to {MAX_SELECTED_SESSIONS} live matches and launch a
               multiple view wall.

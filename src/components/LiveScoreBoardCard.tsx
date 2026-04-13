@@ -563,9 +563,8 @@ export function LiveScoreBoardCard({
     <div
       className="pointer-events-none absolute inset-y-0 hidden md:flex items-center justify-center"
       style={{
-        right: compactExpandedLayout ? -1 : -4,
+        right: compactExpandedLayout ? 0 : -4,
         width: compactExpandedLayout ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH,
-        transform: compactExpandedLayout ? "translateY(-7px)" : undefined,
       }}
     >
       <InningsCard />
