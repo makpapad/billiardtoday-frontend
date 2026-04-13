@@ -409,16 +409,17 @@ export function LiveVideoDrawer({
         aria-label={heading}
       >
         <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
               Live video
             </div>
-            <p className="mt-2 text-sm text-slate-300">
+            <h2 className="mt-1 text-lg font-semibold text-white truncate">{heading}</h2>
+            <p className="mt-1 text-sm text-slate-300">
               Select up to {MAX_SELECTED_SESSIONS} live matches and launch a
               multiple view wall.
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex shrink-0 items-center justify-end gap-2 whitespace-nowrap">
             <button
               type="button"
               onClick={() => setWallOpen(true)}
