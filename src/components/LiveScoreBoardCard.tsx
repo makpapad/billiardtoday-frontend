@@ -562,7 +562,11 @@ export function LiveScoreBoardCard({
   const DesktopInningsOverlay = () => (
     <div
       className="pointer-events-none absolute inset-y-0 hidden md:flex items-center justify-center"
-      style={{ right: compactExpandedLayout ? -1 : -4, width: compactExpandedLayout ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH }}
+      style={{
+        right: compactExpandedLayout ? -1 : -4,
+        width: compactExpandedLayout ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH,
+        transform: compactExpandedLayout ? "translateY(-7px)" : undefined,
+      }}
     >
       <InningsCard />
     </div>
@@ -833,7 +837,10 @@ export function LiveScoreBoardCard({
           </div>
           <div
             className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
-            style={{ paddingRight: desktopScoreReserve }}
+            style={{
+              paddingRight: desktopScoreReserve,
+              transform: compactExpandedLayout ? "translateY(4px)" : undefined,
+            }}
           >
             <StatsRow player={player2} variant="bottom" dense={compactExpandedLayout} className="w-full" />
           </div>
@@ -1203,7 +1210,10 @@ export function LiveScoreBoardCard({
         </div>
         <div
           className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"
-          style={{ paddingRight: desktopScoreReserve }}
+          style={{
+            paddingRight: desktopScoreReserve,
+            transform: compactExpandedLayout ? "translateY(4px)" : undefined,
+          }}
         >
           <StatsRow player={player2} variant="bottom" dense={compactExpandedLayout} className="w-full" />
         </div>
