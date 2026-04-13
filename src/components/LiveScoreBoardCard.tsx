@@ -436,7 +436,7 @@ export function LiveScoreBoardCard({
   }) => (
     <div
       className={`ml-0 mr-0 flex items-center rounded-xl border shadow-sm ${
-        dense ? "h-[28px] gap-1 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
+        dense ? "h-[26px] gap-1 px-1 py-0" : "h-[42px] gap-2 px-1.5 py-1"
       } ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
@@ -518,7 +518,7 @@ export function LiveScoreBoardCard({
     dense?: boolean;
   }) => (
     <div
-      className={`mr-0 ${dense ? "h-[28px] px-1 py-0" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
+      className={`mr-0 ${dense ? "h-[26px] px-1 py-0" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -790,7 +790,7 @@ export function LiveScoreBoardCard({
           className="relative z-10 hidden md:grid gap-y-1"
           style={{
             gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 40px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 36px" : "60px 28px 18px 28px 60px",
           }}
         >
           <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
@@ -1163,7 +1163,7 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden md:grid gap-y-1"
         style={{
           gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 40px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "44px 10px 12px 10px 36px" : "60px 28px 18px 28px 60px",
         }}
       >
         <div className="row-start-1 row-end-2 flex items-center justify-center pl-2">
