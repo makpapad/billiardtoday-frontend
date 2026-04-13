@@ -93,8 +93,8 @@ export function LiveScoreBoardCard({
   const wasExpandedRef = React.useRef(false);
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
   const isExpanded = isControlled ? Boolean(expanded) : internalExpanded;
-  const desktopAvatarColumnWidth = compactExpandedLayout ? 58 : AVATAR_COLUMN_WIDTH;
-  const desktopScoreBoxWidth = compactExpandedLayout ? 82 : SCORE_BOX_WIDTH - 6;
+  const desktopAvatarColumnWidth = compactExpandedLayout ? 54 : AVATAR_COLUMN_WIDTH;
+  const desktopScoreBoxWidth = compactExpandedLayout ? 76 : SCORE_BOX_WIDTH - 6;
   const desktopScoreReserve = desktopScoreBoxWidth + DESKTOP_SCORE_GUTTER;
 
   React.useEffect(() => {
@@ -436,7 +436,7 @@ export function LiveScoreBoardCard({
   }) => (
     <div
       className={`ml-0 mr-0 flex items-center rounded-xl border shadow-sm ${
-        dense ? "h-[38px] gap-1.5 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
+        dense ? "h-[34px] gap-1 px-1 py-0.5" : "h-[42px] gap-2 px-1.5 py-1"
       } ${
         variant === "top"
           ? "bg-white text-slate-900 border-white/70"
@@ -450,7 +450,7 @@ export function LiveScoreBoardCard({
             compact
               ? "text-[14px] md:text-[15px]"
               : dense
-                ? "text-[15px] md:text-[17px]"
+                ? "text-[13px] md:text-[15px]"
                 : "text-[17px] md:text-[19px]"
           } truncate font-semibold leading-tight`}
           title={name || ""}
@@ -460,13 +460,13 @@ export function LiveScoreBoardCard({
       </div>
       <div
         className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
-          compact ? "min-w-[26px] px-1" : dense ? "min-w-[28px] px-1" : "min-w-[32px] px-1.5"
+          compact ? "min-w-[26px] px-1" : dense ? "min-w-[24px] px-1" : "min-w-[32px] px-1.5"
         } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
         aria-hidden={!isActive}
       >
         <div
           className={`${
-            compact ? "text-[17px]" : dense ? "text-[19px]" : "text-[22px]"
+            compact ? "text-[17px]" : dense ? "text-[17px]" : "text-[22px]"
           } font-black tabular-nums leading-none ${
             isActive ? "animate-pulse" : ""
           }`}
@@ -518,7 +518,7 @@ export function LiveScoreBoardCard({
     dense?: boolean;
   }) => (
     <div
-      className={`mr-0 ${dense ? "h-[38px] px-1.5 py-1" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
+      className={`mr-0 ${dense ? "h-[34px] px-1 py-0.5" : "h-[42px] px-2 py-1.5"} rounded-xl border shadow-md flex items-center justify-center ${
         variant === "top"
           ? "bg-white/95 text-slate-900 border-white/70"
           : "bg-amber-300 text-slate-900 border-amber-200"
@@ -526,7 +526,7 @@ export function LiveScoreBoardCard({
       style={{ width: dense ? desktopScoreBoxWidth + 6 : SCORE_BOX_WIDTH }}
     >
       <div className="w-full flex items-center justify-center">
-        <div className={`${dense ? "text-[38px]" : "text-[44px]"} font-black leading-none tabular-nums text-center`}>
+        <div className={`${dense ? "text-[33px]" : "text-[44px]"} font-black leading-none tabular-nums text-center`}>
           {player.points ?? 0}
         </div>
       </div>
@@ -543,14 +543,14 @@ export function LiveScoreBoardCard({
 
   const InningsCard = () => (
     <div
-      className={`mx-auto ${compactExpandedLayout ? "h-[40px] gap-0" : "h-[44px] gap-0.5"} rounded-[999px] border border-white/70 px-2 py-1.5 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center`}
-      style={{ width: compactExpandedLayout ? 40 : 44 }}
+      className={`mx-auto ${compactExpandedLayout ? "h-[36px] gap-0" : "h-[44px] gap-0.5"} rounded-[999px] border border-white/70 px-2 py-1 shadow bg-white/95 text-slate-900 flex flex-col items-center justify-center`}
+      style={{ width: compactExpandedLayout ? 36 : 44 }}
     >
-      <div className={`${compactExpandedLayout ? "text-[7px]" : "text-[8px]"} font-black uppercase tracking-[0.2em] text-slate-600 leading-none`}>
+      <div className={`${compactExpandedLayout ? "text-[6px]" : "text-[8px]"} font-black uppercase tracking-[0.18em] text-slate-600 leading-none`}>
         INN
       </div>
       <div
-        className={`${compactExpandedLayout ? "text-[18px]" : "text-[20px]"} font-black tabular-nums text-slate-900 leading-none`}
+        className={`${compactExpandedLayout ? "text-[16px]" : "text-[20px]"} font-black tabular-nums text-slate-900 leading-none`}
         style={{ fontVariantNumeric: "tabular-nums" }}
         aria-label="Current inning"
       >
@@ -941,11 +941,11 @@ export function LiveScoreBoardCard({
 
     return (
       <div className={`${rowClasses} ml-0 mr-0 ${className}`}>
-        <div className={`grid grid-cols-5 ${dense ? "gap-0 text-[9px]" : "gap-0.5 text-[10px]"}`}>
+        <div className={`grid grid-cols-5 ${dense ? "gap-0 text-[8px]" : "gap-0.5 text-[10px]"}`}>
           {items.map((item) => (
             <div key={`${variant}-${item.label}`} className={`${dense ? "px-0 py-0" : "px-0.5 py-0"} text-center`}>
               <div className={`${labelClasses} leading-none text-center`}>{item.label}</div>
-              <div className={`mt-0 text-center ${dense ? "text-[15px]" : "text-[17px]"} font-semibold leading-tight tabular-nums`}>{item.value}</div>
+              <div className={`mt-0 text-center ${dense ? "text-[13px]" : "text-[17px]"} font-semibold leading-tight tabular-nums`}>{item.value}</div>
             </div>
           ))}
         </div>
@@ -1152,7 +1152,7 @@ export function LiveScoreBoardCard({
         className="relative z-10 hidden md:grid gap-y-1"
         style={{
           gridTemplateColumns: `${desktopAvatarColumnWidth}px minmax(0,1fr) ${desktopScoreBoxWidth}px`,
-          gridTemplateRows: compactExpandedLayout ? "56px 24px 16px 24px 56px" : "60px 28px 18px 28px 60px",
+            gridTemplateRows: compactExpandedLayout ? "50px 20px 14px 20px 50px" : "60px 28px 18px 28px 60px",
         }}
       >
         <div className="row-start-1 row-end-2 flex items-center justify-center pl-3">
