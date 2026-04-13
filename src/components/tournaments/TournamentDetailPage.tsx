@@ -3861,6 +3861,8 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
       )
     ) : (
       <section ref={liveContentRef} className="space-y-6">
+        <div className={`flex flex-col gap-6 ${videoDrawerOpen ? "xl:flex-row xl:items-start" : ""}`}>
+          <div className="min-w-0 flex-1">
         {isLiveLoading && liveCards.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Loading live scores...
@@ -3874,7 +3876,7 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             Waiting for live scores...
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-6 ${videoDrawerOpen ? "" : "md:grid-cols-2"}`}>
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
               const photoFallback =
@@ -4022,21 +4024,27 @@ export function TournamentDetailPage({ summary, embedded = false }: Props) {
             })}
           </div>
         )}
+          </div>
+          {videoDrawerOpen ? (
+            <div className="w-full shrink-0 xl:sticky xl:top-6">
+              <LiveVideoDrawer
+                open={videoDrawerOpen}
+                sessions={tournamentVideoSessions}
+                initialSessionId={videoDrawerSessionId}
+                initialVideoId={videoDrawerVideoId}
+                launchOrigin={videoDrawerLaunchOrigin}
+                heading={summary.title || "Tournament live videos"}
+                onClose={() => {
+                  setVideoDrawerOpen(false);
+                  setVideoDrawerLaunchOrigin(null);
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
         <LiveStatsHighlightModal
           item={highlightItem}
           onClose={handleHighlightClose}
-        />
-        <LiveVideoDrawer
-          open={videoDrawerOpen}
-          sessions={tournamentVideoSessions}
-          initialSessionId={videoDrawerSessionId}
-          initialVideoId={videoDrawerVideoId}
-          launchOrigin={videoDrawerLaunchOrigin}
-          heading={summary.title || "Tournament live videos"}
-          onClose={() => {
-            setVideoDrawerOpen(false);
-            setVideoDrawerLaunchOrigin(null);
-          }}
         />
       </section>
     );

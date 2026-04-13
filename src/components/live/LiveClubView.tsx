@@ -1636,91 +1636,99 @@ export function LiveClubView({ club, embedded = false }: Props) {
           </header>
         )}
 
-        {filteredItems.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/5 text-white/70 p-6 text-center">
-            Waiting for live scores...
+        <div className={`flex flex-col gap-6 ${videoDrawerOpen ? "xl:flex-row xl:items-start" : ""}`}>
+          <div className="min-w-0 flex-1">
+            {filteredItems.length === 0 ? (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-white/70">
+                Waiting for live scores...
+              </div>
+            ) : (
+              <div className={`grid grid-cols-1 gap-6 ${videoDrawerOpen ? "" : "md:grid-cols-2"}`}>
+                {filteredItems.map((s) => {
+                  const st = s.state || {};
+                  return (
+                    <LiveScoreBoardCard
+                      key={s.screenId || s.sessionId}
+                      sessionId={s.sessionId}
+                      clubName={s.clubName}
+                      clubCity={s.clubCity}
+                      updatedAt={s.updatedAt}
+                      timerProgress={st.progress}
+                      timerTotal={st.totalBlocks}
+                      timerRunning={st.isRunning}
+                      timeoutsUsed1={st.timeoutsA}
+                      maxTimeouts1={st.maxTimeoutsA}
+                      timeoutsUsed2={st.timeoutsB}
+                      maxTimeouts2={st.maxTimeoutsB}
+                      inningsCount={st.inningsCount}
+                      gameDurationSeconds={st.gameDurationSeconds}
+                      player1={{
+                        name: st.playerAName || "Player A",
+                        country: st.playerACountry ?? null,
+                        photoUrl: st.playerAPhotoUrl ?? null,
+                        photoMainUrl: st.playerAPhotoMainUrl ?? null,
+                        points: st.scoreA ?? 0,
+                        run: st.runA ?? 0,
+                        liveRun: st.liveRunA ?? 0,
+                        innings: st.inningsA ?? 0,
+                        hr: st.bestRunA ?? 0,
+                        flag: "🇬🇷",
+                        avgFormatted: st.avgFormattedA,
+                        accPercent: st.accPercentA,
+                        secondsPerInning: st.secondsPerInningA,
+                        targetPoints: st.targetPointsA ?? null,
+                      }}
+                      player2={{
+                        name: st.playerBName || "Player B",
+                        country: st.playerBCountry ?? null,
+                        photoUrl: st.playerBPhotoUrl ?? null,
+                        photoMainUrl: st.playerBPhotoMainUrl ?? null,
+                        points: st.scoreB ?? 0,
+                        run: st.runB ?? 0,
+                        liveRun: st.liveRunB ?? 0,
+                        innings: st.inningsB ?? 0,
+                        hr: st.bestRunB ?? 0,
+                        flag: "🇬🇷",
+                        avgFormatted: st.avgFormattedB,
+                        accPercent: st.accPercentB,
+                        secondsPerInning: st.secondsPerInningB,
+                        targetPoints: st.targetPointsB ?? null,
+                      }}
+                      current={st.current}
+                      onNavigate={() => handleCardClick(s)}
+                      hasLiveVideos={
+                        normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
+                      }
+                      onOpenLiveVideos={(_sessionId, origin) =>
+                        handleOpenLiveVideos(s, origin)
+                      }
+                      expanded={expandedSessions.has(s.sessionId)}
+                      onExpandedChange={handleExpandedChange}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredItems.map((s) => {
-              const st = s.state || {};
-              return (
-                <LiveScoreBoardCard
-                  key={s.screenId || s.sessionId}
-                  sessionId={s.sessionId}
-                  clubName={s.clubName}
-                  clubCity={s.clubCity}
-                  updatedAt={s.updatedAt}
-                  timerProgress={st.progress}
-                  timerTotal={st.totalBlocks}
-                  timerRunning={st.isRunning}
-                  timeoutsUsed1={st.timeoutsA}
-                  maxTimeouts1={st.maxTimeoutsA}
-                  timeoutsUsed2={st.timeoutsB}
-                  maxTimeouts2={st.maxTimeoutsB}
-                  inningsCount={st.inningsCount}
-                  gameDurationSeconds={st.gameDurationSeconds}
-                  player1={{
-                    name: st.playerAName || "Player A",
-                    country: st.playerACountry ?? null,
-                    photoUrl: st.playerAPhotoUrl ?? null,
-                    photoMainUrl: st.playerAPhotoMainUrl ?? null,
-                    points: st.scoreA ?? 0,
-                    run: st.runA ?? 0,
-                    liveRun: st.liveRunA ?? 0,
-                    innings: st.inningsA ?? 0,
-                    hr: st.bestRunA ?? 0,
-                    flag: "🇬🇷",
-                    avgFormatted: st.avgFormattedA,
-                    accPercent: st.accPercentA,
-                    secondsPerInning: st.secondsPerInningA,
-                    targetPoints: st.targetPointsA ?? null,
-                  }}
-                  player2={{
-                    name: st.playerBName || "Player B",
-                    country: st.playerBCountry ?? null,
-                    photoUrl: st.playerBPhotoUrl ?? null,
-                    photoMainUrl: st.playerBPhotoMainUrl ?? null,
-                    points: st.scoreB ?? 0,
-                    run: st.runB ?? 0,
-                    liveRun: st.liveRunB ?? 0,
-                    innings: st.inningsB ?? 0,
-                    hr: st.bestRunB ?? 0,
-                    flag: "🇬🇷",
-                    avgFormatted: st.avgFormattedB,
-                    accPercent: st.accPercentB,
-                    secondsPerInning: st.secondsPerInningB,
-                    targetPoints: st.targetPointsB ?? null,
-                  }}
-                  current={st.current}
-                  onNavigate={() => handleCardClick(s)}
-                  hasLiveVideos={
-                    normalizeLiveVideoEntries(s.liveVideos ?? st.liveVideos).length > 0
-                  }
-                  onOpenLiveVideos={(_sessionId, origin) =>
-                    handleOpenLiveVideos(s, origin)
-                  }
-                  expanded={expandedSessions.has(s.sessionId)}
-                  onExpandedChange={handleExpandedChange}
-                />
-              );
-            })}
-          </div>
-        )}
+          {videoDrawerOpen ? (
+            <div className="w-full shrink-0 xl:sticky xl:top-6">
+              <LiveVideoDrawer
+                open={videoDrawerOpen}
+                sessions={videoDrawerSessions}
+                initialSessionId={videoDrawerSessionId}
+                initialVideoId={videoDrawerVideoId}
+                launchOrigin={videoDrawerLaunchOrigin}
+                heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
+                onClose={() => {
+                  setVideoDrawerOpen(false);
+                  setVideoDrawerLaunchOrigin(null);
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
       <LiveStatsHighlightModal item={highlightItem} onClose={() => setHighlightItem(null)} />
-      <LiveVideoDrawer
-        open={videoDrawerOpen}
-        sessions={videoDrawerSessions}
-        initialSessionId={videoDrawerSessionId}
-        initialVideoId={videoDrawerVideoId}
-        launchOrigin={videoDrawerLaunchOrigin}
-        heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
-        onClose={() => {
-          setVideoDrawerOpen(false);
-          setVideoDrawerLaunchOrigin(null);
-        }}
-      />
     </main>
   );
 }
