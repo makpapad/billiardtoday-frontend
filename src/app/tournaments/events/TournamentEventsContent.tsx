@@ -874,7 +874,6 @@ function StageRankingTable({
       (group) => group.total > 0 && group.played < group.total,
     );
   const showBestAverageColumn =
-    showProgressColumn &&
     visibleResults.some((result) => result.bestAverage !== null);
 
   if (visibleResults.length === 0) {
