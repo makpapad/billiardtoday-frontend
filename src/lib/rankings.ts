@@ -27,7 +27,7 @@ type RankingSeriesTournamentMeta = {
   label: string;
   title: string;
   slug: string;
-  href: string;
+  href: string | null;
   season: number | null;
   startDate: string | null;
   endDate: string | null;
@@ -152,7 +152,7 @@ const buildPlayerKey = (
 };
 
 const fetchTournamentForSeries = async (
-  tournamentSlug: string,
+  tournamentSlug?: string,
 ): Promise<{
   title: string;
   slug: string;
@@ -170,6 +170,7 @@ const fetchTournamentForSeries = async (
     playerDocumentId: string | null;
   }>;
 } | null> => {
+  if (!tournamentSlug) return null;
   const summary = await resolveTournamentEventSummary(tournamentSlug);
   if (!summary?.documentId) return null;
 
@@ -351,13 +352,12 @@ const buildSeriesData = async (
       return {
         key: tournament.key,
         label: tournament.label,
-        title: data?.title ?? tournament.tournamentSlug,
-        slug: data?.slug ?? tournament.tournamentSlug,
-        href: buildTournamentHref(
-          data?.documentId ?? tournament.tournamentSlug,
-          data?.title ?? tournament.tournamentSlug,
-          season,
-        ),
+        title: data?.title ?? tournament.fallbackTitle ?? tournament.tournamentSlug ?? tournament.label,
+        slug: data?.slug ?? tournament.tournamentSlug ?? tournament.key,
+        href:
+          data?.documentId && data?.title
+            ? buildTournamentHref(data.documentId, data.title, season)
+            : null,
         season,
         startDate: data?.startDate ?? null,
         endDate: data?.endDate ?? null,

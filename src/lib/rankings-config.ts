@@ -1,7 +1,8 @@
 export type RankingSeriesTournamentConfig = {
   key: string;
   label: string;
-  tournamentSlug: string;
+  tournamentSlug?: string;
+  fallbackTitle?: string;
 };
 
 export type RankingSeriesConfig = {
@@ -25,17 +26,19 @@ export const RANKING_SERIES_CONFIGS: RankingSeriesConfig[] = [
       {
         key: "gp1",
         label: "1st GP",
-        tournamentSlug: "longoni-nextgen-grand-prix-3-cushion-u21-2025",
+        tournamentSlug: "4f2cd729-df19-4927-8c05-089da6692964",
+        fallbackTitle: "LONGONI NEXTGEN Grand Prix 3-Cushion U21",
       },
       {
         key: "gp2",
         label: "2nd GP",
-        tournamentSlug: "longoni-next-gen-grand-prix-3-cushion-u21-2026",
+        tournamentSlug: "v8nc64onx1l242seiui2wjng",
+        fallbackTitle: "LONGONI NEXT GEN Grand Prix 3-Cushion U21",
       },
       {
         key: "ec",
         label: "EC U21",
-        tournamentSlug: "european-championship-3-cushion-u21-2025",
+        fallbackTitle: "European Championship 3-Cushion U21",
       },
     ],
   },

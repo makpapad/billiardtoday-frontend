@@ -164,33 +164,53 @@ export default async function RankingSeriesPage({ params }: Props) {
             </div>
             <div className="mt-4 space-y-3">
               {data.tournaments.map((tournament) => (
-                <Link
-                  key={tournament.key}
-                  href={tournament.href}
-                  className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-                        {tournament.label}
+                tournament.href ? (
+                  <Link
+                    key={tournament.key}
+                    href={tournament.href}
+                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
+                          {tournament.label}
+                        </div>
+                        <div className="mt-2 text-base font-semibold text-slate-950">{tournament.title}</div>
                       </div>
-                      <div className="mt-2 text-base font-semibold text-slate-950">{tournament.title}</div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                          tournament.hasRankingPoints
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {tournament.hasRankingPoints ? "Counted" : "Pending"}
+                      </span>
                     </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                        tournament.hasRankingPoints
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {tournament.hasRankingPoints ? "Counted" : "Pending"}
-                    </span>
+                    <div className="mt-3 text-sm text-slate-600">
+                      {formatDate(tournament.startDate)}
+                      {tournament.endDate ? ` - ${formatDate(tournament.endDate)}` : ""}
+                    </div>
+                  </Link>
+                ) : (
+                  <div
+                    key={tournament.key}
+                    className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
+                          {tournament.label}
+                        </div>
+                        <div className="mt-2 text-base font-semibold text-slate-950">{tournament.title}</div>
+                      </div>
+                      <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
+                        Pending
+                      </span>
+                    </div>
+                    <div className="mt-3 text-sm text-slate-600">Date pending</div>
                   </div>
-                  <div className="mt-3 text-sm text-slate-600">
-                    {formatDate(tournament.startDate)}
-                    {tournament.endDate ? ` - ${formatDate(tournament.endDate)}` : ""}
-                  </div>
-                </Link>
+                )
               ))}
             </div>
           </section>
