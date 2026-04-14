@@ -101,6 +101,8 @@ function canRenderBracketPyramid(
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   initialEventData?: EventApiResponse | null;
+  eventDataOverride?: EventApiResponse | null;
+  disableAutoRefresh?: boolean;
   preferredStageDocumentId?: string | null;
   timezoneOffsetMinutes?: number | null;
   timezoneOptions?: Array<{ value: number; label: string }>;
@@ -1109,6 +1111,8 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 export function TournamentEventsContent({
   eventIdOverride = null,
   initialEventData = null,
+  eventDataOverride = null,
+  disableAutoRefresh = false,
   preferredStageDocumentId = null,
   timezoneOffsetMinutes = null,
   timezoneOptions = [],
@@ -1128,7 +1132,9 @@ export function TournamentEventsContent({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [previewColumnCount, setPreviewColumnCount] = useState(4);
-  const [eventData, setEventData] = useState<EventApiResponse | null>(initialEventData);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(
+    eventDataOverride ?? initialEventData,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deBracketType, setDeBracketType] = useState<"winners" | "losers">(
@@ -1151,6 +1157,8 @@ export function TournamentEventsContent({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
+  const isEventDataControlled = disableAutoRefresh;
+  const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
   const tournamentContextSlug = eventData?.data?.title
     ? buildTournamentSlug(
@@ -1178,8 +1186,21 @@ export function TournamentEventsContent({
     return fetchEvent(eventId);
   }, [eventId]);
 
+  useEffect(() => {
+    if (!isEventDataControlled) return;
+    setEventData(eventDataOverride);
+    setIsLoading(false);
+    setError(null);
+  }, [eventDataOverride, isEventDataControlled]);
+
   // Fetch event data
   useEffect(() => {
+    if (isEventDataControlled) {
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     if (initialEventData?.data) {
       setEventData((current) => current ?? initialEventData);
       setIsLoading(false);
@@ -1208,10 +1229,10 @@ export function TournamentEventsContent({
         setError(err instanceof Error ? err.message : "Failed to fetch event");
         setIsLoading(false);
       });
-  }, [eventId, fetchEventPayload, initialEventData]);
+  }, [eventId, fetchEventPayload, initialEventData, isEventDataControlled]);
 
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || isEventDataControlled) return;
 
     let cancelled = false;
 
@@ -1238,9 +1259,14 @@ export function TournamentEventsContent({
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [eventId, fetchEventPayload]);
+  }, [eventId, fetchEventPayload, isEventDataControlled]);
 
   useEffect(() => {
+    if (isLiveSessionsControlled) {
+      setLiveSessions([]);
+      return;
+    }
+
     if (!eventId) {
       setLiveSessions([]);
       return;
@@ -1295,7 +1321,7 @@ export function TournamentEventsContent({
         window.clearInterval(intervalId);
       }
     };
-  }, [eventId]);
+  }, [eventId, isLiveSessionsControlled]);
 
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
     if (!eventData?.data?.event_stages) return [];

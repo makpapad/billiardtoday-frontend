@@ -37,7 +37,7 @@ export async function GET(
             return NextResponse.json({ error: 'stageId is required' }, { status: 400 })
         }
 
-        const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/matches`
+        const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
         let res = await fetchWithOptionalAuth(directUrl)
         let text = await res.text()
 
@@ -49,7 +49,7 @@ export async function GET(
                 const first = Array.isArray(resolvePayload?.data) ? resolvePayload.data[0] : null
                 const numericId = first?.id
                 if (numericId !== undefined && numericId !== null) {
-                    const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/matches`
+                    const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
                     res = await fetchWithOptionalAuth(fallbackUrl)
                     text = await res.text()
                 }
@@ -57,7 +57,7 @@ export async function GET(
         }
 
         if (!res.ok) {
-            return NextResponse.json({ error: text || 'Failed to fetch stage matches' }, { status: res.status })
+            return NextResponse.json({ error: text || 'Failed to fetch stage standings' }, { status: res.status })
         }
 
         return new NextResponse(text, {
@@ -65,7 +65,7 @@ export async function GET(
             headers: { 'Content-Type': 'application/json' },
         })
     } catch (error) {
-        console.error('[event-stages.matches][GET]', error)
+        console.error('[event-stages.standings][GET]', error)
         return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
     }
 }

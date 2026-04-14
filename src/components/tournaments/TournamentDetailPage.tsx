@@ -23,6 +23,9 @@ import type {
   NormalizedEventStage,
   NormalizedTimetableSlot,
   StageMatchGroup,
+  StrapiFinalResult,
+  StrapiGroup,
+  StrapiResult,
 } from "@/app/tournaments/events/types";
 import {
   buildGroupStandings,
@@ -73,6 +76,9 @@ type EventLiveSession = LiveSessionItem & {
 type WsTournamentPayload = {
   type?: string;
   clubId?: string | null;
+  eventId?: string | null;
+  stageId?: string | null;
+  reason?: string | null;
   screenId?: string;
   screenIdentifier?: string | null;
   sessionId?: string | number | null;
@@ -533,6 +539,34 @@ function GroupTooltip({
 }
 
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
+const EVENT_FALLBACK_POLL_MS = 60000;
+const LIVE_SESSIONS_FALLBACK_POLL_MS = 30000;
+
+const withEntityField = (
+  entity: unknown,
+  field: string,
+  value: unknown,
+) => {
+  if (!entity || typeof entity !== "object") return entity;
+  const record = entity as Record<string, unknown>;
+  if (
+    typeof record.attributes === "object" &&
+    record.attributes !== null &&
+    !Array.isArray(record.attributes)
+  ) {
+    return {
+      ...record,
+      attributes: {
+        ...(record.attributes as Record<string, unknown>),
+        [field]: value,
+      },
+    };
+  }
+  return {
+    ...record,
+    [field]: value,
+  };
+};
 
 const normalizeNameForMatch = (value: string | null | undefined) =>
   String(value || "")
@@ -1148,6 +1182,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
   const tournamentContentRef = useRef<HTMLDivElement | null>(null);
   const liveContentRef = useRef<HTMLDivElement | null>(null);
   const screenSocketKeysRef = useRef<string>("");
+  const lastStructuralRefreshAtRef = useRef(0);
   const derivedClubDocumentId =
     summary.clubDocumentId ||
     eventLiveSessions.find((session) => session.clubId)?.clubId ||
@@ -1192,6 +1227,188 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
     return (await response.json().catch(() => null)) as EventApiResponse | null;
   }, [summary.documentId]);
 
+  const fetchStageMatchesPayload = useCallback(async (stageDocumentId: string) => {
+    const response = await fetch(
+      `/api/event-stages/${encodeURIComponent(stageDocumentId)}/matches`,
+      {
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) throw new Error("Failed to load stage matches.");
+    const payload = (await response.json().catch(() => null)) as
+      | { matches?: unknown[] }
+      | null;
+    return Array.isArray(payload?.matches) ? payload.matches : [];
+  }, []);
+
+  const fetchStageStandingsPayload = useCallback(async (stageDocumentId: string) => {
+    const response = await fetch(
+      `/api/event-stages/${encodeURIComponent(stageDocumentId)}/standings`,
+      {
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) throw new Error("Failed to load stage standings.");
+    const payload = (await response.json().catch(() => null)) as
+      | { results?: unknown[]; data?: unknown[]; standings?: unknown[] }
+      | null;
+    if (Array.isArray(payload?.results)) return payload.results;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return Array.isArray(payload?.standings) ? payload.standings : [];
+  }, []);
+
+  const fetchFinalResultsPayload = useCallback(async () => {
+    const response = await fetch(
+      `/api/events/${encodeURIComponent(summary.documentId)}/final-results`,
+      {
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) throw new Error("Failed to load final results.");
+    const payload = (await response.json().catch(() => null)) as
+      | { data?: unknown[] }
+      | null;
+    return Array.isArray(payload?.data) ? payload.data : [];
+  }, [summary.documentId]);
+
+  const replaceStageField = useCallback(
+    (stageDocumentId: string, field: "groups" | "results", value: unknown[]) => {
+      setEventData((current) => {
+        if (!current?.data?.event_stages) return current;
+        const currentStages = toRelationArray(current.data.event_stages);
+        let changed = false;
+        const nextStages = currentStages.map((stage, index) => {
+          const normalizedStage = normalizeEntity(
+            stage,
+            `stage-${index}`,
+          ) as { documentId?: string | null };
+          if (normalizedStage.documentId !== stageDocumentId) return stage;
+          changed = true;
+          return withEntityField(stage, field, value);
+        }) as unknown as NonNullable<EventApiResponse["data"]>["event_stages"];
+
+        if (!changed) return current;
+        return {
+          ...current,
+          data: {
+            ...current.data,
+            event_stages: nextStages,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const replaceFinalResults = useCallback((value: unknown[]) => {
+    setEventData((current) => {
+      if (!current?.data) return current;
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          results_final:
+            value as unknown as StrapiFinalResult[],
+        },
+      };
+    });
+  }, []);
+
+  const refreshStageMatches = useCallback(
+    async (stageDocumentId: string) => {
+      if (!stageDocumentId) return;
+      try {
+        const matches = (await fetchStageMatchesPayload(
+          stageDocumentId,
+        )) as StrapiGroup[];
+        replaceStageField(stageDocumentId, "groups", matches);
+      } catch {
+        // Keep current stage UI on transient targeted refresh failures.
+      }
+    },
+    [fetchStageMatchesPayload, replaceStageField],
+  );
+
+  const refreshStageStandings = useCallback(
+    async (stageDocumentId: string) => {
+      if (!stageDocumentId) return;
+      try {
+        const standings = (await fetchStageStandingsPayload(
+          stageDocumentId,
+        )) as StrapiResult[];
+        replaceStageField(stageDocumentId, "results", standings);
+      } catch {
+        // Keep current stage UI on transient targeted refresh failures.
+      }
+    },
+    [fetchStageStandingsPayload, replaceStageField],
+  );
+
+  const refreshFinalResults = useCallback(async () => {
+    try {
+      const finals = await fetchFinalResultsPayload();
+      replaceFinalResults(finals);
+    } catch {
+      // Keep current final results UI on transient targeted refresh failures.
+    }
+  }, [fetchFinalResultsPayload, replaceFinalResults]);
+
+  const refreshEventData = useCallback(async () => {
+    try {
+      const payload = await fetchEventPayload();
+      setEventData((current) => {
+        const currentSerialized = JSON.stringify(current);
+        const nextSerialized = JSON.stringify(payload);
+        return currentSerialized === nextSerialized ? current : payload;
+      });
+    } catch {
+      // Keep current UI state and data on transient refresh failures.
+    }
+  }, [fetchEventPayload]);
+
+  const refreshEventLiveSessions = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/tournaments/${encodeURIComponent(summary.documentId)}/live-sessions`,
+        {
+          cache: "no-store",
+        },
+      );
+      const payload = (await response.json().catch(() => ({ data: [] }))) as {
+        data?: EventLiveSession[];
+      };
+      if (!response.ok) {
+        throw new Error("Failed to load event live sessions.");
+      }
+
+      const nextSessions = Array.isArray(payload.data) ? payload.data : [];
+      nextSessions.forEach((session) => {
+        const sessionKey = String(session.sessionId || session.screenId || "").trim();
+        const state = session.state || {};
+        recordSnapshot(sessionKey, {
+          innings:
+            (state.inningsCount ?? state.inningsA ?? state.inningsB ?? 0) || 1,
+          player1Points: state.scoreA ?? 0,
+          player2Points: state.scoreB ?? 0,
+        });
+        if (!state.inningsDetail || state.inningsDetail.length === 0) {
+          const cached =
+            sessionDetailsRef.current.get(sessionKey) ??
+            resolveFallbackInningsDetail(sessionKey);
+          if (cached?.length) {
+            state.inningsDetail = cached;
+          }
+        }
+        if (state.inningsDetail && state.inningsDetail.length > 0) {
+          sessionDetailsRef.current.set(sessionKey, state.inningsDetail);
+        }
+      });
+      setEventLiveSessions(nextSessions);
+    } catch {
+      setEventLiveSessions([]);
+    }
+  }, [summary.documentId]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1219,33 +1436,24 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
 
     let cancelled = false;
 
-    const refreshEventData = async () => {
-      try {
-        const payload = await fetchEventPayload();
-        if (cancelled) return;
-        setEventData((current) => {
-          const currentSerialized = JSON.stringify(current);
-          const nextSerialized = JSON.stringify(payload);
-          return currentSerialized === nextSerialized ? current : payload;
-        });
-      } catch {
-        // Keep current UI state and data on transient polling failures.
-      }
+    const refreshVisibleEventData = async () => {
+      await refreshEventData();
+      if (cancelled) return;
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") return;
-      void refreshEventData();
+      void refreshVisibleEventData();
     };
 
     const handleFocus = () => {
-      void refreshEventData();
+      void refreshVisibleEventData();
     };
 
     const intervalId = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
-      void refreshEventData();
-    }, 5000);
+      void refreshVisibleEventData();
+    }, EVENT_FALLBACK_POLL_MS);
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
@@ -1256,7 +1464,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [activeView, fetchEventPayload]);
+  }, [activeView, refreshEventData]);
 
   useEffect(() => {
     if (previousViewRef.current === "tournament" && activeView === "live") {
@@ -1371,57 +1579,109 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
   useEffect(() => {
     let cancelled = false;
 
-    const fetchEventLiveSessions = async () => {
-      try {
-        const response = await fetch(
-          `/api/tournaments/${encodeURIComponent(summary.documentId)}/live-sessions`,
-          {
-            cache: "no-store",
-          },
-        );
-        const payload = (await response.json().catch(() => ({ data: [] }))) as {
-          data?: EventLiveSession[];
-        };
-        if (!response.ok) {
-          throw new Error("Failed to load event live sessions.");
-        }
-        if (!cancelled) {
-          const nextSessions = Array.isArray(payload.data) ? payload.data : [];
-          nextSessions.forEach((session) => {
-            const sessionKey = String(session.sessionId || session.screenId || "").trim();
-            const state = session.state || {};
-            recordSnapshot(sessionKey, {
-              innings:
-                (state.inningsCount ?? state.inningsA ?? state.inningsB ?? 0) || 1,
-              player1Points: state.scoreA ?? 0,
-              player2Points: state.scoreB ?? 0,
-            });
-            if (!state.inningsDetail || state.inningsDetail.length === 0) {
-              const cached = sessionDetailsRef.current.get(sessionKey) ?? resolveFallbackInningsDetail(sessionKey);
-              if (cached?.length) {
-                state.inningsDetail = cached;
-              }
-            }
-            if (state.inningsDetail && state.inningsDetail.length > 0) {
-              sessionDetailsRef.current.set(sessionKey, state.inningsDetail);
-            }
-          });
-          setEventLiveSessions(nextSessions);
-        }
-      } catch {
-        if (!cancelled) {
-          setEventLiveSessions([]);
-        }
-      }
+    const runRefresh = async () => {
+      await refreshEventLiveSessions();
+      if (cancelled) return;
     };
 
-    void fetchEventLiveSessions();
-    const interval = window.setInterval(fetchEventLiveSessions, 15000);
+    void runRefresh();
+    const interval = window.setInterval(
+      runRefresh,
+      LIVE_SESSIONS_FALLBACK_POLL_MS,
+    );
     return () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [summary.documentId]);
+  }, [refreshEventLiveSessions]);
+
+  useEffect(() => {
+    const wsUrl = normalizeWebSocketUrl(
+      process.env.NEXT_PUBLIC_WS_ENDPOINT ||
+        process.env.NEXT_PUBLIC_WS_URL ||
+        "wss://ws.billiardtoday.com/ws",
+    );
+    const params = new URLSearchParams();
+    if (WS_TOKEN) params.set("token", WS_TOKEN);
+    wsUrl.search = params.toString();
+
+    const socket = new WebSocket(wsUrl.toString());
+    let isClosed = false;
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: "subscribe:event",
+          eventId: summary.documentId,
+        }),
+      );
+    };
+
+    socket.onmessage = (event) => {
+      if (isClosed) return;
+      try {
+        const payload = JSON.parse(
+          String(event.data || "{}"),
+        ) as WsTournamentPayload;
+        if (String(payload.eventId || "").trim() !== String(summary.documentId)) {
+          return;
+        }
+
+        if (payload.type === "stage_matches_dirty" && payload.stageId) {
+          void refreshStageMatches(String(payload.stageId));
+          return;
+        }
+
+        if (payload.type === "stage_standings_dirty" && payload.stageId) {
+          void refreshStageStandings(String(payload.stageId));
+          return;
+        }
+
+        if (payload.type === "final_results_dirty") {
+          void refreshFinalResults();
+          return;
+        }
+
+        if (
+          payload.type === "event_shell_dirty" ||
+          payload.type === "timetable_dirty"
+        ) {
+          const now = Date.now();
+          if (now - lastStructuralRefreshAtRef.current < 1500) return;
+          lastStructuralRefreshAtRef.current = now;
+          void refreshEventData();
+          return;
+        }
+
+        if (
+          (payload.type === "SESSION_ASSIGNED" ||
+            payload.type === "SESSION_UPDATED") &&
+          String(payload.eventId || payload.session?.eventId || "").trim() ===
+            String(summary.documentId)
+        ) {
+          void refreshEventLiveSessions();
+        }
+      } catch {
+        // Ignore malformed payloads from unrelated channels.
+      }
+    };
+
+    return () => {
+      isClosed = true;
+      try {
+        socket.close();
+      } catch {
+        // ignore close errors
+      }
+    };
+  }, [
+    refreshFinalResults,
+    refreshEventData,
+    refreshEventLiveSessions,
+    refreshStageMatches,
+    refreshStageStandings,
+    summary.documentId,
+  ]);
 
   useEffect(() => {
     if (!derivedClubDocumentId) {
@@ -4151,6 +4411,8 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
           key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
           eventIdOverride={summary.documentId}
           initialEventData={initialEventData}
+          eventDataOverride={eventData}
+          disableAutoRefresh
           preferredStageDocumentId={selectedStageDocumentId}
           timezoneOffsetMinutes={
             selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
