@@ -851,6 +851,31 @@ function StageRankingTable({
   const showGroupPositionColumn = visibleResults.some(
     (result) => result.groupPosition !== null,
   );
+  const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  const groupProgressByNumber = new Map<
+    number,
+    { played: number; total: number; complete: boolean }
+  >();
+
+  stageMatchGroups.forEach((group) => {
+    if (group.number === null) return;
+    const total = group.matches.length;
+    const played = group.matches.filter(hasPlayedStageMatch).length;
+    groupProgressByNumber.set(group.number, {
+      played,
+      total,
+      complete: total > 0 && played >= total,
+    });
+  });
+
+  const showProgressColumn =
+    showGroupColumn &&
+    Array.from(groupProgressByNumber.values()).some(
+      (group) => group.total > 0 && group.played < group.total,
+    );
+  const showBestAverageColumn =
+    showProgressColumn &&
+    visibleResults.some((result) => result.bestAverage !== null);
 
   if (visibleResults.length === 0) {
     return (
@@ -875,6 +900,9 @@ function StageRankingTable({
                 Pos in group
               </th>
             )}
+            {showProgressColumn && (
+              <th className="px-4 py-3 text-center font-semibold">Progress</th>
+            )}
             <th className="px-4 py-3 text-center font-semibold">MP</th>
             <th className="px-4 py-3 text-center font-semibold">Points</th>
             <th className="px-4 py-3 text-center font-semibold">
@@ -886,6 +914,11 @@ function StageRankingTable({
             <th className="px-4 py-3 text-center font-semibold">
               {artistic ? "Best run" : "H.R."}
             </th>
+            {showBestAverageColumn && (
+              <th className="px-4 py-3 text-center font-semibold">
+                Best AVG
+              </th>
+            )}
             {artistic && (
               <th className="px-4 py-3 text-center font-semibold">
                 Best game
@@ -932,6 +965,32 @@ function StageRankingTable({
                   {formatNumberValue(result.groupPosition)}
                 </td>
               )}
+              {showProgressColumn && (
+                <td className="px-4 py-3 text-center">
+                  {result.groupNumber !== null &&
+                  groupProgressByNumber.has(result.groupNumber) ? (
+                    <span
+                      className={clsx(
+                        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                        groupProgressByNumber.get(result.groupNumber)?.complete
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+                      )}
+                    >
+                      {(() => {
+                        const progress = groupProgressByNumber.get(
+                          result.groupNumber!,
+                        );
+                        return progress
+                          ? `${progress.played}/${progress.total}`
+                          : "-";
+                      })()}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+              )}
               <td className="px-4 py-3 text-center">
                 {formatNumberValue(result.matchPoints)}
               </td>
@@ -947,6 +1006,13 @@ function StageRankingTable({
               <td className="px-4 py-3 text-center">
                 {formatNumberValue(result.highRun)}
               </td>
+              {showBestAverageColumn && (
+                <td className="px-4 py-3 text-center">
+                  {result.bestAverage !== null
+                    ? formatTruncatedAverage(result.bestAverage)
+                    : "-"}
+                </td>
+              )}
               {artistic && (
                 <td className="px-4 py-3 text-center">
                   {result.bestAverage !== null
