@@ -3024,6 +3024,8 @@ export function TournamentEventsContent({
                                         ) : null}
                                       </div>
                                     ) : null}
+                                  </div>
+                                  <div className="flex flex-col gap-3">
                                     {stageUsesBracketView ? (
                                       brLoadingByStage[stage.documentId] ? (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
