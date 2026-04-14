@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { RANKING_SERIES_CONFIGS } from "@/lib/rankings-config";
 import { buildTournamentHref } from "@/lib/tournaments";
 import type { Federation } from "@/lib/directory";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
@@ -28,7 +29,7 @@ type TournamentPayload = {
   };
 };
 
-type HeroView = "network" | "tournaments" | "board" | "upcoming";
+type HeroView = "network" | "tournaments" | "board" | "upcoming" | "rankings";
 
 type Props = {
   federation: Federation;
@@ -232,6 +233,7 @@ async function fetchAllFederationTournaments(federationId: string): Promise<Tour
 
 export function CebFederationExperience({ federation, members, embedded = false }: Props) {
   const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "en"));
+  const rankingSeries = RANKING_SERIES_CONFIGS.filter((item) => item.federationSlug === federation.slug);
   const initialSelectedId = sortedMembers[0]?.documentId || null;
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeTab, setActiveTab] = useState<TabKey>("details");
@@ -363,6 +365,8 @@ export function CebFederationExperience({ federation, members, embedded = false 
         description={
           heroView === "tournaments"
             ? "Browse the official tournament calendar organized directly by the CEB, including championships and major European events."
+            : heroView === "rankings"
+              ? "Access official CEB ranking pages built from published tournament standings, ranking points, and cumulative circuit averages."
             : heroView === "upcoming"
               ? "Track the next CEB events in a clean monthly calendar view, focused on upcoming and currently live competitions."
             : heroView === "board"
@@ -371,9 +375,29 @@ export function CebFederationExperience({ federation, members, embedded = false 
         }
         actions={[]}
         actionSlot={
-          <span className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950">
-            Events
-          </span>
+          <div className="inline-flex flex-wrap gap-2">
+            {([
+              ["tournaments", "Events"],
+              ["rankings", "Rankings"],
+              ["upcoming", "Upcoming"],
+            ] as Array<[HeroView, string]>).map(([view, label]) => {
+              const isActive = heroView === view;
+              return (
+                <button
+                  key={view}
+                  type="button"
+                  onClick={() => setHeroView(view)}
+                  className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-white text-slate-950"
+                      : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         }
         aside={
           <div className="grid gap-4">
@@ -615,6 +639,45 @@ export function CebFederationExperience({ federation, members, embedded = false 
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             No CEB tournaments match the selected filters.
+          </div>
+        )}
+      </section>
+      ) : null}
+
+      {heroView === "rankings" ? (
+      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="mb-6 space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Official rankings</div>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+            {`${federation.name} rankings`}
+          </h2>
+          <p className="max-w-2xl text-sm leading-7 text-slate-600">
+            Published ranking lists and circuit standings linked to the CEB competition calendar.
+          </p>
+        </div>
+
+        {rankingSeries.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {rankingSeries.map((series) => (
+              <Link
+                key={series.slug}
+                href={`${embedded ? "/embed" : ""}/rankings/${series.slug}`}
+                className="rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                  Ranking Series
+                </div>
+                <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">
+                  {series.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{series.description}</p>
+                <div className="mt-5 text-sm font-semibold text-sky-700">Open ranking page</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+            No public CEB rankings are available yet.
           </div>
         )}
       </section>
