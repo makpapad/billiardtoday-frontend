@@ -4139,6 +4139,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
         <TournamentEventsContent
           key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
           eventIdOverride={summary.documentId}
+          initialEventData={initialEventData}
           preferredStageDocumentId={selectedStageDocumentId}
           timezoneOffsetMinutes={
             selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes

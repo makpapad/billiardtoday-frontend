@@ -100,6 +100,7 @@ function canRenderBracketPyramid(
 
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
+  initialEventData?: EventApiResponse | null;
   preferredStageDocumentId?: string | null;
   timezoneOffsetMinutes?: number | null;
   timezoneOptions?: Array<{ value: number; label: string }>;
@@ -1018,6 +1019,7 @@ const fetchEvent = async (eventId: string): Promise<EventApiResponse> => {
 
 export function TournamentEventsContent({
   eventIdOverride = null,
+  initialEventData = null,
   preferredStageDocumentId = null,
   timezoneOffsetMinutes = null,
   timezoneOptions = [],
@@ -1037,7 +1039,7 @@ export function TournamentEventsContent({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [previewColumnCount, setPreviewColumnCount] = useState(4);
-  const [eventData, setEventData] = useState<EventApiResponse | null>(null);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(initialEventData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deBracketType, setDeBracketType] = useState<"winners" | "losers">(
@@ -1089,6 +1091,13 @@ export function TournamentEventsContent({
 
   // Fetch event data
   useEffect(() => {
+    if (initialEventData?.data) {
+      setEventData((current) => current ?? initialEventData);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     if (!eventId) {
       setEventData(null);
       setError(null);
@@ -1110,7 +1119,7 @@ export function TournamentEventsContent({
         setError(err instanceof Error ? err.message : "Failed to fetch event");
         setIsLoading(false);
       });
-  }, [eventId, fetchEventPayload]);
+  }, [eventId, fetchEventPayload, initialEventData]);
 
   useEffect(() => {
     if (!eventId) return;
