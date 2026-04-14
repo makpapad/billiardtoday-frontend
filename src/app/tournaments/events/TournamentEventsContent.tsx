@@ -3545,6 +3545,38 @@ export function TournamentEventsContent({
                                                   match,
                                                 ]),
                                             );
+                                            const buildPlayerPairKey = (
+                                              top: {
+                                                documentId: string | null;
+                                                id: number | null;
+                                                name: string;
+                                              },
+                                              bottom: {
+                                                documentId: string | null;
+                                                id: number | null;
+                                                name: string;
+                                              },
+                                            ) =>
+                                              [top, bottom]
+                                                .map((player) =>
+                                                  player.documentId
+                                                    ? `doc:${player.documentId}`
+                                                    : player.id !== null
+                                                      ? `id:${player.id}`
+                                                      : `name:${player.name.trim().toLowerCase()}`,
+                                                )
+                                                .sort()
+                                                .join("::");
+                                            const groupMatchByPlayerPair =
+                                              new Map(
+                                                group.matches.map((match) => [
+                                                  buildPlayerPairKey(
+                                                    match.top.player,
+                                                    match.bottom.player,
+                                                  ),
+                                                  match,
+                                                ]),
+                                              );
                                             const tableRows = (() => {
                                               const buildFallbackPlayer = (
                                                 label: string,
@@ -3642,6 +3674,41 @@ export function TournamentEventsContent({
                                                 timetableGroupSlots.length > 0
                                                   ? timetableGroupSlots.map(
                                                       (slot) => {
+                                                        const metadata =
+                                                          slot.metadata ?? {};
+                                                        const slotPairKey =
+                                                          buildPlayerPairKey(
+                                                            {
+                                                              documentId:
+                                                                typeof metadata.resolvedPlayer1DocumentId ===
+                                                                "string"
+                                                                  ? metadata.resolvedPlayer1DocumentId
+                                                                  : null,
+                                                              id:
+                                                                typeof metadata.resolvedPlayer1Id ===
+                                                                "number"
+                                                                  ? metadata.resolvedPlayer1Id
+                                                                  : null,
+                                                              name:
+                                                                slot.matchPlayer1Name ||
+                                                                "",
+                                                            },
+                                                            {
+                                                              documentId:
+                                                                typeof metadata.resolvedPlayer2DocumentId ===
+                                                                "string"
+                                                                  ? metadata.resolvedPlayer2DocumentId
+                                                                  : null,
+                                                              id:
+                                                                typeof metadata.resolvedPlayer2Id ===
+                                                                "number"
+                                                                  ? metadata.resolvedPlayer2Id
+                                                                  : null,
+                                                              name:
+                                                                slot.matchPlayer2Name ||
+                                                                "",
+                                                            },
+                                                          );
                                                         const sourceMatch =
                                                           (slot.matchDocumentId
                                                             ? groupMatchByDocumentId.get(
@@ -3652,6 +3719,12 @@ export function TournamentEventsContent({
                                                           null
                                                             ? groupMatchByNumber.get(
                                                                 slot.matchNumber,
+                                                              ) ?? null
+                                                            : null) ??
+                                                          (slot.matchPlayer1Name ||
+                                                          slot.matchPlayer2Name
+                                                            ? groupMatchByPlayerPair.get(
+                                                                slotPairKey,
                                                               ) ?? null
                                                             : null);
                                                         const match =
