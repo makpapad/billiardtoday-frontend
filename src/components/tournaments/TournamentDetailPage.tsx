@@ -1193,9 +1193,6 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
   }, [summary.documentId]);
 
   useEffect(() => {
-    if (initialEventData?.data) {
-      return;
-    }
     let cancelled = false;
 
     const fetchEventData = async () => {
@@ -1205,7 +1202,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
           setEventData(payload);
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && !initialEventData?.data) {
           setEventData(null);
         }
       }
