@@ -852,26 +852,42 @@ function StageRankingTable({
     (result) => result.groupPosition !== null,
   );
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
-  const groupProgressByNumber = new Map<
-    number,
+  const playerProgressByGroupKey = new Map<
+    string,
     { played: number; total: number; complete: boolean }
   >();
 
   stageMatchGroups.forEach((group) => {
     if (group.number === null) return;
-    const total = group.matches.length;
-    const played = group.matches.filter(hasPlayedStageMatch).length;
-    groupProgressByNumber.set(group.number, {
-      played,
-      total,
-      complete: total > 0 && played >= total,
+    const byPlayer = new Map<string, { played: number; total: number }>();
+
+    group.matches.forEach((match) => {
+      [match.top.player, match.bottom.player].forEach((player) => {
+        const playerKey =
+          player.documentId ??
+          (player.id !== null ? `id:${player.id}` : player.name.trim());
+        const existing = byPlayer.get(playerKey) ?? { played: 0, total: 0 };
+        existing.total += 1;
+        if (hasPlayedStageMatch(match)) {
+          existing.played += 1;
+        }
+        byPlayer.set(playerKey, existing);
+      });
+    });
+
+    byPlayer.forEach((progress, playerKey) => {
+      playerProgressByGroupKey.set(`${group.number}::${playerKey}`, {
+        played: progress.played,
+        total: progress.total,
+        complete: progress.total > 0 && progress.played >= progress.total,
+      });
     });
   });
 
   const showProgressColumn =
     showGroupColumn &&
-    Array.from(groupProgressByNumber.values()).some(
-      (group) => group.total > 0 && group.played < group.total,
+    Array.from(playerProgressByGroupKey.values()).some(
+      (progress) => progress.total > 0 && progress.played < progress.total,
     );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
@@ -966,28 +982,36 @@ function StageRankingTable({
               )}
               {showProgressColumn && (
                 <td className="px-4 py-3 text-center">
-                  {result.groupNumber !== null &&
-                  groupProgressByNumber.has(result.groupNumber) ? (
-                    <span
-                      className={clsx(
-                        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
-                        groupProgressByNumber.get(result.groupNumber)?.complete
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-                      )}
-                    >
-                      {(() => {
-                        const progress = groupProgressByNumber.get(
-                          result.groupNumber!,
-                        );
-                        return progress
-                          ? `${progress.played}/${progress.total}`
-                          : "-";
-                      })()}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
+                  {(() => {
+                    const playerKey =
+                      result.playerDocumentId ??
+                      (result.playerId !== null
+                        ? `id:${result.playerId}`
+                        : result.playerName.trim());
+                    const progressKey =
+                      result.groupNumber !== null
+                        ? `${result.groupNumber}::${playerKey}`
+                        : null;
+                    const progress =
+                      progressKey !== null
+                        ? playerProgressByGroupKey.get(progressKey)
+                        : null;
+
+                    return progress ? (
+                      <span
+                        className={clsx(
+                          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                          progress.complete
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+                        )}
+                      >
+                        {`${progress.played}/${progress.total}`}
+                      </span>
+                    ) : (
+                      "-"
+                    );
+                  })()}
                 </td>
               )}
               <td className="px-4 py-3 text-center">
