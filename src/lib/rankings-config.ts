@@ -19,7 +19,7 @@ export const RANKING_SERIES_CONFIGS: RankingSeriesConfig[] = [
     title: "LONGONI NEXT GEN Grand Prix 3-Cushion U21",
     shortTitle: "Longoni Next Gen U21",
     description:
-      "Seasonal CEB youth ranking for the Longoni Next Gen 3-Cushion U21 circuit, aggregated from the linked Grand Prix tournaments.",
+      "Seasonal CEB youth ranking for the Longoni Next Gen 3-Cushion U21 circuit, aggregated from the two Grand Prix tournaments and the EC U21 event.",
     federationSlug: "ceb",
     tournaments: [
       {
@@ -31,6 +31,11 @@ export const RANKING_SERIES_CONFIGS: RankingSeriesConfig[] = [
         key: "gp2",
         label: "2nd GP",
         tournamentSlug: "longoni-next-gen-grand-prix-3-cushion-u21-2026",
+      },
+      {
+        key: "ec",
+        label: "EC U21",
+        tournamentSlug: "european-championship-3-cushion-u21-2025",
       },
     ],
   },

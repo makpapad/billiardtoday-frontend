@@ -22,6 +22,14 @@ const formatDate = (value: string | null) => {
 
 const formatAverage = (value: number) => value.toFixed(3);
 
+const renderStackedHeader = (top: string, middle: string, bottom: string, align: "left" | "center" = "center") => (
+  <div className={`flex flex-col gap-1 ${align === "left" ? "items-start text-left" : "items-center text-center"}`}>
+    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">{top}</span>
+    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/90">{middle}</span>
+    <span className="text-base font-bold uppercase tracking-[0.03em] text-white">{bottom}</span>
+  </div>
+);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const config = getRankingSeriesConfigBySlug(slug);
@@ -87,15 +95,23 @@ export default async function RankingSeriesPage({ params }: Props) {
               <table className="min-w-full border-collapse text-sm">
                 <thead className="bg-slate-950 text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">#</th>
-                    <th className="px-4 py-3 text-left font-semibold">Player</th>
+                    <th className="w-16 px-3 py-4 text-left font-semibold">
+                      {renderStackedHeader("Rank", "Series", "#", "left")}
+                    </th>
+                    <th className="min-w-[280px] px-4 py-4 text-left font-semibold">
+                      {renderStackedHeader("Longoni Next Gen", "Player", "Name", "left")}
+                    </th>
                     {data.tournaments.map((tournament) => (
-                      <th key={tournament.key} className="px-4 py-3 text-center font-semibold">
-                        {tournament.label}
+                      <th key={tournament.key} className="min-w-[132px] px-4 py-4 text-center font-semibold">
+                        {renderStackedHeader("Next Gen", "Ranking Points", tournament.label)}
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-center font-semibold">Total Points</th>
-                    <th className="px-4 py-3 text-center font-semibold">GEN AVG</th>
+                    <th className="min-w-[132px] px-4 py-4 text-center font-semibold">
+                      {renderStackedHeader("Next Gen", "Total", "Points")}
+                    </th>
+                    <th className="min-w-[112px] px-4 py-4 text-center font-semibold">
+                      {renderStackedHeader("Circuit", "General", "AVG")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,7 +120,7 @@ export default async function RankingSeriesPage({ params }: Props) {
                       key={`${row.playerDocumentId ?? row.playerName}-${row.rank}`}
                       className="border-t border-slate-200 bg-white text-slate-700"
                     >
-                      <td className="px-4 py-3 font-semibold text-slate-950">{row.rank}</td>
+                      <td className="px-3 py-4 font-semibold text-slate-950">{row.rank}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {getCountryFlagCdnUrl(row.playerCountry, 40) ? (
@@ -114,7 +130,7 @@ export default async function RankingSeriesPage({ params }: Props) {
                               className="h-5 w-7 rounded-sm border border-slate-200 object-cover"
                             />
                           ) : null}
-                          <div className="min-w-0 truncate font-medium text-slate-950">
+                          <div className="min-w-0 truncate text-[15px] font-semibold text-slate-950">
                             {row.playerName}
                           </div>
                         </div>
