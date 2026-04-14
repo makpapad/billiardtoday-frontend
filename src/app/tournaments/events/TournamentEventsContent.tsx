@@ -4241,39 +4241,6 @@ export function TournamentEventsContent({
                                                                 "bestRunB",
                                                               );
 
-                                                            const topDisplayPoints =
-                                                              hasActiveLiveSession &&
-                                                              topLivePoints !== null
-                                                                ? topLivePoints
-                                                                : match.top.player.points;
-                                                            const bottomDisplayPoints =
-                                                              hasActiveLiveSession &&
-                                                              bottomLivePoints !== null
-                                                                ? bottomLivePoints
-                                                                : match.bottom.player.points;
-                                                            const topDisplayInnings =
-                                                              hasActiveLiveSession &&
-                                                              topLiveInnings !== null
-                                                                ? topLiveInnings
-                                                                : match.top.player.innings;
-                                                            const bottomDisplayInnings =
-                                                              hasActiveLiveSession &&
-                                                              bottomLiveInnings !== null
-                                                                ? bottomLiveInnings
-                                                                : match.bottom.player.innings;
-                                                            const topDisplayHighRun =
-                                                              hasActiveLiveSession &&
-                                                              topLiveHighRun !== null
-                                                                ? topLiveHighRun
-                                                                : match.top.player.highRun;
-                                                            const bottomDisplayHighRun =
-                                                              hasActiveLiveSession &&
-                                                              bottomLiveHighRun !== null
-                                                                ? bottomLiveHighRun
-                                                                : match.bottom.player.highRun;
-
-                                                            const displayPlayers =
-                                                              row.displayPlayers;
                                                             const matchPlayed =
                                                               [match.top, match.bottom].some(
                                                                 (entry) =>
@@ -4295,8 +4262,59 @@ export function TournamentEventsContent({
                                                                     .matchPoints ??
                                                                     0) > 0,
                                                               );
+                                                            const hasMeaningfulLiveStats =
+                                                              [
+                                                                topLivePoints,
+                                                                bottomLivePoints,
+                                                                topLiveInnings,
+                                                                bottomLiveInnings,
+                                                                topLiveHighRun,
+                                                                bottomLiveHighRun,
+                                                              ].some(
+                                                                (value) =>
+                                                                  value !== null &&
+                                                                  value > 0,
+                                                              );
+                                                            const shouldUseLiveOverlay =
+                                                              hasActiveLiveSession &&
+                                                              (!matchPlayed ||
+                                                                hasMeaningfulLiveStats);
+
+                                                            const topDisplayPoints =
+                                                              shouldUseLiveOverlay &&
+                                                              topLivePoints !== null
+                                                                ? topLivePoints
+                                                                : match.top.player.points;
+                                                            const bottomDisplayPoints =
+                                                              shouldUseLiveOverlay &&
+                                                              bottomLivePoints !== null
+                                                                ? bottomLivePoints
+                                                                : match.bottom.player.points;
+                                                            const topDisplayInnings =
+                                                              shouldUseLiveOverlay &&
+                                                              topLiveInnings !== null
+                                                                ? topLiveInnings
+                                                                : match.top.player.innings;
+                                                            const bottomDisplayInnings =
+                                                              shouldUseLiveOverlay &&
+                                                              bottomLiveInnings !== null
+                                                                ? bottomLiveInnings
+                                                                : match.bottom.player.innings;
+                                                            const topDisplayHighRun =
+                                                              shouldUseLiveOverlay &&
+                                                              topLiveHighRun !== null
+                                                                ? topLiveHighRun
+                                                                : match.top.player.highRun;
+                                                            const bottomDisplayHighRun =
+                                                              shouldUseLiveOverlay &&
+                                                              bottomLiveHighRun !== null
+                                                                ? bottomLiveHighRun
+                                                                : match.bottom.player.highRun;
+
+                                                            const displayPlayers =
+                                                              row.displayPlayers;
                                                             const matchHasLiveOverlay =
-                                                              hasActiveLiveSession;
+                                                              shouldUseLiveOverlay;
                                                             const displayMatchValue = (
                                                               value: number | null,
                                                             ) =>
