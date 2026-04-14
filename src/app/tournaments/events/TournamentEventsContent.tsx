@@ -900,7 +900,7 @@ function StageRankingTable({
               className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             >
               <td className="px-4 py-3 font-semibold">
-                {formatNumberValue(index + 1)}
+                {formatNumberValue(result.finalPosition ?? index + 1)}
               </td>
               <td className="px-4 py-3 font-medium">
                 {result.playerId ? (
