@@ -93,11 +93,32 @@ const fetchStageStandings = async (
     stageId: string,
     headers: HeadersInit,
 ): Promise<Record<string, unknown>[] | null> => {
-    const url = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
-    const res = await fetch(url, {
+    const standingsQuery =
+        'populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country'
+    const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?${standingsQuery}`
+    let res = await fetch(directUrl, {
         cache: 'no-store',
         headers,
     })
+
+    if (!res.ok && res.status === 404) {
+        const resolveUrl = `${STRAPI_URL}/api/bt-event-stages?filters[documentId][$eq]=${encodeURIComponent(stageId)}&fields[0]=id&pagination[limit]=1`
+        const resolveRes = await fetch(resolveUrl, {
+            cache: 'no-store',
+            headers,
+        })
+        if (resolveRes.ok) {
+            const resolvePayload = (await resolveRes.json().catch(() => null)) as { data?: Array<{ id?: number | string }> } | null
+            const numericId = resolvePayload?.data?.[0]?.id
+            if (numericId !== undefined && numericId !== null) {
+                const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?${standingsQuery}`
+                res = await fetch(fallbackUrl, {
+                    cache: 'no-store',
+                    headers,
+                })
+            }
+        }
+    }
 
     if (!res.ok) {
         return null
