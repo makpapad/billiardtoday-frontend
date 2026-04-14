@@ -1,4 +1,5 @@
 import { buildTournamentHref } from "@/lib/tournaments";
+import { resolveTournamentEventSummary } from "@/lib/tournaments";
 import {
   getRankingSeriesConfigBySlug,
   type RankingSeriesConfig,
@@ -17,8 +18,8 @@ const STRAPI_URLS = Array.from(
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = !IS_PRODUCTION;
 
-type StrapiTournamentResponse = {
-  data?: unknown[];
+type StrapiEventResponse = {
+  data?: unknown;
 };
 
 type RankingSeriesTournamentMeta = {
@@ -169,35 +170,35 @@ const fetchTournamentForSeries = async (
     playerDocumentId: string | null;
   }>;
 } | null> => {
-  const params = new URLSearchParams();
-  params.set("filters[slug][$eq]", tournamentSlug);
-  params.set("fields[0]", "title");
-  params.set("fields[1]", "slug");
-  params.set("fields[2]", "documentId");
-  params.set("fields[3]", "startDate");
-  params.set("fields[4]", "endDate");
-  params.set("populate[bt_event][fields][0]", "season");
-  params.set("populate[bt_event][fields][1]", "documentId");
-  params.set("populate[bt_event][populate][results_final][sort][0]", "position:asc");
-  params.set("populate[bt_event][populate][results_final][fields][0]", "position");
-  params.set("populate[bt_event][populate][results_final][fields][1]", "ranking_points");
-  params.set("populate[bt_event][populate][results_final][fields][2]", "caroms");
-  params.set("populate[bt_event][populate][results_final][fields][3]", "innings");
-  params.set("populate[bt_event][populate][results_final][populate][player][fields][0]", "full_name");
-  params.set("populate[bt_event][populate][results_final][populate][player][fields][1]", "full_name_en");
-  params.set("populate[bt_event][populate][results_final][populate][player][fields][2]", "country");
-  params.set("populate[bt_event][populate][results_final][populate][player][fields][3]", "documentId");
-  params.set("pagination[limit]", "1");
+  const summary = await resolveTournamentEventSummary(tournamentSlug);
+  if (!summary?.documentId) return null;
 
-  const response = await fetchWithOptionalAuth(`/api/tournaments?${params.toString()}`);
+  const params = new URLSearchParams();
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "season");
+  params.set("fields[2]", "start_date");
+  params.set("fields[3]", "end_date");
+  params.set("fields[4]", "documentId");
+  params.set("populate[results_final][sort][0]", "position:asc");
+  params.set("populate[results_final][fields][0]", "position");
+  params.set("populate[results_final][fields][1]", "ranking_points");
+  params.set("populate[results_final][fields][2]", "caroms");
+  params.set("populate[results_final][fields][3]", "innings");
+  params.set("populate[results_final][populate][player][fields][0]", "full_name");
+  params.set("populate[results_final][populate][player][fields][1]", "full_name_en");
+  params.set("populate[results_final][populate][player][fields][2]", "country");
+  params.set("populate[results_final][populate][player][fields][3]", "documentId");
+
+  const response = await fetchWithOptionalAuth(
+    `/api/bt-events/${encodeURIComponent(summary.documentId)}?${params.toString()}`,
+  );
   if (!response?.ok) return null;
 
-  const payload = (await response.json().catch(() => null)) as StrapiTournamentResponse | null;
-  const entity = unwrapEntity(Array.isArray(payload?.data) ? payload?.data[0] : null);
+  const payload = (await response.json().catch(() => null)) as StrapiEventResponse | null;
+  const entity = unwrapEntity(payload?.data ?? null);
   if (!entity) return null;
 
-  const btEvent = unwrapEntity(entity.bt_event);
-  const results = toRelationArray(btEvent?.results_final)
+  const results = toRelationArray(entity.results_final)
     .map((row, index) => {
       const result = unwrapEntity(row);
       if (!result) return null;
@@ -220,12 +221,12 @@ const fetchTournamentForSeries = async (
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return {
-    title: readString(entity.title) || tournamentSlug,
-    slug: readString(entity.slug) || tournamentSlug,
-    documentId: readString(entity.documentId) || tournamentSlug,
-    season: toNumber(btEvent?.season),
-    startDate: readString(entity.startDate),
-    endDate: readString(entity.endDate),
+    title: readString(entity.title) || summary.title || tournamentSlug,
+    slug: tournamentSlug,
+    documentId: readString(entity.documentId) || summary.documentId,
+    season: toNumber(entity.season) ?? summary.season,
+    startDate: readString(entity.start_date) || summary.startDate,
+    endDate: readString(entity.end_date) || summary.endDate,
     results,
   };
 };
