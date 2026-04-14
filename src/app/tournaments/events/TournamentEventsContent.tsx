@@ -2928,13 +2928,13 @@ export function TournamentEventsContent({
 
                         return (
                           <div key={stage.id} className="flex flex-col gap-4">
-                            {stageDateRange && (
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {stageDateRange}
-                              </div>
-                            )}
                             {stageViewMode === "ranks" ? (
                               <div className="flex flex-col gap-3">
+                                {stageDateRange && (
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {stageDateRange}
+                                  </div>
+                                )}
                                 <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                   Ranking - {stage.title || stage.order || ""}
                                 </div>
@@ -2948,15 +2948,22 @@ export function TournamentEventsContent({
                             ) : (
                               <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-3">
-                                  <div className="flex flex-col gap-3">
-                                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                      Matches -{" "}
-                                      {stage.title || stage.order || ""}
+                                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                                    <div className="flex flex-col gap-1">
+                                      <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                        Matches -{" "}
+                                        {stage.title || stage.order || ""}
+                                      </div>
+                                      {stageDateRange && (
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                          {stageDateRange}
+                                        </div>
+                                      )}
                                     </div>
                                     {showStageControls ? (
                                       <div
                                         className={clsx(
-                                          "grid items-center gap-3",
+                                          "grid items-center gap-3 lg:min-w-[22rem]",
                                           showCompactFilters
                                             ? "md:grid-cols-[minmax(0,1fr)_9rem]"
                                             : "grid-cols-1",
