@@ -907,6 +907,9 @@ function StageRankingTable({
           <tr>
             <th className="px-4 py-3 text-left font-semibold">#</th>
             <th className="px-4 py-3 text-left font-semibold">Player</th>
+            {showProgressColumn && (
+              <th className="px-4 py-3 text-center font-semibold">Progress</th>
+            )}
             {showGroupColumn && (
               <th className="px-4 py-3 text-center font-semibold">Group</th>
             )}
@@ -914,9 +917,6 @@ function StageRankingTable({
               <th className="px-4 py-3 text-center font-semibold">
                 Pos in group
               </th>
-            )}
-            {showProgressColumn && (
-              <th className="px-4 py-3 text-center font-semibold">Progress</th>
             )}
             <th className="px-4 py-3 text-center font-semibold">MP</th>
             <th className="px-4 py-3 text-center font-semibold">Points</th>
@@ -970,16 +970,6 @@ function StageRankingTable({
                   />
                 )}
               </td>
-              {showGroupColumn && (
-                <td className="px-4 py-3 text-center">
-                  {formatNumberValue(result.groupNumber)}
-                </td>
-              )}
-              {showGroupPositionColumn && (
-                <td className="px-4 py-3 text-center">
-                  {formatNumberValue(result.groupPosition)}
-                </td>
-              )}
               {showProgressColumn && (
                 <td className="px-4 py-3 text-center">
                   {(() => {
@@ -1012,6 +1002,16 @@ function StageRankingTable({
                       "-"
                     );
                   })()}
+                </td>
+              )}
+              {showGroupColumn && (
+                <td className="px-4 py-3 text-center">
+                  {formatNumberValue(result.groupNumber)}
+                </td>
+              )}
+              {showGroupPositionColumn && (
+                <td className="px-4 py-3 text-center">
+                  {formatNumberValue(result.groupPosition)}
                 </td>
               )}
               <td className="px-4 py-3 text-center">
