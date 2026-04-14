@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CountryFlag } from "@/components/public/PresentationBlocks";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { getRankingSeriesConfigBySlug } from "@/lib/rankings-config";
 import { getRankingSeriesData } from "@/lib/rankings";
 
@@ -107,17 +107,15 @@ export default async function RankingSeriesPage({ params }: Props) {
                       <td className="px-4 py-3 font-semibold text-slate-950">{row.rank}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <CountryFlag
-                            country={row.playerCountry}
-                            className="h-5 w-7 rounded-sm border border-slate-200 object-cover"
-                          />
-                          <div className="min-w-0">
-                            <div className="truncate font-medium text-slate-950">{row.playerName}</div>
-                            {row.playerCountry ? (
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                                {row.playerCountry}
-                              </div>
-                            ) : null}
+                          {getCountryFlagCdnUrl(row.playerCountry, 40) ? (
+                            <img
+                              src={getCountryFlagCdnUrl(row.playerCountry, 40) ?? ""}
+                              alt={row.playerCountry || "flag"}
+                              className="h-5 w-7 rounded-sm border border-slate-200 object-cover"
+                            />
+                          ) : null}
+                          <div className="min-w-0 truncate font-medium text-slate-950">
+                            {row.playerName}
                           </div>
                         </div>
                       </td>
