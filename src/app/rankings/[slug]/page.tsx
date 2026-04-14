@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CountryFlag } from "@/components/public/PresentationBlocks";
 import { getRankingSeriesConfigBySlug } from "@/lib/rankings-config";
 import { getRankingSeriesData } from "@/lib/rankings";
 
@@ -105,12 +106,20 @@ export default async function RankingSeriesPage({ params }: Props) {
                     >
                       <td className="px-4 py-3 font-semibold text-slate-950">{row.rank}</td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-950">{row.playerName}</div>
-                        {row.playerCountry ? (
-                          <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
-                            {row.playerCountry}
+                        <div className="flex items-center gap-3">
+                          <CountryFlag
+                            country={row.playerCountry}
+                            className="h-5 w-7 rounded-sm border border-slate-200 object-cover"
+                          />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-slate-950">{row.playerName}</div>
+                            {row.playerCountry ? (
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                {row.playerCountry}
+                              </div>
+                            ) : null}
                           </div>
-                        ) : null}
+                        </div>
                       </td>
                       {data.tournaments.map((tournament) => (
                         <td key={tournament.key} className="px-4 py-3 text-center font-semibold">
