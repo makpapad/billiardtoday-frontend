@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import { getRankingSeriesConfigBySlug } from "@/lib/rankings-config";
 import { getRankingSeriesData } from "@/lib/rankings";
 
 type Props = {
@@ -32,19 +31,19 @@ const renderStackedHeader = (top: string, middle: string, bottom: string, align:
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const config = getRankingSeriesConfigBySlug(slug);
+  const data = await getRankingSeriesData(slug);
 
-  if (!config) {
+  if (!data) {
     return {
       title: "Ranking not found",
     };
   }
 
   return {
-    title: config.title,
-    description: config.description,
+    title: data.title,
+    description: data.description,
     alternates: {
-      canonical: `/rankings/${config.slug}`,
+      canonical: `/rankings/${data.slug}`,
     },
   };
 }
@@ -63,7 +62,7 @@ export default async function RankingSeriesPage({ params }: Props) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-4">
             <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">
-              CEB Rankings
+              {(data.federationName || data.federationSlug || "Official").toUpperCase()} Rankings
             </div>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{data.title}</h1>
             <p className="max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
@@ -71,7 +70,7 @@ export default async function RankingSeriesPage({ params }: Props) {
             </p>
           </div>
           <Link
-            href={`/federations/${data.federationSlug}`}
+            href={data.federationSlug ? `/federations/${data.federationSlug}` : "/federations"}
             className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
           >
             Back to federation

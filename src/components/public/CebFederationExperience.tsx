@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RANKING_SERIES_CONFIGS } from "@/lib/rankings-config";
 import { buildTournamentHref } from "@/lib/tournaments";
 import type { Federation } from "@/lib/directory";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
@@ -27,6 +26,13 @@ type TournamentPayload = {
       total?: number;
     };
   };
+};
+
+type RankingSeriesItem = {
+  slug: string;
+  title: string;
+  description: string;
+  federationSlug: string | null;
 };
 
 type HeroView = "network" | "tournaments" | "board" | "upcoming" | "rankings";
@@ -233,7 +239,7 @@ async function fetchAllFederationTournaments(federationId: string): Promise<Tour
 
 export function CebFederationExperience({ federation, members, embedded = false }: Props) {
   const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "en"));
-  const rankingSeries = RANKING_SERIES_CONFIGS.filter((item) => item.federationSlug === federation.slug);
+  const [rankingSeries, setRankingSeries] = useState<RankingSeriesItem[]>([]);
   const initialSelectedId = sortedMembers[0]?.documentId || null;
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeTab, setActiveTab] = useState<TabKey>("details");
@@ -301,6 +307,27 @@ export function CebFederationExperience({ federation, members, embedded = false 
       mounted = false;
     };
   }, [heroView, cebTournaments, federation.documentId]);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const response = await fetch("/api/rankings/series-index", { cache: "no-store" });
+        const payload = (await response.json().catch(() => ({ data: [] }))) as { data?: RankingSeriesItem[] };
+        if (!mounted) return;
+        const items = Array.isArray(payload.data) ? payload.data : [];
+        setRankingSeries(items.filter((item) => item.federationSlug === federation.slug));
+      } catch {
+        if (!mounted) return;
+        setRankingSeries([]);
+      }
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [federation.slug]);
 
   const selectedFederation = sortedMembers.find((item) => item.documentId === selectedId) || sortedMembers[0] || null;
   const selectedTournaments = selectedFederation ? tournaments[selectedFederation.documentId] || [] : [];
