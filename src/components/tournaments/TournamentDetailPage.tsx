@@ -1233,14 +1233,28 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") return;
+      void refreshEventData();
+    };
+
+    const handleFocus = () => {
+      void refreshEventData();
+    };
+
     const intervalId = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
       void refreshEventData();
-    }, 10000);
+    }, 5000);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [activeView, fetchEventPayload]);
 
