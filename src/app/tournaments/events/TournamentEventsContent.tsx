@@ -2948,8 +2948,8 @@ export function TournamentEventsContent({
                             ) : (
                               <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-3">
-                                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                                    <div className="flex flex-col gap-1">
+                                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                    <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:gap-3">
                                       <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                         Matches -{" "}
                                         {stage.title || stage.order || ""}
@@ -2963,9 +2963,9 @@ export function TournamentEventsContent({
                                     {showStageControls ? (
                                       <div
                                         className={clsx(
-                                          "grid items-center gap-3 lg:min-w-[22rem]",
+                                          "grid items-center gap-3 lg:min-w-[28rem]",
                                           showCompactFilters
-                                            ? "md:grid-cols-[minmax(0,1fr)_9rem]"
+                                            ? "md:grid-cols-[minmax(0,1fr)_8rem]"
                                             : "grid-cols-1",
                                         )}
                                       >
