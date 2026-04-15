@@ -56,6 +56,12 @@ export default async function RankingSeriesPage({ params }: Props) {
     notFound();
   }
 
+  const linkedTournaments = data.tournaments.filter((tournament) => tournament.href);
+  const useInlineTournamentCards = linkedTournaments.length > 2;
+  const leaderboardSectionClassName = useInlineTournamentCards
+    ? "space-y-4"
+    : "grid gap-4 lg:grid-cols-[2fr_1fr]";
+
   return (
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-8 px-4 py-10 sm:px-6">
       <section className="rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#082f49_100%)] px-6 py-8 text-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] sm:px-8">
@@ -78,7 +84,58 @@ export default async function RankingSeriesPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <section className={leaderboardSectionClassName}>
+        {useInlineTournamentCards ? (
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)]">
+            <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                Counted events
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {linkedTournaments.map((tournament) => (
+                  <Link
+                    key={tournament.key}
+                    href={tournament.href!}
+                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
+                          {tournament.label}
+                        </div>
+                        <div className="mt-2 text-base font-semibold text-slate-950">{tournament.title}</div>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                          tournament.hasRankingPoints
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {tournament.hasRankingPoints ? "Counted" : "Pending"}
+                      </span>
+                    </div>
+                    <div className="mt-3 text-sm text-slate-600">
+                      {formatDate(tournament.startDate)}
+                      {tournament.endDate ? ` - ${formatDate(tournament.endDate)}` : ""}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
+                Sorting
+              </div>
+              <div className="mt-4 space-y-3 text-sm leading-7 text-white/75">
+                <p>The list is ordered by total ranking points across the counted events.</p>
+                <p>When players are tied on points, the cumulative circuit general average is used.</p>
+              </div>
+            </section>
+          </div>
+        ) : null}
+
         <div className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="mb-5 flex flex-col gap-2">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
@@ -156,15 +213,14 @@ export default async function RankingSeriesPage({ params }: Props) {
           )}
         </div>
 
-        <div className="space-y-4">
-          <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-              Counted events
-            </div>
-            <div className="mt-4 space-y-3">
-              {data.tournaments
-                .filter((tournament) => tournament.href)
-                .map((tournament) => (
+        {!useInlineTournamentCards ? (
+          <div className="space-y-4">
+            <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                Counted events
+              </div>
+              <div className="mt-4 space-y-3">
+                {linkedTournaments.map((tournament) => (
                   <Link
                     key={tournament.key}
                     href={tournament.href!}
@@ -192,20 +248,21 @@ export default async function RankingSeriesPage({ params }: Props) {
                       {tournament.endDate ? ` - ${formatDate(tournament.endDate)}` : ""}
                     </div>
                   </Link>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
 
-          <section className="rounded-[32px] border border-black/5 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
-              Sorting
-            </div>
-            <div className="mt-4 space-y-3 text-sm leading-7 text-white/75">
-              <p>The list is ordered by total ranking points across the counted events.</p>
-              <p>When players are tied on points, the cumulative circuit general average is used.</p>
-            </div>
-          </section>
-        </div>
+            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
+                Sorting
+              </div>
+              <div className="mt-4 space-y-3 text-sm leading-7 text-white/75">
+                <p>The list is ordered by total ranking points across the counted events.</p>
+                <p>When players are tied on points, the cumulative circuit general average is used.</p>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </section>
     </div>
   );
