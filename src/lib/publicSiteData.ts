@@ -31,6 +31,7 @@ export type PublicTournamentCard = {
   gameType: string | null;
   clubName: string | null;
   eventDocumentId: string | null;
+  tournamentSlug: string | null;
   href: string | null;
 };
 
@@ -78,6 +79,7 @@ export type PublicFederationDetail = PublicFederationCard & {
 export type PublicTournamentEventCard = {
   id: number | null;
   documentId: string;
+  tournamentSlug: string | null;
   title: string;
   season: number | null;
   startDate: string | null;
@@ -227,6 +229,7 @@ const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
       : entity.bt_event,
   );
   const eventDocumentId = readString(eventEntity?.documentId);
+  const tournamentSlug = readString(entity.slug);
 
   return {
     id: toNumber(entity.id),
@@ -239,7 +242,10 @@ const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
     gameType: readString(entity.game_type),
     clubName: readString(clubEntity?.name),
     eventDocumentId,
-    href: eventDocumentId ? buildTournamentHref(eventDocumentId, title, toNumber(entity.season)) : null,
+    tournamentSlug,
+    href: eventDocumentId
+      ? buildTournamentHref(tournamentSlug || eventDocumentId, title, toNumber(entity.season))
+      : null,
   };
 };
 
@@ -325,6 +331,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
   params.set("fields[4]", "game_type");
   params.set("fields[5]", "documentId");
   params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[tournament][fields][1]", "slug");
 
   const json = await fetchStrapiJson(`/api/bt-events?${params.toString()}`, 60).catch(() => null);
   const rows = Array.isArray(json?.data) ? json.data : [];
@@ -345,13 +352,18 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
       return {
         id: toNumber(entity.id),
         documentId,
+        tournamentSlug: readString(tournamentEntity?.slug),
         title,
         season: toNumber(entity.season),
         startDate: readString(entity.start_date),
         endDate: readString(entity.end_date),
         gameType: readString(entity.game_type),
         tournamentTitle: readString(tournamentEntity?.title),
-        href: buildTournamentHref(documentId, title, toNumber(entity.season)),
+        href: buildTournamentHref(
+          readString(tournamentEntity?.slug) || documentId,
+          title,
+          toNumber(entity.season),
+        ),
       } satisfies PublicTournamentEventCard;
     })
     .filter((row: PublicTournamentEventCard | null): row is PublicTournamentEventCard => Boolean(row));

@@ -7,6 +7,7 @@ export type TournamentEventStageSummary = {
 
 export type TournamentEventSummary = {
   documentId: string;
+  tournamentSlug: string | null;
   title: string;
   description: string | null;
   season: number | null;
@@ -180,25 +181,58 @@ const normalizeStage = (value: unknown, index: number): TournamentEventStageSumm
 };
 
 export const buildTournamentSlug = (
-  _documentId: string,
+  canonicalId: string,
   title: string,
   season?: number | null,
 ) => {
+  const safeCanonicalId = slugify(String(canonicalId || "").trim());
   const safeTitle = slugify(String(title || "").trim()) || "event";
   const safeSeason =
     typeof season === "number" && Number.isFinite(season) ? String(season) : "";
-  return safeSeason ? `${safeTitle}-${safeSeason}` : safeTitle;
+  const readableSlug = safeSeason ? `${safeTitle}-${safeSeason}` : safeTitle;
+  return safeCanonicalId ? `${safeCanonicalId}--${readableSlug}` : readableSlug;
 };
 
 export const buildTournamentHref = (
-  documentId: string,
+  canonicalId: string,
   title: string,
   season?: number | null,
   embedded = false,
-) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(documentId, title, season)}`;
+) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(canonicalId, title, season)}`;
 
 export const extractTournamentDocumentId = (slug: string) =>
   String(slug || "").split("--")[0]?.trim() || "";
+
+const fetchTournamentEventSummaryByTournamentSlug = async (
+  tournamentSlug: string,
+): Promise<TournamentEventSummary | null> => {
+  const cleanSlug = slugify(String(tournamentSlug || "").trim());
+  if (!cleanSlug) return null;
+
+  const params = new URLSearchParams();
+  params.set("fields[0]", "documentId");
+  params.set("pagination[limit]", "1");
+  params.set("filters[tournament][slug][$eq]", cleanSlug);
+
+  const response = await fetchWithOptionalAuth(
+    `/api/bt-events?${params.toString()}`,
+    { retryWithoutAuth: true },
+  );
+
+  if (!response?.ok) return null;
+
+  const json = await response.json().catch(() => null);
+  const first = Array.isArray(json?.data) ? json.data[0] : null;
+  const source =
+    first && typeof first === "object" && "attributes" in (first as Record<string, unknown>)
+      ? {
+          ...(((first as { attributes?: Record<string, unknown> }).attributes ?? {})),
+          ...(first as Record<string, unknown>),
+        }
+      : (first as Record<string, unknown> | null);
+  const documentId = readString(source?.documentId);
+  return documentId ? fetchTournamentEventSummaryById(documentId) : null;
+};
 
 const fetchTournamentEventSummaryById = async (
   documentId: string,
@@ -227,6 +261,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][3]", "endDate");
       params.set("populate[tournament][fields][4]", "description");
       params.set("populate[tournament][fields][5]", "category");
+      params.set("populate[tournament][fields][6]", "slug");
       params.set("populate[tournament][populate][venue][fields][0]", "name");
       params.set("populate[tournament][populate][venue][fields][1]", "city");
       params.set("populate[tournament][populate][venue][fields][2]", "country");
@@ -325,6 +360,7 @@ const fetchTournamentEventSummaryById = async (
 
   return {
     documentId: readString(event.documentId) || cleanId,
+    tournamentSlug: readString((tournamentSource as Record<string, unknown>).slug),
     title: readString(event.title) || "Tournament Event",
     description: readString((tournamentSource as Record<string, unknown>).description),
     season: toNumber(event.season),
@@ -419,7 +455,10 @@ export const resolveTournamentEventSummary = async (
   if (!cleanValue) return null;
 
   if (cleanValue.includes("--")) {
-    return fetchTournamentEventSummaryById(extractTournamentDocumentId(cleanValue));
+    const canonicalId = extractTournamentDocumentId(cleanValue);
+    const byEventId = await fetchTournamentEventSummaryById(canonicalId);
+    if (byEventId) return byEventId;
+    return fetchTournamentEventSummaryByTournamentSlug(canonicalId);
   }
 
   const bySlug = await fetchTournamentEventSummaryBySlug(cleanValue);

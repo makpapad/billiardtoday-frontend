@@ -14,6 +14,18 @@ type TournamentItem = {
   start_date: string | null;
   end_date: string | null;
   game_type?: string | null;
+  tournament?: {
+    slug?: string | null;
+    data?: {
+      slug?: string | null;
+      attributes?: {
+        slug?: string | null;
+      } | null;
+    } | null;
+    attributes?: {
+      slug?: string | null;
+    } | null;
+  } | null;
 };
 
 type TournamentPayload = {
@@ -189,6 +201,13 @@ const buildClubHref = (slug?: string | null, documentId?: string | null, embedde
   const target = slug || documentId;
   return target ? `${embedded ? "/embed" : ""}/clubs/${target}` : "#";
 };
+
+const resolveTournamentCanonicalId = (item: TournamentItem) =>
+  item.tournament?.slug ||
+  item.tournament?.attributes?.slug ||
+  item.tournament?.data?.slug ||
+  item.tournament?.data?.attributes?.slug ||
+  item.documentId;
 
 const DETAIL_FIELDS = [
   { key: "country", label: "Country" },
@@ -640,7 +659,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               return (
                 <Link
                   key={item.documentId}
-                  href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
+                  href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
                   className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -763,7 +782,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     return (
                       <Link
                         key={item.documentId}
-                        href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
+                        href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
                         className="grid gap-4 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:grid-cols-[90px_1fr]"
                       >
                         <div className="flex min-h-[90px] flex-col items-center justify-center rounded-[22px] bg-slate-950 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
@@ -974,7 +993,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     return (
                       <Link
                         key={item.documentId}
-                        href={buildTournamentHref(item.documentId, item.title, item.season, embedded)}
+                        href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
                         className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                       >
                         <div className="flex items-start justify-between gap-4">

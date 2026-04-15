@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
         queryParams.set('fields[3]', 'end_date')
         queryParams.set('fields[4]', 'documentId')
         queryParams.set('fields[5]', 'game_type')
+        queryParams.set('populate[tournament][fields][0]', 'slug')
 
         if (season) {
             queryParams.set('filters[season][$eq]', season)

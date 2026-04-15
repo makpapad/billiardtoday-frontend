@@ -21,7 +21,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${summary.title} Flowchart`,
     description: `${summary.title} flowchart page.`,
     alternates: {
-      canonical: `/tournaments/${buildTournamentSlug(summary.documentId, summary.title, summary.season)}/flowchart`,
+      canonical: `/tournaments/${buildTournamentSlug(
+        summary.tournamentSlug || summary.documentId,
+        summary.title,
+        summary.season,
+      )}/flowchart`,
     },
   };
 }
@@ -34,7 +38,11 @@ export default async function TournamentFlowchartPage({ params }: Props) {
     notFound();
   }
 
-  const canonicalSlug = buildTournamentSlug(summary.documentId, summary.title, summary.season);
+  const canonicalSlug = buildTournamentSlug(
+    summary.tournamentSlug || summary.documentId,
+    summary.title,
+    summary.season,
+  );
   if (slug !== canonicalSlug) {
     permanentRedirect(`/tournaments/${canonicalSlug}/flowchart`);
   }

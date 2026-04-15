@@ -1071,7 +1071,7 @@ export function TournamentDetailPage({
     typeof summary.description === "string" && summary.description.trim().length > 0;
 
   const fullPageHref = buildTournamentHref(
-    summary.documentId,
+    summary.tournamentSlug || summary.documentId,
     summary.title,
     summary.season,
     false,

@@ -16,6 +16,18 @@ type Tournament = {
     season: number | null
     start_date: string | null
     end_date: string | null
+    tournament?: {
+        slug?: string | null
+        data?: {
+            slug?: string | null
+            attributes?: {
+                slug?: string | null
+            } | null
+        } | null
+        attributes?: {
+            slug?: string | null
+        } | null
+    } | null
 }
 
 type TournamentResponse = {
@@ -65,6 +77,13 @@ const getStatus = (startDate: string | null, endDate: string | null) => {
     if (start || end) return 'Live'
     return 'Scheduled'
 }
+
+const resolveTournamentCanonicalId = (item: Tournament) =>
+    item.tournament?.slug ||
+    item.tournament?.attributes?.slug ||
+    item.tournament?.data?.slug ||
+    item.tournament?.data?.attributes?.slug ||
+    item.documentId
 
 export function TournamentListSection({
     section,
@@ -154,8 +173,12 @@ export function TournamentListSection({
         }
     }, [currentPage, debouncedSeason, debouncedQuery, itemsPerPage, clubSlug, federationId])
 
-    const tournamentEventHref = (eventDocumentId: string, title: string, season: number | null) =>
-        buildTournamentHref(eventDocumentId, title, season, embedded)
+    const tournamentEventHref = (
+        eventDocumentId: string,
+        title: string,
+        season: number | null,
+        tournamentSlug?: string | null,
+    ) => buildTournamentHref(tournamentSlug || eventDocumentId, title, season, embedded)
 
     const handlePageChange = (nextPage: number) => {
         setCurrentPage(nextPage)
@@ -302,7 +325,7 @@ export function TournamentListSection({
                                             >
                                                 {useTitleLink ? (
                                                     <Link
-                                                        href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                        href={tournamentEventHref(item.documentId, item.title, item.season, resolveTournamentCanonicalId(item))}
                                                         className="transition hover:text-sky-700"
                                                     >
                                                         {item.title}
@@ -333,7 +356,7 @@ export function TournamentListSection({
                                     {section.showResultsLink && !useTitleLink ? (
                                         <div className="mt-5">
                                             <Link
-                                                href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                href={tournamentEventHref(item.documentId, item.title, item.season, resolveTournamentCanonicalId(item))}
                                                 className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                             >
                                                 View tournament
@@ -389,7 +412,7 @@ export function TournamentListSection({
                                                 <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                                                     {useTitleLink ? (
                                                         <Link
-                                                            href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                            href={tournamentEventHref(item.documentId, item.title, item.season, resolveTournamentCanonicalId(item))}
                                                             className="transition hover:text-sky-700"
                                                         >
                                                             {item.title}
@@ -424,7 +447,7 @@ export function TournamentListSection({
                                                 {section.showResultsLink && !useTitleLink ? (
                                                     <td className="px-6 py-4 text-sm">
                                                         <Link
-                                                            href={tournamentEventHref(item.documentId, item.title, item.season)}
+                                                            href={tournamentEventHref(item.documentId, item.title, item.season, resolveTournamentCanonicalId(item))}
                                                             className="font-semibold text-sky-700 transition hover:text-sky-900"
                                                         >
                                                             View tournament
