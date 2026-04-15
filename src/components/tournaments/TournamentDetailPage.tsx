@@ -152,6 +152,7 @@ type TournamentParticipantRow = {
   photoUrl: string | null;
   birthDate: string | null;
   registrationOrder: number;
+  stableDisplayNumber: number;
   seriesRank: number | null;
   seriesTotalPoints: number;
 };
@@ -3521,6 +3522,7 @@ export function TournamentDetailPage({
           photoUrl,
           birthDate: normalizeDateOnly(normalized.birth_date),
           registrationOrder: index,
+          stableDisplayNumber: index + 1,
           seriesRank: null,
           seriesTotalPoints: 0,
         };
@@ -3571,6 +3573,7 @@ export function TournamentDetailPage({
             photoUrl,
             birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
             registrationOrder: uniquePlayers.size,
+            stableDisplayNumber: uniquePlayers.size + 1,
             seriesRank: null,
             seriesTotalPoints: 0,
           });
@@ -4273,7 +4276,7 @@ export function TournamentDetailPage({
                             <td className="px-5 py-3 align-middle">
                               <div className="flex items-center gap-3">
                                 <span className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
-                                  {player.registrationOrder + 1}
+                                  {player.stableDisplayNumber}
                                 </span>
                                 {player.photoUrl ? (
                                   <img
