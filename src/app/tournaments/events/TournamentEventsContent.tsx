@@ -1909,6 +1909,13 @@ export function TournamentEventsContent({
       .map((length) => `${Math.min(Math.max(length + 4, 16), 30)}ch`)
       .join(" ");
   }, [filteredActiveStageGroups, previewColumnCount]);
+  const previewHeaderCount = useMemo(() => {
+    if (filteredActiveStageGroups.length === 0) return 0;
+    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
+      return Math.max(max, getGroupPreviewPlayers(group).length);
+    }, 0);
+    return Math.max(1, Math.min(maxPlayers, previewColumnCount));
+  }, [filteredActiveStageGroups, previewColumnCount]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -3548,7 +3555,34 @@ export function TournamentEventsContent({
                                           <div className="text-sm text-gray-500 dark:text-gray-400">
                                             No players found.
                                           </div>
-                                        ) : filteredActiveStageGroups.map(
+                                        ) : (
+                                          <>
+                                            <div className="hidden md:flex items-center gap-1.5 px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                                              <div className="flex min-w-[92px] items-center gap-1.5 pl-6">
+                                                <span>Group</span>
+                                              </div>
+                                              <div
+                                                className="ml-5 grid flex-1 items-center gap-x-7"
+                                                style={{
+                                                  gridTemplateColumns:
+                                                    previewGridTemplateColumns ||
+                                                    `repeat(${Math.max(previewHeaderCount, 1)}, minmax(0, 1fr))`,
+                                                }}
+                                              >
+                                                {Array.from({
+                                                  length: previewHeaderCount,
+                                                }).map((_, index) => (
+                                                  <div
+                                                    key={`preview-header-${index + 1}`}
+                                                    className="truncate"
+                                                  >
+                                                    Player {index + 1}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                              <div className="w-[86px]" />
+                                            </div>
+                                            {filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
                                             const groupKey = getGroupKey(
                                               stage,
@@ -4897,6 +4931,8 @@ export function TournamentEventsContent({
                                             </div>
                                             );
                                           },
+                                            )}
+                                          </>
                                         )}
                                       </div>
                                     )}
