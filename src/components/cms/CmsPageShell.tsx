@@ -24,6 +24,36 @@ const getSocialLabel = (platform: string) => {
   return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : "Social";
 };
 
+const getSocialIcon = (platform: string) => {
+  const clean = platform.trim().toLowerCase();
+
+  if (clean === "facebook") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+        <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.47H15.2c-1.25 0-1.64.78-1.64 1.58v1.89h2.8l-.45 2.9h-2.35V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
+      </svg>
+    );
+  }
+
+  return null;
+};
+
+const renderSocialLinkContent = (platform: string, label?: string | null, showLabel = true) => {
+  const resolvedLabel = label || getSocialLabel(platform);
+  const icon = getSocialIcon(platform);
+
+  if (!icon) {
+    return showLabel ? resolvedLabel : getSocialLabel(platform).slice(0, 2);
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      {icon}
+      {showLabel ? <span>{resolvedLabel}</span> : null}
+    </span>
+  );
+};
+
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -355,7 +385,7 @@ export function CmsLayoutRenderer({
         <div key={key} className={wrapperClass}>
           {settings.socialLinks.map((item) => (
             <a key={`${item.platform}-${item.url}`} href={item.url} target="_blank" rel="noreferrer" className={region === "footer" ? "rounded-full border border-white/10 px-4 py-2 text-sm transition hover:border-white/30" : "rounded-full border border-black/10 px-4 py-2 text-sm"}>
-              {showLabels ? item.label || getSocialLabel(item.platform) : getSocialLabel(item.platform).slice(0, 2)}
+              {renderSocialLinkContent(item.platform, item.label, showLabels)}
             </a>
           ))}
         </div>
@@ -574,7 +604,7 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
                         rel="noreferrer"
                         className={footerChipClass}
                       >
-                        {link.label || getSocialLabel(link.platform)}
+                        {renderSocialLinkContent(link.platform, link.label, true)}
                       </a>
                     ))}
                   </div>

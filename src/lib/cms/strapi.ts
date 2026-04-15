@@ -90,7 +90,7 @@ const fetchCmsAdminJson = async (path: string, revalidate = 60) => {
 
 const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
   siteName: "Billiard Today",
-  siteTagline: "Greek billiard tournaments, rankings, results, and CMS-managed pages.",
+  siteTagline: "International billiard tournaments, rankings, results, clubs, federations, and players.",
   logo: null,
   contactEmail: null,
   menus: [
@@ -145,7 +145,13 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
     { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
     { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
   ],
-  socialLinks: [],
+  socialLinks: [
+    {
+      platform: "facebook",
+      label: "Facebook",
+      url: "https://www.facebook.com/profile.php?id=100063661505276",
+    },
+  ],
   defaultSeo: {
     metaTitle: "Billiard Today",
     metaDescription:
