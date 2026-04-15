@@ -1169,6 +1169,7 @@ export function TournamentDetailPage({
     "registration" | "age" | "ranking"
   >("registration");
   const [participantAgeDirection, setParticipantAgeDirection] = useState<"asc" | "desc">("asc");
+  const [participantRankingDirection, setParticipantRankingDirection] = useState<"asc" | "desc">("asc");
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
@@ -3608,12 +3609,20 @@ export function TournamentDetailPage({
     if (participantSortMode === "ranking") {
       rows.sort((left, right) => {
         if (left.seriesRank !== null && right.seriesRank !== null && left.seriesRank !== right.seriesRank) {
-          return left.seriesRank - right.seriesRank;
+          return participantRankingDirection === "asc"
+            ? left.seriesRank - right.seriesRank
+            : right.seriesRank - left.seriesRank;
         }
-        if (left.seriesRank !== null && right.seriesRank === null) return -1;
-        if (left.seriesRank === null && right.seriesRank !== null) return 1;
+        if (left.seriesRank !== null && right.seriesRank === null) {
+          return participantRankingDirection === "asc" ? -1 : 1;
+        }
+        if (left.seriesRank === null && right.seriesRank !== null) {
+          return participantRankingDirection === "asc" ? 1 : -1;
+        }
         if (left.seriesTotalPoints !== right.seriesTotalPoints) {
-          return right.seriesTotalPoints - left.seriesTotalPoints;
+          return participantRankingDirection === "asc"
+            ? right.seriesTotalPoints - left.seriesTotalPoints
+            : left.seriesTotalPoints - right.seriesTotalPoints;
         }
         return left.registrationOrder - right.registrationOrder;
       });
@@ -3622,7 +3631,7 @@ export function TournamentDetailPage({
 
     rows.sort((left, right) => left.registrationOrder - right.registrationOrder);
     return rows;
-  }, [participantAgeDirection, participantSortMode, participantsWithSeriesData]);
+  }, [participantAgeDirection, participantRankingDirection, participantSortMode, participantsWithSeriesData]);
 
   const eventTimezoneOffsetMinutes = useMemo(() => {
     const raw =
@@ -4158,10 +4167,25 @@ export function TournamentDetailPage({
   };
 
   const handleRankingSortClick = () => {
-    setParticipantSortMode((current) =>
-      current === "ranking" ? "registration" : "ranking",
-    );
+    if (participantSortMode !== "ranking") {
+      setParticipantSortMode("ranking");
+      setParticipantRankingDirection("asc");
+      return;
+    }
+    if (participantRankingDirection === "asc") {
+      setParticipantRankingDirection("desc");
+      return;
+    }
+    setParticipantSortMode("registration");
+    setParticipantRankingDirection("asc");
   };
+
+  const rankingSortButtonLabel =
+    participantSortMode === "ranking"
+      ? participantRankingDirection === "asc"
+        ? "Ranking ↑"
+        : "Ranking ↓"
+      : "Ranking order";
 
   const mainContent =
     activeView === "tournament" ? (
@@ -4178,7 +4202,7 @@ export function TournamentDetailPage({
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
                   {participantSortMode === "age"
-                    ? "Sorted by hidden date of birth for youth events."
+                    ? "Sorted by age."
                     : participantSortMode === "ranking"
                       ? "Sorted by the current ranking order of the linked series."
                       : "Listed in the same order they were registered for this event."}
@@ -4209,7 +4233,7 @@ export function TournamentDetailPage({
                           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                       }`}
                     >
-                      Ranking order
+                      {rankingSortButtonLabel}
                     </button>
                   ) : null}
                 </div>
