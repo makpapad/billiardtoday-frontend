@@ -149,7 +149,6 @@ type TournamentParticipantRow = {
   documentId: string | null;
   name: string;
   country: string | null;
-  status: string;
   birthDate: string | null;
   registrationOrder: number;
   seriesRank: number | null;
@@ -3515,7 +3514,6 @@ export function TournamentDetailPage({
           documentId: normalized.documentId ?? null,
           name,
           country,
-          status: formatParticipantStatus(normalized.status),
           birthDate: normalizeDateOnly(normalized.birth_date),
           registrationOrder: index,
           seriesRank: null,
@@ -3562,7 +3560,6 @@ export function TournamentDetailPage({
             documentId: normalizedPlayer.documentId ?? null,
             name,
             country,
-            status: "Registered",
             birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
             registrationOrder: uniquePlayers.size,
             seriesRank: null,
@@ -4254,7 +4251,6 @@ export function TournamentDetailPage({
                         {isSeriesTournament ? (
                           <th className="px-4 py-3 text-left font-semibold">Series Pts</th>
                         ) : null}
-                        <th className="px-4 py-3 text-left font-semibold">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4298,11 +4294,6 @@ export function TournamentDetailPage({
                                 </span>
                               </td>
                             ) : null}
-                            <td className="px-4 py-3 align-middle">
-                              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                                {player.status}
-                              </span>
-                            </td>
                           </tr>
                         );
                       })}
