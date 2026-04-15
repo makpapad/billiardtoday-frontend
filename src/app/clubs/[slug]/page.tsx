@@ -31,7 +31,6 @@ export default async function ClubPage({ params }: Props) {
             }
             actions={[
               { label: "Open live hub", href: `/live/${club.documentId}` },
-              { label: "Embed live", href: `/embed/live/${club.documentId}`, variant: "secondary" },
             ]}
             meta={[]}
             aside={
