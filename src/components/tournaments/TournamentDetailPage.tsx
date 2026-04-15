@@ -4262,16 +4262,22 @@ export function TournamentDetailPage({
                             className="border-t border-slate-200 bg-white text-slate-700"
                           >
                             <td className="px-5 py-3 align-middle">
-                              {player.documentId ? (
-                                <Link
-                                  href={playerProfileHref(player.documentId, player.name)}
-                                  className="font-semibold text-slate-950 transition hover:text-cyan-700"
-                                >
-                                  {player.name}
-                                </Link>
-                              ) : (
-                                <span className="font-semibold text-slate-950">{player.name}</span>
-                              )}
+                              <div className="flex items-center gap-3">
+                                <span
+                                  aria-hidden="true"
+                                  className="h-9 w-9 flex-none rounded-full border border-slate-200 bg-slate-100"
+                                />
+                                {player.documentId ? (
+                                  <Link
+                                    href={playerProfileHref(player.documentId, player.name)}
+                                    className="font-semibold text-slate-950 transition hover:text-cyan-700"
+                                  >
+                                    {player.name}
+                                  </Link>
+                                ) : (
+                                  <span className="font-semibold text-slate-950">{player.name}</span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3 align-middle">
                               <span className="inline-flex items-center gap-2">
