@@ -1422,10 +1422,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.matches')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {effectiveCareerStats ? (
-                                    overallMatches
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    overallMatches
                                 )}
                             </div>
                         </div>
@@ -1434,10 +1434,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.wins')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
-                                {effectiveCareerStats ? (
-                                    overallWins
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    overallWins
                                 )}
                             </div>
                         </div>
@@ -1446,10 +1446,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                {effectiveCareerStats ? (
-                                    overallDraws
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    overallDraws
                                 )}
                             </div>
                         </div>
@@ -1458,10 +1458,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.losses')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">
-                                {effectiveCareerStats ? (
-                                    overallLosses
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    overallLosses
                                 )}
                             </div>
                         </div>
@@ -1470,10 +1470,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.winPct')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                {effectiveCareerStats ? (
-                                    `${overallWinPercentage}%`
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
+                                ) : (
+                                    `${overallWinPercentage}%`
                                 )}
                             </div>
                         </div>
@@ -1484,10 +1484,10 @@ export default function PlayerProfilePage() {
                                     : t('players.profile.stats.avg')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                {effectiveCareerStats ? (
-                                    displayedOverallAvg
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
+                                ) : (
+                                    displayedOverallAvg
                                 )}
                             </div>
                         </div>
@@ -1498,10 +1498,10 @@ export default function PlayerProfilePage() {
                                     : t('players.profile.stats.highRunShort')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                {effectiveCareerStats ? (
-                                    displayedOverallHighestRun
-                                ) : (
+                                {isLoadingHistory ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                ) : (
+                                    displayedOverallHighestRun
                                 )}
                             </div>
                         </div>
