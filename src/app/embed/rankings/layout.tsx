@@ -1,3 +1,13 @@
-import RankingsLayout from "@/app/rankings/layout";
+import type { ReactNode } from "react";
+import { EmbedPageFrame } from "@/components/embed/EmbedPageFrame";
+import { getCmsAppearance } from "@/lib/cms/strapi";
 
-export default RankingsLayout;
+export default async function EmbedRankingsLayout({ children }: { children: ReactNode }) {
+  const appearance = await getCmsAppearance();
+
+  return (
+    <EmbedPageFrame appearance={appearance}>
+      {children}
+    </EmbedPageFrame>
+  );
+}
