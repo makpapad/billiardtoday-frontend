@@ -4272,7 +4272,7 @@ export function TournamentDetailPage({
                           >
                             <td className="px-5 py-3 align-middle">
                               <div className="flex items-center gap-3">
-                                <span className="w-7 flex-none text-right text-xs font-semibold text-slate-400">
+                                <span className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
                                   {player.registrationOrder + 1}
                                 </span>
                                 {player.photoUrl ? (
