@@ -4272,6 +4272,9 @@ export function TournamentDetailPage({
                           >
                             <td className="px-5 py-3 align-middle">
                               <div className="flex items-center gap-3">
+                                <span className="w-7 flex-none text-right text-xs font-semibold text-slate-400">
+                                  {player.registrationOrder + 1}
+                                </span>
                                 {player.photoUrl ? (
                                   <img
                                     src={player.photoUrl}
