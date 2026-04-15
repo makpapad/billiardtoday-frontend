@@ -18,6 +18,15 @@ const CMS_FETCH_REVALIDATE_SECONDS = Math.max(
   0,
   Number(getServerEnv("CMS_FETCH_REVALIDATE_SECONDS") || 5),
 );
+const DEFAULT_GLOBAL_TAGLINE =
+  "International billiard tournaments, rankings, results, clubs, federations, and players.";
+const DEFAULT_SOCIAL_LINKS = [
+  {
+    platform: "facebook",
+    label: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=100063661505276",
+  },
+] as const;
 
 const isLocalCmsAdminUrl = (url: string) =>
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url.trim());
@@ -90,7 +99,7 @@ const fetchCmsAdminJson = async (path: string, revalidate = 60) => {
 
 const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
   siteName: "Billiard Today",
-  siteTagline: "International billiard tournaments, rankings, results, clubs, federations, and players.",
+  siteTagline: DEFAULT_GLOBAL_TAGLINE,
   logo: null,
   contactEmail: null,
   menus: [
@@ -145,13 +154,7 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
     { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
     { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
   ],
-  socialLinks: [
-    {
-      platform: "facebook",
-      label: "Facebook",
-      url: "https://www.facebook.com/profile.php?id=100063661505276",
-    },
-  ],
+  socialLinks: [...DEFAULT_SOCIAL_LINKS],
   defaultSeo: {
     metaTitle: "Billiard Today",
     metaDescription:
@@ -184,7 +187,22 @@ export const getCmsSiteSettings = async (): Promise<CmsSiteSettings> => {
     params.set("populate", "*");
 
     const json = await fetchJson(`/api/site-setting?${params.toString()}`);
-    return mapCmsSiteSettings(json.data ?? json, STRAPI_URL);
+    const mapped = mapCmsSiteSettings(json.data ?? json, STRAPI_URL);
+    const normalizedTagline =
+      !mapped.siteTagline ||
+      mapped.siteTagline.trim() === "" ||
+      mapped.siteTagline.trim() === "Greek billiard tournaments, rankings, results, and CMS-managed pages."
+        ? DEFAULT_GLOBAL_TAGLINE
+        : mapped.siteTagline;
+
+    return {
+      ...mapped,
+      siteTagline: normalizedTagline,
+      socialLinks:
+        Array.isArray(mapped.socialLinks) && mapped.socialLinks.length > 0
+          ? mapped.socialLinks
+          : [...DEFAULT_SOCIAL_LINKS],
+    };
   } catch (error) {
     if (isHttpStatusError(error, 404)) {
       return DEFAULT_SITE_SETTINGS;
