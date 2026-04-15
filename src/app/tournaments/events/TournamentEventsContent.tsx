@@ -350,7 +350,10 @@ function getPreviewPlayerLabel(player: {
   return player.name || player.nativeName || "Unknown";
 }
 
-function getGroupPreviewPlayers(group: StageMatchGroup) {
+function getGroupPreviewPlayers(
+  group: StageMatchGroup,
+  playerSeedByDocumentId?: Map<string, number>,
+) {
   return Array.from(
     new Map(
       group.matches
@@ -360,7 +363,24 @@ function getGroupPreviewPlayers(group: StageMatchGroup) {
           player,
         ]),
     ).values(),
-  );
+  ).sort((left, right) => {
+    const leftSeed =
+      left.documentId && playerSeedByDocumentId
+        ? playerSeedByDocumentId.get(left.documentId) ?? null
+        : null;
+    const rightSeed =
+      right.documentId && playerSeedByDocumentId
+        ? playerSeedByDocumentId.get(right.documentId) ?? null
+        : null;
+
+    if (leftSeed !== null && rightSeed !== null && leftSeed !== rightSeed) {
+      return leftSeed - rightSeed;
+    }
+    if (leftSeed !== null) return -1;
+    if (rightSeed !== null) return 1;
+
+    return getPreviewPlayerLabel(left).localeCompare(getPreviewPlayerLabel(right));
+  });
 }
 
 type GroupDisplayPlayer = {
@@ -1175,6 +1195,18 @@ export function TournamentEventsContent({
         ? `?tournament=${encodeURIComponent(tournamentContextSlug)}`
         : ""
     }`;
+
+  const playerSeedByDocumentId = useMemo(() => {
+    const next = new Map<string, number>();
+    toRelationArray(eventData?.data?.players).forEach((player) => {
+      const normalized = normalizeEntity<{ seed?: unknown }>(player, "event-player");
+      if (!normalized.documentId) return;
+      const seed = toNumber(normalized.seed);
+      if (seed === null) return;
+      next.set(normalized.documentId, seed);
+    });
+    return next;
+  }, [eventData]);
 
   const liveBadgeAnimation = `@keyframes btLivePulse {
         0%, 100% { opacity: 0.72; background-color: #ffd21c; box-shadow: inset 0 0 0 0 rgba(255,255,255,0.0); }
@@ -3487,7 +3519,10 @@ export function TournamentEventsContent({
                                               group,
                                             );
                                             const previewPlayers =
-                                              getGroupPreviewPlayers(group);
+                                              getGroupPreviewPlayers(
+                                                group,
+                                                playerSeedByDocumentId,
+                                              );
                                             const isLargeGroup =
                                               previewPlayers.length > 4;
                                             const matchingPlayerIds =
