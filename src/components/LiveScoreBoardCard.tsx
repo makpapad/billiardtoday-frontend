@@ -289,12 +289,10 @@ export function LiveScoreBoardCard({
     player,
     fallback,
     compact = false,
-    mirrored = false,
   }: {
     player: Player;
     fallback: string;
     compact?: boolean;
-    mirrored?: boolean;
   }) => {
     const src = normalizePhotoUrl(player.photoMainUrl ?? player.photoUrl);
     const [imageFailed, setImageFailed] = React.useState(false);
@@ -311,7 +309,7 @@ export function LiveScoreBoardCard({
           <img
             src={src}
             alt={resolveDisplayName(player) || fallback}
-            className={`${innerSize} rounded-full object-cover ring-1 ring-white/20 shadow-[0_8px_18px_rgba(15,23,42,0.28)]${mirrored ? " -scale-x-100" : ""}`}
+            className={`${innerSize} rounded-full object-cover ring-1 ring-white/20 shadow-[0_8px_18px_rgba(15,23,42,0.28)]`}
             loading="eager"
             referrerPolicy="no-referrer"
             onError={() => setImageFailed(true)}
@@ -811,7 +809,7 @@ export function LiveScoreBoardCard({
             <LiveVideoButton />
           </div>
           <div className="row-start-5 row-end-6 flex items-center justify-center pl-2">
-            <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} mirrored />
+            <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} />
           </div>
 
           <div
@@ -1184,7 +1182,7 @@ export function LiveScoreBoardCard({
           <LiveVideoButton />
         </div>
         <div className="row-start-5 row-end-6 flex items-center justify-center pl-2">
-          <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} mirrored />
+          <AvatarCircle player={player2} fallback="P2" compact={compactExpandedLayout} />
         </div>
 
         <div
