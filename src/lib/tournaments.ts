@@ -24,6 +24,10 @@ export type TournamentEventSummary = {
   organizerType: string | null;
   organizerLogoUrl: string | null;
   organizerLogoName: string | null;
+  category: string | null;
+  rankingSeriesDocumentId: string | null;
+  rankingSeriesSlug: string | null;
+  rankingSeriesTitle: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -222,6 +226,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][2]", "startDate");
       params.set("populate[tournament][fields][3]", "endDate");
       params.set("populate[tournament][fields][4]", "description");
+      params.set("populate[tournament][fields][5]", "category");
       params.set("populate[tournament][populate][venue][fields][0]", "name");
       params.set("populate[tournament][populate][venue][fields][1]", "city");
       params.set("populate[tournament][populate][venue][fields][2]", "country");
@@ -237,6 +242,12 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
+      params.set("populate[tournament][populate][series_entries][sort][0]", "order:asc");
+      params.set("populate[tournament][populate][series_entries][fields][0]", "order");
+      params.set("populate[tournament][populate][series_entries][fields][1]", "documentId");
+      params.set("populate[tournament][populate][series_entries][populate][series][fields][0]", "documentId");
+      params.set("populate[tournament][populate][series_entries][populate][series][fields][1]", "slug");
+      params.set("populate[tournament][populate][series_entries][populate][series][fields][2]", "title");
     }
 
     return params;
@@ -273,6 +284,16 @@ const fetchTournamentEventSummaryById = async (
   const federationLogoSource = unwrapEntitySource(federationSource.logo);
   const organizerFederationSource = unwrapEntitySource(tournamentSource.organizer_federation);
   const organizerFederationLogoSource = unwrapEntitySource(organizerFederationSource.logo);
+  const seriesEntries = Array.isArray((tournamentSource as Record<string, unknown>).series_entries)
+    ? ((tournamentSource as Record<string, unknown>).series_entries as unknown[])
+    : Array.isArray(
+          ((tournamentSource as Record<string, unknown>).series_entries as { data?: unknown[] } | undefined)
+            ?.data,
+        )
+      ? (((tournamentSource as Record<string, unknown>).series_entries as { data?: unknown[] }).data ?? [])
+      : [];
+  const firstSeriesEntry = unwrapEntitySource(seriesEntries[0]);
+  const rankingSeriesSource = unwrapEntitySource(firstSeriesEntry.series);
   const organizerType = readString((tournamentSource as Record<string, unknown>).organizer_type);
   const tournamentStartDate =
     readString((tournamentSource as Record<string, unknown>).startDate) ??
@@ -323,6 +344,10 @@ const fetchTournamentEventSummaryById = async (
     organizerType,
     organizerLogoUrl: readString((organizerLogoSource as Record<string, unknown>).url),
     organizerLogoName: readString((organizerLogoSource as Record<string, unknown>).name),
+    category: readString((tournamentSource as Record<string, unknown>).category),
+    rankingSeriesDocumentId: readString((rankingSeriesSource as Record<string, unknown>).documentId),
+    rankingSeriesSlug: readString((rankingSeriesSource as Record<string, unknown>).slug),
+    rankingSeriesTitle: readString((rankingSeriesSource as Record<string, unknown>).title),
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };

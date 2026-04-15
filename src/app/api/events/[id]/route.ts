@@ -61,6 +61,31 @@ const buildStageMatchKey = (match: Record<string, unknown>) => {
     return null
 }
 
+const buildParticipantPlayerSnapshot = (
+    participant: Record<string, unknown>,
+): Record<string, unknown> | null => {
+    const player = asObject(participant.player)
+    if (!player) return null
+
+    return {
+        ...player,
+        status:
+            typeof participant.participant_status === 'string'
+                ? participant.participant_status
+                : undefined,
+        participant_status:
+            typeof participant.participant_status === 'string'
+                ? participant.participant_status
+                : undefined,
+        registration_date:
+            typeof participant.registration_date === 'string'
+                ? participant.registration_date
+                : undefined,
+        ranking: toNumber(participant.ranking),
+        seed: toNumber(participant.seed),
+    }
+}
+
 const mergeLiveStageMatches = (
     baseMatches: Record<string, unknown>[],
     liveMatches: Record<string, unknown>[],
@@ -226,10 +251,12 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][2]', 'full_name_en')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][3]', 'country')
+            queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][4]', 'birth_date')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][1]', 'documentId')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][2]', 'full_name_en')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][3]', 'country')
+            queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][4]', 'birth_date')
 
             queryParams.set('populate[event_stages][populate][results][sort][0]', 'group_number:asc')
             queryParams.set('populate[event_stages][populate][results][sort][1]', 'final_position:asc')
@@ -263,6 +290,18 @@ export async function GET(
             queryParams.set('populate[results_final][populate][player][fields][1]', 'documentId')
             queryParams.set('populate[results_final][populate][player][fields][2]', 'full_name_en')
             queryParams.set('populate[results_final][populate][player][fields][3]', 'country')
+
+            queryParams.set('populate[tournament][populate][participants][sort][0]', 'registration_date:asc')
+            queryParams.set('populate[tournament][populate][participants][sort][1]', 'ranking:asc')
+            queryParams.set('populate[tournament][populate][participants][fields][0]', 'participant_status')
+            queryParams.set('populate[tournament][populate][participants][fields][1]', 'registration_date')
+            queryParams.set('populate[tournament][populate][participants][fields][2]', 'ranking')
+            queryParams.set('populate[tournament][populate][participants][fields][3]', 'seed')
+            queryParams.set('populate[tournament][populate][participants][populate][player][fields][0]', 'documentId')
+            queryParams.set('populate[tournament][populate][participants][populate][player][fields][1]', 'full_name')
+            queryParams.set('populate[tournament][populate][participants][populate][player][fields][2]', 'full_name_en')
+            queryParams.set('populate[tournament][populate][participants][populate][player][fields][3]', 'country')
+            queryParams.set('populate[tournament][populate][participants][populate][player][fields][4]', 'birth_date')
 
             queryParams.set('populate[timetable_slots][sort][0]', 'slot_order:asc')
             queryParams.set('populate[timetable_slots][sort][1]', 'date_time:asc')
@@ -443,10 +482,18 @@ export async function GET(
                     }
                 })
 
+                const tournament = asObject(event.tournament)
+                const registeredPlayers = tournament
+                    ? asArray(tournament.participants)
+                          .map((participant) => buildParticipantPlayerSnapshot(participant))
+                          .filter((player): player is Record<string, unknown> => Boolean(player))
+                    : []
+
                 payload.data = {
                     ...event,
                     event_stages: stages,
                     results_final: enrichedFinalResults,
+                    ...(registeredPlayers.length > 0 ? { players: registeredPlayers } : {}),
                 }
             }
 

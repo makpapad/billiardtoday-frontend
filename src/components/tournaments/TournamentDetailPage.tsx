@@ -15,6 +15,7 @@ import {
 } from "@/components/live/LiveVideoDrawer";
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
+import type { RankingSeriesData } from "@/lib/rankings";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
 import type {
@@ -50,6 +51,7 @@ type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
   initialEventData?: EventApiResponse | null;
+  initialSeriesData?: RankingSeriesData | null;
 };
 
 type TournamentLiveScreen = {
@@ -148,6 +150,10 @@ type TournamentParticipantRow = {
   name: string;
   country: string | null;
   status: string;
+  birthDate: string | null;
+  registrationOrder: number;
+  seriesRank: number | null;
+  seriesTotalPoints: number;
 };
 
 function HeroMenuButton({
@@ -193,6 +199,13 @@ const formatParticipantStatus = (value: unknown) => {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const normalizeDateOnly = (value: unknown) => {
+  const normalized = String(value || "").trim();
+  if (!normalized) return null;
+  const isoMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return isoMatch ? isoMatch[1] + "-" + isoMatch[2] + "-" + isoMatch[3] : null;
 };
 
 type InningDetailEntry = {
@@ -1012,7 +1025,12 @@ const resolveMediaUrl = (url: string | null) => {
   return `${base}${url.startsWith("/") ? url : `/${url}`}`;
 };
 
-export function TournamentDetailPage({ summary, embedded = false, initialEventData = null }: Props) {
+export function TournamentDetailPage({
+  summary,
+  embedded = false,
+  initialEventData = null,
+  initialSeriesData = null,
+}: Props) {
   const hasInfoDescription =
     typeof summary.description === "string" && summary.description.trim().length > 0;
 
@@ -1147,6 +1165,10 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
     () => new Set(),
   );
   const [eventData, setEventData] = useState<EventApiResponse | null>(initialEventData);
+  const [participantSortMode, setParticipantSortMode] = useState<
+    "registration" | "age" | "ranking"
+  >("registration");
+  const [participantAgeDirection, setParticipantAgeDirection] = useState<"asc" | "desc">("asc");
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
@@ -3424,6 +3446,46 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
       });
   }, [eventData, timetableTrainingPlayers]);
 
+  const isYouthTournament = useMemo(() => {
+    const normalizedCategory = String(summary.category || "").trim().toLowerCase();
+    return normalizedCategory === "youth" || normalizedCategory.includes("youth");
+  }, [summary.category]);
+
+  const seriesLeaderboardByPlayerId = useMemo(() => {
+    const next = new Map<
+      string,
+      {
+        rank: number | null;
+        totalPoints: number;
+      }
+    >();
+
+    (initialSeriesData?.leaderboard ?? []).forEach((row) => {
+      const playerDocumentId = String(row.playerDocumentId || "").trim();
+      if (!playerDocumentId) return;
+      next.set(playerDocumentId, {
+        rank: typeof row.rank === "number" && Number.isFinite(row.rank) ? row.rank : null,
+        totalPoints:
+          typeof row.totalPoints === "number" && Number.isFinite(row.totalPoints)
+            ? row.totalPoints
+            : 0,
+      });
+    });
+
+    return next;
+  }, [initialSeriesData]);
+
+  const isSeriesTournament = Boolean(summary.rankingSeriesSlug);
+
+  useEffect(() => {
+    if (!isYouthTournament && participantSortMode === "age") {
+      setParticipantSortMode("registration");
+    }
+    if (!isSeriesTournament && participantSortMode === "ranking") {
+      setParticipantSortMode("registration");
+    }
+  }, [isSeriesTournament, isYouthTournament, participantSortMode]);
+
   const tournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
     if (eventData?.data?.players) {
       return toRelationArray(eventData.data.players).map((player, index) => {
@@ -3432,6 +3494,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
           full_name_en?: unknown;
           country?: unknown;
           status?: unknown;
+          birth_date?: unknown;
         }>(player, `participant-${index + 1}`);
 
         const name =
@@ -3452,6 +3515,10 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
           name,
           country,
           status: formatParticipantStatus(normalized.status),
+          birthDate: normalizeDateOnly(normalized.birth_date),
+          registrationOrder: index,
+          seriesRank: null,
+          seriesTotalPoints: 0,
         };
       });
     }
@@ -3476,6 +3543,7 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
             full_name?: unknown;
             full_name_en?: unknown;
             country?: unknown;
+            birth_date?: unknown;
           }>(player, `derived-participant-${groupIndex + 1}-${playerIndex + 1}`);
           if (uniquePlayers.has(normalizedPlayer.id)) return;
           const name =
@@ -3494,6 +3562,10 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
             name,
             country,
             status: "Registered",
+            birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
+            registrationOrder: uniquePlayers.size,
+            seriesRank: null,
+            seriesTotalPoints: 0,
           });
         });
       });
@@ -3501,6 +3573,56 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
 
     return Array.from(uniquePlayers.values());
   }, [eventData]);
+
+  const participantsWithSeriesData = useMemo<TournamentParticipantRow[]>(() => {
+    return tournamentParticipants.map((player) => {
+      const ranking = player.documentId ? seriesLeaderboardByPlayerId.get(player.documentId) : null;
+      return {
+        ...player,
+        seriesRank: ranking?.rank ?? null,
+        seriesTotalPoints: ranking?.totalPoints ?? 0,
+      };
+    });
+  }, [seriesLeaderboardByPlayerId, tournamentParticipants]);
+
+  const visibleTournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
+    const rows = [...participantsWithSeriesData];
+
+    if (participantSortMode === "age") {
+      rows.sort((left, right) => {
+        const leftBirthDate = left.birthDate;
+        const rightBirthDate = right.birthDate;
+
+        if (leftBirthDate && rightBirthDate && leftBirthDate !== rightBirthDate) {
+          return participantAgeDirection === "asc"
+            ? leftBirthDate.localeCompare(rightBirthDate)
+            : rightBirthDate.localeCompare(leftBirthDate);
+        }
+        if (leftBirthDate && !rightBirthDate) return -1;
+        if (!leftBirthDate && rightBirthDate) return 1;
+        return left.registrationOrder - right.registrationOrder;
+      });
+      return rows;
+    }
+
+    if (participantSortMode === "ranking") {
+      rows.sort((left, right) => {
+        if (left.seriesRank !== null && right.seriesRank !== null && left.seriesRank !== right.seriesRank) {
+          return left.seriesRank - right.seriesRank;
+        }
+        if (left.seriesRank !== null && right.seriesRank === null) return -1;
+        if (left.seriesRank === null && right.seriesRank !== null) return 1;
+        if (left.seriesTotalPoints !== right.seriesTotalPoints) {
+          return right.seriesTotalPoints - left.seriesTotalPoints;
+        }
+        return left.registrationOrder - right.registrationOrder;
+      });
+      return rows;
+    }
+
+    rows.sort((left, right) => left.registrationOrder - right.registrationOrder);
+    return rows;
+  }, [participantAgeDirection, participantSortMode, participantsWithSeriesData]);
 
   const eventTimezoneOffsetMinutes = useMemo(() => {
     const raw =
@@ -4014,23 +4136,86 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
     }, 400);
   };
 
+  const ageSortButtonLabel =
+    participantSortMode === "age"
+      ? participantAgeDirection === "asc"
+        ? "Age ↑"
+        : "Age ↓"
+      : "Sort by age";
+
+  const handleAgeSortClick = () => {
+    if (participantSortMode !== "age") {
+      setParticipantSortMode("age");
+      setParticipantAgeDirection("asc");
+      return;
+    }
+    if (participantAgeDirection === "asc") {
+      setParticipantAgeDirection("desc");
+      return;
+    }
+    setParticipantSortMode("registration");
+    setParticipantAgeDirection("asc");
+  };
+
+  const handleRankingSortClick = () => {
+    setParticipantSortMode((current) =>
+      current === "ranking" ? "registration" : "ranking",
+    );
+  };
+
   const mainContent =
     activeView === "tournament" ? (
       tournamentPanelMode === "participants" ? (
         <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4">
-            <div>
-              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Participants
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Participants
+                </div>
+                <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                  Registered players
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  {participantSortMode === "age"
+                    ? "Sorted by hidden date of birth for youth events."
+                    : participantSortMode === "ranking"
+                      ? "Sorted by the current ranking order of the linked series."
+                      : "Listed in the same order they were registered for this event."}
+                </p>
               </div>
-              <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                Registered players
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Listed in the same order they were registered for this event.
-              </p>
+              {(isYouthTournament || isSeriesTournament) ? (
+                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                  {isYouthTournament ? (
+                    <button
+                      type="button"
+                      onClick={handleAgeSortClick}
+                      className={`inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                        participantSortMode === "age"
+                          ? "border-cyan-300 bg-cyan-50 text-cyan-900"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {ageSortButtonLabel}
+                    </button>
+                  ) : null}
+                  {isSeriesTournament ? (
+                    <button
+                      type="button"
+                      onClick={handleRankingSortClick}
+                      className={`inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                        participantSortMode === "ranking"
+                          ? "border-cyan-300 bg-cyan-50 text-cyan-900"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      Ranking order
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-            {tournamentParticipants.length === 0 ? (
+            {visibleTournamentParticipants.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
                 No participants have been published yet.
               </div>
@@ -4042,11 +4227,14 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                       <tr>
                         <th className="px-5 py-3 text-left font-semibold">Player</th>
                         <th className="px-4 py-3 text-left font-semibold">Country</th>
+                        {isSeriesTournament ? (
+                          <th className="px-4 py-3 text-left font-semibold">Series Pts</th>
+                        ) : null}
                         <th className="px-4 py-3 text-left font-semibold">Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tournamentParticipants.map((player) => {
+                      {visibleTournamentParticipants.map((player) => {
                         const flagSrc = getCountryFlagCdnUrl(player.country, 40);
                         return (
                           <tr
@@ -4079,6 +4267,13 @@ export function TournamentDetailPage({ summary, embedded = false, initialEventDa
                                 <span>{player.country || "-"}</span>
                               </span>
                             </td>
+                            {isSeriesTournament ? (
+                              <td className="px-4 py-3 align-middle">
+                                <span className="font-semibold text-slate-950">
+                                  {player.seriesTotalPoints}
+                                </span>
+                              </td>
+                            ) : null}
                             <td className="px-4 py-3 align-middle">
                               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                                 {player.status}

@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
+import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
 import type { EventApiResponse } from "@/app/tournaments/events/types";
 
@@ -52,6 +53,9 @@ export default async function TournamentPage({ params }: Props) {
   }
 
   let initialEventData: EventApiResponse | null = null;
+  const initialSeriesData = summary.rankingSeriesSlug
+    ? await getRankingSeriesData(summary.rankingSeriesSlug)
+    : null;
   try {
     const eventDataUrl = `http://127.0.0.1:3022/event-data/${encodeURIComponent(summary.documentId)}`;
     const response = await fetch(eventDataUrl, { cache: "no-store" });
@@ -64,7 +68,11 @@ export default async function TournamentPage({ params }: Props) {
 
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
-      <TournamentDetailPage summary={summary} initialEventData={initialEventData} />
+      <TournamentDetailPage
+        summary={summary}
+        initialEventData={initialEventData}
+        initialSeriesData={initialSeriesData}
+      />
     </CmsPageShell>
   );
 }
