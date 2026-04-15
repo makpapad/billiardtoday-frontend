@@ -149,6 +149,7 @@ type TournamentParticipantRow = {
   documentId: string | null;
   name: string;
   country: string | null;
+  photoUrl: string | null;
   birthDate: string | null;
   registrationOrder: number;
   seriesRank: number | null;
@@ -3508,12 +3509,16 @@ export function TournamentDetailPage({
           typeof normalized.country === "string" && normalized.country.trim()
             ? normalized.country.trim()
             : null;
+        const photoUrl = normalizeMediaUrl(
+          (normalized as { photo_main?: { url?: unknown } | unknown }).photo_main,
+        );
 
         return {
           id: normalized.id,
           documentId: normalized.documentId ?? null,
           name,
           country,
+          photoUrl,
           birthDate: normalizeDateOnly(normalized.birth_date),
           registrationOrder: index,
           seriesRank: null,
@@ -3555,11 +3560,15 @@ export function TournamentDetailPage({
             typeof normalizedPlayer.country === "string" && normalizedPlayer.country.trim()
               ? normalizedPlayer.country.trim()
               : null;
+          const photoUrl = normalizeMediaUrl(
+            (normalizedPlayer as { photo_main?: { url?: unknown } | unknown }).photo_main,
+          );
           uniquePlayers.set(normalizedPlayer.id, {
             id: normalizedPlayer.id,
             documentId: normalizedPlayer.documentId ?? null,
             name,
             country,
+            photoUrl,
             birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
             registrationOrder: uniquePlayers.size,
             seriesRank: null,
@@ -4263,10 +4272,20 @@ export function TournamentDetailPage({
                           >
                             <td className="px-5 py-3 align-middle">
                               <div className="flex items-center gap-3">
-                                <span
-                                  aria-hidden="true"
-                                  className="h-9 w-9 flex-none rounded-full border border-slate-200 bg-slate-100"
-                                />
+                                {player.photoUrl ? (
+                                  <img
+                                    src={player.photoUrl}
+                                    alt={player.name}
+                                    className="h-9 w-9 flex-none rounded-full border border-slate-200 object-cover"
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <span
+                                    aria-hidden="true"
+                                    className="h-9 w-9 flex-none rounded-full border border-slate-200 bg-slate-100"
+                                  />
+                                )}
                                 {player.documentId ? (
                                   <Link
                                     href={playerProfileHref(player.documentId, player.name)}

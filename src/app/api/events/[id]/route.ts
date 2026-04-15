@@ -302,6 +302,7 @@ export async function GET(
             queryParams.set('populate[tournament][populate][participants][populate][player][fields][2]', 'full_name_en')
             queryParams.set('populate[tournament][populate][participants][populate][player][fields][3]', 'country')
             queryParams.set('populate[tournament][populate][participants][populate][player][fields][4]', 'birth_date')
+            queryParams.set('populate[tournament][populate][participants][populate][player][populate][photo_main][fields][0]', 'url')
 
             queryParams.set('populate[timetable_slots][sort][0]', 'slot_order:asc')
             queryParams.set('populate[timetable_slots][sort][1]', 'date_time:asc')
