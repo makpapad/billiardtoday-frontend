@@ -1,5 +1,5 @@
 import { mapCmsAppearance, mapCmsPage, mapCmsSiteSettings } from "@/lib/cms/mappers";
-import type { CmsAppearance, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
+import type { CmsAppearance, CmsNavLink, CmsPage, CmsSiteSettings } from "@/lib/cms/types";
 import { getServerEnv } from "@/lib/serverEnv";
 
 const IS_PRODUCTION = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production";
@@ -27,6 +27,12 @@ const DEFAULT_SOCIAL_LINKS = [
     url: "https://www.facebook.com/profile.php?id=100063661505276",
   },
 ] as const;
+const DEFAULT_FOOTER_LINKS: CmsNavLink[] = [
+  { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
+  { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
+  { label: "Players", url: "/players", openInNewTab: false, children: [] },
+  { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
+];
 
 const isLocalCmsAdminUrl = (url: string) =>
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url.trim());
@@ -118,12 +124,7 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
       key: "footer-navigation",
       name: "Footer Navigation",
       orientation: "horizontal",
-      items: [
-        { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
-        { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
-        { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
-        { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
-      ],
+      items: [...DEFAULT_FOOTER_LINKS],
     },
   ],
   activeHeaderMenuKey: "primary-navigation",
@@ -148,12 +149,7 @@ const DEFAULT_SITE_SETTINGS: CmsSiteSettings = {
     { label: "Clubs", url: "/clubs", openInNewTab: false, children: [] },
     { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
   ],
-  footerLinks: [
-    { label: "Tournaments", url: "/tournaments", openInNewTab: false, children: [] },
-    { label: "Federations", url: "/federations", openInNewTab: false, children: [] },
-    { label: "Teams", url: "/teams", openInNewTab: false, children: [] },
-    { label: "Rankings", url: "/rankings", openInNewTab: false, children: [] },
-  ],
+  footerLinks: [...DEFAULT_FOOTER_LINKS],
   socialLinks: [...DEFAULT_SOCIAL_LINKS],
   defaultSeo: {
     metaTitle: "Billiard Today",
@@ -194,10 +190,28 @@ export const getCmsSiteSettings = async (): Promise<CmsSiteSettings> => {
       mapped.siteTagline.trim() === "Greek billiard tournaments, rankings, results, and CMS-managed pages."
         ? DEFAULT_GLOBAL_TAGLINE
         : mapped.siteTagline;
+    const normalizedFooterLinks =
+      Array.isArray(mapped.footerLinks) && mapped.footerLinks.length > 0
+        ? mapped.footerLinks
+            .filter((link) => String(link?.url || "").trim() !== "/teams")
+            .filter((link) => String(link?.label || "").trim().toLowerCase() !== "teams")
+        : [];
 
     return {
       ...mapped,
       siteTagline: normalizedTagline,
+      footerLinks:
+        normalizedFooterLinks.length > 0
+          ? normalizedFooterLinks.some(
+              (link) => String(link?.url || "").trim() === "/players",
+            )
+            ? normalizedFooterLinks
+            : [
+                ...normalizedFooterLinks.slice(0, 2),
+                DEFAULT_FOOTER_LINKS[2],
+                ...normalizedFooterLinks.slice(2),
+              ]
+          : [...DEFAULT_FOOTER_LINKS],
       socialLinks:
         Array.isArray(mapped.socialLinks) && mapped.socialLinks.length > 0
           ? mapped.socialLinks

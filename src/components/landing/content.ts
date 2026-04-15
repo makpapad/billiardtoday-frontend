@@ -6,6 +6,7 @@ import type {
   CmsPage,
   CmsPostsListSection,
   CmsServiceCardsSection,
+  CmsSocialLink,
   CmsSiteSettings,
   CmsStatsSection,
 } from "@/lib/cms/types";
@@ -106,6 +107,7 @@ export type LandingFooterContent = {
   siteName: string;
   description: string;
   links: LandingNavItem[];
+  socialLinks: CmsSocialLink[];
 };
 
 export type LandingPageContent = {
@@ -320,6 +322,7 @@ const buildDefaultContent = (settings: CmsSiteSettings): LandingPageContent => (
           { label: "Rankings", href: "/rankings" },
           { label: "Clubs", href: "/clubs" },
         ],
+    socialLinks: settings.socialLinks,
   },
 });
 
@@ -439,11 +442,15 @@ export const buildLandingPageContent = (
     },
     footer: {
       siteName: settings.siteName || defaults.footer.siteName,
-      description: asText(page?.summary, defaults.footer.description),
+      description: asText(settings.siteTagline, defaults.footer.description),
       links:
         settings.footerLinks.length > 0
           ? settings.footerLinks.map((link) => ({ label: link.label, href: link.url || "#" }))
           : defaults.footer.links,
+      socialLinks:
+        settings.socialLinks.length > 0
+          ? settings.socialLinks
+          : defaults.footer.socialLinks,
     },
   };
 };

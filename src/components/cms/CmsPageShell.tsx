@@ -8,6 +8,7 @@ import {
   SITE_HEADER_PRIMARY_CTA,
   SITE_HEADER_SECONDARY_CTA,
 } from "@/components/site/siteHeaderConfig";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { getCmsContainerStyle, getCmsPageWidth } from "@/lib/cms/layout";
 
 type Props = {
@@ -541,78 +542,16 @@ export function CmsPageShell({ appearance, settings, children, showChrome = true
               region="footer"
             />
           ) : (
-            <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
-              <div className="space-y-4">
-                <img
-                  src={DEFAULT_MARKETING_LOGO_SRC}
-                  alt={settings.siteName}
-                  className="h-14 w-auto object-contain sm:h-16"
-                />
-                {settings.footerAppearance.showSiteTagline && settings.siteTagline ? (
-                  <p className={`max-w-xl text-sm ${footerMutedClass}`}>{settings.siteTagline}</p>
-                ) : null}
-                {settings.footerAppearance.showContactEmail && settings.contactEmail ? (
-                  <a
-                    href={`mailto:${settings.contactEmail}`}
-                    className={footerChipClass}
-                  >
-                    {settings.contactEmail}
-                  </a>
-                ) : null}
-              </div>
-
-              <div>
-                <div className={`mb-4 text-xs font-semibold uppercase tracking-[0.2em] ${footerLabelClass}`}>
-                  Explore
-                </div>
-                <div
-                  className={`${
-                    footerMenu?.orientation === "vertical"
-                      ? "space-y-3"
-                      : "flex flex-wrap gap-3"
-                  }`}
-                >
-                  {settings.footerLinks.map((link) => (
-                    <Link
-                      key={`${link.label}-${link.url}`}
-                      href={resolveContextHref(link.url || "#", false)}
-                      target={link.openInNewTab ? "_blank" : undefined}
-                      rel={link.openInNewTab ? "noreferrer" : undefined}
-                      className={`text-sm transition ${
-                        footerMenu?.orientation === "vertical"
-                          ? `${footerMutedClass} block`
-                          : footerChipClass
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className={`mb-4 text-xs font-semibold uppercase tracking-[0.2em] ${footerLabelClass}`}>
-                  Social
-                </div>
-                {settings.footerAppearance.showSocialLinks ? (
-                  <div className="flex flex-wrap gap-3">
-                    {settings.socialLinks.map((link) => (
-                      <a
-                        key={`${link.platform}-${link.url}`}
-                        href={link.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={footerChipClass}
-                      >
-                        {renderSocialLinkContent(link.platform, link.label, true)}
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm opacity-70">Hidden</div>
-                )}
-              </div>
-            </div>
+            <PublicFooter
+              siteName={settings.siteName}
+              description={settings.siteTagline || ""}
+              exploreLinks={settings.footerLinks.map((link) => ({
+                label: link.label,
+                href: resolveContextHref(link.url || "#", false),
+              }))}
+              socialLinks={settings.footerAppearance.showSocialLinks ? settings.socialLinks : []}
+              renderContainerOnly
+            />
           )}
         </div>
       </footer>
