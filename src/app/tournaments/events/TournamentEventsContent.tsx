@@ -58,6 +58,22 @@ function isBracketStageType(stageType: string | null | undefined): boolean {
   );
 }
 
+function toGroupLetter(value: number | null | undefined): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 1) return null;
+  let current = Math.floor(value);
+  let label = "";
+  while (current > 0) {
+    current -= 1;
+    label = String.fromCharCode(65 + (current % 26)) + label;
+    current = Math.floor(current / 26);
+  }
+  return label || null;
+}
+
+function formatGroupDisplayLabel(value: number | null | undefined): string {
+  return `Group ${toGroupLetter(value) ?? "?"}`;
+}
+
 function canRenderBracketPyramid(
   stageType: string | null | undefined,
   matches: unknown[],
@@ -3960,7 +3976,7 @@ export function TournamentEventsContent({
                                                     <div className="font-semibold text-gray-700 dark:text-gray-200">
                                                       {isLegacyBracketFallback
                                                         ? `Match ${group.number ?? groupIndex + 1}`
-                                                        : `Group ${group.number ?? "?"}`}
+                                                        : formatGroupDisplayLabel(group.number)}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div

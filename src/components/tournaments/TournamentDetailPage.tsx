@@ -624,6 +624,21 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   return keys;
 };
 
+const toGroupLetter = (value: number | null | undefined): string | null => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 1) return null;
+  let current = Math.floor(value);
+  let label = "";
+  while (current > 0) {
+    current -= 1;
+    label = String.fromCharCode(65 + (current % 26)) + label;
+    current = Math.floor(current / 26);
+  }
+  return label || null;
+};
+
+const formatGroupDisplayLabel = (value: number | null | undefined) =>
+  `Group ${toGroupLetter(value) ?? "?"}`;
+
 const createGroupPopoverData = (
   group: StageMatchGroup,
   session?: EventLiveSession | null,
@@ -694,7 +709,7 @@ const createGroupPopoverData = (
   const standings = buildGroupStandings(patchedMatches);
   if (playedMatches.length === 0 && standings.length === 0) return null;
   return {
-    title: `Group ${group.number ?? group.key}`,
+    title: formatGroupDisplayLabel(group.number),
     standings,
     matches: playedMatches,
   };
@@ -4629,7 +4644,7 @@ export function TournamentDetailPage({
                             {timetableViewMode === "matches" ? (
                               <>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
-                                  {slot.groupNumber !== null ? `Group ${slot.groupNumber}` : "-"}
+                                  {slot.groupNumber !== null ? formatGroupDisplayLabel(slot.groupNumber) : "-"}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                                   {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}
