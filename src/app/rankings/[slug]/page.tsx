@@ -48,10 +48,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function RankingSeriesPage({ params }: Props) {
-  const { slug } = await params;
-  const data = await getRankingSeriesData(slug);
+type RankingSeriesContentProps = {
+  data: NonNullable<Awaited<ReturnType<typeof getRankingSeriesData>>>;
+  embedded?: boolean;
+};
 
+export function RankingSeriesContent({ data, embedded = false }: RankingSeriesContentProps) {
   if (!data) {
     notFound();
   }
@@ -76,7 +78,11 @@ export default async function RankingSeriesPage({ params }: Props) {
             </p>
           </div>
           <Link
-            href={data.federationSlug ? `/federations/${data.federationSlug}` : "/federations"}
+            href={
+              data.federationSlug
+                ? `${embedded ? "/embed" : ""}/federations/${data.federationSlug}`
+                : `${embedded ? "/embed" : ""}/federations`
+            }
             className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
           >
             Back to federation
@@ -266,4 +272,15 @@ export default async function RankingSeriesPage({ params }: Props) {
       </section>
     </div>
   );
+}
+
+export default async function RankingSeriesPage({ params }: Props) {
+  const { slug } = await params;
+  const data = await getRankingSeriesData(slug);
+
+  if (!data) {
+    notFound();
+  }
+
+  return <RankingSeriesContent data={data} />;
 }
