@@ -51,6 +51,8 @@ const BRACKET_STAGE_TYPES = new Set([
   "knockout",
 ]);
 
+type GroupLabelMode = "numbers" | "letters";
+
 function isBracketStageType(stageType: string | null | undefined): boolean {
   return (
     typeof stageType === "string" &&
@@ -70,8 +72,21 @@ function toGroupLetter(value: number | null | undefined): string | null {
   return label || null;
 }
 
-function formatGroupDisplayLabel(value: number | null | undefined): string {
-  return `Group ${toGroupLetter(value) ?? "?"}`;
+function resolveGroupLabelMode(
+  timetableConfig: Record<string, unknown> | null | undefined,
+): GroupLabelMode {
+  return timetableConfig?.groupLabelMode === "letters" ? "letters" : "numbers";
+}
+
+function formatGroupDisplayLabel(
+  value: number | null | undefined,
+  mode: GroupLabelMode,
+): string {
+  const suffix =
+    mode === "letters"
+      ? (toGroupLetter(value) ?? "?")
+      : (typeof value === "number" && Number.isFinite(value) ? String(value) : "?");
+  return `Group ${suffix}`;
 }
 
 function canRenderBracketPyramid(
@@ -1433,6 +1448,11 @@ export function TournamentEventsContent({
           order,
           isFinal,
           stageType,
+          timetableConfig:
+            normalizedStage.timetable_config &&
+            typeof normalizedStage.timetable_config === "object"
+              ? normalizedStage.timetable_config
+              : null,
           groups,
           results,
         };
@@ -3976,7 +3996,12 @@ export function TournamentEventsContent({
                                                     <div className="font-semibold text-gray-700 dark:text-gray-200">
                                                       {isLegacyBracketFallback
                                                         ? `Match ${group.number ?? groupIndex + 1}`
-                                                        : formatGroupDisplayLabel(group.number)}
+                                                        : formatGroupDisplayLabel(
+                                                            group.number,
+                                                            resolveGroupLabelMode(
+                                                              stage.timetableConfig,
+                                                            ),
+                                                          )}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div

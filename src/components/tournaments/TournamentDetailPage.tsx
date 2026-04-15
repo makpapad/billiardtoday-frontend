@@ -157,6 +157,8 @@ type TournamentParticipantRow = {
   seriesTotalPoints: number;
 };
 
+type GroupLabelMode = "numbers" | "letters";
+
 function HeroMenuButton({
   label,
   iconSrc,
@@ -636,10 +638,25 @@ const toGroupLetter = (value: number | null | undefined): string | null => {
   return label || null;
 };
 
-const formatGroupDisplayLabel = (value: number | null | undefined) =>
-  `Group ${toGroupLetter(value) ?? "?"}`;
+const resolveGroupLabelMode = (
+  timetableConfig: Record<string, unknown> | null | undefined,
+): GroupLabelMode => {
+  return timetableConfig?.groupLabelMode === "letters" ? "letters" : "numbers";
+};
+
+const formatGroupDisplayLabel = (
+  value: number | null | undefined,
+  mode: GroupLabelMode,
+) => {
+  const suffix =
+    mode === "letters"
+      ? (toGroupLetter(value) ?? "?")
+      : (typeof value === "number" && Number.isFinite(value) ? String(value) : "?");
+  return `Group ${suffix}`;
+};
 
 const createGroupPopoverData = (
+  stage: NormalizedEventStage,
   group: StageMatchGroup,
   session?: EventLiveSession | null,
 ): GroupPopoverData | null => {
@@ -709,7 +726,10 @@ const createGroupPopoverData = (
   const standings = buildGroupStandings(patchedMatches);
   if (playedMatches.length === 0 && standings.length === 0) return null;
   return {
-    title: formatGroupDisplayLabel(group.number),
+    title: formatGroupDisplayLabel(
+      group.number,
+      resolveGroupLabelMode(stage.timetableConfig ?? null),
+    ),
     standings,
     matches: playedMatches,
   };
@@ -3175,6 +3195,11 @@ export function TournamentDetailPage({
             typeof normalizedStage.stage_type === "string"
               ? normalizedStage.stage_type.trim()
               : null,
+          timetableConfig:
+            normalizedStage.timetable_config &&
+            typeof normalizedStage.timetable_config === "object"
+              ? normalizedStage.timetable_config
+              : null,
           groups: groupsRaw
             .map((group, groupIndex) =>
               normalizeGroup(
@@ -3204,6 +3229,17 @@ export function TournamentDetailPage({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+
+  const stageLabelModeByDocumentId = useMemo(() => {
+    const map = new Map<string, GroupLabelMode>();
+    eventStages.forEach((stage) => {
+      map.set(
+        stage.documentId,
+        resolveGroupLabelMode(stage.timetableConfig ?? null),
+      );
+    });
+    return map;
+  }, [eventStages]);
 
   const timetableTrainingPlayers = useMemo(() => {
     const byId = new Map<string, { name: string; country: string | null }>();
@@ -3989,7 +4025,7 @@ export function TournamentDetailPage({
             return false;
           });
           if (hit) {
-            return createGroupPopoverData(group, session);
+            return createGroupPopoverData(stage, group, session);
           }
         }
       }
@@ -4006,7 +4042,12 @@ export function TournamentDetailPage({
             (entry) => entry.number === session.groupNumber,
           ) ?? null;
         if (group) {
-          popover = createGroupPopoverData(group, session);
+          const stage =
+            eventStages.find((entry) => entry.documentId === session.eventStageId) ??
+            null;
+          if (stage) {
+            popover = createGroupPopoverData(stage, group, session);
+          }
         }
       }
 
@@ -4644,7 +4685,14 @@ export function TournamentDetailPage({
                             {timetableViewMode === "matches" ? (
                               <>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
-                                  {slot.groupNumber !== null ? formatGroupDisplayLabel(slot.groupNumber) : "-"}
+                                  {slot.groupNumber !== null
+                                    ? formatGroupDisplayLabel(
+                                        slot.groupNumber,
+                                        stageLabelModeByDocumentId.get(
+                                          slot.stageDocumentId ?? "",
+                                        ) ?? "numbers",
+                                      )
+                                    : "-"}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                                   {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}

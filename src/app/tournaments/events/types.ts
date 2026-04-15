@@ -5,6 +5,7 @@ export type TimetableConfig = {
   defaultDayStartTime?: string | null;
   defaultLastStartTime?: string | null;
   timezoneOffsetMinutes?: number | null;
+  groupLabelMode?: "numbers" | "letters" | null;
   training?: {
     enabled?: boolean | null;
     date?: string | null;
@@ -141,6 +142,7 @@ export type NormalizedEventStage = {
   order: number | null;
   isFinal: boolean;
   stageType: string | null;
+  timetableConfig: TimetableConfig | null;
   groups: NormalizedGroupMatch[];
   results: NormalizedStageResult[];
 };
