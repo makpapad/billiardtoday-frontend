@@ -2145,7 +2145,7 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
         <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
           {rightPhoto ? (
             <div
-              className="absolute inset-0 opacity-100 bg-cover bg-center"
+              className="absolute inset-0 opacity-100 bg-cover bg-center -scale-x-100"
               style={{ backgroundImage: `url(${rightPhoto})` }}
             />
           ) : null}
