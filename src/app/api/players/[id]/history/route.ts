@@ -9,6 +9,29 @@ const STRAPI_FALLBACK_URL = process.env.STRAPI_FALLBACK_URL || 'https://app.bill
 
 type RouteContext = { params: Promise<{ id?: string }> }
 
+const toFiniteNumber = (value: unknown): number => {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+const isPlayedMatch = (match: Record<string, unknown>): boolean => {
+    const scoreFor = toFiniteNumber(match?.scoreFor)
+    const scoreAgainst = toFiniteNumber(match?.scoreAgainst)
+    const innings = toFiniteNumber(match?.innings)
+    const highRun = toFiniteNumber(match?.highRun)
+    const playerPossiblePoints = toFiniteNumber(match?.playerPossiblePoints)
+    const opponentPossiblePoints = toFiniteNumber(match?.opponentPossiblePoints)
+
+    return (
+        scoreFor > 0 ||
+        scoreAgainst > 0 ||
+        innings > 0 ||
+        highRun > 0 ||
+        playerPossiblePoints > 0 ||
+        opponentPossiblePoints > 0
+    )
+}
+
 export async function GET(req: NextRequest, context: RouteContext) {
     try {
         const { id: playerId } = await context.params
@@ -98,9 +121,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items = rawItems.map((it: any) => {
             const rawMatches = Array.isArray(it?.matches) ? it.matches : []
+            const playedRawMatches = rawMatches.filter((match: Record<string, unknown>) =>
+                isPlayedMatch(match),
+            )
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const matches = includeMatches
-                ? rawMatches.map((m: any) => ({
+                ? playedRawMatches.map((m: any) => ({
                       ...m,
                       scoreFor: Number(m?.scoreFor) || 0,
                       scoreAgainst: Number(m?.scoreAgainst) || 0,
@@ -122,13 +148,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
                       ...matches.map((m: any) => Number(m.highRun) || 0),
                   )
                 : 0
-            const rawTotalPoints = Array.isArray(rawMatches)
+            const rawTotalPoints = Array.isArray(playedRawMatches)
                 ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  rawMatches.reduce((sum: number, m: any) => sum + (Number(m?.scoreFor) || 0), 0)
+                  playedRawMatches.reduce((sum: number, m: any) => sum + (Number(m?.scoreFor) || 0), 0)
                 : 0
-            const rawTotalInnings = Array.isArray(rawMatches)
+            const rawTotalInnings = Array.isArray(playedRawMatches)
                 ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  rawMatches.reduce((sum: number, m: any) => sum + (Number(m?.innings) || 0), 0)
+                  playedRawMatches.reduce((sum: number, m: any) => sum + (Number(m?.innings) || 0), 0)
                 : 0
             let totalPoints = 0
             let totalInnings = 0
@@ -165,45 +191,59 @@ export async function GET(req: NextRequest, context: RouteContext) {
                     ? it.stageResults
                     : [],
                 matches,
+                hasFinalResult: Array.isArray(it?.finals)
+                    ? it.finals.some(
+                          (entry: { position?: unknown }) =>
+                              Number.isFinite(Number(entry?.position)),
+                      )
+                    : false,
                 totalMatches:
                     Number(it?.totalMatches) ||
                     (includeMatches
                         ? totalMatches
-                        : Array.isArray(rawMatches)
-                          ? rawMatches.length
+                        : Array.isArray(playedRawMatches)
+                          ? playedRawMatches.length
                           : 0),
                 wins:
                     Number(it?.wins) ||
                     (includeMatches
                         ? wins
-                        : Array.isArray(rawMatches)
+                        : Array.isArray(playedRawMatches)
                           ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            rawMatches.filter((m: any) => m?.result === 'win').length
+                            playedRawMatches.filter((m: any) => m?.result === 'win').length
                           : 0),
                 losses:
                     Number(it?.losses) ||
                     (includeMatches
                         ? losses
-                        : Array.isArray(rawMatches)
+                        : Array.isArray(playedRawMatches)
                           ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            rawMatches.filter((m: any) => m?.result === 'loss').length
+                            playedRawMatches.filter((m: any) => m?.result === 'loss').length
                           : 0),
                 highestRun:
                     Number(it?.highestRun) ||
                     (includeMatches
                         ? highestRun
-                        : Array.isArray(rawMatches)
+                        : Array.isArray(playedRawMatches)
                           ? Math.max(
                                 0,
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                ...rawMatches.map((m: any) => Number(m?.highRun) || 0),
+                                ...playedRawMatches.map((m: any) => Number(m?.highRun) || 0),
                             )
                           : 0),
                 avgPerInning: avgPerInningNum,
             }
         })
         const filteredItems = items.filter(
-            (item: { gameType: string | null; tournamentType: string | null }) => {
+            (item: {
+                gameType: string | null
+                tournamentType: string | null
+                totalMatches: number
+                hasFinalResult: boolean
+            }) => {
+                if (item.totalMatches <= 0 && !item.hasFinalResult) {
+                    return false
+                }
                 if (
                     normalizedGameType &&
                     normalizeGameTypeOrFallback(item.gameType) !== normalizedGameType
