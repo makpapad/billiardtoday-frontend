@@ -2113,8 +2113,8 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
   };
 
   const modalPhotoFallback = "/shooterspool-3-cushion-billiards.webp";
-  const leftPhoto = normalizePhotoUrl(state.playerAPhotoMainUrl ?? state.playerAPhotoUrl ?? null) ?? modalPhotoFallback;
-  const rightPhoto = normalizePhotoUrl(state.playerBPhotoMainUrl ?? state.playerBPhotoUrl ?? null) ?? modalPhotoFallback;
+  const leftPhoto = normalizePhotoUrl(state.playerAPhotoUrl ?? state.playerAPhotoMainUrl ?? null) ?? modalPhotoFallback;
+  const rightPhoto = normalizePhotoUrl(state.playerBPhotoUrl ?? state.playerBPhotoMainUrl ?? null) ?? modalPhotoFallback;
   const leftFlag = countryToIso(state.playerACountry ?? null);
   const rightFlag = countryToIso(state.playerBCountry ?? null);
   const leftFlagUrl = leftFlag ? `https://flagcdn.com/w1600/${leftFlag}.png` : null;
