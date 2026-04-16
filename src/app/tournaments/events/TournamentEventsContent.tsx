@@ -313,6 +313,16 @@ function formatTruncatedAverage(value: number | null): string {
   return truncated.toFixed(3);
 }
 
+function renderRankingMetricBadge(value: string, highlighted: boolean) {
+  if (!highlighted || value === "-") return value;
+
+  return (
+    <span className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full bg-orange-500 px-3 py-1 font-extrabold leading-none text-white">
+      {value}
+    </span>
+  );
+}
+
 function getSingleElimSeedOrder(size: number): number[] {
   const patterns: Record<number, number[]> = {
     2: [1, 2],
@@ -1066,7 +1076,14 @@ function StageRankingTable({
               !artistic &&
               stageRankingHighlights.highRun !== null &&
               result.highRun !== null &&
+              result.highRun > 10 &&
               result.highRun === stageRankingHighlights.highRun;
+            const averageDisplay = formatAverage(result.points, result.innings);
+            const highRunDisplay = formatNumberValue(result.highRun);
+            const bestAverageDisplay =
+              result.bestAverage !== null
+                ? formatTruncatedAverage(result.bestAverage)
+                : "-";
 
             return (
               <tr
@@ -1150,31 +1167,21 @@ function StageRankingTable({
                   {formatNumberValue(result.innings)}
                 </td>
                 <td
-                  className={clsx(
-                    "px-4 py-3 text-center",
-                    highlightAverage && "bg-orange-500 font-extrabold text-white",
-                  )}
+                  className="px-4 py-3 text-center"
                 >
-                  {formatAverage(result.points, result.innings)}
+                  {renderRankingMetricBadge(averageDisplay, highlightAverage)}
                 </td>
                 <td
-                  className={clsx(
-                    "px-4 py-3 text-center",
-                    highlightHighRun && "bg-orange-500 font-extrabold text-white",
-                  )}
+                  className="px-4 py-3 text-center"
                 >
-                  {formatNumberValue(result.highRun)}
+                  {renderRankingMetricBadge(highRunDisplay, highlightHighRun)}
                 </td>
                 {showBestAverageColumn && (
-                  <td
-                    className={clsx(
-                      "px-4 py-3 text-center",
-                      highlightBestAverage && "bg-orange-500 font-extrabold text-white",
+                  <td className="px-4 py-3 text-center">
+                    {renderRankingMetricBadge(
+                      bestAverageDisplay,
+                      highlightBestAverage,
                     )}
-                  >
-                    {result.bestAverage !== null
-                      ? formatTruncatedAverage(result.bestAverage)
-                      : "-"}
                   </td>
                 )}
                 {artistic && (
@@ -2899,7 +2906,28 @@ export function TournamentEventsContent({
                                   !isArtisticEvent &&
                                   finalStandingsHighlights.highRun !== null &&
                                   result.highRun !== null &&
+                                  result.highRun > 10 &&
                                   result.highRun === finalStandingsHighlights.highRun;
+                                const averageDisplay = isArtisticEvent
+                                  ? (result.bestAverage !== null
+                                      ? formatTruncatedAverage(
+                                          result.bestAverage,
+                                        )
+                                      : "-")
+                                  : formatAverage(
+                                      result.caroms ?? result.points,
+                                      result.innings,
+                                    );
+                                const bestAverageDisplay = isArtisticEvent
+                                  ? formatNumberValue(result.highRun)
+                                  : result.bestAverage !== null
+                                    ? formatTruncatedAverage(
+                                        result.bestAverage,
+                                      )
+                                    : "-";
+                                const highRunDisplay = formatNumberValue(
+                                  result.highRun,
+                                );
 
                                 return (
                                 <tr
@@ -2942,37 +2970,20 @@ export function TournamentEventsContent({
                                     {formatNumberValue(result.innings)}
                                   </td>
                                   <td
-                                    className={clsx(
-                                      "px-4 py-3 text-center",
-                                      highlightAverage &&
-                                        "bg-orange-500 font-extrabold text-white",
-                                    )}
+                                    className="px-4 py-3 text-center"
                                   >
-                                    {isArtisticEvent
-                                      ? (result.bestAverage !== null
-                                          ? formatTruncatedAverage(
-                                              result.bestAverage,
-                                            )
-                                          : "-")
-                                      : formatAverage(
-                                          result.caroms ?? result.points,
-                                          result.innings,
-                                        )}
+                                    {renderRankingMetricBadge(
+                                      averageDisplay,
+                                      highlightAverage,
+                                    )}
                                   </td>
                                   <td
-                                    className={clsx(
-                                      "px-4 py-3 text-center",
-                                      highlightBestAverage &&
-                                        "bg-orange-500 font-extrabold text-white",
-                                    )}
+                                    className="px-4 py-3 text-center"
                                   >
-                                    {isArtisticEvent
-                                      ? formatNumberValue(result.highRun)
-                                      : result.bestAverage !== null
-                                        ? formatTruncatedAverage(
-                                            result.bestAverage,
-                                          )
-                                        : "-"}
+                                    {renderRankingMetricBadge(
+                                      bestAverageDisplay,
+                                      highlightBestAverage,
+                                    )}
                                   </td>
                                   {isArtisticEvent && (
                                     <td className="px-4 py-3 text-center">
@@ -2984,14 +2995,11 @@ export function TournamentEventsContent({
                                     </td>
                                   )}
                                   {!isArtisticEvent && (
-                                    <td
-                                      className={clsx(
-                                        "px-4 py-3 text-center",
-                                        highlightHighRun &&
-                                          "bg-orange-500 font-extrabold text-white",
+                                    <td className="px-4 py-3 text-center">
+                                      {renderRankingMetricBadge(
+                                        highRunDisplay,
+                                        highlightHighRun,
                                       )}
-                                    >
-                                      {formatNumberValue(result.highRun)}
                                     </td>
                                   )}
                                   {showRankPointsColumn && (
