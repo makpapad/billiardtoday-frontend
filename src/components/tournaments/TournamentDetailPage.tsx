@@ -491,7 +491,6 @@ function GroupTooltip({
               <tr>
                 <th className="px-2 py-1.5 text-left font-semibold">Player</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Pos</th>
-                <th className="px-2 py-1.5 text-center font-semibold">MP</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Pts</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Inn</th>
                 <th className="px-2 py-1.5 text-center font-semibold">Avg</th>
@@ -524,11 +523,6 @@ function GroupTooltip({
                   </td>
                   <td className="px-2 py-1.5 text-center font-semibold">
                     {player.place}
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    {hasStandingActivity(player)
-                      ? formatNumberValue(player.totalMatchPoints)
-                      : "-"}
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     {hasStandingActivity(player)
@@ -695,6 +689,54 @@ const createGroupPopoverData = (
       ),
     );
 
+  const deriveProvisionalLiveMatch = (
+    match: StageMatchGroup["matches"][number],
+  ): StageMatchGroup["matches"][number] => {
+    const topMatchPoints = match.top.player.matchPoints ?? 0;
+    const bottomMatchPoints = match.bottom.player.matchPoints ?? 0;
+    const hasPersistedMatchPoints = topMatchPoints > 0 || bottomMatchPoints > 0;
+    if (hasPersistedMatchPoints || !hasPlayedStageMatch(match)) {
+      return match;
+    }
+
+    const topPoints = match.top.player.points ?? 0;
+    const bottomPoints = match.bottom.player.points ?? 0;
+    const provisionalTopMatchPoints =
+      topPoints > bottomPoints ? 2 : topPoints < bottomPoints ? 0 : 1;
+    const provisionalBottomMatchPoints =
+      bottomPoints > topPoints ? 2 : bottomPoints < topPoints ? 0 : 1;
+
+    return {
+      ...match,
+      top: {
+        ...match.top,
+        outcome:
+          provisionalTopMatchPoints > provisionalBottomMatchPoints
+            ? "W"
+            : provisionalTopMatchPoints < provisionalBottomMatchPoints
+              ? "L"
+              : "D",
+        player: {
+          ...match.top.player,
+          matchPoints: provisionalTopMatchPoints,
+        },
+      },
+      bottom: {
+        ...match.bottom,
+        outcome:
+          provisionalBottomMatchPoints > provisionalTopMatchPoints
+            ? "W"
+            : provisionalBottomMatchPoints < provisionalTopMatchPoints
+              ? "L"
+              : "D",
+        player: {
+          ...match.bottom.player,
+          matchPoints: provisionalBottomMatchPoints,
+        },
+      },
+    };
+  };
+
   const patchedMatches = group.matches.map((match) => {
     const matchPairKey = resolveMatchPairKey(match);
     const liveSession = matchPairKey
@@ -760,7 +802,9 @@ const createGroupPopoverData = (
       (typeof matchPairKey === "string" && liveSessionByPairKey.has(matchPairKey))
     );
   });
-  const standings = buildGroupStandings(patchedMatches);
+  const standings = buildGroupStandings(
+    patchedMatches.map(deriveProvisionalLiveMatch),
+  );
   if (relevantMatches.length === 0 && standings.length === 0) return null;
   return {
     title: formatGroupDisplayLabel(
