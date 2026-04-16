@@ -5018,7 +5018,7 @@ export function TournamentDetailPage({
           </div>
         )}
           </div>
-          {videoDrawerOpen ? (
+          {videoDrawerOpen && isWideDesktop ? (
             <div className="hidden w-full shrink-0 xl:sticky xl:top-6 xl:block">
               <LiveVideoDrawer
                 open={videoDrawerOpen}
@@ -5033,7 +5033,7 @@ export function TournamentDetailPage({
             </div>
           ) : null}
         </div>
-        {mobileVideoDrawerSessionId ? (
+        {mobileVideoDrawerSessionId && !isWideDesktop ? (
           <div ref={mobileVideoDrawerRef} className="mt-6 xl:hidden">
             <LiveVideoDrawer
               open
