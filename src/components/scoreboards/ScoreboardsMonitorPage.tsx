@@ -264,27 +264,33 @@ export function ScoreboardsMonitorPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Active screens
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">
-                    {entries.length}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Visible
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">
-                    {filteredEntries.length}
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Active screens
+                    </div>
+                    <div className="text-3xl font-semibold leading-none tracking-tight text-slate-950">
+                      {entries.length}
+                    </div>
                   </div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Refresh
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Visible
+                    </div>
+                    <div className="text-3xl font-semibold leading-none tracking-tight text-slate-950">
+                      {filteredEntries.length}
+                    </div>
                   </div>
-                  <div className="mt-2 text-sm font-medium text-slate-800">
-                    {refreshing ? "Refreshing..." : "Every 10s"}
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Refresh
+                    </div>
+                    <div className="text-sm font-medium leading-none text-slate-800">
+                      {refreshing ? "Refreshing..." : "Every 10s"}
+                    </div>
                   </div>
                 </div>
               </div>
