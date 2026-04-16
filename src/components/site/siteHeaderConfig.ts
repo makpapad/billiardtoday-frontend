@@ -1,10 +1,10 @@
 import type { SiteHeaderNavItem } from "@/components/site/SiteHeader";
 
 export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
-  { label: "Features", href: "/#features" },
+  { label: "Platform", href: "/#features" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Screens", href: "/#screenshots" },
-  { label: "Benefits", href: "/#benefits" },
+  { label: "Live screens", href: "/#screenshots" },
+  { label: "For clubs", href: "/#benefits" },
   {
     label: "More",
     href: "#",
@@ -12,7 +12,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
       { label: "Live", href: "/live" },
       { label: "Tournaments", href: "/tournaments" },
       { label: "Clubs", href: "/clubs" },
-      { label: "Organizers", href: "/federations" },
+      { label: "Federations", href: "/federations" },
       { label: "Players", href: "/players" },
       { label: "Account", href: "/account" },
     ],
@@ -27,11 +27,11 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
 ];
 
 export const SITE_HEADER_PRIMARY_CTA: SiteHeaderNavItem = {
-  label: "Book a demo",
+  label: "Contact us",
   href: "/#cta",
 };
 
 export const SITE_HEADER_SECONDARY_CTA: SiteHeaderNavItem = {
-  label: "Live demo",
+  label: "View live",
   href: "/live",
 };

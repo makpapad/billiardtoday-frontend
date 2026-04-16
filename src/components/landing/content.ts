@@ -57,6 +57,9 @@ export type LandingHeroContent = {
   adTitle: string;
   adDescription: string;
   adMetric: string;
+  panelDetails: Array<{ label: string; value: string }>;
+  panelNoteLabel: string;
+  panelNote: string;
   stats: Array<{ value: string; label: string }>;
   highlights: LandingHeroHighlight[];
 };
@@ -144,168 +147,176 @@ const buildDefaultContent = (settings: CmsSiteSettings): LandingPageContent => (
     secondaryCtaUrl: SITE_HEADER_SECONDARY_CTA.href,
   },
   hero: {
-    eyebrow: "SaaS for billiard venues",
-    title: "Turn every billiard screen into a live match and tournament control point.",
+    eyebrow: "Digital scoreboards and tournament pages",
+    title: "Live scoreboards, tournament control and public billiard pages in one platform.",
     subtitle:
-      "BilliardToday helps clubs, academies and federations run digital scoreboards, manage tournaments, control devices remotely and schedule advertising from one platform.",
-    primaryCtaLabel: "Request a demo",
+      "Billiard Today helps clubs, academies and federations manage live screens, tournament operations, public pages and sponsor rotations from one workflow.",
+    primaryCtaLabel: "Contact us",
     primaryCtaUrl: "#cta",
-    secondaryCtaLabel: "Explore features",
-    secondaryCtaUrl: "#features",
-    showcaseLabel: "Control Center",
-    showcaseTitle: "Live tables, matches and displays",
-    showcaseStatus: "Connected",
+    secondaryCtaLabel: "View live pages",
+    secondaryCtaUrl: "/live",
+    showcaseLabel: "Live control",
+    showcaseTitle: "Scoreboards, tournament pages and venue displays",
+    showcaseStatus: "Live",
     liveScoreLabel: "Table 03",
     liveScoreValue: "14 - 12",
-    liveScoreStatus: "Live score",
+    liveScoreStatus: "In progress",
     playerALabel: "Player A",
-    playerAName: "Nikolaos P.",
+    playerAName: "Player A",
     playerBLabel: "Player B",
-    playerBName: "Giannis K.",
-    adTitle: "Advertising playlist",
-    adDescription: "Rotate sponsor content between live matches and tournament breaks.",
-    adMetric: "Screen occupancy 92%",
+    playerBName: "Player B",
+    adTitle: "Sponsor rotation",
+    adDescription: "Schedule branded messages between matches, breaks and event updates.",
+    adMetric: "Ad-ready screen slots",
+    panelDetails: [
+      { label: "Stage", value: "Quarter final" },
+      { label: "Format", value: "Race to 40" },
+      { label: "Overlay", value: "Ready" },
+    ],
+    panelNoteLabel: "Screen behavior",
+    panelNote:
+      "This public layout stays readable from distance and updates automatically as live match data changes.",
     stats: [
-      { value: "24/7", label: "Live scoreboard visibility" },
-      { value: "1 hub", label: "Tournament and device control" },
-      { value: "+Ads", label: "Monetize every screen" },
+      { value: "Live", label: "Scoreboard screens" },
+      { value: "1 hub", label: "Tournament control" },
+      { value: "Ads", label: "Sponsor slots" },
     ],
     highlights: [
       {
         title: "Large-screen scoreboards",
-        description: "Display match score, table status and branding in real time.",
+        description: "Show scores, tables, rounds and venue branding on public-facing screens.",
       },
       {
         title: "Tournament operations",
-        description: "Manage players, draws, rounds and results from one admin flow.",
+        description: "Manage players, draws, rounds, standings and results from one workflow.",
       },
       {
         title: "Remote control",
-        description: "Update scoreboard devices without walking across the venue.",
+        description: "Update connected screens and overlays without moving from table to table.",
       },
     ],
   },
   trustedClubs: {
-    eyebrow: "Trusted by clubs, academies and federations",
+    eyebrow: "Built for clubs, academies and federations",
     description:
-      "Built for billiard operations that need a clean public display layer and a practical admin workflow behind it.",
+      "From venue scoreboards to federation event pages, the platform is designed for public visibility and practical day-to-day control.",
     clubs: [
-      "Athens Billiard Club",
-      "Blue Cue Academy",
-      "Hellenic Snooker League",
-      "Piraeus Pool Center",
-      "North Side Cue Hall",
-      "Federation Events Hub",
+      "Club live scoreboards",
+      "Academy practice rooms",
+      "Federation event pages",
+      "Public ranking pages",
+      "Venue screen networks",
+      "Sponsor-ready displays",
     ],
   },
   features: {
-    eyebrow: "Features",
-    title: "One platform for venue displays, tournament staff and public match visibility.",
+    eyebrow: "Platform",
+    title: "One platform for venue screens, tournament staff and public billiard visibility.",
     subtitle:
-      "The product combines operational control with a polished viewing experience, so venues can run matches and present them professionally at the same time.",
+      "The product combines operational control with a clear viewing experience, so venues can run events and present them professionally at the same time.",
     items: [
       {
-        title: "Live score on big screens",
+        title: "Live scoreboard screens",
         description:
-          "Show match score, timers, tables and player names in a format optimized for venue displays.",
+          "Show score, table status, players and match progress in a format made for venue screens.",
         iconName: "monitor",
       },
       {
-        title: "Player and tournament management",
+        title: "Tournament and player management",
         description:
-          "Organize registrations, brackets, rounds and standings without relying on disconnected tools.",
+          "Organize registrations, draws, rounds and standings without relying on disconnected tools.",
         iconName: "users",
       },
       {
-        title: "Remote scoreboard control",
+        title: "Remote screen control",
         description:
-          "Push updates to connected scoreboard devices from the admin panel in real time.",
+          "Push updates to connected scoreboards and public displays from the admin panel in real time.",
         iconName: "radio",
       },
       {
-        title: "Advertising-ready screens",
+        title: "Sponsor and partner rotations",
         description:
-          "Use idle moments, breaks and transitions to display sponsor messages and digital promotions.",
+          "Use breaks, idle moments and transitions to display sponsor messages and branded promotions.",
         iconName: "chart",
       },
     ],
   },
   howItWorks: {
     eyebrow: "How it works",
-    title: "Designed for operational clarity, not dashboard clutter.",
+    title: "Designed for simple event operations, not dashboard clutter.",
     subtitle:
-      "Clubs and federations can deploy the platform progressively, starting from displays and moving into full tournament coordination.",
+      "Clubs and federations can start with screens and grow into full event coordination without changing the front-end experience.",
     steps: [
       {
         step: "01",
-        title: "Configure venue screens",
+        title: "Connect venue screens",
         description:
           "Register screens or scoreboard devices and assign them to tables, halls or event spaces.",
       },
       {
         step: "02",
-        title: "Run tournaments from admin",
+        title: "Run the event",
         description:
-          "Create events, manage players, update matches and control what appears on each live display.",
+          "Create events, manage players, update matches and control what appears on every live display.",
       },
       {
         step: "03",
-        title: "Broadcast scores and sponsor messages",
+        title: "Publish scores and sponsor content",
         description:
-          "Keep spectators informed while rotating ads and branded content during the event flow.",
+          "Keep spectators informed while rotating sponsor messages and event content during the live flow.",
       },
     ],
   },
   screenshots: {
-    eyebrow: "Screenshots",
-    title: "Interfaces built for public screens and back-office control.",
+    eyebrow: "Live screens",
+    title: "Example layouts for public scoreboards, event control and sponsor-ready displays.",
     items: [
       {
-        title: "Live venue display",
-        description: "A scoreboard-first screen for TV panels and in-room displays.",
-        tag: "Quarter Final",
+        title: "Live scoreboard layout",
+        description: "A scoreboard-first screen for venue monitors, TV panels and in-room displays.",
+        tag: "Match view",
       },
       {
-        title: "Tournament command panel",
-        description: "Control tables, matches and progress from a clean admin workspace.",
-        tag: "Active event",
+        title: "Tournament control view",
+        description: "A compact command view for tables, players, rounds and event progress.",
+        tag: "Event view",
       },
       {
-        title: "Sponsor rotation view",
-        description: "Blend ads and match information without breaking the viewing flow.",
-        tag: "Sponsor slot",
+        title: "Sponsor rotation layout",
+        description: "A branded screen mode that keeps sponsor content visible without breaking the match flow.",
+        tag: "Sponsor view",
       },
     ],
   },
   benefits: {
-    eyebrow: "Benefits",
-    title: "Practical value for operators, players and commercial partners.",
+    eyebrow: "For clubs",
+    title: "Practical value for operators, players and event partners.",
     items: [
       {
-        value: "Fewer manual updates",
+        value: "Less manual coordination",
         label: "Operations",
-        description: "Staff can update match progress once and reflect it on venue screens instantly.",
+        description: "Staff update match progress once and the venue screens reflect it immediately.",
       },
       {
-        value: "Better spectator experience",
+        value: "Clearer public visibility",
         label: "Audience",
         description:
-          "Players and audiences can follow scores, rounds and announcements without confusion.",
+          "Players and spectators can follow scores, rounds and announcements without confusion.",
       },
       {
-        value: "New sponsor inventory",
+        value: "More useful sponsor inventory",
         label: "Commercial",
         description:
-          "Digital displays become monetizable surfaces for clubs, events and federation partners.",
+          "Digital displays become usable sponsor surfaces for clubs, events and federation partners.",
       },
     ],
   },
   cta: {
-    eyebrow: "Call to action",
-    title: "Bring live scoreboards and tournament control into one production-ready workflow.",
+    eyebrow: "Get started",
+    title: "Use one workflow for live scoreboards, tournament control and sponsor-ready screens.",
     description:
-      "BilliardToday is built for billiard rooms that want cleaner operations, better screen usage and a more professional event presentation.",
-    primaryCtaLabel: "Contact sales",
+      "Billiard Today is built for billiard venues that want cleaner operations, clearer public presentation and better use of every screen.",
+    primaryCtaLabel: "Contact us",
     primaryCtaUrl: "mailto:hello@billiardtoday.com?subject=BilliardToday%20Demo",
     secondaryCtaLabel: "View live pages",
     secondaryCtaUrl: "/tournaments/live",
@@ -313,7 +324,7 @@ const buildDefaultContent = (settings: CmsSiteSettings): LandingPageContent => (
   footer: {
     siteName: settings.siteName || "BilliardToday",
     description:
-      "Digital scoreboard and tournament management platform for billiard clubs, academies and federations.",
+      "Live scoreboards, tournament pages and sponsor-ready display workflows for clubs, academies and federations.",
     links: settings.footerLinks.length
       ? settings.footerLinks.map((link) => ({ label: link.label, href: link.url || "#" }))
       : [
@@ -367,6 +378,9 @@ export const buildLandingPageContent = (
       adTitle: asText(hero?.adTitle, defaults.hero.adTitle),
       adDescription: asText(hero?.adDescription, defaults.hero.adDescription),
       adMetric: asText(hero?.adMetric, defaults.hero.adMetric),
+      panelDetails: defaults.hero.panelDetails,
+      panelNoteLabel: defaults.hero.panelNoteLabel,
+      panelNote: defaults.hero.panelNote,
       primaryCtaLabel: asText(hero?.primaryCtaLabel, defaults.hero.primaryCtaLabel),
       primaryCtaUrl: asText(hero?.primaryCtaUrl, defaults.hero.primaryCtaUrl),
       secondaryCtaLabel: asText(hero?.secondaryCtaLabel, defaults.hero.secondaryCtaLabel),

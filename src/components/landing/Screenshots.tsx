@@ -40,15 +40,15 @@ export function Screenshots({ content }: { content: LandingScreenshotsContent })
                     <div className="space-y-4">
                       <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
                         <span>Table 05</span>
-                        <span>{item.tag || "Quarter Final"}</span>
+                        <span>{item.tag || "Match view"}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-2xl bg-white/5 p-4">
-                          <div className="text-xs text-slate-400">Home</div>
+                          <div className="text-xs text-slate-400">Player A</div>
                           <div className="mt-3 text-3xl font-semibold text-white">09</div>
                         </div>
                         <div className="rounded-2xl bg-white/5 p-4">
-                          <div className="text-xs text-slate-400">Away</div>
+                          <div className="text-xs text-slate-400">Player B</div>
                           <div className="mt-3 text-3xl font-semibold text-white">11</div>
                         </div>
                       </div>
@@ -58,15 +58,15 @@ export function Screenshots({ content }: { content: LandingScreenshotsContent })
                   {index === 1 ? (
                     <div className="space-y-3">
                       <div className="rounded-2xl bg-white/10 p-4 text-white">
-                        <div className="text-xs text-slate-300">{item.tag || "Active event"}</div>
-                        <div className="mt-2 text-lg font-semibold">Open Athens Masters</div>
+                        <div className="text-xs text-slate-300">{item.tag || "Event view"}</div>
+                        <div className="mt-2 text-lg font-semibold">Tournament control panel</div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-2xl bg-white/10 p-4 text-sm text-slate-200">
-                          48 Players
+                          Player lists
                         </div>
                         <div className="rounded-2xl bg-white/10 p-4 text-sm text-slate-200">
-                          12 Tables
+                          Table status
                         </div>
                       </div>
                     </div>
@@ -76,12 +76,12 @@ export function Screenshots({ content }: { content: LandingScreenshotsContent })
                     <div className="space-y-3 text-slate-950">
                       <div className="rounded-2xl bg-white/80 p-4">
                         <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          {item.tag || "Sponsor slot"}
+                          {item.tag || "Sponsor view"}
                         </div>
-                        <div className="mt-2 text-lg font-semibold">Cue Tech Championship Series</div>
+                        <div className="mt-2 text-lg font-semibold">Partner message rotation</div>
                       </div>
                       <div className="rounded-2xl bg-slate-950/10 p-4 text-sm font-medium">
-                        Next match overlay in 00:30
+                        Return to match overlay after rotation
                       </div>
                     </div>
                   ) : null}

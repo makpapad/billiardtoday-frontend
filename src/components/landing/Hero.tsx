@@ -59,9 +59,7 @@ export function Hero({ content }: { content: LandingHeroContent }) {
                   <div className="text-xs text-slate-400">{content.showcaseTitle}</div>
                 </div>
                 <a
-                  href="https://admin.billiardtoday.com/"
-                  target="_blank"
-                  rel="noreferrer"
+                  href={content.secondaryCtaUrl}
                   className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200 transition hover:border-cyan-300/40 hover:bg-cyan-400/15 hover:text-cyan-100"
                 >
                   {content.showcaseStatus}
@@ -71,25 +69,26 @@ export function Hero({ content }: { content: LandingHeroContent }) {
 
             <div className="grid gap-4 p-6">
               <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-[24px] border border-white/10 bg-slate-950 p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{content.liveScoreLabel}</div>
-                      <div className="mt-3 text-3xl font-semibold tracking-tight text-white">{content.liveScoreValue}</div>
-                    </div>
-                    <div className="rounded-2xl bg-cyan-400/15 px-3 py-2 text-xs font-medium text-cyan-200">
-                      {content.liveScoreStatus}
-                    </div>
+                <div className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950 p-5">
+                  <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#183ec9] shadow-[0_18px_50px_rgba(8,47,73,0.3)]">
+                    <img
+                      src="/img/others/live-score.webp"
+                      alt="Live scoreboard card example"
+                      className="block h-auto w-full"
+                    />
                   </div>
-                  <div className="mt-6 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-white/5 p-4">
-                      <div className="text-xs text-slate-500">{content.playerALabel}</div>
-                      <div className="mt-2 text-lg font-semibold text-white">{content.playerAName}</div>
+                  <div className="mt-3 overflow-hidden rounded-[20px] border border-white/10 bg-slate-900 shadow-[0_18px_50px_rgba(8,47,73,0.24)]">
+                    <img
+                      src="/img/others/live-video.webp"
+                      alt="Live video card example"
+                      className="block h-auto w-full"
+                    />
+                  </div>
+                  <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      {content.panelNoteLabel}
                     </div>
-                    <div className="rounded-2xl bg-white/5 p-4">
-                      <div className="text-xs text-slate-500">{content.playerBLabel}</div>
-                      <div className="mt-2 text-lg font-semibold text-white">{content.playerBName}</div>
-                    </div>
+                    <div className="mt-2 text-sm leading-6 text-slate-300">{content.panelNote}</div>
                   </div>
                 </div>
 
