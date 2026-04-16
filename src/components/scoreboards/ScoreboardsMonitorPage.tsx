@@ -16,6 +16,10 @@ const WS_URL = normalizeWebSocketUrl(
 ).toString();
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
+function getEntryDisplayName(entry: PresenceEntry) {
+  return entry.screenName || entry.venue || entry.screenId;
+}
+
 function formatAbsoluteTime(value: number | null | undefined) {
   if (!value) return "-";
 
@@ -100,7 +104,7 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
   const displayInning = [playerA?.innings, playerB?.innings]
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
     .reduce((highest, value) => Math.max(highest, value), 0);
-  const displayName = entry.screenName || entry.venue || entry.screenId;
+  const displayName = getEntryDisplayName(entry);
 
   return (
     <article className="rounded-[20px] bg-white p-2 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
@@ -226,22 +230,30 @@ export function ScoreboardsMonitorPage() {
     };
   }, []);
 
-  const filteredEntries = entries.filter((entry) => {
-    if (!deferredQuery) return true;
+  const filteredEntries = entries
+    .filter((entry) => {
+      if (!deferredQuery) return true;
 
-    return [
-      entry.screenId,
-      entry.venue,
-      entry.city,
-      entry.region,
-      entry.country,
-      entry.countryCode,
-      entry.org,
-      entry.ip,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(deferredQuery));
-  });
+      return [
+        entry.screenId,
+        entry.screenName,
+        entry.venue,
+        entry.city,
+        entry.region,
+        entry.country,
+        entry.countryCode,
+        entry.org,
+        entry.ip,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(deferredQuery));
+    })
+    .sort((a, b) =>
+      getEntryDisplayName(a).localeCompare(getEntryDisplayName(b), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
 
   return (
     <section className="px-4 py-12 sm:px-6 sm:py-16">
