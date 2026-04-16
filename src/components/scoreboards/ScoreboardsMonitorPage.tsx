@@ -265,8 +265,8 @@ export function ScoreboardsMonitorPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <div className="flex items-baseline justify-between gap-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Active screens
+                    <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      Act
                     </div>
                     <div className="text-3xl font-semibold leading-none tracking-tight text-slate-950">
                       {entries.length}
@@ -275,7 +275,7 @@ export function ScoreboardsMonitorPage() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <div className="flex items-baseline justify-between gap-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                       Visible
                     </div>
                     <div className="text-3xl font-semibold leading-none tracking-tight text-slate-950">
@@ -285,7 +285,7 @@ export function ScoreboardsMonitorPage() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <div className="flex items-baseline justify-between gap-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                       Refresh
                     </div>
                     <div className="text-sm font-medium leading-none text-slate-800">
