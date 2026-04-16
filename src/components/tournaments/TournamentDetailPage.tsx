@@ -658,26 +658,43 @@ const formatGroupDisplayLabel = (
 const createGroupPopoverData = (
   stage: NormalizedEventStage,
   group: StageMatchGroup,
-  session?: EventLiveSession | null,
+  sessions?: EventLiveSession | EventLiveSession[] | null,
 ): GroupPopoverData | null => {
-  const sessionPairKey = buildPairKey(
-    normalizeNameForMatch(
-      session?.state?.playerAName ?? session?.player1Name ?? null,
-    ),
-    normalizeNameForMatch(
-      session?.state?.playerBName ?? session?.player2Name ?? null,
-    ),
-  );
+  const liveSessions = Array.isArray(sessions)
+    ? sessions.filter(Boolean)
+    : sessions
+      ? [sessions]
+      : [];
+  const liveSessionByPairKey = new Map<string, EventLiveSession>();
 
-  const patchedMatches = group.matches.map((match) => {
-    if (!session || !sessionPairKey) return match;
-    const matchPairKey = buildPairKey(
+  liveSessions.forEach((session) => {
+    const pairKey = buildPairKey(
+      normalizeNameForMatch(
+        session?.state?.playerAName ?? session?.player1Name ?? null,
+      ),
+      normalizeNameForMatch(
+        session?.state?.playerBName ?? session?.player2Name ?? null,
+      ),
+    );
+    if (pairKey && !liveSessionByPairKey.has(pairKey)) {
+      liveSessionByPairKey.set(pairKey, session);
+    }
+  });
+
+  const resolveMatchPairKey = (match: StageMatchGroup["matches"][number]) =>
+    buildPairKey(
       normalizeNameForMatch(match.top.player.name || match.top.player.nativeName),
       normalizeNameForMatch(
         match.bottom.player.name || match.bottom.player.nativeName,
       ),
     );
-    if (!matchPairKey || matchPairKey !== sessionPairKey) return match;
+
+  const patchedMatches = group.matches.map((match) => {
+    const matchPairKey = resolveMatchPairKey(match);
+    const liveSession = matchPairKey
+      ? liveSessionByPairKey.get(matchPairKey) ?? null
+      : null;
+    if (!liveSession) return match;
 
     return {
       ...match,
@@ -686,18 +703,22 @@ const createGroupPopoverData = (
         player: {
           ...match.top.player,
           points:
-            typeof session.state?.scoreA === "number"
-              ? session.state.scoreA
+            typeof liveSession.state?.scoreA === "number"
+              ? liveSession.state.scoreA
               : match.top.player.points,
           innings:
-            typeof session.state?.inningsA === "number"
-              ? session.state.inningsA
+            typeof liveSession.state?.inningsA === "number"
+              ? liveSession.state.inningsA
               : match.top.player.innings,
           highRun:
-            typeof session.state?.bestRunA === "number"
-              ? session.state.bestRunA
+            typeof liveSession.state?.bestRunA === "number"
+              ? liveSession.state.bestRunA
               : match.top.player.highRun,
-          highRun2: resolveLiveHighRun2(session, "A", match.top.player.highRun2),
+          highRun2: resolveLiveHighRun2(
+            liveSession,
+            "A",
+            match.top.player.highRun2,
+          ),
         },
       },
       bottom: {
@@ -705,33 +726,43 @@ const createGroupPopoverData = (
         player: {
           ...match.bottom.player,
           points:
-            typeof session.state?.scoreB === "number"
-              ? session.state.scoreB
+            typeof liveSession.state?.scoreB === "number"
+              ? liveSession.state.scoreB
               : match.bottom.player.points,
           innings:
-            typeof session.state?.inningsB === "number"
-              ? session.state.inningsB
+            typeof liveSession.state?.inningsB === "number"
+              ? liveSession.state.inningsB
               : match.bottom.player.innings,
           highRun:
-            typeof session.state?.bestRunB === "number"
-              ? session.state.bestRunB
+            typeof liveSession.state?.bestRunB === "number"
+              ? liveSession.state.bestRunB
               : match.bottom.player.highRun,
-          highRun2: resolveLiveHighRun2(session, "B", match.bottom.player.highRun2),
+          highRun2: resolveLiveHighRun2(
+            liveSession,
+            "B",
+            match.bottom.player.highRun2,
+          ),
         },
       },
     };
   });
 
-  const playedMatches = patchedMatches.filter(hasPlayedStageMatch);
+  const relevantMatches = patchedMatches.filter((match) => {
+    const matchPairKey = resolveMatchPairKey(match);
+    return (
+      hasPlayedStageMatch(match) ||
+      (typeof matchPairKey === "string" && liveSessionByPairKey.has(matchPairKey))
+    );
+  });
   const standings = buildGroupStandings(patchedMatches);
-  if (playedMatches.length === 0 && standings.length === 0) return null;
+  if (relevantMatches.length === 0 && standings.length === 0) return null;
   return {
     title: formatGroupDisplayLabel(
       group.number,
       resolveGroupLabelMode(stage.timetableConfig ?? null),
     ),
     standings,
-    matches: playedMatches,
+    matches: relevantMatches,
   };
 };
 
@@ -4025,7 +4056,7 @@ export function TournamentDetailPage({
             return false;
           });
           if (hit) {
-            return createGroupPopoverData(stage, group, session);
+            return createGroupPopoverData(stage, group, [session]);
           }
         }
       }
@@ -4046,7 +4077,15 @@ export function TournamentDetailPage({
             eventStages.find((entry) => entry.documentId === session.eventStageId) ??
             null;
           if (stage) {
-            popover = createGroupPopoverData(stage, group, session);
+            popover = createGroupPopoverData(
+              stage,
+              group,
+              liveCards.filter(
+                (entry) =>
+                  entry.eventStageId === session.eventStageId &&
+                  entry.groupNumber === session.groupNumber,
+              ),
+            );
           }
         }
       }
