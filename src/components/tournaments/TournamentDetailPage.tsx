@@ -4224,6 +4224,16 @@ export function TournamentDetailPage({
   }, [liveCards]);
 
   const toggleGroupPopover = (sessionId: string) => {
+    const targetSession = liveCards.find((session) => session.sessionId === sessionId);
+    if (targetSession && isWideDesktop) {
+      const liveVideos = normalizeLiveVideoEntries(
+        targetSession.liveVideos ?? targetSession.state?.liveVideos,
+      );
+      if (liveVideos.length === 0) {
+        setVideoDrawerSessionId(targetSession.sessionId);
+        setVideoDrawerVideoId(null);
+      }
+    }
     const willOpen = openGroupSessionId !== sessionId;
     if (!willOpen) {
       setOpenGroupSessionId(null);
