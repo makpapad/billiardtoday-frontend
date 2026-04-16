@@ -5,10 +5,13 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 export interface ScoreUpdate {
   type: 'score:update'
   screenId: string
+  activePlayer?: 1 | 2
+  ts?: number
   players: Array<{
     id: string
     name: string
-    score: number
+    score?: number
+    points?: number
     innings?: number
     isActive?: boolean
   }>
@@ -60,6 +63,26 @@ export function useLiveScore({
   const reconnectAttemptsRef = useRef(0)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const normalizePlayers = useCallback((data: ScoreUpdate) => {
+    const activePlayer = data.activePlayer === 2 ? 2 : 1
+
+    return Array.isArray(data.players)
+      ? data.players.map((player, index) => ({
+          ...player,
+          score:
+            typeof player.score === 'number'
+              ? player.score
+              : typeof player.points === 'number'
+                ? player.points
+                : 0,
+          isActive:
+            typeof player.isActive === 'boolean'
+              ? player.isActive
+              : activePlayer === index + 1,
+        }))
+      : []
+  }, [])
+
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return
@@ -93,8 +116,12 @@ export function useLiveScore({
           if (data.type === 'score:update' && data.screenId === screenId) {
             setState(prev => ({
               ...prev,
-              lastUpdate: data.timestamp || new Date().toISOString(),
-              players: data.players || [],
+              lastUpdate:
+                data.timestamp ||
+                (typeof data.ts === 'number'
+                  ? new Date(data.ts).toISOString()
+                  : new Date().toISOString()),
+              players: normalizePlayers(data),
               error: null
             }))
           }
@@ -148,7 +175,7 @@ export function useLiveScore({
         error: 'Failed to create WebSocket connection'
       }))
     }
-  }, [screenId, wsUrl, token, reconnectInterval, maxReconnectAttempts])
+  }, [screenId, wsUrl, token, reconnectInterval, maxReconnectAttempts, normalizePlayers])
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
