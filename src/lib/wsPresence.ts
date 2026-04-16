@@ -1,5 +1,8 @@
+import { SERVER_API_URL } from "@/lib/api";
+
 export interface PresenceEntry {
   screenId: string;
+  screenName: string | null;
   lastSeen: number | null;
   version: string | null;
   venue: string | null;
@@ -28,6 +31,14 @@ function asNumber(value: unknown): number | null {
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+}
+
+function unwrapNode(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  const node = value as Record<string, unknown>;
+  if (node.data) return unwrapNode(node.data);
+  if (node.attributes) return unwrapNode(node.attributes);
+  return node;
 }
 
 export function getPresenceEndpoint(): string {
@@ -59,6 +70,7 @@ export function normalizePresenceEntry(raw: unknown): PresenceEntry | null {
 
   return {
     screenId,
+    screenName: asString(row.screenName),
     lastSeen: asNumber(row.lastSeen),
     version: asString(row.version),
     venue: asString(row.venue),
@@ -71,6 +83,55 @@ export function normalizePresenceEntry(raw: unknown): PresenceEntry | null {
     region: asString(row.region),
     city: asString(row.city),
   };
+}
+
+async function fetchScreenNameMap(
+  screenIds: string[],
+): Promise<Map<string, string>> {
+  const uniqueIds = Array.from(
+    new Set(screenIds.map((id) => id.trim()).filter(Boolean)),
+  );
+  if (uniqueIds.length === 0) return new Map();
+
+  const params = new URLSearchParams();
+  uniqueIds.forEach((screenId, index) => {
+    params.set(`filters[$or][${index}][identifier][$eq]`, screenId);
+  });
+  params.set("pagination[pageSize]", String(uniqueIds.length));
+  params.append("fields[0]", "identifier");
+  params.append("fields[1]", "name");
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  const token = process.env.STRAPI_API_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(
+    `${SERVER_API_URL}/api/screens?${params.toString()}`,
+    {
+      cache: "no-store",
+      headers,
+    },
+  );
+  if (!response.ok) return new Map();
+
+  const json = await response.json();
+  const rows = Array.isArray(json?.data) ? json.data : [];
+  const result = new Map<string, string>();
+
+  rows.forEach((row: unknown) => {
+    const node = unwrapNode(row) ?? {};
+    const identifier = asString(node.identifier);
+    const name = asString(node.name);
+    if (identifier && name) {
+      result.set(identifier, name);
+    }
+  });
+
+  return result;
 }
 
 export async function fetchPresenceEntries(): Promise<PresenceEntry[]> {
@@ -86,8 +147,16 @@ export async function fetchPresenceEntries(): Promise<PresenceEntry[]> {
   const json = await response.json();
   if (!Array.isArray(json)) return [];
 
-  return json
+  const entries = json
     .map((entry) => normalizePresenceEntry(entry))
     .filter((entry): entry is PresenceEntry => entry !== null)
     .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0));
+  const screenNameMap = await fetchScreenNameMap(
+    entries.map((entry) => entry.screenId),
+  );
+
+  return entries.map((entry) => ({
+    ...entry,
+    screenName: screenNameMap.get(entry.screenId) ?? entry.screenName,
+  }));
 }

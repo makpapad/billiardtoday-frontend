@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useDeferredValue, useEffect, useState } from "react";
 import type { PresenceEntry } from "@/lib/wsPresence";
 import { normalizeWebSocketUrl, useLiveScore } from "@/hooks/useLiveScore";
@@ -48,41 +47,39 @@ function formatRelativeTime(value: number | null | undefined) {
   return `${diffDays}d ago`;
 }
 
-function formatLocation(entry: PresenceEntry) {
-  return [entry.city, entry.region, entry.countryCode || entry.country]
-    .filter(Boolean)
-    .join(", ");
-}
-
 function ScoreboardLane({
   name,
   score,
+  innings,
   active,
   accentClassName,
 }: {
   name: string;
   score: number;
+  innings?: number;
   active: boolean;
   accentClassName: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-4 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+    <div
+      className={
+        active
+          ? "relative overflow-hidden rounded-[18px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(255,255,255,0.14)]"
+          : "relative overflow-hidden rounded-[18px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+      }
+    >
       <div className={["absolute left-0 top-0 h-full w-1.5", accentClassName].join(" ")} />
-      <div className="flex items-center justify-between gap-3 pl-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_44px_26px] items-center gap-2 pl-2">
         <div className="min-w-0">
-          <div className="truncate text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/95">
+          <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-white/95">
             {name}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-3xl font-extrabold tracking-tight text-white">
-            {score}
-          </div>
-          {active ? (
-            <div className="flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[#ffe066] px-2 text-lg font-extrabold leading-none text-slate-950 shadow-[0_4px_14px_rgba(255,224,102,0.45)]">
-              0
-            </div>
-          ) : null}
+        <div className="text-right text-[2rem] font-extrabold leading-none tracking-tight text-white">
+          {score}
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-[#ffe066] text-sm font-extrabold leading-none text-slate-950 shadow-[0_4px_14px_rgba(255,224,102,0.32)]">
+          {typeof innings === "number" && Number.isFinite(innings) ? innings : 0}
         </div>
       </div>
     </div>
@@ -96,48 +93,22 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
     token: WS_TOKEN,
   });
 
-  const location = formatLocation(entry);
   const playerA = players[0];
   const playerB = players[1];
   const displayInning = [playerA?.innings, playerB?.innings]
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
     .reduce((highest, value) => Math.max(highest, value), 0);
+  const displayName = entry.screenName || entry.venue || entry.screenId;
 
   return (
-    <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.07)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-            Screen ID
+    <article className="rounded-[20px] bg-white p-2 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="overflow-hidden rounded-[18px] bg-[#0f1a2d] p-1 shadow-[0_14px_26px_rgba(15,23,42,0.14)]">
+        <div className="flex items-center justify-between gap-2 rounded-t-[14px] bg-[#22314b] px-3 py-1.5 text-white">
+          <div className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-white/90">
+            {displayName}
           </div>
-          <div className="mt-1.5 truncate font-mono text-[13px] font-semibold text-slate-950">
-            {entry.screenId}
-          </div>
-          {entry.venue ? (
-            <div className="mt-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-              {entry.venue}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-          <span
-            className={
-              isConnected
-                ? "h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(34,197,94,0.5)]"
-                : "h-2 w-2 rounded-full bg-rose-500"
-            }
-          />
-          {isConnected ? "Live" : "Idle"}
-        </div>
-      </div>
-
-      <div className="mt-4 overflow-hidden rounded-[20px] bg-[#0f1a2d] p-1 shadow-[0_14px_26px_rgba(15,23,42,0.14)]">
-        <div className="flex items-center justify-between gap-3 rounded-t-[16px] bg-[#22314b] px-3 py-1.5 text-white">
-          <div className="min-w-0 truncate font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/90">
-            {entry.screenId}
-          </div>
-          <div className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">
-            Inning {displayInning || 1}
+          <div className="flex min-w-[42px] items-center justify-center rounded-[10px] bg-white/10 px-2 py-1 text-[12px] font-extrabold leading-none text-white/90">
+            {displayInning || 1}
           </div>
         </div>
 
@@ -146,6 +117,9 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
             <ScoreboardLane
               name={playerA.name || "Player A"}
               score={Number(playerA.score ?? 0)}
+              innings={
+                typeof playerA.innings === "number" ? playerA.innings : undefined
+              }
               active={Boolean(playerA.isActive)}
               accentClassName="bg-[#ff5a57]"
             />
@@ -154,6 +128,9 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
             <ScoreboardLane
               name={playerB.name || "Player B"}
               score={Number(playerB.score ?? 0)}
+              innings={
+                typeof playerB.innings === "number" ? playerB.innings : undefined
+              }
               active={Boolean(playerB.isActive)}
               accentClassName="bg-[#64f06a]"
             />
@@ -178,54 +155,14 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
         </div>
       </div>
 
-      <div className="mt-3 grid gap-2">
-        <div className="rounded-2xl bg-slate-50 px-3 py-2.5">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Location
-          </div>
-          <div className="mt-1 text-xs font-medium text-slate-800">
-            {location || "-"}
-          </div>
-        </div>
-        <div className="rounded-2xl bg-slate-50 px-3 py-2.5">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Last Seen
-          </div>
-          <div className="mt-1 text-xs font-medium text-slate-800">
-            {formatRelativeTime(entry.lastSeen)}
-          </div>
-          <div className="mt-1 text-xs text-slate-500">
-            {formatAbsoluteTime(entry.lastSeen)}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
-        {entry.version ? (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1">
-            Version {entry.version}
-          </span>
-        ) : null}
-        {entry.ip ? (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-mono">
-            {entry.ip}
-          </span>
-        ) : null}
-        {entry.org ? (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1">
-            {entry.org}
-          </span>
-        ) : null}
-      </div>
-
       {error ? (
-        <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">
+        <div className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
           {error}
         </div>
       ) : null}
 
       {!isConnected ? (
-        <div className="mt-3">
+        <div className="mt-2">
           <button
             type="button"
             onClick={reconnect}
@@ -380,14 +317,6 @@ export function ScoreboardsMonitorPage() {
             <div className="mt-5 text-xs text-slate-300">
               Last presence fetch:{" "}
               {fetchedAt ? formatAbsoluteTime(Date.parse(fetchedAt)) : "-"}
-            </div>
-            <div className="mt-5">
-              <Link
-                href="/presence"
-                className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Open raw presence list
-              </Link>
             </div>
           </aside>
         </div>
