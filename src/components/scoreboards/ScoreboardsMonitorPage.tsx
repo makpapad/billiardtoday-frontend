@@ -50,13 +50,13 @@ function formatRelativeTime(value: number | null | undefined) {
 function ScoreboardLane({
   name,
   score,
-  innings,
+  run,
   active,
   accentClassName,
 }: {
   name: string;
   score: number;
-  innings?: number;
+  run?: number;
   active: boolean;
   accentClassName: string;
 }) {
@@ -64,24 +64,26 @@ function ScoreboardLane({
     <div
       className={
         active
-          ? "relative overflow-hidden rounded-[18px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(255,255,255,0.14)]"
-          : "relative overflow-hidden rounded-[18px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+          ? "relative overflow-hidden rounded-[16px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-1.5 pr-9 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(255,255,255,0.14)]"
+          : "relative overflow-hidden rounded-[16px] bg-[linear-gradient(90deg,#3156da_0%,#4833c7_100%)] px-3 py-1.5 pr-9 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
       }
     >
       <div className={["absolute left-0 top-0 h-full w-1.5", accentClassName].join(" ")} />
-      <div className="grid grid-cols-[minmax(0,1fr)_44px_26px] items-center gap-2 pl-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_34px] items-center gap-2 pl-2">
         <div className="min-w-0">
           <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-white/95">
             {name}
           </div>
         </div>
-        <div className="text-right text-[2rem] font-extrabold leading-none tracking-tight text-white">
+        <div className="text-right text-[1.1rem] font-extrabold leading-none tracking-tight text-white sm:text-[1.35rem]">
           {score}
         </div>
-        <div className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-[#ffe066] text-sm font-extrabold leading-none text-slate-950 shadow-[0_4px_14px_rgba(255,224,102,0.32)]">
-          {typeof innings === "number" && Number.isFinite(innings) ? innings : 0}
-        </div>
       </div>
+      {active ? (
+        <div className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-[8px] bg-[#ffe066] text-[11px] font-extrabold leading-none text-slate-950 shadow-[0_4px_14px_rgba(255,224,102,0.32)]">
+          {typeof run === "number" && Number.isFinite(run) ? run : 0}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -117,9 +119,7 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
             <ScoreboardLane
               name={playerA.name || "Player A"}
               score={Number(playerA.score ?? 0)}
-              innings={
-                typeof playerA.innings === "number" ? playerA.innings : undefined
-              }
+              run={typeof playerA.run === "number" ? playerA.run : undefined}
               active={Boolean(playerA.isActive)}
               accentClassName="bg-[#ff5a57]"
             />
@@ -128,9 +128,7 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
             <ScoreboardLane
               name={playerB.name || "Player B"}
               score={Number(playerB.score ?? 0)}
-              innings={
-                typeof playerB.innings === "number" ? playerB.innings : undefined
-              }
+              run={typeof playerB.run === "number" ? playerB.run : undefined}
               active={Boolean(playerB.isActive)}
               accentClassName="bg-[#64f06a]"
             />

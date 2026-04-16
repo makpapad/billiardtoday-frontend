@@ -12,6 +12,7 @@ export interface ScoreUpdate {
     name: string
     score?: number
     points?: number
+    run?: number
     innings?: number
     isActive?: boolean
   }>
