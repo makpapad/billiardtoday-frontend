@@ -732,6 +732,47 @@ function hasMeaningfulFinalResult(
   );
 }
 
+function getFinalResultAverageValue(result: NormalizedFinalResult): number | null {
+  const points = result.caroms ?? result.points;
+  if (
+    typeof points !== "number" ||
+    !Number.isFinite(points) ||
+    typeof result.innings !== "number" ||
+    !Number.isFinite(result.innings) ||
+    result.innings <= 0
+  ) {
+    return null;
+  }
+  return points / result.innings;
+}
+
+function getStageResultAverageValue(result: NormalizedStageResult): number | null {
+  if (
+    typeof result.points !== "number" ||
+    !Number.isFinite(result.points) ||
+    typeof result.innings !== "number" ||
+    !Number.isFinite(result.innings) ||
+    result.innings <= 0
+  ) {
+    return null;
+  }
+  return result.points / result.innings;
+}
+
+function getBestPositiveValue(values: Array<number | null>): number | null {
+  const best = values.reduce<number | null>((currentBest, value) => {
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      return currentBest;
+    }
+    if (currentBest === null || value > currentBest) {
+      return value;
+    }
+    return currentBest;
+  }, null);
+
+  return best;
+}
+
 function normalizeEventGameType(value: string | null | undefined): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -944,6 +985,20 @@ function StageRankingTable({
     );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
+  const stageRankingHighlights = useMemo(
+    () => ({
+      average: getBestPositiveValue(
+        visibleResults.map((result) => getStageResultAverageValue(result)),
+      ),
+      bestAverage: getBestPositiveValue(
+        visibleResults.map((result) => result.bestAverage),
+      ),
+      highRun: getBestPositiveValue(
+        visibleResults.map((result) => result.highRun),
+      ),
+    }),
+    [visibleResults],
+  );
 
   if (visibleResults.length === 0) {
     return (
@@ -995,109 +1050,143 @@ function StageRankingTable({
           </tr>
         </thead>
         <tbody>
-          {visibleResults.map((result, index) => (
-            <tr
-              key={result.id}
-              className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-            >
-              <td className="px-4 py-3 font-semibold">
-                {formatNumberValue(result.finalPosition ?? index + 1)}
-              </td>
-              <td className="px-4 py-3 font-medium">
-                {result.playerId ? (
-                  <Link
-                    href={playerProfileHref(result.playerId, result.playerName)}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
-                  >
+          {visibleResults.map((result, index) => {
+            const stageAverageValue = getStageResultAverageValue(result);
+            const highlightAverage =
+              !artistic &&
+              stageRankingHighlights.average !== null &&
+              stageAverageValue !== null &&
+              stageAverageValue === stageRankingHighlights.average;
+            const highlightBestAverage =
+              !artistic &&
+              stageRankingHighlights.bestAverage !== null &&
+              result.bestAverage !== null &&
+              result.bestAverage === stageRankingHighlights.bestAverage;
+            const highlightHighRun =
+              !artistic &&
+              stageRankingHighlights.highRun !== null &&
+              result.highRun !== null &&
+              result.highRun === stageRankingHighlights.highRun;
+
+            return (
+              <tr
+                key={result.id}
+                className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+              >
+                <td className="px-4 py-3 font-semibold">
+                  {formatNumberValue(result.finalPosition ?? index + 1)}
+                </td>
+                <td className="px-4 py-3 font-medium">
+                  {result.playerId ? (
+                    <Link
+                      href={playerProfileHref(result.playerId, result.playerName)}
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                    >
+                      <PlayerNameWithFlag
+                        name={result.playerName || "Unknown"}
+                        nativeName={result.playerNativeName}
+                        country={result.playerCountry}
+                      />
+                    </Link>
+                  ) : (
                     <PlayerNameWithFlag
                       name={result.playerName || "Unknown"}
                       nativeName={result.playerNativeName}
                       country={result.playerCountry}
                     />
-                  </Link>
-                ) : (
-                  <PlayerNameWithFlag
-                    name={result.playerName || "Unknown"}
-                    nativeName={result.playerNativeName}
-                    country={result.playerCountry}
-                  />
-                )}
-              </td>
-              {showProgressColumn && (
-                <td className="px-4 py-3 text-center">
-                  {(() => {
-                    const playerKey =
-                      result.playerDocumentId ??
-                      (result.playerId !== null
-                        ? `id:${result.playerId}`
-                        : result.playerName.trim());
-                    const progressKey =
-                      result.groupNumber !== null
-                        ? `${result.groupNumber}::${playerKey}`
-                        : null;
-                    const progress =
-                      progressKey !== null
-                        ? playerProgressByGroupKey.get(progressKey)
-                        : null;
+                  )}
+                </td>
+                {showProgressColumn && (
+                  <td className="px-4 py-3 text-center">
+                    {(() => {
+                      const playerKey =
+                        result.playerDocumentId ??
+                        (result.playerId !== null
+                          ? `id:${result.playerId}`
+                          : result.playerName.trim());
+                      const progressKey =
+                        result.groupNumber !== null
+                          ? `${result.groupNumber}::${playerKey}`
+                          : null;
+                      const progress =
+                        progressKey !== null
+                          ? playerProgressByGroupKey.get(progressKey)
+                          : null;
 
-                    return progress ? (
-                      <span
-                        className={clsx(
-                          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
-                          progress.complete
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-                        )}
-                      >
-                        {`${progress.played}/${progress.total}`}
-                      </span>
-                    ) : (
-                      "-"
-                    );
-                  })()}
-                </td>
-              )}
-              {showGroupColumn && (
+                      return progress ? (
+                        <span
+                          className={clsx(
+                            "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                            progress.complete
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                              : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+                          )}
+                        >
+                          {`${progress.played}/${progress.total}`}
+                        </span>
+                      ) : (
+                        "-"
+                      );
+                    })()}
+                  </td>
+                )}
+                {showGroupColumn && (
+                  <td className="px-4 py-3 text-center">
+                    {formatNumberValue(result.groupNumber)}
+                  </td>
+                )}
+                {showGroupPositionColumn && (
+                  <td className="px-4 py-3 text-center">
+                    {formatNumberValue(result.groupPosition)}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-center">
-                  {formatNumberValue(result.groupNumber)}
+                  {formatNumberValue(result.matchPoints)}
                 </td>
-              )}
-              {showGroupPositionColumn && (
                 <td className="px-4 py-3 text-center">
-                  {formatNumberValue(result.groupPosition)}
+                  {formatNumberValue(result.points)}
                 </td>
-              )}
-              <td className="px-4 py-3 text-center">
-                {formatNumberValue(result.matchPoints)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatNumberValue(result.points)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatNumberValue(result.innings)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatAverage(result.points, result.innings)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatNumberValue(result.highRun)}
-              </td>
-              {showBestAverageColumn && (
                 <td className="px-4 py-3 text-center">
-                  {result.bestAverage !== null
-                    ? formatTruncatedAverage(result.bestAverage)
-                    : "-"}
+                  {formatNumberValue(result.innings)}
                 </td>
-              )}
-              {artistic && (
-                <td className="px-4 py-3 text-center">
-                  {result.bestAverage !== null
-                    ? formatTruncatedAverage(result.bestAverage)
-                    : "-"}
+                <td
+                  className={clsx(
+                    "px-4 py-3 text-center",
+                    highlightAverage && "bg-orange-500 font-extrabold text-white",
+                  )}
+                >
+                  {formatAverage(result.points, result.innings)}
                 </td>
-              )}
-            </tr>
-          ))}
+                <td
+                  className={clsx(
+                    "px-4 py-3 text-center",
+                    highlightHighRun && "bg-orange-500 font-extrabold text-white",
+                  )}
+                >
+                  {formatNumberValue(result.highRun)}
+                </td>
+                {showBestAverageColumn && (
+                  <td
+                    className={clsx(
+                      "px-4 py-3 text-center",
+                      highlightBestAverage && "bg-orange-500 font-extrabold text-white",
+                    )}
+                  >
+                    {result.bestAverage !== null
+                      ? formatTruncatedAverage(result.bestAverage)
+                      : "-"}
+                  </td>
+                )}
+                {artistic && (
+                  <td className="px-4 py-3 text-center">
+                    {result.bestAverage !== null
+                      ? formatTruncatedAverage(result.bestAverage)
+                      : "-"}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -1700,6 +1789,20 @@ export function TournamentEventsContent({
         (result) => getEffectiveFinalPoints(result) !== null,
       ),
     [getEffectiveFinalPoints, publishedFinalResults],
+  );
+  const finalStandingsHighlights = useMemo(
+    () => ({
+      average: getBestPositiveValue(
+        publishedFinalResults.map((result) => getFinalResultAverageValue(result)),
+      ),
+      bestAverage: getBestPositiveValue(
+        publishedFinalResults.map((result) => result.bestAverage),
+      ),
+      highRun: getBestPositiveValue(
+        publishedFinalResults.map((result) => result.highRun),
+      ),
+    }),
+    [publishedFinalResults],
   );
 
   // Keep active stage in sync with external tournament hero selection when present.
@@ -2780,7 +2883,25 @@ export function TournamentEventsContent({
                               </tr>
                             </thead>
                             <tbody>
-                              {publishedFinalResults.map((result) => (
+                              {publishedFinalResults.map((result) => {
+                                const finalAverageValue = getFinalResultAverageValue(result);
+                                const highlightAverage =
+                                  !isArtisticEvent &&
+                                  finalStandingsHighlights.average !== null &&
+                                  finalAverageValue !== null &&
+                                  finalAverageValue === finalStandingsHighlights.average;
+                                const highlightBestAverage =
+                                  !isArtisticEvent &&
+                                  finalStandingsHighlights.bestAverage !== null &&
+                                  result.bestAverage !== null &&
+                                  result.bestAverage === finalStandingsHighlights.bestAverage;
+                                const highlightHighRun =
+                                  !isArtisticEvent &&
+                                  finalStandingsHighlights.highRun !== null &&
+                                  result.highRun !== null &&
+                                  result.highRun === finalStandingsHighlights.highRun;
+
+                                return (
                                 <tr
                                   key={result.id}
                                   className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
@@ -2820,7 +2941,13 @@ export function TournamentEventsContent({
                                   <td className="px-4 py-3 text-center">
                                     {formatNumberValue(result.innings)}
                                   </td>
-                                  <td className="px-4 py-3 text-center">
+                                  <td
+                                    className={clsx(
+                                      "px-4 py-3 text-center",
+                                      highlightAverage &&
+                                        "bg-orange-500 font-extrabold text-white",
+                                    )}
+                                  >
                                     {isArtisticEvent
                                       ? (result.bestAverage !== null
                                           ? formatTruncatedAverage(
@@ -2832,7 +2959,13 @@ export function TournamentEventsContent({
                                           result.innings,
                                         )}
                                   </td>
-                                  <td className="px-4 py-3 text-center">
+                                  <td
+                                    className={clsx(
+                                      "px-4 py-3 text-center",
+                                      highlightBestAverage &&
+                                        "bg-orange-500 font-extrabold text-white",
+                                    )}
+                                  >
                                     {isArtisticEvent
                                       ? formatNumberValue(result.highRun)
                                       : result.bestAverage !== null
@@ -2851,7 +2984,13 @@ export function TournamentEventsContent({
                                     </td>
                                   )}
                                   {!isArtisticEvent && (
-                                    <td className="px-4 py-3 text-center">
+                                    <td
+                                      className={clsx(
+                                        "px-4 py-3 text-center",
+                                        highlightHighRun &&
+                                          "bg-orange-500 font-extrabold text-white",
+                                      )}
+                                    >
                                       {formatNumberValue(result.highRun)}
                                     </td>
                                   )}
@@ -2873,7 +3012,7 @@ export function TournamentEventsContent({
                                     </td>
                                   )}
                                 </tr>
-                              ))}
+                              )})}
                             </tbody>
                           </table>
                         </div>
