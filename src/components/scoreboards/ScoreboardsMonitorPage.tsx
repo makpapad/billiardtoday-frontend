@@ -10,7 +10,7 @@ type PresenceApiResponse = {
   fetchedAt?: string;
 };
 
-const PRESENCE_REFRESH_MS = 10000;
+const PRESENCE_REFRESH_MS = 30000;
 const WS_URL = normalizeWebSocketUrl(
   process.env.NEXT_PUBLIC_WS_URL || "wss://ws.billiardtoday.com/ws",
 ).toString();
@@ -307,7 +307,7 @@ export function ScoreboardsMonitorPage() {
                       Refresh
                     </div>
                     <div className="text-sm font-medium leading-none text-slate-800">
-                      {refreshing ? "Refreshing..." : "Every 10s"}
+                      {refreshing ? "Refreshing..." : "Every 30s"}
                     </div>
                   </div>
                 </div>
