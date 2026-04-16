@@ -150,13 +150,13 @@ export function SiteHeader({
             aria-label="Close menu overlay"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute inset-x-3 top-20 rounded-[28px] border border-white/10 bg-slate-950/98 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.45)]">
+          <div className="absolute inset-x-3 top-20 rounded-[28px] border border-slate-200/80 bg-white/95 p-5 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Navigation</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Navigation</div>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300"
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600"
               >
                 Close
               </button>
@@ -165,10 +165,10 @@ export function SiteHeader({
             <nav className="max-h-[70vh] overflow-y-auto">
               <div className="space-y-2">
                 {navItems.map((item) => (
-                  <div key={`mobile-${item.label}-${item.href}`} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-2">
+                  <div key={`mobile-${item.label}-${item.href}`} className="rounded-[22px] border border-slate-200 bg-slate-50/90 p-2">
                     {item.children && item.children.length > 0 ? (
                       <>
-                        <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                           {item.label}
                         </div>
                         <div className="space-y-1">
@@ -177,7 +177,7 @@ export function SiteHeader({
                               key={`mobile-${child.label}-${child.href}`}
                               href={child.href}
                               onClick={() => setMobileMenuOpen(false)}
-                              className="block rounded-2xl px-3 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/5 hover:text-white"
+                              className="block rounded-2xl px-3 py-3 text-sm font-medium text-slate-800 transition hover:bg-white hover:text-slate-950"
                             >
                               {child.label}
                             </Link>
@@ -188,7 +188,7 @@ export function SiteHeader({
                       <Link
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/5 hover:text-white"
+                        className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-800 transition hover:bg-white hover:text-slate-950"
                       >
                         {item.iconSrc ? (
                           <img
@@ -209,7 +209,7 @@ export function SiteHeader({
                   <Link
                     href={secondaryCta.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="inline-flex items-center justify-center rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/5"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-white"
                   >
                     {secondaryCta.label}
                   </Link>
