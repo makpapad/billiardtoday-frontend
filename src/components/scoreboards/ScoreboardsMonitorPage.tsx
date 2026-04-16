@@ -17,7 +17,7 @@ const WS_URL = normalizeWebSocketUrl(
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 
 function getEntryDisplayName(entry: PresenceEntry) {
-  return entry.screenName || entry.venue || entry.screenId;
+  return entry.screenName || entry.screenId;
 }
 
 function formatAbsoluteTime(value: number | null | undefined) {
@@ -93,7 +93,7 @@ function ScoreboardLane({
 }
 
 function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
-  const { isConnected, lastUpdate, players, error, reconnect } = useLiveScore({
+  const { isConnected, lastUpdate, keyboardMode, tableName, players, error, reconnect } = useLiveScore({
     screenId: entry.screenId,
     wsUrl: WS_URL,
     token: WS_TOKEN,
@@ -104,7 +104,7 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
   const displayInning = [playerA?.innings, playerB?.innings]
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
     .reduce((highest, value) => Math.max(highest, value), 0);
-  const displayName = getEntryDisplayName(entry);
+  const displayName = tableName || getEntryDisplayName(entry);
 
   return (
     <article className="rounded-[20px] bg-white p-2 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
@@ -113,8 +113,15 @@ function ScoreboardMonitorCard({ entry }: { entry: PresenceEntry }) {
           <div className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-white/90">
             {displayName}
           </div>
-          <div className="flex min-w-[42px] items-center justify-center rounded-[10px] bg-white/10 px-2 py-1 text-[12px] font-extrabold leading-none text-white/90">
-            {displayInning || 1}
+          <div className="flex items-center gap-1">
+            {keyboardMode ? (
+              <div className="flex min-w-[34px] items-center justify-center rounded-[10px] bg-cyan-400/15 px-2 py-1 text-[11px] font-extrabold leading-none text-cyan-200">
+                K{keyboardMode}
+              </div>
+            ) : null}
+            <div className="flex min-w-[42px] items-center justify-center rounded-[10px] bg-white/10 px-2 py-1 text-[12px] font-extrabold leading-none text-white/90">
+              {displayInning || 1}
+            </div>
           </div>
         </div>
 
@@ -237,7 +244,6 @@ export function ScoreboardsMonitorPage() {
       return [
         entry.screenId,
         entry.screenName,
-        entry.venue,
         entry.city,
         entry.region,
         entry.country,
@@ -312,7 +318,7 @@ export function ScoreboardsMonitorPage() {
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search screen id, venue, city or IP..."
+                  placeholder="Search screen id, name, city or IP..."
                   className="w-full rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-cyan-400 focus:bg-white"
                 />
               </div>

@@ -3,9 +3,9 @@ import { SERVER_API_URL } from "@/lib/api";
 export interface PresenceEntry {
   screenId: string;
   screenName: string | null;
+  keyboardMode: "1" | "2" | "3" | "4" | null;
   lastSeen: number | null;
   version: string | null;
-  venue: string | null;
   ip: string | null;
   isp: string | null;
   org: string | null;
@@ -71,9 +71,15 @@ export function normalizePresenceEntry(raw: unknown): PresenceEntry | null {
   return {
     screenId,
     screenName: asString(row.screenName),
+    keyboardMode:
+      row.keyboardMode === "1" ||
+      row.keyboardMode === "2" ||
+      row.keyboardMode === "3" ||
+      row.keyboardMode === "4"
+        ? row.keyboardMode
+        : null,
     lastSeen: asNumber(row.lastSeen),
     version: asString(row.version),
-    venue: asString(row.venue),
     ip: asString(row.ip),
     isp: asString(row.isp),
     org: asString(row.org),

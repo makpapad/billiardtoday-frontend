@@ -6,6 +6,9 @@ export interface ScoreUpdate {
   type: 'score:update'
   screenId: string
   activePlayer?: 1 | 2
+  keyboardMode?: '1' | '2' | '3' | '4'
+  tableName?: string | null
+  tableNumber?: string | null
   ts?: number
   players: Array<{
     id: string
@@ -23,6 +26,8 @@ export interface LiveScoreState {
   screenId: string
   isConnected: boolean
   lastUpdate: string | null
+  keyboardMode: ScoreUpdate['keyboardMode'] | null
+  tableName: string | null
   players: ScoreUpdate['players']
   error: string | null
 }
@@ -56,6 +61,8 @@ export function useLiveScore({
     screenId,
     isConnected: false,
     lastUpdate: null,
+    keyboardMode: null,
+    tableName: null,
     players: [],
     error: null
   })
@@ -122,6 +129,17 @@ export function useLiveScore({
                 (typeof data.ts === 'number'
                   ? new Date(data.ts).toISOString()
                   : new Date().toISOString()),
+              keyboardMode:
+                data.keyboardMode === '1' ||
+                data.keyboardMode === '2' ||
+                data.keyboardMode === '3' ||
+                data.keyboardMode === '4'
+                  ? data.keyboardMode
+                  : prev.keyboardMode,
+              tableName:
+                typeof data.tableName === 'string' && data.tableName.trim().length > 0
+                  ? data.tableName.trim()
+                  : prev.tableName,
               players: normalizePlayers(data),
               error: null
             }))
@@ -226,6 +244,8 @@ export function useMultipleLiveScores(screenIds: string[], options?: Omit<UseLiv
         screenId,
         isConnected: false,
         lastUpdate: null,
+        keyboardMode: null,
+        tableName: null,
         players: [],
         error: null
       }

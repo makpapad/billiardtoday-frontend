@@ -104,12 +104,12 @@ export function PresenceDashboard() {
     const withLocation = entries.filter(
       (entry) => Boolean(entry.city || entry.region || entry.country || entry.countryCode),
     ).length;
-    const withVenue = entries.filter((entry) => Boolean(entry.venue)).length;
+    const withKeyboard = entries.filter((entry) => Boolean(entry.keyboardMode)).length;
 
     return {
       total: entries.length,
       withLocation,
-      withVenue,
+      withKeyboard,
     };
   }, [entries]);
 
@@ -139,10 +139,10 @@ export function PresenceDashboard() {
           </article>
           <article className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
             <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-              With venue
+              With keyboard
             </div>
             <div className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">
-              {stats.withVenue}
+              {stats.withKeyboard}
             </div>
           </article>
           <article className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
@@ -180,7 +180,7 @@ export function PresenceDashboard() {
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="px-4 py-3 font-semibold">Screen ID</th>
-                    <th className="px-4 py-3 font-semibold">Venue</th>
+                    <th className="px-4 py-3 font-semibold">Keyboard</th>
                     <th className="px-4 py-3 font-semibold">Location</th>
                     <th className="px-4 py-3 font-semibold">IP</th>
                     <th className="px-4 py-3 font-semibold">Version</th>
@@ -195,7 +195,7 @@ export function PresenceDashboard() {
                           {entry.screenId}
                         </div>
                       </td>
-                      <td className="px-4 py-3">{entry.venue || "-"}</td>
+                      <td className="px-4 py-3">{entry.keyboardMode ? `K${entry.keyboardMode}` : "-"}</td>
                       <td className="px-4 py-3">{formatLocation(entry)}</td>
                       <td className="px-4 py-3 font-mono text-xs">{entry.ip || "-"}</td>
                       <td className="px-4 py-3">{entry.version || "-"}</td>
