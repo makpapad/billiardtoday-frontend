@@ -12,6 +12,7 @@ export type PlayerAccountSummary = {
     | "active_linked"
     | "suspended"
     | null;
+  isOfficiallyVerified?: boolean;
   emailVerifiedAt: string | null;
   player: {
     id: number | null;
@@ -106,6 +107,9 @@ export type PlayerAccountDashboard = {
     activeDevices: number;
     totalDevices: number;
     wins: number;
+  };
+  visibility?: {
+    officialSectionsEnabled?: boolean;
   };
   latestFriendlyMatches: PlayerAccountFriendlyMatch[];
   latestTournaments: PlayerAccountTournamentParticipation[];

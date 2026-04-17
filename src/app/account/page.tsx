@@ -5,6 +5,7 @@ import React from "react";
 import {
   AccountAccessCard,
   identityStatusLabel,
+  officialVerificationLabel,
   PrivateAccountShell,
   formatDateTime,
   statusLabel,
@@ -86,6 +87,10 @@ export default function AccountPage() {
   const playerCard = dashboard?.playerCard || null;
   const latestFriendlyMatches =
     dashboard?.latestFriendlyMatches?.length ? dashboard.latestFriendlyMatches : friendlyMatches.slice(0, 5);
+  const officialSectionsEnabled =
+    Boolean(dashboard?.visibility?.officialSectionsEnabled) ||
+    Boolean(account?.isOfficiallyVerified) ||
+    account?.status === "active_linked";
 
   if (isLoading) {
     return (
@@ -173,6 +178,9 @@ export default function AccountPage() {
                 <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
                 <div>Official player ID: {playerCard?.documentId || account.player?.documentId || "Not verified yet"}</div>
                 <div>Account email: {account.email || "Not available"}</div>
+                <div>
+                  Verification label: <span className="font-medium text-slate-900">{officialVerificationLabel(account)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -283,18 +291,28 @@ export default function AccountPage() {
       ) : null}
 
       <section className="mt-10 grid gap-4 lg:grid-cols-3">
-        <Link href="/account/tournaments" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Section</div>
-          <h2 className="mt-2 text-xl font-semibold">Tournaments</h2>
-          <p className="mt-2 text-sm text-slate-600">Review full tournament history, positions and match results.</p>
-        </Link>
+        {officialSectionsEnabled ? (
+          <Link href="/account/tournaments" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Official section</div>
+            <h2 className="mt-2 text-xl font-semibold">Tournaments</h2>
+            <p className="mt-2 text-sm text-slate-600">Review full tournament history, positions and match results.</p>
+          </Link>
+        ) : (
+          <article className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 p-5">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-amber-700">Official section</div>
+            <h2 className="mt-2 text-xl font-semibold">Tournaments</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Tournament history stays hidden until an official player profile is verified and linked to this account.
+            </p>
+          </article>
+        )}
         <Link href="/account/friendly" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Section</div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Casual section</div>
           <h2 className="mt-2 text-xl font-semibold">Friendly Matches</h2>
           <p className="mt-2 text-sm text-slate-600">See completed private matches recorded after gameplay ends.</p>
         </Link>
         <Link href="/account/devices" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Section</div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Account section</div>
           <h2 className="mt-2 text-xl font-semibold">Devices</h2>
           <p className="mt-2 text-sm text-slate-600">Manage and review trusted devices linked to your player account.</p>
         </Link>
@@ -303,17 +321,24 @@ export default function AccountPage() {
       <section className="mt-10">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="text-xl font-semibold">Tournament snapshot</h2>
-          <Link href="/account/tournaments" className="text-sm text-cyan-700">
-            Open tournaments page
-          </Link>
+          {officialSectionsEnabled ? (
+            <Link href="/account/tournaments" className="text-sm text-cyan-700">
+              Open tournaments page
+            </Link>
+          ) : null}
         </div>
         <div className="mt-4 space-y-3">
-          {tournaments.length === 0 ? (
+          {!officialSectionsEnabled ? (
+            <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-6 text-sm text-amber-900">
+              Tournament history is an official-only section. It will unlock after trusted review links this account to
+              a verified player profile.
+            </div>
+          ) : tournaments.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-                {account.player?.documentId
-                  ? "No tournament participations were found for this player yet."
-                  : "Tournament history will appear here after a verified player profile is connected to this account."}
-              </div>
+              {account.player?.documentId
+                ? "No tournament participations were found for this player yet."
+                : "Tournament history will appear here after a verified player profile is connected to this account."}
+            </div>
           ) : (
             tournaments.slice(0, 3).map((participation) => (
               <article key={participation.id} className="rounded-3xl border border-slate-200 bg-white px-5 py-4">

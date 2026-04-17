@@ -93,6 +93,9 @@ export default function AccountTournamentsPage() {
     return <AccountAccessCard onAuthenticated={async (next) => setAccount(next)} />;
   }
 
+  const officialSectionsEnabled =
+    Boolean(account.isOfficiallyVerified) || account.status === "active_linked";
+
   return (
     <PrivateAccountShell account={account} setAccount={setAccount} activeHref="/account/tournaments">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -111,9 +114,17 @@ export default function AccountTournamentsPage() {
         </button>
       </div>
 
+      {!officialSectionsEnabled ? (
+        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-5 text-sm text-amber-900">
+          Tournament history is hidden for temporary and pending-review identities. This page becomes available only
+          after an official player profile is verified and linked to your account.
+        </div>
+      ) : null}
+
       {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-      <div className="mt-6 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-[minmax(0,1.4fr)_0.8fr_0.8fr]">
+      {officialSectionsEnabled ? (
+        <div className="mt-6 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-[minmax(0,1.4fr)_0.8fr_0.8fr]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -144,10 +155,11 @@ export default function AccountTournamentsPage() {
             </option>
           ))}
         </select>
-      </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 space-y-4">
-        {filteredTournaments.length === 0 ? (
+        {!officialSectionsEnabled ? null : filteredTournaments.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">{emptyStateMessage}</div>
         ) : (
           filteredTournaments.map((participation) => (

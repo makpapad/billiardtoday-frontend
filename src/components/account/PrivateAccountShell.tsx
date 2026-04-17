@@ -27,6 +27,22 @@ export function identityStatusLabel(status?: string | null) {
   return status || "Unknown";
 }
 
+export function officialVerificationLabel(account: PlayerAccountSummary) {
+  if (account.status === "active_linked" || account.player?.documentId || account.isOfficiallyVerified) {
+    return "Official player verified";
+  }
+  if (account.status === "active_pending_player_review") {
+    return "Official player review pending";
+  }
+  if (account.status === "active_unlinked") {
+    return "No official player linked";
+  }
+  if (account.status === "pending_verification") {
+    return "Account verification required first";
+  }
+  return "Official verification unavailable";
+}
+
 export function formatDateTime(value?: string | null) {
   if (!value) return null;
   try {
