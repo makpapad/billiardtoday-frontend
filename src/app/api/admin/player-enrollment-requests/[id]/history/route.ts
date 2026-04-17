@@ -5,25 +5,18 @@ import { buildVerificationProxyHeaders } from "@/lib/player-review-admin";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  let body: any = {};
-  try {
-    body = await req.json();
-  } catch {}
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...buildVerificationProxyHeaders(req),
   };
   const token = getScoreboardApiToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}/api/player-enrollment-requests/${encodeURIComponent(id)}/reject`, {
-    method: "POST",
+  const res = await fetch(`${API_URL}/api/player-enrollment-requests/${encodeURIComponent(id)}/history`, {
     cache: "no-store",
     headers,
-    body: JSON.stringify(body),
   });
 
   const text = await res.text();

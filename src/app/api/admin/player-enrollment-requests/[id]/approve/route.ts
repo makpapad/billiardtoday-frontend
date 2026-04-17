@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { API_URL } from "@/lib/api";
 import { getScoreboardApiToken } from "@/lib/server-token";
+import { buildVerificationProxyHeaders } from "@/lib/player-review-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     body = await req.json();
   } catch {}
 
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...buildVerificationProxyHeaders(req),
+  };
   const token = getScoreboardApiToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
