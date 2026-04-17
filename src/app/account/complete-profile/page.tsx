@@ -111,7 +111,8 @@ export default function CompleteProfilePage() {
           </div>
           {!account.emailVerifiedAt ? (
             <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Check your email to verify account ownership before relying on recovery and full account access.
+              Check your email to verify account ownership before relying on recovery and full account access. A phone
+              OTP can also be added later from the security section.
             </div>
           ) : null}
           <div className="mt-6">

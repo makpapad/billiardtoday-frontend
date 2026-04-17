@@ -68,7 +68,7 @@ export default async function VerifyEmailPage({
                 ? `Account ownership is verified and your official player profile is linked as ${verifiedPlayerId}.`
                 : verifiedStatus === "active_pending_player_review"
                   ? "Account ownership is verified. Your official player profile is still pending review."
-                  : "Account ownership is verified. Official player verification remains a separate later step."}
+                  : "Account ownership is verified. Phone OTP and social login can strengthen recovery later, but official player verification remains a separate step."}
             </div>
             <div className="mt-6">
               <Link

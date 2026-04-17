@@ -14,6 +14,21 @@ export type PlayerAccountSummary = {
     | null;
   isOfficiallyVerified?: boolean;
   emailVerifiedAt: string | null;
+  mobile?: string | null;
+  phoneVerifiedAt?: string | null;
+  socialProvider?: "google" | "facebook" | null;
+  socialProviderLinked?: boolean;
+  ownership?: {
+    methods: Array<"email" | "phone" | "google" | "facebook">;
+    primaryMethod: "email" | "phone" | "google" | "facebook" | null;
+    emailVerifiedAt: string | null;
+    mobile: string | null;
+    mobileMasked: string | null;
+    phoneVerifiedAt: string | null;
+    socialProvider: "google" | "facebook" | null;
+    socialProviderLabel: string | null;
+    socialVerified: boolean;
+  };
   player: {
     id: number | null;
     documentId: string | null;
@@ -126,6 +141,41 @@ export type PlayerAccountDashboard = {
   } | null;
 };
 
+export type PlayerAccountAuthOptions = {
+  socialProviders: {
+    google: {
+      provider: "google";
+      label: string;
+      enabled: boolean;
+      clientId?: string | null;
+    };
+    facebook: {
+      provider: "facebook";
+      label: string;
+      enabled: boolean;
+      appId?: string | null;
+      graphVersion?: string | null;
+    };
+  };
+  phoneOtp: {
+    enabled: boolean;
+    mode: "webhook" | "console" | null;
+  };
+};
+
+export type PlayerAccountSecurity = {
+  account: PlayerAccountSummary | null;
+  authOptions: PlayerAccountAuthOptions;
+  phoneVerification: {
+    mobile: string | null;
+    mobileMasked: string | null;
+    verifiedAt: string | null;
+    sentAt: string | null;
+    expiresAt: string | null;
+    pending: boolean;
+  };
+};
+
 export type PlayerAccountTournamentMatch = {
   id: string;
   num: number | null;
@@ -229,6 +279,28 @@ type DeviceLinkEnvelope = {
   data?: PlayerAccountDeviceLinkRequest | PlayerAccountSummary;
   error?: string;
 };
+
+type AuthOptionsEnvelope = {
+  data?: PlayerAccountAuthOptions;
+  error?: string;
+};
+
+type SecurityEnvelope = {
+  data?: PlayerAccountSecurity;
+  error?: string;
+};
+
+type PhoneVerificationStartEnvelope = {
+  data?: {
+    sent: boolean;
+    alreadyVerified?: boolean;
+    mobileMasked: string | null;
+    expiresAt: string | null;
+  };
+  error?: string;
+};
+
+type SocialLoginEnvelope = AuthEnvelope;
 
 function extractErrorMessage(json: any, fallback: string) {
   const parseMaybeJson = (value: string) => {
@@ -338,6 +410,42 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as AuthEnvelope | null;
     if (!res.ok || !json?.data || !json?.meta?.jwt) {
       throw new Error(extractErrorMessage(json, "Registration failed"));
+    }
+    this.jwt = json.meta.jwt;
+    this.account = json.data;
+    this.persist();
+    return this.account;
+  }
+
+  async getAuthOptions() {
+    const res = await fetch("/account-access/auth-options", {
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as AuthOptionsEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Account auth options request failed"));
+    }
+    return json.data;
+  }
+
+  async socialLogin(
+    provider: "google" | "facebook",
+    payload: { idToken?: string | null; accessToken?: string | null },
+  ) {
+    this.hydrateFromStorage();
+    const res = await fetch("/account-access/social/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider,
+        idToken: payload.idToken || null,
+        accessToken: payload.accessToken || null,
+      }),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as SocialLoginEnvelope | null;
+    if (!res.ok || !json?.data || !json?.meta?.jwt) {
+      throw new Error(extractErrorMessage(json, "Social login failed"));
     }
     this.jwt = json.meta.jwt;
     this.account = json.data;
@@ -483,6 +591,64 @@ class PlayerAccountAuth {
     if (!res.ok || !json?.data) {
       throw new Error(extractErrorMessage(json, "Dashboard request failed"));
     }
+    return json.data;
+  }
+
+  async security() {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/security", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as SecurityEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Security request failed"));
+    }
+    if (json.data.account) {
+      this.account = json.data.account;
+      this.persist();
+    }
+    return json.data;
+  }
+
+  async startPhoneVerification(mobile?: string | null) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/phone-verification/start", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ mobile: mobile || null }),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as PhoneVerificationStartEnvelope | null;
+    if (!res.ok || !json?.data?.sent) {
+      throw new Error(extractErrorMessage(json, "Phone verification start failed"));
+    }
+    return json.data;
+  }
+
+  async completePhoneVerification(code: string) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/phone-verification/complete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code }),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Phone verification failed"));
+    }
+    this.account = json.data;
+    this.persist();
     return json.data;
   }
 

@@ -6,6 +6,7 @@ import {
   AccountAccessCard,
   identityStatusLabel,
   officialVerificationLabel,
+  ownershipLabel,
   PrivateAccountShell,
   formatDateTime,
   statusLabel,
@@ -195,9 +196,7 @@ export default function AccountPage() {
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Account ownership</span>
-              <span className="font-semibold text-slate-950">
-                {account.emailVerifiedAt ? "Verified by email" : "Pending email verification"}
-              </span>
+              <span className="font-semibold text-slate-950">{ownershipLabel(account)}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Official player profile</span>

@@ -402,7 +402,7 @@ export default function PlayerProfilePage() {
             params.set('pagination[pageSize]', '1')
 
             const response = await fetch(
-                buildApiUrl(`/api/admin/tournament/players?${params.toString()}`),
+                buildApiUrl(`/api/players/lookup?${params.toString()}`),
             )
 
             if (!response.ok) {
@@ -484,7 +484,7 @@ export default function PlayerProfilePage() {
                 const fetchPromises: Promise<Response>[] = [
                     fetch(
                         buildApiUrl(
-                            `/api/admin/tournament/players?${params.toString()}`,
+                            `/api/players/lookup?${params.toString()}`,
                         ),
                         { signal: abortController.signal },
                     ),
