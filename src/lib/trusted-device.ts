@@ -6,13 +6,16 @@ const TRUSTED_DEVICE_PLAYER_KEY = "bt.trustedDevicePlayer";
 export type TrustedDevicePlayer = {
   id?: number | null;
   documentId?: string | null;
+  displayName?: string | null;
   fullName?: string | null;
+  officialPlayerName?: string | null;
   country?: string | null;
   photoUrl?: string | null;
   enrollmentRequestId?: string | null;
   mobile?: string | null;
   email?: string | null;
   isTemporary?: boolean;
+  identityStatus?: string | null;
 };
 
 export function getTrustedDeviceToken(): string | null {

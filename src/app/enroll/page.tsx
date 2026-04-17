@@ -20,7 +20,7 @@ export default function EnrollPage() {
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [requestForm, setRequestForm] = React.useState({
-    fullName: "",
+    displayName: "",
     country: "",
     clubName: "",
     mobile: "",
@@ -29,7 +29,7 @@ export default function EnrollPage() {
 
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
-    setTrustedPlayerName(trusted?.fullName ?? null);
+    setTrustedPlayerName(trusted?.displayName ?? trusted?.fullName ?? null);
   }, []);
 
   const finish = React.useCallback(() => {
@@ -66,9 +66,9 @@ export default function EnrollPage() {
       setTrustedDeviceToken(data.data.deviceToken);
       if (data.data.player) {
         setTrustedDevicePlayer(data.data.player);
-        setTrustedPlayerName(data.data.player.fullName ?? null);
+        setTrustedPlayerName(data.data.player.displayName ?? data.data.player.fullName ?? null);
       }
-      setStatus("Temporary enrollment was created. You can continue to the scoreboard now.");
+      setStatus("Temporary profile created. You can continue to the scoreboard now.");
       setTimeout(finish, 700);
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Temporary enrollment failed.");
@@ -128,9 +128,9 @@ export default function EnrollPage() {
 
         <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4">
           <input
-            value={requestForm.fullName}
-            onChange={(e) => setRequestForm((prev) => ({ ...prev, fullName: e.target.value }))}
-            placeholder="Display or full name"
+            value={requestForm.displayName}
+            onChange={(e) => setRequestForm((prev) => ({ ...prev, displayName: e.target.value }))}
+            placeholder="Display name"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
           />
           <input
@@ -148,7 +148,7 @@ export default function EnrollPage() {
           <input
             value={requestForm.mobile}
             onChange={(e) => setRequestForm((prev) => ({ ...prev, mobile: e.target.value }))}
-            placeholder="Mobile"
+            placeholder="Mobile (optional)"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
           />
           <input
@@ -161,10 +161,9 @@ export default function EnrollPage() {
             type="button"
             disabled={
               busy ||
-              !requestForm.fullName.trim() ||
+              !requestForm.displayName.trim() ||
               !requestForm.country.trim() ||
               !requestForm.clubName.trim() ||
-              !requestForm.mobile.trim() ||
               !requestForm.email.trim()
             }
             onClick={() => void submitEnrollmentRequest()}

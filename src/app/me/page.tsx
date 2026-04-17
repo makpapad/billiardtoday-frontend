@@ -134,12 +134,12 @@ export default function MePage() {
                 Private Player Area
               </div>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
-                {player?.fullName || "Unknown player"}
+                {player?.displayName || player?.fullName || "Unknown player"}
               </h1>
               {player?.country ? <p className="mt-2 text-sm text-slate-600">{player.country}</p> : null}
               {player?.isTemporary ? (
                 <div className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                  Pending admin approval
+                  Temporary profile
                 </div>
               ) : null}
             </div>
@@ -177,8 +177,8 @@ export default function MePage() {
 
           {player?.isTemporary ? (
             <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Your details were saved as temporary. You can play normally, but an admin must approve and connect your
-              profile to a regular BT Player.
+              This device is using a temporary player profile. You can play normally now, while official player
+              verification remains a separate later step.
             </div>
           ) : null}
 

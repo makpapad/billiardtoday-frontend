@@ -74,7 +74,7 @@ export default function ClaimPage() {
 
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
-    setTrustedPlayerName(trusted?.fullName ?? null);
+    setTrustedPlayerName(trusted?.displayName ?? trusted?.fullName ?? null);
   }, []);
 
   const claimWithToken = React.useCallback(async (deviceToken: string) => {

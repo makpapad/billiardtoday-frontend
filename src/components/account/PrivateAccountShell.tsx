@@ -15,6 +15,16 @@ export function statusLabel(status: PlayerAccountSummary["status"]) {
   return "Unknown";
 }
 
+export function identityStatusLabel(status?: string | null) {
+  if (status === "verified") return "Verified";
+  if (status === "pending_review") return "Pending review";
+  if (status === "rejected") return "Rejected";
+  if (status === "temporary") return "Temporary";
+  if (status === "approved") return "Verified";
+  if (status === "pending") return "Temporary";
+  return status || "Unknown";
+}
+
 export function formatDateTime(value?: string | null) {
   if (!value) return null;
   try {
@@ -94,7 +104,7 @@ export function AccountAccessCard({
         const preview = await playerAccountAuth.getEnrollmentPreview(normalized);
         setEnrollmentPreview(preview);
         if (!hasEditedFullName) {
-          setFullName(preview?.fullName || "");
+          setFullName(preview?.displayName || preview?.fullName || "");
         }
       } catch {
         setEnrollmentPreview(null);
@@ -192,7 +202,7 @@ export function AccountAccessCard({
                   setFullName(e.target.value);
                   setHasEditedFullName(true);
                 }}
-                placeholder="Full name"
+                placeholder="Account name"
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
               />
               <input
@@ -207,9 +217,11 @@ export function AccountAccessCard({
                 context before creating the account.
                 {isCheckingEnrollment ? " Checking enrollment..." : ""}
               </div>
-              {enrollmentPreview?.fullName ? (
+              {enrollmentPreview?.displayName || enrollmentPreview?.fullName ? (
                 <div className="rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-                  Enrollment found for <span className="font-semibold">{enrollmentPreview.fullName}</span>. You can keep this name or edit it before creating the account.
+                  Temporary enrollment found for{" "}
+                  <span className="font-semibold">{enrollmentPreview.displayName || enrollmentPreview.fullName}</span>.
+                  You can keep this account name or edit it before creating the account.
                 </div>
               ) : null}
             </>
@@ -256,7 +268,11 @@ export function PrivateAccountShell({
           <div>
             <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              {account.player?.fullName || account.enrollmentRequest?.fullName || account.email || "Player account"}
+              {account.player?.fullName ||
+                account.enrollmentRequest?.displayName ||
+                account.enrollmentRequest?.fullName ||
+                account.email ||
+                "Player account"}
             </h1>
             <p className="mt-2 text-sm text-slate-600">{account.email}</p>
           </div>
@@ -301,8 +317,8 @@ export function PrivateAccountShell({
 
         {account.status === "pending_verification" ? (
           <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Your account is currently in partial access mode. Friendly matches and devices are already available.
-            Tournament identity will be added after verification and player linking are completed.
+            Your account ownership still needs email verification. Friendly matches and trusted devices are already
+            available, but official player verification remains separate.
           </div>
         ) : null}
 

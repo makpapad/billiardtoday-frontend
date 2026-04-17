@@ -10,6 +10,9 @@ import {
 } from "@/lib/player-account-auth";
 
 function friendlyStatus(status: string | null) {
+  if (status === "verified") return "Verified";
+  if (status === "pending_review") return "Pending review";
+  if (status === "temporary") return "Temporary";
   if (status === "approved") return "Approved";
   if (status === "pending") return "Pending";
   if (status === "rejected") return "Rejected";
@@ -45,7 +48,7 @@ export default function CompleteProfilePage() {
         const next = await playerAccountAuth.getClaimInfo(claimToken);
         setClaimInfo(next);
         setEmail(next.email || "");
-        setFullName(next.fullName || "");
+        setFullName(next.displayName || next.fullName || "");
       } catch (err) {
         setClaimInfo(null);
         setError(err instanceof Error ? err.message : "Claim lookup failed");
@@ -96,9 +99,13 @@ export default function CompleteProfilePage() {
             Your profile access is now active. You can continue to your private account area.
           </p>
           <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Linked player</div>
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Current identity</div>
             <div className="mt-2 text-lg font-semibold text-slate-950">
-              {account.player?.fullName || account.player?.documentId || "Pending player"}
+              {account.player?.fullName ||
+                account.enrollmentRequest?.displayName ||
+                account.enrollmentRequest?.fullName ||
+                account.player?.documentId ||
+                "Temporary player"}
             </div>
           </div>
           <div className="mt-6">
@@ -136,12 +143,16 @@ export default function CompleteProfilePage() {
         {claimInfo ? (
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Player</div>
-              <div className="mt-2 text-lg font-semibold text-slate-950">{claimInfo.fullName || "Pending player"}</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Temporary identity</div>
+              <div className="mt-2 text-lg font-semibold text-slate-950">
+                {claimInfo.displayName || claimInfo.fullName || "Temporary player"}
+              </div>
             </div>
             <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Status</div>
-              <div className="mt-2 text-lg font-semibold text-slate-950">{friendlyStatus(claimInfo.status)}</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Identity status</div>
+              <div className="mt-2 text-lg font-semibold text-slate-950">
+                {friendlyStatus(claimInfo.identityStatus || claimInfo.status)}
+              </div>
             </div>
             <div className="rounded-2xl bg-slate-50 px-4 py-3">
               <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Club</div>
@@ -158,7 +169,7 @@ export default function CompleteProfilePage() {
           <input
             value={fullName}
             onChange={(event) => setFullName(event.target.value)}
-            placeholder="Full name"
+            placeholder="Account name"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
           />
           <input
@@ -176,7 +187,7 @@ export default function CompleteProfilePage() {
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
           />
           <div className="text-xs text-slate-500">
-            Use at least 8 characters. Tournament history can be added after approval if your player link is still pending.
+            Use at least 8 characters. This creates account access only. Official player verification happens later.
           </div>
           <button
             type="submit"

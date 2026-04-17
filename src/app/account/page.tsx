@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import {
   AccountAccessCard,
+  identityStatusLabel,
   PrivateAccountShell,
   formatDateTime,
   statusLabel,
@@ -161,7 +162,12 @@ export default function AccountPage() {
             )}
             <div className="min-w-0">
               <h3 className="text-xl font-semibold text-slate-950">
-                {playerCard?.fullName || account.player?.fullName || account.enrollmentRequest?.fullName || "Player account"}
+                {playerCard?.displayName ||
+                  playerCard?.fullName ||
+                  account.player?.fullName ||
+                  account.enrollmentRequest?.displayName ||
+                  account.enrollmentRequest?.fullName ||
+                  "Player account"}
               </h3>
               <div className="mt-2 space-y-1 text-sm text-slate-600">
                 <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
@@ -188,8 +194,10 @@ export default function AccountPage() {
               <span className="font-semibold text-slate-950">{account.player?.documentId || "Not verified yet"}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span>Enrollment status</span>
-              <span className="font-semibold text-slate-950">{account.enrollmentRequest?.status || "Not linked"}</span>
+              <span>Identity status</span>
+              <span className="font-semibold text-slate-950">
+                {identityStatusLabel(account.enrollmentRequest?.identityStatus || account.enrollmentRequest?.status)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Profile completion</span>
@@ -207,7 +215,7 @@ export default function AccountPage() {
           <h2 className="mt-2 text-xl font-semibold tracking-tight">Link your enrolled phone</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
             If you already enrolled from a scoreboard on your phone, scan this QR with that same phone to attach the
-            trusted device to this account.
+            trusted device and temporary identity to this account.
           </p>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">

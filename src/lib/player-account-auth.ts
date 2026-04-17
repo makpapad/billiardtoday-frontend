@@ -14,32 +14,41 @@ export type PlayerAccountSummary = {
   enrollmentRequest: {
     id: number | null;
     documentId: string | null;
+    displayName: string | null;
     fullName: string | null;
+    fullNameSubmitted?: string | null;
     status: string | null;
+    identityStatus?: string | null;
     accountCompletionStatus: string | null;
   } | null;
 };
 
 export type PlayerAccountClaimInfo = {
   enrollmentRequestId: string | null;
+  displayName: string | null;
   fullName: string | null;
+  fullNameSubmitted?: string | null;
   email: string | null;
   mobile: string | null;
   country: string | null;
   clubName: string | null;
   status: string | null;
+  identityStatus?: string | null;
   accountCompletionStatus: string | null;
   linkedPlayerDocumentId: string | null;
 };
 
 export type PlayerAccountEnrollmentPreview = {
   enrollmentRequestId: string | null;
+  displayName: string | null;
   fullName: string | null;
+  fullNameSubmitted?: string | null;
   email: string | null;
   mobile: string | null;
   country: string | null;
   clubName: string | null;
   status: string | null;
+  identityStatus?: string | null;
   accountCompletionStatus: string | null;
   linkedPlayerDocumentId: string | null;
 };
@@ -94,10 +103,14 @@ export type PlayerAccountDashboard = {
   latestTournaments: PlayerAccountTournamentParticipation[];
   devices: PlayerAccountDevice[];
   playerCard: {
+    displayName?: string | null;
     documentId: string | null;
     fullName: string | null;
+    officialPlayerName?: string | null;
     country: string | null;
     photoUrl: string | null;
+    identityStatus?: string | null;
+    isTemporary?: boolean;
   } | null;
 };
 
