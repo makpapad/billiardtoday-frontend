@@ -96,7 +96,8 @@ export default function CompleteProfilePage() {
           <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Account created</h1>
           <p className="mt-3 text-sm text-slate-600">
-            Your profile access is now active. You can continue to your private account area.
+            Your private account was created. Email verification secures account ownership, while official player
+            verification remains a separate step.
           </p>
           <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4">
             <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Current identity</div>
@@ -108,6 +109,11 @@ export default function CompleteProfilePage() {
                 "Temporary player"}
             </div>
           </div>
+          {!account.emailVerifiedAt ? (
+            <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Check your email to verify account ownership before relying on recovery and full account access.
+            </div>
+          ) : null}
           <div className="mt-6">
             <Link
               href="/account"

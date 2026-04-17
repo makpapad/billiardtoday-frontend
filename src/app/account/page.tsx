@@ -182,16 +182,24 @@ export default function AccountPage() {
           <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Account state</div>
           <div className="mt-4 space-y-3 text-sm text-slate-700">
             <div className="flex items-center justify-between gap-4">
-              <span>Status</span>
+              <span>Account status</span>
               <span className="font-semibold text-slate-950">{statusLabel(account.status)}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span>Email verification</span>
-              <span className="font-semibold text-slate-950">{account.emailVerifiedAt ? "Verified" : "Pending"}</span>
+              <span>Account ownership</span>
+              <span className="font-semibold text-slate-950">
+                {account.emailVerifiedAt ? "Verified by email" : "Pending email verification"}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Official player profile</span>
-              <span className="font-semibold text-slate-950">{account.player?.documentId || "Not verified yet"}</span>
+              <span className="font-semibold text-slate-950">
+                {account.player?.documentId
+                  ? account.player.documentId
+                  : account.status === "active_pending_player_review"
+                    ? "Pending review"
+                    : "Not verified yet"}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Identity status</span>
@@ -240,7 +248,8 @@ export default function AccountPage() {
                 <br />
                 2. Scan this QR.
                 <br />
-                3. If that phone is already enrolled, this account can reuse that trusted device.
+                3. If that phone is already enrolled, this account can reuse that trusted device without auto-claiming
+                any new official player identity.
               </div>
               {deviceLink?.linkUrl ? (
                 <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">

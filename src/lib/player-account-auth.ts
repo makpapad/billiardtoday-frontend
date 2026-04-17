@@ -3,7 +3,15 @@ export type PlayerAccountSummary = {
   documentId: string | null;
   email: string | null;
   fullName: string | null;
-  status: "active" | "pending_verification" | "disabled" | null;
+  status:
+    | "active"
+    | "pending_verification"
+    | "disabled"
+    | "active_unlinked"
+    | "active_pending_player_review"
+    | "active_linked"
+    | "suspended"
+    | null;
   emailVerifiedAt: string | null;
   player: {
     id: number | null;

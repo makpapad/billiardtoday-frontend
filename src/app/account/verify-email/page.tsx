@@ -3,6 +3,10 @@ import Link from "next/link";
 type VerifyResult = {
   data?: {
     email?: string | null;
+    status?: string | null;
+    player?: {
+      documentId?: string | null;
+    } | null;
   } | null;
   error?: {
     message?: string;
@@ -28,6 +32,8 @@ export default async function VerifyEmailPage({
   let isSuccess = false;
   let message = "Missing verification token.";
   let verifiedEmail: string | null = null;
+  let verifiedStatus: string | null = null;
+  let verifiedPlayerId: string | null = null;
 
   if (token) {
     const query = new URLSearchParams({ token });
@@ -39,6 +45,8 @@ export default async function VerifyEmailPage({
     if (res.ok) {
       isSuccess = true;
       verifiedEmail = json?.data?.email || null;
+      verifiedStatus = json?.data?.status || null;
+      verifiedPlayerId = json?.data?.player?.documentId || null;
     } else {
       message = json?.error?.message || "Email verification failed.";
     }
@@ -54,6 +62,13 @@ export default async function VerifyEmailPage({
           <>
             <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               Your email is now verified{verifiedEmail ? ` for ${verifiedEmail}` : ""}.
+            </div>
+            <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              {verifiedPlayerId
+                ? `Account ownership is verified and your official player profile is linked as ${verifiedPlayerId}.`
+                : verifiedStatus === "active_pending_player_review"
+                  ? "Account ownership is verified. Your official player profile is still pending review."
+                  : "Account ownership is verified. Official player verification remains a separate later step."}
             </div>
             <div className="mt-6">
               <Link

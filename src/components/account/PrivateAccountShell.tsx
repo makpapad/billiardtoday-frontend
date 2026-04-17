@@ -9,9 +9,11 @@ import {
 } from "@/lib/player-account-auth";
 
 export function statusLabel(status: PlayerAccountSummary["status"]) {
-  if (status === "active") return "Active";
+  if (status === "active_linked" || status === "active") return "Account verified and linked";
+  if (status === "active_pending_player_review") return "Account verified, player review pending";
+  if (status === "active_unlinked") return "Account verified, player unlinked";
   if (status === "pending_verification") return "Pending verification";
-  if (status === "disabled") return "Disabled";
+  if (status === "suspended" || status === "disabled") return "Suspended";
   return "Unknown";
 }
 
@@ -319,6 +321,25 @@ export function PrivateAccountShell({
           <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
             Your account ownership still needs email verification. Friendly matches and trusted devices are already
             available, but official player verification remains separate.
+          </div>
+        ) : null}
+
+        {account.status === "active_unlinked" ? (
+          <div className="mt-6 rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            Your account ownership is verified. You can use trusted devices and private account recovery, but no
+            official player profile is linked yet.
+          </div>
+        ) : null}
+
+        {account.status === "active_pending_player_review" ? (
+          <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Your account ownership is verified. Your official player profile is still pending review.
+          </div>
+        ) : null}
+
+        {account.status === "active_linked" ? (
+          <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            Your account ownership is verified and an official player profile is linked.
           </div>
         ) : null}
 
