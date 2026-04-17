@@ -142,7 +142,8 @@ export function AccountAccessCard({
         <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Account Access</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Sign in with your player account or create one using the same email you used on the scoreboard.
+          Sign in with your account or create one from your enrollment details. Official player verification is a
+          separate step.
         </p>
 
         <div className="mt-6 flex gap-2">
@@ -202,7 +203,8 @@ export function AccountAccessCard({
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
               />
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                If you already enrolled from a scoreboard, use the same email address here and your account will be linked automatically.
+                If you already enrolled from a scoreboard, use the same email address here to recover that enrollment
+                context before creating the account.
                 {isCheckingEnrollment ? " Checking enrollment..." : ""}
               </div>
               {enrollmentPreview?.fullName ? (

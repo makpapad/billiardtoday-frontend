@@ -9,11 +9,20 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {}
 
+  if (typeof body?.playerDocumentId === "string" && body.playerDocumentId.trim()) {
+    return NextResponse.json({ error: "Public playerDocumentId account binding is disabled" }, { status: 400 });
+  }
+
   const res = await fetch(`${SERVER_API_URL}/api/player-accounts/register`, {
     method: "POST",
     cache: "no-store",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      email: body?.email,
+      password: body?.password,
+      fullName: body?.fullName,
+      enrollmentRequestId: body?.enrollmentRequestId,
+    }),
   });
 
   const text = await res.text();

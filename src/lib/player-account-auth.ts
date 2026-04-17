@@ -302,7 +302,6 @@ class PlayerAccountAuth {
     email: string;
     password: string;
     fullName?: string | null;
-    playerDocumentId?: string | null;
     enrollmentRequestId?: string | null;
   }) {
     this.hydrateFromStorage();

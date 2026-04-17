@@ -108,7 +108,7 @@ export default function AccountPage() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Your private player summary across tournaments, friendly matches and trusted devices.
+            Your private account summary across tournaments, friendly matches and trusted devices.
           </p>
         </div>
         <button
@@ -145,7 +145,7 @@ export default function AccountPage() {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Player card</div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Current profile</div>
           <div className="mt-4 flex items-start gap-4">
             {playerCard?.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -165,7 +165,7 @@ export default function AccountPage() {
               </h3>
               <div className="mt-2 space-y-1 text-sm text-slate-600">
                 <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
-                <div>Player ID: {playerCard?.documentId || account.player?.documentId || "Pending"}</div>
+                <div>Official player ID: {playerCard?.documentId || account.player?.documentId || "Not verified yet"}</div>
                 <div>Account email: {account.email || "Not available"}</div>
               </div>
             </div>
@@ -184,8 +184,8 @@ export default function AccountPage() {
               <span className="font-semibold text-slate-950">{account.emailVerifiedAt ? "Verified" : "Pending"}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span>Player link</span>
-              <span className="font-semibold text-slate-950">{account.player?.documentId || "Pending"}</span>
+              <span>Official player profile</span>
+              <span className="font-semibold text-slate-950">{account.player?.documentId || "Not verified yet"}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span>Enrollment status</span>
@@ -206,7 +206,8 @@ export default function AccountPage() {
           <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Scoreboard pairing</div>
           <h2 className="mt-2 text-xl font-semibold tracking-tight">Link your enrolled phone</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            If you already enrolled from a scoreboard on your phone, scan this QR with that same phone to link the account automatically.
+            If you already enrolled from a scoreboard on your phone, scan this QR with that same phone to attach the
+            trusted device to this account.
           </p>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
@@ -231,7 +232,7 @@ export default function AccountPage() {
                 <br />
                 2. Scan this QR.
                 <br />
-                3. If that phone is already enrolled, the account will be linked automatically.
+                3. If that phone is already enrolled, this account can reuse that trusted device.
               </div>
               {deviceLink?.linkUrl ? (
                 <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">
@@ -292,10 +293,10 @@ export default function AccountPage() {
         <div className="mt-4 space-y-3">
           {tournaments.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-              {account.player?.documentId
-                ? "No tournament participations were found for this player yet."
-                : "Tournament history will appear here after your account is linked to a verified player profile."}
-            </div>
+                {account.player?.documentId
+                  ? "No tournament participations were found for this player yet."
+                  : "Tournament history will appear here after a verified player profile is connected to this account."}
+              </div>
           ) : (
             tournaments.slice(0, 3).map((participation) => (
               <article key={participation.id} className="rounded-3xl border border-slate-200 bg-white px-5 py-4">

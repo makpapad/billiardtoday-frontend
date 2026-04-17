@@ -10,6 +10,10 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {}
 
+  if (typeof body?.playerDocumentId === "string" && body.playerDocumentId.trim()) {
+    return NextResponse.json({ error: "Public playerDocumentId device binding is disabled" }, { status: 400 });
+  }
+
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getScoreboardApiToken();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -18,7 +22,13 @@ export async function POST(req: Request) {
     method: "POST",
     cache: "no-store",
     headers,
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      enrollmentRequestDocumentId: body?.enrollmentRequestDocumentId,
+      deviceLabel: body?.deviceLabel,
+      platform: body?.platform,
+      browser: body?.browser,
+      appVersion: body?.appVersion,
+    }),
   });
 
   const text = await res.text();
