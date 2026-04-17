@@ -16,6 +16,7 @@ export default function EnrollPage() {
   const nonce = params?.get("nonce") || "";
   const slot = params?.get("slot") || "";
   const screenId = params?.get("screenId") || "";
+  const inheritsClubFromScreen = Boolean(screenId.trim());
   const [trustedPlayerName, setTrustedPlayerName] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -86,6 +87,11 @@ export default function EnrollPage() {
           Create a temporary player profile for this device. Official player verification happens later and is not part
           of this step.
         </p>
+        {inheritsClubFromScreen ? (
+          <div className="mt-4 rounded-2xl bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+            Club will be inherited automatically from the scanned scoreboard screen.
+          </div>
+        ) : null}
 
         {trustedPlayerName ? (
           <div className="mt-5 rounded-2xl bg-emerald-500/15 px-4 py-3 text-sm">
@@ -139,12 +145,14 @@ export default function EnrollPage() {
             placeholder="Country"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
           />
-          <input
-            value={requestForm.clubName}
-            onChange={(e) => setRequestForm((prev) => ({ ...prev, clubName: e.target.value }))}
-            placeholder="Club"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
-          />
+          {!inheritsClubFromScreen ? (
+            <input
+              value={requestForm.clubName}
+              onChange={(e) => setRequestForm((prev) => ({ ...prev, clubName: e.target.value }))}
+              placeholder="Club"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
+            />
+          ) : null}
           <input
             value={requestForm.mobile}
             onChange={(e) => setRequestForm((prev) => ({ ...prev, mobile: e.target.value }))}
@@ -163,7 +171,7 @@ export default function EnrollPage() {
               busy ||
               !requestForm.displayName.trim() ||
               !requestForm.country.trim() ||
-              !requestForm.clubName.trim() ||
+              (!inheritsClubFromScreen && !requestForm.clubName.trim()) ||
               !requestForm.email.trim()
             }
             onClick={() => void submitEnrollmentRequest()}

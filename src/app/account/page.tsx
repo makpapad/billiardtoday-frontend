@@ -169,6 +169,7 @@ export default function AccountPage() {
             <div className="min-w-0">
               <h3 className="text-xl font-semibold text-slate-950">
                 {playerCard?.displayName ||
+                  account.fullName ||
                   playerCard?.fullName ||
                   account.player?.fullName ||
                   account.enrollmentRequest?.displayName ||
@@ -176,6 +177,10 @@ export default function AccountPage() {
                   "Player account"}
               </h3>
               <div className="mt-2 space-y-1 text-sm text-slate-600">
+                {account.player?.documentId && playerCard?.officialPlayerName ? (
+                  <div>Official player name: {playerCard.officialPlayerName}</div>
+                ) : null}
+                {account.fullName ? <div>Private nickname: {account.fullName}</div> : null}
                 <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
                 <div>Official player ID: {playerCard?.documentId || account.player?.documentId || "Not verified yet"}</div>
                 <div>Account email: {account.email || "Not available"}</div>

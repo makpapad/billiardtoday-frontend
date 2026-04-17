@@ -16,9 +16,11 @@ import {
 export default function AccountSecurityPage() {
   const { account, setAccount, isLoading } = useAccountSession();
   const [security, setSecurity] = React.useState<PlayerAccountSecurity | null>(null);
+  const [nickname, setNickname] = React.useState("");
   const [mobile, setMobile] = React.useState("");
   const [code, setCode] = React.useState("");
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isSavingProfile, setIsSavingProfile] = React.useState(false);
   const [isStarting, setIsStarting] = React.useState(false);
   const [isCompleting, setIsCompleting] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -33,6 +35,7 @@ export default function AccountSecurityPage() {
       if (next.account && next.account.id !== account?.id) {
         setAccount(next.account);
       }
+      setNickname(next.account?.fullName || "");
       setMobile(next.phoneVerification.mobile || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Security data could not be loaded.");
@@ -115,6 +118,54 @@ export default function AccountSecurityPage() {
             </div>
           </div>
         </article>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5">
+        <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private nickname</div>
+        <h3 className="mt-2 text-xl font-semibold">Friendly and trusted-device name</h3>
+        <p className="mt-2 max-w-2xl text-sm text-slate-600">
+          This nickname is used only in your private account area, trusted-device pairing and future friendly match
+          labels. It does not rename your official BT Player profile.
+        </p>
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setNotice(null);
+            setError(null);
+            setIsSavingProfile(true);
+            try {
+              const updated = await playerAccountAuth.updateProfile({ fullName: nickname });
+              setAccount(updated);
+              setNickname(updated.fullName || "");
+              setNotice("Private nickname updated.");
+              await loadSecurity();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Nickname update failed.");
+            } finally {
+              setIsSavingProfile(false);
+            }
+          }}
+          className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto]"
+        >
+          <div>
+            <input
+              value={nickname}
+              onChange={(event) => setNickname(event.target.value)}
+              placeholder={account.player?.fullName || "Enter a private nickname"}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none"
+            />
+            <div className="mt-2 text-xs text-slate-500">
+              Leave it empty if you want private views to fall back to your official player name.
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={isSavingProfile}
+            className="rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSavingProfile ? "Saving..." : "Save nickname"}
+          </button>
+        </form>
       </section>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5">

@@ -457,7 +457,8 @@ export function PrivateAccountShell({
           <div>
             <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              {account.player?.fullName ||
+              {account.fullName ||
+                account.player?.fullName ||
                 account.enrollmentRequest?.displayName ||
                 account.enrollmentRequest?.fullName ||
                 account.email ||

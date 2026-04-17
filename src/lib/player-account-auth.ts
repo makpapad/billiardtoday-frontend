@@ -634,6 +634,27 @@ class PlayerAccountAuth {
     return json.data;
   }
 
+  async updateProfile(input: { fullName?: string | null }) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/profile", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as VerifyEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Profile update failed"));
+    }
+    this.account = json.data;
+    this.persist();
+    return json.data;
+  }
+
   async startPhoneVerification(mobile?: string | null) {
     this.hydrateFromStorage();
     if (!this.jwt) throw new Error("Not authenticated");
