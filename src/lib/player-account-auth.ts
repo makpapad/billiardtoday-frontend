@@ -280,6 +280,28 @@ type DeviceLinkEnvelope = {
   error?: string;
 };
 
+type TrustedDeviceRecoveryEnvelope = {
+  data?: {
+    deviceToken: string;
+    player: {
+      id?: number | null;
+      documentId?: string | null;
+      displayName?: string | null;
+      fullName?: string | null;
+      officialPlayerName?: string | null;
+      country?: string | null;
+      photoUrl?: string | null;
+      identityStatus?: string | null;
+      isTemporary?: boolean;
+      enrollmentRequestId?: string | null;
+      mobile?: string | null;
+      email?: string | null;
+    } | null;
+    account?: PlayerAccountSummary | null;
+  };
+  error?: string;
+};
+
 type AuthOptionsEnvelope = {
   data?: PlayerAccountAuthOptions;
   error?: string;
@@ -762,6 +784,34 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as DeviceLinkEnvelope | null;
     if (!res.ok || !json?.data || !("id" in json.data)) {
       throw new Error(extractErrorMessage(json, "Device link completion failed"));
+    }
+    return json.data;
+  }
+
+  async recoverTrustedDevice(input: {
+    deviceLabel?: string | null;
+    platform?: string | null;
+    browser?: string | null;
+    appVersion?: string | null;
+  }) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/device/recover", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as TrustedDeviceRecoveryEnvelope | null;
+    if (!res.ok || !json?.data?.deviceToken) {
+      throw new Error(extractErrorMessage(json, "Trusted device recovery failed"));
+    }
+    if (json.data.account) {
+      this.account = json.data.account;
+      this.persist();
     }
     return json.data;
   }

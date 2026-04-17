@@ -6,7 +6,10 @@ import {
   clearTrustedDeviceToken,
   getTrustedDevicePlayer,
   getTrustedDeviceToken,
+  setTrustedDevicePlayer,
+  setTrustedDeviceToken,
 } from "@/lib/trusted-device";
+import { playerAccountAuth } from "@/lib/player-account-auth";
 
 function extractErrorText(value: unknown): string {
   if (typeof value === "string") {
@@ -72,6 +75,22 @@ export default function ClaimPage() {
     );
   }, [nonce, screenId, slot]);
 
+  const recoverTrustedDevice = React.useCallback(async () => {
+    const recovered = await playerAccountAuth.recoverTrustedDevice({
+      deviceLabel: typeof window !== "undefined" ? window.navigator.userAgent.slice(0, 80) : "browser",
+      platform: typeof window !== "undefined" ? window.navigator.platform : "web",
+      browser: typeof window !== "undefined" ? window.navigator.userAgent : "web",
+    });
+
+    setTrustedDeviceToken(recovered.deviceToken);
+    if (recovered.player) {
+      setTrustedDevicePlayer(recovered.player);
+      setTrustedPlayerName(recovered.player.displayName ?? recovered.player.fullName ?? null);
+    }
+
+    return recovered.deviceToken;
+  }, []);
+
   React.useEffect(() => {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.displayName ?? trusted?.fullName ?? null);
@@ -122,6 +141,14 @@ export default function ClaimPage() {
       if (nonce && screenId) {
         if (deviceToken) {
           void claimWithToken(deviceToken);
+        } else if (playerAccountAuth.isAuthenticated()) {
+          setBusy(true);
+          setStatus("Recovering this phone as a trusted device for your linked account...");
+          void recoverTrustedDevice()
+            .then((recoveredToken) => claimWithToken(recoveredToken))
+            .catch(() => {
+              redirectToEnroll();
+            });
         } else if (typeof window !== "undefined") {
           redirectToEnroll();
         }
@@ -130,7 +157,7 @@ export default function ClaimPage() {
       setStatus(presentClaimError(err instanceof Error ? err.message : "Claim flow failed."));
       setBusy(false);
     }
-  }, [claimWithToken, nonce, presentClaimError, redirectToEnroll, screenId, slot]);
+  }, [claimWithToken, nonce, presentClaimError, recoverTrustedDevice, redirectToEnroll, screenId, slot]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1e293b,#020617_60%)] px-5 py-8 text-white">
