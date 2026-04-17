@@ -84,6 +84,7 @@ export default function PlayerEnrollmentRequestsAdminPage() {
   const [status, setStatus] = React.useState<string | null>(null);
   const [playerResults, setPlayerResults] = React.useState<Record<string, ExistingPlayer[]>>({});
   const [playerQuery, setPlayerQuery] = React.useState<Record<string, string>>({});
+  const [selectedPlayerByRequest, setSelectedPlayerByRequest] = React.useState<Record<string, ExistingPlayer | null>>({});
   const [methodByRequest, setMethodByRequest] = React.useState<Record<string, string>>({});
   const [notesByRequest, setNotesByRequest] = React.useState<Record<string, string>>({});
   const [clubByRequest, setClubByRequest] = React.useState<Record<string, string>>({});
@@ -147,6 +148,9 @@ export default function PlayerEnrollmentRequestsAdminPage() {
       return;
     }
     setStatus("Verification approved.");
+    setSelectedPlayerByRequest((prev) => ({ ...prev, [requestId]: null }));
+    setPlayerResults((prev) => ({ ...prev, [requestId]: [] }));
+    setPlayerQuery((prev) => ({ ...prev, [requestId]: "" }));
     await load();
   };
 
@@ -205,6 +209,7 @@ export default function PlayerEnrollmentRequestsAdminPage() {
                 const requestId = String(row.documentId || row.id || "");
                 const matches = playerResults[requestId] || [];
                 const history = historyByRequest[requestId] || [];
+                const selectedPlayer = selectedPlayerByRequest[requestId] || null;
 
                 return (
                   <div key={requestId} className="rounded-2xl border border-slate-200 p-5">
@@ -283,13 +288,31 @@ export default function PlayerEnrollmentRequestsAdminPage() {
                             <button
                               key={String(player.documentId || player.id)}
                               type="button"
-                              onClick={() => void approve(requestId, String(player.documentId || ""))}
-                              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm hover:bg-slate-100"
+                              onClick={() =>
+                                setSelectedPlayerByRequest((prev) => ({
+                                  ...prev,
+                                  [requestId]: player,
+                                }))
+                              }
+                              className={`w-full rounded-xl border px-3 py-3 text-left text-sm ${
+                                selectedPlayer?.documentId === player.documentId
+                                  ? "border-emerald-300 bg-emerald-50"
+                                  : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                              }`}
                             >
                               <div className="font-medium">{playerLabel(player)}</div>
                               <div className="text-slate-500">{player.country || "Unknown country"}</div>
                             </button>
                           ))}
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                          <div className="font-medium text-slate-900">Selected existing BT Player</div>
+                          <div className="mt-2">
+                            {selectedPlayer
+                              ? `${playerLabel(selectedPlayer)} (${selectedPlayer.country || "Unknown country"})`
+                              : "No player selected yet"}
+                          </div>
                         </div>
 
                         <input
@@ -317,6 +340,14 @@ export default function PlayerEnrollmentRequestsAdminPage() {
                         />
 
                         <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => void approve(requestId, String(selectedPlayer?.documentId || ""))}
+                            disabled={!selectedPlayer?.documentId}
+                            className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Approve selected BT Player
+                          </button>
                           <button
                             type="button"
                             onClick={() => void approve(requestId)}
