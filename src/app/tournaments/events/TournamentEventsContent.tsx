@@ -1703,10 +1703,19 @@ export function TournamentEventsContent({
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
 
-    return toRelationArray(eventData.data.timetable_slots)
+    const visibleSlots = toRelationArray(eventData.data.timetable_slots)
       .map((slot, index) => normalizeTimetableSlot(slot, `slot-${index}`))
-      .filter((slot) => slot.isVisible)
+      .filter((slot) => slot.isVisible);
+
+    const publicSlots = visibleSlots.some((slot) => slot.isPublished)
+      ? visibleSlots.filter((slot) => slot.isPublished)
+      : visibleSlots;
+
+    return publicSlots
       .sort((a, b) => {
+        const bySlot = compareOptionalNumbers(a.slotOrder, b.slotOrder);
+        if (bySlot !== 0) return bySlot;
+
         const aDateTime = a.dateTime ? Date.parse(a.dateTime) : Number.NaN;
         const bDateTime = b.dateTime ? Date.parse(b.dateTime) : Number.NaN;
         if (
@@ -1723,11 +1732,6 @@ export function TournamentEventsContent({
         }
         if (a.tableOrder !== null) return -1;
         if (b.tableOrder !== null) return 1;
-        if (a.slotOrder !== null && b.slotOrder !== null && a.slotOrder !== b.slotOrder) {
-          return a.slotOrder - b.slotOrder;
-        }
-        if (a.slotOrder !== null) return -1;
-        if (b.slotOrder !== null) return 1;
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);

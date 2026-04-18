@@ -3359,7 +3359,7 @@ export function TournamentDetailPage({
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
 
-    return toRelationArray(eventData.data.timetable_slots)
+    const visibleSlots = toRelationArray(eventData.data.timetable_slots)
       .map((slot, index) => {
         const normalized = normalizeEntity<any>(slot, `slot-${index}`);
         const stage = normalized.stage
@@ -3530,8 +3530,24 @@ export function TournamentDetailPage({
           matchDocumentId: match?.documentId ?? null,
         } satisfies NormalizedTimetableSlot;
       })
-      .filter((slot) => slot.isVisible)
+      .filter((slot) => slot.isVisible);
+
+    const publicSlots = visibleSlots.some((slot) => slot.isPublished)
+      ? visibleSlots.filter((slot) => slot.isPublished)
+      : visibleSlots;
+
+    return publicSlots
       .sort((a, b) => {
+        if (
+          a.slotOrder !== null &&
+          b.slotOrder !== null &&
+          a.slotOrder !== b.slotOrder
+        ) {
+          return a.slotOrder - b.slotOrder;
+        }
+        if (a.slotOrder !== null) return -1;
+        if (b.slotOrder !== null) return 1;
+
         const aHasCalendarInfo = Boolean(a.dateTime || a.date || a.time);
         const bHasCalendarInfo = Boolean(b.dateTime || b.date || b.time);
         if (aHasCalendarInfo !== bHasCalendarInfo) {
@@ -3548,20 +3564,6 @@ export function TournamentDetailPage({
         }
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         if (a.time !== b.time) return a.time.localeCompare(b.time);
-        if (a.matchNumber !== null && b.matchNumber !== null && a.matchNumber !== b.matchNumber) {
-          return a.matchNumber - b.matchNumber;
-        }
-        if (a.matchNumber !== null) return -1;
-        if (b.matchNumber !== null) return 1;
-        if (
-          a.slotOrder !== null &&
-          b.slotOrder !== null &&
-          a.slotOrder !== b.slotOrder
-        ) {
-          return a.slotOrder - b.slotOrder;
-        }
-        if (a.slotOrder !== null) return -1;
-        if (b.slotOrder !== null) return 1;
         if (
           a.tableOrder !== null &&
           b.tableOrder !== null &&
@@ -3576,6 +3578,11 @@ export function TournamentDetailPage({
             sortTableLabel(b.tableLabel),
           );
         }
+        if (a.matchNumber !== null && b.matchNumber !== null && a.matchNumber !== b.matchNumber) {
+          return a.matchNumber - b.matchNumber;
+        }
+        if (a.matchNumber !== null) return -1;
+        if (b.matchNumber !== null) return 1;
         return a.id.localeCompare(b.id);
       });
   }, [eventData, timetableTrainingPlayers]);
