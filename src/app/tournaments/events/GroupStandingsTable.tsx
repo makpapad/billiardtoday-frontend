@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { GroupStanding } from './types'
-import { formatNumberValue, formatAverage, formatRecord } from './utils'
+import { formatNumberValue, formatAverage, formatRecord, formatTruncatedNumber } from './utils'
 import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
 
 type GroupStandingsTableProps = {
@@ -87,7 +87,7 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                                 {formatAverage(player.totalPoints, player.totalInnings)}
                             </td>
                             <td className="px-2 py-2 text-center">
-                                {typeof player.bestAverage === 'number' ? player.bestAverage.toFixed(3) : '-'}
+                                {formatTruncatedNumber(player.bestAverage)}
                             </td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
                             {!artistic && (

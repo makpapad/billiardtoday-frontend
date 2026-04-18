@@ -356,10 +356,17 @@ export const formatAverage = (
   const result = points / innings;
   if (!Number.isFinite(result)) return "-";
   
-  // Truncate instead of round
-  const factor = Math.pow(10, 3);
-  const truncated = Math.floor(result * factor) / factor;
-  return truncated.toFixed(3);
+  return formatTruncatedNumber(result, 3);
+};
+
+export const formatTruncatedNumber = (
+  value: number | null,
+  digits = 3,
+): string => {
+  if (value === null || Number.isNaN(value)) return "-";
+  const factor = Math.pow(10, digits);
+  const truncated = Math.trunc(value * factor) / factor;
+  return truncated.toFixed(digits);
 };
 
 export const formatOutcomeLabel = (outcome: "W" | "L" | "D" | null): string => {
