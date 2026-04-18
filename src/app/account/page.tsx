@@ -244,8 +244,10 @@ export default function AccountPage() {
                               setIsEditingNickname(false);
                             }}
                             className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label="Cancel private nickname edit"
+                            title="Cancel private nickname edit"
                           >
-                            Cancel
+                            ✖️
                           </button>
                         </form>
                       ) : (
