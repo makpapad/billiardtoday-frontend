@@ -30,6 +30,11 @@ export default function AccountPage() {
   const [dataError, setDataError] = React.useState<string | null>(null);
   const [deviceLink, setDeviceLink] = React.useState<{ linkUrl: string; expiresAt: string | null } | null>(null);
   const [isPreparingDeviceLink, setIsPreparingDeviceLink] = React.useState(false);
+  const [nicknameDraft, setNicknameDraft] = React.useState("");
+  const [isEditingNickname, setIsEditingNickname] = React.useState(false);
+  const [isSavingNickname, setIsSavingNickname] = React.useState(false);
+  const [nicknameError, setNicknameError] = React.useState<string | null>(null);
+  const [nicknameNotice, setNicknameNotice] = React.useState<string | null>(null);
 
   const loadPrivateData = React.useCallback(async () => {
     setIsRefreshingData(true);
@@ -56,6 +61,10 @@ export default function AccountPage() {
     if (!account) return;
     void loadPrivateData();
   }, [account, loadPrivateData]);
+
+  React.useEffect(() => {
+    setNicknameDraft(account?.fullName || "");
+  }, [account?.fullName]);
 
   React.useEffect(() => {
     if (!account || account.player?.documentId) {
@@ -92,6 +101,7 @@ export default function AccountPage() {
     Boolean(dashboard?.visibility?.officialSectionsEnabled) ||
     Boolean(account?.isOfficiallyVerified) ||
     account?.status === "active_linked";
+  const privateNicknameLabel = account?.fullName || "No private nickname set";
 
   if (isLoading) {
     return (
@@ -180,7 +190,88 @@ export default function AccountPage() {
                 {account.player?.documentId && playerCard?.officialPlayerName ? (
                   <div>Official player name: {playerCard.officialPlayerName}</div>
                 ) : null}
-                {account.fullName ? <div>Private nickname: {account.fullName}</div> : null}
+                <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Private nickname</div>
+                      {isEditingNickname ? (
+                        <form
+                          onSubmit={async (event) => {
+                            event.preventDefault();
+                            setNicknameError(null);
+                            setNicknameNotice(null);
+                            setIsSavingNickname(true);
+                            try {
+                              const updated = await playerAccountAuth.updateProfile({
+                                fullName: nicknameDraft,
+                              });
+                              setAccount(updated);
+                              setNicknameDraft(updated.fullName || "");
+                              setIsEditingNickname(false);
+                              setNicknameNotice("Private nickname updated.");
+                            } catch (err) {
+                              setNicknameError(
+                                err instanceof Error ? err.message : "Nickname update failed.",
+                              );
+                            } finally {
+                              setIsSavingNickname(false);
+                            }
+                          }}
+                          className="mt-2 flex flex-wrap items-center gap-2"
+                        >
+                          <input
+                            value={nicknameDraft}
+                            onChange={(event) => setNicknameDraft(event.target.value)}
+                            placeholder={account.player?.fullName || "Enter a private nickname"}
+                            className="min-w-[220px] flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSavingNickname}
+                            className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isSavingNickname ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSavingNickname}
+                            onClick={() => {
+                              setNicknameDraft(account.fullName || "");
+                              setNicknameError(null);
+                              setNicknameNotice(null);
+                              setIsEditingNickname(false);
+                            }}
+                            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="mt-1 font-medium text-slate-900">{privateNicknameLabel}</div>
+                      )}
+                      {nicknameError ? (
+                        <div className="mt-2 text-xs text-red-600">{nicknameError}</div>
+                      ) : null}
+                      {nicknameNotice ? (
+                        <div className="mt-2 text-xs text-emerald-700">{nicknameNotice}</div>
+                      ) : null}
+                    </div>
+                    {!isEditingNickname ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNicknameDraft(account.fullName || "");
+                          setNicknameError(null);
+                          setNicknameNotice(null);
+                          setIsEditingNickname(true);
+                        }}
+                        className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
                 <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
                 <div>Official player ID: {playerCard?.documentId || account.player?.documentId || "Not verified yet"}</div>
                 <div>Account email: {account.email || "Not available"}</div>
