@@ -950,7 +950,7 @@ function StageRankingTable({
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
-    if (stageMatchGroups.length > 0) {
+    if (stageMatchGroups.length === 1) {
       const computedResults = stageMatchGroups.flatMap((group) =>
         buildGroupStandings(group.matches, { artistic }).map((standing) => ({
           id: `computed:${group.key}:${standing.key}`,
