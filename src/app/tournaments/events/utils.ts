@@ -404,6 +404,8 @@ export const buildGroupStandings = (
   options?: { artistic?: boolean },
 ): GroupStanding[] => {
   const artistic = options?.artistic === true;
+  const truncateTo3Decimals = (value: number): number =>
+    Math.trunc(value * 1000) / 1000;
   if (!matches.some(hasPlayedStageMatch)) {
     return [];
   }
@@ -447,16 +449,16 @@ export const buildGroupStandings = (
           typeof entry.player.points === "number" &&
           typeof entry.player.innings === "number" &&
           entry.player.innings > 0
-            ? entry.player.points / entry.player.innings
+            ? truncateTo3Decimals(entry.player.points / entry.player.innings)
             : null;
         const bestAverageCandidate =
           artistic
             ? entryAverage
-            : entry.outcome === "W" &&
+            : (entry.outcome === "W" || entry.outcome === "D") &&
           typeof entry.player.points === "number" &&
           typeof entry.player.innings === "number" &&
           entry.player.innings > 0
-            ? entry.player.points / entry.player.innings
+            ? truncateTo3Decimals(entry.player.points / entry.player.innings)
             : null;
         acc[key] = {
           ...current,
@@ -486,7 +488,7 @@ export const buildGroupStandings = (
   const standings = Object.values(players).map((standing) => {
     const averageValue =
       standing.totalInnings > 0
-        ? standing.totalPoints / standing.totalInnings
+        ? truncateTo3Decimals(standing.totalPoints / standing.totalInnings)
         : null;
     const bestAverageValue = standing.bestAverage;
     const bestHighRun = standing.highRun;
