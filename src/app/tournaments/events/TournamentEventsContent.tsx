@@ -948,14 +948,42 @@ function StageRankingTable({
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
 }) {
-  const visibleResults = stage.results.filter(hasMeaningfulStageResult);
+  const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  const visibleResults = useMemo<NormalizedStageResult[]>(() => {
+    if (stageMatchGroups.length > 0) {
+      const computedResults = stageMatchGroups.flatMap((group) =>
+        buildGroupStandings(group.matches, { artistic }).map((standing) => ({
+          id: `computed:${group.key}:${standing.key}`,
+          documentId: `computed:${group.key}:${standing.key}`,
+          playerId: standing.playerId,
+          playerDocumentId: null,
+          playerName: standing.playerName,
+          playerNativeName: standing.playerNativeName,
+          playerCountry: standing.playerCountry,
+          matchPoints: standing.totalMatchPoints,
+          points: standing.totalPoints,
+          innings: standing.totalInnings,
+          bestAverage: standing.bestAverage,
+          highRun: standing.highRun,
+          groupNumber: group.number,
+          groupPosition: standing.place,
+          finalPosition: null,
+        })),
+      );
+
+      if (computedResults.length > 0) {
+        return computedResults;
+      }
+    }
+
+    return stage.results.filter(hasMeaningfulStageResult);
+  }, [artistic, stage.results, stageMatchGroups]);
   const showGroupColumn = visibleResults.some(
     (result) => result.groupNumber !== null,
   );
   const showGroupPositionColumn = visibleResults.some(
     (result) => result.groupPosition !== null,
   );
-  const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const playerProgressByGroupKey = new Map<
     string,
     { played: number; total: number; complete: boolean }
