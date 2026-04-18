@@ -229,8 +229,10 @@ export default function AccountPage() {
                             type="submit"
                             disabled={isSavingNickname}
                             className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label={isSavingNickname ? "Saving private nickname" : "Save private nickname"}
+                            title={isSavingNickname ? "Saving private nickname" : "Save private nickname"}
                           >
-                            {isSavingNickname ? "Saving..." : "Save"}
+                            {isSavingNickname ? "⏳" : "💾"}
                           </button>
                           <button
                             type="button"
@@ -266,8 +268,10 @@ export default function AccountPage() {
                           setIsEditingNickname(true);
                         }}
                         className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
+                        aria-label="Edit private nickname"
+                        title="Edit private nickname"
                       >
-                        Edit
+                        ✏️
                       </button>
                     ) : null}
                   </div>
