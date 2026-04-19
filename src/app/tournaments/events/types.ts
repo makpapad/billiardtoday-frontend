@@ -124,6 +124,7 @@ export type StrapiEvent = {
   end_date?: string | null;
   timetable_config?: TimetableConfig | null;
   gallery_images?: unknown;
+  gallery_video_files?: unknown;
   gallery_videos?: unknown;
   gallery_sections?: unknown;
   players?: unknown;

@@ -345,6 +345,7 @@ export async function GET(
             queryParams.set('fields[6]', 'game_type')
             queryParams.set('fields[7]', 'gallery_videos')
             queryParams.set('fields[8]', 'gallery_sections')
+            queryParams.set('fields[9]', 'gallery_video_files')
 
             queryParams.set('populate[gallery_images][fields][0]', 'name')
             queryParams.set('populate[gallery_images][fields][1]', 'url')
@@ -352,6 +353,14 @@ export async function GET(
             queryParams.set('populate[gallery_images][fields][3]', 'caption')
             queryParams.set('populate[gallery_images][fields][4]', 'formats')
             queryParams.set('populate[gallery_images][fields][5]', 'documentId')
+            queryParams.set('populate[gallery_images][fields][6]', 'mime')
+
+            queryParams.set('populate[gallery_video_files][fields][0]', 'name')
+            queryParams.set('populate[gallery_video_files][fields][1]', 'url')
+            queryParams.set('populate[gallery_video_files][fields][2]', 'alternativeText')
+            queryParams.set('populate[gallery_video_files][fields][3]', 'caption')
+            queryParams.set('populate[gallery_video_files][fields][4]', 'documentId')
+            queryParams.set('populate[gallery_video_files][fields][5]', 'mime')
 
             return queryParams
         }

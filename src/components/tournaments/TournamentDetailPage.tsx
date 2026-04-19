@@ -81,6 +81,7 @@ type TournamentGalleryImage = {
   name: string;
   alt: string | null;
   caption: string | null;
+  capturedAt: string | null;
   previewUrl: string | null;
   originalUrl: string | null;
 };
@@ -88,8 +89,20 @@ type TournamentGalleryImage = {
 type TournamentGallerySectionVideo = {
   id: string;
   title: string;
+  kind: "youtube" | "upload";
   youtubeUrl: string | null;
-  videoId: string;
+  videoId: string | null;
+  mediaId: number | null;
+  fileUrl: string | null;
+  fileName: string | null;
+};
+
+type TournamentGalleryVideoFile = {
+  id: string;
+  mediaId: number | null;
+  name: string;
+  fileUrl: string | null;
+  mime: string | null;
 };
 
 type TournamentGallerySection = {
@@ -101,6 +114,82 @@ type TournamentGallerySection = {
 };
 
 const GENERAL_SECTION_KEY = "general";
+
+const normalizeGalleryVideoEntries = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const mediaId =
+        toNumber(record.mediaId) ??
+        toNumber(record.videoMediaId) ??
+        toNumber(record.fileId);
+      const youtubeUrl =
+        typeof record.youtubeUrl === "string" && record.youtubeUrl.trim()
+          ? record.youtubeUrl.trim()
+          : typeof record.url === "string" && record.url.trim()
+            ? record.url.trim()
+            : null;
+      const title =
+        typeof record.title === "string" && record.title.trim()
+          ? record.title.trim()
+          : typeof record.label === "string" && record.label.trim()
+            ? record.label.trim()
+            : "";
+
+      if (mediaId !== null) {
+        return {
+          id:
+            typeof record.id === "string" && record.id.trim()
+              ? record.id.trim()
+              : `gallery-upload-${index + 1}`,
+          title,
+          kind: "upload" as const,
+          mediaId,
+          youtubeUrl: null,
+        };
+      }
+
+      const normalizedYoutube = normalizeLiveVideoEntries([record])[0] ?? null;
+      if (!normalizedYoutube || !normalizedYoutube.videoId) return null;
+
+      return {
+        id:
+          typeof record.id === "string" && record.id.trim()
+            ? record.id.trim()
+            : normalizedYoutube.id,
+        title: title || normalizedYoutube.title || normalizedYoutube.label || "",
+        kind: "youtube" as const,
+        mediaId: null,
+        youtubeUrl: youtubeUrl ?? normalizedYoutube.youtubeUrl ?? null,
+        videoId: normalizedYoutube.videoId,
+      };
+    })
+    .filter(Boolean) as Array<{
+    id: string;
+    title: string;
+    kind: "youtube" | "upload";
+    mediaId: number | null;
+    youtubeUrl: string | null;
+    videoId?: string;
+  }>;
+};
+
+const formatGalleryCapturedAt = (value: string | null): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
 
 type WsTournamentPayload = {
   type?: string;
@@ -3655,6 +3744,7 @@ export function TournamentDetailPage({
             typeof normalized.caption === "string" && normalized.caption.trim()
               ? normalized.caption.trim()
               : null,
+          capturedAt: null,
           previewUrl: previewUrl ?? originalUrl,
           originalUrl,
         } satisfies TournamentGalleryImage;
@@ -3662,8 +3752,35 @@ export function TournamentDetailPage({
       .filter((image) => Boolean(image.originalUrl));
   }, [eventData]);
 
+  const galleryVideoFiles = useMemo<TournamentGalleryVideoFile[]>(() => {
+    if (!eventData?.data?.gallery_video_files) return [];
+
+    return toRelationArray(eventData.data.gallery_video_files)
+      .map((video, index) => {
+        const normalized = normalizeEntity<any>(video, `gallery-video-${index}`);
+        const mediaId = toNumber(
+          (video as { id?: unknown } | null)?.id ?? normalized.id,
+        );
+        const fileUrl = normalizeMediaUrl(normalized);
+
+        return {
+          id: normalized.id,
+          mediaId,
+          name:
+            typeof normalized.name === "string" && normalized.name.trim()
+              ? normalized.name.trim()
+              : `Video ${index + 1}`,
+          fileUrl,
+          mime:
+            typeof normalized.mime === "string" && normalized.mime.trim()
+              ? normalized.mime.trim()
+              : null,
+        } satisfies TournamentGalleryVideoFile;
+      })
+      .filter((video) => Boolean(video.fileUrl));
+  }, [eventData]);
   const galleryVideos = useMemo(
-    () => normalizeLiveVideoEntries(eventData?.data?.gallery_videos ?? []),
+    () => normalizeGalleryVideoEntries(eventData?.data?.gallery_videos ?? []),
     [eventData],
   );
   const gallerySections = useMemo<TournamentGallerySection[]>(() => {
@@ -3671,6 +3788,12 @@ export function TournamentDetailPage({
     galleryImages.forEach((image) => {
       if (typeof image.mediaId === "number" && Number.isFinite(image.mediaId)) {
         imageByMediaId.set(image.mediaId, image);
+      }
+    });
+    const videoByMediaId = new Map<number, TournamentGalleryVideoFile>();
+    galleryVideoFiles.forEach((video) => {
+      if (typeof video.mediaId === "number" && Number.isFinite(video.mediaId)) {
+        videoByMediaId.set(video.mediaId, video);
       }
     });
 
@@ -3689,20 +3812,96 @@ export function TournamentDetailPage({
           section.stageDocumentId.trim()
             ? section.stageDocumentId.trim()
             : null;
-        const imageIds = Array.isArray(section.imageIds)
-          ? section.imageIds
-              .map((value) => toNumber(value))
-              .filter((value): value is number => value !== null)
+        const imageEntries = Array.isArray(section.images)
+          ? section.images
           : [];
-        const images = imageIds
-          .map((imageId) => imageByMediaId.get(imageId) ?? null)
-          .filter((image): image is TournamentGalleryImage => Boolean(image));
-        const videos = normalizeLiveVideoEntries(section.videos ?? []).map((video) => ({
-          id: video.id,
-          title: video.title || video.label || "Tournament video",
-          youtubeUrl: video.youtubeUrl,
-          videoId: video.videoId,
-        }));
+        const images =
+          imageEntries.length > 0
+            ? imageEntries
+                .map((entry, imageIndex) => {
+                  if (!entry || typeof entry !== "object") return null;
+                  const record = entry as Record<string, unknown>;
+                  const mediaId = toNumber(record.mediaId);
+                  if (mediaId === null) return null;
+                  const baseImage = imageByMediaId.get(mediaId) ?? null;
+                  if (!baseImage) return null;
+                  const title =
+                    typeof record.title === "string" && record.title.trim()
+                      ? record.title.trim()
+                      : baseImage.name;
+                  const altText =
+                    typeof record.altText === "string" && record.altText.trim()
+                      ? record.altText.trim()
+                      : typeof record.alternativeText === "string" &&
+                          record.alternativeText.trim()
+                        ? record.alternativeText.trim()
+                        : baseImage.alt;
+                  const caption =
+                    typeof record.caption === "string" && record.caption.trim()
+                      ? record.caption.trim()
+                      : baseImage.caption;
+                  const capturedAt =
+                    typeof record.capturedAt === "string" && record.capturedAt.trim()
+                      ? record.capturedAt.trim()
+                      : typeof record.dateTaken === "string" &&
+                          record.dateTaken.trim()
+                        ? record.dateTaken.trim()
+                        : null;
+
+                  return {
+                    ...baseImage,
+                    id:
+                      typeof record.id === "string" && record.id.trim()
+                        ? record.id.trim()
+                        : `${baseImage.id}-${imageIndex + 1}`,
+                    name: title,
+                    alt: altText,
+                    caption,
+                    capturedAt,
+                  } satisfies TournamentGalleryImage;
+                })
+                .filter((image): image is TournamentGalleryImage => Boolean(image))
+            : (Array.isArray(section.imageIds)
+                ? section.imageIds
+                    .map((value) => toNumber(value))
+                    .filter((value): value is number => value !== null)
+                    .map((imageId) => imageByMediaId.get(imageId) ?? null)
+                    .filter((image): image is TournamentGalleryImage => Boolean(image))
+                : []);
+        const videos = normalizeGalleryVideoEntries(section.videos ?? []).reduce<
+          TournamentGallerySectionVideo[]
+        >((accumulator, video) => {
+          if (video.kind === "upload" && video.mediaId !== null) {
+            const uploadedVideo = videoByMediaId.get(video.mediaId) ?? null;
+            if (!uploadedVideo?.fileUrl) return accumulator;
+            accumulator.push({
+              id: video.id,
+              title: video.title || uploadedVideo.name || "Tournament video",
+              kind: "upload",
+              youtubeUrl: null,
+              videoId: null,
+              mediaId: video.mediaId,
+              fileUrl: uploadedVideo.fileUrl,
+              fileName: uploadedVideo.name,
+            });
+            return accumulator;
+          }
+
+          if (video.kind === "youtube" && video.videoId) {
+            accumulator.push({
+              id: video.id,
+              title: video.title || "Tournament video",
+              kind: "youtube",
+              youtubeUrl: video.youtubeUrl,
+              videoId: video.videoId,
+              mediaId: null,
+              fileUrl: null,
+              fileName: null,
+            });
+          }
+
+          return accumulator;
+        }, []);
         return {
           key:
             typeof section.key === "string" && section.key.trim()
@@ -3724,15 +3923,33 @@ export function TournamentDetailPage({
         title: "General",
         stageDocumentId: null,
         images: galleryImages.slice().reverse(),
-        videos: galleryVideos.map((video) => ({
-          id: video.id,
-          title: video.title || video.label || "Tournament video",
-          youtubeUrl: video.youtubeUrl,
-          videoId: video.videoId,
-        })),
+        videos: [
+          ...galleryVideoFiles.map((video) => ({
+            id: `upload-${video.id}`,
+            title: video.name || "Tournament video",
+            kind: "upload" as const,
+            youtubeUrl: null,
+            videoId: null,
+            mediaId: video.mediaId,
+            fileUrl: video.fileUrl,
+            fileName: video.name,
+          })),
+          ...galleryVideos
+            .filter((video) => video.kind === "youtube" && video.videoId)
+            .map((video) => ({
+              id: video.id,
+              title: video.title || "Tournament video",
+              kind: "youtube" as const,
+              youtubeUrl: video.youtubeUrl,
+              videoId: video.videoId ?? null,
+              mediaId: null,
+              fileUrl: null,
+              fileName: null,
+            })),
+        ],
       },
     ].filter((section) => section.images.length > 0 || section.videos.length > 0);
-  }, [eventData, galleryImages, galleryVideos]);
+  }, [eventData, galleryImages, galleryVideoFiles, galleryVideos]);
   const flatGalleryImages = useMemo(
     () =>
       gallerySections.flatMap((section) =>
@@ -4765,22 +4982,38 @@ export function TournamentDetailPage({
                         className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm"
                       >
                         <div className="aspect-video bg-slate-950">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
-                            title={video.title || `Tournament video ${index + 1}`}
-                            className="h-full w-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                          />
+                          {video.kind === "youtube" && video.videoId ? (
+                            <iframe
+                              src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
+                              title={video.title || `Tournament video ${index + 1}`}
+                              className="h-full w-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            />
+                          ) : video.fileUrl ? (
+                            <video
+                              src={video.fileUrl}
+                              controls
+                              playsInline
+                              preload="metadata"
+                              className="h-full w-full"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                              Video unavailable
+                            </div>
+                          )}
                         </div>
                         <div className="space-y-2 px-5 py-4">
                           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Video {index + 1}
+                            {video.kind === "youtube"
+                              ? `YouTube video ${index + 1}`
+                              : `Uploaded video ${index + 1}`}
                           </div>
                           <div className="text-base font-bold text-slate-950">
                             {video.title || "Tournament video"}
                           </div>
-                          {video.youtubeUrl ? (
+                          {video.kind === "youtube" && video.youtubeUrl ? (
                             <a
                               href={video.youtubeUrl}
                               target="_blank"
@@ -4788,6 +5021,15 @@ export function TournamentDetailPage({
                               className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
                             >
                               Open on YouTube
+                            </a>
+                          ) : video.kind === "upload" && video.fileUrl ? (
+                            <a
+                              href={video.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+                            >
+                              Open video file
                             </a>
                           ) : null}
                         </div>
@@ -4837,6 +5079,11 @@ export function TournamentDetailPage({
                             <div className="line-clamp-2 text-base font-bold text-slate-950">
                               {image.caption || image.alt || image.name}
                             </div>
+                            {image.capturedAt ? (
+                              <div className="text-xs font-medium text-slate-500">
+                                {formatGalleryCapturedAt(image.capturedAt) || image.capturedAt}
+                              </div>
+                            ) : null}
                             <div className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
                               View fullscreen
                             </div>
@@ -4869,6 +5116,12 @@ export function TournamentDetailPage({
                       selectedGalleryImage.alt ||
                       selectedGalleryImage.name}
                   </div>
+                  {selectedGalleryImage.capturedAt ? (
+                    <div className="mt-1 text-xs font-medium text-white/55">
+                      {formatGalleryCapturedAt(selectedGalleryImage.capturedAt) ||
+                        selectedGalleryImage.capturedAt}
+                    </div>
+                  ) : null}
                 </div>
                 <button
                   type="button"
