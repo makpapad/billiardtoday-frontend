@@ -468,8 +468,11 @@ function findRankingMetricTooltipData(
   return candidates[0] ?? null;
 }
 
-function renderRankingMetricTooltipCard(tooltip: RankingMetricTooltipData) {
-  const renderPlayerRow = (
+function renderRankingMetricTooltipCard(
+  tooltip: RankingMetricTooltipData,
+  align: "center" | "right" = "center",
+) {
+  const renderPlayerPanel = (
     side: "top" | "bottom",
     player: RankingMetricTooltipPlayer,
   ) => {
@@ -477,63 +480,124 @@ function renderRankingMetricTooltipCard(tooltip: RankingMetricTooltipData) {
       tooltip.focusMetric === "bestAverage" && tooltip.focusSide === side;
     const highlightHr =
       tooltip.focusMetric === "highRun" && tooltip.focusSide === side;
+    const focusHighlighted =
+      tooltip.focusMetric === "bestAverage" ? highlightAvg : highlightHr;
 
     return (
-      <div className="grid grid-cols-[minmax(120px,1fr)_48px_48px_60px_44px] items-center gap-x-2">
-        <div className="truncate font-medium text-white">{player.name}</div>
-        <div className="text-right text-slate-200">
-          {formatNumberValue(player.points)}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+        <div className="text-center">
+          <div className="text-3xl font-black leading-none text-white">
+            {formatNumberValue(player.points)}
+          </div>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-slate-500">
+            Points
+          </div>
         </div>
-        <div className="text-right text-slate-200">
-          {formatNumberValue(player.innings)}
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-slate-950/80 px-2 py-2">
+            <div className="text-[10px] uppercase tracking-wide text-slate-500">
+              Inn
+            </div>
+            <div className="mt-1 text-sm font-semibold text-slate-200">
+              {formatNumberValue(player.innings)}
+            </div>
+          </div>
+          <div
+            className={clsx(
+              "rounded-lg px-2 py-2",
+              highlightAvg
+                ? "bg-orange-500/20 ring-1 ring-orange-400/60"
+                : "bg-slate-950/80",
+            )}
+          >
+            <div
+              className={clsx(
+                "text-[10px] uppercase tracking-wide",
+                highlightAvg ? "text-orange-200" : "text-slate-500",
+              )}
+            >
+              AVG
+            </div>
+            <div
+              className={clsx(
+                "mt-1 text-sm font-semibold",
+                highlightAvg ? "text-orange-100" : "text-slate-200",
+              )}
+            >
+              {formatTruncatedAverage(player.average)}
+            </div>
+          </div>
+          <div
+            className={clsx(
+              "rounded-lg px-2 py-2",
+              highlightHr
+                ? "bg-orange-500/20 ring-1 ring-orange-400/60"
+                : "bg-slate-950/80",
+            )}
+          >
+            <div
+              className={clsx(
+                "text-[10px] uppercase tracking-wide",
+                highlightHr ? "text-orange-200" : "text-slate-500",
+              )}
+            >
+              H.R.
+            </div>
+            <div
+              className={clsx(
+                "mt-1 text-sm font-semibold",
+                highlightHr ? "text-orange-100" : "text-slate-200",
+              )}
+            >
+              {formatNumberValue(player.highRun)}
+            </div>
+          </div>
         </div>
-        <div
-          className={clsx(
-            "text-right text-slate-200",
-            highlightAvg && "font-extrabold text-orange-300",
-          )}
-        >
-          {formatTruncatedAverage(player.average)}
-        </div>
-        <div
-          className={clsx(
-            "text-right text-slate-200",
-            highlightHr && "font-extrabold text-orange-300",
-          )}
-        >
-          {formatNumberValue(player.highRun)}
+        <div className="mt-3 flex justify-center">
+          <div
+            className={clsx(
+              "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold",
+              focusHighlighted
+                ? "bg-orange-500 text-white"
+                : "bg-slate-800 text-slate-300",
+            )}
+          >
+            {tooltip.focusMetric === "bestAverage"
+              ? `AVG ${formatTruncatedAverage(player.average)}`
+              : `H.R. ${formatNumberValue(player.highRun)}`}
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[22rem] -translate-x-1/2 rounded-xl border border-slate-700 bg-slate-950/95 p-3 text-xs text-white shadow-2xl group-hover/ranking-metric:block">
-      <span className="block text-center text-sm font-semibold text-white">
+    <div
+      className={clsx(
+        "pointer-events-none absolute top-full z-30 mt-2 hidden w-[24rem] rounded-xl border border-slate-700 bg-slate-950/95 p-3 text-xs text-white shadow-2xl group-hover/ranking-metric:block",
+        align === "right"
+          ? "right-0"
+          : "left-1/2 -translate-x-1/2",
+      )}
+    >
+      <div className="text-center text-sm font-semibold text-white">
         {tooltip.top.name} VS {tooltip.bottom.name}
-      </span>
+      </div>
       {(tooltip.stageTitle || tooltip.matchNumber !== null) && (
-        <span className="mt-1 block text-center text-[11px] text-slate-400">
+        <div className="mt-1 text-center text-[11px] text-slate-400">
           {[
             tooltip.stageTitle,
             tooltip.matchNumber !== null ? `Match ${tooltip.matchNumber}` : null,
           ]
             .filter(Boolean)
             .join(" · ")}
-        </span>
+        </div>
       )}
-      <span className="mt-3 grid grid-cols-[minmax(120px,1fr)_48px_48px_60px_44px] gap-x-2 text-[10px] uppercase tracking-wide text-slate-400">
-        <span>Player</span>
-        <span className="text-right">Pts</span>
-        <span className="text-right">Inn</span>
-        <span className="text-right">AVG</span>
-        <span className="text-right">H.R.</span>
-      </span>
-      <span className="mt-2 block space-y-1">
-        {renderPlayerRow("top", tooltip.top)}
-        {renderPlayerRow("bottom", tooltip.bottom)}
-      </span>
-    </span>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        {renderPlayerPanel("top", tooltip.top)}
+        {renderPlayerPanel("bottom", tooltip.bottom)}
+      </div>
+    </div>
   );
 }
 
@@ -541,6 +605,7 @@ function renderRankingMetricBadge(
   value: string,
   highlighted: boolean,
   tooltip?: RankingMetricTooltipData | null,
+  tooltipAlign: "center" | "right" = "center",
 ) {
   if (!highlighted || value === "-") return value;
 
@@ -557,7 +622,7 @@ function renderRankingMetricBadge(
   return (
     <span className="group/ranking-metric relative inline-flex cursor-help">
       {badge}
-      {renderRankingMetricTooltipCard(tooltip)}
+      {renderRankingMetricTooltipCard(tooltip, tooltipAlign)}
     </span>
   );
 }
@@ -1515,6 +1580,7 @@ function StageRankingTable({
                       bestAverageDisplay,
                       highlightBestAverage,
                       metricTooltip?.bestAverage ?? null,
+                      "right",
                     )}
                   </td>
                 )}
@@ -3410,6 +3476,7 @@ export function TournamentEventsContent({
                                         bestAverageDisplay,
                                         highlightBestAverage,
                                         metricTooltip?.bestAverage ?? null,
+                                        "right",
                                       )}
                                     </td>
                                   )}
