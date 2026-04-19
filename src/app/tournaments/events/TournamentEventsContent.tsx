@@ -490,13 +490,13 @@ function renderRankingMetricTooltipCard(
           <div className="text-3xl font-black leading-none text-white">
             {formatNumberValue(player.points)}
           </div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-slate-500">
+          <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-slate-300">
             Points
           </div>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-slate-950/80 px-2 py-2">
-            <div className="text-[10px] uppercase tracking-wide text-slate-500">
+            <div className="text-[10px] uppercase tracking-wide text-slate-300">
               Inn
             </div>
             <div className="mt-1 text-sm font-semibold text-slate-200">
@@ -507,14 +507,14 @@ function renderRankingMetricTooltipCard(
             className={clsx(
               "rounded-lg px-2 py-2",
               highlightAvg
-                ? "bg-orange-500/20 ring-1 ring-orange-400/60"
+                ? "bg-orange-500/55 ring-1 ring-orange-300"
                 : "bg-slate-950/80",
             )}
           >
             <div
               className={clsx(
                 "text-[10px] uppercase tracking-wide",
-                highlightAvg ? "text-orange-200" : "text-slate-500",
+                highlightAvg ? "text-white" : "text-slate-300",
               )}
             >
               AVG
@@ -532,14 +532,14 @@ function renderRankingMetricTooltipCard(
             className={clsx(
               "rounded-lg px-2 py-2",
               highlightHr
-                ? "bg-orange-500/20 ring-1 ring-orange-400/60"
+                ? "bg-orange-500/55 ring-1 ring-orange-300"
                 : "bg-slate-950/80",
             )}
           >
             <div
               className={clsx(
                 "text-[10px] uppercase tracking-wide",
-                highlightHr ? "text-orange-200" : "text-slate-500",
+                highlightHr ? "text-white" : "text-slate-300",
               )}
             >
               H.R.
@@ -562,6 +562,7 @@ function renderRankingMetricTooltipCard(
     tooltip.groupNumber !== null
       ? formatGroupDisplayLabel(tooltip.groupNumber, groupLabelMode)
       : tooltip.stageTitle;
+  const subtitleLabel = tooltip.groupNumber !== null ? "Group:" : "Stage:";
 
   return (
     <div
@@ -576,13 +577,20 @@ function renderRankingMetricTooltipCard(
         {tooltip.top.name} VS {tooltip.bottom.name}
       </div>
       {(subtitle || tooltip.matchNumber !== null) && (
-        <div className="mt-1 text-center text-[11px] text-slate-400">
-          {[
-            subtitle,
-            tooltip.matchNumber !== null ? `Match ${tooltip.matchNumber}` : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+        <div className="mt-1 text-center text-[11px] text-slate-300">
+          {subtitle && (
+            <span>
+              <span className="font-semibold text-white/90">{subtitleLabel}</span>{" "}
+              {subtitle}
+            </span>
+          )}
+          {tooltip.matchNumber !== null && (
+            <span>
+              {subtitle ? " | " : ""}
+              <span className="font-semibold text-white/90">Match:</span>{" "}
+              {tooltip.matchNumber}
+            </span>
+          )}
         </div>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3">
