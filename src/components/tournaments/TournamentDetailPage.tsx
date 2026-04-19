@@ -75,6 +75,15 @@ type EventLiveSession = LiveSessionItem & {
   sessionStatus: string | null;
 };
 
+type TournamentGalleryImage = {
+  id: string;
+  name: string;
+  alt: string | null;
+  caption: string | null;
+  previewUrl: string | null;
+  originalUrl: string | null;
+};
+
 type WsTournamentPayload = {
   type?: string;
   clubId?: string | null;
@@ -3587,6 +3596,51 @@ export function TournamentDetailPage({
       });
   }, [eventData, timetableTrainingPlayers]);
 
+  const galleryImages = useMemo<TournamentGalleryImage[]>(() => {
+    if (!eventData?.data?.gallery_images) return [];
+
+    return toRelationArray(eventData.data.gallery_images)
+      .map((image, index) => {
+        const normalized = normalizeEntity<any>(image, `gallery-image-${index}`);
+        const formats =
+          normalized.formats && typeof normalized.formats === "object"
+            ? (normalized.formats as Record<string, unknown>)
+            : null;
+        const previewUrl =
+          normalizeMediaUrl(formats?.medium) ||
+          normalizeMediaUrl(formats?.small) ||
+          normalizeMediaUrl(formats?.thumbnail) ||
+          normalizeMediaUrl(normalized);
+        const originalUrl = normalizeMediaUrl(normalized);
+
+        return {
+          id: normalized.id,
+          name:
+            typeof normalized.name === "string" && normalized.name.trim()
+              ? normalized.name.trim()
+              : `Photo ${index + 1}`,
+          alt:
+            typeof normalized.alternativeText === "string" &&
+            normalized.alternativeText.trim()
+              ? normalized.alternativeText.trim()
+              : null,
+          caption:
+            typeof normalized.caption === "string" && normalized.caption.trim()
+              ? normalized.caption.trim()
+              : null,
+          previewUrl: previewUrl ?? originalUrl,
+          originalUrl,
+        } satisfies TournamentGalleryImage;
+      })
+      .filter((image) => Boolean(image.originalUrl));
+  }, [eventData]);
+
+  const galleryVideos = useMemo(
+    () => normalizeLiveVideoEntries(eventData?.data?.gallery_videos ?? []),
+    [eventData],
+  );
+  const hasGalleryContent = galleryImages.length > 0 || galleryVideos.length > 0;
+
   const isYouthTournament = useMemo(() => {
     const normalizedCategory = String(summary.category || "").trim().toLowerCase();
     return normalizedCategory === "youth" || normalizedCategory.includes("youth");
@@ -4548,17 +4602,119 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : tournamentPanelMode === "gallery" ? (
-        <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-16 text-center shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-10">
-          <div className="mx-auto max-w-2xl">
-            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-              Photo Gallery
+        <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-10 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-8 sm:py-12">
+          <div className="flex flex-col gap-8">
+            <div className={hasGalleryContent ? "max-w-3xl" : "mx-auto max-w-2xl text-center"}>
+              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Photo Gallery
+              </div>
+              <h2 className="mt-6 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                {hasGalleryContent ? `Moments from ${summary.title}` : "Coming soon"}
+              </h2>
+              <p className="mt-4 text-sm text-slate-600 sm:text-base">
+                {hasGalleryContent
+                  ? "Photos and videos uploaded by the event organizers."
+                  : `The photo gallery for ${summary.title} is being prepared.`}
+              </p>
             </div>
-            <h2 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-              Coming soon
-            </h2>
-            <p className="mt-4 text-sm text-slate-600 sm:text-base">
-              The photo gallery for {summary.title} is being prepared.
-            </p>
+
+            {galleryVideos.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">
+                    Videos
+                  </h3>
+                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {galleryVideos.length} items
+                  </div>
+                </div>
+                <div className="grid gap-5 xl:grid-cols-2">
+                  {galleryVideos.map((video, index) => (
+                    <article
+                      key={video.id}
+                      className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm"
+                    >
+                      <div className="aspect-video bg-slate-950">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
+                          title={video.title || `Tournament video ${index + 1}`}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        />
+                      </div>
+                      <div className="space-y-2 px-5 py-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Video {index + 1}
+                        </div>
+                        <div className="text-base font-bold text-slate-950">
+                          {video.title || video.label || "Tournament video"}
+                        </div>
+                        {video.youtubeUrl ? (
+                          <a
+                            href={video.youtubeUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+                          >
+                            Open on YouTube
+                          </a>
+                        ) : null}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {galleryImages.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">
+                    Photos
+                  </h3>
+                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {galleryImages.length} items
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {galleryImages.map((image, index) => (
+                    <a
+                      key={`${image.id}-${index}`}
+                      href={image.originalUrl ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+                    >
+                      <div className="aspect-[4/3] overflow-hidden bg-slate-200">
+                        {image.previewUrl ? (
+                          <img
+                            src={image.previewUrl}
+                            alt={image.alt || image.name}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                            No preview
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 px-5 py-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Photo {index + 1}
+                        </div>
+                        <div className="line-clamp-2 text-base font-bold text-slate-950">
+                          {image.caption || image.alt || image.name}
+                        </div>
+                        <div className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
+                          Open full image
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
       ) : tournamentPanelMode === "timetable" ? (

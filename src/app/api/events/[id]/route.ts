@@ -343,6 +343,14 @@ export async function GET(
             queryParams.set('fields[4]', 'end_date')
             queryParams.set('fields[5]', 'timetable_config')
             queryParams.set('fields[6]', 'game_type')
+            queryParams.set('fields[7]', 'gallery_videos')
+
+            queryParams.set('populate[gallery_images][fields][0]', 'name')
+            queryParams.set('populate[gallery_images][fields][1]', 'url')
+            queryParams.set('populate[gallery_images][fields][2]', 'alternativeText')
+            queryParams.set('populate[gallery_images][fields][3]', 'caption')
+            queryParams.set('populate[gallery_images][fields][4]', 'formats')
+            queryParams.set('populate[gallery_images][fields][5]', 'documentId')
 
             return queryParams
         }
