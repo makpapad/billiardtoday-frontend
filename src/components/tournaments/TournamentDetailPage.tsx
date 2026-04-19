@@ -90,6 +90,7 @@ type TournamentGallerySectionVideo = {
   id: string;
   title: string;
   kind: "youtube" | "upload";
+  createdAt: string | null;
   youtubeUrl: string | null;
   videoId: string | null;
   mediaId: number | null;
@@ -101,6 +102,7 @@ type TournamentGalleryVideoFile = {
   id: string;
   mediaId: number | null;
   name: string;
+  createdAt: string | null;
   fileUrl: string | null;
   mime: string | null;
 };
@@ -3770,6 +3772,10 @@ export function TournamentDetailPage({
             typeof normalized.name === "string" && normalized.name.trim()
               ? normalized.name.trim()
               : `Video ${index + 1}`,
+          createdAt:
+            typeof normalized.createdAt === "string" && normalized.createdAt.trim()
+              ? normalized.createdAt.trim()
+              : null,
           fileUrl,
           mime:
             typeof normalized.mime === "string" && normalized.mime.trim()
@@ -3878,6 +3884,7 @@ export function TournamentDetailPage({
               id: video.id,
               title: video.title || uploadedVideo.name || "Tournament video",
               kind: "upload",
+              createdAt: uploadedVideo.createdAt,
               youtubeUrl: null,
               videoId: null,
               mediaId: video.mediaId,
@@ -3892,6 +3899,7 @@ export function TournamentDetailPage({
               id: video.id,
               title: video.title || "Tournament video",
               kind: "youtube",
+              createdAt: null,
               youtubeUrl: video.youtubeUrl,
               videoId: video.videoId,
               mediaId: null,
@@ -3928,6 +3936,7 @@ export function TournamentDetailPage({
             id: `upload-${video.id}`,
             title: video.name || "Tournament video",
             kind: "upload" as const,
+            createdAt: video.createdAt,
             youtubeUrl: null,
             videoId: null,
             mediaId: video.mediaId,
@@ -3940,6 +3949,7 @@ export function TournamentDetailPage({
               id: video.id,
               title: video.title || "Tournament video",
               kind: "youtube" as const,
+              createdAt: null,
               youtubeUrl: video.youtubeUrl,
               videoId: video.videoId ?? null,
               mediaId: null,
@@ -5004,12 +5014,12 @@ export function TournamentDetailPage({
                             </div>
                           )}
                         </div>
-                        <div className="space-y-2 px-5 py-4">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            {video.kind === "youtube"
-                              ? `YouTube video ${index + 1}`
-                              : `Uploaded video ${index + 1}`}
-                          </div>
+                          <div className="space-y-2 px-5 py-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              {video.kind === "youtube"
+                                ? `YouTube video ${index + 1}`
+                                : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
+                            </div>
                           <div className="text-base font-bold text-slate-950">
                             {video.title || "Tournament video"}
                           </div>

@@ -359,6 +359,7 @@ export async function GET(
             queryParams.set('populate[gallery_video_files][fields][3]', 'caption')
             queryParams.set('populate[gallery_video_files][fields][4]', 'documentId')
             queryParams.set('populate[gallery_video_files][fields][5]', 'mime')
+            queryParams.set('populate[gallery_video_files][fields][6]', 'createdAt')
 
             return queryParams
         }
