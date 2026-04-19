@@ -2892,7 +2892,7 @@ export function TournamentEventsContent({
                                   {isArtisticEvent ? "%" : "AVG"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  {isArtisticEvent ? "Best run" : "Best AVG"}
+                                  {isArtisticEvent ? "Best run" : "H.R."}
                                 </th>
                                 {isArtisticEvent && (
                                   <th className="px-4 py-3 text-center font-semibold">
@@ -2901,7 +2901,7 @@ export function TournamentEventsContent({
                                 )}
                                 {!isArtisticEvent && (
                                   <th className="px-4 py-3 text-center font-semibold">
-                                    H.R.
+                                    Best AVG
                                   </th>
                                 )}
                                 {showRankPointsColumn && (
@@ -3009,14 +3009,6 @@ export function TournamentEventsContent({
                                       highlightAverage,
                                     )}
                                   </td>
-                                  <td
-                                    className="px-4 py-3 text-center"
-                                  >
-                                    {renderRankingMetricBadge(
-                                      bestAverageDisplay,
-                                      highlightBestAverage,
-                                    )}
-                                  </td>
                                   {isArtisticEvent && (
                                     <td className="px-4 py-3 text-center">
                                       {result.bestGame !== null
@@ -3031,6 +3023,14 @@ export function TournamentEventsContent({
                                       {renderRankingMetricBadge(
                                         highRunDisplay,
                                         highlightHighRun,
+                                      )}
+                                    </td>
+                                  )}
+                                  {!isArtisticEvent && (
+                                    <td className="px-4 py-3 text-center">
+                                      {renderRankingMetricBadge(
+                                        bestAverageDisplay,
+                                        highlightBestAverage,
                                       )}
                                     </td>
                                   )}
