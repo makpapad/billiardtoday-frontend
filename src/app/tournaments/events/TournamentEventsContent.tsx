@@ -326,6 +326,7 @@ type RankingMetricTooltipPlayer = {
 
 type RankingMetricTooltipData = {
   stageTitle: string | null;
+  groupNumber: number | null;
   stageOrder: number | null;
   matchNumber: number | null;
   dateTime: string | null;
@@ -337,6 +338,7 @@ type RankingMetricTooltipData = {
 
 type RankingMetricMatchCandidate = {
   stageTitle: string | null;
+  groupNumber: number | null;
   stageOrder: number | null;
   matchNumber: number | null;
   dateTime: string | null;
@@ -408,6 +410,7 @@ function buildMetricTooltipData(
 
   return {
     stageTitle: candidate.stageTitle,
+    groupNumber: candidate.groupNumber,
     stageOrder: candidate.stageOrder,
     matchNumber: candidate.matchNumber,
     dateTime: candidate.dateTime,
@@ -471,6 +474,7 @@ function findRankingMetricTooltipData(
 function renderRankingMetricTooltipCard(
   tooltip: RankingMetricTooltipData,
   align: "center" | "right" = "center",
+  groupLabelMode: GroupLabelMode = "numbers",
 ) {
   const renderPlayerPanel = (
     side: "top" | "bottom",
@@ -480,9 +484,6 @@ function renderRankingMetricTooltipCard(
       tooltip.focusMetric === "bestAverage" && tooltip.focusSide === side;
     const highlightHr =
       tooltip.focusMetric === "highRun" && tooltip.focusSide === side;
-    const focusHighlighted =
-      tooltip.focusMetric === "bestAverage" ? highlightAvg : highlightHr;
-
     return (
       <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
         <div className="text-center">
@@ -553,23 +554,14 @@ function renderRankingMetricTooltipCard(
             </div>
           </div>
         </div>
-        <div className="mt-3 flex justify-center">
-          <div
-            className={clsx(
-              "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold",
-              focusHighlighted
-                ? "bg-orange-500 text-white"
-                : "bg-slate-800 text-slate-300",
-            )}
-          >
-            {tooltip.focusMetric === "bestAverage"
-              ? `AVG ${formatTruncatedAverage(player.average)}`
-              : `H.R. ${formatNumberValue(player.highRun)}`}
-          </div>
-        </div>
       </div>
     );
   };
+
+  const subtitle =
+    tooltip.groupNumber !== null
+      ? formatGroupDisplayLabel(tooltip.groupNumber, groupLabelMode)
+      : tooltip.stageTitle;
 
   return (
     <div
@@ -583,10 +575,10 @@ function renderRankingMetricTooltipCard(
       <div className="text-center text-sm font-semibold text-white">
         {tooltip.top.name} VS {tooltip.bottom.name}
       </div>
-      {(tooltip.stageTitle || tooltip.matchNumber !== null) && (
+      {(subtitle || tooltip.matchNumber !== null) && (
         <div className="mt-1 text-center text-[11px] text-slate-400">
           {[
-            tooltip.stageTitle,
+            subtitle,
             tooltip.matchNumber !== null ? `Match ${tooltip.matchNumber}` : null,
           ]
             .filter(Boolean)
@@ -606,6 +598,7 @@ function renderRankingMetricBadge(
   highlighted: boolean,
   tooltip?: RankingMetricTooltipData | null,
   tooltipAlign: "center" | "right" = "center",
+  groupLabelMode: GroupLabelMode = "numbers",
 ) {
   if (!highlighted || value === "-") return value;
 
@@ -622,7 +615,7 @@ function renderRankingMetricBadge(
   return (
     <span className="group/ranking-metric relative inline-flex cursor-help">
       {badge}
-      {renderRankingMetricTooltipCard(tooltip, tooltipAlign)}
+      {renderRankingMetricTooltipCard(tooltip, tooltipAlign, groupLabelMode)}
     </span>
   );
 }
@@ -1246,11 +1239,13 @@ function StageRankingTable({
   embedded,
   playerProfileHref,
   artistic = false,
+  groupLabelMode = "numbers",
 }: {
   stage: NormalizedEventStage;
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
+  groupLabelMode?: GroupLabelMode;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
@@ -1258,6 +1253,7 @@ function StageRankingTable({
       stageMatchGroups.flatMap((group) =>
         group.matches.map((match) => ({
           stageTitle: stage.title,
+          groupNumber: group.number,
           stageOrder: stage.order,
           matchNumber: match.matchNumber,
           dateTime: match.dateTime,
@@ -1568,11 +1564,13 @@ function StageRankingTable({
                 <td
                   className="px-4 py-3 text-center"
                 >
-                  {renderRankingMetricBadge(
-                    highRunDisplay,
-                    highlightHighRun,
-                    metricTooltip?.highRun ?? null,
-                  )}
+                    {renderRankingMetricBadge(
+                      highRunDisplay,
+                      highlightHighRun,
+                      metricTooltip?.highRun ?? null,
+                      "center",
+                      groupLabelMode,
+                    )}
                 </td>
                 {showBestAverageColumn && (
                   <td className="px-4 py-3 text-center">
@@ -1581,6 +1579,7 @@ function StageRankingTable({
                       highlightBestAverage,
                       metricTooltip?.bestAverage ?? null,
                       "right",
+                      groupLabelMode,
                     )}
                   </td>
                 )}
@@ -1701,6 +1700,10 @@ export function TournamentEventsContent({
   const [brLoadingByStage, setBrLoadingByStage] = useState<
     Record<string, boolean>
   >({});
+  const groupLabelMode = resolveGroupLabelMode(
+    (eventData?.data?.timetable_config as Record<string, unknown> | null | undefined) ??
+      null,
+  );
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
@@ -2081,6 +2084,7 @@ export function TournamentEventsContent({
         (stageMatchGroups[stage.id] ?? []).flatMap((group) =>
           group.matches.map((match) => ({
             stageTitle: stage.title,
+            groupNumber: group.number,
             stageOrder: stage.order,
             matchNumber: match.matchNumber,
             dateTime: match.dateTime,
@@ -3467,6 +3471,8 @@ export function TournamentEventsContent({
                                         highRunDisplay,
                                         highlightHighRun,
                                         metricTooltip?.highRun ?? null,
+                                        "center",
+                                        groupLabelMode,
                                       )}
                                     </td>
                                   )}
@@ -3477,6 +3483,7 @@ export function TournamentEventsContent({
                                         highlightBestAverage,
                                         metricTooltip?.bestAverage ?? null,
                                         "right",
+                                        groupLabelMode,
                                       )}
                                     </td>
                                   )}
@@ -3758,6 +3765,7 @@ export function TournamentEventsContent({
                                   embedded={embedded}
                                   playerProfileHref={playerProfileHref}
                                   artistic={isArtisticEvent}
+                                  groupLabelMode={groupLabelMode}
                                 />
                               </div>
                             ) : (
