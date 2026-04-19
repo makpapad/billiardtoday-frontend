@@ -558,11 +558,11 @@ function renderRankingMetricTooltipCard(
     );
   };
 
-  const subtitle =
+  const groupSubtitle =
     tooltip.groupNumber !== null
       ? formatGroupDisplayLabel(tooltip.groupNumber, groupLabelMode)
-      : tooltip.stageTitle;
-  const subtitleLabel = tooltip.groupNumber !== null ? "Group:" : "Stage:";
+      : null;
+  const stageSubtitle = tooltip.stageTitle;
 
   return (
     <div
@@ -576,17 +576,24 @@ function renderRankingMetricTooltipCard(
       <div className="text-center text-sm font-semibold text-white">
         {tooltip.top.name} VS {tooltip.bottom.name}
       </div>
-      {(subtitle || tooltip.matchNumber !== null) && (
+      {(stageSubtitle || groupSubtitle || tooltip.matchNumber !== null) && (
         <div className="mt-1 text-center text-[11px] text-slate-300">
-          {subtitle && (
+          {stageSubtitle && (
             <span>
-              <span className="font-semibold text-white/90">{subtitleLabel}</span>{" "}
-              {subtitle}
+              <span className="font-semibold text-white/90">Stage:</span>{" "}
+              {stageSubtitle}
+            </span>
+          )}
+          {groupSubtitle && (
+            <span>
+              {stageSubtitle ? " | " : ""}
+              <span className="font-semibold text-white/90">Group:</span>{" "}
+              {groupSubtitle}
             </span>
           )}
           {tooltip.matchNumber !== null && (
             <span>
-              {subtitle ? " | " : ""}
+              {stageSubtitle || groupSubtitle ? " | " : ""}
               <span className="font-semibold text-white/90">Match:</span>{" "}
               {tooltip.matchNumber}
             </span>
