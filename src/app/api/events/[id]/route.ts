@@ -344,6 +344,7 @@ export async function GET(
             queryParams.set('fields[5]', 'timetable_config')
             queryParams.set('fields[6]', 'game_type')
             queryParams.set('fields[7]', 'gallery_videos')
+            queryParams.set('fields[8]', 'gallery_sections')
 
             queryParams.set('populate[gallery_images][fields][0]', 'name')
             queryParams.set('populate[gallery_images][fields][1]', 'url')

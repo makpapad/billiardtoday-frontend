@@ -77,12 +77,30 @@ type EventLiveSession = LiveSessionItem & {
 
 type TournamentGalleryImage = {
   id: string;
+  mediaId: number | null;
   name: string;
   alt: string | null;
   caption: string | null;
   previewUrl: string | null;
   originalUrl: string | null;
 };
+
+type TournamentGallerySectionVideo = {
+  id: string;
+  title: string;
+  youtubeUrl: string | null;
+  videoId: string;
+};
+
+type TournamentGallerySection = {
+  key: string;
+  title: string;
+  stageDocumentId: string | null;
+  images: TournamentGalleryImage[];
+  videos: TournamentGallerySectionVideo[];
+};
+
+const GENERAL_SECTION_KEY = "general";
 
 type WsTournamentPayload = {
   type?: string;
@@ -1270,6 +1288,9 @@ export function TournamentDetailPage({
     "matches" | "training"
   >("matches");
   const [timetableSearchQuery, setTimetableSearchQuery] = useState("");
+  const [selectedGalleryImageIndex, setSelectedGalleryImageIndex] = useState<
+    number | null
+  >(null);
   const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
     useState<number | null>(null);
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
@@ -3607,14 +3628,20 @@ export function TournamentDetailPage({
             ? (normalized.formats as Record<string, unknown>)
             : null;
         const previewUrl =
+          normalizeMediaUrl(formats?.large) ||
           normalizeMediaUrl(formats?.medium) ||
           normalizeMediaUrl(formats?.small) ||
+          normalizeMediaUrl(normalized) ||
           normalizeMediaUrl(formats?.thumbnail) ||
           normalizeMediaUrl(normalized);
         const originalUrl = normalizeMediaUrl(normalized);
+        const mediaId = toNumber(
+          (image as { id?: unknown } | null)?.id ?? normalized.id,
+        );
 
         return {
           id: normalized.id,
+          mediaId,
           name:
             typeof normalized.name === "string" && normalized.name.trim()
               ? normalized.name.trim()
@@ -3639,7 +3666,103 @@ export function TournamentDetailPage({
     () => normalizeLiveVideoEntries(eventData?.data?.gallery_videos ?? []),
     [eventData],
   );
-  const hasGalleryContent = galleryImages.length > 0 || galleryVideos.length > 0;
+  const gallerySections = useMemo<TournamentGallerySection[]>(() => {
+    const imageByMediaId = new Map<number, TournamentGalleryImage>();
+    galleryImages.forEach((image) => {
+      if (typeof image.mediaId === "number" && Number.isFinite(image.mediaId)) {
+        imageByMediaId.set(image.mediaId, image);
+      }
+    });
+
+    const rawSections = Array.isArray(eventData?.data?.gallery_sections)
+      ? (eventData?.data?.gallery_sections as Array<Record<string, unknown>>)
+      : [];
+
+    const normalizedSections = rawSections
+      .map((section, index) => {
+        const title =
+          typeof section.title === "string" && section.title.trim()
+            ? section.title.trim()
+            : `Folder ${index + 1}`;
+        const stageDocumentId =
+          typeof section.stageDocumentId === "string" &&
+          section.stageDocumentId.trim()
+            ? section.stageDocumentId.trim()
+            : null;
+        const imageIds = Array.isArray(section.imageIds)
+          ? section.imageIds
+              .map((value) => toNumber(value))
+              .filter((value): value is number => value !== null)
+          : [];
+        const images = imageIds
+          .map((imageId) => imageByMediaId.get(imageId) ?? null)
+          .filter((image): image is TournamentGalleryImage => Boolean(image));
+        const videos = normalizeLiveVideoEntries(section.videos ?? []).map((video) => ({
+          id: video.id,
+          title: video.title || video.label || "Tournament video",
+          youtubeUrl: video.youtubeUrl,
+          videoId: video.videoId,
+        }));
+        return {
+          key:
+            typeof section.key === "string" && section.key.trim()
+              ? section.key.trim()
+              : stageDocumentId || `section-${index + 1}`,
+          title,
+          stageDocumentId,
+          images,
+          videos,
+        } satisfies TournamentGallerySection;
+      })
+      .filter((section) => section.images.length > 0 || section.videos.length > 0);
+
+    if (normalizedSections.length > 0) return normalizedSections;
+
+    return [
+      {
+        key: GENERAL_SECTION_KEY,
+        title: "General",
+        stageDocumentId: null,
+        images: galleryImages,
+        videos: galleryVideos.map((video) => ({
+          id: video.id,
+          title: video.title || video.label || "Tournament video",
+          youtubeUrl: video.youtubeUrl,
+          videoId: video.videoId,
+        })),
+      },
+    ].filter((section) => section.images.length > 0 || section.videos.length > 0);
+  }, [eventData, galleryImages, galleryVideos]);
+  const flatGalleryImages = useMemo(
+    () =>
+      gallerySections.flatMap((section) =>
+        section.images.map((image) => ({
+          ...image,
+          sectionTitle: section.title,
+        })),
+      ),
+    [gallerySections],
+  );
+  const hasGalleryContent = gallerySections.length > 0;
+  const selectedGalleryImage =
+    selectedGalleryImageIndex !== null &&
+    selectedGalleryImageIndex >= 0 &&
+    selectedGalleryImageIndex < flatGalleryImages.length
+      ? flatGalleryImages[selectedGalleryImageIndex]
+      : null;
+
+  useEffect(() => {
+    if (selectedGalleryImageIndex === null) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedGalleryImageIndex(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedGalleryImageIndex]);
 
   const isYouthTournament = useMemo(() => {
     const normalizedCategory = String(summary.category || "").trim().toLowerCase();
@@ -4602,6 +4725,7 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : tournamentPanelMode === "gallery" ? (
+        <>
         <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-10 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-8 sm:py-12">
           <div className="flex flex-col gap-8">
             <div className={hasGalleryContent ? "max-w-3xl" : "mx-auto max-w-2xl text-center"}>
@@ -4617,106 +4741,195 @@ export function TournamentDetailPage({
                   : `The photo gallery for ${summary.title} is being prepared.`}
               </p>
             </div>
-
-            {galleryVideos.length > 0 ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">
-                    Videos
-                  </h3>
+            {gallerySections.map((section) => (
+              <div key={section.key} className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {section.stageDocumentId ? "Stage Folder" : "General Folder"}
+                    </div>
+                    <h3 className="mt-3 text-lg font-black tracking-tight text-slate-950 sm:text-xl">
+                      {section.title}
+                    </h3>
+                  </div>
                   <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {galleryVideos.length} items
+                    {section.images.length} photos • {section.videos.length} videos
                   </div>
                 </div>
-                <div className="grid gap-5 xl:grid-cols-2">
-                  {galleryVideos.map((video, index) => (
-                    <article
-                      key={video.id}
-                      className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm"
-                    >
-                      <div className="aspect-video bg-slate-950">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
-                          title={video.title || `Tournament video ${index + 1}`}
-                          className="h-full w-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                        />
-                      </div>
-                      <div className="space-y-2 px-5 py-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                          Video {index + 1}
-                        </div>
-                        <div className="text-base font-bold text-slate-950">
-                          {video.title || video.label || "Tournament video"}
-                        </div>
-                        {video.youtubeUrl ? (
-                          <a
-                            href={video.youtubeUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
-                          >
-                            Open on YouTube
-                          </a>
-                        ) : null}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ) : null}
 
-            {galleryImages.length > 0 ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">
-                    Photos
-                  </h3>
-                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {galleryImages.length} items
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {galleryImages.map((image, index) => (
-                    <a
-                      key={`${image.id}-${index}`}
-                      href={image.originalUrl ?? undefined}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
-                    >
-                      <div className="aspect-[4/3] overflow-hidden bg-slate-200">
-                        {image.previewUrl ? (
-                          <img
-                            src={image.previewUrl}
-                            alt={image.alt || image.name}
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                {section.videos.length > 0 ? (
+                  <div className="grid gap-5 xl:grid-cols-2">
+                    {section.videos.map((video, index) => (
+                      <article
+                        key={video.id}
+                        className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm"
+                      >
+                        <div className="aspect-video bg-slate-950">
+                          <iframe
+                            src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
+                            title={video.title || `Tournament video ${index + 1}`}
+                            className="h-full w-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
                           />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
-                            No preview
+                        </div>
+                        <div className="space-y-2 px-5 py-4">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Video {index + 1}
                           </div>
-                        )}
-                      </div>
-                      <div className="space-y-2 px-5 py-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                          Photo {index + 1}
+                          <div className="text-base font-bold text-slate-950">
+                            {video.title || "Tournament video"}
+                          </div>
+                          {video.youtubeUrl ? (
+                            <a
+                              href={video.youtubeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+                            >
+                              Open on YouTube
+                            </a>
+                          ) : null}
                         </div>
-                        <div className="line-clamp-2 text-base font-bold text-slate-950">
-                          {image.caption || image.alt || image.name}
-                        </div>
-                        <div className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
-                          Open full image
-                        </div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+
+                {section.images.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {section.images.map((image, index) => {
+                      const lightboxIndex = flatGalleryImages.findIndex(
+                        (entry) =>
+                          entry.id === image.id &&
+                          entry.mediaId === image.mediaId &&
+                          entry.sectionTitle === section.title,
+                      );
+
+                      return (
+                        <button
+                          key={`${section.key}-${image.id}-${index}`}
+                          type="button"
+                          onClick={() =>
+                            setSelectedGalleryImageIndex(
+                              lightboxIndex >= 0 ? lightboxIndex : null,
+                            )
+                          }
+                          className="group overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+                        >
+                          <div className="aspect-[4/3] overflow-hidden bg-slate-200">
+                            {image.previewUrl ? (
+                              <img
+                                src={image.previewUrl}
+                                alt={image.alt || image.name}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                No preview
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-2 px-5 py-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              Photo {index + 1}
+                            </div>
+                            <div className="line-clamp-2 text-base font-bold text-slate-950">
+                              {image.caption || image.alt || image.name}
+                            </div>
+                            <div className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
+                              View fullscreen
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+            ))}
           </div>
         </section>
+        {selectedGalleryImage ? (
+          <div
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/92 p-4 backdrop-blur-sm"
+            onClick={() => setSelectedGalleryImageIndex(null)}
+          >
+            <div
+              className="relative flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-950 shadow-[0_30px_120px_rgba(2,6,23,0.75)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 text-white">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
+                    {selectedGalleryImage.sectionTitle}
+                  </div>
+                  <div className="mt-1 truncate text-base font-bold sm:text-lg">
+                    {selectedGalleryImage.caption ||
+                      selectedGalleryImage.alt ||
+                      selectedGalleryImage.name}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGalleryImageIndex(null)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xl font-semibold text-white transition hover:bg-white/10"
+                  aria-label="Close fullscreen image"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="relative flex min-h-[60vh] items-center justify-center bg-black">
+                {flatGalleryImages.length > 1 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedGalleryImageIndex((current) => {
+                          if (current === null) return current;
+                          return current === 0
+                            ? flatGalleryImages.length - 1
+                            : current - 1;
+                        })
+                      }
+                      className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+                      aria-label="Previous image"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedGalleryImageIndex((current) => {
+                          if (current === null) return current;
+                          return current === flatGalleryImages.length - 1
+                            ? 0
+                            : current + 1;
+                        })
+                      }
+                      className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+                      aria-label="Next image"
+                    >
+                      ›
+                    </button>
+                  </>
+                ) : null}
+                {selectedGalleryImage.originalUrl ? (
+                  <img
+                    src={selectedGalleryImage.originalUrl}
+                    alt={
+                      selectedGalleryImage.alt ||
+                      selectedGalleryImage.caption ||
+                      selectedGalleryImage.name
+                    }
+                    className="max-h-[78vh] w-auto max-w-full object-contain"
+                  />
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+        </>
       ) : tournamentPanelMode === "timetable" ? (
         <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4">
