@@ -3723,7 +3723,7 @@ export function TournamentDetailPage({
         key: GENERAL_SECTION_KEY,
         title: "General",
         stageDocumentId: null,
-        images: galleryImages,
+        images: galleryImages.slice().reverse(),
         videos: galleryVideos.map((video) => ({
           id: video.id,
           title: video.title || video.label || "Tournament video",
