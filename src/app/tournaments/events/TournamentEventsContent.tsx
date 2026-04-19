@@ -15,6 +15,7 @@ import type {
   EventApiResponse,
   NormalizedEventStage,
   NormalizedFinalResult,
+  NormalizedGroupPlayer,
   NormalizedStageResult,
   NormalizedTimetableSlot,
   StrapiEventTimetableSlot,
@@ -313,12 +314,250 @@ function formatTruncatedAverage(value: number | null): string {
   return truncated.toFixed(3);
 }
 
-function renderRankingMetricBadge(value: string, highlighted: boolean) {
-  if (!highlighted || value === "-") return value;
+type RankingMetricTooltipMetric = "highRun" | "bestAverage";
+
+type RankingMetricTooltipPlayer = {
+  name: string;
+  points: number | null;
+  innings: number | null;
+  average: number | null;
+  highRun: number | null;
+};
+
+type RankingMetricTooltipData = {
+  stageTitle: string | null;
+  stageOrder: number | null;
+  matchNumber: number | null;
+  dateTime: string | null;
+  focusMetric: RankingMetricTooltipMetric;
+  focusSide: "top" | "bottom";
+  top: RankingMetricTooltipPlayer;
+  bottom: RankingMetricTooltipPlayer;
+};
+
+type RankingMetricMatchCandidate = {
+  stageTitle: string | null;
+  stageOrder: number | null;
+  matchNumber: number | null;
+  dateTime: string | null;
+  top: StageMatchGroup["matches"][number]["top"];
+  bottom: StageMatchGroup["matches"][number]["bottom"];
+};
+
+const normalizeRankingPlayerName = (value: string | null | undefined) =>
+  String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+function rankingPlayerMatchesCandidate(
+  player: NormalizedGroupPlayer,
+  target: {
+    playerId: number | null;
+    playerDocumentId: string | null;
+    playerName: string;
+  },
+) {
+  if (
+    target.playerDocumentId &&
+    player.documentId &&
+    target.playerDocumentId === player.documentId
+  ) {
+    return true;
+  }
+  if (
+    target.playerId !== null &&
+    player.id !== null &&
+    target.playerId === player.id
+  ) {
+    return true;
+  }
+  return (
+    normalizeRankingPlayerName(player.name || player.nativeName) ===
+    normalizeRankingPlayerName(target.playerName)
+  );
+}
+
+function getCandidatePlayerAverage(player: NormalizedGroupPlayer) {
+  if (
+    typeof player.points !== "number" ||
+    typeof player.innings !== "number" ||
+    player.innings <= 0
+  ) {
+    return null;
+  }
+  return Math.trunc((player.points / player.innings) * 1000) / 1000;
+}
+
+function buildMetricTooltipData(
+  candidate: RankingMetricMatchCandidate,
+  focusSide: "top" | "bottom",
+  focusMetric: RankingMetricTooltipMetric,
+): RankingMetricTooltipData {
+  const toPlayer = (
+    side: StageMatchGroup["matches"][number]["top"],
+  ): RankingMetricTooltipPlayer => ({
+    name: side.player.name || side.player.nativeName || "Unknown",
+    points: side.player.points,
+    innings: side.player.innings,
+    average: getCandidatePlayerAverage(side.player),
+    highRun: side.player.highRun,
+  });
+
+  return {
+    stageTitle: candidate.stageTitle,
+    stageOrder: candidate.stageOrder,
+    matchNumber: candidate.matchNumber,
+    dateTime: candidate.dateTime,
+    focusMetric,
+    focusSide,
+    top: toPlayer(candidate.top),
+    bottom: toPlayer(candidate.bottom),
+  };
+}
+
+function findRankingMetricTooltipData(
+  matches: RankingMetricMatchCandidate[],
+  target: {
+    playerId: number | null;
+    playerDocumentId: string | null;
+    playerName: string;
+  },
+  metric: RankingMetricTooltipMetric,
+  metricValue: number | null,
+): RankingMetricTooltipData | null {
+  if (metricValue === null || Number.isNaN(metricValue)) return null;
+
+  const candidates = matches
+    .flatMap((match) => {
+      const sides = [
+        { side: "top" as const, entry: match.top },
+        { side: "bottom" as const, entry: match.bottom },
+      ];
+
+      return sides
+        .filter(({ entry }) =>
+          rankingPlayerMatchesCandidate(entry.player, target),
+        )
+        .filter(({ entry }) => {
+          if (metric === "highRun") {
+            return (entry.player.highRun ?? null) === metricValue;
+          }
+          const avg = getCandidatePlayerAverage(entry.player);
+          return (
+            avg === metricValue &&
+            entry.outcome !== "L"
+          );
+        })
+        .map(({ side }) => buildMetricTooltipData(match, side, metric));
+    })
+    .sort((a, b) => {
+      const stageOrderDiff = (b.stageOrder ?? -1) - (a.stageOrder ?? -1);
+      if (stageOrderDiff !== 0) return stageOrderDiff;
+      if (a.dateTime && b.dateTime && a.dateTime !== b.dateTime) {
+        return b.dateTime.localeCompare(a.dateTime);
+      }
+      if (a.matchNumber !== null && b.matchNumber !== null) {
+        return a.matchNumber - b.matchNumber;
+      }
+      return 0;
+    });
+
+  return candidates[0] ?? null;
+}
+
+function renderRankingMetricTooltipCard(tooltip: RankingMetricTooltipData) {
+  const renderPlayerRow = (
+    side: "top" | "bottom",
+    player: RankingMetricTooltipPlayer,
+  ) => {
+    const highlightAvg =
+      tooltip.focusMetric === "bestAverage" && tooltip.focusSide === side;
+    const highlightHr =
+      tooltip.focusMetric === "highRun" && tooltip.focusSide === side;
+
+    return (
+      <div className="grid grid-cols-[minmax(120px,1fr)_48px_48px_60px_44px] items-center gap-x-2">
+        <div className="truncate font-medium text-white">{player.name}</div>
+        <div className="text-right text-slate-200">
+          {formatNumberValue(player.points)}
+        </div>
+        <div className="text-right text-slate-200">
+          {formatNumberValue(player.innings)}
+        </div>
+        <div
+          className={clsx(
+            "text-right text-slate-200",
+            highlightAvg && "font-extrabold text-orange-300",
+          )}
+        >
+          {formatTruncatedAverage(player.average)}
+        </div>
+        <div
+          className={clsx(
+            "text-right text-slate-200",
+            highlightHr && "font-extrabold text-orange-300",
+          )}
+        >
+          {formatNumberValue(player.highRun)}
+        </div>
+      </div>
+    );
+  };
 
   return (
+    <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[22rem] -translate-x-1/2 rounded-xl border border-slate-700 bg-slate-950/95 p-3 text-xs text-white shadow-2xl group-hover/ranking-metric:block">
+      <span className="block text-center text-sm font-semibold text-white">
+        {tooltip.top.name} VS {tooltip.bottom.name}
+      </span>
+      {(tooltip.stageTitle || tooltip.matchNumber !== null) && (
+        <span className="mt-1 block text-center text-[11px] text-slate-400">
+          {[
+            tooltip.stageTitle,
+            tooltip.matchNumber !== null ? `Match ${tooltip.matchNumber}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+      )}
+      <span className="mt-3 grid grid-cols-[minmax(120px,1fr)_48px_48px_60px_44px] gap-x-2 text-[10px] uppercase tracking-wide text-slate-400">
+        <span>Player</span>
+        <span className="text-right">Pts</span>
+        <span className="text-right">Inn</span>
+        <span className="text-right">AVG</span>
+        <span className="text-right">H.R.</span>
+      </span>
+      <span className="mt-2 block space-y-1">
+        {renderPlayerRow("top", tooltip.top)}
+        {renderPlayerRow("bottom", tooltip.bottom)}
+      </span>
+    </span>
+  );
+}
+
+function renderRankingMetricBadge(
+  value: string,
+  highlighted: boolean,
+  tooltip?: RankingMetricTooltipData | null,
+) {
+  if (!highlighted || value === "-") return value;
+
+  const badge = (
     <span className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full bg-orange-500 px-3 py-1 font-extrabold leading-none text-white">
       {value}
+    </span>
+  );
+
+  if (!tooltip) {
+    return badge;
+  }
+
+  return (
+    <span className="group/ranking-metric relative inline-flex cursor-help">
+      {badge}
+      {renderRankingMetricTooltipCard(tooltip)}
     </span>
   );
 }
@@ -949,6 +1188,20 @@ function StageRankingTable({
   artistic?: boolean;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
+    () =>
+      stageMatchGroups.flatMap((group) =>
+        group.matches.map((match) => ({
+          stageTitle: stage.title,
+          stageOrder: stage.order,
+          matchNumber: match.matchNumber,
+          dateTime: match.dateTime,
+          top: match.top,
+          bottom: match.bottom,
+        })),
+      ),
+    [stage.title, stage.order, stageMatchGroups],
+  );
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
     if (stageMatchGroups.length === 1) {
       const computedResults = stageMatchGroups.flatMap((group) =>
@@ -1037,6 +1290,53 @@ function StageRankingTable({
     }),
     [visibleResults],
   );
+  const stageMetricTooltipByResultId = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        highRun: RankingMetricTooltipData | null;
+        bestAverage: RankingMetricTooltipData | null;
+      }
+    >();
+
+    visibleResults.forEach((result) => {
+      map.set(result.id, {
+        highRun:
+          result.highRun !== null &&
+          stageRankingHighlights.highRun !== null &&
+          result.highRun > 10 &&
+          result.highRun === stageRankingHighlights.highRun
+            ? findRankingMetricTooltipData(
+                stageMetricMatches,
+                {
+                  playerId: result.playerId,
+                  playerDocumentId: result.playerDocumentId,
+                  playerName: result.playerName,
+                },
+                "highRun",
+                result.highRun,
+              )
+            : null,
+        bestAverage:
+          result.bestAverage !== null &&
+          stageRankingHighlights.bestAverage !== null &&
+          result.bestAverage === stageRankingHighlights.bestAverage
+            ? findRankingMetricTooltipData(
+                stageMetricMatches,
+                {
+                  playerId: result.playerId,
+                  playerDocumentId: result.playerDocumentId,
+                  playerName: result.playerName,
+                },
+                "bestAverage",
+                result.bestAverage,
+              )
+            : null,
+      });
+    });
+
+    return map;
+  }, [stageMetricMatches, stageRankingHighlights.bestAverage, stageRankingHighlights.highRun, visibleResults]);
 
   if (visibleResults.length === 0) {
     return (
@@ -1112,6 +1412,7 @@ function StageRankingTable({
               result.bestAverage !== null
                 ? formatTruncatedAverage(result.bestAverage)
                 : "-";
+            const metricTooltip = stageMetricTooltipByResultId.get(result.id);
 
             return (
               <tr
@@ -1202,13 +1503,18 @@ function StageRankingTable({
                 <td
                   className="px-4 py-3 text-center"
                 >
-                  {renderRankingMetricBadge(highRunDisplay, highlightHighRun)}
+                  {renderRankingMetricBadge(
+                    highRunDisplay,
+                    highlightHighRun,
+                    metricTooltip?.highRun ?? null,
+                  )}
                 </td>
                 {showBestAverageColumn && (
                   <td className="px-4 py-3 text-center">
                     {renderRankingMetricBadge(
                       bestAverageDisplay,
                       highlightBestAverage,
+                      metricTooltip?.bestAverage ?? null,
                     )}
                   </td>
                 )}
@@ -1703,6 +2009,23 @@ export function TournamentEventsContent({
     return map;
   }, [eventStages, stageMatchGroups]);
 
+  const finalMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
+    () =>
+      eventStages.flatMap((stage) =>
+        (stageMatchGroups[stage.id] ?? []).flatMap((group) =>
+          group.matches.map((match) => ({
+            stageTitle: stage.title,
+            stageOrder: stage.order,
+            matchNumber: match.matchNumber,
+            dateTime: match.dateTime,
+            top: match.top,
+            bottom: match.bottom,
+          })),
+        ),
+      ),
+    [eventStages, stageMatchGroups],
+  );
+
   const publishedFinalResults = useMemo<NormalizedFinalResult[]>(() => {
     if (!eventData?.data?.results_final) return [];
 
@@ -1843,6 +2166,58 @@ export function TournamentEventsContent({
     }),
     [publishedFinalResults],
   );
+  const finalMetricTooltipByResultId = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        highRun: RankingMetricTooltipData | null;
+        bestAverage: RankingMetricTooltipData | null;
+      }
+    >();
+
+    publishedFinalResults.forEach((result) => {
+      map.set(result.id, {
+        highRun:
+          result.highRun !== null &&
+          finalStandingsHighlights.highRun !== null &&
+          result.highRun > 10 &&
+          result.highRun === finalStandingsHighlights.highRun
+            ? findRankingMetricTooltipData(
+                finalMetricMatches,
+                {
+                  playerId: result.playerId,
+                  playerDocumentId: result.playerDocumentId,
+                  playerName: result.playerName,
+                },
+                "highRun",
+                result.highRun,
+              )
+            : null,
+        bestAverage:
+          result.bestAverage !== null &&
+          finalStandingsHighlights.bestAverage !== null &&
+          result.bestAverage === finalStandingsHighlights.bestAverage
+            ? findRankingMetricTooltipData(
+                finalMetricMatches,
+                {
+                  playerId: result.playerId,
+                  playerDocumentId: result.playerDocumentId,
+                  playerName: result.playerName,
+                },
+                "bestAverage",
+                result.bestAverage,
+              )
+            : null,
+      });
+    });
+
+    return map;
+  }, [
+    finalMetricMatches,
+    finalStandingsHighlights.bestAverage,
+    finalStandingsHighlights.highRun,
+    publishedFinalResults,
+  ]);
 
   // Keep active stage in sync with external tournament hero selection when present.
   useEffect(() => {
@@ -2960,6 +3335,8 @@ export function TournamentEventsContent({
                                 const highRunDisplay = formatNumberValue(
                                   result.highRun,
                                 );
+                                const metricTooltip =
+                                  finalMetricTooltipByResultId.get(result.id);
 
                                 return (
                                 <tr
@@ -3023,6 +3400,7 @@ export function TournamentEventsContent({
                                       {renderRankingMetricBadge(
                                         highRunDisplay,
                                         highlightHighRun,
+                                        metricTooltip?.highRun ?? null,
                                       )}
                                     </td>
                                   )}
@@ -3031,6 +3409,7 @@ export function TournamentEventsContent({
                                       {renderRankingMetricBadge(
                                         bestAverageDisplay,
                                         highlightBestAverage,
+                                        metricTooltip?.bestAverage ?? null,
                                       )}
                                     </td>
                                   )}
