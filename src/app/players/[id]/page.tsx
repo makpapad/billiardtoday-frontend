@@ -708,9 +708,9 @@ export default function PlayerProfilePage() {
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
                 <div className="text-center">
                     <img
-                        src={`${basePath}/img/logo/logo-light-full.png`}
+                        src={`${basePath}/logo-billiardtoday.png`}
                         alt={t('players.profile.logoAlt')}
-                        className="mx-auto mb-6 h-10 sm:h-12 md:h-14 w-auto"
+                        className="mx-auto mb-6 h-8 sm:h-9 md:h-10 w-auto object-contain"
                     />
                     <div className="animate-spin h-16 w-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-gray-600 dark:text-gray-300">{t('players.profile.loading')}</p>
