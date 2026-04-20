@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -4365,7 +4365,7 @@ export function TournamentDetailPage({
           subtitle:
             [session.state?.stageName, session.state?.groupName, session.state?.tableName]
               .filter(Boolean)
-              .join(" • ") || null,
+              .join(" β€Ά ") || null,
           playerAName: session.state?.playerAName ?? session.player1Name ?? null,
           playerBName: session.state?.playerBName ?? session.player2Name ?? null,
           playerACountry: session.state?.playerACountry ?? null,
@@ -4748,8 +4748,8 @@ export function TournamentDetailPage({
   const ageSortButtonLabel =
     participantSortMode === "age"
       ? participantAgeDirection === "asc"
-        ? "Age ↑"
-        : "Age ↓"
+        ? "Age β†‘"
+        : "Age β†“"
       : "Sort by age";
 
   const handleAgeSortClick = () => {
@@ -4783,8 +4783,8 @@ export function TournamentDetailPage({
   const rankingSortButtonLabel =
     participantSortMode === "ranking"
       ? participantRankingDirection === "asc"
-        ? "Ranking ↑"
-        : "Ranking ↓"
+        ? "Ranking β†‘"
+        : "Ranking β†“"
       : "Ranking order";
 
   const mainContent =
@@ -4993,247 +4993,244 @@ export function TournamentDetailPage({
                   : `The photo gallery for ${summary.title} is being prepared.`}
               </p>
             </div>
-            {hasGalleryContent ? (
-              <div className="space-y-5">
-                {!activeGallerySection ? (
-                  <>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Browse by folder
-                      </div>
-                      <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        {gallerySections.length} folders
-                      </div>
+            {hasGalleryContent && activeGallerySection ? (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveGallerySectionKey(null)}
+                      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                    >
+                      Back to folders
+                    </button>
+                    <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {activeGallerySection.videos.length} videos • {activeGallerySection.images.length} photos
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      {gallerySections.map((section) => {
-                        const folderPreview =
-                          section.images[0]?.previewUrl ||
-                          section.images[0]?.originalUrl ||
-                          null;
-                        return (
-                          <button
-                            key={`folder-${section.key}`}
-                            type="button"
-                            onClick={() => setActiveGallerySectionKey(section.key)}
-                            className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] px-7 pb-8 pt-7 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:aspect-square sm:min-h-0"
-                          >
-                            <div className="relative mb-7 h-[210px]">
-                              <div
-                                aria-hidden="true"
-                                className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
-                              >
-                                {folderPreview ? (
-                                  <>
-                                    <img
-                                      src={folderPreview}
-                                      alt=""
-                                      className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
-                                      loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]" />
-                                  </>
-                                ) : (
-                                  <div className="h-full w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
-                                )}
-                              </div>
-                              <img
-                                aria-hidden="true"
-                                src="/icons%20webp/folder-1485.svg"
-                                alt=""
-                                className="absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
-                                loading="lazy"
-                              />
-                            </div>
-                            <div className="mt-auto space-y-2">
-                              <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                {section.stageDocumentId ? "Stage Folder" : "General Folder"}
-                              </div>
-                              <div className="text-base font-black tracking-tight text-slate-950">
-                                {section.title}
-                              </div>
-                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                {section.images.length} photos • {section.videos.length} videos
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                ) : (
-                <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-                  <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
+                  </div>
+                  <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                    <div className="border-b border-slate-200 bg-slate-50/80 px-5 py-4">
                       <div className="truncate text-sm font-semibold text-slate-700">
                         Photo Gallery / {activeGallerySection.title}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setActiveGallerySectionKey(null)}
-                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
-                      >
-                        ← Back to folders
-                      </button>
-                      <div className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
-                      {activeGallerySection.videos.length} videos • {activeGallerySection.images.length} photos
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-8 px-5 py-5 sm:px-6 sm:py-6">
-                    {activeGallerySection.videos.length > 0 ? (
-                      <div className="space-y-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                          Videos
-                        </div>
-                        <div className="grid gap-5 xl:grid-cols-2">
-                          {activeGallerySection.videos.map((video, index) => {
-                            const isExpanded = expandedGalleryVideoIds.has(video.id);
-                            const youtubeThumbnailUrl =
-                              video.kind === "youtube" && video.videoId
-                                ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`
-                                : null;
-                            return (
-                              <article
-                                key={`explorer-video-${video.id}`}
-                                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
-                              >
-                                <div className="aspect-video bg-slate-950">
-                                  {video.kind === "youtube" && video.videoId ? (
-                                    isExpanded ? (
-                                      <iframe
-                                        src={`https://www.youtube.com/embed/${video.videoId}?rel=0&autoplay=1`}
-                                        title={video.title || `Tournament video ${index + 1}`}
+                    <div className="space-y-8 px-5 py-5 sm:px-6 sm:py-6">
+                      {activeGallerySection.videos.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Videos
+                          </div>
+                          <div className="grid gap-5 xl:grid-cols-2">
+                            {activeGallerySection.videos.map((video, index) => {
+                              const isExpanded = expandedGalleryVideoIds.has(video.id);
+                              const youtubeThumbnailUrl =
+                                video.kind === "youtube" && video.videoId
+                                  ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`
+                                  : null;
+                              return (
+                                <article
+                                  key={`explorer-video-${video.id}`}
+                                  className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+                                >
+                                  <div className="aspect-video bg-slate-950">
+                                    {video.kind === "youtube" && video.videoId ? (
+                                      isExpanded ? (
+                                        <iframe
+                                          src={`https://www.youtube.com/embed/${video.videoId}?rel=0&autoplay=1`}
+                                          title={video.title || `Tournament video ${index + 1}`}
+                                          className="h-full w-full"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                          allowFullScreen
+                                        />
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setExpandedGalleryVideoIds((current) => {
+                                              const next = new Set(current);
+                                              next.add(video.id);
+                                              return next;
+                                            })
+                                          }
+                                          className="group relative block h-full w-full overflow-hidden text-left"
+                                          aria-label={video.title || `Play tournament video ${index + 1}`}
+                                        >
+                                          {youtubeThumbnailUrl ? (
+                                            <img
+                                              src={youtubeThumbnailUrl}
+                                              alt={video.title || `Tournament video ${index + 1}`}
+                                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                              loading="lazy"
+                                              referrerPolicy="no-referrer"
+                                            />
+                                          ) : (
+                                            <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                              Video preview unavailable
+                                            </div>
+                                          )}
+                                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
+                                          <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
+                                              <span className="ml-1 text-2xl">▶</span>
+                                            </span>
+                                          </div>
+                                          <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                                            Load video
+                                          </div>
+                                        </button>
+                                      )
+                                    ) : video.fileUrl ? (
+                                      <video
+                                        src={video.fileUrl}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
                                         className="h-full w-full"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                        allowFullScreen
                                       />
                                     ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setExpandedGalleryVideoIds((current) => {
-                                            const next = new Set(current);
-                                            next.add(video.id);
-                                            return next;
-                                          })
-                                        }
-                                        className="group relative block h-full w-full overflow-hidden text-left"
-                                        aria-label={video.title || `Play tournament video ${index + 1}`}
-                                      >
-                                        {youtubeThumbnailUrl ? (
-                                          <img
-                                            src={youtubeThumbnailUrl}
-                                            alt={video.title || `Tournament video ${index + 1}`}
-                                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                                            loading="lazy"
-                                            referrerPolicy="no-referrer"
-                                          />
-                                        ) : (
-                                          <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
-                                            Video preview unavailable
-                                          </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
-                                            <span className="ml-1 text-2xl">▶</span>
-                                          </span>
-                                        </div>
-                                        <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
-                                          Load video
-                                        </div>
-                                      </button>
-                                    )
-                                  ) : video.fileUrl ? (
-                                    <video
-                                      src={video.fileUrl}
-                                      controls
-                                      playsInline
-                                      preload="metadata"
-                                      className="h-full w-full"
-                                    />
-                                  ) : (
-                                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
-                                      Video unavailable
+                                      <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                        Video unavailable
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2 px-5 py-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                      {video.kind === "youtube"
+                                        ? `YouTube video ${index + 1}`
+                                        : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
                                     </div>
-                                  )}
-                                </div>
-                                <div className="space-y-2 px-5 py-4">
-                                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    {video.kind === "youtube"
-                                      ? `YouTube video ${index + 1}`
-                                      : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
+                                    <div className="text-base font-bold text-slate-950">
+                                      {video.title || "Tournament video"}
+                                    </div>
                                   </div>
-                                  <div className="text-base font-bold text-slate-950">
-                                    {video.title || "Tournament video"}
-                                  </div>
-                                </div>
-                              </article>
-                            );
-                          })}
+                                </article>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ) : null}
-                    {activeGallerySection.images.length > 0 ? (
-                      <div className="space-y-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                          Photos
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                          {activeGallerySection.images.map((image, index) => {
-                            const lightboxIndex = flatGalleryImages.findIndex(
-                              (entry) =>
-                                entry.id === image.id &&
-                                entry.mediaId === image.mediaId &&
-                                entry.sectionTitle === activeGallerySection.title,
-                            );
+                      ) : null}
+                      {activeGallerySection.images.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Photos
+                          </div>
+                          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            {activeGallerySection.images.map((image, index) => {
+                              const lightboxIndex = flatGalleryImages.findIndex(
+                                (entry) =>
+                                  entry.id === image.id &&
+                                  entry.mediaId === image.mediaId &&
+                                  entry.sectionTitle === activeGallerySection.title,
+                              );
 
-                            return (
-                              <button
-                                key={`explorer-photo-${activeGallerySection.key}-${image.id}-${index}`}
-                                type="button"
-                                onClick={() =>
-                                  setSelectedGalleryImageIndex(
-                                    lightboxIndex >= 0 ? lightboxIndex : null,
-                                  )
-                                }
-                                className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
-                              >
-                                <div className="aspect-[4/3] overflow-hidden bg-slate-200">
-                                  {image.previewUrl ? (
-                                    <img
-                                      src={image.previewUrl}
-                                      alt={image.alt || image.name}
-                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                                    />
-                                  ) : (
-                                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
-                                      No preview
+                              return (
+                                <button
+                                  key={`explorer-photo-${activeGallerySection.key}-${image.id}-${index}`}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedGalleryImageIndex(
+                                      lightboxIndex >= 0 ? lightboxIndex : null,
+                                    )
+                                  }
+                                  className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+                                >
+                                  <div className="aspect-[4/3] overflow-hidden bg-slate-200">
+                                    {image.previewUrl ? (
+                                      <img
+                                        src={image.previewUrl}
+                                        alt={image.alt || image.name}
+                                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                        No preview
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2 px-5 py-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                      Photo {index + 1}
                                     </div>
-                                  )}
-                                </div>
-                                <div className="space-y-2 px-5 py-4">
-                                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Photo {index + 1}
+                                    <div className="line-clamp-2 text-base font-bold text-slate-950">
+                                      {image.caption || image.alt || image.name}
+                                    </div>
                                   </div>
-                                  <div className="line-clamp-2 text-base font-bold text-slate-950">
-                                    {image.caption || image.alt || image.name}
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ) : null}
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-                )}
-              </div>
-            ) : null}
+              ) : null}
+            {hasGalleryContent && !activeGallerySection ? (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Browse by folder
+                    </div>
+                    <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {gallerySections.length} folders
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {gallerySections.map((section) => {
+                      const folderPreview =
+                        section.images[0]?.previewUrl ||
+                        section.images[0]?.originalUrl ||
+                        null;
+                      return (
+                        <button
+                          key={`folder-${section.key}`}
+                          type="button"
+                          onClick={() => setActiveGallerySectionKey(section.key)}
+                          className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] px-7 pb-8 pt-7 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:aspect-square sm:min-h-0"
+                        >
+                          <div className="relative mb-7 h-[210px]">
+                            <div
+                              aria-hidden="true"
+                              className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
+                            >
+                              {folderPreview ? (
+                                <>
+                                  <img
+                                    src={folderPreview}
+                                    alt=""
+                                    className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
+                                    loading="lazy"
+                                  />
+                                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]" />
+                                </>
+                              ) : (
+                                <div className="h-full w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
+                              )}
+                            </div>
+                            <img
+                              aria-hidden="true"
+                              src="/icons%20webp/folder-1485.svg"
+                              alt=""
+                              className="absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="mt-auto space-y-2">
+                            <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              {section.stageDocumentId ? "Stage Folder" : "General Folder"}
+                            </div>
+                            <div className="text-base font-black tracking-tight text-slate-950">
+                              {section.title}
+                            </div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              {section.images.length} photos • {section.videos.length} videos
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             {false && gallerySections.map((section) => (
               <div
                 key={section.key}
@@ -5249,7 +5246,7 @@ export function TournamentDetailPage({
                     </h3>
                   </div>
                   <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {section.images.length} photos • {section.videos.length} videos
+                    {section.images.length} photos β€Ά {section.videos.length} videos
                   </div>
                 </div>
 
@@ -5305,7 +5302,7 @@ export function TournamentDetailPage({
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
-                                    <span className="ml-1 text-2xl">▶</span>
+                                    <span className="ml-1 text-2xl">β–¶</span>
                                   </span>
                                 </div>
                                 <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -5452,7 +5449,7 @@ export function TournamentDetailPage({
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xl font-semibold text-white transition hover:bg-white/10"
                   aria-label="Close fullscreen image"
                 >
-                  ×
+                  Γ—
                 </button>
               </div>
               <div className="relative flex min-h-[60vh] items-center justify-center bg-black">
@@ -5471,7 +5468,7 @@ export function TournamentDetailPage({
                       className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
                       aria-label="Previous image"
                     >
-                      ‹
+                      β€Ή
                     </button>
                     <button
                       type="button"
@@ -5486,7 +5483,7 @@ export function TournamentDetailPage({
                       className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
                       aria-label="Next image"
                     >
-                      ›
+                      β€Ί
                     </button>
                   </>
                 ) : null}
@@ -5894,7 +5891,7 @@ export function TournamentDetailPage({
                         liveRun: state.liveRunA ?? 0,
                         innings: state.inningsA ?? 0,
                         hr: state.bestRunA ?? 0,
-                        flag: "🇬🇷",
+                        flag: "π‡¬π‡·",
                         avgFormatted: state.avgFormattedA,
                         accPercent: state.accPercentA,
                         secondsPerInning: state.secondsPerInningA,
@@ -5921,7 +5918,7 @@ export function TournamentDetailPage({
                         liveRun: state.liveRunB ?? 0,
                         innings: state.inningsB ?? 0,
                         hr: state.bestRunB ?? 0,
-                        flag: "🇬🇷",
+                        flag: "π‡¬π‡·",
                         avgFormatted: state.avgFormattedB,
                         accPercent: state.accPercentB,
                         secondsPerInning: state.secondsPerInningB,
@@ -6030,7 +6027,7 @@ export function TournamentDetailPage({
                         key={`${part}-${index}`}
                         className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? <span className="text-white/55">•</span> : null}
+                        {index > 0 ? <span className="text-white/55">β€Ά</span> : null}
                         <span>{part}</span>
                       </span>
                     ))}
