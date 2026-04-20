@@ -997,7 +997,7 @@ function TemplateThreeOverlayCard({
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
   const rightName = normalizeString(state.playerBName) ?? "Player 2";
-  const nameCharLimit = Math.max(18, Math.min(30, Math.round(width * 0.022)));
+  const nameCharLimit = Math.max(16, Math.min(24, Math.round(width * 0.018)));
   const displayLeftName = truncateOverlayLabel(leftName, nameCharLimit);
   const displayRightName = truncateOverlayLabel(rightName, nameCharLimit);
   const activeSide = state.current;
