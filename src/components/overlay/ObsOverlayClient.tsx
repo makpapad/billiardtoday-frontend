@@ -1373,10 +1373,10 @@ function CompactOverlayStats({
 
   return (
     <div className={`flex min-w-0 items-center gap-4 leading-none whitespace-nowrap ${justifyClass}`}>
-      <span className="text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+      <span className="text-[12px] font-normal uppercase tracking-[0.08em] text-white/92">
         AVG <span className="font-semibold text-white">{avg}</span>
       </span>
-      <span className="text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+      <span className="text-[12px] font-normal uppercase tracking-[0.08em] text-white/92">
         H.R. <span className="font-semibold text-white">{hr}</span>
       </span>
     </div>
