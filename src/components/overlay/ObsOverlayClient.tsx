@@ -998,7 +998,10 @@ function TemplateThreeOverlayCard({
   const totalBlocks = 40;
   const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
   const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
-  const overlayHeight = 56;
+  const overlayHeight = 60;
+  const statsColumnWidth = Math.max(92, Math.min(124, Math.round(width * 0.11)));
+  const topStripWidth = Math.max(620, Math.min(width - 24, Math.round(width * 0.82)));
+  const timeStripWidth = Math.max(240, Math.min(340, Math.round(width * 0.3)));
 
   return (
     <div
@@ -1017,10 +1020,15 @@ function TemplateThreeOverlayCard({
           "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
       }}
     >
-      <div className="flex h-6 w-full items-end justify-center overflow-visible">
+      <div className="flex h-5 w-full items-end justify-center overflow-visible">
         <div
-          className="grid h-6 w-[80%] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center rounded-t-[10px] px-5 text-[13px] font-normal tracking-[0.06em] text-slate-800"
-          style={{ backgroundColor: "#d6d9e1" }}
+          className="grid h-5 items-center rounded-t-[10px] px-4 text-[11px] font-normal tracking-[0.05em] text-slate-800"
+          style={{
+            width: topStripWidth,
+            backgroundColor: "#d6d9e1",
+            gridTemplateColumns: "minmax(0,1fr) auto auto",
+            columnGap: 12,
+          }}
         >
           <span className="truncate whitespace-nowrap">
             {tournament} / Stage {stage} / Table {table}
@@ -1030,74 +1038,82 @@ function TemplateThreeOverlayCard({
             elapsedBlocks={elapsedBlocks}
             totalBlocks={totalBlocks}
             compact
+            barWidth={timeStripWidth}
           />
-          <span className="justify-self-end whitespace-nowrap pl-4 text-[14px] tracking-[0.08em] text-slate-950">
+          <span className="justify-self-end whitespace-nowrap text-[12px] tracking-[0.06em] text-slate-950">
             {target ? `Race to ${target}` : ""}
           </span>
         </div>
       </div>
 
       <div
-        className="relative h-10 w-full overflow-hidden text-white"
-        style={{ backgroundColor: "#8a909d" }}
+        className="grid h-[42px] w-full items-center gap-2 px-3 text-white"
+        style={{
+          backgroundColor: "#8a909d",
+          gridTemplateColumns: `${statsColumnWidth}px minmax(0,1fr) auto auto auto minmax(0,1fr) ${statsColumnWidth}px`,
+        }}
       >
-        <div className="absolute inset-y-0 left-0 flex items-center gap-5 pl-4">
-          <OverlayMiniStat label="H.R." value={leftHr} align="left" />
-          <OverlayMiniStat label="AVG:" value={leftAvg} align="left" />
-        </div>
+        <CompactOverlayStats align="left" avg={leftAvg} hr={leftHr} />
 
-        <div className="absolute inset-y-0 right-0 flex items-center gap-5 pr-4">
-          <OverlayMiniStat label="AVG:" value={rightAvg} align="right" />
-          <OverlayMiniStat label="H.R." value={rightHr} align="right" />
-        </div>
-
-        <div className="absolute inset-0 grid grid-cols-[1fr_auto_1fr] items-center">
-          <div className="z-10 flex h-7 items-center justify-center px-3 text-[16px] font-normal leading-none tracking-[0.06em] text-white col-start-2 row-start-1">
-            ({innings})
-          </div>
-
-          <div className="col-start-1 row-start-1 flex min-w-0 items-center justify-end pr-6">
-            <div className="flex min-w-0 max-w-[390px] items-center justify-end gap-3">
-              <CompactTimeoutTicks
-                activeCount={leftTimeouts}
-                totalCount={leftMaxTimeouts}
-                reverse={false}
-              />
-              {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
-              <span className="truncate text-[18px] font-normal leading-none tracking-[0.04em]">
+        <div className="flex min-w-0 items-center justify-end pr-1">
+          <div className="flex min-w-0 max-w-[330px] items-center gap-2">
+            {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
+            <div className="flex min-w-0 flex-col items-end gap-[3px] overflow-hidden">
+              <span className="w-full truncate text-right text-[17px] font-normal leading-none tracking-[0.03em]">
                 {leftName}
               </span>
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-                {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
-              </div>
-              <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
-                {activeSide === "A" ? <TurnArrow side="right" active /> : null}
-              </div>
-              <OverlayScoreBox score={leftScore} tone="light" />
-            </div>
-          </div>
-
-          <div className="col-start-3 row-start-1 flex min-w-0 items-center pl-6">
-            <div className="flex min-w-0 max-w-[390px] items-center gap-3">
-              <OverlayScoreBox score={rightScore} tone="accent" />
-              <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
-                {activeSide === "B" ? <TurnArrow side="left" active /> : null}
-              </div>
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-                {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
-              </div>
-              <span className="truncate text-[18px] font-normal leading-none tracking-[0.04em]">
-                {rightName}
-              </span>
-              {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
-              <CompactTimeoutTicks
-                activeCount={rightTimeouts}
-                totalCount={rightMaxTimeouts}
-                reverse
+              <HorizontalTimeoutTicks
+                activeCount={leftTimeouts}
+                totalCount={leftMaxTimeouts}
+                align="right"
               />
             </div>
           </div>
         </div>
+
+        <div className="flex items-center justify-end gap-1.5">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+            {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
+          </div>
+          <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+            {activeSide === "A" ? <TurnArrow side="right" active /> : null}
+          </div>
+          <OverlayScoreBox score={leftScore} tone="light" />
+        </div>
+
+        <div className="z-10 flex h-7 items-center justify-center px-2 text-[15px] font-normal leading-none tracking-[0.05em] text-white">
+          <span className="whitespace-nowrap">
+            ({innings})
+          </span>
+        </div>
+
+        <div className="flex items-center justify-start gap-1.5">
+          <OverlayScoreBox score={rightScore} tone="accent" />
+          <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+            {activeSide === "B" ? <TurnArrow side="left" active /> : null}
+          </div>
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+            {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
+          </div>
+        </div>
+
+        <div className="flex min-w-0 items-center justify-start pl-1">
+          <div className="flex min-w-0 max-w-[330px] items-center gap-2">
+            <div className="flex min-w-0 flex-col items-start gap-[3px] overflow-hidden">
+              <span className="w-full truncate text-left text-[17px] font-normal leading-none tracking-[0.03em]">
+                {rightName}
+              </span>
+              <HorizontalTimeoutTicks
+                activeCount={rightTimeouts}
+                totalCount={rightMaxTimeouts}
+                align="left"
+              />
+            </div>
+            {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
+          </div>
+        </div>
+
+        <CompactOverlayStats align="right" avg={rightAvg} hr={rightHr} />
       </div>
     </div>
   );
@@ -1415,6 +1431,34 @@ function CompactTimeoutTicks({
         <span
           key={index}
           className={`h-4 w-[4px] rounded-full ${
+            index < usedCount ? "bg-slate-200/65" : "bg-emerald-400"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function HorizontalTimeoutTicks({
+  activeCount,
+  totalCount,
+  align,
+}: {
+  activeCount: number;
+  totalCount: number;
+  align: "left" | "right";
+}) {
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
+  const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
+  const positions = Array.from({ length: safeTotal }, (_, index) => index);
+  const orderedPositions = align === "right" ? [...positions].reverse() : positions;
+
+  return (
+    <div className={`flex w-full items-center gap-[4px] ${align === "right" ? "justify-end" : "justify-start"}`}>
+      {orderedPositions.map((index) => (
+        <span
+          key={index}
+          className={`h-[4px] w-[18px] rounded-full ${
             index < usedCount ? "bg-slate-200/65" : "bg-emerald-400"
           }`}
         />
