@@ -5018,48 +5018,50 @@ export function TournamentDetailPage({
                         key={`folder-${section.key}`}
                         type="button"
                         onClick={() => setActiveGallerySectionKey(section.key)}
-                        className={`group relative flex min-h-[290px] flex-col overflow-hidden rounded-[28px] border p-4 text-left transition sm:aspect-square sm:min-h-0 ${
+                        className={`group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border px-7 pb-8 pt-7 text-left transition sm:aspect-square sm:min-h-0 ${
                           isActive
-                            ? "border-amber-300 bg-amber-50 shadow-[0_18px_45px_rgba(245,158,11,0.18)]"
-                            : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+                            ? "border-amber-300 bg-[linear-gradient(180deg,#fffdf5_0%,#fff9e8_100%)] shadow-[0_20px_50px_rgba(245,158,11,0.12)]"
+                            : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                         }`}
                       >
-                        <div className="relative mb-5 h-[170px]">
+                        <div className="relative mb-7 h-[170px]">
                           <div
                             aria-hidden="true"
-                            className={`absolute left-[8%] top-0 h-7 w-20 rounded-t-[18px] ${
-                              isActive ? "bg-amber-300" : "bg-amber-200"
+                            className={`absolute left-7 top-0 h-10 w-20 rounded-t-[22px] ${
+                              isActive ? "bg-amber-300" : "bg-amber-300/95"
                             }`}
                           />
                           <div
                             aria-hidden="true"
-                            className={`absolute inset-x-[7%] top-5 bottom-8 overflow-hidden rounded-[20px] border ${
+                            className={`absolute left-6 right-6 top-8 bottom-8 overflow-hidden rounded-[22px] border ${
                               isActive
-                                ? "border-amber-200 bg-slate-50"
-                                : "border-slate-200 bg-slate-50"
+                                ? "border-slate-300 bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]"
+                                : "border-slate-200 bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]"
                             }`}
                           >
                             {folderPreview ? (
-                              <img
-                                src={folderPreview}
-                                alt=""
-                                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                                loading="lazy"
-                              />
+                              <>
+                                <img
+                                  src={folderPreview}
+                                  alt=""
+                                  className="h-full w-full object-cover opacity-35 transition duration-300 group-hover:scale-[1.03]"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.72),rgba(239,246,255,0.9))]" />
+                              </>
                             ) : (
-                              <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_48%),linear-gradient(135deg,_rgba(226,232,240,0.9),_rgba(241,245,249,0.75))]" />
+                              <div className="h-full w-full bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]" />
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/10 via-transparent to-white/30" />
                           </div>
                           <div
                             aria-hidden="true"
-                            className={`absolute inset-x-0 bottom-0 h-[43%] rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ${
+                            className={`absolute inset-x-0 bottom-0 h-[42%] rounded-[24px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ${
                               isActive
-                                ? "border-amber-300 bg-gradient-to-b from-amber-200 to-amber-300"
+                                ? "border-amber-300 bg-gradient-to-b from-[#ffe89a] to-[#ffd54a]"
                                 : "border-amber-300 bg-gradient-to-b from-amber-100 to-amber-200"
                             }`}
                           >
-                            <div className="absolute inset-x-[5%] top-0 h-px bg-white/70" />
+                            <div className="absolute inset-x-[5%] top-0 h-px bg-white/80" />
                           </div>
                         </div>
                         <div className="mt-auto space-y-2">
