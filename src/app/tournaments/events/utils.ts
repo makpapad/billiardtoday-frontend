@@ -22,6 +22,21 @@ export const toNumber = (value: unknown): number | null => {
   return null;
 };
 
+const looksLikeUtf8Mojibake = (value: string): boolean =>
+  /[ÃÂ][\u0080-\u00FF]/.test(value) ||
+  value.includes("Ã") ||
+  value.includes("Â");
+
+const repairUtf8Mojibake = (value: string): string => {
+  if (!looksLikeUtf8Mojibake(value)) return value;
+  try {
+    const repaired = Buffer.from(value, "latin1").toString("utf8").trim();
+    return repaired && repaired.includes("�") === false ? repaired : value;
+  } catch {
+    return value;
+  }
+};
+
 export const toRelationArray = (value: unknown): unknown[] => {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -89,10 +104,12 @@ export const normalizePlayer = (
 
   const nameEn =
     typeof normalized.full_name_en === "string"
-      ? normalized.full_name_en.trim()
+      ? repairUtf8Mojibake(normalized.full_name_en.trim())
       : "";
   const nativeName =
-    typeof normalized.full_name === "string" ? normalized.full_name.trim() : "";
+    typeof normalized.full_name === "string"
+      ? repairUtf8Mojibake(normalized.full_name.trim())
+      : "";
   const name = nameEn || nativeName;
   const country =
     typeof (normalized as { country?: unknown }).country === "string"
@@ -206,9 +223,7 @@ export const normalizeFinalResult = (
     playerCountry: player.country ?? null,
     matchPoints: toNumber((normalized as typeof normalized & { match_points?: unknown }).match_points) ?? toNumber(normalized.points),
     bestAverage: toNumber(normalized.best_average),
-    bestGame:
-      toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game) ??
-      toNumber((normalized as typeof normalized & { high_run_2?: unknown }).high_run_2),
+    bestGame: toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game),
     caroms: toNumber(normalized.caroms),
     points: toNumber(normalized.points),
     innings: toNumber(normalized.innings),

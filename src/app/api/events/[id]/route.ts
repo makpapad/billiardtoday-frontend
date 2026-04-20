@@ -538,19 +538,33 @@ export async function GET(
                         typeof player?.documentId === 'string' ? player.documentId : null
                     const derivedMatchPoints =
                         playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null
+                    const hasExplicitBestGameField =
+                        Object.prototype.hasOwnProperty.call(result, 'best_game')
+                    const explicitBestGame =
+                        hasExplicitBestGameField && result.best_game !== undefined
+                            ? toNumber(result.best_game)
+                            : null
                     const derivedBestGame =
-                        isArtisticEvent && playerDocumentId
+                        isArtisticEvent && playerDocumentId && !hasExplicitBestGameField
                             ? (stageBestGame.get(playerDocumentId) ?? null)
                             : null
 
-                    if (derivedMatchPoints === null && derivedBestGame === null) {
+                    if (
+                        derivedMatchPoints === null &&
+                        derivedBestGame === null &&
+                        explicitBestGame === null
+                    ) {
                         return result
                     }
 
                     return {
                         ...result,
                         ...(derivedMatchPoints === null ? {} : { match_points: derivedMatchPoints }),
-                        ...(derivedBestGame === null ? {} : { best_game: derivedBestGame }),
+                        ...(hasExplicitBestGameField
+                            ? { best_game: explicitBestGame }
+                            : derivedBestGame === null
+                              ? {}
+                              : { best_game: derivedBestGame }),
                     }
                 })
 
