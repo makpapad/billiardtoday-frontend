@@ -5065,10 +5065,7 @@ export function TournamentDetailPage({
                 <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                   <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Explorer View
-                      </div>
-                      <div className="mt-1 truncate text-sm font-semibold text-slate-700">
+                      <div className="truncate text-sm font-semibold text-slate-700">
                         Photo Gallery / {activeGallerySection.title}
                       </div>
                     </div>
