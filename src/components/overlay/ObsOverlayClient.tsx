@@ -1031,7 +1031,7 @@ function TemplateThreeOverlayCard({
           }}
         >
           <span className="truncate whitespace-nowrap">
-            {tournament} / Stage {stage} / Table {table}
+            {tournament} / Stage {stage}
           </span>
           <TimeStrip
             remainingBlocks={remainingBlocks}
@@ -1041,7 +1041,7 @@ function TemplateThreeOverlayCard({
             barWidth={timeStripWidth}
           />
           <span className="justify-self-end whitespace-nowrap text-[12px] tracking-[0.06em] text-slate-950">
-            {target ? `Race to ${target}` : ""}
+            {`Table ${table}${target ? ` / Race to ${target}` : ""}`}
           </span>
         </div>
       </div>
