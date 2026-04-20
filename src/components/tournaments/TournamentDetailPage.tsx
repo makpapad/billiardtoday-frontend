@@ -5027,78 +5027,31 @@ export function TournamentDetailPage({
                         <div className="relative mb-7 h-[210px]">
                           <div
                             aria-hidden="true"
-                            className="absolute left-[19%] right-[19%] top-[72px] h-[74px] overflow-hidden rounded-[24px]"
+                            className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
                           >
                             {folderPreview ? (
                               <>
                                 <img
                                   src={folderPreview}
                                   alt=""
-                                  className="h-full w-full object-cover opacity-28 transition duration-300 group-hover:scale-[1.03]"
+                                  className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
                                   loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.84),rgba(239,246,255,0.97))]" />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]" />
                               </>
                             ) : (
-                              <div className="h-full w-full bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]" />
+                              <div className="h-full w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
                             )}
                           </div>
-                          <svg
+                          <img
                             aria-hidden="true"
-                            viewBox="0 0 320 220"
-                            className="absolute inset-0 h-full w-full"
-                          >
-                            <defs>
-                              <linearGradient id={`folder-back-${section.key}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#DBEAFE" />
-                                <stop offset="100%" stopColor="#EFF6FF" />
-                              </linearGradient>
-                              <linearGradient id={`folder-front-${section.key}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={isActive ? "#FFE89A" : "#FDE68A"} />
-                                <stop offset="100%" stopColor={isActive ? "#FFD54A" : "#FCD34D"} />
-                              </linearGradient>
-                              <linearGradient id={`folder-tab-${section.key}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#FCD34D" />
-                                <stop offset="100%" stopColor="#FBBF24" />
-                              </linearGradient>
-                              <filter id={`folder-shadow-${section.key}`} x="-20%" y="-20%" width="140%" height="160%">
-                                <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#dbeafe" floodOpacity="0.6" />
-                              </filter>
-                            </defs>
-                            <rect
-                              x="88"
-                              y="18"
-                              width="84"
-                              height="52"
-                              rx="22"
-                              fill={`url(#folder-tab-${section.key})`}
-                            />
-                            <rect
-                              x="80"
-                              y="64"
-                              width="200"
-                              height="62"
-                              rx="22"
-                              fill={`url(#folder-back-${section.key})`}
-                              stroke={isActive ? "#C9D8EF" : "#D8E3F1"}
-                            />
-                            <rect
-                              x="40"
-                              y="106"
-                              width="240"
-                              height="88"
-                              rx="30"
-                              fill={`url(#folder-front-${section.key})`}
-                              stroke="#F5C23B"
-                              filter={`url(#folder-shadow-${section.key})`}
-                            />
-                            <path
-                              d="M60 110 H260"
-                              stroke="rgba(255,255,255,0.75)"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
+                            src="/icons%20webp/folder-1485.svg"
+                            alt=""
+                            className={`absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain ${
+                              isActive ? "drop-shadow-[0_18px_28px_rgba(245,158,11,0.12)]" : "drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
+                            }`}
+                            loading="lazy"
+                          />
                         </div>
                         <div className="mt-auto space-y-2">
                           <div
