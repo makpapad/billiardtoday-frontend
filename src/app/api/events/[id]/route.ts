@@ -29,6 +29,56 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
 
 const isMissingStat = (value: unknown) => value === undefined || value === null || value === ''
 
+const resolveArtisticMatchPoints = (
+    match: Record<string, unknown>,
+    role: 'player1' | 'player2',
+) => {
+    const explicit = toNumber(match[`${role}_match_points`])
+    if (explicit !== null) return explicit
+
+    const playerPoints = toNumber(match[`${role}_points`])
+    const opponentRole = role === 'player1' ? 'player2' : 'player1'
+    const opponentPoints = toNumber(match[`${opponentRole}_points`])
+    const penaltyWinner = toNumber(match.penalty_winner)
+
+    if (playerPoints !== null && opponentPoints !== null) {
+        if (playerPoints > opponentPoints) return 2
+        if (playerPoints < opponentPoints) return 0
+    }
+
+    if (penaltyWinner === (role === 'player1' ? 1 : 2)) return 2
+    if (penaltyWinner === (role === 'player1' ? 2 : 1)) return 0
+
+    return 1
+}
+
+const isEligibleArtisticBestGameMatch = (
+    match: Record<string, unknown>,
+    role: 'player1' | 'player2',
+) => {
+    const source = String(match.source ?? '').toLowerCase()
+    if (source.includes('double-ff')) return false
+    if (
+        role === 'player1' &&
+        (source.includes('ff-1') || source.includes('forfeit-1') || source.includes('forfait-1'))
+    ) {
+        return false
+    }
+    if (
+        role === 'player2' &&
+        (source.includes('ff-2') || source.includes('forfeit-2') || source.includes('forfait-2'))
+    ) {
+        return false
+    }
+
+    const playerMatchPoints = resolveArtisticMatchPoints(match, role)
+    const opponentMatchPoints = resolveArtisticMatchPoints(
+        match,
+        role === 'player1' ? 'player2' : 'player1',
+    )
+    return playerMatchPoints >= opponentMatchPoints
+}
+
 const looksLikeHtmlError = (value: string) => {
     const normalized = value.trim().toLowerCase()
     return normalized.startsWith('<!doctype html') || normalized.startsWith('<html')
@@ -431,7 +481,7 @@ export async function GET(
                                 (stageMatchPoints.get(playerDocumentId) ?? 0) + matchPoints,
                             )
                         }
-                        if (playerDocumentId && bestAverage !== null) {
+                        if (!isArtisticEvent && playerDocumentId && bestAverage !== null) {
                             stageBestGame.set(
                                 playerDocumentId,
                                 Math.max(stageBestGame.get(playerDocumentId) ?? 0, bestAverage),
@@ -455,7 +505,8 @@ export async function GET(
                                 player1DocumentId &&
                                 player1Points !== null &&
                                 player1Innings !== null &&
-                                player1Innings > 0
+                                player1Innings > 0 &&
+                                isEligibleArtisticBestGameMatch(match, 'player1')
                             ) {
                                 const percentage = Math.trunc((player1Points / player1Innings) * 100000) / 1000
                                 stageBestGame.set(
@@ -468,7 +519,8 @@ export async function GET(
                                 player2DocumentId &&
                                 player2Points !== null &&
                                 player2Innings !== null &&
-                                player2Innings > 0
+                                player2Innings > 0 &&
+                                isEligibleArtisticBestGameMatch(match, 'player2')
                             ) {
                                 const percentage = Math.trunc((player2Points / player2Innings) * 100000) / 1000
                                 stageBestGame.set(
