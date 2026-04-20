@@ -408,6 +408,134 @@ export const buildGroupStandings = (
   const artistic = options?.artistic === true;
   const truncateTo3Decimals = (value: number): number =>
     Math.trunc(value * 1000) / 1000;
+  const computeArtisticPercentage = (
+    points: number | null | undefined,
+    possiblePoints: number | null | undefined,
+  ): number => {
+    const succeededPoints =
+      typeof points === "number" && Number.isFinite(points) ? points : 0;
+    const totalPossiblePoints =
+      typeof possiblePoints === "number" && Number.isFinite(possiblePoints)
+        ? possiblePoints
+        : 0;
+
+    if (succeededPoints <= 0 || totalPossiblePoints <= 0) return 0;
+
+    const pct = (succeededPoints * 100) / totalPossiblePoints;
+    return Number.isFinite(pct) ? truncateTo3Decimals(pct) : 0;
+  };
+  const compareArtisticMetrics = (
+    a: GroupStanding,
+    b: GroupStanding,
+    compareOptions?: { includeHighRun?: boolean; includeMatchPoints?: boolean },
+  ): number => {
+    const includeMatchPoints = compareOptions?.includeMatchPoints !== false;
+    const includeHighRun = compareOptions?.includeHighRun !== false;
+
+    if (includeMatchPoints && a.totalMatchPoints !== b.totalMatchPoints) {
+      return b.totalMatchPoints - a.totalMatchPoints;
+    }
+
+    const pctA = computeArtisticPercentage(a.totalPoints, a.totalInnings);
+    const pctB = computeArtisticPercentage(b.totalPoints, b.totalInnings);
+    if (pctA !== pctB) return pctB - pctA;
+
+    if (includeHighRun) {
+      const highRunA = a.highRun ?? -1;
+      const highRunB = b.highRun ?? -1;
+      if (highRunA !== highRunB) return highRunB - highRunA;
+    }
+
+    return a.playerName.localeCompare(b.playerName);
+  };
+  const resolveArtisticDirectComparison = (
+    standings: GroupStanding[],
+  ): GroupStanding[] => {
+    const resolved: GroupStanding[] = [];
+    let index = 0;
+
+    while (index < standings.length) {
+      const current = standings[index];
+      const tiedBlock = [current];
+      let nextIndex = index + 1;
+
+      while (
+        nextIndex < standings.length &&
+        compareArtisticMetrics(current, standings[nextIndex], {
+          includeHighRun: false,
+        }) === 0
+      ) {
+        tiedBlock.push(standings[nextIndex]);
+        nextIndex += 1;
+      }
+
+      if (tiedBlock.length === 1) {
+        resolved.push(current);
+        index = nextIndex;
+        continue;
+      }
+
+      const tiedKeys = new Set(tiedBlock.map((standing) => standing.key));
+      const directStats = new Map<
+        string,
+        { totalMatchPoints: number; totalPoints: number; totalInnings: number }
+      >(
+        tiedBlock.map((standing) => [
+          standing.key,
+          { totalMatchPoints: 0, totalPoints: 0, totalInnings: 0 },
+        ]),
+      );
+
+      matches.forEach((match) => {
+        const topKey = match.top.player.documentId ?? `${match.top.player.name}-top`;
+        const bottomKey =
+          match.bottom.player.documentId ?? `${match.bottom.player.name}-bottom`;
+        if (!tiedKeys.has(topKey) || !tiedKeys.has(bottomKey)) return;
+
+        const topStats = directStats.get(topKey);
+        const bottomStats = directStats.get(bottomKey);
+        if (!topStats || !bottomStats) return;
+
+        topStats.totalMatchPoints += match.top.player.matchPoints ?? 0;
+        topStats.totalPoints += match.top.player.points ?? 0;
+        topStats.totalInnings += match.top.player.innings ?? 0;
+
+        bottomStats.totalMatchPoints += match.bottom.player.matchPoints ?? 0;
+        bottomStats.totalPoints += match.bottom.player.points ?? 0;
+        bottomStats.totalInnings += match.bottom.player.innings ?? 0;
+      });
+
+      const sortedBlock = [...tiedBlock].sort((left, right) => {
+        const leftDirect = directStats.get(left.key);
+        const rightDirect = directStats.get(right.key);
+
+        if (leftDirect && rightDirect) {
+          if (leftDirect.totalMatchPoints !== rightDirect.totalMatchPoints) {
+            return rightDirect.totalMatchPoints - leftDirect.totalMatchPoints;
+          }
+
+          const directPctLeft = computeArtisticPercentage(
+            leftDirect.totalPoints,
+            leftDirect.totalInnings,
+          );
+          const directPctRight = computeArtisticPercentage(
+            rightDirect.totalPoints,
+            rightDirect.totalInnings,
+          );
+          if (directPctLeft !== directPctRight) {
+            return directPctRight - directPctLeft;
+          }
+        }
+
+        return compareArtisticMetrics(left, right);
+      });
+
+      resolved.push(...sortedBlock);
+      index = nextIndex;
+    }
+
+    return resolved;
+  };
   if (!matches.some(hasPlayedStageMatch)) {
     return [];
   }
@@ -504,27 +632,29 @@ export const buildGroupStandings = (
     };
   });
 
-  standings.sort((a, b) => {
-    if (a.totalMatchPoints !== b.totalMatchPoints)
-      return b.totalMatchPoints - a.totalMatchPoints;
-    const avgA = a.average ?? -1;
-    const avgB = b.average ?? -1;
-    if (avgA !== avgB) return avgB - avgA;
-    const highRunA = a.highRun ?? -1;
-    const highRunB = b.highRun ?? -1;
-    if (highRunA !== highRunB) return highRunB - highRunA;
-    const bestAvgA = a.bestAverage ?? -1;
-    const bestAvgB = b.bestAverage ?? -1;
-    if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
-    if (!artistic) {
-      const highRun2A = a.highRun2 ?? -1;
-      const highRun2B = b.highRun2 ?? -1;
-      if (highRun2A !== highRun2B) return highRun2B - highRun2A;
-    }
-    return a.playerName.localeCompare(b.playerName);
-  });
+  const sortedStandings = artistic
+    ? resolveArtisticDirectComparison(
+        [...standings].sort((a, b) => compareArtisticMetrics(a, b)),
+      )
+    : [...standings].sort((a, b) => {
+        if (a.totalMatchPoints !== b.totalMatchPoints)
+          return b.totalMatchPoints - a.totalMatchPoints;
+        const avgA = a.average ?? -1;
+        const avgB = b.average ?? -1;
+        if (avgA !== avgB) return avgB - avgA;
+        const highRunA = a.highRun ?? -1;
+        const highRunB = b.highRun ?? -1;
+        if (highRunA !== highRunB) return highRunB - highRunA;
+        const bestAvgA = a.bestAverage ?? -1;
+        const bestAvgB = b.bestAverage ?? -1;
+        if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
+        const highRun2A = a.highRun2 ?? -1;
+        const highRun2B = b.highRun2 ?? -1;
+        if (highRun2A !== highRun2B) return highRun2B - highRun2A;
+        return a.playerName.localeCompare(b.playerName);
+      });
 
-  return standings.map((standing, index) => ({
+  return sortedStandings.map((standing, index) => ({
     ...standing,
     place: index + 1,
   }));
