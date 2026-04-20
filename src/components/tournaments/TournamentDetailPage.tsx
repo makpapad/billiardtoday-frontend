@@ -5024,45 +5024,77 @@ export function TournamentDetailPage({
                             : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                         }`}
                       >
-                        <div className="relative mb-7 h-[170px]">
+                        <div className="relative mb-7 h-[200px]">
                           <div
                             aria-hidden="true"
-                            className={`absolute left-7 top-0 h-10 w-20 rounded-t-[22px] ${
-                              isActive ? "bg-amber-300" : "bg-amber-300/95"
-                            }`}
-                          />
-                          <div
-                            aria-hidden="true"
-                            className={`absolute left-6 right-6 top-8 bottom-8 overflow-hidden rounded-[22px] border ${
-                              isActive
-                                ? "border-slate-300 bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]"
-                                : "border-slate-200 bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]"
-                            }`}
+                            className="absolute left-[14%] right-[14%] top-[58px] h-[58px] overflow-hidden rounded-[22px]"
                           >
                             {folderPreview ? (
                               <>
                                 <img
                                   src={folderPreview}
                                   alt=""
-                                  className="h-full w-full object-cover opacity-35 transition duration-300 group-hover:scale-[1.03]"
+                                  className="h-full w-full object-cover opacity-40 transition duration-300 group-hover:scale-[1.03]"
                                   loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.72),rgba(239,246,255,0.9))]" />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.75),rgba(239,246,255,0.92))]" />
                               </>
                             ) : (
                               <div className="h-full w-full bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]" />
                             )}
                           </div>
-                          <div
+                          <svg
                             aria-hidden="true"
-                            className={`absolute inset-x-0 bottom-0 h-[42%] rounded-[24px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ${
-                              isActive
-                                ? "border-amber-300 bg-gradient-to-b from-[#ffe89a] to-[#ffd54a]"
-                                : "border-amber-300 bg-gradient-to-b from-amber-100 to-amber-200"
-                            }`}
+                            viewBox="0 0 320 210"
+                            className="absolute inset-0 h-full w-full"
                           >
-                            <div className="absolute inset-x-[5%] top-0 h-px bg-white/80" />
-                          </div>
+                            <defs>
+                              <linearGradient id={`folder-back-${section.key}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#DBEAFE" />
+                                <stop offset="100%" stopColor="#EFF6FF" />
+                              </linearGradient>
+                              <linearGradient id={`folder-front-${section.key}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={isActive ? "#FFE89A" : "#FDE68A"} />
+                                <stop offset="100%" stopColor={isActive ? "#FFD54A" : "#FCD34D"} />
+                              </linearGradient>
+                              <linearGradient id={`folder-tab-${section.key}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#FCD34D" />
+                                <stop offset="100%" stopColor="#FBBF24" />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              x="54"
+                              y="10"
+                              width="92"
+                              height="58"
+                              rx="24"
+                              fill={`url(#folder-tab-${section.key})`}
+                            />
+                            <rect
+                              x="48"
+                              y="52"
+                              width="224"
+                              height="66"
+                              rx="24"
+                              fill={`url(#folder-back-${section.key})`}
+                              stroke={isActive ? "#CBD5E1" : "#D6DEE9"}
+                            />
+                            <rect
+                              x="14"
+                              y="108"
+                              width="292"
+                              height="82"
+                              rx="28"
+                              fill={`url(#folder-front-${section.key})`}
+                              stroke="#F5C23B"
+                            />
+                            <path
+                              d="M28 111 H292"
+                              stroke="rgba(255,255,255,0.75)"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
                         </div>
                         <div className="mt-auto space-y-2">
                           <div
