@@ -5074,9 +5074,172 @@ export function TournamentDetailPage({
                     );
                   })}
                 </div>
+                <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                  <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Explorer View
+                      </div>
+                      <div className="mt-1 truncate text-sm font-semibold text-slate-700">
+                        Photo Gallery / {activeGallerySection.title}
+                      </div>
+                    </div>
+                    <div className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
+                      {activeGallerySection.videos.length} videos • {activeGallerySection.images.length} photos
+                    </div>
+                  </div>
+                  <div className="space-y-8 px-5 py-5 sm:px-6 sm:py-6">
+                    {activeGallerySection.videos.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Videos
+                        </div>
+                        <div className="grid gap-5 xl:grid-cols-2">
+                          {activeGallerySection.videos.map((video, index) => {
+                            const isExpanded = expandedGalleryVideoIds.has(video.id);
+                            const youtubeThumbnailUrl =
+                              video.kind === "youtube" && video.videoId
+                                ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`
+                                : null;
+                            return (
+                              <article
+                                key={`explorer-video-${video.id}`}
+                                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+                              >
+                                <div className="aspect-video bg-slate-950">
+                                  {video.kind === "youtube" && video.videoId ? (
+                                    isExpanded ? (
+                                      <iframe
+                                        src={`https://www.youtube.com/embed/${video.videoId}?rel=0&autoplay=1`}
+                                        title={video.title || `Tournament video ${index + 1}`}
+                                        className="h-full w-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                      />
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setExpandedGalleryVideoIds((current) => {
+                                            const next = new Set(current);
+                                            next.add(video.id);
+                                            return next;
+                                          })
+                                        }
+                                        className="group relative block h-full w-full overflow-hidden text-left"
+                                        aria-label={video.title || `Play tournament video ${index + 1}`}
+                                      >
+                                        {youtubeThumbnailUrl ? (
+                                          <img
+                                            src={youtubeThumbnailUrl}
+                                            alt={video.title || `Tournament video ${index + 1}`}
+                                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                        ) : (
+                                          <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                            Video preview unavailable
+                                          </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
+                                            <span className="ml-1 text-2xl">▶</span>
+                                          </span>
+                                        </div>
+                                        <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                                          Load video
+                                        </div>
+                                      </button>
+                                    )
+                                  ) : video.fileUrl ? (
+                                    <video
+                                      src={video.fileUrl}
+                                      controls
+                                      playsInline
+                                      preload="metadata"
+                                      className="h-full w-full"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                      Video unavailable
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="space-y-2 px-5 py-4">
+                                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    {video.kind === "youtube"
+                                      ? `YouTube video ${index + 1}`
+                                      : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
+                                  </div>
+                                  <div className="text-base font-bold text-slate-950">
+                                    {video.title || "Tournament video"}
+                                  </div>
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                    {activeGallerySection.images.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Photos
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          {activeGallerySection.images.map((image, index) => {
+                            const lightboxIndex = flatGalleryImages.findIndex(
+                              (entry) =>
+                                entry.id === image.id &&
+                                entry.mediaId === image.mediaId &&
+                                entry.sectionTitle === activeGallerySection.title,
+                            );
+
+                            return (
+                              <button
+                                key={`explorer-photo-${activeGallerySection.key}-${image.id}-${index}`}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedGalleryImageIndex(
+                                    lightboxIndex >= 0 ? lightboxIndex : null,
+                                  )
+                                }
+                                className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+                              >
+                                <div className="aspect-[4/3] overflow-hidden bg-slate-200">
+                                  {image.previewUrl ? (
+                                    <img
+                                      src={image.previewUrl}
+                                      alt={image.alt || image.name}
+                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                      No preview
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="space-y-2 px-5 py-4">
+                                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Photo {index + 1}
+                                  </div>
+                                  <div className="line-clamp-2 text-base font-bold text-slate-950">
+                                    {image.caption || image.alt || image.name}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             ) : null}
-            {gallerySections.map((section) => (
+            {false && gallerySections.map((section) => (
               <div
                 key={section.key}
                 className={section.key === activeGallerySection?.key ? "space-y-4" : "hidden"}
