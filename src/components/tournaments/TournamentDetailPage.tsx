@@ -1382,6 +1382,9 @@ export function TournamentDetailPage({
   const [selectedGalleryImageIndex, setSelectedGalleryImageIndex] = useState<
     number | null
   >(null);
+  const [activeGallerySectionKey, setActiveGallerySectionKey] = useState<
+    string | null
+  >(null);
   const [expandedGalleryVideoIds, setExpandedGalleryVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -3974,12 +3977,34 @@ export function TournamentDetailPage({
     [gallerySections],
   );
   const hasGalleryContent = gallerySections.length > 0;
+  const activeGallerySection = useMemo(() => {
+    if (gallerySections.length === 0) return null;
+    return (
+      gallerySections.find((section) => section.key === activeGallerySectionKey) ??
+      gallerySections[0] ??
+      null
+    );
+  }, [activeGallerySectionKey, gallerySections]);
   const selectedGalleryImage =
     selectedGalleryImageIndex !== null &&
     selectedGalleryImageIndex >= 0 &&
     selectedGalleryImageIndex < flatGalleryImages.length
       ? flatGalleryImages[selectedGalleryImageIndex]
       : null;
+
+  useEffect(() => {
+    if (gallerySections.length === 0) {
+      setActiveGallerySectionKey(null);
+      return;
+    }
+
+    setActiveGallerySectionKey((current) => {
+      if (current && gallerySections.some((section) => section.key === current)) {
+        return current;
+      }
+      return gallerySections[0]?.key ?? null;
+    });
+  }, [gallerySections]);
 
   useEffect(() => {
     if (selectedGalleryImageIndex === null) return;
@@ -4971,8 +4996,75 @@ export function TournamentDetailPage({
                   : `The photo gallery for ${summary.title} is being prepared.`}
               </p>
             </div>
+            {hasGalleryContent && activeGallerySection ? (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Browse by folder
+                  </div>
+                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {gallerySections.length} folders
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {gallerySections.map((section) => {
+                    const isActive = section.key === activeGallerySection.key;
+                    return (
+                      <button
+                        key={`folder-${section.key}`}
+                        type="button"
+                        onClick={() => setActiveGallerySectionKey(section.key)}
+                        className={`group relative overflow-hidden rounded-[26px] border p-5 text-left transition ${
+                          isActive
+                            ? "border-amber-300 bg-amber-50 shadow-[0_18px_45px_rgba(245,158,11,0.16)]"
+                            : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`absolute left-5 top-0 h-3 w-16 rounded-b-xl ${
+                            isActive ? "bg-amber-300" : "bg-slate-200"
+                          }`}
+                        />
+                        <div
+                          className={`mb-4 h-14 w-full rounded-[18px] border px-4 py-3 ${
+                            isActive
+                              ? "border-amber-200 bg-white/80"
+                              : "border-slate-200 bg-slate-50"
+                          }`}
+                        >
+                          <div className="relative h-full w-full rounded-[12px] bg-gradient-to-b from-amber-300 to-amber-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+                            <span className="absolute left-3 top-[-7px] h-3 w-10 rounded-t-xl bg-amber-300" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                              isActive
+                                ? "bg-amber-100 text-amber-900"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {section.stageDocumentId ? "Stage Folder" : "General Folder"}
+                          </div>
+                          <div className="text-base font-black tracking-tight text-slate-950">
+                            {section.title}
+                          </div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            {section.images.length} photos | {section.videos.length} videos
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             {gallerySections.map((section) => (
-              <div key={section.key} className="space-y-4">
+              <div
+                key={section.key}
+                className={section.key === activeGallerySection?.key ? "space-y-4" : "hidden"}
+              >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
