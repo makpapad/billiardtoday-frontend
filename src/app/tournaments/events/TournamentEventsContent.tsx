@@ -3401,11 +3401,17 @@ export function TournamentEventsContent({
                                   result.highRun > 10 &&
                                   result.highRun === finalStandingsHighlights.highRun;
                                 const averageDisplay = isArtisticEvent
-                                  ? (result.bestAverage !== null
-                                      ? formatTruncatedAverage(
-                                          result.bestAverage,
-                                        )
-                                      : "-")
+                                  ? (() => {
+                                      if (
+                                        finalAverageValue === null ||
+                                        !Number.isFinite(finalAverageValue)
+                                      ) {
+                                        return "-";
+                                      }
+                                      return formatTruncatedAverage(
+                                        finalAverageValue * 100,
+                                      );
+                                    })()
                                   : formatAverage(
                                       result.caroms ?? result.points,
                                       result.innings,
@@ -3471,6 +3477,11 @@ export function TournamentEventsContent({
                                       highlightAverage,
                                     )}
                                   </td>
+                                  {isArtisticEvent && (
+                                    <td className="px-4 py-3 text-center">
+                                      {formatNumberValue(result.highRun)}
+                                    </td>
+                                  )}
                                   {isArtisticEvent && (
                                     <td className="px-4 py-3 text-center">
                                       {result.bestGame !== null
