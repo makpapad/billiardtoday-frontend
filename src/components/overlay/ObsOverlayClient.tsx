@@ -172,6 +172,12 @@ function formatOverlayPlayerName(name: string | null | undefined): string {
   return firstInitial ? `${lastName} ${firstInitial}.` : lastName;
 }
 
+function truncateOverlayLabel(value: string, maxChars: number): string {
+  const normalized = value.trim();
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, Math.max(1, maxChars - 1)).trimEnd()}.`;
+}
+
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
   if (!input) return null;
 
@@ -991,6 +997,9 @@ function TemplateThreeOverlayCard({
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
   const rightName = normalizeString(state.playerBName) ?? "Player 2";
+  const nameCharLimit = Math.max(18, Math.min(30, Math.round(width * 0.022)));
+  const displayLeftName = truncateOverlayLabel(leftName, nameCharLimit);
+  const displayRightName = truncateOverlayLabel(rightName, nameCharLimit);
   const activeSide = state.current;
   const tournament = state.tournamentName ?? "Live Match";
   const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
@@ -1059,8 +1068,8 @@ function TemplateThreeOverlayCard({
           <div className="flex min-w-0 max-w-[330px] items-center gap-2">
             {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
             <div className="flex min-w-0 flex-col items-end gap-[3px] overflow-hidden">
-              <span className="w-full truncate text-right text-[17px] font-normal leading-none tracking-[0.03em]">
-                {leftName}
+              <span className="w-full overflow-hidden whitespace-nowrap text-right text-[17px] font-normal leading-none tracking-[0.03em]">
+                {displayLeftName}
               </span>
               <HorizontalTimeoutTicks
                 activeCount={leftTimeouts}
@@ -1100,8 +1109,8 @@ function TemplateThreeOverlayCard({
         <div className="flex min-w-0 items-center justify-start pl-1">
           <div className="flex min-w-0 max-w-[330px] items-center gap-2">
             <div className="flex min-w-0 flex-col items-start gap-[3px] overflow-hidden">
-              <span className="w-full truncate text-left text-[17px] font-normal leading-none tracking-[0.03em]">
-                {rightName}
+              <span className="w-full overflow-hidden whitespace-nowrap text-left text-[17px] font-normal leading-none tracking-[0.03em]">
+                {displayRightName}
               </span>
               <HorizontalTimeoutTicks
                 activeCount={rightTimeouts}
@@ -1149,6 +1158,9 @@ function TemplateFourOverlayCard({
   const rightFlag = resolveCountryCode(state.playerBCountry);
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
   const rightName = normalizeString(state.playerBName) ?? "Player 2";
+  const nameCharLimit = Math.max(18, Math.min(30, Math.round(width * 0.022)));
+  const displayLeftName = truncateOverlayLabel(leftName, nameCharLimit);
+  const displayRightName = truncateOverlayLabel(rightName, nameCharLimit);
   const activeSide = state.current;
   const tournament = state.tournamentName ?? "Live Match";
   const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
