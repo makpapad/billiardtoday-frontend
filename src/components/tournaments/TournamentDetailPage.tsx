@@ -5024,20 +5024,20 @@ export function TournamentDetailPage({
                             : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                         }`}
                       >
-                        <div className="relative mb-7 h-[200px]">
+                        <div className="relative mb-7 h-[210px]">
                           <div
                             aria-hidden="true"
-                            className="absolute left-[14%] right-[14%] top-[58px] h-[58px] overflow-hidden rounded-[22px]"
+                            className="absolute left-[16%] right-[16%] top-[56px] h-[64px] overflow-hidden rounded-[22px]"
                           >
                             {folderPreview ? (
                               <>
                                 <img
                                   src={folderPreview}
                                   alt=""
-                                  className="h-full w-full object-cover opacity-40 transition duration-300 group-hover:scale-[1.03]"
+                                  className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
                                   loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.75),rgba(239,246,255,0.92))]" />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.88),rgba(239,246,255,0.98))]" />
                               </>
                             ) : (
                               <div className="h-full w-full bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]" />
@@ -5045,7 +5045,7 @@ export function TournamentDetailPage({
                           </div>
                           <svg
                             aria-hidden="true"
-                            viewBox="0 0 320 210"
+                            viewBox="0 0 320 220"
                             className="absolute inset-0 h-full w-full"
                           >
                             <defs>
@@ -5063,33 +5063,33 @@ export function TournamentDetailPage({
                               </linearGradient>
                             </defs>
                             <rect
-                              x="54"
-                              y="10"
-                              width="92"
-                              height="58"
+                              x="74"
+                              y="20"
+                              width="82"
+                              height="54"
                               rx="24"
                               fill={`url(#folder-tab-${section.key})`}
                             />
                             <rect
-                              x="48"
-                              y="52"
-                              width="224"
-                              height="66"
-                              rx="24"
+                              x="68"
+                              y="58"
+                              width="184"
+                              height="62"
+                              rx="22"
                               fill={`url(#folder-back-${section.key})`}
-                              stroke={isActive ? "#CBD5E1" : "#D6DEE9"}
+                              stroke={isActive ? "#CCD8EA" : "#D9E2EF"}
                             />
                             <rect
-                              x="14"
-                              y="108"
-                              width="292"
-                              height="82"
-                              rx="28"
+                              x="28"
+                              y="112"
+                              width="264"
+                              height="74"
+                              rx="26"
                               fill={`url(#folder-front-${section.key})`}
                               stroke="#F5C23B"
                             />
                             <path
-                              d="M28 111 H292"
+                              d="M42 114 H278"
                               stroke="rgba(255,255,255,0.75)"
                               strokeWidth="2"
                               strokeLinecap="round"
