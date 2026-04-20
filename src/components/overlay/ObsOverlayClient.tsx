@@ -1026,7 +1026,7 @@ function TemplateThreeOverlayCard({
           style={{
             width: topStripWidth,
             backgroundColor: "#d6d9e1",
-            gridTemplateColumns: "minmax(0,1fr) auto auto",
+            gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)",
             columnGap: 12,
           }}
         >
@@ -1369,16 +1369,16 @@ function CompactOverlayStats({
   hr: number;
   align: "left" | "right";
 }) {
-  const textAlignClass = align === "right" ? "items-end text-right" : "items-start text-left";
+  const justifyClass = align === "right" ? "justify-end text-right" : "justify-start text-left";
 
   return (
-    <div className={`flex min-w-0 flex-col justify-center gap-[2px] leading-none ${textAlignClass}`}>
-      <div className="whitespace-nowrap text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+    <div className={`flex min-w-0 items-center gap-4 leading-none whitespace-nowrap ${justifyClass}`}>
+      <span className="text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
         AVG <span className="font-semibold text-white">{avg}</span>
-      </div>
-      <div className="whitespace-nowrap text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+      </span>
+      <span className="text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
         H.R. <span className="font-semibold text-white">{hr}</span>
-      </div>
+      </span>
     </div>
   );
 }
