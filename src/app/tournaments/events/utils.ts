@@ -206,7 +206,9 @@ export const normalizeFinalResult = (
     playerCountry: player.country ?? null,
     matchPoints: toNumber((normalized as typeof normalized & { match_points?: unknown }).match_points) ?? toNumber(normalized.points),
     bestAverage: toNumber(normalized.best_average),
-    bestGame: toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game),
+    bestGame:
+      toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game) ??
+      toNumber((normalized as typeof normalized & { high_run_2?: unknown }).high_run_2),
     caroms: toNumber(normalized.caroms),
     points: toNumber(normalized.points),
     innings: toNumber(normalized.innings),
