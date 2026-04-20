@@ -5009,35 +5009,60 @@ export function TournamentDetailPage({
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {gallerySections.map((section) => {
                     const isActive = section.key === activeGallerySection.key;
+                    const folderPreview =
+                      section.images[0]?.previewUrl ||
+                      section.images[0]?.originalUrl ||
+                      null;
                     return (
                       <button
                         key={`folder-${section.key}`}
                         type="button"
                         onClick={() => setActiveGallerySectionKey(section.key)}
-                        className={`group relative overflow-hidden rounded-[26px] border p-5 text-left transition ${
+                        className={`group relative flex min-h-[290px] flex-col overflow-hidden rounded-[28px] border p-4 text-left transition sm:aspect-square sm:min-h-0 ${
                           isActive
-                            ? "border-amber-300 bg-amber-50 shadow-[0_18px_45px_rgba(245,158,11,0.16)]"
+                            ? "border-amber-300 bg-amber-50 shadow-[0_18px_45px_rgba(245,158,11,0.18)]"
                             : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                         }`}
                       >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute left-5 top-0 h-3 w-16 rounded-b-xl ${
-                            isActive ? "bg-amber-300" : "bg-slate-200"
-                          }`}
-                        />
-                        <div
-                          className={`mb-4 h-14 w-full rounded-[18px] border px-4 py-3 ${
-                            isActive
-                              ? "border-amber-200 bg-white/80"
-                              : "border-slate-200 bg-slate-50"
-                          }`}
-                        >
-                          <div className="relative h-full w-full rounded-[12px] bg-gradient-to-b from-amber-300 to-amber-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-                            <span className="absolute left-3 top-[-7px] h-3 w-10 rounded-t-xl bg-amber-300" />
+                        <div className="relative mb-5 h-[170px]">
+                          <div
+                            aria-hidden="true"
+                            className={`absolute left-[8%] top-0 h-7 w-20 rounded-t-[18px] ${
+                              isActive ? "bg-amber-300" : "bg-amber-200"
+                            }`}
+                          />
+                          <div
+                            aria-hidden="true"
+                            className={`absolute inset-x-[7%] top-5 bottom-8 overflow-hidden rounded-[20px] border ${
+                              isActive
+                                ? "border-amber-200 bg-slate-50"
+                                : "border-slate-200 bg-slate-50"
+                            }`}
+                          >
+                            {folderPreview ? (
+                              <img
+                                src={folderPreview}
+                                alt=""
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_48%),linear-gradient(135deg,_rgba(226,232,240,0.9),_rgba(241,245,249,0.75))]" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/10 via-transparent to-white/30" />
+                          </div>
+                          <div
+                            aria-hidden="true"
+                            className={`absolute inset-x-0 bottom-0 h-[43%] rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ${
+                              isActive
+                                ? "border-amber-300 bg-gradient-to-b from-amber-200 to-amber-300"
+                                : "border-amber-300 bg-gradient-to-b from-amber-100 to-amber-200"
+                            }`}
+                          >
+                            <div className="absolute inset-x-[5%] top-0 h-px bg-white/70" />
                           </div>
                         </div>
-                        <div className="space-y-2">
+                        <div className="mt-auto space-y-2">
                           <div
                             className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                               isActive
@@ -5051,7 +5076,7 @@ export function TournamentDetailPage({
                             {section.title}
                           </div>
                           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            {section.images.length} photos | {section.videos.length} videos
+                            {section.images.length} photos • {section.videos.length} videos
                           </div>
                         </div>
                       </button>
