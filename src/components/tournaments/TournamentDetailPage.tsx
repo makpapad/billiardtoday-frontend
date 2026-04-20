@@ -5027,17 +5027,17 @@ export function TournamentDetailPage({
                         <div className="relative mb-7 h-[210px]">
                           <div
                             aria-hidden="true"
-                            className="absolute left-[16%] right-[16%] top-[56px] h-[64px] overflow-hidden rounded-[22px]"
+                            className="absolute left-[19%] right-[19%] top-[72px] h-[74px] overflow-hidden rounded-[24px]"
                           >
                             {folderPreview ? (
                               <>
                                 <img
                                   src={folderPreview}
                                   alt=""
-                                  className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
+                                  className="h-full w-full object-cover opacity-28 transition duration-300 group-hover:scale-[1.03]"
                                   loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.88),rgba(239,246,255,0.98))]" />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(219,234,254,0.84),rgba(239,246,255,0.97))]" />
                               </>
                             ) : (
                               <div className="h-full w-full bg-[linear-gradient(180deg,#dbeafe_0%,#eff6ff_100%)]" />
@@ -5061,35 +5061,39 @@ export function TournamentDetailPage({
                                 <stop offset="0%" stopColor="#FCD34D" />
                                 <stop offset="100%" stopColor="#FBBF24" />
                               </linearGradient>
+                              <filter id={`folder-shadow-${section.key}`} x="-20%" y="-20%" width="140%" height="160%">
+                                <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#dbeafe" floodOpacity="0.6" />
+                              </filter>
                             </defs>
                             <rect
-                              x="74"
-                              y="20"
-                              width="82"
-                              height="54"
-                              rx="24"
+                              x="88"
+                              y="18"
+                              width="84"
+                              height="52"
+                              rx="22"
                               fill={`url(#folder-tab-${section.key})`}
                             />
                             <rect
-                              x="68"
-                              y="58"
-                              width="184"
+                              x="80"
+                              y="64"
+                              width="200"
                               height="62"
                               rx="22"
                               fill={`url(#folder-back-${section.key})`}
-                              stroke={isActive ? "#CCD8EA" : "#D9E2EF"}
+                              stroke={isActive ? "#C9D8EF" : "#D8E3F1"}
                             />
                             <rect
-                              x="28"
-                              y="112"
-                              width="264"
-                              height="74"
-                              rx="26"
+                              x="40"
+                              y="106"
+                              width="240"
+                              height="88"
+                              rx="30"
                               fill={`url(#folder-front-${section.key})`}
                               stroke="#F5C23B"
+                              filter={`url(#folder-shadow-${section.key})`}
                             />
                             <path
-                              d="M42 114 H278"
+                              d="M60 110 H260"
                               stroke="rgba(255,255,255,0.75)"
                               strokeWidth="2"
                               strokeLinecap="round"
