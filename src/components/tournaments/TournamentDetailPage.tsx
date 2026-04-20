@@ -3979,11 +3979,8 @@ export function TournamentDetailPage({
   const hasGalleryContent = gallerySections.length > 0;
   const activeGallerySection = useMemo(() => {
     if (gallerySections.length === 0) return null;
-    return (
-      gallerySections.find((section) => section.key === activeGallerySectionKey) ??
-      gallerySections[0] ??
-      null
-    );
+    if (!activeGallerySectionKey) return null;
+    return gallerySections.find((section) => section.key === activeGallerySectionKey) ?? null;
   }, [activeGallerySectionKey, gallerySections]);
   const selectedGalleryImage =
     selectedGalleryImageIndex !== null &&
@@ -4002,7 +3999,7 @@ export function TournamentDetailPage({
       if (current && gallerySections.some((section) => section.key === current)) {
         return current;
       }
-      return gallerySections[0]?.key ?? null;
+      return null;
     });
   }, [gallerySections]);
 
@@ -4996,84 +4993,75 @@ export function TournamentDetailPage({
                   : `The photo gallery for ${summary.title} is being prepared.`}
               </p>
             </div>
-            {hasGalleryContent && activeGallerySection ? (
+            {hasGalleryContent ? (
               <div className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Browse by folder
-                  </div>
-                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {gallerySections.length} folders
-                  </div>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {gallerySections.map((section) => {
-                    const isActive = section.key === activeGallerySection.key;
-                    const folderPreview =
-                      section.images[0]?.previewUrl ||
-                      section.images[0]?.originalUrl ||
-                      null;
-                    return (
-                      <button
-                        key={`folder-${section.key}`}
-                        type="button"
-                        onClick={() => setActiveGallerySectionKey(section.key)}
-                        className={`group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border px-7 pb-8 pt-7 text-left transition sm:aspect-square sm:min-h-0 ${
-                          isActive
-                            ? "border-amber-300 bg-[linear-gradient(180deg,#fffdf5_0%,#fff9e8_100%)] shadow-[0_20px_50px_rgba(245,158,11,0.12)]"
-                            : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
-                        }`}
-                      >
-                        <div className="relative mb-7 h-[210px]">
-                          <div
-                            aria-hidden="true"
-                            className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
+                {!activeGallerySection ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Browse by folder
+                      </div>
+                      <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {gallerySections.length} folders
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      {gallerySections.map((section) => {
+                        const folderPreview =
+                          section.images[0]?.previewUrl ||
+                          section.images[0]?.originalUrl ||
+                          null;
+                        return (
+                          <button
+                            key={`folder-${section.key}`}
+                            type="button"
+                            onClick={() => setActiveGallerySectionKey(section.key)}
+                            className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] px-7 pb-8 pt-7 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:aspect-square sm:min-h-0"
                           >
-                            {folderPreview ? (
-                              <>
-                                <img
-                                  src={folderPreview}
-                                  alt=""
-                                  className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
-                                  loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]" />
-                              </>
-                            ) : (
-                              <div className="h-full w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
-                            )}
-                          </div>
-                          <img
-                            aria-hidden="true"
-                            src="/icons%20webp/folder-1485.svg"
-                            alt=""
-                            className={`absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain ${
-                              isActive ? "drop-shadow-[0_18px_28px_rgba(245,158,11,0.12)]" : "drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
-                            }`}
-                            loading="lazy"
-                          />
-                        </div>
-                        <div className="mt-auto space-y-2">
-                          <div
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                              isActive
-                                ? "bg-amber-100 text-amber-900"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            {section.stageDocumentId ? "Stage Folder" : "General Folder"}
-                          </div>
-                          <div className="text-base font-black tracking-tight text-slate-950">
-                            {section.title}
-                          </div>
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            {section.images.length} photos • {section.videos.length} videos
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                            <div className="relative mb-7 h-[210px]">
+                              <div
+                                aria-hidden="true"
+                                className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
+                              >
+                                {folderPreview ? (
+                                  <>
+                                    <img
+                                      src={folderPreview}
+                                      alt=""
+                                      className="h-full w-full object-cover opacity-24 transition duration-300 group-hover:scale-[1.03]"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]" />
+                                  </>
+                                ) : (
+                                  <div className="h-full w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
+                                )}
+                              </div>
+                              <img
+                                aria-hidden="true"
+                                src="/icons%20webp/folder-1485.svg"
+                                alt=""
+                                className="absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="mt-auto space-y-2">
+                              <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                {section.stageDocumentId ? "Stage Folder" : "General Folder"}
+                              </div>
+                              <div className="text-base font-black tracking-tight text-slate-950">
+                                {section.title}
+                              </div>
+                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                {section.images.length} photos • {section.videos.length} videos
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
                 <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                   <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -5084,8 +5072,17 @@ export function TournamentDetailPage({
                         Photo Gallery / {activeGallerySection.title}
                       </div>
                     </div>
-                    <div className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveGallerySectionKey(null)}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                      >
+                        ← Back to folders
+                      </button>
+                      <div className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
                       {activeGallerySection.videos.length} videos • {activeGallerySection.images.length} photos
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-8 px-5 py-5 sm:px-6 sm:py-6">
@@ -5237,6 +5234,7 @@ export function TournamentDetailPage({
                     ) : null}
                   </div>
                 </div>
+                )}
               </div>
             ) : null}
             {false && gallerySections.map((section) => (
