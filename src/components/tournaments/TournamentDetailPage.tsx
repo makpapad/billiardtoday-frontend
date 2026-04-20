@@ -1382,6 +1382,9 @@ export function TournamentDetailPage({
   const [selectedGalleryImageIndex, setSelectedGalleryImageIndex] = useState<
     number | null
   >(null);
+  const [expandedGalleryVideoIds, setExpandedGalleryVideoIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
     useState<number | null>(null);
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
@@ -4986,20 +4989,64 @@ export function TournamentDetailPage({
 
                 {section.videos.length > 0 ? (
                   <div className="grid gap-5 xl:grid-cols-2">
-                    {section.videos.map((video, index) => (
+                    {section.videos.map((video, index) => {
+                      const isExpanded = expandedGalleryVideoIds.has(video.id);
+                      const youtubeThumbnailUrl =
+                        video.kind === "youtube" && video.videoId
+                          ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`
+                          : null;
+                      return (
                       <article
                         key={video.id}
                         className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-sm"
                       >
                         <div className="aspect-video bg-slate-950">
                           {video.kind === "youtube" && video.videoId ? (
-                            <iframe
-                              src={`https://www.youtube.com/embed/${video.videoId}?rel=0`}
-                              title={video.title || `Tournament video ${index + 1}`}
-                              className="h-full w-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                              allowFullScreen
-                            />
+                            isExpanded ? (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${video.videoId}?rel=0&autoplay=1`}
+                                title={video.title || `Tournament video ${index + 1}`}
+                                className="h-full w-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedGalleryVideoIds((current) => {
+                                    const next = new Set(current);
+                                    next.add(video.id);
+                                    return next;
+                                  })
+                                }
+                                className="group relative block h-full w-full overflow-hidden text-left"
+                                aria-label={video.title || `Play tournament video ${index + 1}`}
+                              >
+                                {youtubeThumbnailUrl ? (
+                                  <img
+                                    src={youtubeThumbnailUrl}
+                                    alt={video.title || `Tournament video ${index + 1}`}
+                                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                                    Video preview unavailable
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
+                                    <span className="ml-1 text-2xl">▶</span>
+                                  </span>
+                                </div>
+                                <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                                  Load video
+                                </div>
+                              </button>
+                            )
                           ) : video.fileUrl ? (
                             <video
                               src={video.fileUrl}
@@ -5044,7 +5091,7 @@ export function TournamentDetailPage({
                           ) : null}
                         </div>
                       </article>
-                    ))}
+                    )})}
                   </div>
                 ) : null}
 
