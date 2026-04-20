@@ -7,7 +7,7 @@ type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-type OverlayTemplate = "1" | "2" | "3";
+type OverlayTemplate = "1" | "2" | "3" | "4";
 
 type LiveScoreState = {
   scoreA?: number;
@@ -351,7 +351,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     .trim()
     .toLowerCase();
   const template: OverlayTemplate =
-    templateParam === "3" || templateParam === "t3"
+    templateParam === "4" || templateParam === "t4"
+      ? "4"
+      : templateParam === "3" || templateParam === "t3"
       ? "3"
       : templateParam === "2" || templateParam === "royalpro"
         ? "2"
@@ -691,6 +693,17 @@ function ScoreOverlayCard({
   if (template === "3") {
     return (
       <TemplateThreeOverlayCard
+        item={item}
+        width={width}
+        height={height}
+        obsSafe={obsSafe}
+      />
+    );
+  }
+
+  if (template === "4") {
+    return (
+      <TemplateFourOverlayCard
         item={item}
         width={width}
         height={height}
@@ -1090,16 +1103,166 @@ function TemplateThreeOverlayCard({
   );
 }
 
+function TemplateFourOverlayCard({
+  item,
+  width,
+  height,
+  obsSafe,
+}: {
+  item: LiveScoreItem;
+  width: number;
+  height: number;
+  obsSafe: boolean;
+}) {
+  const state = item.state;
+  const innings = state.inningsCount ?? 0;
+  const leftScore = state.scoreA ?? 0;
+  const rightScore = state.scoreB ?? 0;
+  const leftRun = state.liveRunA ?? state.runA ?? 0;
+  const rightRun = state.liveRunB ?? state.runB ?? 0;
+  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
+  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftHr = state.bestRunA ?? 0;
+  const rightHr = state.bestRunB ?? 0;
+  const target = state.targetPointsA ?? state.targetPointsB ?? null;
+  const leftTimeouts = state.timeoutsA ?? 0;
+  const rightTimeouts = state.timeoutsB ?? 0;
+  const leftMaxTimeouts = state.maxTimeoutsA ?? 3;
+  const rightMaxTimeouts = state.maxTimeoutsB ?? 3;
+  const leftFlag = resolveCountryCode(state.playerACountry);
+  const rightFlag = resolveCountryCode(state.playerBCountry);
+  const leftName = normalizeString(state.playerAName) ?? "Player 1";
+  const rightName = normalizeString(state.playerBName) ?? "Player 2";
+  const activeSide = state.current;
+  const tournament = state.tournamentName ?? "Live Match";
+  const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
+  const table = stripLeadingWord(state.tableName ?? "-", "table") ?? "-";
+  const totalBlocks = 40;
+  const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
+  const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
+  const overlayHeight = 60;
+  const statsColumnWidth = Math.max(76, Math.min(110, Math.round(width * 0.11)));
+  const topStripWidth = Math.max(560, Math.min(width - 24, Math.round(width * 0.8)));
+  const timeStripWidth = Math.max(180, Math.min(260, Math.round(width * 0.26)));
+
+  return (
+    <div
+      className="relative text-white"
+      style={{
+        width: "100%",
+        maxWidth: width,
+        height: Math.min(height, overlayHeight),
+        minWidth: width,
+        minHeight: overlayHeight,
+        transform: obsSafe ? "translateZ(0)" : undefined,
+        backfaceVisibility: obsSafe ? "hidden" : undefined,
+        WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
+        textRendering: obsSafe ? "geometricPrecision" : undefined,
+        fontFamily:
+          "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
+      }}
+    >
+      <div className="flex h-5 w-full items-end justify-center overflow-visible">
+        <div
+          className="grid h-5 items-center rounded-t-[10px] px-4 text-[11px] font-normal tracking-[0.05em] text-slate-800"
+          style={{
+            width: topStripWidth,
+            backgroundColor: "#d6d9e1",
+            gridTemplateColumns: "minmax(0,1fr) auto auto",
+            columnGap: 12,
+          }}
+        >
+          <span className="truncate whitespace-nowrap">
+            {tournament} / S {stage} / T {table}
+          </span>
+          <TimeStrip
+            remainingBlocks={remainingBlocks}
+            elapsedBlocks={elapsedBlocks}
+            totalBlocks={totalBlocks}
+            compact
+            barWidth={timeStripWidth}
+          />
+          <span className="justify-self-end whitespace-nowrap text-[12px] font-medium tracking-[0.06em] text-slate-950">
+            {target ? `Race ${target}` : ""}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="grid h-10 w-full items-center gap-2 px-3 text-white"
+        style={{
+          backgroundColor: "#8a909d",
+          gridTemplateColumns: `${statsColumnWidth}px minmax(0,1fr) auto auto auto minmax(0,1fr) ${statsColumnWidth}px`,
+        }}
+      >
+        <CompactOverlayStats align="left" avg={leftAvg} hr={leftHr} />
+
+        <div className="flex min-w-0 items-center justify-end gap-2 overflow-hidden">
+          <CompactTimeoutTicks
+            activeCount={leftTimeouts}
+            totalCount={leftMaxTimeouts}
+            reverse={false}
+          />
+          {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
+          <span className="min-w-0 truncate text-[15px] font-normal leading-none tracking-[0.03em]">
+            {leftName}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-end gap-1.5">
+          <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+            {activeSide === "A" ? <TurnArrow side="right" active /> : null}
+          </div>
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+            {activeSide === "A" ? <OverlayRunCircle run={leftRun} /> : null}
+          </div>
+          <OverlayScoreBox score={leftScore} tone="light" />
+        </div>
+
+        <div className="flex h-7 min-w-[38px] items-center justify-center px-2 text-[15px] font-normal leading-none tracking-[0.04em] text-white">
+          ({innings})
+        </div>
+
+        <div className="flex items-center justify-start gap-1.5">
+          <OverlayScoreBox score={rightScore} tone="accent" />
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+            {activeSide === "B" ? <OverlayRunCircle run={rightRun} /> : null}
+          </div>
+          <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
+            {activeSide === "B" ? <TurnArrow side="left" active /> : null}
+          </div>
+        </div>
+
+        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <span className="min-w-0 truncate text-[15px] font-normal leading-none tracking-[0.03em]">
+            {rightName}
+          </span>
+          {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
+          <CompactTimeoutTicks
+            activeCount={rightTimeouts}
+            totalCount={rightMaxTimeouts}
+            reverse
+          />
+        </div>
+
+        <CompactOverlayStats align="right" avg={rightAvg} hr={rightHr} />
+      </div>
+    </div>
+  );
+}
+
 function TimeStrip({
   remainingBlocks,
   elapsedBlocks,
   totalBlocks,
   compact,
+  barWidth,
 }: {
   remainingBlocks: number;
   elapsedBlocks: number;
   totalBlocks: number;
   compact?: boolean;
+  barWidth?: number;
 }) {
   const remainingColorClass =
     remainingBlocks > 20
@@ -1113,7 +1276,10 @@ function TimeStrip({
       <div className={`${compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
-      <div className={`flex ${compact ? "w-[460px]" : "w-[320px]"} gap-[2px]`}>
+      <div
+        className="flex gap-[2px]"
+        style={{ width: barWidth ?? (compact ? 460 : 320) }}
+      >
         {Array.from({ length: totalBlocks }).map((_, index) => {
           const isRemaining = index >= elapsedBlocks;
           const zoneClass =
@@ -1174,6 +1340,29 @@ function OverlayMiniStat({
         {label}
       </span>
       <span className="text-[17px] font-normal text-white">{value}</span>
+    </div>
+  );
+}
+
+function CompactOverlayStats({
+  avg,
+  hr,
+  align,
+}: {
+  avg: string;
+  hr: number;
+  align: "left" | "right";
+}) {
+  const textAlignClass = align === "right" ? "items-end text-right" : "items-start text-left";
+
+  return (
+    <div className={`flex min-w-0 flex-col justify-center gap-[2px] leading-none ${textAlignClass}`}>
+      <div className="whitespace-nowrap text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+        AVG <span className="font-semibold text-white">{avg}</span>
+      </div>
+      <div className="whitespace-nowrap text-[11px] font-normal uppercase tracking-[0.08em] text-white/92">
+        H.R. <span className="font-semibold text-white">{hr}</span>
+      </div>
     </div>
   );
 }
