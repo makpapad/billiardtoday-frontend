@@ -688,8 +688,8 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     <div
       className={
         obsSafe
-          ? "fixed inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none"
-          : "min-h-screen flex items-center justify-center p-4"
+          ? `fixed inset-0 flex ${template === "3" && !breakStatsOpen ? "items-end" : "items-center"} justify-center overflow-hidden pointer-events-none select-none`
+          : `min-h-screen flex ${template === "3" && !breakStatsOpen ? "items-end" : "items-center"} justify-center p-4`
       }
       style={{ backgroundColor: "transparent" }}
     >
