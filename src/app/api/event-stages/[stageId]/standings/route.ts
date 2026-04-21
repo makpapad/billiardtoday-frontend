@@ -27,6 +27,40 @@ const fetchWithOptionalAuth = async (url: string): Promise<Response> => {
     return withAuth
 }
 
+const fetchStoredStageResults = async (stageId: string): Promise<Record<string, unknown>[] | null> => {
+    const url = new URL(`${STRAPI_URL}/api/bt-results`)
+    url.searchParams.set('filters[event_stage][documentId][$eq]', stageId)
+    url.searchParams.set('populate[player][fields][0]', 'full_name')
+    url.searchParams.set('populate[player][fields][1]', 'documentId')
+    url.searchParams.set('populate[player][fields][2]', 'full_name_en')
+    url.searchParams.set('populate[player][fields][3]', 'country')
+    url.searchParams.set('fields[0]', 'match_points')
+    url.searchParams.set('fields[1]', 'points')
+    url.searchParams.set('fields[2]', 'innings')
+    url.searchParams.set('fields[3]', 'best_average')
+    url.searchParams.set('fields[4]', 'high_run')
+    url.searchParams.set('fields[5]', 'high_run_2')
+    url.searchParams.set('fields[6]', 'group_number')
+    url.searchParams.set('fields[7]', 'group_position')
+    url.searchParams.set('fields[8]', 'final_position')
+    url.searchParams.set('fields[9]', 'documentId')
+    url.searchParams.set('fields[10]', 'qualified')
+    url.searchParams.set('fields[11]', 'qualification_type')
+    url.searchParams.set('fields[12]', 'source')
+    url.searchParams.set('pagination[pageSize]', '1000')
+    url.searchParams.set('sort[0]', 'group_number:asc')
+    url.searchParams.set('sort[1]', 'final_position:asc')
+    url.searchParams.set('sort[2]', 'group_position:asc')
+
+    const res = await fetchWithOptionalAuth(url.toString())
+    if (!res.ok) return null
+    const payload = (await res.json().catch(() => null)) as { data?: unknown[] } | null
+    const rows = Array.isArray(payload?.data)
+        ? payload.data.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
+        : []
+    return rows.length > 0 ? rows : null
+}
+
 export async function GET(
     _req: NextRequest,
     context: { params: Promise<{ stageId: string }> },
@@ -35,6 +69,16 @@ export async function GET(
         const { stageId } = await context.params
         if (!stageId) {
             return NextResponse.json({ error: 'stageId is required' }, { status: 400 })
+        }
+
+        const storedResults = await fetchStoredStageResults(stageId)
+        if (storedResults) {
+            return NextResponse.json({
+                source: 'stored-results',
+                results: storedResults,
+                standings: storedResults,
+                overallRankings: storedResults,
+            })
         }
 
         const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
