@@ -138,6 +138,46 @@ const SHEET_STAGE_KEY = "scoreboard.sheet.stage";
 const SHEET_GROUP_KEY = "scoreboard.sheet.group";
 const SHEET_TABLE_KEY = "scoreboard.sheet.table";
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
+const LIVE_SCORE_DELAY_EVENT = "LIVE_SYNC_DELAY_UPDATED";
+const LIVE_SCORE_DELAY_MAX_SECONDS = 180;
+const LIVE_SCORE_DELAY_HISTORY_MS = (LIVE_SCORE_DELAY_MAX_SECONDS + 15) * 1000;
+
+function liveScoreDelayStorageKey(clubId: string | number | null | undefined) {
+  return `scoreboard.live.delay.${clubId ?? "global"}`;
+}
+
+function getLiveItemKey(item: LiveScoreItem) {
+  return String(item.screenId || item.sessionId || item.id || "");
+}
+
+function cloneLiveScoreItem(item: LiveScoreItem): LiveScoreItem {
+  return {
+    ...item,
+    liveVideos: item.liveVideos ? [...item.liveVideos] : item.liveVideos,
+    state: {
+      ...item.state,
+      liveVideos: item.state?.liveVideos ? [...item.state.liveVideos] : item.state?.liveVideos,
+      inningsDetail: item.state?.inningsDetail ? [...item.state.inningsDetail] : item.state?.inningsDetail,
+    },
+  };
+}
+
+function mergeDelayedLiveScoreItem(current: LiveScoreItem, delayed: LiveScoreItem): LiveScoreItem {
+  return {
+    ...current,
+    updatedAt: delayed.updatedAt ?? current.updatedAt,
+    liveVideos: current.liveVideos ?? delayed.liveVideos,
+    state: {
+      ...current.state,
+      ...delayed.state,
+      liveVideos: current.state?.liveVideos ?? delayed.state?.liveVideos,
+      tournamentName: current.state?.tournamentName ?? delayed.state?.tournamentName,
+      stageName: current.state?.stageName ?? delayed.state?.stageName,
+      groupName: current.state?.groupName ?? delayed.state?.groupName,
+      tableName: current.state?.tableName ?? delayed.state?.tableName,
+    },
+  };
+}
 
 function resolveLivePlayerDisplayName(player: any, fallback?: string | null): string | null {
   const englishName =
@@ -363,6 +403,11 @@ export type LiveScoreItem = {
   clubFederationName?: string | null;
 };
 
+type DelayedLiveScoreEntry = {
+  at: number;
+  item: LiveScoreItem;
+};
+
 type LiveScorePayload = {
   screenId: string;
   sessionId?: string | null;
@@ -418,6 +463,7 @@ type LiveScorePayload = {
   matchSheetJson?: unknown;
   sheet?: unknown;
   liveVideos?: unknown;
+  delaySeconds?: number;
 };
 
 const isPlaceholderPlayerName = (value?: string | null) => {
@@ -511,6 +557,8 @@ function resolveDisplayLiveRuns(
 export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
+  const [displayItems, setDisplayItems] = useState<LiveScoreItem[]>([]);
+  const [liveScoreDelayByScreenId, setLiveScoreDelayByScreenId] = React.useState<Record<string, number>>({});
   const [expandedSessions, setExpandedSessions] = React.useState<Set<string>>(new Set());
   const [highlightItem, setHighlightItem] = useState<LiveScoreItem | null>(null);
   const [videoDrawerSessionId, setVideoDrawerSessionId] = React.useState<string | null>(null);
@@ -521,12 +569,17 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const [isWideDesktop, setIsWideDesktop] = React.useState(false);
   const mobileVideoDrawerRef = React.useRef<HTMLDivElement | null>(null);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
+  const delayedItemsHistoryRef = React.useRef<Map<string, DelayedLiveScoreEntry[]>>(new Map());
+  const liveScoreDelayByScreenIdRef = React.useRef<Record<string, number>>({});
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
   const sessionTargetsRef = React.useRef<Map<string, { a: number | null; b: number | null }>>(new Map());
   React.useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+  React.useEffect(() => {
+    liveScoreDelayByScreenIdRef.current = liveScoreDelayByScreenId;
+  }, [liveScoreDelayByScreenId]);
   React.useEffect(() => {
     if (!highlightItem) return;
     const fresh =
@@ -543,6 +596,48 @@ export function LiveClubView({ club, embedded = false }: Props) {
     endedScreensRef.current = endedScreens;
   }, [endedScreens]);
   const [err, setErr] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!clubId || typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(liveScoreDelayStorageKey(clubId));
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const next: Record<string, number> = {};
+        Object.entries(parsed).forEach(([screenId, value]) => {
+          const delay = Number(value);
+          if (screenId && Number.isFinite(delay) && delay >= 0) {
+            next[screenId] = Math.min(LIVE_SCORE_DELAY_MAX_SECONDS, delay);
+          }
+        });
+        setLiveScoreDelayByScreenId(next);
+      }
+    } catch {}
+  }, [clubId]);
+
+  React.useEffect(() => {
+    if (!clubId || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        liveScoreDelayStorageKey(clubId),
+        JSON.stringify(liveScoreDelayByScreenId),
+      );
+    } catch {}
+  }, [clubId, liveScoreDelayByScreenId]);
+
+  const applyLiveScoreDelayPayload = React.useCallback((payload: { type?: string } & LiveScorePayload) => {
+    if (payload.type !== LIVE_SCORE_DELAY_EVENT && payload.type !== "LIVE_SCORE_DELAY_UPDATED") return false;
+    const screenId = String(payload.screenIdentifier ?? payload.screenId ?? "").trim();
+    const delaySeconds = Number(payload.delaySeconds);
+    if (!screenId || !Number.isFinite(delaySeconds) || delaySeconds < 0) return true;
+    const normalizedDelay = Math.min(LIVE_SCORE_DELAY_MAX_SECONDS, Math.max(0, delaySeconds));
+    setLiveScoreDelayByScreenId((prev) => ({
+      ...prev,
+      [screenId]: normalizedDelay,
+    }));
+    return true;
+  }, []);
 
   const hydrateFromScreenSnapshot = React.useCallback((screenId: string) => {
     const cleanScreenId = String(screenId || "").trim();
@@ -573,6 +668,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(String(event.data || "{}")) as { type?: string } & LiveScorePayload;
+        if (applyLiveScoreDelayPayload(payload)) return;
         if (payload.type !== "score:update") return;
         if (String(payload.screenId || "") !== cleanScreenId) return;
 
@@ -652,7 +748,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     socket.onerror = () => {
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [applyLiveScoreDelayPayload]);
 
   const recordSnapshot = React.useCallback((sessionKey: string | undefined | null, snapshot: SessionSnapshot) => {
     if (!sessionKey) return;
@@ -1058,6 +1154,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
           screenId: payload.screenId,
           ended: payload.ended
         });
+
+        if (applyLiveScoreDelayPayload(payload)) return;
         
         const itemsSnapshot = itemsRef.current;
         const endedScreensSnapshot = endedScreensRef.current;
@@ -1476,7 +1574,92 @@ export function LiveClubView({ club, embedded = false }: Props) {
     socket.onerror = () => setErr("WebSocket error");
     socket.onclose = () => {};
     return () => socket.close();
-  }, [clubId, fetchSessionTargetsOnce]);
+  }, [applyLiveScoreDelayPayload, clubId, fetchSessionTargetsOnce]);
+
+  const activeScreenIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    items.forEach((item) => {
+      const screenId = String(item.screenId || "").trim();
+      if (screenId) ids.add(screenId);
+    });
+    return Array.from(ids).sort();
+  }, [items]);
+  const activeScreenIdsKey = activeScreenIds.join("|");
+
+  React.useEffect(() => {
+    if (!activeScreenIdsKey) return;
+    const sockets = activeScreenIdsKey
+      .split("|")
+      .filter(Boolean)
+      .map((screenId) => {
+        const wsUrl = normalizeWebSocketUrl(
+          process.env.NEXT_PUBLIC_WS_ENDPOINT ||
+            process.env.NEXT_PUBLIC_WS_URL ||
+            "wss://ws.billiardtoday.com/ws",
+        );
+        if (!wsUrl) return null;
+        const params = new URLSearchParams();
+        if (WS_TOKEN) params.set("token", WS_TOKEN);
+        params.set("screenId", screenId);
+        wsUrl.search = params.toString();
+        const socket = new WebSocket(wsUrl.toString());
+        socket.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(String(event.data || "{}")) as { type?: string } & LiveScorePayload;
+            applyLiveScoreDelayPayload(payload);
+          } catch {}
+        };
+        return socket;
+      })
+      .filter((socket): socket is WebSocket => Boolean(socket));
+
+    return () => {
+      sockets.forEach((socket) => {
+        try {
+          socket.close();
+        } catch {}
+      });
+    };
+  }, [activeScreenIdsKey, applyLiveScoreDelayPayload]);
+
+  React.useEffect(() => {
+    const now = Date.now();
+    const cutoff = now - LIVE_SCORE_DELAY_HISTORY_MS;
+    const seen = new Set<string>();
+    items.forEach((item) => {
+      const key = getLiveItemKey(item);
+      if (!key) return;
+      seen.add(key);
+      const history = delayedItemsHistoryRef.current.get(key) ?? [];
+      const next = [...history.filter((entry) => entry.at >= cutoff), { at: now, item: cloneLiveScoreItem(item) }];
+      delayedItemsHistoryRef.current.set(key, next.slice(-500));
+    });
+    Array.from(delayedItemsHistoryRef.current.keys()).forEach((key) => {
+      if (!seen.has(key)) delayedItemsHistoryRef.current.delete(key);
+    });
+  }, [items]);
+
+  React.useEffect(() => {
+    const buildDisplayItems = () => {
+      const now = Date.now();
+      return itemsRef.current.map((item) => {
+        const screenId = String(item.screenId || "").trim();
+        const delaySeconds = screenId ? liveScoreDelayByScreenIdRef.current[screenId] ?? 0 : 0;
+        if (!delaySeconds) return item;
+        const history = delayedItemsHistoryRef.current.get(getLiveItemKey(item)) ?? [];
+        if (!history.length) return item;
+        const targetAt = now - delaySeconds * 1000;
+        const delayed = [...history].reverse().find((entry) => entry.at <= targetAt) ?? history[0];
+        return delayed ? mergeDelayedLiveScoreItem(item, delayed.item) : item;
+      });
+    };
+
+    setDisplayItems(buildDisplayItems());
+    const interval = window.setInterval(() => {
+      setDisplayItems(buildDisplayItems());
+    }, 500);
+    return () => window.clearInterval(interval);
+  }, [items, liveScoreDelayByScreenId]);
 
   if (err) {
     return (
@@ -1525,10 +1708,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
     return () => media.removeEventListener("change", update);
   }, []);
 
+  const presentationItems = displayItems.length === items.length ? displayItems : items;
   const filteredItems =
     selectedTournament === "all"
-      ? items
-      : items.filter((item) => {
+      ? presentationItems
+      : presentationItems.filter((item) => {
           const raw = item.state?.tournamentName;
           const label = typeof raw === "string" && raw.trim() ? raw.trim() : "Unknown Tournament";
           return label === selectedTournament;
