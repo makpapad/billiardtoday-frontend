@@ -5777,7 +5777,7 @@ export function TournamentEventsContent({
 export default function TournamentEventsPage() {
   return (
     <Suspense
-      fallback={<div className="container mx-auto px-4 py-8">Φόρτωση...</div>}
+      fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}
     >
       <TournamentEventsContent />
     </Suspense>

@@ -39,7 +39,7 @@ function LiveTournamentsContent() {
         
         if (data.success) {
           setLiveScreensData(data.data)
-          // Αυτόματη επιλογή των ενεργών screens
+          // Select active screens automatically.
           const activeScreenIds = data.data
             .flatMap(tournament => tournament.liveScreens)
             .filter(screen => screen.isActive)
@@ -57,7 +57,7 @@ function LiveTournamentsContent() {
 
     fetchLiveScreens()
     
-    // Refresh κάθε 10 δευτερόλεπτα
+    // Refresh every 10 seconds.
     const interval = setInterval(fetchLiveScreens, 10000)
     return () => clearInterval(interval)
   }, [])
@@ -83,7 +83,7 @@ function LiveTournamentsContent() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Φόρτωση live τουρνουά...</p>
+          <p className="text-gray-600">Loading live tournaments...</p>
         </div>
       </div>
     )
@@ -100,7 +100,7 @@ function LiveTournamentsContent() {
             onClick={() => window.location.reload()}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Επανάληψη
+            Retry
           </button>
         </div>
       </div>
@@ -111,8 +111,8 @@ function LiveTournamentsContent() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Δεν υπάρχουν live τουρνουά</h2>
-          <p className="text-gray-600">Δεν βρέθηκαν ενεργές οθόνες για την προβολή live σκορ.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">No live tournaments</h2>
+          <p className="text-gray-600">No active screens were found for live score display.</p>
         </div>
       </div>
     )
@@ -125,9 +125,9 @@ function LiveTournamentsContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Live Τουρνουά</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Live Tournaments</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Ενεργές οθόνες: {selectedScreens.size} / {liveScreensData.flatMap(t => t.liveScreens).length}
+                Active screens: {selectedScreens.size} / {liveScreensData.flatMap(t => t.liveScreens).length}
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -174,7 +174,7 @@ function LiveTournamentsContent() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
               {tournament.tournamentTitle}
               <span className="ml-3 text-sm text-gray-500">
-                ({tournament.liveScreens.filter(s => s.isActive).length} ενεργές)
+                ({tournament.liveScreens.filter(s => s.isActive).length} active)
               </span>
             </h2>
             
@@ -206,20 +206,20 @@ function LiveTournamentsContent() {
                       <p>Screen ID: {screen.screenId}</p>
                       {screen.lastUpdate && (
                         <p className="mt-1">
-                          Τελευταία ενημέρωση: {new Date(screen.lastUpdate).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                          Last update: {new Date(screen.lastUpdate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </p>
                       )}
                     </div>
                     
                     {!screen.isActive && (
                       <div className="mt-3 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                        Μη ενεργή οθόνη
+                        Inactive screen
                       </div>
                     )}
                     
                     {selectedScreens.has(screen.screenId) && (
                       <div className="mt-3 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        Επιλεγμένη για προβολή
+                        Selected for display
                       </div>
                     )}
                   </div>

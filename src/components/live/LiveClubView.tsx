@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -1672,7 +1672,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
               <p className="text-xs uppercase tracking-[0.4em] text-white/60 mb-2">Live Feed</p>
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{club.name}</h1>
               <p className="text-sm text-white/60 mt-1">
-                Παρακολούθησε ενεργά scoreboards με real-time ενημέρωση.
+                Watch active scoreboards with real-time updates.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">

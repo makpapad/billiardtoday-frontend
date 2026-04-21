@@ -55,7 +55,7 @@ export default function LiveScoreDisplay({ screenId, screenName, isActive }: Liv
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="text-center text-gray-500">
           <div className="text-lg font-medium mb-2">{screenName}</div>
-          <div className="text-sm">Η οθόνη δεν είναι ενεργή</div>
+          <div className="text-sm">This screen is not active</div>
         </div>
       </div>
     )

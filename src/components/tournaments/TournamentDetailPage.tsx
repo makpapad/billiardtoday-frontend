@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -4365,7 +4365,7 @@ export function TournamentDetailPage({
           subtitle:
             [session.state?.stageName, session.state?.groupName, session.state?.tableName]
               .filter(Boolean)
-              .join(" β€Ά ") || null,
+              .join(" / ") || null,
           playerAName: session.state?.playerAName ?? session.player1Name ?? null,
           playerBName: session.state?.playerBName ?? session.player2Name ?? null,
           playerACountry: session.state?.playerACountry ?? null,
@@ -4748,8 +4748,8 @@ export function TournamentDetailPage({
   const ageSortButtonLabel =
     participantSortMode === "age"
       ? participantAgeDirection === "asc"
-        ? "Age β†‘"
-        : "Age β†“"
+        ? "Age asc"
+        : "Age desc"
       : "Sort by age";
 
   const handleAgeSortClick = () => {
@@ -4783,8 +4783,8 @@ export function TournamentDetailPage({
   const rankingSortButtonLabel =
     participantSortMode === "ranking"
       ? participantRankingDirection === "asc"
-        ? "Ranking β†‘"
-        : "Ranking β†“"
+        ? "Ranking asc"
+        : "Ranking desc"
       : "Ranking order";
 
   const mainContent =
@@ -5246,7 +5246,7 @@ export function TournamentDetailPage({
                     </h3>
                   </div>
                   <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {section.images.length} photos β€Ά {section.videos.length} videos
+                    {section.images.length} photos / {section.videos.length} videos
                   </div>
                 </div>
 
@@ -5302,7 +5302,7 @@ export function TournamentDetailPage({
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
-                                    <span className="ml-1 text-2xl">β–¶</span>
+                                    <span className="ml-1 text-2xl">Play</span>
                                   </span>
                                 </div>
                                 <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -5449,7 +5449,7 @@ export function TournamentDetailPage({
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xl font-semibold text-white transition hover:bg-white/10"
                   aria-label="Close fullscreen image"
                 >
-                  Γ—
+                  X
                 </button>
               </div>
               <div className="relative flex min-h-[60vh] items-center justify-center bg-black">
@@ -5468,7 +5468,7 @@ export function TournamentDetailPage({
                       className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
                       aria-label="Previous image"
                     >
-                      β€Ή
+                      &lt;
                     </button>
                     <button
                       type="button"
@@ -5483,7 +5483,7 @@ export function TournamentDetailPage({
                       className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
                       aria-label="Next image"
                     >
-                      β€Ί
+                      &gt;
                     </button>
                   </>
                 ) : null}
@@ -5891,7 +5891,7 @@ export function TournamentDetailPage({
                         liveRun: state.liveRunA ?? 0,
                         innings: state.inningsA ?? 0,
                         hr: state.bestRunA ?? 0,
-                        flag: "π‡¬π‡·",
+                        flag: "GR",
                         avgFormatted: state.avgFormattedA,
                         accPercent: state.accPercentA,
                         secondsPerInning: state.secondsPerInningA,
@@ -5918,7 +5918,7 @@ export function TournamentDetailPage({
                         liveRun: state.liveRunB ?? 0,
                         innings: state.inningsB ?? 0,
                         hr: state.bestRunB ?? 0,
-                        flag: "π‡¬π‡·",
+                        flag: "GR",
                         avgFormatted: state.avgFormattedB,
                         accPercent: state.accPercentB,
                         secondsPerInning: state.secondsPerInningB,
@@ -6027,7 +6027,7 @@ export function TournamentDetailPage({
                         key={`${part}-${index}`}
                         className="inline-flex items-center gap-2"
                       >
-                        {index > 0 ? <span className="text-white/55">β€Ά</span> : null}
+                        {index > 0 ? <span className="text-white/55">/</span> : null}
                         <span>{part}</span>
                       </span>
                     ))}
