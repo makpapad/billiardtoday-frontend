@@ -5004,7 +5004,7 @@ export function TournamentDetailPage({
                       Back to folders
                     </button>
                     <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      {activeGallerySection.videos.length} videos • {activeGallerySection.images.length} photos
+                      {activeGallerySection.videos.length} videos / {activeGallerySection.images.length} photos
                     </div>
                   </div>
                   <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
@@ -5070,7 +5070,7 @@ export function TournamentDetailPage({
                                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
                                           <div className="absolute inset-0 flex items-center justify-center">
                                             <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/92 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.25)] transition group-hover:scale-105">
-                                              <span className="ml-1 text-2xl">▶</span>
+                                              <span className="ml-1 text-2xl">Play</span>
                                             </span>
                                           </div>
                                           <div className="absolute bottom-4 left-4 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -5185,9 +5185,9 @@ export function TournamentDetailPage({
                           key={`folder-${section.key}`}
                           type="button"
                           onClick={() => setActiveGallerySectionKey(section.key)}
-                          className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-[36px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] px-7 pb-8 pt-7 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:aspect-square sm:min-h-0"
+                          className="group relative flex min-h-[320px] flex-col overflow-hidden rounded-[36px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fdfcf8_100%)] px-7 pb-8 pt-7 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                         >
-                          <div className="relative mb-7 h-[210px]">
+                          <div className="relative mb-6 h-[190px]">
                             <div
                               aria-hidden="true"
                               className="absolute left-[18%] right-[18%] top-[62px] h-[76px] overflow-hidden rounded-[22px]"
@@ -5210,7 +5210,7 @@ export function TournamentDetailPage({
                               aria-hidden="true"
                               src="/icons%20webp/folder-1485.svg"
                               alt=""
-                              className="absolute left-[9%] right-[9%] top-3 h-[178px] w-[82%] object-contain drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
+                              className="absolute left-[9%] right-[9%] top-3 h-[166px] w-[82%] object-contain drop-shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
                               loading="lazy"
                             />
                           </div>
@@ -5222,7 +5222,7 @@ export function TournamentDetailPage({
                               {section.title}
                             </div>
                             <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                              {section.images.length} photos • {section.videos.length} videos
+                              {section.images.length} photos / {section.videos.length} videos
                             </div>
                           </div>
                         </button>
