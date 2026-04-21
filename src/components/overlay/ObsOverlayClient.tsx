@@ -577,7 +577,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
   React.useEffect(() => {
     if (!item?.screenId) return;
-    const currentSessionId = sessionId ?? item.sessionId;
+    const currentSessionId = sessionId ?? null;
     const currentScreenId = item.screenId ?? resolvedScreenId;
     if (!currentScreenId) return;
 
@@ -617,7 +617,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
           }
 
           const payloadSessionId = normalizeString(payload.sessionId);
-          if (payloadSessionId && payloadSessionId !== currentSessionId) return;
+          if (currentSessionId && payloadSessionId && payloadSessionId !== currentSessionId) return;
 
           if (payload.type !== "score:update") return;
           setError(null);
