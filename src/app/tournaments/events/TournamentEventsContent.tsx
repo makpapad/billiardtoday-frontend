@@ -2237,6 +2237,16 @@ export function TournamentEventsContent({
       ),
     [getEffectiveFinalPoints, publishedFinalResults],
   );
+  const showFinalHighRun2Column = useMemo(
+    () =>
+      publishedFinalResults.some(
+        (result) =>
+          typeof result.highRun2 === "number" &&
+          Number.isFinite(result.highRun2) &&
+          result.highRun2 > 0,
+      ),
+    [publishedFinalResults],
+  );
   const finalStandingsHighlights = useMemo(
     () => ({
       average: getBestPositiveValue(
@@ -3404,7 +3414,7 @@ export function TournamentEventsContent({
                                     Best game
                                   </th>
                                 )}
-                                {!isArtisticEvent && (
+                                {!isArtisticEvent && showFinalHighRun2Column && (
                                   <th className="px-4 py-3 text-center font-semibold">
                                     2nd H.R.
                                   </th>
@@ -3552,7 +3562,7 @@ export function TournamentEventsContent({
                                       )}
                                     </td>
                                   )}
-                                  {!isArtisticEvent && (
+                                  {!isArtisticEvent && showFinalHighRun2Column && (
                                     <td className="px-4 py-3 text-center">
                                       {formatNumberValue(result.highRun2)}
                                     </td>
