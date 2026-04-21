@@ -19,10 +19,14 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
   },
   {
     label: "CEB",
-    href: "/federations/ceb",
+    href: "/federations/confederation-europeenne-de-billard",
     iconSrc: "/img/logo/ceb.png",
     iconAlt: "CEB logo",
     iconClassName: "h-10 w-auto object-contain",
+  },
+  {
+    label: "UMB",
+    href: "/federations/union-mondiale-de-billard",
   },
 ];
 
