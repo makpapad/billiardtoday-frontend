@@ -1256,6 +1256,7 @@ const resolveMediaUrl = (url: string | null) => {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
   const base =
+    process.env.NEXT_PUBLIC_MEDIA_URL ||
     process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
   return `${base}${url.startsWith("/") ? url : `/${url}`}`;
 };

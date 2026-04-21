@@ -2056,11 +2056,19 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
     if (!trimmed) return null;
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
     if (trimmed.startsWith("/")) {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
+      const apiBase = (
+        process.env.NEXT_PUBLIC_MEDIA_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
+        "https://app.billiardtoday.com"
+      ).trim().replace(/\/$/, "");
       if (apiBase && trimmed.startsWith("/uploads/")) return `${apiBase}${trimmed}`;
       return trimmed;
     }
-    if (trimmed.startsWith("uploads/")) return `/${trimmed}`;
+    if (trimmed.startsWith("uploads/")) {
+      const mediaBase = (process.env.NEXT_PUBLIC_MEDIA_URL || "").trim().replace(/\/$/, "");
+      return mediaBase ? `${mediaBase}/${trimmed}` : `/${trimmed}`;
+    }
     return null;
   };
 
