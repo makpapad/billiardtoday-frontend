@@ -2348,6 +2348,23 @@ export function TournamentEventsContent({
     () => eventStages.find((stage) => stage.id === activeStageId) ?? null,
     [eventStages, activeStageId],
   );
+  const activeBracketStageChain = useMemo<NormalizedEventStage[]>(() => {
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
+
+    const activeIndex = eventStages.findIndex(
+      (stage) => stage.id === activeStage.id,
+    );
+    if (activeIndex < 0) return [activeStage];
+
+    const chain: NormalizedEventStage[] = [];
+    for (let index = activeIndex; index < eventStages.length; index += 1) {
+      const stage = eventStages[index];
+      if (!isBracketStageType(stage.stageType)) break;
+      chain.push(stage);
+    }
+
+    return chain.length > 0 ? chain : [activeStage];
+  }, [activeStage, eventStages]);
   const effectiveLiveSessions = liveSessionsOverride ?? liveSessions;
   const normalizeLiveName = useCallback((value: string | null | undefined) => {
     return String(value || "")
@@ -2620,25 +2637,54 @@ export function TournamentEventsContent({
 
   useEffect(() => {
     if (!activeStage || !isBracketStageType(activeStage.stageType)) return;
-    if (brMatchesByStage[activeStage.documentId]) return;
-    void fetchBracketMatches(activeStage.documentId);
-  }, [activeStage, brMatchesByStage, fetchBracketMatches]);
+    activeBracketStageChain.forEach((stage) => {
+      if (brMatchesByStage[stage.documentId] || brLoadingByStage[stage.documentId]) {
+        return;
+      }
+      void fetchBracketMatches(stage.documentId);
+    });
+  }, [
+    activeBracketStageChain,
+    activeStage,
+    brLoadingByStage,
+    brMatchesByStage,
+    fetchBracketMatches,
+  ]);
+
+  const activeBracketMatchSource = useMemo(() => {
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
+    const chain =
+      activeBracketStageChain.length > 0 ? activeBracketStageChain : [activeStage];
+    return chain.flatMap((stage) => {
+      const matches = brMatchesByStage[stage.documentId];
+      return Array.isArray(matches) ? matches : [];
+    });
+  }, [activeBracketStageChain, activeStage, brMatchesByStage]);
 
   const activeStageUsesBracketView = useMemo(() => {
     if (!activeStage || !isBracketStageType(activeStage.stageType)) {
       return false;
     }
-    if (brLoadingByStage[activeStage.documentId]) {
+    const chain =
+      activeBracketStageChain.length > 0 ? activeBracketStageChain : [activeStage];
+    if (
+      chain.some(
+        (stage) =>
+          brLoadingByStage[stage.documentId] ||
+          typeof brMatchesByStage[stage.documentId] === "undefined",
+      )
+    ) {
       return true;
     }
 
-    const sourceRaw = brMatchesByStage[activeStage.documentId];
-    if (typeof sourceRaw === "undefined") {
-      return true;
-    }
-
-    return canRenderBracketPyramid(activeStage.stageType, sourceRaw);
-  }, [activeStage, brLoadingByStage, brMatchesByStage]);
+    return canRenderBracketPyramid(activeStage.stageType, activeBracketMatchSource);
+  }, [
+    activeBracketMatchSource,
+    activeBracketStageChain,
+    activeStage,
+    brLoadingByStage,
+    brMatchesByStage,
+  ]);
 
   const activeBracketRounds = useMemo<BracketRoundView[]>(() => {
     if (
@@ -2648,8 +2694,7 @@ export function TournamentEventsContent({
     ) {
       return [];
     }
-    const sourceRaw = brMatchesByStage[activeStage.documentId];
-    const source = Array.isArray(sourceRaw) ? sourceRaw : [];
+    const source = activeBracketMatchSource;
     if (source.length === 0) return [];
 
     const canonicalizeRound = (raw: string): string => {
@@ -2991,7 +3036,7 @@ export function TournamentEventsContent({
   }, [
     activeStage,
     activeStageUsesBracketView,
-    brMatchesByStage,
+    activeBracketMatchSource,
     normalizeBracketPlayer,
   ]);
 
