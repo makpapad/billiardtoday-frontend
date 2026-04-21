@@ -605,8 +605,6 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
           const payload = JSON.parse(String(event.data || "{}")) as WsPayload;
           const payloadScreenId = normalizeString(payload.screenId) ?? normalizeString(payload.screenIdentifier);
           if (payloadScreenId && payloadScreenId !== item.screenId) return;
-          const payloadSessionId = normalizeString(payload.sessionId);
-          if (payloadSessionId && payloadSessionId !== currentSessionId) return;
 
           if (payload.type === "overlay:break:start") {
             setBreakStatsOpen(true);
@@ -617,6 +615,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
             setBreakStatsOpen(false);
             return;
           }
+
+          const payloadSessionId = normalizeString(payload.sessionId);
+          if (payloadSessionId && payloadSessionId !== currentSessionId) return;
 
           if (payload.type !== "score:update") return;
           setError(null);
