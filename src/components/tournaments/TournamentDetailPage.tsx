@@ -5465,7 +5465,7 @@ export function TournamentDetailPage({
                             : current - 1;
                         })
                       }
-                      className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+                      className="absolute left-4 top-1/2 z-10 inline-flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-slate-950/90 text-3xl font-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.55)] ring-1 ring-black/30 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white/80 sm:left-6"
                       aria-label="Previous image"
                     >
                       &lt;
@@ -5480,7 +5480,7 @@ export function TournamentDetailPage({
                             : current + 1;
                         })
                       }
-                      className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+                      className="absolute right-4 top-1/2 z-10 inline-flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-slate-950/90 text-3xl font-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.55)] ring-1 ring-black/30 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white/80 sm:right-6"
                       aria-label="Next image"
                     >
                       &gt;
