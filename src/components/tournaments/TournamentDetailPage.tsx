@@ -219,6 +219,7 @@ type WsTournamentPayload = {
   sheet?: unknown;
   inningsDetail?: unknown;
   liveVideos?: unknown;
+  delaySeconds?: number;
   ts?: number;
   session?: Record<string, any>;
   players?: Array<{
@@ -674,6 +675,57 @@ function GroupTooltip({
 }
 
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
+const LIVE_SCORE_DELAY_EVENT = "LIVE_SYNC_DELAY_UPDATED";
+const LIVE_SCORE_DELAY_MAX_SECONDS = 180;
+const LIVE_SCORE_DELAY_HISTORY_MS = (LIVE_SCORE_DELAY_MAX_SECONDS + 15) * 1000;
+
+type DelayedEventLiveSessionEntry = {
+  at: number;
+  session: EventLiveSession;
+};
+
+function getEventLiveSessionKey(session: EventLiveSession) {
+  return String(
+    session.screenIdentifier ||
+      session.screenId ||
+      session.sessionId ||
+      session.documentId ||
+      session.id ||
+      "",
+  );
+}
+
+function cloneEventLiveSession(session: EventLiveSession): EventLiveSession {
+  return {
+    ...session,
+    liveVideos: session.liveVideos ? [...session.liveVideos] : session.liveVideos,
+    state: {
+      ...session.state,
+      liveVideos: session.state?.liveVideos ? [...session.state.liveVideos] : session.state?.liveVideos,
+      inningsDetail: session.state?.inningsDetail ? [...session.state.inningsDetail] : session.state?.inningsDetail,
+    },
+  };
+}
+
+function mergeDelayedEventLiveSession(
+  current: EventLiveSession,
+  delayed: EventLiveSession,
+): EventLiveSession {
+  return {
+    ...current,
+    updatedAt: delayed.updatedAt ?? current.updatedAt,
+    liveVideos: current.liveVideos ?? delayed.liveVideos,
+    state: {
+      ...current.state,
+      ...delayed.state,
+      liveVideos: current.state?.liveVideos ?? delayed.state?.liveVideos,
+      tournamentName: current.state?.tournamentName ?? delayed.state?.tournamentName,
+      stageName: current.state?.stageName ?? delayed.state?.stageName,
+      groupName: current.state?.groupName ?? delayed.state?.groupName,
+      tableName: current.state?.tableName ?? delayed.state?.tableName,
+    },
+  };
+}
 const EVENT_FALLBACK_POLL_MS = 60000;
 const LIVE_SESSIONS_FALLBACK_POLL_MS = 30000;
 
@@ -1403,6 +1455,12 @@ export function TournamentDetailPage({
     EventLiveSession[]
   >([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
+  const [displayEventLiveSessions, setDisplayEventLiveSessions] = useState<
+    EventLiveSession[]
+  >([]);
+  const [liveScoreDelayByScreenId, setLiveScoreDelayByScreenId] = useState<
+    Record<string, number>
+  >({});
   const [expandedLiveSessionIds, setExpandedLiveSessionIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -1430,6 +1488,11 @@ export function TournamentDetailPage({
   const lastModalCloseAtRef = useRef(0);
   const sessionSnapshotsRef = useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = useRef<Map<string, InningDetailEntry[]>>(new Map());
+  const eventLiveDelayHistoryRef = useRef<
+    Map<string, DelayedEventLiveSessionEntry[]>
+  >(new Map());
+  const mergedEventLiveSessionsRef = useRef<EventLiveSession[]>([]);
+  const liveScoreDelayByScreenIdRef = useRef<Record<string, number>>({});
   const lastClosedHighlightRef = useRef<{
     sessionId?: string;
     screenId?: string;
@@ -1452,6 +1515,29 @@ export function TournamentDetailPage({
     summary.clubDocumentId ||
     eventLiveSessions.find((session) => session.clubId)?.clubId ||
     null;
+
+  useEffect(() => {
+    liveScoreDelayByScreenIdRef.current = liveScoreDelayByScreenId;
+  }, [liveScoreDelayByScreenId]);
+
+  const applyLiveScoreDelayPayload = useCallback((payload: WsTournamentPayload) => {
+    if (payload.type !== LIVE_SCORE_DELAY_EVENT && payload.type !== "LIVE_SCORE_DELAY_UPDATED") {
+      return false;
+    }
+    const screenId = String(payload.screenIdentifier ?? payload.screenId ?? "").trim();
+    const delaySeconds = Number(payload.delaySeconds);
+    if (!screenId || !Number.isFinite(delaySeconds) || delaySeconds < 0) {
+      return true;
+    }
+    setLiveScoreDelayByScreenId((prev) => ({
+      ...prev,
+      [screenId]: Math.min(
+        LIVE_SCORE_DELAY_MAX_SECONDS,
+        Math.max(0, delaySeconds),
+      ),
+    }));
+    return true;
+  }, []);
 
   const recordSnapshot = (sessionKey: string | undefined | null, snapshot: SessionSnapshot) => {
     if (!sessionKey) return;
@@ -1888,6 +1974,7 @@ export function TournamentDetailPage({
         const payload = JSON.parse(
           String(event.data || "{}"),
         ) as WsTournamentPayload;
+        if (applyLiveScoreDelayPayload(payload)) return;
         if (String(payload.eventId || "").trim() !== String(summary.documentId)) {
           return;
         }
@@ -1946,6 +2033,7 @@ export function TournamentDetailPage({
     refreshStageMatches,
     refreshStageStandings,
     summary.documentId,
+    applyLiveScoreDelayPayload,
   ]);
 
   useEffect(() => {
@@ -1989,6 +2077,7 @@ export function TournamentDetailPage({
         const payload = JSON.parse(
           String(event.data || "{}"),
         ) as WsTournamentPayload;
+        if (applyLiveScoreDelayPayload(payload)) return;
         const payloadClubId = String(
           payload.clubId ?? payload.session?.clubId ?? "",
         );
@@ -2306,7 +2395,7 @@ export function TournamentDetailPage({
     return () => {
       socket.close();
     };
-  }, [derivedClubDocumentId, eventLiveSessions]);
+  }, [applyLiveScoreDelayPayload, derivedClubDocumentId, eventLiveSessions]);
 
   useEffect(() => {
     const screenIds = Array.from(
@@ -2349,6 +2438,7 @@ export function TournamentDetailPage({
           const payload = JSON.parse(
             String(event.data || "{}"),
           ) as WsTournamentPayload;
+          if (applyLiveScoreDelayPayload(payload)) return;
           const baseSession =
             eventLiveSessions.find(
               (entry) =>
@@ -3090,7 +3180,7 @@ export function TournamentDetailPage({
     return () => {
       sockets.forEach((socket) => socket.close());
     };
-  }, [derivedClubDocumentId, eventLiveSessions]);
+  }, [applyLiveScoreDelayPayload, derivedClubDocumentId, eventLiveSessions]);
 
   useEffect(() => {
     if (activeView !== "live" || !highlightedLiveSessionId) return;
@@ -3202,6 +3292,72 @@ export function TournamentDetailPage({
       ),
     [filteredEventLiveSessions, filteredWsLiveSessionsByPair],
   );
+
+  useEffect(() => {
+    mergedEventLiveSessionsRef.current = mergedEventLiveSessions;
+  }, [mergedEventLiveSessions]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const cutoff = now - LIVE_SCORE_DELAY_HISTORY_MS;
+    const seen = new Set<string>();
+
+    mergedEventLiveSessions.forEach((session) => {
+      const key = getEventLiveSessionKey(session);
+      if (!key) return;
+      seen.add(key);
+      const history = eventLiveDelayHistoryRef.current.get(key) ?? [];
+      const next = [
+        ...history.filter((entry) => entry.at >= cutoff),
+        { at: now, session: cloneEventLiveSession(session) },
+      ];
+      eventLiveDelayHistoryRef.current.set(key, next.slice(-500));
+    });
+
+    Array.from(eventLiveDelayHistoryRef.current.keys()).forEach((key) => {
+      if (!seen.has(key)) eventLiveDelayHistoryRef.current.delete(key);
+    });
+  }, [mergedEventLiveSessions]);
+
+  useEffect(() => {
+    const buildDisplaySessions = () => {
+      const now = Date.now();
+      return mergedEventLiveSessionsRef.current.map((session) => {
+        const screenId = String(
+          session.screenIdentifier || session.screenId || "",
+        ).trim();
+        const delaySeconds = screenId
+          ? liveScoreDelayByScreenIdRef.current[screenId] ?? 0
+          : 0;
+        if (!delaySeconds) return session;
+
+        const history =
+          eventLiveDelayHistoryRef.current.get(getEventLiveSessionKey(session)) ??
+          [];
+        if (!history.length) return session;
+
+        const targetAt = now - delaySeconds * 1000;
+        const delayed =
+          [...history].reverse().find((entry) => entry.at <= targetAt) ??
+          history[0];
+        return delayed
+          ? mergeDelayedEventLiveSession(session, delayed.session)
+          : session;
+      });
+    };
+
+    setDisplayEventLiveSessions(buildDisplaySessions());
+    const interval = window.setInterval(() => {
+      setDisplayEventLiveSessions(buildDisplaySessions());
+    }, 500);
+    return () => window.clearInterval(interval);
+  }, [mergedEventLiveSessions, liveScoreDelayByScreenId]);
+
+  const presentedEventLiveSessions =
+    displayEventLiveSessions.length === mergedEventLiveSessions.length
+      ? displayEventLiveSessions
+      : mergedEventLiveSessions;
+
   const apiPhotoFallbackBySessionId = useMemo(() => {
     const map = new Map<
       string,
@@ -4340,12 +4496,12 @@ export function TournamentDetailPage({
   );
   const liveCards = useMemo(
     () =>
-      mergedEventLiveSessions.filter(
+      presentedEventLiveSessions.filter(
         (session) =>
           session.state?.isRunning ||
           session.sessionStatus === "in_progress",
       ),
-    [mergedEventLiveSessions],
+    [presentedEventLiveSessions],
   );
   const tournamentVideoSessions = useMemo<LiveVideoDrawerSession[]>(
     () =>
@@ -5824,7 +5980,7 @@ export function TournamentDetailPage({
           showStandaloneTitle={false}
           showEventHeader={false}
           emptyStateMessage="This tournament page is missing event data."
-          liveSessionsOverride={mergedEventLiveSessions}
+          liveSessionsOverride={presentedEventLiveSessions}
           onLiveMatchOpen={(sessionId) => {
             setHighlightedLiveSessionId(sessionId);
             switchToLive();
