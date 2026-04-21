@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
+import { buildLiveScoreChartRows, LiveSheetScoreChart } from "@/components/live/LiveSheetScoreChart";
 
 type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -33,8 +34,25 @@ type LiveScoreState = {
   isRunning?: boolean;
   targetPointsA?: number | null;
   targetPointsB?: number | null;
+  avgFormattedA?: string | null;
+  avgFormattedB?: string | null;
+  accPercentA?: number | null;
+  accPercentB?: number | null;
+  playerATimeSeconds?: number | null;
+  playerBTimeSeconds?: number | null;
+  secondsPerInningA?: number | null;
+  secondsPerInningB?: number | null;
+  gameDurationSeconds?: number | null;
+  inningsA?: number | null;
+  inningsB?: number | null;
+  inningsDetail?: Array<{
+    inning: number;
+    player1?: { pt: number; tot: number };
+    player2?: { pt: number; tot: number };
+  }>;
   tournamentName?: string | null;
   stageName?: string | null;
+  groupName?: string | null;
   tableName?: string | null;
 };
 
@@ -92,7 +110,9 @@ type SessionApiRecord = {
 type WsPayload = {
   type?: string;
   screenId?: string;
+  screenIdentifier?: string;
   sessionId?: string | number | null;
+  reason?: string | null;
   current?: "A" | "B" | null;
   activePlayer?: 1 | 2 | null;
   progress?: number | null;
@@ -110,7 +130,14 @@ type WsPayload = {
     timeoutsUsed?: number | null;
     timeouts?: number | null;
     maxTimeouts?: number | null;
+    avgFormatted?: string | null;
+    accPercent?: number | null;
+    playerTimeSeconds?: number | null;
+    secondsPerInning?: number | null;
   }>;
+  innings?: number | null;
+  inningsDetail?: LiveScoreState["inningsDetail"];
+  gameDurationSeconds?: number | null;
 };
 
 const DEFAULT_WIDTH = 540;
@@ -310,6 +337,34 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         playerB.target_points,
         item.state.targetPointsB,
       ),
+      avgFormattedA: normalizeString(playerA.avgFormatted) ?? item.state.avgFormattedA ?? null,
+      avgFormattedB: normalizeString(playerB.avgFormatted) ?? item.state.avgFormattedB ?? null,
+      accPercentA: Number.isFinite(Number(playerA.accPercent))
+        ? Number(playerA.accPercent)
+        : item.state.accPercentA ?? null,
+      accPercentB: Number.isFinite(Number(playerB.accPercent))
+        ? Number(playerB.accPercent)
+        : item.state.accPercentB ?? null,
+      playerATimeSeconds: Number.isFinite(Number(playerA.playerTimeSeconds))
+        ? Number(playerA.playerTimeSeconds)
+        : item.state.playerATimeSeconds ?? null,
+      playerBTimeSeconds: Number.isFinite(Number(playerB.playerTimeSeconds))
+        ? Number(playerB.playerTimeSeconds)
+        : item.state.playerBTimeSeconds ?? null,
+      secondsPerInningA: Number.isFinite(Number(playerA.secondsPerInning))
+        ? Number(playerA.secondsPerInning)
+        : item.state.secondsPerInningA ?? null,
+      secondsPerInningB: Number.isFinite(Number(playerB.secondsPerInning))
+        ? Number(playerB.secondsPerInning)
+        : item.state.secondsPerInningB ?? null,
+      gameDurationSeconds: Number.isFinite(Number(payload.gameDurationSeconds))
+        ? Number(payload.gameDurationSeconds)
+        : item.state.gameDurationSeconds ?? null,
+      inningsA: coerceNumber(playerA.innings, item.state.inningsA ?? item.state.inningsCount ?? 0),
+      inningsB: coerceNumber(playerB.innings, item.state.inningsB ?? item.state.inningsCount ?? 0),
+      inningsDetail: Array.isArray(payload.inningsDetail)
+        ? payload.inningsDetail
+        : item.state.inningsDetail,
     },
   };
 }
@@ -381,6 +436,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [resolvedScreenId, setResolvedScreenId] = React.useState<string | null>(null);
+  const [breakStatsOpen, setBreakStatsOpen] = React.useState(false);
 
   const loadSession = React.useCallback(
     async (requestedSessionId: string, options?: { preserveItem?: boolean; silent?: boolean }) => {
@@ -547,9 +603,22 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
       socket.onmessage = (event) => {
         try {
           const payload = JSON.parse(String(event.data || "{}")) as WsPayload;
-          if (payload.type !== "score:update") return;
-          const payloadScreenId = normalizeString(payload.screenId);
+          const payloadScreenId = normalizeString(payload.screenId) ?? normalizeString(payload.screenIdentifier);
           if (payloadScreenId && payloadScreenId !== item.screenId) return;
+          const payloadSessionId = normalizeString(payload.sessionId);
+          if (payloadSessionId && payloadSessionId !== currentSessionId) return;
+
+          if (payload.type === "overlay:break:start") {
+            setBreakStatsOpen(true);
+            return;
+          }
+
+          if (payload.type === "overlay:break:end") {
+            setBreakStatsOpen(false);
+            return;
+          }
+
+          if (payload.type !== "score:update") return;
           setError(null);
           setItem((current) => (current ? applyWsUpdate(current, payload) : current));
         } catch {
@@ -623,13 +692,227 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
       }
       style={{ backgroundColor: "transparent" }}
     >
-      <ScoreOverlayCard
-        item={item}
-        width={width}
-        height={height}
-        obsSafe={obsSafe}
-        template={template}
-      />
+      {!breakStatsOpen ? (
+        <ScoreOverlayCard
+          item={item}
+          width={width}
+          height={height}
+          obsSafe={obsSafe}
+          template={template}
+        />
+      ) : null}
+      {breakStatsOpen ? <OverlayBreakStatsModal item={item} /> : null}
+    </div>
+  );
+}
+
+function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
+  const state = item.state;
+  const leftName = state.playerAName || "Player A";
+  const rightName = state.playerBName || "Player B";
+  const leftScore = state.scoreA ?? 0;
+  const rightScore = state.scoreB ?? 0;
+  const innings = state.inningsCount ?? Math.max(state.inningsA ?? 0, state.inningsB ?? 0, 0);
+  const totalTime = formatMMSS(state.gameDurationSeconds);
+  const chartRows = buildLiveScoreChartRows({
+    inningsDetail: state.inningsDetail,
+    inningsCount: innings,
+    inningsA: state.inningsA,
+    inningsB: state.inningsB,
+    scoreA: leftScore,
+    scoreB: rightScore,
+    ended: false,
+  });
+
+  const meta = [
+    ["Tournament", state.tournamentName],
+    ["Stage", stripLeadingWord(state.stageName ?? null, "stage")],
+    ["Group", stripLeadingWord(state.groupName ?? null, "group")],
+    ["Table", stripLeadingWord(state.tableName ?? null, "table")],
+  ];
+
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-6 text-white backdrop-blur-[2px]">
+      <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-slate-950/95 via-blue-950/90 to-purple-950/90 shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="text-sm uppercase tracking-[0.55em] text-white/70">Live Recap</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-white/45">Break</div>
+        </div>
+
+        <div className="mx-5 mb-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-xs uppercase tracking-[0.26em] text-white/55">
+          {meta.map(([label, value]) => (
+            <div key={label} className="flex min-w-[112px] items-center justify-center gap-2">
+              <span>{label}</span>
+              <span className="text-sm font-semibold normal-case tracking-normal text-white">{value || "--"}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-3 px-5 pb-4">
+          <BreakPlayerCard
+            label="Leading"
+            name={leftName}
+            score={leftScore}
+            avg={state.avgFormattedA ?? formatAverage(leftScore, innings)}
+            hr={state.bestRunA ?? 0}
+            acc={formatPercent(state.accPercentA)}
+            secPer={formatSeconds(state.secondsPerInningA)}
+            playerTime={formatMMSS(state.playerATimeSeconds)}
+            tone="light"
+          />
+          <div className="flex min-w-[128px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-4 text-center">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Total time</div>
+            <div className="text-xl font-semibold text-white/80">{totalTime}</div>
+            <div className="mt-3 text-4xl font-black text-white/70">VS</div>
+            <div className="mt-3 text-[11px] uppercase tracking-[0.24em] text-white/45">Innings</div>
+            <div className="text-3xl font-black text-white/90">{innings || "--"}</div>
+          </div>
+          <BreakPlayerCard
+            label="Chasing"
+            name={rightName}
+            score={rightScore}
+            avg={state.avgFormattedB ?? formatAverage(rightScore, innings)}
+            hr={state.bestRunB ?? 0}
+            acc={formatPercent(state.accPercentB)}
+            secPer={formatSeconds(state.secondsPerInningB)}
+            playerTime={formatMMSS(state.playerBTimeSeconds)}
+            tone="yellow"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 px-5 pb-4">
+          <BreakStatsGrid
+            avg={state.avgFormattedA ?? formatAverage(leftScore, innings)}
+            hr={state.bestRunA ?? 0}
+            acc={formatPercent(state.accPercentA)}
+            secPer={formatSeconds(state.secondsPerInningA)}
+            playerTime={formatMMSS(state.playerATimeSeconds)}
+            target={formatTargetPct(leftScore, state.targetPointsA)}
+          />
+          <BreakStatsGrid
+            avg={state.avgFormattedB ?? formatAverage(rightScore, innings)}
+            hr={state.bestRunB ?? 0}
+            acc={formatPercent(state.accPercentB)}
+            secPer={formatSeconds(state.secondsPerInningB)}
+            playerTime={formatMMSS(state.playerBTimeSeconds)}
+            target={formatTargetPct(rightScore, state.targetPointsB)}
+          />
+        </div>
+
+        <div className="px-5 pb-5">
+          <LiveSheetScoreChart
+            data={chartRows}
+            height={288}
+            noAnim
+            playerAName={leftName}
+            playerBName={rightName}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatMMSS(value?: number | null) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return "--";
+  const totalSeconds = Math.max(0, Math.floor(Number(value)));
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function formatAverage(score?: number | null, innings?: number | null) {
+  const safeScore = Number(score ?? 0);
+  const safeInnings = Number(innings ?? 0);
+  if (!Number.isFinite(safeScore) || !Number.isFinite(safeInnings) || safeInnings <= 0) return "0.000";
+  return (safeScore / safeInnings).toFixed(3);
+}
+
+function formatPercent(value?: number | null) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return "--";
+  return `${Number(value).toFixed(1)}%`;
+}
+
+function formatSeconds(value?: number | null) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return "--";
+  return `${Math.max(0, Number(value)).toFixed(1)}s`;
+}
+
+function formatTargetPct(score?: number | null, target?: number | null) {
+  const safeTarget = Number(target ?? 0);
+  if (!Number.isFinite(safeTarget) || safeTarget <= 0) return "--";
+  const pct = Math.min(100, Math.max(0, (Number(score ?? 0) / safeTarget) * 100));
+  return `${pct.toFixed(0)}%`;
+}
+
+function BreakPlayerCard({
+  label,
+  name,
+  score,
+  avg,
+  hr,
+  acc,
+  secPer,
+  playerTime,
+  tone,
+}: {
+  label: string;
+  name: string;
+  score: number;
+  avg: string;
+  hr: number;
+  acc: string;
+  secPer: string;
+  playerTime: string;
+  tone: "light" | "yellow";
+}) {
+  return (
+    <div className={`rounded-2xl border p-4 text-center ${tone === "yellow" ? "border-yellow-300/45 bg-yellow-400/25" : "border-white/80 bg-white/85 text-slate-950"}`}>
+      <div className={`text-xs uppercase tracking-[0.35em] ${tone === "yellow" ? "text-white/65" : "text-slate-600"}`}>{label}</div>
+      <div className="mt-1 text-xl font-semibold">{name}</div>
+      <div className="mt-2 text-7xl font-black leading-none">{score}</div>
+      <div className={`mt-3 grid grid-cols-2 gap-2 text-xs ${tone === "yellow" ? "text-white" : "text-slate-900"}`}>
+        <span>AVG {avg}</span>
+        <span>HR {hr}</span>
+        <span>ACC {acc}</span>
+        <span>{secPer}</span>
+        <span className="col-span-2">Time {playerTime}</span>
+      </div>
+    </div>
+  );
+}
+
+function BreakStatsGrid({
+  avg,
+  hr,
+  acc,
+  secPer,
+  playerTime,
+  target,
+}: {
+  avg: string;
+  hr: number;
+  acc: string;
+  secPer: string;
+  playerTime: string;
+  target: string;
+}) {
+  const stats = [
+    ["AVG", avg],
+    ["H.R.", String(hr)],
+    ["ACC", acc],
+    ["SEC/P", secPer],
+    ["P TIME", playerTime],
+    ["TARGET", target],
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/10 p-2.5">
+      {stats.map(([label, value]) => (
+        <div key={label} className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-center">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-white/45">{label}</div>
+          <div className="text-lg font-bold text-white">{value}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1656,4 +1939,3 @@ function FlagBadge({
     </div>
   );
 }
-
