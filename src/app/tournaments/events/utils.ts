@@ -228,6 +228,7 @@ export const normalizeFinalResult = (
     points: toNumber(normalized.points),
     innings: toNumber(normalized.innings),
     highRun: toNumber(normalized.high_run),
+    highRun2: toNumber(normalized.high_run_2),
     rankingPoints: toNumber(normalized.ranking_points),
     penalty: toNumber(normalized.penalty),
     finalPoints: toNumber(normalized.final_points),

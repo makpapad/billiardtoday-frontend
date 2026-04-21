@@ -3352,11 +3352,16 @@ export function TournamentEventsContent({
                                   {isArtisticEvent ? "%" : "AVG"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  {isArtisticEvent ? "Best run" : "H.R."}
+                                  {isArtisticEvent ? "Best run" : "1st H.R."}
                                 </th>
                                 {isArtisticEvent && (
                                   <th className="px-4 py-3 text-center font-semibold">
                                     Best game
+                                  </th>
+                                )}
+                                {!isArtisticEvent && (
+                                  <th className="px-4 py-3 text-center font-semibold">
+                                    2nd H.R.
                                   </th>
                                 )}
                                 {!isArtisticEvent && (
@@ -3500,6 +3505,11 @@ export function TournamentEventsContent({
                                         "center",
                                         groupLabelMode,
                                       )}
+                                    </td>
+                                  )}
+                                  {!isArtisticEvent && (
+                                    <td className="px-4 py-3 text-center">
+                                      {formatNumberValue(result.highRun2)}
                                     </td>
                                   )}
                                   {!isArtisticEvent && (

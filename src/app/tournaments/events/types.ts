@@ -212,6 +212,7 @@ export type NormalizedFinalResult = {
   points: number | null;
   innings: number | null;
   highRun: number | null;
+  highRun2: number | null;
   rankingPoints: number | null;
   penalty: number | null;
   finalPoints: number | null;
