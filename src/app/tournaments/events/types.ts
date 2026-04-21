@@ -80,6 +80,7 @@ export type StrapiFinalResult = {
   documentId?: string | null;
   position?: number | string | null;
   best_average?: number | string | null;
+  restricted_best_avg?: number | string | null;
   best_game?: number | string | null;
   high_run_2?: number | string | null;
   caroms?: number | string | null;
