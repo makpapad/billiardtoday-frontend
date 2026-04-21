@@ -679,6 +679,10 @@ const LIVE_SCORE_DELAY_EVENT = "LIVE_SYNC_DELAY_UPDATED";
 const LIVE_SCORE_DELAY_MAX_SECONDS = 180;
 const LIVE_SCORE_DELAY_HISTORY_MS = (LIVE_SCORE_DELAY_MAX_SECONDS + 15) * 1000;
 
+function tournamentLiveScoreDelayStorageKey(eventId: string | number | null | undefined) {
+  return `scoreboard.tournament.live.delay.${eventId ?? "global"}`;
+}
+
 type DelayedEventLiveSessionEntry = {
   at: number;
   session: EventLiveSession;
@@ -1519,6 +1523,36 @@ export function TournamentDetailPage({
   useEffect(() => {
     liveScoreDelayByScreenIdRef.current = liveScoreDelayByScreenId;
   }, [liveScoreDelayByScreenId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(
+        tournamentLiveScoreDelayStorageKey(summary.documentId),
+      );
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
+      const next: Record<string, number> = {};
+      Object.entries(parsed).forEach(([screenId, value]) => {
+        const delay = Number(value);
+        if (screenId && Number.isFinite(delay) && delay >= 0) {
+          next[screenId] = Math.min(LIVE_SCORE_DELAY_MAX_SECONDS, delay);
+        }
+      });
+      setLiveScoreDelayByScreenId(next);
+    } catch {}
+  }, [summary.documentId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        tournamentLiveScoreDelayStorageKey(summary.documentId),
+        JSON.stringify(liveScoreDelayByScreenId),
+      );
+    } catch {}
+  }, [summary.documentId, liveScoreDelayByScreenId]);
 
   const applyLiveScoreDelayPayload = useCallback((payload: WsTournamentPayload) => {
     if (payload.type !== LIVE_SCORE_DELAY_EVENT && payload.type !== "LIVE_SCORE_DELAY_UPDATED") {
