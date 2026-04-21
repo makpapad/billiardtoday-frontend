@@ -1385,6 +1385,7 @@ export function TournamentDetailPage({
   const [activeGallerySectionKey, setActiveGallerySectionKey] = useState<
     string | null
   >(null);
+  const [galleryFolderMenuOpen, setGalleryFolderMenuOpen] = useState(false);
   const [expandedGalleryVideoIds, setExpandedGalleryVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -5003,18 +5004,56 @@ export function TournamentDetailPage({
                     >
                       Back to folders
                     </button>
-                    <select
-                      value={activeGallerySection.key}
-                      onChange={(event) => setActiveGallerySectionKey(event.target.value)}
-                      className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-center text-xs font-bold uppercase tracking-[0.16em] text-slate-800 shadow-sm outline-none transition hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                      aria-label="Select gallery folder"
+                    <div
+                      className="relative"
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) {
+                          setGalleryFolderMenuOpen(false);
+                        }
+                      }}
                     >
-                      {gallerySections.map((section) => (
-                        <option key={section.key} value={section.key}>
-                          {section.title}
-                        </option>
-                      ))}
-                    </select>
+                      <button
+                        type="button"
+                        onClick={() => setGalleryFolderMenuOpen((open) => !open)}
+                        className="flex h-11 w-full items-center justify-between gap-3 rounded-full border border-slate-200 bg-white px-4 text-left shadow-[0_10px_28px_rgba(15,23,42,0.08)] outline-none transition hover:border-slate-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.11)] focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                        aria-label="Select gallery folder"
+                        aria-expanded={galleryFolderMenuOpen}
+                      >
+                        <span className="min-w-0 truncate text-xs font-black uppercase tracking-[0.18em] text-slate-950">
+                          {activeGallerySection.title}
+                        </span>
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-950 text-[10px] font-black text-white">
+                          <span className="h-2 w-2 rotate-45 border-b-2 border-r-2 border-white" />
+                        </span>
+                      </button>
+                      {galleryFolderMenuOpen ? (
+                        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-[0_22px_60px_rgba(15,23,42,0.18)]">
+                          {gallerySections.map((section) => {
+                            const selected = section.key === activeGallerySection.key;
+                            return (
+                              <button
+                                key={section.key}
+                                type="button"
+                                onClick={() => {
+                                  setActiveGallerySectionKey(section.key);
+                                  setGalleryFolderMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.14em] transition ${
+                                  selected
+                                    ? "bg-slate-950 text-white"
+                                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-950"
+                                }`}
+                              >
+                                <span className="min-w-0 truncate">{section.title}</span>
+                                <span className={selected ? "text-white/70" : "text-slate-400"}>
+                                  {section.videos.length} / {section.images.length}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="rounded-full bg-slate-100 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:justify-self-end">
                       {activeGallerySection.videos.length} videos / {activeGallerySection.images.length} photos
                     </div>
