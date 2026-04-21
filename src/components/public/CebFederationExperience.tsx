@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buildTournamentHref } from "@/lib/tournaments";
 import type { Federation } from "@/lib/directory";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { CEB_MEMBER_PIN_POSITIONS } from "@/components/public/cebFederationMapData";
 
@@ -156,9 +157,7 @@ const CEB_BOARD_MEMBERS: BoardMember[] = [
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
   if (!value?.url) return null;
-  return value.url.startsWith("http")
-    ? value.url
-    : `https://app.billiardtoday.com${value.url.startsWith("/") ? value.url : `/${value.url}`}`;
+  return resolveMediaUrl(value.url);
 };
 
 const formatDate = (value: string | null | undefined) => {

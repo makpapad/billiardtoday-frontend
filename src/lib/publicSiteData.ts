@@ -1,10 +1,9 @@
 import { getCountryCode } from "@/lib/countryFlags";
+import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import { buildTournamentHref } from "@/lib/tournaments";
 
 const STRAPI_URL =
   process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
-const MEDIA_URL =
-  process.env.NEXT_PUBLIC_MEDIA_URL || STRAPI_URL;
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 
@@ -169,7 +168,7 @@ const resolveMediaUrl = (value: unknown): string | null => {
   );
   const mediaUrl = readString(entity?.url);
   if (!mediaUrl) return null;
-  return mediaUrl.startsWith("/") ? `${MEDIA_URL}${mediaUrl}` : mediaUrl;
+  return resolveConfiguredMediaUrl(mediaUrl, STRAPI_URL);
 };
 
 const buildPlayerHref = (id: number | string | null, name: string) => {

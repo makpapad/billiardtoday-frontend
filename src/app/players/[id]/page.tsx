@@ -5,6 +5,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
+import { resolveMediaUrl } from "@/lib/mediaUrl"
 import { buildTournamentSlug } from "@/lib/tournaments"
 import {
     LineChart,
@@ -106,13 +107,7 @@ const getPhotoUrl = (photo: Player['photo_main']): string | null => {
 
     if (!url) return null
 
-    // If URL is relative (starts with /uploads), prepend Strapi base URL
-    if (url.startsWith('/uploads')) {
-        const strapiBase = getStrapiBaseUrl()
-        return `${strapiBase}${url}`
-    }
-
-    return url
+    return resolveMediaUrl(url, getStrapiBaseUrl())
 }
 
 const parseAverageValue = (value: unknown) => {

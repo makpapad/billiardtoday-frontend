@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import type { Federation } from "@/lib/directory";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 type Props = {
   federation: Federation;
@@ -9,9 +10,7 @@ type Props = {
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
   if (!value?.url) return null;
-  return value.url.startsWith("http")
-    ? value.url
-    : `https://app.billiardtoday.com${value.url.startsWith("/") ? value.url : `/${value.url}`}`;
+  return resolveMediaUrl(value.url);
 };
 
 const buildClubHref = (slug?: string | null, documentId?: string | null, embedded = false) => {

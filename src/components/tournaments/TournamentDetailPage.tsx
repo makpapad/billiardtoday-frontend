@@ -16,6 +16,7 @@ import {
 import type { LiveSessionItem } from "@/components/live/types";
 import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
 import type { RankingSeriesData } from "@/lib/rankings";
+import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref } from "@/lib/tournaments";
 import type {
@@ -1253,12 +1254,7 @@ const buildPlaceholderSideLabel = (
 };
 
 const resolveMediaUrl = (url: string | null) => {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base =
-    process.env.NEXT_PUBLIC_MEDIA_URL ||
-    process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+  return resolveConfiguredMediaUrl(url);
 };
 
 export function TournamentDetailPage({

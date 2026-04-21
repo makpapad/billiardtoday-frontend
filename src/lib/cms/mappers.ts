@@ -38,6 +38,7 @@ import type {
   CmsSocialLink,
   CmsSection,
 } from "@/lib/cms/types";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { sanitizeCmsHtml } from "@/lib/cms/sanitize";
 
 const DEFAULT_APPEARANCE: CmsAppearance = {
@@ -163,17 +164,8 @@ const mapMarketingLayout = (source: Record<string, unknown>) => ({
   mobileBodySize: readOptionalBodySize(source.mobileBodySize),
 });
 
-const MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
-
 const toAbsoluteUrl = (value: string | null, strapiBaseUrl: string) => {
-  if (!value) return "";
-  if (/^https?:\/\//i.test(value)) return value;
-  const normalizedPath = value.startsWith("/") ? value : `/${value}`;
-  const baseUrl =
-    normalizedPath.startsWith("/uploads/") && MEDIA_BASE_URL
-      ? MEDIA_BASE_URL
-      : strapiBaseUrl;
-  return `${baseUrl}${normalizedPath}`;
+  return resolveMediaUrl(value, strapiBaseUrl) || "";
 };
 
 const unwrapEntity = (value: unknown): Record<string, unknown> => {

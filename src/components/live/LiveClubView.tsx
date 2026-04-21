@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { buildLiveScoreChartRows, LiveSheetScoreChart } from "@/components/live/LiveSheetScoreChart";
 import {
   LiveVideoDrawer,
@@ -2054,20 +2055,24 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
     if (!value || typeof value !== "string") return null;
     const trimmed = value.trim();
     if (!trimmed) return null;
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+    const fallbackBase = (
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_STRAPI_URL ||
+      "https://app.billiardtoday.com"
+    ).trim().replace(/\/$/, "");
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return resolveMediaUrl(trimmed, fallbackBase);
+    }
     if (trimmed.startsWith("/")) {
       const apiBase = (
         process.env.NEXT_PUBLIC_MEDIA_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        process.env.NEXT_PUBLIC_STRAPI_URL ||
-        "https://app.billiardtoday.com"
+        fallbackBase
       ).trim().replace(/\/$/, "");
       if (apiBase && trimmed.startsWith("/uploads/")) return `${apiBase}${trimmed}`;
       return trimmed;
     }
     if (trimmed.startsWith("uploads/")) {
-      const mediaBase = (process.env.NEXT_PUBLIC_MEDIA_URL || "").trim().replace(/\/$/, "");
-      return mediaBase ? `${mediaBase}/${trimmed}` : `/${trimmed}`;
+      return resolveMediaUrl(trimmed, fallbackBase);
     }
     return null;
   };
