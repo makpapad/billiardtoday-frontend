@@ -331,6 +331,36 @@ const normalizeDateOnly = (value: unknown) => {
   return isoMatch ? isoMatch[1] + "-" + isoMatch[2] + "-" + isoMatch[3] : null;
 };
 
+const parseDateOnlyParts = (value: string | null | undefined) => {
+  const normalized = normalizeDateOnly(value);
+  if (!normalized) return null;
+  const [year, month, day] = normalized.split("-").map((part) => Number(part));
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return null;
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year, month, day };
+};
+
+const formatAgeYearsMonths = (
+  birthDate: string | null | undefined,
+  referenceDate: string | null | undefined,
+) => {
+  const birth = parseDateOnlyParts(birthDate);
+  const reference = parseDateOnlyParts(referenceDate);
+  if (!birth || !reference) return null;
+
+  let years = reference.year - birth.year;
+  let months = reference.month - birth.month;
+  if (reference.day < birth.day) months -= 1;
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  if (years < 0) return null;
+  return `${years}Y-${months}M`;
+};
+
 type InningDetailEntry = {
   inning: number;
   player1?: { pt: number; tot: number };
@@ -5047,6 +5077,9 @@ export function TournamentDetailPage({
                     <tbody>
                       {visibleTournamentParticipants.map((player, index) => {
                         const flagSrc = getCountryFlagCdnUrl(player.country, 40);
+                        const youthAgeLabel = isYouthTournament
+                          ? formatAgeYearsMonths(player.birthDate, summary.startDate)
+                          : null;
                         return (
                           <tr
                             key={player.id}
@@ -5081,6 +5114,11 @@ export function TournamentDetailPage({
                                 ) : (
                                   <span className="font-semibold text-slate-950">{player.name}</span>
                                 )}
+                                {youthAgeLabel ? (
+                                  <span className="inline-flex flex-none items-center rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[11px] font-bold text-cyan-900">
+                                    {youthAgeLabel}
+                                  </span>
+                                ) : null}
                               </div>
                             </td>
                             <td className="px-4 py-3 align-middle">
