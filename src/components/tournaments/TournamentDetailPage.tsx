@@ -4995,15 +4995,27 @@ export function TournamentDetailPage({
             </div>
             {hasGalleryContent && activeGallerySection ? (
                 <div className="space-y-5">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="grid gap-3 md:grid-cols-[auto_minmax(220px,360px)_auto] md:items-center">
                     <button
                       type="button"
                       onClick={() => setActiveGallerySectionKey(null)}
-                      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950 md:justify-self-start"
                     >
                       Back to folders
                     </button>
-                    <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <select
+                      value={activeGallerySection.key}
+                      onChange={(event) => setActiveGallerySectionKey(event.target.value)}
+                      className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-center text-xs font-bold uppercase tracking-[0.16em] text-slate-800 shadow-sm outline-none transition hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                      aria-label="Select gallery folder"
+                    >
+                      {gallerySections.map((section) => (
+                        <option key={section.key} value={section.key}>
+                          {section.title}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="rounded-full bg-slate-100 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:justify-self-end">
                       {activeGallerySection.videos.length} videos / {activeGallerySection.images.length} photos
                     </div>
                   </div>
@@ -5215,9 +5227,6 @@ export function TournamentDetailPage({
                             />
                           </div>
                           <div className="mt-auto space-y-2">
-                            <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                              {section.stageDocumentId ? "Stage Folder" : "General Folder"}
-                            </div>
                             <div className="text-base font-black tracking-tight text-slate-950">
                               {section.title}
                             </div>
@@ -5238,10 +5247,7 @@ export function TournamentDetailPage({
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      {section.stageDocumentId ? "Stage Folder" : "General Folder"}
-                    </div>
-                    <h3 className="mt-3 text-lg font-black tracking-tight text-slate-950 sm:text-xl">
+                    <h3 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">
                       {section.title}
                     </h3>
                   </div>
