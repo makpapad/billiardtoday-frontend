@@ -922,6 +922,19 @@ function getGroupKey(stage: NormalizedEventStage, group: StageMatchGroup) {
   return `${stage.documentId || stage.id}-${group.number ?? group.key}`;
 }
 
+function shouldSuppressDerivedBestAverage(params: {
+  title: string | null | undefined;
+  startDate: string | null | undefined;
+}) {
+  const year = params.startDate ? Number.parseInt(params.startDate.slice(0, 4), 10) : NaN;
+  return (
+    Number.isFinite(year) &&
+    year >= 2013 &&
+    year <= 2017 &&
+    (params.title ?? "").toLowerCase().includes("world cup 3-cushion")
+  );
+}
+
 function resolveLivePlayerSide(params: {
   playerDocumentId: string | null | undefined;
   playerName: string | null | undefined;
@@ -1255,12 +1268,14 @@ function StageRankingTable({
   playerProfileHref,
   artistic = false,
   groupLabelMode = "numbers",
+  suppressDerivedBestAverage = false,
 }: {
   stage: NormalizedEventStage;
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
   groupLabelMode?: GroupLabelMode;
+  suppressDerivedBestAverage?: boolean;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
@@ -1281,7 +1296,10 @@ function StageRankingTable({
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
     if (stageMatchGroups.length === 1) {
       const computedResults = stageMatchGroups.flatMap((group) =>
-        buildGroupStandings(group.matches, { artistic }).map((standing) => ({
+        buildGroupStandings(group.matches, {
+          artistic,
+          suppressBestAverage: suppressDerivedBestAverage,
+        }).map((standing) => ({
           id: `computed:${group.key}:${standing.key}`,
           documentId: `computed:${group.key}:${standing.key}`,
           playerId: standing.playerId,
@@ -1306,7 +1324,7 @@ function StageRankingTable({
     }
 
     return stage.results.filter(hasMeaningfulStageResult);
-  }, [artistic, stage.results, stageMatchGroups]);
+  }, [artistic, stage.results, stageMatchGroups, suppressDerivedBestAverage]);
   const showGroupColumn = visibleResults.some(
     (result) => result.groupNumber !== null,
   );
@@ -3312,6 +3330,10 @@ export function TournamentEventsContent({
       endDate: typeof event.end_date === "string" ? event.end_date : null,
     };
   }, [eventData]);
+  const suppressDerivedBestAverage = shouldSuppressDerivedBestAverage({
+    title: eventInfo?.title,
+    startDate: eventInfo?.startDate,
+  });
 
   return (
     <div
@@ -3857,6 +3879,7 @@ export function TournamentEventsContent({
                                   playerProfileHref={playerProfileHref}
                                   artistic={isArtisticEvent}
                                   groupLabelMode={groupLabelMode}
+                                  suppressDerivedBestAverage={suppressDerivedBestAverage}
                                 />
                               </div>
                             ) : (
@@ -5644,6 +5667,7 @@ export function TournamentEventsContent({
                                                     group.matches,
                                                     {
                                                       artistic: isArtisticEvent,
+                                                      suppressBestAverage: suppressDerivedBestAverage,
                                                     },
                                                   )}
                                                   embedded={embedded}

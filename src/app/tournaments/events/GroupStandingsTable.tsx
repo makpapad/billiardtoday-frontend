@@ -14,6 +14,8 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
         return null
     }
 
+    const showBestAverageColumn = standings.some((player) => player.bestAverage !== null)
+
     return (
         <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="min-w-full text-xs">
@@ -27,7 +29,9 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                         <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Possible points' : 'Innings'}</th>
                         <th className="px-2 py-2 text-center font-medium w-16">{artistic ? '%' : 'Average'}</th>
                         <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best run' : 'High Run'}</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best game' : 'Best AVG'}</th>
+                        {showBestAverageColumn && (
+                            <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best game' : 'Best AVG'}</th>
+                        )}
                         {!artistic && <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>}
                     </tr>
                 </thead>
@@ -87,9 +91,11 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                                 {formatAverage(player.totalPoints, player.totalInnings)}
                             </td>
                             <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
-                            <td className="px-2 py-2 text-center">
-                                {formatTruncatedNumber(player.bestAverage)}
-                            </td>
+                            {showBestAverageColumn && (
+                                <td className="px-2 py-2 text-center">
+                                    {formatTruncatedNumber(player.bestAverage)}
+                                </td>
+                            )}
                             {!artistic && (
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
                             )}

@@ -419,9 +419,10 @@ export const hasPlayedStageMatch = (
 
 export const buildGroupStandings = (
   matches: StageMatchGroup["matches"],
-  options?: { artistic?: boolean },
+  options?: { artistic?: boolean; suppressBestAverage?: boolean },
 ): GroupStanding[] => {
   const artistic = options?.artistic === true;
+  const suppressBestAverage = options?.suppressBestAverage === true;
   const truncateTo3Decimals = (value: number): number =>
     Math.trunc(value * 1000) / 1000;
   const computeArtisticPercentage = (
@@ -600,6 +601,8 @@ export const buildGroupStandings = (
         const bestAverageCandidate =
           artistic
             ? entryAverage
+            : suppressBestAverage
+            ? null
             : (entry.outcome === "W" || entry.outcome === "D") &&
           typeof entry.player.points === "number" &&
           typeof entry.player.innings === "number" &&
