@@ -788,14 +788,16 @@ export default function PlayerProfilePage() {
     ).sort((a, b) => b - a)
 
     // Calculate stats based on filters (overall + per game type/year) – mirrors admin logic
+    const completeParticipationsSource = tournamentContextSlug
+        ? tournamentScopedParticipations
+        : allParticipations.length > 0
+          ? allParticipations
+          : participations
+
     const calculateFilteredStats = () => {
         const eventsSource = (() => {
             if (selectedYear === 'all') {
-                const source = tournamentContextSlug
-                    ? tournamentScopedParticipations
-                    : allParticipations.length > 0
-                      ? allParticipations
-                      : participations
+                const source = completeParticipationsSource
                 if (
                     selectedGameType === 'all' &&
                     selectedTournamentType === 'all'
@@ -818,13 +820,7 @@ export default function PlayerProfilePage() {
                 ? historyTotalCount
                 : eventsSource.length
 
-        const fullStatsSource = tournamentContextSlug
-            ? tournamentScopedParticipations
-            : allParticipations.length > 0
-              ? allParticipations
-              : participations
-
-        const sourceParticipations = fullStatsSource.filter((p) => {
+        const sourceParticipations = completeParticipationsSource.filter((p) => {
             if (!matchesSelectedGameType(p.gameType)) return false
             if (
                 selectedTournamentType !== 'all' &&
@@ -1027,9 +1023,22 @@ export default function PlayerProfilePage() {
     const baseParticipationsForH2H =
         selectedGameType === 'all'
             ? []
-            : filteredParticipations.filter((p) =>
-                  selectedYear === 'all' ? true : p.year === Number(selectedYear),
-              )
+            : completeParticipationsSource.filter((p) => {
+                  if (!matchesSelectedGameType(p.gameType)) return false
+                  if (
+                      selectedTournamentType !== 'all' &&
+                      p.tournamentType !== selectedTournamentType
+                  ) {
+                      return false
+                  }
+                  if (
+                      selectedYear !== 'all' &&
+                      p.year !== Number(selectedYear)
+                  ) {
+                      return false
+                  }
+                  return true
+              })
 
     const opponentMap = (() => {
         const map = new Map<string, string>()
