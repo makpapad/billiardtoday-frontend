@@ -1384,7 +1384,7 @@ export default function PlayerProfilePage() {
                                 {gameTypeCareerBoxes.topFourFinishes > 0 ? (
                                     <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
                                         <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                                            Top 4 Finishes
+                                            Podium
                                         </div>
                                         <div className="text-2xl md:text-3xl font-extrabold text-blue-700 dark:text-blue-300 leading-none">
                                             {gameTypeCareerBoxes.topFourFinishes}
