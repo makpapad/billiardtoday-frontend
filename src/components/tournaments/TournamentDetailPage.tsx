@@ -5069,6 +5069,9 @@ export function TournamentDetailPage({
                       <tr>
                         <th className="px-5 py-3 text-left font-semibold">Player</th>
                         <th className="px-4 py-3 text-left font-semibold">Country</th>
+                        {isYouthTournament ? (
+                          <th className="px-4 py-3 text-left font-semibold">Age</th>
+                        ) : null}
                         {isSeriesTournament ? (
                           <th className="px-4 py-3 text-left font-semibold">Series Pts</th>
                         ) : null}
@@ -5114,11 +5117,6 @@ export function TournamentDetailPage({
                                 ) : (
                                   <span className="font-semibold text-slate-950">{player.name}</span>
                                 )}
-                                {youthAgeLabel ? (
-                                  <span className="inline-flex flex-none items-center rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[11px] font-bold text-cyan-900">
-                                    {youthAgeLabel}
-                                  </span>
-                                ) : null}
                               </div>
                             </td>
                             <td className="px-4 py-3 align-middle">
@@ -5135,6 +5133,13 @@ export function TournamentDetailPage({
                                 <span>{player.country || "-"}</span>
                               </span>
                             </td>
+                            {isYouthTournament ? (
+                              <td className="whitespace-nowrap px-4 py-3 align-middle">
+                                <span className="font-semibold text-slate-950">
+                                  {youthAgeLabel || "-"}
+                                </span>
+                              </td>
+                            ) : null}
                             {isSeriesTournament ? (
                               <td className="px-4 py-3 align-middle">
                                 <span className="font-semibold text-slate-950">
