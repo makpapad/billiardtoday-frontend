@@ -119,10 +119,10 @@ type Match = {
     id: string
     opponent: string
     opponentId: string | null
-    result: 'win' | 'loss'
+    result: 'win' | 'loss' | 'draw'
     scoreFor: number
     scoreAgainst: number
-    date: string
+    date: string | null
     stage: string
     innings: number
     playerPossiblePoints?: number
@@ -1018,7 +1018,11 @@ export default function PlayerProfilePage() {
             : filteredParticipations
 
     // Head-to-Head (H2H) derived data based on current filters
-    type H2HMatch = Match & { tournament: string; year: number }
+    type H2HMatch = Match & {
+        tournament: string
+        year: number
+        tournamentHref: string | null
+    }
 
     const baseParticipationsForH2H =
         selectedGameType === 'all'
@@ -1070,6 +1074,14 @@ export default function PlayerProfilePage() {
                       ...m,
                       tournament: p.tournament,
                       year: p.year,
+                      tournamentHref:
+                          p.id && p.tournament
+                              ? `/tournaments/${buildTournamentSlug(
+                                    String(p.id),
+                                    p.tournament,
+                                    p.year,
+                                )}`
+                              : null,
                   })),
           )
         : []
@@ -1078,7 +1090,14 @@ export default function PlayerProfilePage() {
         if (!selectedOpponentId || h2hMatches.length === 0) return null
         const totalMatches = h2hMatches.length
         const wins = h2hMatches.filter((m) => m.result === 'win').length
-        const losses = totalMatches - wins
+        const draws = h2hMatches.filter(
+            (m) =>
+                m.result === 'draw' ||
+                (m.scoreFor === m.scoreAgainst &&
+                    m.scoreFor > 0 &&
+                    m.scoreAgainst > 0),
+        ).length
+        const losses = h2hMatches.filter((m) => m.result === 'loss').length
         const winPercentage =
             totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(1) : '0.0'
         let totalPoints = 0
@@ -1094,6 +1113,7 @@ export default function PlayerProfilePage() {
         return {
             totalMatches,
             wins,
+            draws,
             losses,
             winPercentage,
             avgPerInning,
@@ -1727,7 +1747,7 @@ export default function PlayerProfilePage() {
                                         ? `(${t('players.profile.h2h.title.yearAll')})`
                                         : `(${t('players.profile.h2h.title.yearSpecific').replace('{year}', selectedYear)})`}
                                 </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
                                         <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                             {t('players.profile.h2h.matches')}
@@ -1742,6 +1762,14 @@ export default function PlayerProfilePage() {
                                         </div>
                                         <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
                                             {h2hStats.wins}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
+                                        <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                            {t('players.profile.stats.draws')}
+                                        </div>
+                                        <div className="text-lg sm:text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                                            {h2hStats.draws}
                                         </div>
                                     </div>
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3">
@@ -1798,10 +1826,25 @@ export default function PlayerProfilePage() {
                                     {[...h2hMatches]
                                         .sort(
                                             (a, b) =>
-                                                new Date(a.date).getTime() -
-                                                new Date(b.date).getTime(),
+                                                (a.date
+                                                    ? new Date(a.date).getTime()
+                                                    : 0) -
+                                                (b.date
+                                                    ? new Date(b.date).getTime()
+                                                    : 0),
                                         )
-                                        .map((match) => (
+                                        .map((match) => {
+                                            const matchDateLabel =
+                                                match.date &&
+                                                !Number.isNaN(
+                                                    new Date(match.date).getTime(),
+                                                )
+                                                    ? new Date(
+                                                          match.date,
+                                                      ).toLocaleDateString('en-GB')
+                                                    : null
+
+                                            return (
                                             <div
                                                 key={match.id}
                                                 className={`border-2 rounded-lg p-4 transition-all ${
@@ -1836,13 +1879,11 @@ export default function PlayerProfilePage() {
                                                             <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {match.stage}
                                                             </span>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {new Date(
-                                                                    match.date,
-                                                                ).toLocaleDateString(
-                                                                    'en-GB',
-                                                                )}
-                                                            </span>
+                                                            {matchDateLabel ? (
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {matchDateLabel}
+                                                                </span>
+                                                            ) : null}
                                                         </div>
                                                         <div className="text-base font-semibold">
                                                             vs {match.opponentId ? (
@@ -1904,17 +1945,30 @@ export default function PlayerProfilePage() {
                                                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                             {match.tournament} • {match.year}
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setSelectedMatch(match)}
-                                                            className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
-                                                        >
-                                                            {t('players.profile.h2h.viewDetails')}
-                                                        </button>
+                                                        <div className="mt-1 flex justify-end gap-3">
+                                                            {match.tournamentHref ? (
+                                                                <a
+                                                                    href={match.tournamentHref}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                                >
+                                                                    Open tournament
+                                                                </a>
+                                                            ) : null}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedMatch(match)}
+                                                                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                            >
+                                                                {t('players.profile.h2h.viewDetails')}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                            )
+                                        })}
                                 </div>
                             </div>
                         )}
@@ -2088,7 +2142,18 @@ export default function PlayerProfilePage() {
                                         </h4>
                                         {participation.matches.length > 0 ? (
                                         <div className="space-y-3">
-                                            {participation.matches.map((match) => (
+                                            {participation.matches.map((match) => {
+                                                const matchDateLabel =
+                                                    match.date &&
+                                                    !Number.isNaN(
+                                                        new Date(match.date).getTime(),
+                                                    )
+                                                        ? new Date(
+                                                              match.date,
+                                                          ).toLocaleDateString('el-GR')
+                                                        : null
+
+                                                return (
                                                 <div
                                                     key={match.id}
                                                     className={`border-2 rounded-lg p-4 transition-all ${
@@ -2118,9 +2183,11 @@ export default function PlayerProfilePage() {
                                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                     {match.stage}
                                                                 </span>
-                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    {new Date(match.date).toLocaleDateString('el-GR')}
-                                                                </span>
+                                                                {matchDateLabel ? (
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {matchDateLabel}
+                                                                    </span>
+                                                                ) : null}
                                                             </div>
                                                             <div className="text-base font-semibold">
                                                                 vs {match.opponentId ? (
@@ -2189,7 +2256,8 @@ export default function PlayerProfilePage() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                )
+                                            })}
                                         </div>
                                         ) : (
                                             <div className="space-y-4">
@@ -2311,14 +2379,16 @@ export default function PlayerProfilePage() {
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     Match #{selectedMatch.id.replace('M', '')}
                                 </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {new Date(selectedMatch.date).toLocaleDateString('en-GB', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}
-                                </p>
+                                {selectedMatch.date ? (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        {new Date(selectedMatch.date).toLocaleDateString('en-GB', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                ) : null}
                             </div>
                             <button
                                 type="button"
