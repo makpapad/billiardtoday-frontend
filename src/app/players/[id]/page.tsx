@@ -300,6 +300,161 @@ const normalizeCareerStats = (
     }
 }
 
+const getCareerStatsGameTypes = (
+    stats: Player['career_stats'],
+): GameType[] => {
+    const byGameType = stats?.byGameType
+    if (!byGameType) return []
+
+    return Object.keys(byGameType)
+        .map((value) => normalizeGameTypeOrFallback(value))
+        .filter((value): value is GameType => Boolean(value))
+        .filter(
+            (value, index, values) => values.indexOf(value) === index,
+        )
+        .sort((a, b) =>
+            getGameTypeLabel(a).localeCompare(getGameTypeLabel(b)),
+        )
+}
+
+const getCareerStatsForGameType = (
+    stats: Player['career_stats'],
+    gameType: GameType | 'all',
+) => {
+    if (!stats || gameType === 'all') return stats?.overall || stats || null
+    const byGameType = stats.byGameType || {}
+    const matchingStats = Object.entries(byGameType)
+        .filter(
+            ([rawType]) => normalizeGameTypeOrFallback(rawType) === gameType,
+        )
+        .map(([, value]) => value)
+
+    if (matchingStats.length === 0) return null
+    if (matchingStats.length === 1) return matchingStats[0]
+
+    type CareerStatsAccumulator = {
+        totalPoints: number
+        totalInnings: number
+        totalMatches: number
+        totalWins: number
+        totalLosses: number
+        totalDraws: number
+        highestRun: number
+        bestAverageFromWins: number
+        yearsActive: Set<number>
+    }
+
+    const totals = matchingStats.reduce<CareerStatsAccumulator>(
+        (acc, item) => {
+            const totalPoints = Number(
+                (item as { totalPoints?: number }).totalPoints,
+            ) || 0
+            const totalInnings = Number(
+                (item as { totalInnings?: number }).totalInnings,
+            ) || 0
+            const totalMatches = Number(item.totalMatches) || 0
+            const totalWins = Number(item.totalWins) || 0
+            const totalLosses = Number(item.totalLosses) || 0
+            const totalDraws =
+                Number((item as { totalDraws?: number }).totalDraws) ||
+                Math.max(0, totalMatches - totalWins - totalLosses)
+
+            acc.totalPoints += totalPoints
+            acc.totalInnings += totalInnings
+            acc.totalMatches += totalMatches
+            acc.totalWins += totalWins
+            acc.totalLosses += totalLosses
+            acc.totalDraws += totalDraws
+            acc.highestRun = Math.max(
+                acc.highestRun,
+                Number(item.highestRun) || 0,
+            )
+            acc.bestAverageFromWins = Math.max(
+                acc.bestAverageFromWins,
+                Number(item.bestAverageFromWins) || 0,
+            )
+
+            const yearsActive = (item as { yearsActive?: unknown[] })
+                .yearsActive
+            if (Array.isArray(yearsActive)) {
+                yearsActive.forEach((year) => {
+                    const numericYear = Number(year)
+                    if (Number.isFinite(numericYear)) {
+                        acc.yearsActive.add(numericYear)
+                    }
+                })
+            }
+
+            return acc
+        },
+        {
+            totalPoints: 0,
+            totalInnings: 0,
+            totalMatches: 0,
+            totalWins: 0,
+            totalLosses: 0,
+            totalDraws: 0,
+            highestRun: 0,
+            bestAverageFromWins: 0,
+            yearsActive: new Set<number>(),
+        },
+    )
+
+    return {
+        totalMatches: totals.totalMatches,
+        totalWins: totals.totalWins,
+        totalLosses: totals.totalLosses,
+        totalDraws: totals.totalDraws,
+        winPercentage:
+            totals.totalMatches > 0
+                ? (totals.totalWins / totals.totalMatches) * 100
+                : 0,
+        avgPerInning:
+            totals.totalInnings > 0
+                ? totals.totalPoints / totals.totalInnings
+                : 0,
+        bestAverageFromWins: totals.bestAverageFromWins,
+        highestRun: totals.highestRun,
+        totalPoints: totals.totalPoints,
+        totalInnings: totals.totalInnings,
+        yearsActive: Array.from(totals.yearsActive).sort((a, b) => b - a),
+    }
+}
+
+const getCareerStatsYears = (
+    stats: Player['career_stats'],
+    gameType: GameType | 'all',
+): number[] => {
+    if (!stats) return []
+
+    const selectedStats = getCareerStatsForGameType(stats, gameType) as
+        | { yearsActive?: unknown[] }
+        | null
+    const yearsFromSelectedStats = Array.isArray(selectedStats?.yearsActive)
+        ? selectedStats.yearsActive.map(Number).filter(Number.isFinite)
+        : []
+
+    const byYear = (stats as { byYear?: Record<string, unknown> }).byYear || {}
+    const yearsFromByYear = Object.entries(byYear)
+        .filter(([, value]) => {
+            if (gameType === 'all') return true
+            const byGameType = (
+                value as {
+                    byGameType?: Record<string, unknown>
+                }
+            )?.byGameType
+            return Object.keys(byGameType || {}).some(
+                (rawType) => normalizeGameTypeOrFallback(rawType) === gameType,
+            )
+        })
+        .map(([year]) => Number(year))
+        .filter(Number.isFinite)
+
+    return Array.from(
+        new Set([...yearsFromSelectedStats, ...yearsFromByYear]),
+    ).sort((a, b) => b - a)
+}
+
 export default function PlayerProfilePage() {
     const params = useParams()
     const pathname = usePathname()
@@ -426,11 +581,12 @@ export default function PlayerProfilePage() {
 
         const fetchPlayerData = async () => {
             if (!playerId) return
+            const shouldFetchHistory =
+                selectedGameType !== 'all' && selectedYear !== 'all'
 
-            // Only show full loading on first load
             if (!player) {
                 setIsLoading(true)
-            } else {
+            } else if (shouldFetchHistory) {
                 setIsLoadingHistory(true)
             }
             setError(null)
@@ -447,14 +603,94 @@ export default function PlayerProfilePage() {
                 // Cache buster to avoid stale revalidated response when backend just changed
                 params.set('_cb', Date.now().toString())
 
+                const playerResponse = await fetch(
+                    buildApiUrl(`/api/players/lookup?${params.toString()}`),
+                    { signal: abortController.signal },
+                )
+
+                if (!isActive) return
+
+                if (playerResponse.ok) {
+                    const data = await playerResponse.json()
+                    if (data.data && data.data.length > 0) {
+                        const playerData = data.data[0]
+                        setPlayer(playerData)
+
+                        const gameTypesFromCareerStats =
+                            getCareerStatsGameTypes(playerData.career_stats)
+                        if (gameTypesFromCareerStats.length > 0) {
+                            setAvailableGameTypes(gameTypesFromCareerStats)
+                        }
+                        const yearsFromCareerStats = getCareerStatsYears(
+                            playerData.career_stats,
+                            selectedGameType,
+                        )
+                        if (yearsFromCareerStats.length > 0) {
+                            setAvailableYears(yearsFromCareerStats)
+                        }
+
+                        if (!isNumericPlayerId && playerData?.id) {
+                            const canonicalId = String(playerData.id)
+                            const canonicalName =
+                                playerData.full_name ||
+                                playerData.full_name_en ||
+                                playerData.name ||
+                                playerId
+                            const canonicalUrl = buildPlayerUrl(canonicalId, canonicalName)
+                            router.replace(canonicalUrl)
+                        }
+
+                        if (playerData.career_stats) {
+                            const gameTypeStats =
+                                selectedGameType !== 'all'
+                                    ? getCareerStatsForGameType(
+                                          playerData.career_stats,
+                                          selectedGameType,
+                                      )
+                                    : null
+                            const stats =
+                                gameTypeStats ||
+                                playerData.career_stats.overall ||
+                                      playerData.career_stats
+                            setCareerStats(normalizeCareerStats(stats))
+                        }
+
+                        setIsLoading(false)
+                    } else {
+                        setError(t('players.profile.error.notFound'))
+                        setIsLoading(false)
+                        return
+                    }
+                } else {
+                    const errorText = await playerResponse
+                        .text()
+                        .catch(() => '')
+                    setError(errorText || t('players.profile.error.generic'))
+                    setIsLoading(false)
+                    return
+                }
+
+                if (!shouldFetchHistory) {
+                    setParticipations([])
+                    setAllParticipations([])
+                    if (selectedGameType === 'all') {
+                        setAvailableYears([])
+                    }
+                    setAvailableTournamentTypes([])
+                    setHistoryTotalCount(null)
+                    setHasMoreYears(false)
+                    setHasMoreTournaments(false)
+                    setIsLoadingHistory(false)
+                    return
+                }
+
+                setIsLoadingHistory(true)
+
                 // Build history URL with filters & pagination
                 let historyUrl = `/api/players/${playerId}/history`
                 const historyParams = new URLSearchParams()
 
-                // Add game type filter
-                if (selectedGameType !== 'all') {
-                    historyParams.set('gameType', selectedGameType)
-                }
+                historyParams.set('gameType', selectedGameType)
                 if (selectedTournamentType !== 'all') {
                     historyParams.set('tournamentType', selectedTournamentType)
                 }
@@ -475,88 +711,16 @@ export default function PlayerProfilePage() {
                     historyUrl += `?${historyParams.toString()}`
                 }
 
-                // Fetch ALL data in parallel for maximum speed
+                // Fetch selected game history after the user has chosen a game type.
                 const fetchPromises: Promise<Response>[] = [
-                    fetch(
-                        buildApiUrl(
-                            `/api/players/lookup?${params.toString()}`,
-                        ),
-                        { signal: abortController.signal },
-                    ),
                     fetch(buildApiUrl(historyUrl), {
                         signal: abortController.signal,
                     }),
                 ]
 
-                // Fetch unfiltered metadata when filters are missing.
-                // Keep allParticipations warm for non-all game type views only.
-                const shouldFetchMetadata =
-                    availableGameTypes.length === 0 ||
-                    availableYears.length === 0 ||
-                    availableTournamentTypes.length === 0 ||
-                    (selectedGameType !== 'all' &&
-                        allParticipations.length === 0)
-
-                if (shouldFetchMetadata) {
-                    fetchPromises.push(
-                        fetch(
-                            buildApiUrl(
-                                `/api/players/${playerId}/history?limit=1000`,
-                            ),
-                            { signal: abortController.signal },
-                        ),
-                    )
-                }
-
                 const responses = await Promise.all(fetchPromises)
                 if (!isActive) return
-                const [playerResponse, historyResponse, metadataResponse] =
-                    responses
-
-                // Process player data immediately
-                if (playerResponse.ok) {
-                    const data = await playerResponse.json()
-                    if (data.data && data.data.length > 0) {
-                        const playerData = data.data[0]
-                        setPlayer(playerData)
-
-                        if (!isNumericPlayerId && playerData?.id) {
-                            const canonicalId = String(playerData.id)
-                            const canonicalName =
-                                playerData.full_name ||
-                                playerData.full_name_en ||
-                                playerData.name ||
-                                playerId
-                            const canonicalUrl = buildPlayerUrl(canonicalId, canonicalName)
-                            router.replace(canonicalUrl)
-                        }
-
-                        // Set career stats from player.career_stats (pre-calculated in DB)
-                        if (playerData.career_stats) {
-                            // Use game type specific stats if available, otherwise use overall
-                            const stats =
-                                selectedGameType !== 'all' &&
-                                playerData.career_stats.byGameType?.[
-                                    selectedGameType
-                                ]
-                                    ? playerData.career_stats.byGameType[
-                                          selectedGameType
-                                      ]
-                                    : playerData.career_stats.overall ||
-                                      playerData.career_stats
-                            setCareerStats(normalizeCareerStats(stats))
-                        }
-
-                        setIsLoading(false) // Show player info immediately
-                    } else {
-                        setError(t('players.profile.error.notFound'))
-                    }
-                } else {
-                    const errorText = await playerResponse
-                        .text()
-                        .catch(() => '')
-                    setError(errorText || t('players.profile.error.generic'))
-                }
+                const [historyResponse, metadataResponse] = responses
 
                 // Process filtered history data (new format: { data, availableYears, availableGameTypes })
                 if (historyResponse.ok) {
@@ -658,20 +822,7 @@ export default function PlayerProfilePage() {
     }
 
     const resolveCareerStatsForGameType = (gameType: GameType) => {
-        const byGameType = player?.career_stats?.byGameType
-        if (!byGameType) return null
-
-        if (byGameType[gameType]) {
-            return byGameType[gameType]
-        }
-
-        for (const [rawType, stats] of Object.entries(byGameType)) {
-            if (normalizeGameTypeOrFallback(rawType) === gameType) {
-                return stats
-            }
-        }
-
-        return null
+        return getCareerStatsForGameType(player?.career_stats, gameType)
     }
 
     const loadMoreTournaments = () => {
@@ -764,8 +915,13 @@ export default function PlayerProfilePage() {
                   ),
               ).sort()
 
-    // Get available years for the selected game type using allParticipations metadata
-    const filteredAvailableYears = Array.from(
+    const careerStatsAvailableYears = getCareerStatsYears(
+        player?.career_stats,
+        selectedGameType,
+    )
+
+    // Get available years for the selected game type using loaded data, then fall back to career_stats.
+    const participationAvailableYears = Array.from(
         new Set(
             (tournamentContextSlug
                 ? tournamentScopedParticipations
@@ -786,6 +942,10 @@ export default function PlayerProfilePage() {
                 .map((p) => p.year),
         ),
     ).sort((a, b) => b - a)
+    const filteredAvailableYears =
+        participationAvailableYears.length > 0
+            ? participationAvailableYears
+            : careerStatsAvailableYears
 
     // Calculate stats based on filters (overall + per game type/year) – mirrors admin logic
     const completeParticipationsSource = tournamentContextSlug
@@ -912,16 +1072,92 @@ export default function PlayerProfilePage() {
         }
     }
 
+    const selectedCareerStats =
+        selectedGameType !== 'all'
+            ? resolveCareerStatsForGameType(selectedGameType)
+            : null
     const preloadedCareerStats =
-        selectedGameType !== 'all' &&
-        resolveCareerStatsForGameType(selectedGameType)
+        selectedGameType !== 'all' && selectedCareerStats
             ? normalizeCareerStats(
-                  resolveCareerStatsForGameType(selectedGameType),
+                  selectedCareerStats as Parameters<
+                      typeof normalizeCareerStats
+                  >[0],
               )
-            : normalizeCareerStats(player?.career_stats?.overall)
+            : normalizeCareerStats(
+                  (player?.career_stats?.overall ||
+                      player?.career_stats) as Parameters<
+                      typeof normalizeCareerStats
+                  >[0],
+              )
 
     const effectiveCareerStats = careerStats ?? preloadedCareerStats
-    const stats = calculateFilteredStats()
+    const calculatedStats = calculateFilteredStats()
+    const careerStatsEventCount =
+        selectedGameType === 'all'
+            ? Number(
+                  (
+                      player?.career_stats as
+                          | {
+                                totalEvents?: number
+                                events?: {
+                                    totalParticipations?: number
+                                    finalsEntries?: number
+                                }
+                            }
+                          | null
+                          | undefined
+                  )?.totalEvents ??
+                      (
+                          player?.career_stats as
+                              | {
+                                    events?: {
+                                        totalParticipations?: number
+                                        finalsEntries?: number
+                                    }
+                                }
+                              | null
+                              | undefined
+                      )?.events?.totalParticipations ??
+                      (
+                          player?.career_stats as
+                              | {
+                                    events?: {
+                                        totalParticipations?: number
+                                        finalsEntries?: number
+                                    }
+                                }
+                              | null
+                              | undefined
+                      )?.events?.finalsEntries,
+              ) || 0
+            : 0
+    const shouldUseCareerStatsForCards =
+        selectedYear === 'all' &&
+        selectedTournamentType === 'all' &&
+        !tournamentContextSlug &&
+        Boolean(effectiveCareerStats)
+    const stats =
+        shouldUseCareerStatsForCards && effectiveCareerStats
+            ? {
+                  ...calculatedStats,
+                  totalMatches: effectiveCareerStats.totalMatches,
+                  totalWins: effectiveCareerStats.totalWins,
+                  totalLosses: effectiveCareerStats.totalLosses,
+                  winPercentage: effectiveCareerStats.winPercentage,
+                  avgPerInning: effectiveCareerStats.avgPerInning,
+                  bestAverageFromWins:
+                      effectiveCareerStats.bestAverageFromWins,
+                  highestRun: effectiveCareerStats.highestRun,
+                  eventsCount:
+                      selectedGameType === 'all'
+                          ? careerStatsEventCount || calculatedStats.eventsCount
+                          : calculatedStats.eventsCount,
+              }
+            : calculatedStats
+    const gameTypeOptions =
+        availableGameTypes.length > 0
+            ? availableGameTypes
+            : getCareerStatsGameTypes(player?.career_stats)
     const isSelectedArtisticGameType =
         selectedGameType !== 'all' &&
         isArtisticGameTypeValue(selectedGameType)
@@ -934,6 +1170,12 @@ export default function PlayerProfilePage() {
         stats.bestAverageFromWins || stats.avgPerInning
     const overallHighestRun = stats.highestRun
     const overallEvents = stats.eventsCount
+    const displayedOverallEvents =
+        selectedGameType !== 'all' &&
+        selectedYear === 'all' &&
+        overallEvents === 0
+            ? '-'
+            : overallEvents
     const shouldShowRateStats = selectedGameType !== 'all'
     const displayedOverallAvg = shouldShowRateStats
         ? isSelectedArtisticGameType
@@ -947,6 +1189,12 @@ export default function PlayerProfilePage() {
         0,
         overallMatches - overallWins - overallLosses,
     )
+    const shouldShowStatsSkeleton =
+        isLoadingHistory && !shouldUseCareerStatsForCards
+    const shouldShowEventsSkeleton =
+        isLoadingHistory &&
+        selectedGameType !== 'all' &&
+        overallEvents === 0
     const gameTypeCareerBoxes = (() => {
         if (selectedGameType === 'all') return null
         const source = tournamentContextSlug
@@ -954,6 +1202,17 @@ export default function PlayerProfilePage() {
             : allParticipations.length > 0
               ? allParticipations
               : participations
+        if (source.length === 0 && effectiveCareerStats) {
+            return {
+                bestAverageFromWins: isSelectedArtisticGameType
+                    ? formatArtisticPercentage(
+                          effectiveCareerStats.bestAverageFromWins,
+                      )
+                    : effectiveCareerStats.bestAverageFromWins,
+                highestRun: effectiveCareerStats.highestRun,
+                topFourFinishes: 0,
+            }
+        }
         const filtered = source.filter((p) => {
             if (!matchesSelectedGameType(p.gameType)) return false
             if (
@@ -1131,6 +1390,66 @@ export default function PlayerProfilePage() {
         selectedGameType === 'all'
             ? []
             : (() => {
+                  if (allParticipations.length === 0) {
+                      const byYear =
+                          (
+                              player?.career_stats as
+                                  | {
+                                        byYear?: Record<
+                                            string,
+                                            {
+                                                overall?: Record<string, unknown>
+                                                byGameType?: Record<
+                                                    string,
+                                                    Record<string, unknown>
+                                                >
+                                            }
+                                        >
+                                    }
+                                  | null
+                                  | undefined
+                          )?.byYear || {}
+
+                      return Object.entries(byYear)
+                          .map(([year, data]) => {
+                              const yearStats = getCareerStatsForGameType(
+                                  ({
+                                      byGameType: data.byGameType,
+                                  } as unknown) as Player['career_stats'],
+                                  selectedGameType,
+                              ) as Record<string, unknown> | null
+                              if (!yearStats) return null
+
+                              const wins = Number(yearStats.totalWins) || 0
+                              const losses = Number(yearStats.totalLosses) || 0
+
+                              return {
+                                  year: Number(year),
+                                  avg:
+                                      Number(yearStats.avgPerInning) || 0,
+                                  winPct:
+                                      wins + losses > 0
+                                          ? (wins / (wins + losses)) * 100
+                                          : 0,
+                                  wins,
+                              }
+                          })
+                          .filter(
+                              (
+                                  item,
+                              ): item is {
+                                  year: number
+                                  avg: number
+                                  winPct: number
+                                  wins: number
+                              } => {
+                                  if (!item) return false
+                                  return Number.isFinite(item.year)
+                              },
+                          )
+                          .sort((a, b) => a.year - b.year)
+                  }
+
                   const createYearAggregate = () => ({
                       totalPoints: 0,
                       totalInnings: 0,
@@ -1420,10 +1739,10 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.events')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {isLoadingHistory ? (
+                                {shouldShowEventsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
-                                    overallEvents
+                                    displayedOverallEvents
                                 )}
                             </div>
                         </div>
@@ -1432,7 +1751,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.matches')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
                                     overallMatches
@@ -1444,7 +1763,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.wins')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
                                     overallWins
@@ -1456,7 +1775,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
                                     overallDraws
@@ -1468,7 +1787,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.losses')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
                                     overallLosses
@@ -1480,7 +1799,7 @@ export default function PlayerProfilePage() {
                                 {t('players.profile.stats.winPct')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
                                 ) : (
                                     `${overallWinPercentage}%`
@@ -1494,7 +1813,7 @@ export default function PlayerProfilePage() {
                                     : t('players.profile.stats.avg')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
                                 ) : (
                                     displayedOverallAvg
@@ -1508,7 +1827,7 @@ export default function PlayerProfilePage() {
                                     : t('players.profile.stats.highRunShort')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                {isLoadingHistory ? (
+                                {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                 ) : (
                                     displayedOverallHighestRun
@@ -1529,7 +1848,7 @@ export default function PlayerProfilePage() {
                         </h2>
                         <div className="flex flex-col sm:flex-row gap-3">
                             {/* Game Type Filter */}
-                            {availableGameTypes.length > 0 && (
+                            {gameTypeOptions.length > 0 && (
                                 <select
                                     value={selectedGameType}
                                     onChange={(e) =>
@@ -1541,7 +1860,7 @@ export default function PlayerProfilePage() {
                                     className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <option value="all">{t('players.profile.history.filter.gameType.all')}</option>
-                                    {availableGameTypes.map((gameType) => (
+                                    {gameTypeOptions.map((gameType) => (
                                         <option key={gameType} value={gameType}>
                                             {getGameTypeLabel(gameType)}
                                         </option>
@@ -1598,7 +1917,8 @@ export default function PlayerProfilePage() {
                                     </select>
                                 )}
                             {/* Opponent Filter (Head-to-Head) - custom smart autocomplete */}
-                            {selectedGameType !== 'all' && (
+                            {selectedGameType !== 'all' &&
+                                selectedYear !== 'all' && (
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -2045,7 +2365,15 @@ export default function PlayerProfilePage() {
                             </div>
                         )}
 
-                    {isLoadingHistory && participations.length === 0 ? (
+                    {selectedGameType === 'all' ? (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                            Select a game type to load tournament history and performance chart.
+                        </div>
+                    ) : selectedYear === 'all' ? (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                            Select a season to load tournament history.
+                        </div>
+                    ) : isLoadingHistory && participations.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                             <p className="text-gray-600 dark:text-gray-300">{t('players.profile.history.loading')}</p>
