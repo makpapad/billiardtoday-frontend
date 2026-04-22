@@ -818,39 +818,25 @@ export default function PlayerProfilePage() {
                 ? historyTotalCount
                 : eventsSource.length
 
-        // Use pre-calculated career stats only for "all game types".
-        // For specific game type we rely on participations, to stay aligned
-        // with the event list and avoid mixing in team-board stats.
-        if (
-            selectedYear === 'all' &&
-            selectedGameType === 'all' &&
-            selectedTournamentType === 'all' &&
-            effectiveCareerStats
-        ) {
-            return {
-                totalMatches: effectiveCareerStats.totalMatches,
-                totalWins: effectiveCareerStats.totalWins,
-                totalLosses: effectiveCareerStats.totalLosses,
-                winPercentage: effectiveCareerStats.winPercentage,
-                avgPerInning: effectiveCareerStats.avgPerInning,
-                bestAverageFromWins:
-                    effectiveCareerStats.bestAverageFromWins ||
-                    effectiveCareerStats.avgPerInning,
-                highestRun: effectiveCareerStats.highestRun,
-                eventsCount,
-            }
-        }
+        const fullStatsSource = tournamentContextSlug
+            ? tournamentScopedParticipations
+            : allParticipations.length > 0
+              ? allParticipations
+              : participations
 
-        const sourceParticipations =
-            selectedYear === 'all' &&
-            (selectedGameType !== 'all' || selectedTournamentType !== 'all')
-                ? allParticipations.filter(
-                      (p) =>
-                          matchesSelectedGameType(p.gameType) &&
-                          (selectedTournamentType === 'all' ||
-                              p.tournamentType === selectedTournamentType),
-                  )
-                : filteredParticipations
+        const sourceParticipations = fullStatsSource.filter((p) => {
+            if (!matchesSelectedGameType(p.gameType)) return false
+            if (
+                selectedTournamentType !== 'all' &&
+                p.tournamentType !== selectedTournamentType
+            ) {
+                return false
+            }
+            if (selectedYear !== 'all' && p.year !== Number(selectedYear)) {
+                return false
+            }
+            return true
+        })
 
         const totalMatches = sourceParticipations.reduce(
             (sum, p) => sum + p.totalMatches,
