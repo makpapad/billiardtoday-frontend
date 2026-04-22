@@ -22,7 +22,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
     href: "/federations/confederation-europeenne-de-billard",
     iconSrc: "/img/logo/ceb.png",
     iconAlt: "CEB logo",
-    iconClassName: "h-10 w-auto object-contain",
+    iconClassName: "h-10 w-10 rounded-full object-cover shadow-[0_0_10px_rgba(255,255,255,0.18)] blur-[0.2px]",
   },
   {
     label: "UMB",
