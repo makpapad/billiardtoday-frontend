@@ -584,8 +584,12 @@ export async function GET(
                     const player = asObject(result.player)
                     const playerDocumentId =
                         typeof player?.documentId === 'string' ? player.documentId : null
+                    const explicitMatchPoints =
+                        toNumber(result.match_points) ?? toNumber(result.points)
                     const derivedMatchPoints =
-                        playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null
+                        explicitMatchPoints === null && playerDocumentId
+                            ? (stageMatchPoints.get(playerDocumentId) ?? null)
+                            : null
                     const hasExplicitBestGameField =
                         Object.prototype.hasOwnProperty.call(result, 'best_game')
                     const explicitBestGame =
