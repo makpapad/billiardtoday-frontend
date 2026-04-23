@@ -125,6 +125,12 @@ type ScreensResponse = {
 type SessionDetails = {
   player1Name?: string | null;
   player2Name?: string | null;
+  playerAName?: string | null;
+  playerBName?: string | null;
+  state?: {
+    playerAName?: string | null;
+    playerBName?: string | null;
+  } | null;
 };
 
 type SessionByIdResponse = {
@@ -132,7 +138,7 @@ type SessionByIdResponse = {
 };
 
 const actionButtonClassName =
-  "flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-[16px] px-3 py-1.5 text-center transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
+  "flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[14px] px-2.5 py-1 text-center transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[48px] sm:rounded-[16px] sm:px-3 sm:py-1.5";
 
 const shortcutChipClassName =
   "rounded-full border border-current/20 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] opacity-80";
@@ -235,12 +241,19 @@ export function RemoteScoreboardControl() {
         if (cancelled) return;
 
         const session = Array.isArray(sessionPayload.data) ? sessionPayload.data[0] : null;
-        setPlayer1Name(
-          (typeof session?.player1Name === "string" && session.player1Name.trim()) || "",
-        );
-        setPlayer2Name(
-          (typeof session?.player2Name === "string" && session.player2Name.trim()) || "",
-        );
+        const resolvedPlayer1Name =
+          (typeof session?.state?.playerAName === "string" && session.state.playerAName.trim()) ||
+          (typeof session?.playerAName === "string" && session.playerAName.trim()) ||
+          (typeof session?.player1Name === "string" && session.player1Name.trim()) ||
+          "";
+        const resolvedPlayer2Name =
+          (typeof session?.state?.playerBName === "string" && session.state.playerBName.trim()) ||
+          (typeof session?.playerBName === "string" && session.playerBName.trim()) ||
+          (typeof session?.player2Name === "string" && session.player2Name.trim()) ||
+          "";
+
+        setPlayer1Name(resolvedPlayer1Name);
+        setPlayer2Name(resolvedPlayer2Name);
       } catch {
         if (!cancelled) {
           setPlayer1Name("");
@@ -332,38 +345,35 @@ export function RemoteScoreboardControl() {
 
   return (
     <div className="h-[100dvh] overflow-hidden bg-slate-950 text-white">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden px-4 py-3 sm:px-5">
-        <div className="mb-2 flex items-start justify-between gap-3">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden px-4 py-2.5 sm:px-5">
+        <div className="mb-1.5 flex items-start justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
-              {t("remote.control.eyebrow")}
-            </div>
-            <h1 className="mt-2 text-[1.85rem] font-semibold tracking-tight text-white leading-none">
+            <h1 className="text-[1.7rem] font-semibold leading-none tracking-tight text-white sm:text-[1.85rem]">
               {t("remote.control.title")}
             </h1>
-            <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300/90">
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-300/90 sm:text-[11px] sm:tracking-[0.18em]">
               {screenName || t("remote.control.noScreenName")}
             </div>
           </div>
           <Link
             href={`/live/remote${isNonEmptyString(screenId) ? `?screenId=${encodeURIComponent(screenId)}` : ""}`}
-            className="rounded-full border border-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200 transition hover:bg-white/10"
+            className="rounded-full border border-white/10 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200 transition hover:bg-white/10 sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.18em]"
           >
             {t("remote.control.backButton")}
           </Link>
         </div>
 
-        <div className="rounded-[22px] border border-white/10 bg-white/5 p-2.5">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-[16px] bg-slate-900/80 px-3 py-2.5">
+        <div className="rounded-[20px] border border-white/10 bg-white/5 p-2 sm:rounded-[22px] sm:p-2.5">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+            <div className="rounded-[14px] bg-slate-900/80 px-2.5 py-2 sm:rounded-[16px] sm:px-3 sm:py-2.5">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Player 1</div>
-              <div className="mt-1 text-[12px] font-semibold leading-snug text-white">
+              <div className="mt-1 text-[11px] font-semibold leading-snug text-white sm:text-[12px]">
                 {player1Name || t("remote.control.noPlayerSelected")}
               </div>
             </div>
-            <div className="rounded-[16px] bg-slate-900/80 px-3 py-2.5">
+            <div className="rounded-[14px] bg-slate-900/80 px-2.5 py-2 sm:rounded-[16px] sm:px-3 sm:py-2.5">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Player 2</div>
-              <div className="mt-1 text-[12px] font-semibold leading-snug text-white">
+              <div className="mt-1 text-[11px] font-semibold leading-snug text-white sm:text-[12px]">
                 {player2Name || t("remote.control.noPlayerSelected")}
               </div>
             </div>
@@ -371,23 +381,23 @@ export function RemoteScoreboardControl() {
         </div>
 
         {!canSendCommands ? (
-          <div className="mt-2 rounded-[20px] border border-amber-400/20 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-100">
+          <div className="mt-1.5 rounded-[18px] border border-amber-400/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-100">
             {t("remote.control.errors.missingScreenId")}
           </div>
         ) : null}
 
         {state.error ? (
-          <div className="mt-2 rounded-[20px] border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-100">
+          <div className="mt-1.5 rounded-[18px] border border-red-400/20 bg-red-500/10 px-4 py-2 text-sm text-red-100">
             {state.error}
           </div>
         ) : null}
 
-        <div className="mt-2 flex flex-1 flex-col gap-2 overflow-hidden">
+        <div className="mt-1.5 flex flex-1 flex-col gap-1.5 overflow-hidden">
           <section>
-            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-[10px] sm:tracking-[0.18em]">
               {t("remote.control.sections.scoring.title")}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               <div className="basis-[65%]">
                 {renderActionButton(
                   {
@@ -409,7 +419,7 @@ export function RemoteScoreboardControl() {
                 )}
               </div>
             </div>
-            <div className="mt-2">
+            <div className="mt-1.5 sm:mt-2">
               {renderActionButton(
                 {
                   type: "confirm_turn",
@@ -423,10 +433,10 @@ export function RemoteScoreboardControl() {
           </section>
 
           <section>
-            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-[10px] sm:tracking-[0.18em]">
               {t("remote.control.sections.timer.title")}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               {renderActionButton(
                 {
                   type: "toggle_timer",
@@ -447,17 +457,17 @@ export function RemoteScoreboardControl() {
           </section>
 
           <section>
-            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-[10px] sm:tracking-[0.18em]">
               {t("remote.control.sections.corrections.title")}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               {renderActionButton(
                 {
                   type: "undo",
                   labelKey: "remote.control.actions.undo",
                   shortcutKey: "remote.control.shortcuts.undo",
                 },
-                "bg-red-500/90 text-white",
+                "min-h-[40px] rounded-[12px] bg-red-500/90 text-white sm:min-h-[44px] sm:rounded-[14px]",
               )}
               {renderActionButton(
                 {
@@ -465,16 +475,16 @@ export function RemoteScoreboardControl() {
                   labelKey: "remote.control.actions.undoTimeout",
                   shortcutKey: "remote.control.shortcuts.undoTimeout",
                 },
-                "bg-white/10 text-white border border-white/10",
+                "min-h-[40px] rounded-[12px] bg-white/10 text-white border border-white/10 sm:min-h-[44px] sm:rounded-[14px]",
               )}
             </div>
           </section>
 
           <section>
-            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-[10px] sm:tracking-[0.18em]">
               {t("remote.control.sections.setup.title")}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               {renderActionButton(
                 {
                   type: "warmup_break",
@@ -509,7 +519,7 @@ export function RemoteScoreboardControl() {
                 "bg-blue-500 text-white",
               )}
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:mt-2 sm:gap-2">
               {renderActionButton(
                 {
                   type: "end_game",
