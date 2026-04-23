@@ -44,7 +44,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
         const searchParams = req.nextUrl.searchParams
         const year = searchParams.get('year')
-        const gameType = searchParams.get('gameType')
+        const gameTypeParam = searchParams.get('gameType')
+        const gameType =
+            gameTypeParam && gameTypeParam !== 'all' ? gameTypeParam : null
         const tournamentType = searchParams.get('tournamentType')
         const normalizedGameType = normalizeGameTypeOrFallback(gameType)
         const includeMatchesParam = searchParams.get('includeMatches')

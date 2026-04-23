@@ -687,7 +687,8 @@ export default function PlayerProfilePage() {
 
         const fetchPlayerData = async () => {
             if (!playerId) return
-            const shouldFetchHistory = selectedGameType !== 'all'
+            const shouldFetchHistory =
+                selectedGameType !== 'all' || Boolean(tournamentContextSlug)
 
             if (!player) {
                 setIsLoading(true)
@@ -796,7 +797,9 @@ export default function PlayerProfilePage() {
                 let historyUrl = `/api/players/${playerId}/history`
                 const historyParams = new URLSearchParams()
 
-                historyParams.set('gameType', selectedGameType)
+                if (selectedGameType !== 'all') {
+                    historyParams.set('gameType', selectedGameType)
+                }
                 if (selectedTournamentType !== 'all') {
                     historyParams.set('tournamentType', selectedTournamentType)
                 }
