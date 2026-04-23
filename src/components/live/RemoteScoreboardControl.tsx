@@ -4,31 +4,47 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-// Safe translation fallback
 const t = (key: string): string => {
   try {
     const dictionary: Record<string, string> = {
-      'remote.control.title': 'Remote Control',
-      'remote.control.sections.setup.title': 'Setup',
-      'remote.control.sections.scoring.title': 'Scoring',
-      'remote.control.sections.timer.title': 'Timer',
-      'remote.control.sections.corrections.title': 'Corrections',
-      'remote.control.actions.startMatch': 'Start Match',
-      'remote.control.actions.swapPlayers': 'Swap Players',
-      'remote.control.actions.warmupBreak': 'Warmup / Break',
-      'remote.control.actions.resetGame': 'Reset Game',
-      'remote.control.actions.runDec': 'Live Run -',
-      'remote.control.actions.confirmTurn': 'Confirm / End Turn',
-      'remote.control.actions.runInc': 'Live Run +',
-      'remote.control.actions.toggleTimer': 'Start / Pause Timer',
-      'remote.control.actions.resetShotClock': 'Reset Shot Clock',
-      'remote.control.actions.undo': 'Undo',
-      'remote.control.actions.undoTimeout': 'Undo Timeout',
-      'remote.control.errors.missingParams': 'Missing screen ID or session ID',
-      'remote.control.errors.commandFailed': 'Command failed to send',
-      'remote.control.status.sending': 'Sending...',
-      'remote.control.status.sent': 'Sent: {command}',
-      'remote.control.backButton': '← Back',
+      "remote.control.eyebrow": "Remote Control",
+      "remote.control.title": "Remote Control",
+      "remote.control.screenIdLabel": "Screen ID",
+      "remote.control.sessionIdLabel": "Session ID",
+      "remote.control.noScreenId": "No screen ID",
+      "remote.control.noSessionId": "Auto",
+      "remote.control.lastCommandPrefix": "Last command:",
+      "remote.control.sections.setup.title": "Setup",
+      "remote.control.sections.scoring.title": "Scoring",
+      "remote.control.sections.timer.title": "Timer",
+      "remote.control.sections.corrections.title": "Corrections",
+      "remote.control.actions.startMatch": "Start Match",
+      "remote.control.actions.swapPlayers": "Swap Players",
+      "remote.control.actions.warmupBreak": "Warmup / Break",
+      "remote.control.actions.resetGame": "Reset Game",
+      "remote.control.actions.endGame": "End Game",
+      "remote.control.actions.runDec": "Live Run -",
+      "remote.control.actions.confirmTurn": "Confirm / End Turn",
+      "remote.control.actions.runInc": "Live Run +",
+      "remote.control.actions.toggleTimer": "Start / Pause Timer",
+      "remote.control.actions.resetShotClock": "Reset Time",
+      "remote.control.actions.undo": "Undo",
+      "remote.control.actions.undoTimeout": "Undo Timeout / Foul",
+      "remote.control.errors.missingParams": "Missing screen ID or session ID",
+      "remote.control.errors.commandFailed": "Command failed to send",
+      "remote.control.shortcuts.startMatch": "Session required",
+      "remote.control.shortcuts.swapPlayers": "R",
+      "remote.control.shortcuts.warmupBreak": "C",
+      "remote.control.shortcuts.resetGame": "No shortcut",
+      "remote.control.shortcuts.endGame": "E",
+      "remote.control.shortcuts.runDec": "-",
+      "remote.control.shortcuts.confirmTurn": "Enter",
+      "remote.control.shortcuts.runInc": "+",
+      "remote.control.shortcuts.toggleTimer": "Space",
+      "remote.control.shortcuts.resetShotClock": "Left Arrow",
+      "remote.control.shortcuts.undo": "U",
+      "remote.control.shortcuts.undoTimeout": "D",
+      "remote.control.backButton": "Back",
     };
     return dictionary[key] ?? key;
   } catch {
@@ -42,6 +58,7 @@ type RemoteCommandType =
   | "start_match"
   | "swap_players"
   | "reset_game"
+  | "end_game"
   | "warmup_break"
   | "toggle_timer"
   | "reset_shot_clock"
@@ -69,12 +86,35 @@ type ScreenSessionsResponse = {
   error?: string;
 };
 
+type CommandButtonConfig = {
+  type: RemoteCommandType;
+  labelKey: string;
+  shortcutKey: string;
+  tone: string;
+  fullWidth?: boolean;
+};
+
 const isNonEmptyString = (value: string | null): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
 
 const actionButtonClassName =
-  "flex min-h-[64px] items-center justify-center rounded-3xl px-4 py-4 text-center text-sm font-semibold tracking-[0.02em] transition active:scale-[0.98]";
+  "flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-3xl px-4 py-4 text-center transition active:scale-[0.98]";
+
+const commandLabelKeyMap: Record<RemoteCommandType, string> = {
+  start_match: "remote.control.actions.startMatch",
+  swap_players: "remote.control.actions.swapPlayers",
+  reset_game: "remote.control.actions.resetGame",
+  end_game: "remote.control.actions.endGame",
+  warmup_break: "remote.control.actions.warmupBreak",
+  toggle_timer: "remote.control.actions.toggleTimer",
+  reset_shot_clock: "remote.control.actions.resetShotClock",
+  run_inc: "remote.control.actions.runInc",
+  run_dec: "remote.control.actions.runDec",
+  confirm_turn: "remote.control.actions.confirmTurn",
+  undo: "remote.control.actions.undo",
+  undo_timeout: "remote.control.actions.undoTimeout",
+};
 
 export function RemoteScoreboardControl() {
   const searchParams = useSearchParams();
@@ -131,33 +171,96 @@ export function RemoteScoreboardControl() {
       {
         titleKey: "remote.control.sections.setup.title",
         items: [
-          { type: "start_match" as const, labelKey: "remote.control.actions.startMatch", tone: "bg-emerald-400 text-slate-950" },
-          { type: "swap_players" as const, labelKey: "remote.control.actions.swapPlayers", tone: "bg-white/10 text-white border border-white/10" },
-          { type: "warmup_break" as const, labelKey: "remote.control.actions.warmupBreak", tone: "bg-white/10 text-white border border-white/10" },
-          { type: "reset_game" as const, labelKey: "remote.control.actions.resetGame", tone: "bg-red-500/20 text-red-100 border border-red-400/30" },
-        ],
+          {
+            type: "start_match",
+            labelKey: "remote.control.actions.startMatch",
+            shortcutKey: "remote.control.shortcuts.startMatch",
+            tone: "bg-emerald-400 text-slate-950",
+          },
+          {
+            type: "swap_players",
+            labelKey: "remote.control.actions.swapPlayers",
+            shortcutKey: "remote.control.shortcuts.swapPlayers",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+          {
+            type: "warmup_break",
+            labelKey: "remote.control.actions.warmupBreak",
+            shortcutKey: "remote.control.shortcuts.warmupBreak",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+          {
+            type: "reset_game",
+            labelKey: "remote.control.actions.resetGame",
+            shortcutKey: "remote.control.shortcuts.resetGame",
+            tone: "bg-red-500/20 text-red-100 border border-red-400/30",
+          },
+          {
+            type: "end_game",
+            labelKey: "remote.control.actions.endGame",
+            shortcutKey: "remote.control.shortcuts.endGame",
+            tone: "bg-amber-400 text-slate-950",
+            fullWidth: true,
+          },
+        ] satisfies CommandButtonConfig[],
       },
       {
         titleKey: "remote.control.sections.scoring.title",
         items: [
-          { type: "run_dec" as const, labelKey: "remote.control.actions.runDec", tone: "bg-white/10 text-white border border-white/10" },
-          { type: "confirm_turn" as const, labelKey: "remote.control.actions.confirmTurn", tone: "bg-cyan-400 text-slate-950" },
-          { type: "run_inc" as const, labelKey: "remote.control.actions.runInc", tone: "bg-white/10 text-white border border-white/10" },
-        ],
+          {
+            type: "run_dec",
+            labelKey: "remote.control.actions.runDec",
+            shortcutKey: "remote.control.shortcuts.runDec",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+          {
+            type: "confirm_turn",
+            labelKey: "remote.control.actions.confirmTurn",
+            shortcutKey: "remote.control.shortcuts.confirmTurn",
+            tone: "bg-cyan-400 text-slate-950",
+            fullWidth: true,
+          },
+          {
+            type: "run_inc",
+            labelKey: "remote.control.actions.runInc",
+            shortcutKey: "remote.control.shortcuts.runInc",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+        ] satisfies CommandButtonConfig[],
       },
       {
         titleKey: "remote.control.sections.timer.title",
         items: [
-          { type: "toggle_timer" as const, labelKey: "remote.control.actions.toggleTimer", tone: "bg-white/10 text-white border border-white/10" },
-          { type: "reset_shot_clock" as const, labelKey: "remote.control.actions.resetShotClock", tone: "bg-white/10 text-white border border-white/10" },
-        ],
+          {
+            type: "toggle_timer",
+            labelKey: "remote.control.actions.toggleTimer",
+            shortcutKey: "remote.control.shortcuts.toggleTimer",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+          {
+            type: "reset_shot_clock",
+            labelKey: "remote.control.actions.resetShotClock",
+            shortcutKey: "remote.control.shortcuts.resetShotClock",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+        ] satisfies CommandButtonConfig[],
       },
       {
         titleKey: "remote.control.sections.corrections.title",
         items: [
-          { type: "undo" as const, labelKey: "remote.control.actions.undo", tone: "bg-white/10 text-white border border-white/10" },
-          { type: "undo_timeout" as const, labelKey: "remote.control.actions.undoTimeout", tone: "bg-white/10 text-white border border-white/10" },
-        ],
+          {
+            type: "undo",
+            labelKey: "remote.control.actions.undo",
+            shortcutKey: "remote.control.shortcuts.undo",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+          {
+            type: "undo_timeout",
+            labelKey: "remote.control.actions.undoTimeout",
+            shortcutKey: "remote.control.shortcuts.undoTimeout",
+            tone: "bg-white/10 text-white border border-white/10",
+          },
+        ] satisfies CommandButtonConfig[],
       },
     ],
     [],
@@ -266,7 +369,7 @@ export function RemoteScoreboardControl() {
 
         {state.lastCommand ? (
           <div className="mt-4 rounded-3xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
-            {t("remote.control.lastCommandPrefix")} {t(`remote.control.actions.${state.lastCommand === "start_match" ? "startMatch" : state.lastCommand === "swap_players" ? "swapPlayers" : state.lastCommand === "reset_game" ? "resetGame" : state.lastCommand === "warmup_break" ? "warmupBreak" : state.lastCommand === "toggle_timer" ? "toggleTimer" : state.lastCommand === "reset_shot_clock" ? "resetShotClock" : state.lastCommand === "run_inc" ? "runInc" : state.lastCommand === "run_dec" ? "runDec" : state.lastCommand === "confirm_turn" ? "confirmTurn" : state.lastCommand === "undo_timeout" ? "undoTimeout" : "undo"}`)}
+            {t("remote.control.lastCommandPrefix")} {t(commandLabelKeyMap[state.lastCommand])}
           </div>
         ) : null}
 
@@ -277,22 +380,22 @@ export function RemoteScoreboardControl() {
                 {t(group.titleKey)}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {group.items.map((item) => {
-                  const spanClassName = group.items.length === 3 && item.type === "confirm_turn" ? "col-span-2" : "col-span-1";
-                  return (
-                    <button
-                      key={item.type}
-                      type="button"
-                      disabled={state.loading || !canSendCommands}
-                      onClick={() => {
-                        void sendCommand(item.type);
-                      }}
-                      className={`${spanClassName} ${actionButtonClassName} ${item.tone} disabled:cursor-not-allowed disabled:opacity-50`}
-                    >
-                      {t(item.labelKey)}
-                    </button>
-                  );
-                })}
+                {group.items.map((item) => (
+                  <button
+                    key={item.type}
+                    type="button"
+                    disabled={state.loading || !canSendCommands}
+                    onClick={() => {
+                      void sendCommand(item.type);
+                    }}
+                    className={`${("fullWidth" in item && item.fullWidth) ? "col-span-2" : "col-span-1"} ${actionButtonClassName} ${item.tone} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    <span className="text-sm font-semibold leading-tight">{t(item.labelKey)}</span>
+                    <span className="rounded-full border border-current/20 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">
+                      {t(item.shortcutKey)}
+                    </span>
+                  </button>
+                ))}
               </div>
             </section>
           ))}
