@@ -30,7 +30,8 @@ const t = (key: string): string => {
       "remote.control.actions.resetShotClock": "Reset Time",
       "remote.control.actions.undo": "Undo",
       "remote.control.actions.undoTimeout": "Undo Timeout / Foul",
-      "remote.control.errors.missingParams": "Missing screen ID or session ID",
+      "remote.control.errors.missingScreenId": "Missing screen ID",
+      "remote.control.errors.startMatchRequiresSession": "Start Match requires a session ID",
       "remote.control.errors.commandFailed": "Command failed to send",
       "remote.control.shortcuts.startMatch": "Session required",
       "remote.control.shortcuts.swapPlayers": "R",
@@ -127,6 +128,7 @@ export function RemoteScoreboardControl() {
   });
 
   const canSendCommands = isNonEmptyString(screenId);
+  const canStartMatch = isNonEmptyString(screenId) && isNonEmptyString(sessionId);
 
   const resolveTargetId = async (): Promise<string> => {
     if (isNonEmptyString(sessionId)) return sessionId;
@@ -269,7 +271,7 @@ export function RemoteScoreboardControl() {
   const sendCommand = async (type: RemoteCommandType) => {
     if (!canSendCommands) {
       setState({
-        error: t("remote.control.errors.missingParams"),
+        error: t("remote.control.errors.missingScreenId"),
         lastCommand: null,
         loading: false,
       });
@@ -278,7 +280,7 @@ export function RemoteScoreboardControl() {
 
     if (type === "start_match" && !isNonEmptyString(sessionId)) {
       setState({
-        error: t("remote.control.errors.missingParams"),
+        error: t("remote.control.errors.startMatchRequiresSession"),
         lastCommand: null,
         loading: false,
       });
@@ -357,7 +359,7 @@ export function RemoteScoreboardControl() {
 
         {!canSendCommands ? (
           <div className="mt-4 rounded-3xl border border-amber-400/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
-            {t("remote.control.errors.missingParams")}
+            {t("remote.control.errors.missingScreenId")}
           </div>
         ) : null}
 
@@ -384,7 +386,7 @@ export function RemoteScoreboardControl() {
                   <button
                     key={item.type}
                     type="button"
-                    disabled={state.loading || !canSendCommands}
+                    disabled={state.loading || !canSendCommands || (item.type === "start_match" && !canStartMatch)}
                     onClick={() => {
                       void sendCommand(item.type);
                     }}
