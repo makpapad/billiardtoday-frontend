@@ -10,6 +10,8 @@ const t = (key: string): string => {
       "remote.home.title": "Remote Scoreboard Control",
       "remote.home.description": "Pick a live screen, choose one of its available matches, then open the remote control with the correct session.",
       "remote.home.screensTitle": "Available screens",
+      "remote.home.screenPickerPlaceholder": "Search screen by name or ID...",
+      "remote.home.screenPickerEmpty": "No screens match your search.",
       "remote.home.screensLoading": "Loading live screens...",
       "remote.home.screensEmpty": "No live screens found right now.",
       "remote.home.matchesTitle": "Available matches",
@@ -141,6 +143,8 @@ export function RemoteScoreboardHome() {
 
   const [screenId, setScreenId] = useState(initialScreenId);
   const [sessionId, setSessionId] = useState(initialSessionId);
+  const [screenQuery, setScreenQuery] = useState("");
+  const [screenPickerOpen, setScreenPickerOpen] = useState(false);
   const [screens, setScreens] = useState<LiveScreen[]>([]);
   const [screensLoading, setScreensLoading] = useState(true);
   const [screensError, setScreensError] = useState<string | null>(null);
@@ -299,6 +303,17 @@ export function RemoteScoreboardHome() {
     return screens.find((entry) => entry.screenId === screenId) ?? null;
   }, [screenId, screens]);
 
+  const filteredScreens = useMemo(() => {
+    const needle = screenQuery.trim().toLowerCase();
+    if (!needle) return screens;
+    return screens.filter((entry) => {
+      const haystack = [entry.screenName, entry.screenId, entry.clubName ?? ""]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [screenQuery, screens]);
+
   const selectedSession = useMemo(() => {
     return sessions.find((entry) => resolveSessionId(entry) === sessionId) ?? null;
   }, [sessionId, sessions]);
@@ -322,7 +337,7 @@ export function RemoteScoreboardHome() {
         <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30 backdrop-blur">
           <label
             className="mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-slate-300"
-            htmlFor="remote-screen-select"
+            htmlFor="remote-screen-search"
           >
             {t("remote.home.screensTitle")}
           </label>
@@ -339,21 +354,69 @@ export function RemoteScoreboardHome() {
               {t("remote.home.screensEmpty")}
             </div>
           ) : (
-            <select
-              id="remote-screen-select"
-              value={screenId}
-              onChange={(event) => {
-                setScreenId(event.target.value);
-                setSessionId("");
-              }}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none"
-            >
-              {screens.map((entry) => (
-                <option key={entry.screenId} value={entry.screenId}>
-                  {entry.screenName || entry.screenId} | {entry.screenId}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setScreenPickerOpen((current) => !current)}
+                className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-left text-sm text-white transition hover:border-cyan-300/40"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">
+                    {selectedScreen?.screenName || selectedScreen?.screenId || t("remote.home.noScreenSelected")}
+                  </span>
+                  {selectedScreen?.screenId ? (
+                    <span className="mt-1 block truncate font-mono text-[11px] text-slate-400">
+                      {selectedScreen.screenId}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="ml-3 text-slate-400">{screenPickerOpen ? "▲" : "▼"}</span>
+              </button>
+
+              {screenPickerOpen ? (
+                <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-white/10 bg-slate-950/98 p-3 shadow-2xl shadow-black/50 backdrop-blur">
+                  <input
+                    id="remote-screen-search"
+                    value={screenQuery}
+                    onChange={(event) => setScreenQuery(event.target.value)}
+                    placeholder={t("remote.home.screenPickerPlaceholder")}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500"
+                  />
+                  <div className="mt-3 max-h-72 overflow-y-auto space-y-2">
+                    {filteredScreens.length === 0 ? (
+                      <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3 text-sm text-slate-300">
+                        {t("remote.home.screenPickerEmpty")}
+                      </div>
+                    ) : (
+                      filteredScreens.map((entry) => {
+                        const isSelected = entry.screenId === screenId;
+                        return (
+                          <button
+                            key={entry.screenId}
+                            type="button"
+                            onClick={() => {
+                              setScreenId(entry.screenId);
+                              setSessionId("");
+                              setScreenPickerOpen(false);
+                              setScreenQuery("");
+                            }}
+                            className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                              isSelected
+                                ? "border-cyan-300/50 bg-cyan-400/10"
+                                : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
+                            }`}
+                          >
+                            <div className="text-sm font-semibold text-white">{entry.screenName || entry.screenId}</div>
+                            <div className="mt-1 text-xs text-slate-400">{entry.clubName || "Screen"}</div>
+                            <div className="mt-2 font-mono text-[11px] text-slate-400">{entry.screenId}</div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
 
@@ -401,23 +464,39 @@ export function RemoteScoreboardHome() {
               {t("remote.home.matchesEmpty")}
             </div>
           ) : (
-            <select
-              id="remote-session-select"
-              value={sessionId}
-              onChange={(event) => setSessionId(event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none"
-            >
+            <div className="grid gap-3">
               {sessions.map((entry) => {
                 const resolvedId = resolveSessionId(entry);
                 const status = getSessionStatus(entry) || "pending";
                 const meta = formatSessionMeta(entry);
+                const isSelected = resolvedId === sessionId;
                 return (
-                  <option key={`${resolvedId}-${formatSessionLabel(entry)}`} value={resolvedId}>
-                    {formatSessionLabel(entry)} | {t(`remote.home.status.${status}`)}{meta ? ` | ${meta}` : ""}
-                  </option>
+                  <button
+                    key={`${resolvedId}-${formatSessionLabel(entry)}`}
+                    type="button"
+                    onClick={() => setSessionId(resolvedId)}
+                    className={`rounded-2xl border px-4 py-4 text-left transition ${
+                      isSelected
+                        ? "border-cyan-300/50 bg-cyan-400/10 shadow-lg shadow-cyan-950/30"
+                        : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white">{formatSessionLabel(entry)}</div>
+                        {meta ? (
+                          <div className="mt-1 text-xs leading-5 text-slate-400">{meta}</div>
+                        ) : null}
+                        <div className="mt-2 font-mono text-[11px] text-slate-500">{resolvedId}</div>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusToneMap[status]}`}>
+                        {t(`remote.home.status.${status}`)}
+                      </span>
+                    </div>
+                  </button>
                 );
               })}
-            </select>
+            </div>
           )}
         </div>
 
