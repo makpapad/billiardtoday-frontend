@@ -56,10 +56,12 @@ type Player = {
             totalMatches?: number
             totalWins?: number
             totalLosses?: number
+            totalDraws?: number
             winPercentage?: number | string
             avgPerInning?: number | string
             bestAverageFromWins?: number | string
             highestRun?: number
+            yearsActive?: number[]
         }
         byGameType?: Record<
             string,
@@ -67,12 +69,26 @@ type Player = {
                 totalMatches?: number
                 totalWins?: number
                 totalLosses?: number
+                totalDraws?: number
                 winPercentage?: number | string
                 avgPerInning?: number | string
                 bestAverageFromWins?: number | string
                 highestRun?: number
+                yearsActive?: number[]
             }
         >
+        byYear?: Record<
+            string,
+            {
+                byGameType?: Record<string, Record<string, unknown>>
+            }
+        >
+        events?: {
+            bySeason?: Record<string, number>
+            totalParticipations?: number
+            finalsEntries?: number
+        }
+        totalEvents?: number
     } | null
 }
 
@@ -455,6 +471,68 @@ const getCareerStatsYears = (
     ).sort((a, b) => b - a)
 }
 
+const getOverallCareerStatsEventCount = (
+    stats: Player['career_stats'],
+): number | null => {
+    const count = Number(
+        stats?.totalEvents ??
+            stats?.events?.totalParticipations ??
+            stats?.events?.finalsEntries,
+    )
+
+    return Number.isFinite(count) && count > 0 ? count : null
+}
+
+const getCareerStatsEventCount = (
+    stats: Player['career_stats'],
+    gameType: GameType | 'all',
+    selectedYear: string,
+): number | null => {
+    if (!stats) return null
+
+    const seasonEvents = stats.events?.bySeason || {}
+    if (gameType === 'all') {
+        if (selectedYear !== 'all') {
+            const count = Number(seasonEvents[selectedYear])
+            return Number.isFinite(count) && count > 0 ? count : null
+        }
+        return getOverallCareerStatsEventCount(stats)
+    }
+
+    const byYear = stats.byYear || {}
+    const yearEntries = Object.entries(byYear).filter(([year]) =>
+        selectedYear === 'all' ? true : year === selectedYear,
+    )
+    let total = 0
+    let foundSelectedYear = false
+
+    for (const [year, yearStats] of yearEntries) {
+        const count = Number(seasonEvents[year])
+        if (!Number.isFinite(count) || count <= 0) continue
+
+        const normalizedTypes = Array.from(
+            new Set(
+                Object.keys(yearStats.byGameType || {})
+                    .map((rawType) => normalizeGameTypeOrFallback(rawType))
+                    .filter(
+                        (value): value is string => typeof value === 'string',
+                    ),
+            ),
+        )
+
+        if (!normalizedTypes.includes(gameType)) continue
+
+        if (normalizedTypes.length !== 1) {
+            return null
+        }
+
+        total += count
+        foundSelectedYear = true
+    }
+
+    return foundSelectedYear ? total : null
+}
+
 export default function PlayerProfilePage() {
     const params = useParams()
     const pathname = usePathname()
@@ -587,6 +665,7 @@ export default function PlayerProfilePage() {
                 setIsLoading(true)
             } else if (shouldFetchHistory) {
                 setIsLoadingHistory(true)
+                setHistoryTotalCount(null)
             }
             setError(null)
 
@@ -1090,44 +1169,19 @@ export default function PlayerProfilePage() {
     const effectiveCareerStats = careerStats ?? preloadedCareerStats
     const calculatedStats = calculateFilteredStats()
     const careerStatsEventCount =
-        selectedGameType === 'all'
-            ? Number(
-                  (
-                      player?.career_stats as
-                          | {
-                                totalEvents?: number
-                                events?: {
-                                    totalParticipations?: number
-                                    finalsEntries?: number
-                                }
-                            }
-                          | null
-                          | undefined
-                  )?.totalEvents ??
-                      (
-                          player?.career_stats as
-                              | {
-                                    events?: {
-                                        totalParticipations?: number
-                                        finalsEntries?: number
-                                    }
-                                }
-                              | null
-                              | undefined
-                      )?.events?.totalParticipations ??
-                      (
-                          player?.career_stats as
-                              | {
-                                    events?: {
-                                        totalParticipations?: number
-                                        finalsEntries?: number
-                                    }
-                                }
-                              | null
-                              | undefined
-                      )?.events?.finalsEntries,
-              ) || 0
-            : 0
+        selectedTournamentType === 'all'
+            ? getCareerStatsEventCount(
+                  player?.career_stats,
+                  selectedGameType,
+                  selectedYear,
+              )
+            : null
+    const effectiveEventsCount =
+        selectedYear === 'all' &&
+        !tournamentContextSlug &&
+        historyTotalCount !== null
+            ? calculatedStats.eventsCount
+            : careerStatsEventCount ?? calculatedStats.eventsCount
     const shouldUseCareerStatsForCards =
         selectedYear === 'all' &&
         selectedTournamentType === 'all' &&
@@ -1145,10 +1199,7 @@ export default function PlayerProfilePage() {
                   bestAverageFromWins:
                       effectiveCareerStats.bestAverageFromWins,
                   highestRun: effectiveCareerStats.highestRun,
-                  eventsCount:
-                      selectedGameType === 'all'
-                          ? careerStatsEventCount || calculatedStats.eventsCount
-                          : calculatedStats.eventsCount,
+                  eventsCount: effectiveEventsCount,
               }
             : calculatedStats
     const gameTypeOptions =
