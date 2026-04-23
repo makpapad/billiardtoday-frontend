@@ -35,7 +35,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
 
 export const SITE_HEADER_PRIMARY_CTA: SiteHeaderNavItem = {
   label: "Contact us",
-  href: "/#cta",
+  href: "/contact",
 };
 
 export const SITE_HEADER_SECONDARY_CTA: SiteHeaderNavItem = {
