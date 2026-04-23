@@ -1398,6 +1398,7 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
+  const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(
     summary.startDate,
@@ -1515,7 +1516,10 @@ export function TournamentDetailPage({
     useState<number | null>(null);
   const searchParams = useSearchParams();
   const preferredStageFromQuery =
-    preferredStageDocumentId ?? searchParams?.get("stage") ?? null;
+    preferredStageDocumentId ??
+    stageFromLocation ??
+    searchParams?.get("stage") ??
+    null;
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
@@ -1544,6 +1548,12 @@ export function TournamentDetailPage({
   const [participantSortMode, setParticipantSortMode] = useState<
     "registration" | "age" | "ranking"
   >("registration");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nextStage = new URLSearchParams(window.location.search).get("stage");
+    setStageFromLocation(nextStage);
+  }, []);
 
   useEffect(() => {
     if (!preferredStageFromQuery) return;

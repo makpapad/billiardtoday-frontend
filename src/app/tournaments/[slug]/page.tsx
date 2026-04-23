@@ -8,12 +8,12 @@ import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tourna
 import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
-  params: { slug: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
   const summary = await resolveTournamentEventSummary(slug);
 
   if (!summary) {
@@ -41,8 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TournamentPage({ params, searchParams }: Props) {
-  const { slug } = params;
-  const resolvedSearchParams = searchParams ?? {};
+  const { slug } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const [summary, settings, appearance] = await Promise.all([
     resolveTournamentEventSummary(slug),
     getCmsSiteSettings(),

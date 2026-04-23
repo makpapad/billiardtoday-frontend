@@ -1743,14 +1743,32 @@ export function TournamentEventsContent({
   );
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [locationSearchParams, setLocationSearchParams] = useState<{
+    group: string | null;
+    match: string | null;
+  }>({ group: null, match: null });
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
   const preferredGroupParam =
-    preferredGroupParamOverride ?? searchParams?.get("group") ?? null;
+    preferredGroupParamOverride ??
+    locationSearchParams.group ??
+    searchParams?.get("group") ??
+    null;
   const preferredMatchParam =
-    preferredMatchParamOverride ?? searchParams?.get("match") ?? null;
+    preferredMatchParamOverride ??
+    locationSearchParams.match ??
+    searchParams?.get("match") ??
+    null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setLocationSearchParams({
+      group: params.get("group"),
+      match: params.get("match"),
+    });
+  }, []);
   const tournamentContextSlug = eventData?.data?.title
     ? buildTournamentSlug(
         "",
