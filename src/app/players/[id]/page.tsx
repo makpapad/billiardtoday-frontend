@@ -6,7 +6,7 @@ import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
 import { t } from "@/lib/i18n"
 import { resolveMediaUrl } from "@/lib/mediaUrl"
-import { buildTournamentSlug } from "@/lib/tournaments"
+import { buildTournamentHref, buildTournamentSlug } from "@/lib/tournaments"
 import {
     LineChart,
     Line,
@@ -1539,12 +1539,13 @@ export default function PlayerProfilePage() {
                       tournament: p.tournament,
                       year: p.year,
                       tournamentHref:
-                          p.id && p.tournament
-                              ? `/tournaments/${buildTournamentSlug(
-                                    String(p.id),
+                          p.tournament
+                              ? buildTournamentHref(
+                                    '',
                                     p.tournament,
                                     p.year,
-                                )}`
+                                    isEmbedMode,
+                                )
                               : null,
                   })),
               )
@@ -1638,12 +1639,13 @@ export default function PlayerProfilePage() {
                       tournament: p.tournament,
                       year: p.year,
                       tournamentHref:
-                          p.id && p.tournament
-                              ? `/tournaments/${buildTournamentSlug(
-                                    String(p.id),
+                          p.tournament
+                              ? buildTournamentHref(
+                                    '',
                                     p.tournament,
                                     p.year,
-                                )}`
+                                    isEmbedMode,
+                                )
                               : null,
                   })),
           )
