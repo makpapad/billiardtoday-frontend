@@ -24,6 +24,35 @@ function getRequiredEnv(key: string) {
   return value;
 }
 
+interface ResendEmailInput {
+  from: string;
+  to: string[];
+  reply_to?: string;
+  subject: string;
+  html: string;
+  text: string;
+}
+
+async function sendResendEmail(apiKey: string, input: ResendEmailInput) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "User-Agent": "billiardtoday-frontend/1.0",
+    },
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Resend request failed: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
+}
+
 export async function sendContactEmail(input: ContactFormPayload) {
   const apiKey = getRequiredEnv("RESEND_API_KEY");
   const to = getRequiredEnv("CONTACT_FORM_TO_EMAIL");
@@ -61,28 +90,43 @@ export async function sendContactEmail(input: ContactFormPayload) {
     .filter(Boolean)
     .join("\n");
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "User-Agent": "billiardtoday-frontend/1.0",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      reply_to: cleanEmail,
-      subject: composedSubject,
-      html,
-      text,
-    }),
-    cache: "no-store",
+  const submissionResponse = await sendResendEmail(apiKey, {
+    from,
+    to: [to],
+    reply_to: cleanEmail,
+    subject: composedSubject,
+    html,
+    text,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Resend request failed: ${response.status} ${errorText}`);
+  const confirmationHtml = [
+    "<div style=\"font-family:Arial,sans-serif;line-height:1.6;color:#0f172a\">",
+    `<p>Hello ${escapeHtml(cleanName)},</p>`,
+    "<p>We received your message and will get back to you as soon as possible.</p>",
+    "<p>Thank you,<br />Billiard Today</p>",
+    "</div>",
+  ].join("");
+
+  const confirmationText = [
+    `Hello ${cleanName},`,
+    "",
+    "We received your message and will get back to you as soon as possible.",
+    "",
+    "Thank you,",
+    "Billiard Today",
+  ].join("\n");
+
+  try {
+    await sendResendEmail(apiKey, {
+      from,
+      to: [cleanEmail],
+      subject: "We received your message",
+      html: confirmationHtml,
+      text: confirmationText,
+    });
+  } catch (error) {
+    console.warn("Contact form confirmation email failed", error);
   }
 
-  return response.json();
+  return submissionResponse;
 }
