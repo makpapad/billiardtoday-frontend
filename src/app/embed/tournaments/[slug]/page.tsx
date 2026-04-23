@@ -39,7 +39,7 @@ export default async function EmbedTournamentPage({ params, searchParams }: Prop
   }
 
   const canonicalSlug = buildTournamentSlug(
-    summary.tournamentSlug || summary.documentId,
+    "",
     summary.title,
     summary.season,
   );

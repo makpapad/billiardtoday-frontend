@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`,
     alternates: {
       canonical: `/tournaments/${buildTournamentSlug(
-        summary.tournamentSlug || summary.documentId,
+        "",
         summary.title,
         summary.season,
       )}`,
@@ -54,7 +54,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   }
 
   const canonicalSlug = buildTournamentSlug(
-    summary.tournamentSlug || summary.documentId,
+    "",
     summary.title,
     summary.season,
   );
