@@ -145,6 +145,7 @@ export function RemoteScoreboardHome() {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [screenQuery, setScreenQuery] = useState("");
   const [screenPickerOpen, setScreenPickerOpen] = useState(false);
+  const [screenChosen, setScreenChosen] = useState(Boolean(initialScreenId));
   const [screens, setScreens] = useState<LiveScreen[]>([]);
   const [screensLoading, setScreensLoading] = useState(true);
   const [screensError, setScreensError] = useState<string | null>(null);
@@ -195,6 +196,7 @@ export function RemoteScoreboardHome() {
 
         setScreenId(resolvedScreenId);
         setSessionId(hasPreferred ? preferredSessionId : "");
+        setScreenChosen(Boolean(hasPreferred && resolvedScreenId));
       } catch (error: unknown) {
         if (cancelled) return;
         setScreens([]);
@@ -217,7 +219,7 @@ export function RemoteScoreboardHome() {
     let cancelled = false;
 
     const selectedScreenId = screenId.trim();
-    if (!selectedScreenId) {
+    if (!selectedScreenId || !screenChosen) {
       setSessions([]);
       setSessionsError(null);
       setSessionsLoading(false);
@@ -273,7 +275,7 @@ export function RemoteScoreboardHome() {
     return () => {
       cancelled = true;
     };
-  }, [screenId]);
+  }, [screenChosen, screenId]);
 
   useEffect(() => {
     try {
@@ -374,7 +376,7 @@ export function RemoteScoreboardHome() {
               </button>
 
               {screenPickerOpen ? (
-                <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-white/10 bg-slate-950/98 p-3 shadow-2xl shadow-black/50 backdrop-blur">
+                <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-slate-700 bg-slate-950 p-3 shadow-[0_24px_80px_rgba(0,0,0,0.65)]">
                   <input
                     id="remote-screen-search"
                     value={screenQuery}
@@ -397,6 +399,7 @@ export function RemoteScoreboardHome() {
                             onClick={() => {
                               setScreenId(entry.screenId);
                               setSessionId("");
+                              setScreenChosen(true);
                               setScreenPickerOpen(false);
                               setScreenQuery("");
                             }}
@@ -433,72 +436,80 @@ export function RemoteScoreboardHome() {
               <div className="uppercase tracking-[0.18em] text-slate-500">{t("remote.home.selectedMatchLabel")}</div>
               <div className="mt-1 text-white">{selectedSession ? formatSessionLabel(selectedSession) : t("remote.home.noMatchSelected")}</div>
               <div className="mt-2 font-mono text-[11px] text-slate-400">
-                {sessionId || t("remote.home.sessionAutoLabel")}
+                {screenChosen ? (sessionId || t("remote.home.sessionAutoLabel")) : t("remote.home.noMatchSelected")}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4">
-          <label
-            className="mb-3 block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400"
-            htmlFor="remote-session-select"
-          >
-            {t("remote.home.matchesTitle")}
-          </label>
+        {screenChosen ? (
+          <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4">
+            <label
+              className="mb-3 block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400"
+              htmlFor="remote-session-select"
+            >
+              {t("remote.home.matchesTitle")}
+            </label>
 
-          {!screenId ? (
+            {!screenId ? (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
+                {t("remote.home.selectScreenHint")}
+              </div>
+            ) : sessionsLoading ? (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
+                {t("remote.home.matchesLoading")}
+              </div>
+            ) : sessionsError ? (
+              <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
+                {sessionsError}
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
+                {t("remote.home.matchesEmpty")}
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {sessions.map((entry) => {
+                  const resolvedId = resolveSessionId(entry);
+                  const status = getSessionStatus(entry) || "pending";
+                  const meta = formatSessionMeta(entry);
+                  const isSelected = resolvedId === sessionId;
+                  return (
+                    <button
+                      key={`${resolvedId}-${formatSessionLabel(entry)}`}
+                      type="button"
+                      onClick={() => setSessionId(resolvedId)}
+                      className={`rounded-2xl border px-4 py-4 text-left transition ${
+                        isSelected
+                          ? "border-cyan-300/50 bg-cyan-400/10 shadow-lg shadow-cyan-950/30"
+                          : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-white">{formatSessionLabel(entry)}</div>
+                          {meta ? (
+                            <div className="mt-1 text-xs leading-5 text-slate-400">{meta}</div>
+                          ) : null}
+                          <div className="mt-2 font-mono text-[11px] text-slate-500">{resolvedId}</div>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusToneMap[status]}`}>
+                          {t(`remote.home.status.${status}`)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4">
             <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
               {t("remote.home.selectScreenHint")}
             </div>
-          ) : sessionsLoading ? (
-            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
-              {t("remote.home.matchesLoading")}
-            </div>
-          ) : sessionsError ? (
-            <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
-              {sessionsError}
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
-              {t("remote.home.matchesEmpty")}
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {sessions.map((entry) => {
-                const resolvedId = resolveSessionId(entry);
-                const status = getSessionStatus(entry) || "pending";
-                const meta = formatSessionMeta(entry);
-                const isSelected = resolvedId === sessionId;
-                return (
-                  <button
-                    key={`${resolvedId}-${formatSessionLabel(entry)}`}
-                    type="button"
-                    onClick={() => setSessionId(resolvedId)}
-                    className={`rounded-2xl border px-4 py-4 text-left transition ${
-                      isSelected
-                        ? "border-cyan-300/50 bg-cyan-400/10 shadow-lg shadow-cyan-950/30"
-                        : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white">{formatSessionLabel(entry)}</div>
-                        {meta ? (
-                          <div className="mt-1 text-xs leading-5 text-slate-400">{meta}</div>
-                        ) : null}
-                        <div className="mt-2 font-mono text-[11px] text-slate-500">{resolvedId}</div>
-                      </div>
-                      <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusToneMap[status]}`}>
-                        {t(`remote.home.status.${status}`)}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="mt-5 grid gap-3 pb-6">
           <Link
