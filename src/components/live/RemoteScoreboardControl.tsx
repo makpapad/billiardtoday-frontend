@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const t = (key: string): string => {
@@ -132,8 +132,6 @@ export function RemoteScoreboardControl() {
   const [state, setState] = useState<ActionState>({
     error: null,
   });
-  const inFlightCommandRef = useRef<RemoteCommandType | null>(null);
-  const lastSentAtRef = useRef<Partial<Record<RemoteCommandType, number>>>({});
   const [screenName, setScreenName] = useState<string>("");
   const [player1Name, setPlayer1Name] = useState<string>("");
   const [player2Name, setPlayer2Name] = useState<string>("");
@@ -251,6 +249,33 @@ export function RemoteScoreboardControl() {
     };
   }, [screenId, sessionId]);
 
+  const postRemoteCommand = async (
+    targetId: string,
+    type: RemoteCommandType,
+    commandId: string,
+  ) => {
+    const response = await fetch(`/api/scoreboards/${encodeURIComponent(targetId)}/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type,
+        payload: {
+          screenIdentifier: screenId,
+          commandId,
+          sentAt: Date.now(),
+          ...(isNonEmptyString(sessionId) ? { sessionId } : {}),
+        },
+      }),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      throw new Error(payload.error || t("remote.control.errors.commandFailed"));
+    }
+  };
+
   const sendCommand = async (type: RemoteCommandType) => {
     if (!canSendCommands) {
       setState({
@@ -266,36 +291,26 @@ export function RemoteScoreboardControl() {
       return;
     }
 
-    const now = Date.now();
-    const lastSentAt = lastSentAtRef.current[type] ?? 0;
-    if (inFlightCommandRef.current === type || now - lastSentAt < 180) {
-      return;
-    }
-
-    inFlightCommandRef.current = type;
-    lastSentAtRef.current[type] = now;
-
     try {
       setState({ error: null });
 
       const targetId = await resolveTargetId();
-      const response = await fetch(`/api/scoreboards/${encodeURIComponent(targetId)}/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type,
-          payload: {
-            screenIdentifier: screenId,
-            ...(isNonEmptyString(sessionId) ? { sessionId } : {}),
-          },
+      const commandId = `${type}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+      const attempts = await Promise.allSettled([
+        postRemoteCommand(targetId, type, commandId),
+        new Promise<void>((resolve) => {
+          window.setTimeout(() => {
+            resolve(postRemoteCommand(targetId, type, commandId));
+          }, 140);
         }),
-      });
+      ]);
 
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error || t("remote.control.errors.commandFailed"));
+      const firstSuccess = attempts.find((entry) => entry.status === "fulfilled");
+      if (!firstSuccess) {
+        const firstFailure = attempts.find((entry) => entry.status === "rejected");
+        throw firstFailure?.reason instanceof Error
+          ? firstFailure.reason
+          : new Error(t("remote.control.errors.commandFailed"));
       }
 
       setState({ error: null });
@@ -303,10 +318,6 @@ export function RemoteScoreboardControl() {
       setState({
         error: error instanceof Error ? error.message : t("remote.control.errors.commandFailed"),
       });
-    } finally {
-      if (inFlightCommandRef.current === type) {
-        inFlightCommandRef.current = null;
-      }
     }
   };
 
