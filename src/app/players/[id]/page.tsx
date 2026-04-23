@@ -142,6 +142,9 @@ type Match = {
     scoreAgainst: number
     date: string | null
     stage: string
+    stageDocumentId?: string | null
+    groupNumber?: number | null
+    num?: number | null
     innings: number
     playerPossiblePoints?: number
     opponentPossiblePoints?: number
@@ -1072,6 +1075,15 @@ export default function PlayerProfilePage() {
     const toggleStatBreakdown = (key: StatBreakdownKey) => {
         if (selectedGameType === 'all') return
         setActiveStatBreakdown((current) => (current === key ? null : key))
+    }
+
+    const buildTournamentGroupHref = (match: FilteredStatMatch) => {
+        if (!match.tournamentHref) return null
+        if (!match.stageDocumentId || !Number.isFinite(Number(match.groupNumber))) {
+            return match.tournamentHref
+        }
+        const separator = match.tournamentHref.includes('?') ? '&' : '?'
+        return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}&group=${encodeURIComponent(String(match.groupNumber))}`
     }
 
     if (isLoading) {
@@ -2321,6 +2333,25 @@ export default function PlayerProfilePage() {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <div className="mt-2 flex justify-end gap-3">
+                                                        {buildTournamentGroupHref(match) ? (
+                                                            <a
+                                                                href={buildTournamentGroupHref(match) || undefined}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                            >
+                                                                Open group
+                                                            </a>
+                                                        ) : null}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedMatch(match)}
+                                                            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                        >
+                                                            {t('players.profile.h2h.viewDetails')}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )
                                         })}
@@ -2781,6 +2812,16 @@ export default function PlayerProfilePage() {
                                                                     className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                                                                 >
                                                                     Open tournament
+                                                                </a>
+                                                            ) : null}
+                                                            {buildTournamentGroupHref(match) ? (
+                                                                <a
+                                                                    href={buildTournamentGroupHref(match) || undefined}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                                >
+                                                                    Open group
                                                                 </a>
                                                             ) : null}
                                                             <button

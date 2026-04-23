@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
@@ -1506,12 +1507,14 @@ export function TournamentDetailPage({
   );
   const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
     useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const preferredStageFromQuery = searchParams?.get("stage") ?? null;
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
-  >(summary.stages[0]?.documentId ?? null);
+  >(preferredStageFromQuery ?? summary.stages[0]?.documentId ?? null);
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -1534,6 +1537,11 @@ export function TournamentDetailPage({
   const [participantSortMode, setParticipantSortMode] = useState<
     "registration" | "age" | "ranking"
   >("registration");
+
+  useEffect(() => {
+    if (!preferredStageFromQuery) return;
+    setSelectedStageDocumentId(preferredStageFromQuery);
+  }, [preferredStageFromQuery]);
   const [participantAgeDirection, setParticipantAgeDirection] = useState<"asc" | "desc">("asc");
   const [participantRankingDirection, setParticipantRankingDirection] = useState<"asc" | "desc">("asc");
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<

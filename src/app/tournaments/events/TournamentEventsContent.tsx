@@ -1740,6 +1740,7 @@ export function TournamentEventsContent({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
+  const preferredGroupParam = searchParams?.get("group") ?? null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
@@ -2351,6 +2352,30 @@ export function TournamentEventsContent({
       setActiveStageId(eventStages[0].id);
     }
   }, [eventStages, activeStageId, preferredStageDocumentId]);
+
+  useEffect(() => {
+    if (!preferredGroupParam || !activeStageId) return;
+
+    const activeStage =
+      eventStages.find((stage) => stage.id === activeStageId) ?? null;
+    if (!activeStage) return;
+
+    const targetGroup = (stageMatchGroups[activeStage.id] ?? []).find((group) => {
+      if (group.number !== null && String(group.number) === preferredGroupParam) {
+        return true;
+      }
+      return String(group.key) === preferredGroupParam;
+    });
+    if (!targetGroup) return;
+
+    const targetKey = getGroupKey(activeStage, targetGroup);
+    setExpandedGroups((prev) => {
+      if (prev.has(targetKey)) return prev;
+      const next = new Set(prev);
+      next.add(targetKey);
+      return next;
+    });
+  }, [preferredGroupParam, activeStageId, eventStages, stageMatchGroups]);
 
   useEffect(() => {
     const updatePreviewColumnCount = () => {
