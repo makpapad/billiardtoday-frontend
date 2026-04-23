@@ -66,6 +66,7 @@ export async function sendContactEmail(input: ContactFormPayload) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "User-Agent": "billiardtoday-frontend/1.0",
     },
     body: JSON.stringify({
       from,
