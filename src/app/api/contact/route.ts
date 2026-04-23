@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/contact-email";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ const RATE_LIMIT_MAX_REQUESTS = 5;
 const submissionsByIp = new Map<string, number[]>();
 
 function getClientIp(request: NextRequest) {
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp;
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     return forwardedFor.split(",")[0]?.trim() || "unknown";
@@ -52,14 +55,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    const turnstileToken =
+      typeof body?.turnstileToken === "string" ? body.turnstileToken.trim().slice(0, 2048) : "";
+
     const name = validateString(body?.name, 2, 120);
     const email = validateString(body?.email, 5, 160);
     const subject = typeof body?.subject === "string" ? body.subject.trim().slice(0, 160) : "";
     const message = validateString(body?.message, 10, 4000);
 
-    if (!name || !email || !message || !EMAIL_RE.test(email)) {
+    if (!name || !email || !message || !EMAIL_RE.test(email) || !turnstileToken) {
       return NextResponse.json(
-        { error: "Please provide a valid name, email, and message." },
+        { error: "Please complete the verification and provide a valid name, email, and message." },
+        { status: 400 },
+      );
+    }
+
+    const turnstile = await verifyTurnstileToken(turnstileToken, ip);
+    if (!turnstile.success) {
+      console.warn("Contact form Turnstile verification failed", {
+        ip,
+        errorCodes: turnstile.errorCodes,
+      });
+      return NextResponse.json(
+        { error: "Verification failed. Please try again." },
         { status: 400 },
       );
     }
