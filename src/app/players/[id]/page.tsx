@@ -1002,6 +1002,21 @@ export default function PlayerProfilePage() {
         setTournamentsToShow(3)
     }
 
+    const handleShowAllTournaments = () => {
+        appliedTournamentContextSlugRef.current = ''
+        setSelectedGameType('all')
+        setSelectedTournamentType('all')
+        setSelectedYear('all')
+        setTournamentsToShow(3)
+        setYearsToShow(3)
+        setSelectedOpponentId('')
+        setOpponentQuery('')
+        setIsOpponentOpen(false)
+        router.push(
+            `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player?.full_name || '')}`,
+        )
+    }
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -1858,11 +1873,7 @@ export default function PlayerProfilePage() {
                                 {tournamentContextSlug ? (
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            router.push(
-                                                `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player.full_name)}`,
-                                            )
-                                        }
+                                        onClick={handleShowAllTournaments}
                                         className="inline-flex shrink-0 items-center rounded-full bg-[#475ded] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3e51cf] focus:outline-none focus:ring-2 focus:ring-[#475ded] focus:ring-offset-2"
                                     >
                                         Show all tournaments
