@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const t = (key: string): string => {
@@ -71,8 +71,6 @@ type RemoteCommandType =
 
 interface ActionState {
   error: string | null;
-  lastCommand: RemoteCommandType | null;
-  loading: boolean;
 }
 
 type RemoteSessionSummary = {
@@ -95,22 +93,6 @@ type CommandButtonConfig = {
 
 const isNonEmptyString = (value: string | null): value is string => {
   return typeof value === "string" && value.trim().length > 0;
-};
-
-const commandLabelKeyMap: Record<RemoteCommandType, string> = {
-  start_match: "remote.control.actions.startMatch",
-  setup_start: "remote.control.actions.setupStart",
-  swap_players: "remote.control.actions.swapPlayers",
-  start_new_game: "remote.control.actions.startNewGame",
-  end_game: "remote.control.actions.endGame",
-  warmup_break: "remote.control.actions.warmupBreak",
-  toggle_timer: "remote.control.actions.toggleTimer",
-  reset_shot_clock: "remote.control.actions.resetShotClock",
-  run_inc: "remote.control.actions.runInc",
-  run_dec: "remote.control.actions.runDec",
-  confirm_turn: "remote.control.actions.confirmTurn",
-  undo: "remote.control.actions.undo",
-  undo_timeout: "remote.control.actions.undoTimeout",
 };
 
 type ScreenSummary = {
@@ -138,7 +120,7 @@ type SessionByIdResponse = {
 };
 
 const actionButtonClassName =
-  "flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[14px] px-2.5 py-1 text-center transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[48px] sm:rounded-[16px] sm:px-3 sm:py-1.5";
+  "flex min-h-[44px] select-none touch-manipulation flex-col items-center justify-center gap-0.5 rounded-[14px] px-2.5 py-1 text-center transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 [webkit-tap-highlight-color:transparent] sm:min-h-[48px] sm:rounded-[16px] sm:px-3 sm:py-1.5";
 
 const shortcutChipClassName =
   "rounded-full border border-current/20 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] opacity-80";
@@ -149,9 +131,9 @@ export function RemoteScoreboardControl() {
   const sessionId = (searchParams?.get("sessionId") || "").trim();
   const [state, setState] = useState<ActionState>({
     error: null,
-    lastCommand: null,
-    loading: false,
   });
+  const inFlightCommandRef = useRef<RemoteCommandType | null>(null);
+  const lastSentAtRef = useRef<Partial<Record<RemoteCommandType, number>>>({});
   const [screenName, setScreenName] = useState<string>("");
   const [player1Name, setPlayer1Name] = useState<string>("");
   const [player2Name, setPlayer2Name] = useState<string>("");
@@ -273,8 +255,6 @@ export function RemoteScoreboardControl() {
     if (!canSendCommands) {
       setState({
         error: t("remote.control.errors.missingScreenId"),
-        lastCommand: null,
-        loading: false,
       });
       return;
     }
@@ -282,14 +262,21 @@ export function RemoteScoreboardControl() {
     if (type === "start_match" && !isNonEmptyString(sessionId)) {
       setState({
         error: t("remote.control.errors.startMatchRequiresSession"),
-        lastCommand: null,
-        loading: false,
       });
       return;
     }
 
+    const now = Date.now();
+    const lastSentAt = lastSentAtRef.current[type] ?? 0;
+    if (inFlightCommandRef.current === type || now - lastSentAt < 180) {
+      return;
+    }
+
+    inFlightCommandRef.current = type;
+    lastSentAtRef.current[type] = now;
+
     try {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      setState({ error: null });
 
       const targetId = await resolveTargetId();
       const response = await fetch(`/api/scoreboards/${encodeURIComponent(targetId)}/events`, {
@@ -311,17 +298,15 @@ export function RemoteScoreboardControl() {
         throw new Error(payload.error || t("remote.control.errors.commandFailed"));
       }
 
-      setState({
-        error: null,
-        lastCommand: type,
-        loading: false,
-      });
+      setState({ error: null });
     } catch (error: unknown) {
       setState({
         error: error instanceof Error ? error.message : t("remote.control.errors.commandFailed"),
-        lastCommand: null,
-        loading: false,
       });
+    } finally {
+      if (inFlightCommandRef.current === type) {
+        inFlightCommandRef.current = null;
+      }
     }
   };
 
@@ -332,7 +317,7 @@ export function RemoteScoreboardControl() {
   ) => (
     <button
       type="button"
-      disabled={state.loading || !canSendCommands || options?.disabled}
+      disabled={!canSendCommands || options?.disabled}
       onClick={() => {
         void sendCommand(config.type);
       }}
