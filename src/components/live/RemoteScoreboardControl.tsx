@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const t = (key: string): string => {
@@ -9,11 +9,8 @@ const t = (key: string): string => {
     const dictionary: Record<string, string> = {
       "remote.control.eyebrow": "Remote Control",
       "remote.control.title": "Remote Control",
-      "remote.control.screenIdLabel": "Screen ID",
-      "remote.control.sessionIdLabel": "Session ID",
-      "remote.control.noScreenId": "No screen ID",
-      "remote.control.noSessionId": "Auto",
-      "remote.control.lastCommandPrefix": "Last command:",
+      "remote.control.noScreenName": "Unknown Screen",
+      "remote.control.noPlayerSelected": "No player selected",
       "remote.control.sections.setup.title": "Setup",
       "remote.control.sections.scoring.title": "Scoring",
       "remote.control.sections.timer.title": "Timer",
@@ -94,16 +91,11 @@ type CommandButtonConfig = {
   type: RemoteCommandType;
   labelKey: string;
   shortcutKey: string;
-  tone: string;
-  fullWidth?: boolean;
 };
 
 const isNonEmptyString = (value: string | null): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
-
-const actionButtonClassName =
-  "flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-3xl px-4 py-4 text-center transition active:scale-[0.98]";
 
 const commandLabelKeyMap: Record<RemoteCommandType, string> = {
   start_match: "remote.control.actions.startMatch",
@@ -121,6 +113,30 @@ const commandLabelKeyMap: Record<RemoteCommandType, string> = {
   undo_timeout: "remote.control.actions.undoTimeout",
 };
 
+type ScreenSummary = {
+  screenId?: string;
+  screenName?: string;
+};
+
+type ScreensResponse = {
+  data?: ScreenSummary[];
+};
+
+type SessionDetails = {
+  player1Name?: string | null;
+  player2Name?: string | null;
+};
+
+type SessionByIdResponse = {
+  data?: SessionDetails[];
+};
+
+const actionButtonClassName =
+  "flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-[22px] px-3 py-2 text-center transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
+
+const shortcutChipClassName =
+  "rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] opacity-80";
+
 export function RemoteScoreboardControl() {
   const searchParams = useSearchParams();
   const screenId = (searchParams?.get("screenId") || "").trim();
@@ -130,6 +146,9 @@ export function RemoteScoreboardControl() {
     lastCommand: null,
     loading: false,
   });
+  const [screenName, setScreenName] = useState<string>("");
+  const [player1Name, setPlayer1Name] = useState<string>("");
+  const [player2Name, setPlayer2Name] = useState<string>("");
 
   const canSendCommands = isNonEmptyString(screenId);
   const canStartMatch = isNonEmptyString(screenId) && isNonEmptyString(sessionId);
@@ -172,111 +191,70 @@ export function RemoteScoreboardControl() {
     return screenId;
   };
 
-  const commandGroups = useMemo(
-    () => [
-      {
-        titleKey: "remote.control.sections.setup.title",
-        items: [
-          {
-            type: "start_match",
-            labelKey: "remote.control.actions.startMatch",
-            shortcutKey: "remote.control.shortcuts.startMatch",
-            tone: "bg-emerald-400 text-slate-950",
-          },
-          {
-            type: "setup_start",
-            labelKey: "remote.control.actions.setupStart",
-            shortcutKey: "remote.control.shortcuts.setupStart",
-            tone: "bg-blue-500 text-white",
-          },
-          {
-            type: "swap_players",
-            labelKey: "remote.control.actions.swapPlayers",
-            shortcutKey: "remote.control.shortcuts.swapPlayers",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-          {
-            type: "warmup_break",
-            labelKey: "remote.control.actions.warmupBreak",
-            shortcutKey: "remote.control.shortcuts.warmupBreak",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-          {
-            type: "start_new_game",
-            labelKey: "remote.control.actions.startNewGame",
-            shortcutKey: "remote.control.shortcuts.startNewGame",
-            tone: "bg-green-500/20 text-green-100 border border-green-400/30",
-          },
-          {
-            type: "end_game",
-            labelKey: "remote.control.actions.endGame",
-            shortcutKey: "remote.control.shortcuts.endGame",
-            tone: "bg-amber-400 text-slate-950",
-            fullWidth: true,
-          },
-        ] satisfies CommandButtonConfig[],
-      },
-      {
-        titleKey: "remote.control.sections.scoring.title",
-        items: [
-          {
-            type: "run_dec",
-            labelKey: "remote.control.actions.runDec",
-            shortcutKey: "remote.control.shortcuts.runDec",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-          {
-            type: "confirm_turn",
-            labelKey: "remote.control.actions.confirmTurn",
-            shortcutKey: "remote.control.shortcuts.confirmTurn",
-            tone: "bg-cyan-400 text-slate-950",
-            fullWidth: true,
-          },
-          {
-            type: "run_inc",
-            labelKey: "remote.control.actions.runInc",
-            shortcutKey: "remote.control.shortcuts.runInc",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-        ] satisfies CommandButtonConfig[],
-      },
-      {
-        titleKey: "remote.control.sections.timer.title",
-        items: [
-          {
-            type: "toggle_timer",
-            labelKey: "remote.control.actions.toggleTimer",
-            shortcutKey: "remote.control.shortcuts.toggleTimer",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-          {
-            type: "reset_shot_clock",
-            labelKey: "remote.control.actions.resetShotClock",
-            shortcutKey: "remote.control.shortcuts.resetShotClock",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-        ] satisfies CommandButtonConfig[],
-      },
-      {
-        titleKey: "remote.control.sections.corrections.title",
-        items: [
-          {
-            type: "undo",
-            labelKey: "remote.control.actions.undo",
-            shortcutKey: "remote.control.shortcuts.undo",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-          {
-            type: "undo_timeout",
-            labelKey: "remote.control.actions.undoTimeout",
-            shortcutKey: "remote.control.shortcuts.undoTimeout",
-            tone: "bg-white/10 text-white border border-white/10",
-          },
-        ] satisfies CommandButtonConfig[],
-      },
-    ],
-    [],
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMeta = async () => {
+      if (!isNonEmptyString(screenId)) {
+        setScreenName("");
+        setPlayer1Name("");
+        setPlayer2Name("");
+        return;
+      }
+
+      try {
+        const screensResponse = await fetch("/api/scoreboard/screens", { cache: "no-store" });
+        const screensPayload = (await screensResponse.json().catch(() => ({}))) as ScreensResponse;
+        if (!cancelled) {
+          const matchingScreen = Array.isArray(screensPayload.data)
+            ? screensPayload.data.find((entry) => entry.screenId === screenId)
+            : null;
+          setScreenName(
+            (typeof matchingScreen?.screenName === "string" && matchingScreen.screenName.trim()) || screenId,
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setScreenName(screenId);
+        }
+      }
+
+      if (!isNonEmptyString(sessionId)) {
+        if (!cancelled) {
+          setPlayer1Name("");
+          setPlayer2Name("");
+        }
+        return;
+      }
+
+      try {
+        const sessionResponse = await fetch(`/api/scoreboard/session-by-id/${encodeURIComponent(sessionId)}`, {
+          cache: "no-store",
+        });
+        const sessionPayload = (await sessionResponse.json().catch(() => ({}))) as SessionByIdResponse;
+        if (cancelled) return;
+
+        const session = Array.isArray(sessionPayload.data) ? sessionPayload.data[0] : null;
+        setPlayer1Name(
+          (typeof session?.player1Name === "string" && session.player1Name.trim()) || "",
+        );
+        setPlayer2Name(
+          (typeof session?.player2Name === "string" && session.player2Name.trim()) || "",
+        );
+      } catch {
+        if (!cancelled) {
+          setPlayer1Name("");
+          setPlayer2Name("");
+        }
+      }
+    };
+
+    void loadMeta();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [screenId, sessionId]);
 
   const sendCommand = async (type: RemoteCommandType) => {
     if (!canSendCommands) {
@@ -334,83 +312,219 @@ export function RemoteScoreboardControl() {
     }
   };
 
+  const renderActionButton = (
+    config: CommandButtonConfig,
+    className: string,
+    options?: { disabled?: boolean; fullWidth?: boolean },
+  ) => (
+    <button
+      type="button"
+      disabled={state.loading || !canSendCommands || options?.disabled}
+      onClick={() => {
+        void sendCommand(config.type);
+      }}
+      className={`${options?.fullWidth ? "w-full" : ""} ${actionButtonClassName} ${className}`}
+    >
+      <span className="text-sm font-semibold leading-tight">{t(config.labelKey)}</span>
+      <span className={shortcutChipClassName}>{t(config.shortcutKey)}</span>
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-6 sm:px-6">
-        <div className="mb-6 flex items-center justify-between gap-3">
+    <div className="h-[100dvh] overflow-hidden bg-slate-950 text-white">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden px-4 py-4 sm:px-5">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
               {t("remote.control.eyebrow")}
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              {t("remote.control.title")}
+            <h1 className="mt-2 text-[2rem] font-semibold tracking-tight text-white leading-none">
+              {screenName || t("remote.control.noScreenName")}
             </h1>
           </div>
           <Link
             href={`/live/remote${isNonEmptyString(screenId) ? `?screenId=${encodeURIComponent(screenId)}` : ""}`}
-            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-200 transition hover:bg-white/10"
+            className="rounded-full border border-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200 transition hover:bg-white/10"
           >
             {t("remote.control.backButton")}
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-          <div className="grid grid-cols-2 gap-3 text-xs text-slate-300">
-            <div className="rounded-2xl bg-slate-900/70 px-3 py-3">
-              <div className="uppercase tracking-[0.18em] text-slate-500">{t("remote.control.screenIdLabel")}</div>
-              <div className="mt-1 font-mono text-white">{screenId || t("remote.control.noScreenId")}</div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Player 1</div>
+              <div className="mt-1.5 text-[13px] font-semibold leading-snug text-white">
+                {player1Name || t("remote.control.noPlayerSelected")}
+              </div>
             </div>
-            <div className="rounded-2xl bg-slate-900/70 px-3 py-3">
-              <div className="uppercase tracking-[0.18em] text-slate-500">{t("remote.control.sessionIdLabel")}</div>
-              <div className="mt-1 font-mono text-white">{sessionId || t("remote.control.noSessionId")}</div>
+            <div className="rounded-2xl bg-slate-900/80 px-3 py-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Player 2</div>
+              <div className="mt-1.5 text-[13px] font-semibold leading-snug text-white">
+                {player2Name || t("remote.control.noPlayerSelected")}
+              </div>
             </div>
           </div>
         </div>
 
         {!canSendCommands ? (
-          <div className="mt-4 rounded-3xl border border-amber-400/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
+          <div className="mt-3 rounded-3xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
             {t("remote.control.errors.missingScreenId")}
           </div>
         ) : null}
 
         {state.error ? (
-          <div className="mt-4 rounded-3xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
+          <div className="mt-3 rounded-3xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
             {state.error}
           </div>
         ) : null}
 
-        {state.lastCommand ? (
-          <div className="mt-4 rounded-3xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
-            {t("remote.control.lastCommandPrefix")} {t(commandLabelKeyMap[state.lastCommand])}
-          </div>
-        ) : null}
+        <div className="mt-3 flex flex-1 flex-col gap-3 overflow-hidden">
+          <section>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              {t("remote.control.sections.scoring.title")}
+            </div>
+            <div className="flex gap-2.5">
+              <div className="basis-[65%]">
+                {renderActionButton(
+                  {
+                    type: "run_inc",
+                    labelKey: "remote.control.actions.runInc",
+                    shortcutKey: "remote.control.shortcuts.runInc",
+                  },
+                  "w-full bg-emerald-400 text-slate-950",
+                )}
+              </div>
+              <div className="basis-[35%]">
+                {renderActionButton(
+                  {
+                    type: "run_dec",
+                    labelKey: "remote.control.actions.runDec",
+                    shortcutKey: "remote.control.shortcuts.runDec",
+                  },
+                  "w-full bg-white/10 text-white border border-white/10",
+                )}
+              </div>
+            </div>
+            <div className="mt-2.5">
+              {renderActionButton(
+                {
+                  type: "confirm_turn",
+                  labelKey: "remote.control.actions.confirmTurn",
+                  shortcutKey: "remote.control.shortcuts.confirmTurn",
+                },
+                "w-full bg-cyan-400 text-slate-950",
+                { fullWidth: true },
+              )}
+            </div>
+          </section>
 
-        <div className="mt-5 flex flex-1 flex-col gap-5 pb-6">
-          {commandGroups.map((group) => (
-            <section key={group.titleKey}>
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                {t(group.titleKey)}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {group.items.map((item) => (
-                  <button
-                    key={item.type}
-                    type="button"
-                    disabled={state.loading || !canSendCommands || (item.type === "start_match" && !canStartMatch)}
-                    onClick={() => {
-                      void sendCommand(item.type);
-                    }}
-                    className={`${("fullWidth" in item && item.fullWidth) ? "col-span-2" : "col-span-1"} ${actionButtonClassName} ${item.tone} disabled:cursor-not-allowed disabled:opacity-50`}
-                  >
-                    <span className="text-sm font-semibold leading-tight">{t(item.labelKey)}</span>
-                    <span className="rounded-full border border-current/20 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">
-                      {t(item.shortcutKey)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ))}
+          <section>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              {t("remote.control.sections.timer.title")}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {renderActionButton(
+                {
+                  type: "toggle_timer",
+                  labelKey: "remote.control.actions.toggleTimer",
+                  shortcutKey: "remote.control.shortcuts.toggleTimer",
+                },
+                "bg-white/10 text-white border border-white/10",
+              )}
+              {renderActionButton(
+                {
+                  type: "reset_shot_clock",
+                  labelKey: "remote.control.actions.resetShotClock",
+                  shortcutKey: "remote.control.shortcuts.resetShotClock",
+                },
+                "bg-white/10 text-white border border-white/10",
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              {t("remote.control.sections.corrections.title")}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {renderActionButton(
+                {
+                  type: "undo",
+                  labelKey: "remote.control.actions.undo",
+                  shortcutKey: "remote.control.shortcuts.undo",
+                },
+                "bg-red-500/90 text-white",
+              )}
+              {renderActionButton(
+                {
+                  type: "undo_timeout",
+                  labelKey: "remote.control.actions.undoTimeout",
+                  shortcutKey: "remote.control.shortcuts.undoTimeout",
+                },
+                "bg-white/10 text-white border border-white/10",
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              {t("remote.control.sections.setup.title")}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {renderActionButton(
+                {
+                  type: "start_match",
+                  labelKey: "remote.control.actions.startMatch",
+                  shortcutKey: "remote.control.shortcuts.startMatch",
+                },
+                "bg-emerald-400 text-slate-950",
+                { disabled: !canStartMatch },
+              )}
+              {renderActionButton(
+                {
+                  type: "setup_start",
+                  labelKey: "remote.control.actions.setupStart",
+                  shortcutKey: "remote.control.shortcuts.setupStart",
+                },
+                "bg-blue-500 text-white",
+              )}
+              {renderActionButton(
+                {
+                  type: "warmup_break",
+                  labelKey: "remote.control.actions.warmupBreak",
+                  shortcutKey: "remote.control.shortcuts.warmupBreak",
+                },
+                "bg-white/10 text-white border border-white/10",
+              )}
+              {renderActionButton(
+                {
+                  type: "swap_players",
+                  labelKey: "remote.control.actions.swapPlayers",
+                  shortcutKey: "remote.control.shortcuts.swapPlayers",
+                },
+                "bg-white text-slate-950",
+              )}
+            </div>
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+              {renderActionButton(
+                {
+                  type: "end_game",
+                  labelKey: "remote.control.actions.endGame",
+                  shortcutKey: "remote.control.shortcuts.endGame",
+                },
+                "bg-amber-400 text-slate-950",
+              )}
+              {renderActionButton(
+                {
+                  type: "start_new_game",
+                  labelKey: "remote.control.actions.startNewGame",
+                  shortcutKey: "remote.control.shortcuts.startNewGame",
+                },
+                "bg-emerald-400 text-slate-950",
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </div>
