@@ -19,6 +19,7 @@ const t = (key: string): string => {
       "remote.control.sections.timer.title": "Timer",
       "remote.control.sections.corrections.title": "Corrections",
       "remote.control.actions.startMatch": "Start Match",
+      "remote.control.actions.setupStart": "Start",
       "remote.control.actions.swapPlayers": "Swap Players",
       "remote.control.actions.warmupBreak": "Warmup / Break",
       "remote.control.actions.resetGame": "Reset Game",
@@ -34,6 +35,7 @@ const t = (key: string): string => {
       "remote.control.errors.startMatchRequiresSession": "Start Match requires a session ID",
       "remote.control.errors.commandFailed": "Command failed to send",
       "remote.control.shortcuts.startMatch": "Session required",
+      "remote.control.shortcuts.setupStart": "No shortcut",
       "remote.control.shortcuts.swapPlayers": "R",
       "remote.control.shortcuts.warmupBreak": "C",
       "remote.control.shortcuts.resetGame": "No shortcut",
@@ -57,6 +59,7 @@ type ScoreboardSessionStatus = "pending" | "in_progress" | "finished" | "cancell
 
 type RemoteCommandType =
   | "start_match"
+  | "setup_start"
   | "swap_players"
   | "reset_game"
   | "end_game"
@@ -104,6 +107,7 @@ const actionButtonClassName =
 
 const commandLabelKeyMap: Record<RemoteCommandType, string> = {
   start_match: "remote.control.actions.startMatch",
+  setup_start: "remote.control.actions.setupStart",
   swap_players: "remote.control.actions.swapPlayers",
   reset_game: "remote.control.actions.resetGame",
   end_game: "remote.control.actions.endGame",
@@ -178,6 +182,12 @@ export function RemoteScoreboardControl() {
             labelKey: "remote.control.actions.startMatch",
             shortcutKey: "remote.control.shortcuts.startMatch",
             tone: "bg-emerald-400 text-slate-950",
+          },
+          {
+            type: "setup_start",
+            labelKey: "remote.control.actions.setupStart",
+            shortcutKey: "remote.control.shortcuts.setupStart",
+            tone: "bg-blue-500 text-white",
           },
           {
             type: "swap_players",
