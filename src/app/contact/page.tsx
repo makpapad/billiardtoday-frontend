@@ -52,7 +52,7 @@ export default function ContactPage() {
             <div className="rounded-3xl border border-white/10 bg-black/10 p-5 backdrop-blur">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/80">Response</div>
               <p className="mt-3 text-sm leading-6 text-white/85">
-                Messages are routed as email. Use a real reply address so the team can answer you directly.
+                Send us your message and we will get back to you as soon as possible at the email you provide.
               </p>
             </div>
           </div>
