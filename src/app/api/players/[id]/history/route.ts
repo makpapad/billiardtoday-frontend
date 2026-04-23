@@ -48,6 +48,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         const gameType =
             gameTypeParam && gameTypeParam !== 'all' ? gameTypeParam : null
         const tournamentType = searchParams.get('tournamentType')
+        const tournamentSlug = searchParams.get('tournament')
         const normalizedGameType = normalizeGameTypeOrFallback(gameType)
         const includeMatchesParam = searchParams.get('includeMatches')
         const includeMatches = includeMatchesParam !== 'false'
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
             url.searchParams.set('id', playerId)
             if (year) url.searchParams.set('year', year)
             if (gameType) url.searchParams.set('gameType', gameType)
+            if (tournamentSlug) url.searchParams.set('tournament', tournamentSlug)
             return url
         }
 

@@ -818,6 +818,9 @@ export default function PlayerProfilePage() {
                 if (selectedYear !== 'all') {
                     historyParams.set('year', selectedYear)
                 }
+                if (tournamentContextSlug) {
+                    historyParams.set('tournament', tournamentContextSlug)
+                }
 
                 if (historyParams.toString()) {
                     historyUrl += `?${historyParams.toString()}`
