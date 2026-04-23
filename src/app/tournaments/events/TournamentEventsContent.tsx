@@ -136,6 +136,8 @@ type TournamentEventsContentProps = {
   eventDataOverride?: EventApiResponse | null;
   disableAutoRefresh?: boolean;
   preferredStageDocumentId?: string | null;
+  preferredGroupParam?: string | null;
+  preferredMatchParam?: string | null;
   timezoneOffsetMinutes?: number | null;
   timezoneOptions?: Array<{ value: number; label: string }>;
   onTimezoneChange?: (offsetMinutes: number) => void;
@@ -1693,6 +1695,8 @@ export function TournamentEventsContent({
   eventDataOverride = null,
   disableAutoRefresh = false,
   preferredStageDocumentId = null,
+  preferredGroupParam: preferredGroupParamOverride = null,
+  preferredMatchParam: preferredMatchParamOverride = null,
   timezoneOffsetMinutes = null,
   timezoneOptions = [],
   onTimezoneChange,
@@ -1740,8 +1744,10 @@ export function TournamentEventsContent({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
-  const preferredGroupParam = searchParams?.get("group") ?? null;
-  const preferredMatchParam = searchParams?.get("match") ?? null;
+  const preferredGroupParam =
+    preferredGroupParamOverride ?? searchParams?.get("group") ?? null;
+  const preferredMatchParam =
+    preferredMatchParamOverride ?? searchParams?.get("match") ?? null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;

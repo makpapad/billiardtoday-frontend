@@ -54,6 +54,9 @@ type Props = {
   embedded?: boolean;
   initialEventData?: EventApiResponse | null;
   initialSeriesData?: RankingSeriesData | null;
+  preferredStageDocumentId?: string | null;
+  preferredGroupParam?: string | null;
+  preferredMatchParam?: string | null;
 };
 
 type TournamentLiveScreen = {
@@ -1378,6 +1381,9 @@ export function TournamentDetailPage({
   embedded = false,
   initialEventData = null,
   initialSeriesData = null,
+  preferredStageDocumentId = null,
+  preferredGroupParam = null,
+  preferredMatchParam = null,
 }: Props) {
   const hasInfoDescription =
     typeof summary.description === "string" && summary.description.trim().length > 0;
@@ -1508,7 +1514,8 @@ export function TournamentDetailPage({
   const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
     useState<number | null>(null);
   const searchParams = useSearchParams();
-  const preferredStageFromQuery = searchParams?.get("stage") ?? null;
+  const preferredStageFromQuery =
+    preferredStageDocumentId ?? searchParams?.get("stage") ?? null;
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
@@ -6088,6 +6095,8 @@ export function TournamentDetailPage({
           eventDataOverride={eventData}
           disableAutoRefresh
           preferredStageDocumentId={selectedStageDocumentId}
+          preferredGroupParam={preferredGroupParam}
+          preferredMatchParam={preferredMatchParam}
           timezoneOffsetMinutes={
             selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
           }

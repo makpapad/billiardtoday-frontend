@@ -9,6 +9,7 @@ import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -39,8 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function TournamentPage({ params }: Props) {
+export default async function TournamentPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const [summary, settings, appearance] = await Promise.all([
     resolveTournamentEventSummary(slug),
     getCmsSiteSettings(),
@@ -80,6 +82,21 @@ export default async function TournamentPage({ params }: Props) {
         summary={summary}
         initialEventData={initialEventData}
         initialSeriesData={initialSeriesData}
+        preferredStageDocumentId={
+          typeof resolvedSearchParams.stage === "string"
+            ? resolvedSearchParams.stage
+            : null
+        }
+        preferredGroupParam={
+          typeof resolvedSearchParams.group === "string"
+            ? resolvedSearchParams.group
+            : null
+        }
+        preferredMatchParam={
+          typeof resolvedSearchParams.match === "string"
+            ? resolvedSearchParams.match
+            : null
+        }
       />
     </CmsPageShell>
   );
