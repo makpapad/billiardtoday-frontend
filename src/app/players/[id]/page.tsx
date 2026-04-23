@@ -1095,6 +1095,10 @@ export default function PlayerProfilePage() {
             params.set('match', String(match.num))
         }
 
+        if (player?.full_name) {
+            params.set('player', player.full_name)
+        }
+
         return `${match.tournamentHref}${separator}${params.toString()}`
     }
 

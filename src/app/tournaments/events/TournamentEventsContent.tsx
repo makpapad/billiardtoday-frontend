@@ -1746,7 +1746,8 @@ export function TournamentEventsContent({
   const [locationSearchParams, setLocationSearchParams] = useState<{
     group: string | null;
     match: string | null;
-  }>({ group: null, match: null });
+    player: string | null;
+  }>({ group: null, match: null, player: null });
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
   const preferredGroupParam =
     preferredGroupParamOverride ??
@@ -1767,8 +1768,14 @@ export function TournamentEventsContent({
     setLocationSearchParams({
       group: params.get("group"),
       match: params.get("match"),
+      player: params.get("player"),
     });
   }, []);
+
+  useEffect(() => {
+    if (!locationSearchParams.player) return;
+    setPlayerSearchQuery((current) => current || locationSearchParams.player || "");
+  }, [locationSearchParams.player]);
   const tournamentContextSlug = eventData?.data?.title
     ? buildTournamentSlug(
         "",
