@@ -2781,10 +2781,10 @@ export default function PlayerProfilePage() {
                                         .sort(
                                             (a, b) =>
                                                 getFilteredStatMatchSortTimestamp(
-                                                    a,
+                                                    b,
                                                 ) -
                                                 getFilteredStatMatchSortTimestamp(
-                                                    b,
+                                                    a,
                                                 ),
                                         )
                                         .map((match) => {
