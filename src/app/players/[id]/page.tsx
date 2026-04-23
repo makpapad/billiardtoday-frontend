@@ -940,12 +940,13 @@ export default function PlayerProfilePage() {
                         }
                     }
 
-                    // Initialize available years from history payload if not already set
-                    if (
-                        historyPayload.availableYears &&
-                        availableYears.length === 0
-                    ) {
+                    if (historyPayload.availableYears) {
                         setAvailableYears(historyPayload.availableYears)
+                    }
+                    if (historyPayload.availableTournamentTypes) {
+                        setAvailableTournamentTypes(
+                            historyPayload.availableTournamentTypes,
+                        )
                     }
 
                     if (selectedYear === 'all') {
@@ -1167,7 +1168,7 @@ export default function PlayerProfilePage() {
     const filteredAvailableTournamentTypes = Array.from(
         new Set(
             [
-                ...(selectedGameType === 'all' && availableTournamentTypes.length > 0
+                ...(availableTournamentTypes.length > 0
                     ? availableTournamentTypes
                     : tournamentTypeSource
                           .filter((p) => matchesSelectedGameType(p.gameType))
@@ -1183,7 +1184,7 @@ export default function PlayerProfilePage() {
         selectedGameType,
     )
 
-    // Get available years for the selected game type using loaded data, then fall back to career_stats.
+    // Keep season options stable when tournament type changes.
     const participationAvailableYears = Array.from(
         new Set(
             (tournamentContextSlug
@@ -1194,12 +1195,6 @@ export default function PlayerProfilePage() {
             )
                 .filter((p) => {
                     if (!matchesSelectedGameType(p.gameType)) return false
-                    if (
-                        selectedTournamentType !== 'all' &&
-                        p.tournamentType !== selectedTournamentType
-                    ) {
-                        return false
-                    }
                     return true
                 })
                 .map((p) => p.year),
