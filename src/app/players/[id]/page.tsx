@@ -239,6 +239,17 @@ const parseMatchDate = (value: string | null | undefined): Date | null => {
 const getMatchTimestamp = (value: string | null | undefined): number =>
     parseMatchDate(value)?.getTime() ?? Number.NaN
 
+const getFilteredStatMatchSortTimestamp = (
+    match: Pick<FilteredStatMatch, 'date' | 'year'>,
+): number => {
+    const matchTimestamp = getMatchTimestamp(match.date)
+    if (Number.isFinite(matchTimestamp)) {
+        return matchTimestamp
+    }
+
+    return new Date(match.year, 11, 31).getTime()
+}
+
 const getParticipationSortTimestamp = (
     participation: TournamentParticipation,
 ): number => {
@@ -2302,10 +2313,12 @@ export default function PlayerProfilePage() {
                                     {[...detailedStatMatches]
                                         .sort(
                                             (a, b) =>
-                                                (getMatchTimestamp(b.date) ||
-                                                    0) -
-                                                (getMatchTimestamp(a.date) ||
-                                                    0),
+                                                getFilteredStatMatchSortTimestamp(
+                                                    b,
+                                                ) -
+                                                getFilteredStatMatchSortTimestamp(
+                                                    a,
+                                                ),
                                         )
                                         .map((match) => {
                                             const parsedMatchDate =
@@ -2767,10 +2780,12 @@ export default function PlayerProfilePage() {
                                     {[...h2hMatches]
                                         .sort(
                                             (a, b) =>
-                                                (getMatchTimestamp(a.date) ||
-                                                    0) -
-                                                (getMatchTimestamp(b.date) ||
-                                                    0),
+                                                getFilteredStatMatchSortTimestamp(
+                                                    a,
+                                                ) -
+                                                getFilteredStatMatchSortTimestamp(
+                                                    b,
+                                                ),
                                         )
                                         .map((match) => {
                                             const parsedMatchDate =
