@@ -170,6 +170,19 @@ type TournamentParticipation = {
     highestRun: number
 }
 
+type StatBreakdownKey =
+    | 'matches'
+    | 'wins'
+    | 'draws'
+    | 'losses'
+    | 'highestRun'
+
+type FilteredStatMatch = Match & {
+    tournament: string
+    year: number
+    tournamentHref: string | null
+}
+
 const getTournamentTypeLabel = (value: string) => {
     const labels: Record<string, string> = {
         'E.C': 'European Championship',
@@ -185,6 +198,12 @@ const getTournamentTypeLabel = (value: string) => {
 
     return labels[value] || value
 }
+
+const isDrawMatch = (match: Match) =>
+    match.result === 'draw' ||
+    (match.scoreFor === match.scoreAgainst &&
+        match.scoreFor > 0 &&
+        match.scoreAgainst > 0)
 
 // Helper function to get gradient colors based on position
 const getPositionGradient = (position: string): string => {
@@ -601,6 +620,8 @@ export default function PlayerProfilePage() {
         string[]
     >([])
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+    const [activeStatBreakdown, setActiveStatBreakdown] =
+        useState<StatBreakdownKey | null>(null)
     const [yearsToShow, setYearsToShow] = useState(3) // Show last 3 years initially
     const [hasMoreYears, setHasMoreYears] = useState(false)
     const [tournamentsToShow, setTournamentsToShow] = useState(3) // Show first 3 tournaments per year
@@ -638,6 +659,15 @@ export default function PlayerProfilePage() {
     useEffect(() => {
         appliedTournamentContextSlugRef.current = ''
     }, [tournamentContextSlug])
+
+    useEffect(() => {
+        setActiveStatBreakdown(null)
+    }, [
+        selectedGameType,
+        selectedYear,
+        selectedTournamentType,
+        tournamentContextSlug,
+    ])
 
     useEffect(() => {
         const handlePointerDown = (event: MouseEvent | TouchEvent) => {
@@ -1033,9 +1063,15 @@ export default function PlayerProfilePage() {
         setSelectedOpponentId('')
         setOpponentQuery('')
         setIsOpponentOpen(false)
+        setActiveStatBreakdown(null)
         router.push(
             `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player?.full_name || '')}`,
         )
+    }
+
+    const toggleStatBreakdown = (key: StatBreakdownKey) => {
+        if (selectedGameType === 'all') return
+        setActiveStatBreakdown((current) => (current === key ? null : key))
     }
 
     if (isLoading) {
@@ -1450,13 +1486,6 @@ export default function PlayerProfilePage() {
             ? filteredParticipations.slice(0, tournamentsToShow)
             : filteredParticipations
 
-    // Head-to-Head (H2H) derived data based on current filters
-    type H2HMatch = Match & {
-        tournament: string
-        year: number
-        tournamentHref: string | null
-    }
-
     const baseParticipationsForH2H =
         selectedGameType === 'all'
             ? []
@@ -1476,6 +1505,68 @@ export default function PlayerProfilePage() {
                   }
                   return true
               })
+
+    const filteredStatMatches: FilteredStatMatch[] =
+        selectedGameType === 'all'
+            ? []
+            : baseParticipationsForH2H.flatMap((p) =>
+                  p.matches.map((m) => ({
+                      ...m,
+                      tournament: p.tournament,
+                      year: p.year,
+                      tournamentHref:
+                          p.id && p.tournament
+                              ? `/tournaments/${buildTournamentSlug(
+                                    String(p.id),
+                                    p.tournament,
+                                    p.year,
+                                )}`
+                              : null,
+                  })),
+              )
+
+    const detailedStatMatches: FilteredStatMatch[] = (() => {
+        switch (activeStatBreakdown) {
+            case 'matches':
+                return filteredStatMatches
+            case 'wins':
+                return filteredStatMatches.filter((m) => m.result === 'win')
+            case 'draws':
+                return filteredStatMatches.filter((m) => isDrawMatch(m))
+            case 'losses':
+                return filteredStatMatches.filter(
+                    (m) => m.result === 'loss',
+                )
+            case 'highestRun': {
+                const highestRunValue = Number(displayedOverallHighestRun) || 0
+                if (highestRunValue <= 0) return []
+                return filteredStatMatches.filter(
+                    (m) => (Number(m.highRun) || 0) === highestRunValue,
+                )
+            }
+            default:
+                return []
+        }
+    })()
+
+    const activeStatBreakdownTitle = (() => {
+        switch (activeStatBreakdown) {
+            case 'matches':
+                return t('players.profile.stats.matches')
+            case 'wins':
+                return t('players.profile.stats.wins')
+            case 'draws':
+                return t('players.profile.stats.draws')
+            case 'losses':
+                return t('players.profile.stats.losses')
+            case 'highestRun':
+                return isSelectedArtisticGameType
+                    ? 'Best Run Matches'
+                    : 'Highest Run Matches'
+            default:
+                return ''
+        }
+    })()
 
     const opponentMap = (() => {
         const map = new Map<string, string>()
@@ -1514,7 +1605,7 @@ export default function PlayerProfilePage() {
           )
         : opponentsList
 
-    const h2hMatches: H2HMatch[] = selectedOpponentId
+    const h2hMatches: FilteredStatMatch[] = selectedOpponentId
         ? baseParticipationsForH2H.flatMap((p) =>
               p.matches
                   .filter((m) => m.opponentId === selectedOpponentId)
@@ -1538,13 +1629,7 @@ export default function PlayerProfilePage() {
         if (!selectedOpponentId || h2hMatches.length === 0) return null
         const totalMatches = h2hMatches.length
         const wins = h2hMatches.filter((m) => m.result === 'win').length
-        const draws = h2hMatches.filter(
-            (m) =>
-                m.result === 'draw' ||
-                (m.scoreFor === m.scoreAgainst &&
-                    m.scoreFor > 0 &&
-                    m.scoreAgainst > 0),
-        ).length
+        const draws = h2hMatches.filter((m) => isDrawMatch(m)).length
         const losses = h2hMatches.filter((m) => m.result === 'loss').length
         const winPercentage =
             totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(1) : '0.0'
@@ -1942,7 +2027,20 @@ export default function PlayerProfilePage() {
                                 )}
                             </div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => toggleStatBreakdown('matches')}
+                            disabled={selectedGameType === 'all'}
+                            className={`rounded-xl bg-white dark:bg-gray-800 shadow-lg p-2 sm:p-3 md:p-4 text-center transition ${
+                                selectedGameType === 'all'
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-700'
+                            } ${
+                                activeStatBreakdown === 'matches'
+                                    ? 'ring-2 ring-blue-500 dark:ring-blue-400'
+                                    : ''
+                            }`}
+                        >
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('players.profile.stats.matches')}
                             </div>
@@ -1953,8 +2051,21 @@ export default function PlayerProfilePage() {
                                     overallMatches
                                 )}
                             </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => toggleStatBreakdown('wins')}
+                            disabled={selectedGameType === 'all'}
+                            className={`rounded-xl bg-white dark:bg-gray-800 shadow-lg p-2 sm:p-3 md:p-4 text-center transition ${
+                                selectedGameType === 'all'
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:ring-2 hover:ring-green-300 dark:hover:ring-green-700'
+                            } ${
+                                activeStatBreakdown === 'wins'
+                                    ? 'ring-2 ring-green-500 dark:ring-green-400'
+                                    : ''
+                            }`}
+                        >
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('players.profile.stats.wins')}
                             </div>
@@ -1965,8 +2076,21 @@ export default function PlayerProfilePage() {
                                     overallWins
                                 )}
                             </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => toggleStatBreakdown('draws')}
+                            disabled={selectedGameType === 'all'}
+                            className={`rounded-xl bg-white dark:bg-gray-800 shadow-lg p-2 sm:p-3 md:p-4 text-center transition ${
+                                selectedGameType === 'all'
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:ring-2 hover:ring-yellow-300 dark:hover:ring-yellow-700'
+                            } ${
+                                activeStatBreakdown === 'draws'
+                                    ? 'ring-2 ring-yellow-500 dark:ring-yellow-400'
+                                    : ''
+                            }`}
+                        >
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('players.profile.stats.draws')}
                             </div>
@@ -1977,8 +2101,21 @@ export default function PlayerProfilePage() {
                                     overallDraws
                                 )}
                             </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => toggleStatBreakdown('losses')}
+                            disabled={selectedGameType === 'all'}
+                            className={`rounded-xl bg-white dark:bg-gray-800 shadow-lg p-2 sm:p-3 md:p-4 text-center transition ${
+                                selectedGameType === 'all'
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:ring-2 hover:ring-red-300 dark:hover:ring-red-700'
+                            } ${
+                                activeStatBreakdown === 'losses'
+                                    ? 'ring-2 ring-red-500 dark:ring-red-400'
+                                    : ''
+                            }`}
+                        >
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('players.profile.stats.losses')}
                             </div>
@@ -1989,7 +2126,7 @@ export default function PlayerProfilePage() {
                                     overallLosses
                                 )}
                             </div>
-                        </div>
+                        </button>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('players.profile.stats.winPct')}
@@ -2016,7 +2153,24 @@ export default function PlayerProfilePage() {
                                 )}
                             </div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-3 md:p-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => toggleStatBreakdown('highestRun')}
+                            disabled={
+                                selectedGameType === 'all' ||
+                                Number(displayedOverallHighestRun) <= 0
+                            }
+                            className={`rounded-xl bg-white dark:bg-gray-800 shadow-lg p-2 sm:p-3 md:p-4 text-center transition ${
+                                selectedGameType === 'all' ||
+                                Number(displayedOverallHighestRun) <= 0
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:ring-2 hover:ring-orange-300 dark:hover:ring-orange-700'
+                            } ${
+                                activeStatBreakdown === 'highestRun'
+                                    ? 'ring-2 ring-orange-500 dark:ring-orange-400'
+                                    : ''
+                            }`}
+                        >
                             <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {isSelectedArtisticGameType
                                     ? 'Best run'
@@ -2029,8 +2183,155 @@ export default function PlayerProfilePage() {
                                     displayedOverallHighestRun
                                 )}
                             </div>
-                        </div>
+                        </button>
                     </div>
+                    {selectedGameType !== 'all' && activeStatBreakdown && (
+                        <div className="mt-4 rounded-2xl bg-white dark:bg-gray-800 shadow-xl p-4 sm:p-6">
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                                    {activeStatBreakdownTitle} ({detailedStatMatches.length})
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveStatBreakdown(null)}
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                            {detailedStatMatches.length > 0 ? (
+                                <div className="space-y-3">
+                                    {[...detailedStatMatches]
+                                        .sort(
+                                            (a, b) =>
+                                                (b.date
+                                                    ? new Date(b.date).getTime()
+                                                    : 0) -
+                                                (a.date
+                                                    ? new Date(a.date).getTime()
+                                                    : 0),
+                                        )
+                                        .map((match) => {
+                                            const matchDateLabel =
+                                                match.date &&
+                                                !Number.isNaN(
+                                                    new Date(match.date).getTime(),
+                                                )
+                                                    ? new Date(
+                                                          match.date,
+                                                      ).toLocaleDateString('en-GB')
+                                                    : null
+
+                                            return (
+                                                <div
+                                                    key={`${activeStatBreakdown}-${match.id}`}
+                                                    className={`border-2 rounded-lg p-4 transition-all ${
+                                                        match.result === 'win'
+                                                            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+                                                            : isDrawMatch(match)
+                                                              ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
+                                                              : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="mb-2 flex flex-wrap items-center gap-3">
+                                                                <span
+                                                                    className={`text-xs font-bold px-2 py-1 rounded ${
+                                                                        match.result === 'win'
+                                                                            ? 'bg-green-600 text-white'
+                                                                            : isDrawMatch(match)
+                                                                              ? 'bg-yellow-600 text-white'
+                                                                              : 'bg-red-600 text-white'
+                                                                    }`}
+                                                                >
+                                                                    {match.result === 'win'
+                                                                        ? t('players.profile.modal.badge.win')
+                                                                        : isDrawMatch(match)
+                                                                          ? t('players.profile.modal.badge.draw')
+                                                                          : t('players.profile.modal.badge.loss')}
+                                                                </span>
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {match.stage}
+                                                                </span>
+                                                                {matchDateLabel ? (
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {matchDateLabel}
+                                                                    </span>
+                                                                ) : null}
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                                    {match.tournament} {match.year}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-base font-semibold truncate">
+                                                                vs {match.opponentId ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const opponentId = match.opponentId
+                                                                            if (!opponentId) return
+                                                                            void navigateToPlayer(opponentId, match.opponent)
+                                                                        }}
+                                                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                                                    >
+                                                                        {match.opponent}
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-gray-900 dark:text-white">
+                                                                        {match.opponent}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="shrink-0 text-right">
+                                                            <div
+                                                                className={`text-2xl font-bold ${
+                                                                    isDrawMatch(match)
+                                                                        ? 'text-yellow-600 dark:text-yellow-400'
+                                                                        : 'text-gray-900 dark:text-white'
+                                                                }`}
+                                                            >
+                                                                {match.scoreFor} - {match.scoreAgainst}
+                                                            </div>
+                                                            <div className="mt-1 space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                                                <span>
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `Possible points: ${String(resolvePlayerPossiblePoints(match))}`
+                                                                        : t('players.profile.h2h.innings').replace('{innings}', String(match.innings))}
+                                                                </span>
+                                                                <span>
+                                                                    {isSelectedArtisticGameType
+                                                                        ? `%: ${formatArtisticPercentage(
+                                                                              resolvePlayerPossiblePoints(match) > 0
+                                                                                  ? match.scoreFor / resolvePlayerPossiblePoints(match)
+                                                                                  : null,
+                                                                          )}`
+                                                                        : t('players.profile.h2h.avgValue').replace(
+                                                                              '{avg}',
+                                                                              formatSafeAverage(match.scoreFor, match.innings),
+                                                                          )}
+                                                                </span>
+                                                                {typeof match.highRun === 'number' ? (
+                                                                    <span>
+                                                                        {isSelectedArtisticGameType
+                                                                            ? `Best run: ${match.highRun}`
+                                                                            : t('players.profile.h2h.highRun').replace('{value}', String(match.highRun))}
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    No matching games found for this stat.
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Tournament History */}
