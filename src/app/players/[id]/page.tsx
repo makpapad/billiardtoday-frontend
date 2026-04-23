@@ -2120,6 +2120,11 @@ export default function PlayerProfilePage() {
                                 >
                                     <input
                                         type="text"
+                                        name="player-h2h-opponent"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
                                         placeholder={t('players.profile.h2h.searchPlaceholder')}
                                         value={opponentQuery}
                                         onFocus={() => setIsOpponentOpen(true)}
