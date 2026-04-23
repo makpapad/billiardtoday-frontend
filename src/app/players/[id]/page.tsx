@@ -581,8 +581,7 @@ export default function PlayerProfilePage() {
 
         const fetchPlayerData = async () => {
             if (!playerId) return
-            const shouldFetchHistory =
-                selectedGameType !== 'all' && selectedYear !== 'all'
+            const shouldFetchHistory = selectedGameType !== 'all'
 
             if (!player) {
                 setIsLoading(true)
@@ -698,9 +697,7 @@ export default function PlayerProfilePage() {
                 const historyLimit =
                     selectedYear !== 'all'
                         ? Math.max(tournamentsToShow + 6, 12)
-                        : tournamentContextSlug
-                          ? 1000
-                          : Math.max(yearsToShow * 12, 24)
+                        : 1000
                 historyParams.set('limit', String(historyLimit))
 
                 if (selectedYear !== 'all') {
@@ -1917,8 +1914,7 @@ export default function PlayerProfilePage() {
                                     </select>
                                 )}
                             {/* Opponent Filter (Head-to-Head) - custom smart autocomplete */}
-                            {selectedGameType !== 'all' &&
-                                selectedYear !== 'all' && (
+                            {selectedGameType !== 'all' && (
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -2649,7 +2645,9 @@ export default function PlayerProfilePage() {
                     {!isLoadingHistory && (
                         <>
                             {/* Load More Years (for "all" filter) */}
-                            {selectedYear === 'all' && hasMoreYears && (
+                            {selectedYear === 'all' &&
+                                selectedGameType === 'all' &&
+                                hasMoreYears && (
                                 <div className="mt-6 text-center">
                                     <button
                                         type="button"
