@@ -1184,7 +1184,8 @@ export default function PlayerProfilePage() {
         selectedGameType,
     )
 
-    // Keep season options stable when tournament type changes.
+    // Derive season options from the full metadata set so the year dropdown
+    // respects tournament type without collapsing to the currently fetched page.
     const participationAvailableYears = Array.from(
         new Set(
             (tournamentContextSlug
@@ -1195,16 +1196,29 @@ export default function PlayerProfilePage() {
             )
                 .filter((p) => {
                     if (!matchesSelectedGameType(p.gameType)) return false
+                    if (
+                        selectedTournamentType !== 'all' &&
+                        p.tournamentType !== selectedTournamentType
+                    ) {
+                        return false
+                    }
                     return true
                 })
                 .map((p) => p.year),
         ),
     ).sort((a, b) => b - a)
+    const preservedSelectedYear =
+        selectedYear !== 'all' && Number.isFinite(Number(selectedYear))
+            ? [Number(selectedYear)]
+            : []
     const filteredAvailableYears = Array.from(
         new Set([
             ...participationAvailableYears,
-            ...availableYears,
-            ...careerStatsAvailableYears,
+            ...preservedSelectedYear,
+            ...(selectedTournamentType === 'all' ? availableYears : []),
+            ...(selectedTournamentType === 'all'
+                ? careerStatsAvailableYears
+                : []),
         ]),
     ).sort((a, b) => b - a)
 
