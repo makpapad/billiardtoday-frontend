@@ -1741,6 +1741,7 @@ export function TournamentEventsContent({
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
   const preferredGroupParam = searchParams?.get("group") ?? null;
+  const preferredMatchParam = searchParams?.get("match") ?? null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
@@ -2737,6 +2738,47 @@ export function TournamentEventsContent({
     activeStage,
     brLoadingByStage,
     brMatchesByStage,
+  ]);
+
+  useEffect(() => {
+    if (!preferredMatchParam || !activeStage || !activeStageUsesBracketView) {
+      return;
+    }
+
+    const targetMatch = activeBracketMatchSource.find((match) => {
+      const record =
+        match && typeof match === "object"
+          ? (match as Record<string, unknown>)
+          : null;
+      if (!record) return false;
+      if (
+        typeof record.globalMatchNumber === "number" &&
+        String(record.globalMatchNumber) === preferredMatchParam
+      ) {
+        return true;
+      }
+      if (
+        typeof record.matchNumber === "number" &&
+        String(record.matchNumber) === preferredMatchParam
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (!targetMatch) return;
+    const targetId =
+      targetMatch && typeof targetMatch === "object" && "id" in targetMatch
+        ? String((targetMatch as { id: string }).id)
+        : "";
+    if (!targetId || targetId === selectedBracketMatchId) return;
+    setSelectedBracketMatchId(targetId);
+  }, [
+    preferredMatchParam,
+    activeStage,
+    activeStageUsesBracketView,
+    activeBracketMatchSource,
+    selectedBracketMatchId,
   ]);
 
   const activeBracketRounds = useMemo<BracketRoundView[]>(() => {

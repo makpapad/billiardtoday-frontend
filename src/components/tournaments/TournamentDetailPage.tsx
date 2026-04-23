@@ -1540,6 +1540,8 @@ export function TournamentDetailPage({
 
   useEffect(() => {
     if (!preferredStageFromQuery) return;
+    setActiveView("tournament");
+    setTournamentPanelMode("stages");
     setSelectedStageDocumentId(preferredStageFromQuery);
   }, [preferredStageFromQuery]);
   const [participantAgeDirection, setParticipantAgeDirection] = useState<"asc" | "desc">("asc");

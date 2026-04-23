@@ -1079,11 +1079,30 @@ export default function PlayerProfilePage() {
 
     const buildTournamentGroupHref = (match: FilteredStatMatch) => {
         if (!match.tournamentHref) return null
-        if (!match.stageDocumentId || !Number.isFinite(Number(match.groupNumber))) {
+        if (!match.stageDocumentId) {
             return match.tournamentHref
         }
         const separator = match.tournamentHref.includes('?') ? '&' : '?'
-        return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}&group=${encodeURIComponent(String(match.groupNumber))}`
+        const stageLabel = String(match.stage || '').toLowerCase()
+        const isKnockoutStyleStage =
+            stageLabel.includes('1/') ||
+            stageLabel.includes('final') ||
+            stageLabel.includes('quarter') ||
+            stageLabel.includes('semi') ||
+            stageLabel.includes('round ') ||
+            stageLabel.includes('r16') ||
+            stageLabel.includes('qf') ||
+            stageLabel.includes('sf')
+        if (isKnockoutStyleStage && Number.isFinite(Number(match.num))) {
+            return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}&match=${encodeURIComponent(String(match.num))}`
+        }
+        if (Number.isFinite(Number(match.groupNumber))) {
+            return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}&group=${encodeURIComponent(String(match.groupNumber))}`
+        }
+        if (Number.isFinite(Number(match.num))) {
+            return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}&match=${encodeURIComponent(String(match.num))}`
+        }
+        return `${match.tournamentHref}${separator}stage=${encodeURIComponent(match.stageDocumentId)}`
     }
 
     if (isLoading) {
