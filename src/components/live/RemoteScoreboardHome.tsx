@@ -9,9 +9,7 @@ const t = (key: string): string => {
     const dictionary: Record<string, string> = {
       "remote.home.title": "Remote Scoreboard Control",
       "remote.home.description": "Pick a live screen, choose one of its available matches, then open the remote control with the correct session.",
-      "remote.home.screenSearchLabel": "Find screen",
-      "remote.home.screenSearchPlaceholder": "Search by table name or screen ID",
-      "remote.home.screensTitle": "Live screens",
+      "remote.home.screensTitle": "Available screens",
       "remote.home.screensLoading": "Loading live screens...",
       "remote.home.screensEmpty": "No live screens found right now.",
       "remote.home.matchesTitle": "Available matches",
@@ -141,7 +139,6 @@ export function RemoteScoreboardHome() {
   const initialScreenId = (searchParams?.get("screenId") || "").trim();
   const initialSessionId = (searchParams?.get("sessionId") || "").trim();
 
-  const [screenSearch, setScreenSearch] = useState("");
   const [screenId, setScreenId] = useState(initialScreenId);
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [screens, setScreens] = useState<LiveScreen[]>([]);
@@ -298,17 +295,6 @@ export function RemoteScoreboardHome() {
     }
   }, [sessionId]);
 
-  const filteredScreens = useMemo(() => {
-    const needle = screenSearch.trim().toLowerCase();
-    if (!needle) return screens;
-    return screens.filter((entry) => {
-      const haystack = [entry.screenName, entry.screenId, entry.clubName || ""]
-        .map((value) => value.toLowerCase())
-        .join(" ");
-      return haystack.includes(needle);
-    });
-  }, [screenSearch, screens]);
-
   const selectedScreen = useMemo(() => {
     return screens.find((entry) => entry.screenId === screenId) ?? null;
   }, [screenId, screens]);
@@ -336,75 +322,39 @@ export function RemoteScoreboardHome() {
         <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30 backdrop-blur">
           <label
             className="mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-slate-300"
-            htmlFor="remote-screen-search"
+            htmlFor="remote-screen-select"
           >
-            {t("remote.home.screenSearchLabel")}
+            {t("remote.home.screensTitle")}
           </label>
-          <input
-            id="remote-screen-search"
-            value={screenSearch}
-            onChange={(event) => setScreenSearch(event.target.value)}
-            placeholder={t("remote.home.screenSearchPlaceholder")}
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none ring-0 placeholder:text-slate-500"
-          />
-
-          <div className="mt-4">
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-              {t("remote.home.screensTitle")}
+          {screensLoading ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
+              {t("remote.home.screensLoading")}
             </div>
-
-            {screensLoading ? (
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
-                {t("remote.home.screensLoading")}
-              </div>
-            ) : screensError ? (
-              <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
-                {screensError}
-              </div>
-            ) : filteredScreens.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
-                {t("remote.home.screensEmpty")}
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                {filteredScreens.map((entry) => {
-                  const isSelected = entry.screenId === screenId;
-                  return (
-                    <button
-                      key={entry.screenId}
-                      type="button"
-                      onClick={() => {
-                        setScreenId(entry.screenId);
-                        setSessionId("");
-                      }}
-                      className={`rounded-2xl border px-4 py-4 text-left transition ${
-                        isSelected
-                          ? "border-cyan-300/50 bg-cyan-400/10 shadow-lg shadow-cyan-950/30"
-                          : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-semibold text-white">{entry.screenName || entry.screenId}</div>
-                          <div className="mt-1 text-xs text-slate-400">{entry.clubName || entry.screenId}</div>
-                          <div className="mt-2 font-mono text-xs text-slate-300">{entry.screenId}</div>
-                        </div>
-                        <span
-                          className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                            entry.isActive
-                              ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
-                              : "border-amber-400/30 bg-amber-500/10 text-amber-100"
-                          }`}
-                        >
-                          {entry.isActive ? t("remote.home.status.in_progress") : t("remote.home.status.pending")}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          ) : screensError ? (
+            <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
+              {screensError}
+            </div>
+          ) : screens.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
+              {t("remote.home.screensEmpty")}
+            </div>
+          ) : (
+            <select
+              id="remote-screen-select"
+              value={screenId}
+              onChange={(event) => {
+                setScreenId(event.target.value);
+                setSessionId("");
+              }}
+              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none"
+            >
+              {screens.map((entry) => (
+                <option key={entry.screenId} value={entry.screenId}>
+                  {entry.screenName || entry.screenId} | {entry.screenId}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4">
@@ -427,9 +377,12 @@ export function RemoteScoreboardHome() {
         </div>
 
         <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <label
+            className="mb-3 block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400"
+            htmlFor="remote-session-select"
+          >
             {t("remote.home.matchesTitle")}
-          </div>
+          </label>
 
           {!screenId ? (
             <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
@@ -448,38 +401,23 @@ export function RemoteScoreboardHome() {
               {t("remote.home.matchesEmpty")}
             </div>
           ) : (
-            <div className="grid gap-3">
+            <select
+              id="remote-session-select"
+              value={sessionId}
+              onChange={(event) => setSessionId(event.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none"
+            >
               {sessions.map((entry) => {
                 const resolvedId = resolveSessionId(entry);
                 const status = getSessionStatus(entry) || "pending";
-                const isSelected = resolvedId === sessionId;
+                const meta = formatSessionMeta(entry);
                 return (
-                  <button
-                    key={`${resolvedId}-${formatSessionLabel(entry)}`}
-                    type="button"
-                    onClick={() => setSessionId(resolvedId)}
-                    className={`rounded-2xl border px-4 py-4 text-left transition ${
-                      isSelected
-                        ? "border-cyan-300/50 bg-cyan-400/10 shadow-lg shadow-cyan-950/30"
-                        : "border-white/10 bg-slate-900/70 hover:bg-slate-900"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white">{formatSessionLabel(entry)}</div>
-                        {formatSessionMeta(entry) ? (
-                          <div className="mt-1 text-xs leading-5 text-slate-400">{formatSessionMeta(entry)}</div>
-                        ) : null}
-                        <div className="mt-2 font-mono text-[11px] text-slate-400">{resolvedId || t("remote.home.sessionAutoLabel")}</div>
-                      </div>
-                      <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusToneMap[status]}`}>
-                        {t(`remote.home.status.${status}`)}
-                      </span>
-                    </div>
-                  </button>
+                  <option key={`${resolvedId}-${formatSessionLabel(entry)}`} value={resolvedId}>
+                    {formatSessionLabel(entry)} | {t(`remote.home.status.${status}`)}{meta ? ` | ${meta}` : ""}
+                  </option>
                 );
               })}
-            </div>
+            </select>
           )}
         </div>
 
