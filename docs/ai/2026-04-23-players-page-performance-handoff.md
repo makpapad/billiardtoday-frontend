@@ -4,7 +4,7 @@
 
 Work happened in the frontend repo:
 
-- Local path: `D:\Projects\5-billiardtoday-frontend`
+- Local path: `D:\Projects\4-billiardtoday-frontend`
 - Main page: `src/app/players/[id]/page.tsx`
 - Related API route: `src/app/api/players/[id]/history/route.ts`
 - Deploy notes: `docs/ai/06-server-sync.md`
@@ -50,18 +50,15 @@ The goal was to make the player profile page feel fast when opening a player's s
 - After selecting a season:
   - Tournament history list is fetched and shown.
 
-## Important Caveat
+## Follow-up Completed
 
-`career_stats` currently has:
+Implemented after the handoff:
 
-- `events.totalParticipations`
-- `events.bySeason`
-- `byYear[year].byGameType`
-- `byGameType`
+- Backend repo: `D:\Projects\1-billiards-strapi`
+- Backend file: `src/api/bt-player/services/calculate-stats.ts`
+- Frontend file: `src/app/players/[id]/page.tsx`
 
-It does not have a direct per-game `events` count. The frontend can calculate an immediate per-game event count only when all events in a season belong to one normalized game type. If a season contains multiple game types, the exact count still requires the history endpoint.
-
-For a perfect instant count in all cases, add a backend/precomputed field such as:
+`career_stats.events` now includes exact per-game event counts:
 
 ```json
 {
@@ -77,6 +74,8 @@ For a perfect instant count in all cases, add a backend/precomputed field such a
   }
 }
 ```
+
+The frontend now prefers these fields for the `Events` card and only falls back to the previous `bySeason`/`byYear` inference for older cached `career_stats` payloads.
 
 ## Validation Done
 
@@ -101,4 +100,4 @@ Last production status after `b632810`:
 
 ## Next Useful Step
 
-If the `Events` count must be instantly exact for every game type and every player, add the per-game event counts to the backend `career_stats` calculation, then simplify the frontend fallback to read that field directly.
+Recalculate existing player `career_stats` records after deploying the backend change so production rows receive the new `events.byGameType` and `events.byGameTypeBySeason` fields.

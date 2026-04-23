@@ -85,6 +85,8 @@ type Player = {
         >
         events?: {
             bySeason?: Record<string, number>
+            byGameType?: Record<string, number>
+            byGameTypeBySeason?: Record<string, Record<string, number>>
             totalParticipations?: number
             finalsEntries?: number
         }
@@ -497,6 +499,32 @@ const getCareerStatsEventCount = (
             return Number.isFinite(count) && count > 0 ? count : null
         }
         return getOverallCareerStatsEventCount(stats)
+    }
+
+    const normalizeCountEntries = (entries: Record<string, number>) =>
+        Object.entries(entries).reduce<Record<string, number>>(
+            (acc, [rawType, rawCount]) => {
+                const normalizedType = normalizeGameTypeOrFallback(rawType)
+                const count = Number(rawCount)
+                if (!normalizedType || !Number.isFinite(count) || count <= 0) {
+                    return acc
+                }
+                acc[normalizedType] = (acc[normalizedType] || 0) + count
+                return acc
+            },
+            {},
+        )
+
+    if (selectedYear !== 'all') {
+        const seasonGameCounts = normalizeCountEntries(
+            stats.events?.byGameTypeBySeason?.[selectedYear] || {},
+        )
+        const count = seasonGameCounts[gameType]
+        if (Number.isFinite(count) && count > 0) return count
+    } else {
+        const gameCounts = normalizeCountEntries(stats.events?.byGameType || {})
+        const count = gameCounts[gameType]
+        if (Number.isFinite(count) && count > 0) return count
     }
 
     const byYear = stats.byYear || {}
