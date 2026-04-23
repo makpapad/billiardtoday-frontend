@@ -22,7 +22,7 @@ const t = (key: string): string => {
       "remote.control.actions.setupStart": "Start",
       "remote.control.actions.swapPlayers": "Swap Players",
       "remote.control.actions.warmupBreak": "Warmup / Break",
-      "remote.control.actions.resetGame": "Reset Game",
+      "remote.control.actions.startNewGame": "Start New Game",
       "remote.control.actions.endGame": "End Game",
       "remote.control.actions.runDec": "Live Run -",
       "remote.control.actions.confirmTurn": "Confirm / End Turn",
@@ -38,7 +38,7 @@ const t = (key: string): string => {
       "remote.control.shortcuts.setupStart": "No shortcut",
       "remote.control.shortcuts.swapPlayers": "R",
       "remote.control.shortcuts.warmupBreak": "C",
-      "remote.control.shortcuts.resetGame": "No shortcut",
+      "remote.control.shortcuts.startNewGame": "S",
       "remote.control.shortcuts.endGame": "E",
       "remote.control.shortcuts.runDec": "-",
       "remote.control.shortcuts.confirmTurn": "Enter",
@@ -61,7 +61,7 @@ type RemoteCommandType =
   | "start_match"
   | "setup_start"
   | "swap_players"
-  | "reset_game"
+  | "start_new_game"
   | "end_game"
   | "warmup_break"
   | "toggle_timer"
@@ -109,7 +109,7 @@ const commandLabelKeyMap: Record<RemoteCommandType, string> = {
   start_match: "remote.control.actions.startMatch",
   setup_start: "remote.control.actions.setupStart",
   swap_players: "remote.control.actions.swapPlayers",
-  reset_game: "remote.control.actions.resetGame",
+  start_new_game: "remote.control.actions.startNewGame",
   end_game: "remote.control.actions.endGame",
   warmup_break: "remote.control.actions.warmupBreak",
   toggle_timer: "remote.control.actions.toggleTimer",
@@ -202,10 +202,10 @@ export function RemoteScoreboardControl() {
             tone: "bg-white/10 text-white border border-white/10",
           },
           {
-            type: "reset_game",
-            labelKey: "remote.control.actions.resetGame",
-            shortcutKey: "remote.control.shortcuts.resetGame",
-            tone: "bg-red-500/20 text-red-100 border border-red-400/30",
+            type: "start_new_game",
+            labelKey: "remote.control.actions.startNewGame",
+            shortcutKey: "remote.control.shortcuts.startNewGame",
+            tone: "bg-green-500/20 text-green-100 border border-green-400/30",
           },
           {
             type: "end_game",
