@@ -208,13 +208,42 @@ const isDrawMatch = (match: Match) =>
         match.scoreFor > 0 &&
         match.scoreAgainst > 0)
 
+const parseMatchDate = (value: string | null | undefined): Date | null => {
+    if (!value) return null
+
+    const trimmed = String(value).trim()
+    if (!trimmed) return null
+
+    const directDate = new Date(trimmed)
+    if (!Number.isNaN(directDate.getTime())) {
+        return directDate
+    }
+
+    const localDateMatch = trimmed.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/,
+    )
+    if (!localDateMatch) return null
+
+    const [, dayRaw, monthRaw, yearRaw, hourRaw = '0', minuteRaw = '0'] =
+        localDateMatch
+    const day = Number(dayRaw)
+    const month = Number(monthRaw)
+    const year = Number(yearRaw)
+    const hour = Number(hourRaw)
+    const minute = Number(minuteRaw)
+
+    const parsed = new Date(year, month - 1, day, hour, minute)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const getMatchTimestamp = (value: string | null | undefined): number =>
+    parseMatchDate(value)?.getTime() ?? Number.NaN
+
 const getParticipationSortTimestamp = (
     participation: TournamentParticipation,
 ): number => {
     const matchTimestamps = participation.matches
-        .map((match) =>
-            match.date ? new Date(match.date).getTime() : Number.NaN,
-        )
+        .map((match) => getMatchTimestamp(match.date))
         .filter((value) => Number.isFinite(value))
 
     if (matchTimestamps.length > 0) {
@@ -2273,22 +2302,19 @@ export default function PlayerProfilePage() {
                                     {[...detailedStatMatches]
                                         .sort(
                                             (a, b) =>
-                                                (b.date
-                                                    ? new Date(b.date).getTime()
-                                                    : 0) -
-                                                (a.date
-                                                    ? new Date(a.date).getTime()
-                                                    : 0),
+                                                (getMatchTimestamp(b.date) ||
+                                                    0) -
+                                                (getMatchTimestamp(a.date) ||
+                                                    0),
                                         )
                                         .map((match) => {
+                                            const parsedMatchDate =
+                                                parseMatchDate(match.date)
                                             const matchDateLabel =
-                                                match.date &&
-                                                !Number.isNaN(
-                                                    new Date(match.date).getTime(),
-                                                )
-                                                    ? new Date(
-                                                          match.date,
-                                                      ).toLocaleDateString('en-GB')
+                                                parsedMatchDate
+                                                    ? parsedMatchDate.toLocaleDateString(
+                                                          'en-GB',
+                                                      )
                                                     : null
 
                                             return (
@@ -2741,22 +2767,19 @@ export default function PlayerProfilePage() {
                                     {[...h2hMatches]
                                         .sort(
                                             (a, b) =>
-                                                (a.date
-                                                    ? new Date(a.date).getTime()
-                                                    : 0) -
-                                                (b.date
-                                                    ? new Date(b.date).getTime()
-                                                    : 0),
+                                                (getMatchTimestamp(a.date) ||
+                                                    0) -
+                                                (getMatchTimestamp(b.date) ||
+                                                    0),
                                         )
                                         .map((match) => {
+                                            const parsedMatchDate =
+                                                parseMatchDate(match.date)
                                             const matchDateLabel =
-                                                match.date &&
-                                                !Number.isNaN(
-                                                    new Date(match.date).getTime(),
-                                                )
-                                                    ? new Date(
-                                                          match.date,
-                                                      ).toLocaleDateString('en-GB')
+                                                parsedMatchDate
+                                                    ? parsedMatchDate.toLocaleDateString(
+                                                          'en-GB',
+                                                      )
                                                     : null
 
                                             return (
@@ -3076,14 +3099,13 @@ export default function PlayerProfilePage() {
                                         {participation.matches.length > 0 ? (
                                         <div className="space-y-3">
                                             {participation.matches.map((match) => {
+                                                const parsedMatchDate =
+                                                    parseMatchDate(match.date)
                                                 const matchDateLabel =
-                                                    match.date &&
-                                                    !Number.isNaN(
-                                                        new Date(match.date).getTime(),
-                                                    )
-                                                        ? new Date(
-                                                              match.date,
-                                                          ).toLocaleDateString('el-GR')
+                                                    parsedMatchDate
+                                                        ? parsedMatchDate.toLocaleDateString(
+                                                              'el-GR',
+                                                          )
                                                         : null
 
                                                 return (
@@ -3314,9 +3336,11 @@ export default function PlayerProfilePage() {
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     Match #{selectedMatch.id.replace('M', '')}
                                 </h3>
-                                {selectedMatch.date ? (
+                                {parseMatchDate(selectedMatch.date) ? (
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        {new Date(selectedMatch.date).toLocaleDateString('en-GB', {
+                                        {parseMatchDate(
+                                            selectedMatch.date,
+                                        )?.toLocaleDateString('en-GB', {
                                             weekday: 'long',
                                             year: 'numeric',
                                             month: 'long',
