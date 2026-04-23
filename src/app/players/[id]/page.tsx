@@ -1707,19 +1707,6 @@ export default function PlayerProfilePage() {
                         </svg>
                         {t('players.profile.back')}
                     </button>
-                    {tournamentContextSlug ? (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                router.push(
-                                    `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player.full_name)}`,
-                                )
-                            }
-                            className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                        >
-                            Show all tournaments
-                        </button>
-                    ) : null}
                 </div>
 
                 {/* Player Header */}
@@ -1861,9 +1848,27 @@ export default function PlayerProfilePage() {
                                 ? `Overall Stats - (${gameTypeLabel})`
                                 : `Year ${selectedYear} Stats - (${gameTypeLabel})`
                         return (
-                            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                {statsTitle}
-                            </h2>
+                            <div className="mb-3 sm:mb-4 flex items-center justify-between gap-3">
+                                <h2
+                                    className="min-w-0 flex-1 truncate text-lg sm:text-xl font-bold text-gray-900 dark:text-white"
+                                    title={statsTitle}
+                                >
+                                    {statsTitle}
+                                </h2>
+                                {tournamentContextSlug ? (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            router.push(
+                                                `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player.full_name)}`,
+                                            )
+                                        }
+                                        className="inline-flex shrink-0 items-center rounded-full bg-[#475ded] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3e51cf] focus:outline-none focus:ring-2 focus:ring-[#475ded] focus:ring-offset-2"
+                                    >
+                                        Show all tournaments
+                                    </button>
+                                ) : null}
+                            </div>
                         )
                     })()}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-2 sm:gap-2 md:gap-3">
