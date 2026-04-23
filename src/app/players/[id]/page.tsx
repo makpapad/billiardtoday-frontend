@@ -208,6 +208,22 @@ const isDrawMatch = (match: Match) =>
         match.scoreFor > 0 &&
         match.scoreAgainst > 0)
 
+const getParticipationSortTimestamp = (
+    participation: TournamentParticipation,
+): number => {
+    const matchTimestamps = participation.matches
+        .map((match) =>
+            match.date ? new Date(match.date).getTime() : Number.NaN,
+        )
+        .filter((value) => Number.isFinite(value))
+
+    if (matchTimestamps.length > 0) {
+        return Math.max(...matchTimestamps)
+    }
+
+    return new Date(participation.year, 11, 31).getTime()
+}
+
 // Helper function to get gradient colors based on position
 const getPositionGradient = (position: string): string => {
     const pos = position.toLowerCase().trim()
@@ -1520,8 +1536,22 @@ export default function PlayerProfilePage() {
     // Frontend pagination for specific year (when year filter is applied)
     const displayedParticipations =
         selectedYear !== 'all'
-            ? filteredParticipations.slice(0, tournamentsToShow)
-            : filteredParticipations
+            ? [...filteredParticipations]
+                  .sort((a, b) => {
+                      const timestampDiff =
+                          getParticipationSortTimestamp(b) -
+                          getParticipationSortTimestamp(a)
+                      if (timestampDiff !== 0) return timestampDiff
+                      return b.year - a.year
+                  })
+                  .slice(0, tournamentsToShow)
+            : [...filteredParticipations].sort((a, b) => {
+                  const timestampDiff =
+                      getParticipationSortTimestamp(b) -
+                      getParticipationSortTimestamp(a)
+                  if (timestampDiff !== 0) return timestampDiff
+                  return b.year - a.year
+              })
 
     const baseParticipationsForH2H =
         selectedGameType === 'all'
