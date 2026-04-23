@@ -625,6 +625,7 @@ export default function PlayerProfilePage() {
     const [isOpponentOpen, setIsOpponentOpen] = useState<boolean>(false)
     const [opponentHighlight, setOpponentHighlight] = useState<number>(0)
     const appliedTournamentContextSlugRef = useRef<string>('')
+    const opponentComboboxRef = useRef<HTMLDivElement | null>(null)
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
     const buildPlayerUrl = (id: string, name: string) => {
@@ -637,6 +638,26 @@ export default function PlayerProfilePage() {
     useEffect(() => {
         appliedTournamentContextSlugRef.current = ''
     }, [tournamentContextSlug])
+
+    useEffect(() => {
+        const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+            const target = event.target
+            if (
+                target instanceof Node &&
+                opponentComboboxRef.current?.contains(target)
+            ) {
+                return
+            }
+            setIsOpponentOpen(false)
+        }
+
+        document.addEventListener('mousedown', handlePointerDown)
+        document.addEventListener('touchstart', handlePointerDown)
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown)
+            document.removeEventListener('touchstart', handlePointerDown)
+        }
+    }, [])
 
     const handleBack = () => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -1074,20 +1095,24 @@ export default function PlayerProfilePage() {
             return true
         })
 
-    const filteredAvailableTournamentTypes =
-        selectedGameType === 'all'
-            ? availableTournamentTypes
-            : Array.from(
-                  new Set(
-                      (tournamentContextSlug
-                          ? tournamentScopedParticipations
-                          : allParticipations
-                      )
+    const tournamentTypeSource = tournamentContextSlug
+        ? tournamentScopedParticipations
+        : allParticipations.length > 0
+          ? allParticipations
+          : participations
+    const filteredAvailableTournamentTypes = Array.from(
+        new Set(
+            [
+                ...(selectedGameType === 'all' && availableTournamentTypes.length > 0
+                    ? availableTournamentTypes
+                    : tournamentTypeSource
                           .filter((p) => matchesSelectedGameType(p.gameType))
                           .map((p) => p.tournamentType)
-                          .filter((value): value is string => Boolean(value)),
-                  ),
-              ).sort()
+                          .filter((value): value is string => Boolean(value))),
+                selectedTournamentType !== 'all' ? selectedTournamentType : '',
+            ].filter(Boolean),
+        ),
+    ).sort()
 
     const careerStatsAvailableYears = getCareerStatsYears(
         player?.career_stats,
@@ -1116,10 +1141,13 @@ export default function PlayerProfilePage() {
                 .map((p) => p.year),
         ),
     ).sort((a, b) => b - a)
-    const filteredAvailableYears =
-        participationAvailableYears.length > 0
-            ? participationAvailableYears
-            : careerStatsAvailableYears
+    const filteredAvailableYears = Array.from(
+        new Set([
+            ...participationAvailableYears,
+            ...availableYears,
+            ...careerStatsAvailableYears,
+        ]),
+    ).sort((a, b) => b - a)
 
     // Calculate stats based on filters (overall + per game type/year) – mirrors admin logic
     const completeParticipationsSource = tournamentContextSlug
@@ -1461,8 +1489,23 @@ export default function PlayerProfilePage() {
         return map
     })()
 
+    const opponentMatchCounts = (() => {
+        const map = new Map<string, number>()
+        baseParticipationsForH2H.forEach((p) => {
+            p.matches.forEach((m) => {
+                if (!m.opponentId) return
+                map.set(m.opponentId, (map.get(m.opponentId) || 0) + 1)
+            })
+        })
+        return map
+    })()
+
     const opponentsList = Array.from(opponentMap.entries())
-        .map(([id, name]) => ({ id, name }))
+        .map(([id, name]) => ({
+            id,
+            name,
+            count: opponentMatchCounts.get(id) || 0,
+        }))
         .sort((a, b) => a.name.localeCompare(b.name))
 
     const filteredOpponents = opponentQuery
@@ -1856,12 +1899,16 @@ export default function PlayerProfilePage() {
                             selectedGameType === 'all'
                                 ? 'All Games'
                                 : getGameTypeLabel(selectedGameType)
+                        const filterLabel =
+                            selectedTournamentType === 'all'
+                                ? gameTypeLabel
+                                : `${gameTypeLabel}, ${getTournamentTypeLabel(selectedTournamentType)}`
                         const statsTitle =
                             tournamentContextName
                                 ? `Stats for ${tournamentContextName}`
                                 : selectedYear === 'all'
-                                ? `Overall Stats - (${gameTypeLabel})`
-                                : `Year ${selectedYear} Stats - (${gameTypeLabel})`
+                                ? `Overall Stats - (${filterLabel})`
+                                : `Year ${selectedYear} Stats - (${filterLabel})`
                         return (
                             <div className="mb-3 sm:mb-4 flex items-center justify-between gap-3">
                                 <h2
@@ -2064,10 +2111,13 @@ export default function PlayerProfilePage() {
                                             </option>
                                         ))}
                                     </select>
-                                )}
+                            )}
                             {/* Opponent Filter (Head-to-Head) - custom smart autocomplete */}
                             {selectedGameType !== 'all' && (
-                                <div className="relative">
+                                <div
+                                    ref={opponentComboboxRef}
+                                    className="relative"
+                                >
                                     <input
                                         type="text"
                                         placeholder={t('players.profile.h2h.searchPlaceholder')}
@@ -2160,7 +2210,7 @@ export default function PlayerProfilePage() {
                                     )}
                                     {isOpponentOpen &&
                                         filteredOpponents.length > 0 && (
-                                            <div className="absolute z-20 mt-1 w-full max-w-full max-height-64 overflow-auto rounded-md border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                                            <div className="absolute z-20 mt-1 w-full max-w-full max-h-64 overflow-auto rounded-md border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
                                                 {filteredOpponents
                                                     .slice(0, 20)
                                                     .map((op, idx) => (
@@ -2181,13 +2231,16 @@ export default function PlayerProfilePage() {
                                                                     false,
                                                                 )
                                                             }}
-                                                            className={`w-full text-left px-3 py-2 text-sm truncate ${idx === opponentHighlight ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
+                                                            className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm ${idx === opponentHighlight ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
                                                         >
                                                             <span
-                                                                className="truncate block"
+                                                                className="block min-w-0 flex-1 truncate"
                                                                 title={op.name}
                                                             >
                                                                 {op.name}
+                                                            </span>
+                                                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                                                                {op.count}
                                                             </span>
                                                         </button>
                                                     ))}
