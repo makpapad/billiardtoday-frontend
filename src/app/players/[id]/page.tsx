@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
@@ -624,6 +624,7 @@ export default function PlayerProfilePage() {
     const [opponentQuery, setOpponentQuery] = useState<string>('')
     const [isOpponentOpen, setIsOpponentOpen] = useState<boolean>(false)
     const [opponentHighlight, setOpponentHighlight] = useState<number>(0)
+    const appliedTournamentContextSlugRef = useRef<string>('')
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
     const buildPlayerUrl = (id: string, name: string) => {
@@ -632,6 +633,10 @@ export default function PlayerProfilePage() {
             ? `${baseUrl}?tournament=${encodeURIComponent(tournamentContextSlug)}`
             : baseUrl
     }
+
+    useEffect(() => {
+        appliedTournamentContextSlugRef.current = ''
+    }, [tournamentContextSlug])
 
     const handleBack = () => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -840,6 +845,44 @@ export default function PlayerProfilePage() {
                             : historyData.length,
                     )
 
+                    if (
+                        tournamentContextSlug &&
+                        appliedTournamentContextSlugRef.current !==
+                            tournamentContextSlug
+                    ) {
+                        const contextParticipation = historyData.find(
+                            (participation: TournamentParticipation) =>
+                                buildTournamentSlug(
+                                    '',
+                                    participation.tournament,
+                                    participation.year,
+                                ) === tournamentContextSlug,
+                        ) as TournamentParticipation | undefined
+
+                        if (contextParticipation) {
+                            appliedTournamentContextSlugRef.current =
+                                tournamentContextSlug
+
+                            const contextGameType = normalizeGameTypeOrFallback(
+                                contextParticipation.gameType,
+                            )
+                            if (contextGameType) {
+                                setSelectedGameType(contextGameType as GameType)
+                            }
+                            if (contextParticipation.tournamentType) {
+                                setSelectedTournamentType(
+                                    contextParticipation.tournamentType,
+                                )
+                            }
+                            if (Number.isFinite(contextParticipation.year)) {
+                                setSelectedYear(
+                                    String(contextParticipation.year),
+                                )
+                            }
+                            setTournamentsToShow(3)
+                        }
+                    }
+
                     // Initialize available years from history payload if not already set
                     if (
                         historyPayload.availableYears &&
@@ -993,6 +1036,12 @@ export default function PlayerProfilePage() {
               buildTournamentSlug('', participation.tournament, participation.year) === tournamentContextSlug,
           )
         : participations
+    const tournamentContextParticipation =
+        tournamentContextSlug && tournamentScopedParticipations.length > 0
+            ? tournamentScopedParticipations[0]
+            : null
+    const tournamentContextName =
+        tournamentContextParticipation?.tournament || ''
 
     // Filter participations by selected game type
     const filteredParticipations =
@@ -1803,7 +1852,9 @@ export default function PlayerProfilePage() {
                                 ? 'All Games'
                                 : getGameTypeLabel(selectedGameType)
                         const statsTitle =
-                            selectedYear === 'all'
+                            tournamentContextName
+                                ? `Stats for ${tournamentContextName}`
+                                : selectedYear === 'all'
                                 ? `Overall Stats - (${gameTypeLabel})`
                                 : `Year ${selectedYear} Stats - (${gameTypeLabel})`
                         return (

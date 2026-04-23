@@ -5672,6 +5672,7 @@ export function TournamentEventsContent({
                                                   )}
                                                   embedded={embedded}
                                                   artistic={isArtisticEvent}
+                                                  tournamentContextSlug={tournamentContextSlug}
                                                 />
                                               ) : null}
                                               </>

@@ -18,7 +18,7 @@ import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEven
 import type { RankingSeriesData } from "@/lib/rankings";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import type { TournamentEventSummary } from "@/lib/tournaments";
-import { buildTournamentHref } from "@/lib/tournaments";
+import { buildTournamentHref, buildTournamentSlug } from "@/lib/tournaments";
 import type {
   EventApiResponse,
   GroupStanding,
@@ -502,10 +502,12 @@ function GroupTooltip({
   data,
   embedded,
   locale,
+  tournamentContextSlug,
 }: {
   data: GroupPopoverData;
   embedded: boolean;
   locale?: string;
+  tournamentContextSlug?: string | null;
 }) {
   const hasStandingActivity = (player: GroupStanding) =>
     player.record.wins > 0 ||
@@ -565,7 +567,12 @@ function GroupTooltip({
                 >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
-                      href={`${embedded ? "/embed" : ""}/players/${match.top.player.id}-${match.top.player.name.trim().replace(/\s+/g, "-")}`}
+                      href={buildTournamentPlayerProfileHref(
+                        embedded,
+                        match.top.player.id,
+                        match.top.player.name,
+                        tournamentContextSlug,
+                      )}
                       className="text-blue-600 hover:underline"
                     >
                       <PlayerWithFlag
@@ -599,7 +606,12 @@ function GroupTooltip({
                 >
                   <td className="px-2 py-1.5 font-medium">
                     <Link
-                      href={`${embedded ? "/embed" : ""}/players/${match.bottom.player.id}-${match.bottom.player.name.trim().replace(/\s+/g, "-")}`}
+                      href={buildTournamentPlayerProfileHref(
+                        embedded,
+                        match.bottom.player.id,
+                        match.bottom.player.name,
+                        tournamentContextSlug,
+                      )}
                       className="text-blue-600 hover:underline"
                     >
                       <PlayerWithFlag
@@ -656,7 +668,12 @@ function GroupTooltip({
                   <td className="px-2 py-1.5 font-medium">
                     {player.playerId ? (
                       <Link
-                        href={`${embedded ? "/embed" : ""}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, "-")}`}
+                        href={buildTournamentPlayerProfileHref(
+                          embedded,
+                          player.playerId,
+                          player.playerName,
+                          tournamentContextSlug,
+                        )}
                         className="text-blue-600 hover:underline"
                       >
                         <PlayerWithFlag
@@ -1343,6 +1360,18 @@ const resolveMediaUrl = (url: string | null) => {
   return resolveConfiguredMediaUrl(url);
 };
 
+const buildTournamentPlayerProfileHref = (
+  embedded: boolean,
+  playerId: string | number | null | undefined,
+  playerName: string,
+  tournamentContextSlug?: string | null,
+) =>
+  `${embedded ? "/embed" : ""}/players/${String(playerId ?? "")}-${playerName.trim().replace(/\s+/g, "-")}${
+    tournamentContextSlug
+      ? `?tournament=${encodeURIComponent(tournamentContextSlug)}`
+      : ""
+  }`;
+
 export function TournamentDetailPage({
   summary,
   embedded = false,
@@ -1358,6 +1387,9 @@ export function TournamentDetailPage({
     summary.season,
     false,
   );
+  const tournamentContextSlug = summary.title
+    ? buildTournamentSlug("", summary.title, summary.season)
+    : null;
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const stageCount = summary.stages.length;
   const scheduleLabel = formatDateRange(
@@ -4484,7 +4516,12 @@ export function TournamentDetailPage({
   );
 
   const playerProfileHref = (playerId: string, playerName: string) =>
-    `${embedded ? "/embed" : ""}/players/${String(playerId)}-${playerName.trim().replace(/\s+/g, "-")}`;
+    buildTournamentPlayerProfileHref(
+      embedded,
+      playerId,
+      playerName,
+      tournamentContextSlug,
+    );
 
   const visibleTimetableSlots = useMemo(() => {
     const trimmedQuery = normalizeLookupText(timetableSearchQuery);
@@ -6122,6 +6159,7 @@ export function TournamentDetailPage({
                       data={groupPopoverBySessionId.get(session.sessionId)!}
                       embedded={embedded}
                       locale={browserLocale ?? undefined}
+                      tournamentContextSlug={tournamentContextSlug}
                     />
                   ) : null}
                   <div
