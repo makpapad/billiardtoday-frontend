@@ -48,19 +48,11 @@ type LiveScreen = {
   screenId: string;
   screenName: string;
   isActive?: boolean;
-  tournamentId?: string;
-  lastUpdate?: string;
-};
-
-type LiveScreenGroup = {
-  tournamentId: string;
-  tournamentTitle: string;
-  liveScreens: LiveScreen[];
+  clubName?: string | null;
 };
 
 type LiveScreensResponse = {
-  success?: boolean;
-  data?: LiveScreenGroup[];
+  data?: LiveScreen[];
   error?: string;
 };
 
@@ -85,10 +77,6 @@ type RemoteSessionSummary = {
 type ScreenSessionsResponse = {
   data?: RemoteSessionSummary[];
   error?: string;
-};
-
-type FlatScreenOption = LiveScreen & {
-  tournamentTitle: string;
 };
 
 const normalizeText = (value: string | null | undefined): string => {
@@ -156,7 +144,7 @@ export function RemoteScoreboardHome() {
   const [screenSearch, setScreenSearch] = useState("");
   const [screenId, setScreenId] = useState(initialScreenId);
   const [sessionId, setSessionId] = useState(initialSessionId);
-  const [screens, setScreens] = useState<FlatScreenOption[]>([]);
+  const [screens, setScreens] = useState<LiveScreen[]>([]);
   const [screensLoading, setScreensLoading] = useState(true);
   const [screensError, setScreensError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<RemoteSessionSummary[]>([]);
@@ -171,22 +159,15 @@ export function RemoteScoreboardHome() {
         setScreensLoading(true);
         setScreensError(null);
 
-        const response = await fetch("/api/admin/tournament/live-screens", {
+        const response = await fetch("/api/scoreboard/screens", {
           cache: "no-store",
         });
         const payload = (await response.json().catch(() => ({}))) as LiveScreensResponse;
-        if (!response.ok || payload.success === false) {
+        if (!response.ok) {
           throw new Error(payload.error || t("remote.home.errorLiveScreens"));
         }
 
-        const nextScreens = Array.isArray(payload.data)
-          ? payload.data.flatMap((group) =>
-              (Array.isArray(group.liveScreens) ? group.liveScreens : []).map((screen) => ({
-                ...screen,
-                tournamentTitle: group.tournamentTitle,
-              })),
-            )
-          : [];
+        const nextScreens = Array.isArray(payload.data) ? payload.data : [];
 
         if (cancelled) return;
 
@@ -321,7 +302,7 @@ export function RemoteScoreboardHome() {
     const needle = screenSearch.trim().toLowerCase();
     if (!needle) return screens;
     return screens.filter((entry) => {
-      const haystack = [entry.screenName, entry.screenId, entry.tournamentTitle]
+      const haystack = [entry.screenName, entry.screenId, entry.clubName || ""]
         .map((value) => value.toLowerCase())
         .join(" ");
       return haystack.includes(needle);
@@ -405,7 +386,7 @@ export function RemoteScoreboardHome() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="text-sm font-semibold text-white">{entry.screenName || entry.screenId}</div>
-                          <div className="mt-1 text-xs text-slate-400">{entry.tournamentTitle}</div>
+                          <div className="mt-1 text-xs text-slate-400">{entry.clubName || entry.screenId}</div>
                           <div className="mt-2 font-mono text-xs text-slate-300">{entry.screenId}</div>
                         </div>
                         <span
