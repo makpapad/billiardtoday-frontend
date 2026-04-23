@@ -40,6 +40,22 @@ function validateString(value: unknown, min: number, max: number) {
   return trimmed;
 }
 
+function parseRequestBody(rawText: string) {
+  const trimmed = rawText.trim();
+  if (!trimmed) return {};
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {}
+
+  const params = new URLSearchParams(trimmed);
+  const out: Record<string, string> = {};
+  for (const [key, value] of params.entries()) {
+    out[key] = value;
+  }
+  return out;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
@@ -50,13 +66,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
+    const rawText = await request.text().catch(() => "");
+    const body = parseRequestBody(rawText);
     if (typeof body?.website === "string" && body.website.trim()) {
       return NextResponse.json({ ok: true });
     }
 
     const turnstileToken =
-      typeof body?.turnstileToken === "string" ? body.turnstileToken.trim().slice(0, 2048) : "";
+      typeof body?.turnstileToken === "string"
+        ? body.turnstileToken.trim().slice(0, 2048)
+        : typeof body?.["cf-turnstile-response"] === "string"
+          ? body["cf-turnstile-response"].trim().slice(0, 2048)
+          : "";
 
     const name = validateString(body?.name, 2, 120);
     const email = validateString(body?.email, 5, 160);
