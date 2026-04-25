@@ -4334,6 +4334,62 @@ export function TournamentDetailPage({
   }, [isSeriesTournament, isYouthTournament, participantSortMode]);
 
   const tournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
+    const photoFallbackByPlayerKey = new Map<string, string>();
+    const rememberPlayerPhoto = (player: unknown, fallbackId: string) => {
+      const normalizedPlayer = normalizeEntity<{ photo_main?: unknown }>(player, fallbackId);
+      const photoUrl = normalizeMediaUrl(
+        (normalizedPlayer as { photo_main?: { url?: unknown } | unknown }).photo_main,
+      );
+      if (!photoUrl) return;
+      [normalizedPlayer.id, normalizedPlayer.documentId]
+        .filter((key): key is string => typeof key === "string" && key.trim().length > 0)
+        .forEach((key) => photoFallbackByPlayerKey.set(key, photoUrl));
+    };
+
+    toRelationArray(eventData?.data?.results_final).forEach((result, index) => {
+      const normalizedResult = normalizeEntity<{ player?: unknown }>(
+        result,
+        `participant-final-result-${index + 1}`,
+      );
+      if (normalizedResult.player) {
+        rememberPlayerPhoto(normalizedResult.player, `participant-final-player-${index + 1}`);
+      }
+    });
+
+    toRelationArray(eventData?.data?.event_stages).forEach((stage, stageIndex) => {
+      const normalizedStage = normalizeEntity<{ groups?: unknown; results?: unknown }>(
+        stage,
+        `participant-photo-stage-${stageIndex + 1}`,
+      );
+      toRelationArray(normalizedStage.results).forEach((result, resultIndex) => {
+        const normalizedResult = normalizeEntity<{ player?: unknown }>(
+          result,
+          `participant-stage-result-${stageIndex + 1}-${resultIndex + 1}`,
+        );
+        if (normalizedResult.player) {
+          rememberPlayerPhoto(
+            normalizedResult.player,
+            `participant-stage-result-player-${stageIndex + 1}-${resultIndex + 1}`,
+          );
+        }
+      });
+
+      toRelationArray(normalizedStage.groups).forEach((group, groupIndex) => {
+        const normalizedGroup = normalizeEntity<{ player1?: unknown; player2?: unknown }>(
+          group,
+          `participant-photo-group-${stageIndex + 1}-${groupIndex + 1}`,
+        );
+        [normalizedGroup.player1, normalizedGroup.player2].forEach((player, playerIndex) => {
+          if (player) {
+            rememberPlayerPhoto(
+              player,
+              `participant-group-player-${stageIndex + 1}-${groupIndex + 1}-${playerIndex + 1}`,
+            );
+          }
+        });
+      });
+    });
+
     if (eventData?.data?.players) {
       return toRelationArray(eventData.data.players).map((player, index) => {
         const normalized = normalizeEntity<{
@@ -4357,7 +4413,7 @@ export function TournamentDetailPage({
             : null;
         const photoUrl = normalizeMediaUrl(
           (normalized as { photo_main?: { url?: unknown } | unknown }).photo_main,
-        );
+        ) ?? photoFallbackByPlayerKey.get(normalized.documentId ?? "") ?? photoFallbackByPlayerKey.get(normalized.id) ?? null;
 
         return {
           id: normalized.id,
@@ -4409,7 +4465,10 @@ export function TournamentDetailPage({
               : null;
           const photoUrl = normalizeMediaUrl(
             (normalizedPlayer as { photo_main?: { url?: unknown } | unknown }).photo_main,
-          );
+          ) ??
+            photoFallbackByPlayerKey.get(normalizedPlayer.documentId ?? "") ??
+            photoFallbackByPlayerKey.get(normalizedPlayer.id) ??
+            null;
           uniquePlayers.set(normalizedPlayer.id, {
             id: normalizedPlayer.id,
             documentId: normalizedPlayer.documentId ?? null,
