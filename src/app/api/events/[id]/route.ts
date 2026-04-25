@@ -346,11 +346,13 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][2]', 'full_name_en')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][3]', 'country')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][4]', 'birth_date')
+            queryParams.set('populate[event_stages][populate][groups][populate][player1][populate][photo_main][fields][0]', 'url')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][1]', 'documentId')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][2]', 'full_name_en')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][3]', 'country')
             queryParams.set('populate[event_stages][populate][groups][populate][player2][fields][4]', 'birth_date')
+            queryParams.set('populate[event_stages][populate][groups][populate][player2][populate][photo_main][fields][0]', 'url')
 
             queryParams.set('populate[event_stages][populate][results][sort][0]', 'group_number:asc')
             queryParams.set('populate[event_stages][populate][results][sort][1]', 'final_position:asc')
@@ -372,6 +374,7 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][results][populate][player][fields][1]', 'documentId')
             queryParams.set('populate[event_stages][populate][results][populate][player][fields][2]', 'full_name_en')
             queryParams.set('populate[event_stages][populate][results][populate][player][fields][3]', 'country')
+            queryParams.set('populate[event_stages][populate][results][populate][player][populate][photo_main][fields][0]', 'url')
 
             queryParams.set('populate[results_final][sort][0]', 'position:asc')
             queryParams.set('populate[results_final][fields][0]', 'position')
@@ -390,6 +393,7 @@ export async function GET(
             queryParams.set('populate[results_final][populate][player][fields][1]', 'documentId')
             queryParams.set('populate[results_final][populate][player][fields][2]', 'full_name_en')
             queryParams.set('populate[results_final][populate][player][fields][3]', 'country')
+            queryParams.set('populate[results_final][populate][player][populate][photo_main][fields][0]', 'url')
 
             queryParams.set('populate[tournament][populate][participants][sort][0]', 'registration_date:asc')
             queryParams.set('populate[tournament][populate][participants][sort][1]', 'ranking:asc')
