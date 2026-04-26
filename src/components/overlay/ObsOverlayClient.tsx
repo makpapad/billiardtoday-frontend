@@ -1557,7 +1557,7 @@ function TemplateFourOverlayCard({
       </div>
 
       <div
-        className={`grid w-full items-center px-3 text-white ${isTemplateFive ? "rounded-b-[10px]" : ""}`}
+        className={`grid w-full items-center px-3 text-white ${isTemplateFive ? "rounded-[10px]" : ""}`}
         style={{
           height: mainBarHeight,
           backgroundColor: mainBarColor,
