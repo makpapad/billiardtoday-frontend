@@ -1814,13 +1814,14 @@ function CompactOverlayStats({
   large?: boolean;
 }) {
   const justifyClass = align === "right" ? "justify-end text-right" : "justify-start text-left";
+  const statTextSize = large ? "text-[19px]" : "text-[12px]";
 
   return (
     <div className={`flex min-w-0 items-center gap-4 leading-none whitespace-nowrap ${justifyClass}`}>
-      <span className={`${large ? "text-[16px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
+      <span className={`${statTextSize} font-normal uppercase tracking-[0.08em] text-white/92`}>
         AVG <span className="font-semibold text-white">{avg}</span>
       </span>
-      <span className={`${large ? "text-[16px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
+      <span className={`${statTextSize} font-normal uppercase tracking-[0.08em] text-white/92`}>
         H.R. <span className="font-semibold text-white">{hr}</span>
       </span>
     </div>
