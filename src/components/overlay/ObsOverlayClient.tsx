@@ -205,6 +205,12 @@ function truncateOverlayLabel(value: string, maxChars: number): string {
   return `${normalized.slice(0, Math.max(1, maxChars - 1)).trimEnd()}.`;
 }
 
+function abbreviateOverlayName(value: string, chars: number): string {
+  const normalized = value.trim();
+  const prefix = Array.from(normalized).slice(0, chars).join("").trimEnd();
+  return prefix ? `${prefix}.` : normalized;
+}
+
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
   if (!input) return null;
 
@@ -1571,7 +1577,7 @@ function TemplateFourOverlayCard({
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
           >
-            {leftName}
+            {isTemplateFive ? abbreviateOverlayName(leftName, 3) : leftName}
           </span>
         </div>
 
@@ -1615,7 +1621,7 @@ function TemplateFourOverlayCard({
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
           >
-            {rightName}
+            {isTemplateFive ? abbreviateOverlayName(rightName, 3) : rightName}
           </span>
           {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
           <CompactTimeoutTicks
