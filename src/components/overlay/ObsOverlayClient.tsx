@@ -205,10 +205,14 @@ function truncateOverlayLabel(value: string, maxChars: number): string {
   return `${normalized.slice(0, Math.max(1, maxChars - 1)).trimEnd()}.`;
 }
 
-function abbreviateOverlayName(value: string, chars: number): string {
+function formatTemplateFivePlayerName(value: string): string {
   const normalized = value.trim();
-  const prefix = Array.from(normalized).slice(0, chars).join("").trimEnd();
-  return prefix ? `${prefix}.` : normalized;
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return normalized;
+  const surname = parts[0];
+  const givenName = parts.slice(1).join(" ");
+  const givenPrefix = Array.from(givenName).slice(0, 3).join("").trimEnd();
+  return givenPrefix ? `${surname} ${givenPrefix}.` : surname;
 }
 
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
@@ -1577,7 +1581,7 @@ function TemplateFourOverlayCard({
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
           >
-            {isTemplateFive ? abbreviateOverlayName(leftName, 3) : leftName}
+            {isTemplateFive ? formatTemplateFivePlayerName(leftName) : leftName}
           </span>
         </div>
 
@@ -1621,7 +1625,7 @@ function TemplateFourOverlayCard({
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
           >
-            {isTemplateFive ? abbreviateOverlayName(rightName, 3) : rightName}
+            {isTemplateFive ? formatTemplateFivePlayerName(rightName) : rightName}
           </span>
           {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
           <CompactTimeoutTicks
