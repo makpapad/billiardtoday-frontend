@@ -44,11 +44,7 @@ import {
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import {
-  buildLiveScoreChartRows,
-  LiveSheetScoreChart,
-  type LiveScoreChartInningDetailEntry,
-} from "@/components/live/LiveSheetScoreChart";
+import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
 const BRACKET_STAGE_TYPES = new Set([
   "double_elimination",
@@ -358,15 +354,6 @@ function MatchSheetModal({
   const state = data.session.state ?? {};
   const playerAName = state.playerAName || data.session.player1Name || "Player A";
   const playerBName = state.playerBName || data.session.player2Name || "Player B";
-  const chartRows = buildLiveScoreChartRows({
-    inningsDetail: state.inningsDetail ?? null,
-    inningsCount: state.inningsCount ?? null,
-    inningsA: state.inningsA ?? null,
-    inningsB: state.inningsB ?? null,
-    scoreA: state.scoreA ?? null,
-    scoreB: state.scoreB ?? null,
-    ended: true,
-  });
   const detailRows = Array.isArray(state.inningsDetail)
     ? [...state.inningsDetail]
         .filter((entry) => Number.isFinite(entry?.inning) && entry.inning > 0)
@@ -429,21 +416,12 @@ function MatchSheetModal({
             />
           </div>
 
-          <LiveSheetScoreChart
-            className="mt-5"
-            data={chartRows}
-            height={360}
-            noAnim
-            playerAName={playerAName}
-            playerBName={playerBName}
-          />
-
           <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
             <div className="grid grid-cols-[1fr_1fr_76px_1fr_1fr] border-b border-white/10 bg-white/[0.05] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">
-              <div className="text-center">{playerAName} pt</div>
+              <div className="text-center">Point</div>
               <div className="text-center">Score</div>
               <div className="text-center">Inn</div>
-              <div className="text-center">{playerBName} pt</div>
+              <div className="text-center">Point</div>
               <div className="text-center">Score</div>
             </div>
             {detailRows.length > 0 ? (
