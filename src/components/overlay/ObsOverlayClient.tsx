@@ -1491,8 +1491,8 @@ function TemplateFourOverlayCard({
   const timeStripWidth = isTemplateFive
     ? Math.max(240, Math.min(360, Math.round(width * 0.28)))
     : Math.max(180, Math.min(260, Math.round(width * 0.26)));
-  const topStripColor = isTemplateFive ? "#9da4b0" : "#d6d9e1";
-  const mainBarColor = isTemplateFive ? "#5f6876" : "#8a909d";
+  const topStripColor = isTemplateFive ? "#747b86" : "#d6d9e1";
+  const mainBarColor = isTemplateFive ? "#3f4651" : "#8a909d";
   const topTextSize = isTemplateFive ? 16 : 11;
   const raceTextSize = isTemplateFive ? 16 : 12;
   const nameTextSize = isTemplateFive ? 28 : 15;
