@@ -1547,11 +1547,12 @@ function TemplateFourOverlayCard({
       </div>
 
       <div
-        className="grid w-full items-center gap-2 px-3 text-white"
+        className="grid w-full items-center px-3 text-white"
         style={{
           height: mainBarHeight,
           backgroundColor: mainBarColor,
           gridTemplateColumns: `${statsColumnWidth}px minmax(0,1fr) auto auto auto minmax(0,1fr) ${statsColumnWidth}px`,
+          columnGap: isTemplateFive ? 14 : 8,
         }}
       >
         <CompactOverlayStats align="left" avg={leftAvg} hr={leftHr} large={isTemplateFive} />
@@ -1582,8 +1583,13 @@ function TemplateFourOverlayCard({
         </div>
 
         <div
-          className="flex h-8 min-w-[44px] items-center justify-center px-2 font-normal leading-none tracking-[0.04em] text-white"
-          style={{ fontSize: inningsTextSize }}
+          className="flex h-8 items-center justify-center font-normal leading-none tracking-[0.04em] text-white"
+          style={{
+            fontSize: inningsTextSize,
+            minWidth: isTemplateFive ? 64 : 44,
+            paddingLeft: isTemplateFive ? 8 : 8,
+            paddingRight: isTemplateFive ? 8 : 8,
+          }}
         >
           ({innings})
         </div>
