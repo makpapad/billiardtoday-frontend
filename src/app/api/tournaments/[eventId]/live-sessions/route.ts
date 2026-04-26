@@ -72,7 +72,7 @@ export async function GET(
   try {
     const params = new URLSearchParams();
     params.set("eventId", eventId);
-    params.set("status", "pending,in_progress");
+    params.set("status", "pending,in_progress,completed,complete,finished,ended,closed");
     params.set("pageSize", "100");
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };

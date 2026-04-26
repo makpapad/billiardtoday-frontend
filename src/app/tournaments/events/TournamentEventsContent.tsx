@@ -5212,9 +5212,6 @@ export function TournamentEventsContent({
                                                         Date
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
-                                                        Match sheet
-                                                      </th>
-                                                      <th className="px-4 py-2 font-medium">
                                                         Result
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
@@ -5243,6 +5240,9 @@ export function TournamentEventsContent({
                                                           High Run 2
                                                         </th>
                                                       )}
+                                                      <th className="px-4 py-2 font-medium">
+                                                        Match sheet
+                                                      </th>
                                                     </tr>
                                                   </thead>
                                                   <tbody>
@@ -5846,34 +5846,6 @@ export function TournamentEventsContent({
                                                                       </div>
                                                                     )}
                                                                   </td>
-                                                                  <td className="px-4 py-2 text-center" rowSpan={2}>
-                                                                    <div className="flex min-h-[72px] items-center justify-center">
-                                                                      {canOpenMatchSheet && liveSession ? (
-                                                                        <button
-                                                                          type="button"
-                                                                          onClick={() =>
-                                                                            setSelectedMatchSheet({
-                                                                              title: matchSheetTitle,
-                                                                              subtitle:
-                                                                                matchSheetSubtitle ||
-                                                                                null,
-                                                                              session:
-                                                                                liveSession,
-                                                                            })
-                                                                          }
-                                                                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/40"
-                                                                          title="Match sheet"
-                                                                          aria-label={`Open match sheet for ${matchSheetTitle}`}
-                                                                        >
-                                                                          <List className="h-5 w-5" />
-                                                                        </button>
-                                                                      ) : (
-                                                                        <span className="text-slate-300 dark:text-slate-600">
-                                                                          -
-                                                                        </span>
-                                                                      )}
-                                                                    </div>
-                                                                  </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
                                                                     {formatOutcomeLabel(
                                                                       match.top
@@ -5917,6 +5889,37 @@ export function TournamentEventsContent({
                                                                       )}
                                                                     </td>
                                                                   )}
+                                                                  <td
+                                                                    className="bg-white px-4 py-2 text-center dark:bg-slate-950"
+                                                                    rowSpan={2}
+                                                                  >
+                                                                    <div className="flex min-h-[72px] items-center justify-center">
+                                                                      {canOpenMatchSheet && liveSession ? (
+                                                                        <button
+                                                                          type="button"
+                                                                          onClick={() =>
+                                                                            setSelectedMatchSheet({
+                                                                              title: matchSheetTitle,
+                                                                              subtitle:
+                                                                                matchSheetSubtitle ||
+                                                                                null,
+                                                                              session:
+                                                                                liveSession,
+                                                                            })
+                                                                          }
+                                                                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/40"
+                                                                          title="Match sheet"
+                                                                          aria-label={`Open match sheet for ${matchSheetTitle}`}
+                                                                        >
+                                                                          <List className="h-5 w-5" />
+                                                                        </button>
+                                                                      ) : (
+                                                                        <span className="text-slate-300 dark:text-slate-600">
+                                                                          -
+                                                                        </span>
+                                                                      )}
+                                                                    </div>
+                                                                  </td>
                                                                 </tr>
                                                                 <tr
                                                                   className={clsx(
