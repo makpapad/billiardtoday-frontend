@@ -276,6 +276,21 @@ const formatSheetPercent = (value: unknown) => {
   return `${parsed.toFixed(1)}%`;
 };
 
+const computeSheetAccuracy = (
+  points: unknown,
+  innings: unknown,
+  isWinner: boolean,
+  isDraw: boolean,
+) => {
+  const safePoints = normalizeSheetNumber(points);
+  const safeInnings = normalizeSheetNumber(innings);
+  if (safePoints === null || safeInnings === null) return null;
+  const adjustedInnings = !isDraw && isWinner ? Math.max(0, safeInnings - 1) : safeInnings;
+  const denominator = safePoints + adjustedInnings;
+  if (denominator <= 0) return null;
+  return (safePoints / denominator) * 100;
+};
+
 const hasFinishedSessionStatus = (value: string | null | undefined) => {
   const normalized = String(value || "").trim().toLowerCase();
   return ["completed", "complete", "finished", "ended", "closed"].includes(normalized);
@@ -402,6 +417,19 @@ function MatchSheetModal({
         .filter((entry) => Number.isFinite(entry?.inning) && entry.inning > 0)
         .sort((a, b) => a.inning - b.inning)
     : [];
+  const scoreA = normalizeSheetNumber(state.scoreA);
+  const scoreB = normalizeSheetNumber(state.scoreB);
+  const isDraw = scoreA !== null && scoreB !== null && scoreA === scoreB;
+  const winnerSide =
+    scoreA === null || scoreB === null || isDraw ? null : scoreA > scoreB ? "A" : "B";
+  const accuracyA =
+    Number.isFinite(Number(state.accPercentA))
+      ? state.accPercentA
+      : computeSheetAccuracy(state.scoreA, state.inningsA, winnerSide === "A", isDraw);
+  const accuracyB =
+    Number.isFinite(Number(state.accPercentB))
+      ? state.accPercentB
+      : computeSheetAccuracy(state.scoreB, state.inningsB, winnerSide === "B", isDraw);
 
   return (
     <div
@@ -441,7 +469,7 @@ function MatchSheetModal({
               avg={state.avgFormattedA}
               highRun={state.bestRunA}
               highRun2={state.bestRun2A}
-              accuracy={state.accPercentA}
+              accuracy={accuracyA}
               active={state.current === "A"}
               tone="red"
             />
@@ -453,7 +481,7 @@ function MatchSheetModal({
               avg={state.avgFormattedB}
               highRun={state.bestRunB}
               highRun2={state.bestRun2B}
-              accuracy={state.accPercentB}
+              accuracy={accuracyB}
               active={state.current === "B"}
               tone="blue"
             />
