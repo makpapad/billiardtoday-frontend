@@ -1557,7 +1557,10 @@ function TemplateFourOverlayCard({
       >
         <CompactOverlayStats align="left" avg={leftAvg} hr={leftHr} large={isTemplateFive} />
 
-        <div className="flex min-w-0 items-center justify-end gap-2 overflow-hidden">
+        <div
+          className="flex min-w-0 items-center justify-end gap-2 overflow-hidden"
+          style={{ paddingRight: isTemplateFive ? 14 : 0 }}
+        >
           <CompactTimeoutTicks
             activeCount={leftTimeouts}
             totalCount={leftMaxTimeouts}
@@ -1572,7 +1575,7 @@ function TemplateFourOverlayCard({
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-1.5">
+        <div className={`flex items-center justify-end ${isTemplateFive ? "gap-2.5" : "gap-1.5"}`}>
           <div className="flex h-6 w-[11px] shrink-0 items-center justify-center">
             {activeSide === "A" ? <TurnArrow side="right" active /> : null}
           </div>
@@ -1594,7 +1597,7 @@ function TemplateFourOverlayCard({
           ({innings})
         </div>
 
-        <div className="flex items-center justify-start gap-1.5">
+        <div className={`flex items-center justify-start ${isTemplateFive ? "gap-2.5" : "gap-1.5"}`}>
           <OverlayScoreBox score={rightScore} tone="accent" large={isTemplateFive} />
           <div className="flex h-6 w-6 shrink-0 items-center justify-center">
             {activeSide === "B" ? <OverlayRunCircle run={rightRun} large={isTemplateFive} /> : null}
@@ -1604,7 +1607,10 @@ function TemplateFourOverlayCard({
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+        <div
+          className="flex min-w-0 items-center gap-2 overflow-hidden"
+          style={{ paddingLeft: isTemplateFive ? 14 : 0 }}
+        >
           <span
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
