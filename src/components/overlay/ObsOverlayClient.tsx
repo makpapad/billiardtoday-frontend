@@ -1574,8 +1574,9 @@ function TemplateFourOverlayCard({
             activeCount={leftTimeouts}
             totalCount={leftMaxTimeouts}
             reverse={false}
+            large={isTemplateFive}
           />
-          {leftFlag ? <SmallFlag countryCode={leftFlag} /> : null}
+          {leftFlag ? <SmallFlag countryCode={leftFlag} large={isTemplateFive} /> : null}
           <span
             className="min-w-0 truncate font-normal leading-none tracking-[0.03em]"
             style={{ fontSize: nameTextSize }}
@@ -1626,11 +1627,12 @@ function TemplateFourOverlayCard({
           >
             {isTemplateFive ? formatTemplateFivePlayerName(rightName) : rightName}
           </span>
-          {rightFlag ? <SmallFlag countryCode={rightFlag} /> : null}
+          {rightFlag ? <SmallFlag countryCode={rightFlag} large={isTemplateFive} /> : null}
           <CompactTimeoutTicks
             activeCount={rightTimeouts}
             totalCount={rightMaxTimeouts}
             reverse
+            large={isTemplateFive}
           />
         </div>
 
@@ -1757,9 +1759,11 @@ function TimeStrip({
   );
 }
 
-function SmallFlag({ countryCode }: { countryCode: string | null }) {
+function SmallFlag({ countryCode, large }: { countryCode: string | null; large?: boolean }) {
+  const sizeClass = large ? "h-7 w-[42px]" : "h-4 w-6";
+
   if (!countryCode) {
-    return <div className="h-4 w-6 rounded-[2px] bg-white/12" />;
+    return <div className={`${sizeClass} rounded-[2px] bg-white/12`} />;
   }
 
   return (
@@ -1768,7 +1772,7 @@ function SmallFlag({ countryCode }: { countryCode: string | null }) {
       alt={countryCode}
       width={24}
       height={16}
-      className="h-4 w-6 rounded-[2px] object-cover"
+      className={`${sizeClass} rounded-[2px] object-cover`}
       loading="eager"
       decoding="async"
       referrerPolicy="no-referrer"
@@ -1867,10 +1871,12 @@ function CompactTimeoutTicks({
   activeCount,
   totalCount,
   reverse,
+  large,
 }: {
   activeCount: number;
   totalCount: number;
   reverse?: boolean;
+  large?: boolean;
 }) {
   const safeTotal = Math.max(0, totalCount || 0) || 3;
   const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
@@ -1878,11 +1884,11 @@ function CompactTimeoutTicks({
   const orderedPositions = reverse ? [...positions].reverse() : positions;
 
   return (
-    <div className="flex shrink-0 items-center gap-[3px]">
+    <div className={`flex shrink-0 items-center ${large ? "gap-1" : "gap-[3px]"}`}>
       {orderedPositions.map((index) => (
         <span
           key={index}
-          className={`h-4 w-[4px] rounded-full ${
+          className={`${large ? "h-7 w-[6px]" : "h-4 w-[4px]"} rounded-full ${
             index < usedCount ? "bg-slate-200/65" : "bg-emerald-400"
           }`}
         />
