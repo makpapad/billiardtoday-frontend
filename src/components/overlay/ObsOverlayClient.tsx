@@ -1551,7 +1551,7 @@ function TemplateFourOverlayCard({
             style={{ fontSize: raceTextSize }}
           >
             {isTemplateFive
-              ? `S ${stage} / T ${table}${target ? ` / Race ${target}` : ""}`
+              ? `T ${table}${target ? ` / Race ${target}` : ""}`
               : target
                 ? `Race ${target}`
                 : ""}
