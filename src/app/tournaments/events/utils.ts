@@ -177,6 +177,8 @@ export const normalizeGroup = (
       highRun: toNumber(normalized.player2_high_run),
       highRun2: toNumber(normalized.player2_high_run_2),
     },
+    inningsDetail: normalized.inningsDetail,
+    matchSheetJson: normalized.matchSheetJson,
   };
 };
 
@@ -331,6 +333,8 @@ export const buildStageMatchGroups = (
       matchDocumentId: match.documentId ?? null,
       matchNumber: match.matchNumber,
       dateTime: match.dateTime,
+      inningsDetail: match.inningsDetail,
+      matchSheetJson: match.matchSheetJson,
       top: {
         player: match.player1,
         outcome: getMatchOutcome(match.player1, match.player2),

@@ -54,6 +54,8 @@ export type StrapiGroup = {
   player2_high_run?: number | string | null;
   player2_high_run_2?: number | string | null;
   player2_tie_break?: number | string | null;
+  inningsDetail?: unknown;
+  matchSheetJson?: unknown;
   global_match_number?: number | string | null;
   winner_to_global_match_number?: number | string | null;
   winner_to_slot?: number | string | null;
@@ -177,6 +179,8 @@ export type NormalizedGroupMatch = {
   dateTime: string | null;
   player1: NormalizedGroupPlayer;
   player2: NormalizedGroupPlayer;
+  inningsDetail?: unknown;
+  matchSheetJson?: unknown;
 };
 
 export type NormalizedStageResult = {
@@ -260,6 +264,8 @@ export type StageMatchGroup = {
     matchDocumentId: string | null;
     matchNumber: number | null;
     dateTime: string | null;
+    inningsDetail?: unknown;
+    matchSheetJson?: unknown;
     top: {
       player: NormalizedGroupPlayer;
       outcome: "W" | "L" | "D" | null;

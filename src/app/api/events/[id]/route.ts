@@ -340,6 +340,8 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][groups][fields][18]', 'round')
             queryParams.set('populate[event_stages][populate][groups][fields][19]', 'bracket_type')
             queryParams.set('populate[event_stages][populate][groups][fields][20]', 'match_number')
+            queryParams.set('populate[event_stages][populate][groups][fields][21]', 'inningsDetail')
+            queryParams.set('populate[event_stages][populate][groups][fields][22]', 'matchSheetJson')
 
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')

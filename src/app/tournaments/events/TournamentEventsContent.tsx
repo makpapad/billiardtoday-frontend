@@ -344,6 +344,49 @@ function MatchSheetPlayerSummary({
   );
 }
 
+function extractMatchSheetInningsDetail(source: unknown): LiveScoreChartInningDetailEntry[] {
+  const resolve = (value: unknown): LiveScoreChartInningDetailEntry[] => {
+    if (!value) return [];
+    if (typeof value === "string") {
+      try {
+        return resolve(JSON.parse(value));
+      } catch {
+        return [];
+      }
+    }
+    if (Array.isArray(value)) {
+      return value.filter(
+        (entry): entry is LiveScoreChartInningDetailEntry =>
+          Boolean(entry) &&
+          typeof entry === "object" &&
+          Number.isFinite((entry as LiveScoreChartInningDetailEntry).inning) &&
+          (entry as LiveScoreChartInningDetailEntry).inning > 0,
+      );
+    }
+    if (typeof value === "object") {
+      const record = value as {
+        inningsDetail?: unknown;
+        matchSheetJson?: unknown;
+        matchSheet?: unknown;
+        data?: { attributes?: { inningsDetail?: unknown } };
+      };
+      const candidates = [
+        record.inningsDetail,
+        record.matchSheetJson,
+        record.matchSheet,
+        record.data?.attributes?.inningsDetail,
+      ];
+      for (const candidate of candidates) {
+        const detail = resolve(candidate);
+        if (detail.length > 0) return detail;
+      }
+    }
+    return [];
+  };
+
+  return resolve(source);
+}
+
 function MatchSheetModal({
   data,
   onClose,
@@ -5631,7 +5674,10 @@ export function TournamentEventsContent({
                                                                 liveSession?.state?.inningsDetail,
                                                               )
                                                                 ? liveSession.state.inningsDetail
-                                                                : [];
+                                                                : extractMatchSheetInningsDetail(
+                                                                    row.sourceMatch?.inningsDetail ??
+                                                                      row.sourceMatch?.matchSheetJson,
+                                                                  );
                                                             const canOpenMatchSheet =
                                                               matchPlayed &&
                                                               !hasActiveLiveSession &&
@@ -5639,40 +5685,15 @@ export function TournamentEventsContent({
                                                                 liveSession?.sessionStatus,
                                                               ) ||
                                                                 !liveSession ||
-                                                                liveSession.sessionStatus !==
+                                                                liveSession?.sessionStatus !==
                                                                   "in_progress") &&
-                                                              (matchSheetDetail.some(
+                                                              matchSheetDetail.some(
                                                                 (entry) =>
                                                                   Number.isFinite(
                                                                     entry?.inning,
                                                                   ) &&
                                                                   entry.inning > 0,
-                                                              ) ||
-                                                                Math.max(
-                                                                  topDisplayInnings ?? 0,
-                                                                  bottomDisplayInnings ?? 0,
-                                                                ) > 0);
-                                                            const fallbackSheetDetail =
-                                                              matchSheetDetail.length > 0
-                                                                ? matchSheetDetail
-                                                                : matchPlayed
-                                                                  ? [
-                                                                      {
-                                                                        inning: Math.max(
-                                                                          topDisplayInnings ?? 0,
-                                                                          bottomDisplayInnings ?? 0,
-                                                                        ),
-                                                                        player1: {
-                                                                          pt: topDisplayPoints ?? 0,
-                                                                          tot: topDisplayPoints ?? 0,
-                                                                        },
-                                                                        player2: {
-                                                                          pt: bottomDisplayPoints ?? 0,
-                                                                          tot: bottomDisplayPoints ?? 0,
-                                                                        },
-                                                                      },
-                                                                    ]
-                                                                  : [];
+                                                              );
                                                             const matchSheetSession: EventLiveSession =
                                                               {
                                                                 id:
@@ -5754,7 +5775,7 @@ export function TournamentEventsContent({
                                                                     liveSession?.state?.bestRun2B ??
                                                                     match.bottom.player.highRun2,
                                                                   inningsDetail:
-                                                                    fallbackSheetDetail,
+                                                                    matchSheetDetail,
                                                                 },
                                                               };
                                                             const matchSheetTitle = `${
