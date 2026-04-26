@@ -210,9 +210,8 @@ function formatTemplateFivePlayerName(value: string): string {
   const parts = normalized.split(/\s+/).filter(Boolean);
   if (parts.length <= 1) return normalized;
   const surname = parts[0];
-  const givenName = parts.slice(1).join(" ");
-  const givenPrefix = Array.from(givenName).slice(0, 3).join("").trimEnd();
-  return givenPrefix ? `${surname} ${givenPrefix}.` : surname;
+  const givenInitial = Array.from(parts[1] ?? "").slice(0, 1).join("").trimEnd();
+  return givenInitial ? `${surname} ${givenInitial}.` : surname;
 }
 
 function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fallbackSessionId: string): LiveScoreItem | null {
@@ -1479,7 +1478,7 @@ function TemplateFourOverlayCard({
   const totalBlocks = 40;
   const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
   const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
-  const topStripHeight = isTemplateFive ? 27 : 20;
+  const topStripHeight = isTemplateFive ? 34 : 20;
   const mainBarHeight = isTemplateFive ? 50 : 40;
   const overlayHeight = topStripHeight + mainBarHeight;
   const statsColumnWidth = isTemplateFive
@@ -1493,8 +1492,8 @@ function TemplateFourOverlayCard({
     : Math.max(180, Math.min(260, Math.round(width * 0.26)));
   const topStripColor = isTemplateFive ? "#4e58b8" : "#d6d9e1";
   const mainBarColor = isTemplateFive ? "#2b2f7f" : "#8a909d";
-  const topTextSize = isTemplateFive ? 16 : 11;
-  const raceTextSize = isTemplateFive ? 16 : 12;
+  const topTextSize = isTemplateFive ? 20 : 11;
+  const raceTextSize = isTemplateFive ? 20 : 12;
   const nameTextSize = isTemplateFive ? 28 : 15;
   const inningsTextSize = isTemplateFive ? 22 : 15;
 
