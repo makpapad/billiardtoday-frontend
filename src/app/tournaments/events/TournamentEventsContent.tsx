@@ -11,6 +11,7 @@ import {
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
+import { List, X } from "lucide-react";
 import type {
   EventApiResponse,
   NormalizedEventStage,
@@ -43,6 +44,11 @@ import {
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import {
+  buildLiveScoreChartRows,
+  LiveSheetScoreChart,
+  type LiveScoreChartInningDetailEntry,
+} from "@/components/live/LiveSheetScoreChart";
 
 const BRACKET_STAGE_TYPES = new Set([
   "double_elimination",
@@ -168,13 +174,34 @@ type EventLiveSession = {
   state?: {
     scoreA?: number | null;
     scoreB?: number | null;
+    runA?: number | null;
+    runB?: number | null;
+    liveRunA?: number | null;
+    liveRunB?: number | null;
     inningsA?: number | null;
     inningsB?: number | null;
+    inningsCount?: number | null;
     bestRunA?: number | null;
     bestRunB?: number | null;
+    bestRun2A?: number | null;
+    bestRun2B?: number | null;
+    avgFormattedA?: string | null;
+    avgFormattedB?: string | null;
+    accPercentA?: number | null;
+    accPercentB?: number | null;
+    current?: "A" | "B" | null;
     playerAName?: string | null;
     playerBName?: string | null;
+    playerACountry?: string | null;
+    playerBCountry?: string | null;
+    inningsDetail?: LiveScoreChartInningDetailEntry[];
   } | null;
+};
+
+type MatchSheetModalData = {
+  title: string;
+  subtitle: string | null;
+  session: EventLiveSession;
 };
 
 function PlayerNameWithFlag({
@@ -219,6 +246,233 @@ function PlayerNameWithFlag({
             {nativeName}
           </span>
         )}
+      </div>
+    </div>
+  );
+}
+
+const normalizeSheetNumber = (value: unknown) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.max(0, Math.trunc(parsed));
+};
+
+const formatSheetNumber = (value: unknown) => {
+  const normalized = normalizeSheetNumber(value);
+  return normalized === null ? "-" : String(normalized);
+};
+
+const formatSheetAverage = (
+  explicit: string | null | undefined,
+  points: unknown,
+  innings: unknown,
+) => {
+  if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
+  const safePoints = normalizeSheetNumber(points);
+  const safeInnings = normalizeSheetNumber(innings);
+  if (safePoints === null || safeInnings === null || safeInnings <= 0) return "-";
+  return (safePoints / safeInnings).toFixed(3);
+};
+
+const formatSheetPercent = (value: unknown) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "-";
+  return `${parsed.toFixed(1)}%`;
+};
+
+const hasFinishedSessionStatus = (value: string | null | undefined) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["completed", "complete", "finished", "ended", "closed"].includes(normalized);
+};
+
+function MatchSheetPlayerSummary({
+  name,
+  country,
+  score,
+  innings,
+  avg,
+  highRun,
+  highRun2,
+  accuracy,
+  active,
+  tone,
+}: {
+  name: string;
+  country?: string | null;
+  score?: number | null;
+  innings?: number | null;
+  avg?: string | null;
+  highRun?: number | null;
+  highRun2?: number | null;
+  accuracy?: number | null;
+  active?: boolean;
+  tone: "red" | "blue";
+}) {
+  const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
+  const accentClass = tone === "red" ? "border-red-300/50 bg-red-500/10" : "border-sky-300/50 bg-sky-500/10";
+  return (
+    <div
+      className={clsx(
+        "rounded-2xl border px-4 py-4 text-white shadow-[0_18px_50px_rgba(2,6,23,0.28)]",
+        active ? accentClass : "border-white/10 bg-white/[0.04]",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        {flagSrc ? (
+          <img
+            src={flagSrc}
+            alt={country || "flag"}
+            className="h-5 w-8 rounded-sm object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
+        <div className="min-w-0 flex-1 truncate text-sm font-bold">{name}</div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] text-center">
+        {[
+          { label: "Score", value: formatSheetNumber(score) },
+          { label: "Inn", value: formatSheetNumber(innings) },
+          { label: "Avg", value: formatSheetAverage(avg, score, innings) },
+          { label: "H.R.", value: formatSheetNumber(highRun) },
+          { label: "H.R.2", value: formatSheetNumber(highRun2) },
+          { label: "Acc", value: formatSheetPercent(accuracy) },
+        ].map((item) => (
+          <div key={item.label} className="border-b border-r border-white/10 px-2 py-2 last:border-r-0 [&:nth-child(n+4)]:border-b-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{item.label}</div>
+            <div className="mt-1 text-sm font-black tabular-nums text-white">{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchSheetModal({
+  data,
+  onClose,
+}: {
+  data: MatchSheetModalData;
+  onClose: () => void;
+}) {
+  const state = data.session.state ?? {};
+  const playerAName = state.playerAName || data.session.player1Name || "Player A";
+  const playerBName = state.playerBName || data.session.player2Name || "Player B";
+  const chartRows = buildLiveScoreChartRows({
+    inningsDetail: state.inningsDetail ?? null,
+    inningsCount: state.inningsCount ?? null,
+    inningsA: state.inningsA ?? null,
+    inningsB: state.inningsB ?? null,
+    scoreA: state.scoreA ?? null,
+    scoreB: state.scoreB ?? null,
+    ended: true,
+  });
+  const detailRows = Array.isArray(state.inningsDetail)
+    ? [...state.inningsDetail]
+        .filter((entry) => Number.isFinite(entry?.inning) && entry.inning > 0)
+        .sort((a, b) => a.inning - b.inning)
+    : [];
+
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/82 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#071422] text-white shadow-[0_30px_120px_rgba(2,6,23,0.72)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200/80">
+              Match sheet
+            </div>
+            <div className="mt-1 truncate text-lg font-black tracking-tight">{data.title}</div>
+            {data.subtitle ? (
+              <div className="mt-1 truncate text-sm font-medium text-slate-300">{data.subtitle}</div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+            aria-label="Close match sheet"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <MatchSheetPlayerSummary
+              name={playerAName}
+              country={state.playerACountry}
+              score={state.scoreA}
+              innings={state.inningsA}
+              avg={state.avgFormattedA}
+              highRun={state.bestRunA}
+              highRun2={state.bestRun2A}
+              accuracy={state.accPercentA}
+              active={state.current === "A"}
+              tone="red"
+            />
+            <MatchSheetPlayerSummary
+              name={playerBName}
+              country={state.playerBCountry}
+              score={state.scoreB}
+              innings={state.inningsB}
+              avg={state.avgFormattedB}
+              highRun={state.bestRunB}
+              highRun2={state.bestRun2B}
+              accuracy={state.accPercentB}
+              active={state.current === "B"}
+              tone="blue"
+            />
+          </div>
+
+          <LiveSheetScoreChart
+            className="mt-5"
+            data={chartRows}
+            height={360}
+            noAnim
+            playerAName={playerAName}
+            playerBName={playerBName}
+          />
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
+            <div className="grid grid-cols-[1fr_1fr_76px_1fr_1fr] border-b border-white/10 bg-white/[0.05] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">
+              <div className="text-center">{playerAName} pt</div>
+              <div className="text-center">Score</div>
+              <div className="text-center">Inn</div>
+              <div className="text-center">{playerBName} pt</div>
+              <div className="text-center">Score</div>
+            </div>
+            {detailRows.length > 0 ? (
+              <div>
+                {detailRows.map((row, index) => (
+                  <div
+                    key={`sheet-row-${row.inning}`}
+                    className={clsx(
+                      "grid grid-cols-[1fr_1fr_76px_1fr_1fr] items-center px-3 py-2.5 text-sm",
+                      index > 0 && "border-t border-white/10",
+                    )}
+                  >
+                    <div className="text-center font-semibold text-white">{formatSheetNumber(row.player1?.pt)}</div>
+                    <div className="text-center font-semibold text-white">{formatSheetNumber(row.player1?.tot)}</div>
+                    <div className="mx-auto w-full max-w-[64px] rounded-lg bg-white/[0.06] px-2 py-1 text-center font-black text-cyan-100">
+                      {formatSheetNumber(row.inning)}
+                    </div>
+                    <div className="text-center font-semibold text-white">{formatSheetNumber(row.player2?.pt)}</div>
+                    <div className="text-center font-semibold text-white">{formatSheetNumber(row.player2?.tot)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-4 py-8 text-center text-sm text-slate-300">
+                No inning detail available.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1730,6 +1984,7 @@ export function TournamentEventsContent({
   const [selectedBracketMatchId, setSelectedBracketMatchId] = useState<string | null>(
     null,
   );
+  const [selectedMatchSheet, setSelectedMatchSheet] = useState<MatchSheetModalData | null>(null);
   const [liveSessions, setLiveSessions] = useState<EventLiveSession[]>([]);
   const [brMatchesByStage, setBrMatchesByStage] = useState<
     Record<string, unknown[]>
@@ -4957,6 +5212,9 @@ export function TournamentEventsContent({
                                                         Date
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
+                                                        Match sheet
+                                                      </th>
+                                                      <th className="px-4 py-2 font-medium">
                                                         Result
                                                       </th>
                                                       <th className="px-4 py-2 font-medium">
@@ -5390,6 +5648,52 @@ export function TournamentEventsContent({
                                                                       innings,
                                                                     )
                                                                   : "-";
+                                                            const matchSheetDetail =
+                                                              Array.isArray(
+                                                                liveSession?.state?.inningsDetail,
+                                                              )
+                                                                ? liveSession.state.inningsDetail
+                                                                : [];
+                                                            const canOpenMatchSheet =
+                                                              Boolean(liveSession) &&
+                                                              !hasActiveLiveSession &&
+                                                              matchPlayed &&
+                                                              (hasFinishedSessionStatus(
+                                                                liveSession?.sessionStatus,
+                                                              ) ||
+                                                                liveSession?.sessionStatus !==
+                                                                  "in_progress") &&
+                                                              matchSheetDetail.some(
+                                                                (entry) =>
+                                                                  Number.isFinite(
+                                                                    entry?.inning,
+                                                                  ) &&
+                                                                  entry.inning > 0,
+                                                              );
+                                                            const matchSheetTitle = `${
+                                                              displayPlayers.top.label ||
+                                                              match.top.player.name ||
+                                                              "Player A"
+                                                            } vs ${
+                                                              displayPlayers.bottom.label ||
+                                                              match.bottom.player.name ||
+                                                              "Player B"
+                                                            }`;
+                                                            const matchSheetSubtitle = [
+                                                              stage.title,
+                                                              formatGroupDisplayLabel(
+                                                                group.number,
+                                                                resolveGroupLabelMode(
+                                                                  stage.timetableConfig,
+                                                                ),
+                                                              ),
+                                                              row.sourceMatch?.matchNumber !== null &&
+                                                              row.sourceMatch?.matchNumber !== undefined
+                                                                ? `Match ${row.sourceMatch.matchNumber}`
+                                                                : null,
+                                                            ]
+                                                              .filter(Boolean)
+                                                              .join(" / ");
 
                                                             return (
                                                               <>
@@ -5541,6 +5845,34 @@ export function TournamentEventsContent({
                                                                         </span>
                                                                       </div>
                                                                     )}
+                                                                  </td>
+                                                                  <td className="px-4 py-2 text-center" rowSpan={2}>
+                                                                    <div className="flex min-h-[72px] items-center justify-center">
+                                                                      {canOpenMatchSheet && liveSession ? (
+                                                                        <button
+                                                                          type="button"
+                                                                          onClick={() =>
+                                                                            setSelectedMatchSheet({
+                                                                              title: matchSheetTitle,
+                                                                              subtitle:
+                                                                                matchSheetSubtitle ||
+                                                                                null,
+                                                                              session:
+                                                                                liveSession,
+                                                                            })
+                                                                          }
+                                                                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/40"
+                                                                          title="Match sheet"
+                                                                          aria-label={`Open match sheet for ${matchSheetTitle}`}
+                                                                        >
+                                                                          <List className="h-5 w-5" />
+                                                                        </button>
+                                                                      ) : (
+                                                                        <span className="text-slate-300 dark:text-slate-600">
+                                                                          -
+                                                                        </span>
+                                                                      )}
+                                                                    </div>
                                                                   </td>
                                                                   <td className="px-4 py-2 text-center font-semibold">
                                                                     {formatOutcomeLabel(
@@ -5797,6 +6129,12 @@ export function TournamentEventsContent({
             )}
         </div>
       </div>
+      {selectedMatchSheet ? (
+        <MatchSheetModal
+          data={selectedMatchSheet}
+          onClose={() => setSelectedMatchSheet(null)}
+        />
+      ) : null}
       {selectedBracketMatch ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
