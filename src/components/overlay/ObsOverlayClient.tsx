@@ -1485,7 +1485,7 @@ function TemplateFourOverlayCard({
   const mainBarColor = isTemplateFive ? "#5f6876" : "#8a909d";
   const topTextSize = isTemplateFive ? 16 : 11;
   const raceTextSize = isTemplateFive ? 16 : 12;
-  const nameTextSize = isTemplateFive ? 22 : 15;
+  const nameTextSize = isTemplateFive ? 28 : 15;
   const inningsTextSize = isTemplateFive ? 22 : 15;
 
   return (
