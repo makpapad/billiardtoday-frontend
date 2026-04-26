@@ -1534,7 +1534,7 @@ function TemplateFourOverlayCard({
           }}
         >
           <span className="truncate whitespace-nowrap">
-            {tournament} / S {stage} / T {table}
+            {isTemplateFive ? tournament : `${tournament} / S ${stage} / T ${table}`}
           </span>
           <TimeStrip
             remainingBlocks={remainingBlocks}
@@ -1550,7 +1550,11 @@ function TemplateFourOverlayCard({
             }`}
             style={{ fontSize: raceTextSize }}
           >
-            {target ? `Race ${target}` : ""}
+            {isTemplateFive
+              ? `S ${stage} / T ${table}${target ? ` / Race ${target}` : ""}`
+              : target
+                ? `Race ${target}`
+                : ""}
           </span>
         </div>
       </div>
