@@ -5655,21 +5655,130 @@ export function TournamentEventsContent({
                                                                 ? liveSession.state.inningsDetail
                                                                 : [];
                                                             const canOpenMatchSheet =
-                                                              Boolean(liveSession) &&
-                                                              !hasActiveLiveSession &&
                                                               matchPlayed &&
+                                                              !hasActiveLiveSession &&
                                                               (hasFinishedSessionStatus(
                                                                 liveSession?.sessionStatus,
                                                               ) ||
-                                                                liveSession?.sessionStatus !==
+                                                                !liveSession ||
+                                                                liveSession.sessionStatus !==
                                                                   "in_progress") &&
-                                                              matchSheetDetail.some(
+                                                              (matchSheetDetail.some(
                                                                 (entry) =>
                                                                   Number.isFinite(
                                                                     entry?.inning,
                                                                   ) &&
                                                                   entry.inning > 0,
-                                                              );
+                                                              ) ||
+                                                                Math.max(
+                                                                  topDisplayInnings ?? 0,
+                                                                  bottomDisplayInnings ?? 0,
+                                                                ) > 0);
+                                                            const fallbackSheetDetail =
+                                                              matchSheetDetail.length > 0
+                                                                ? matchSheetDetail
+                                                                : matchPlayed
+                                                                  ? [
+                                                                      {
+                                                                        inning: Math.max(
+                                                                          topDisplayInnings ?? 0,
+                                                                          bottomDisplayInnings ?? 0,
+                                                                        ),
+                                                                        player1: {
+                                                                          pt: topDisplayPoints ?? 0,
+                                                                          tot: topDisplayPoints ?? 0,
+                                                                        },
+                                                                        player2: {
+                                                                          pt: bottomDisplayPoints ?? 0,
+                                                                          tot: bottomDisplayPoints ?? 0,
+                                                                        },
+                                                                      },
+                                                                    ]
+                                                                  : [];
+                                                            const matchSheetSession: EventLiveSession =
+                                                              {
+                                                                id:
+                                                                  liveSession?.id ??
+                                                                  `match-${match.key}`,
+                                                                documentId:
+                                                                  liveSession?.documentId ??
+                                                                  `match-${match.key}`,
+                                                                eventId:
+                                                                  liveSession?.eventId ??
+                                                                  eventId ??
+                                                                  null,
+                                                                eventStageId:
+                                                                  liveSession?.eventStageId ??
+                                                                  stage.documentId,
+                                                                groupNumber:
+                                                                  liveSession?.groupNumber ??
+                                                                  group.number,
+                                                                screenIdentifier:
+                                                                  liveSession?.screenIdentifier ??
+                                                                  null,
+                                                                player1DocumentId:
+                                                                  liveSession?.player1DocumentId ??
+                                                                  match.top.player.documentId,
+                                                                player2DocumentId:
+                                                                  liveSession?.player2DocumentId ??
+                                                                  match.bottom.player.documentId,
+                                                                player1Name:
+                                                                  liveSession?.player1Name ??
+                                                                  match.top.player.name,
+                                                                player2Name:
+                                                                  liveSession?.player2Name ??
+                                                                  match.bottom.player.name,
+                                                                sessionStatus:
+                                                                  liveSession?.sessionStatus ??
+                                                                  "completed",
+                                                                state: {
+                                                                  ...(liveSession?.state ?? {}),
+                                                                  playerAName:
+                                                                    liveSession?.state?.playerAName ??
+                                                                    displayPlayers.top.label,
+                                                                  playerBName:
+                                                                    liveSession?.state?.playerBName ??
+                                                                    displayPlayers.bottom.label,
+                                                                  playerACountry:
+                                                                    liveSession?.state?.playerACountry ??
+                                                                    match.top.player.country,
+                                                                  playerBCountry:
+                                                                    liveSession?.state?.playerBCountry ??
+                                                                    match.bottom.player.country,
+                                                                  scoreA:
+                                                                    liveSession?.state?.scoreA ??
+                                                                    topDisplayPoints,
+                                                                  scoreB:
+                                                                    liveSession?.state?.scoreB ??
+                                                                    bottomDisplayPoints,
+                                                                  inningsA:
+                                                                    liveSession?.state?.inningsA ??
+                                                                    topDisplayInnings,
+                                                                  inningsB:
+                                                                    liveSession?.state?.inningsB ??
+                                                                    bottomDisplayInnings,
+                                                                  inningsCount:
+                                                                    liveSession?.state?.inningsCount ??
+                                                                    Math.max(
+                                                                      topDisplayInnings ?? 0,
+                                                                      bottomDisplayInnings ?? 0,
+                                                                    ),
+                                                                  bestRunA:
+                                                                    liveSession?.state?.bestRunA ??
+                                                                    topDisplayHighRun,
+                                                                  bestRunB:
+                                                                    liveSession?.state?.bestRunB ??
+                                                                    bottomDisplayHighRun,
+                                                                  bestRun2A:
+                                                                    liveSession?.state?.bestRun2A ??
+                                                                    match.top.player.highRun2,
+                                                                  bestRun2B:
+                                                                    liveSession?.state?.bestRun2B ??
+                                                                    match.bottom.player.highRun2,
+                                                                  inningsDetail:
+                                                                    fallbackSheetDetail,
+                                                                },
+                                                              };
                                                             const matchSheetTitle = `${
                                                               displayPlayers.top.label ||
                                                               match.top.player.name ||
@@ -5894,7 +6003,7 @@ export function TournamentEventsContent({
                                                                     rowSpan={2}
                                                                   >
                                                                     <div className="flex min-h-[72px] items-center justify-center">
-                                                                      {canOpenMatchSheet && liveSession ? (
+                                                                      {canOpenMatchSheet ? (
                                                                         <button
                                                                           type="button"
                                                                           onClick={() =>
@@ -5904,7 +6013,7 @@ export function TournamentEventsContent({
                                                                                 matchSheetSubtitle ||
                                                                                 null,
                                                                               session:
-                                                                                liveSession,
+                                                                                matchSheetSession,
                                                                             })
                                                                           }
                                                                           className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500 dark:hover:bg-cyan-950/40"
