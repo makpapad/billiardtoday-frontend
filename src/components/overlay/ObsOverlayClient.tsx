@@ -8,7 +8,7 @@ type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-type OverlayTemplate = "1" | "2" | "3" | "4";
+type OverlayTemplate = "1" | "2" | "3" | "4" | "5";
 
 type LiveScoreState = {
   scoreA?: number;
@@ -412,7 +412,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     .trim()
     .toLowerCase();
   const template: OverlayTemplate =
-    templateParam === "4" || templateParam === "t4"
+    templateParam === "5" || templateParam === "t5"
+      ? "5"
+      : templateParam === "4" || templateParam === "t4"
       ? "4"
       : templateParam === "3" || templateParam === "t3"
       ? "3"
@@ -423,9 +425,10 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const requestedHeight = Number(getParamValue(searchParams?.height));
   const width =
     (Number.isFinite(requestedWidth) && requestedWidth > 0 ? requestedWidth : 0) ||
-    (template === "3" ? 1920 : DEFAULT_WIDTH);
+    (template === "3" || template === "5" ? 1920 : DEFAULT_WIDTH);
   const height =
     (Number.isFinite(requestedHeight) && requestedHeight > 0 ? requestedHeight : 0) ||
+    (template === "5" ? 1080 : 0) ||
     DEFAULT_HEIGHT;
   const obsSafe = parseBooleanParam(
     searchParams?.obs ?? searchParams?.obsSafe ?? searchParams?.safe,
@@ -1002,6 +1005,17 @@ function ScoreOverlayCard({
     );
   }
 
+  if (template === "5") {
+    return (
+      <TemplateFiveOverlayCard
+        item={item}
+        width={width}
+        height={height}
+        obsSafe={obsSafe}
+      />
+    );
+  }
+
   return (
     <div
       className="rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.6)] text-white"
@@ -1558,6 +1572,54 @@ function TemplateFourOverlayCard({
         </div>
 
         <CompactOverlayStats align="right" avg={rightAvg} hr={rightHr} />
+      </div>
+    </div>
+  );
+}
+
+function TemplateFiveOverlayCard({
+  item,
+  width,
+  height,
+  obsSafe,
+}: {
+  item: LiveScoreItem;
+  width: number;
+  height: number;
+  obsSafe: boolean;
+}) {
+  const overlayWidth = Math.round(width * 0.7);
+  const overlayBottom = Math.max(24, Math.round(height * 0.04));
+
+  return (
+    <div
+      className="relative text-white"
+      style={{
+        width,
+        height,
+        minWidth: width,
+        minHeight: height,
+        transform: obsSafe ? "translateZ(0)" : undefined,
+        backfaceVisibility: obsSafe ? "hidden" : undefined,
+        WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
+        textRendering: obsSafe ? "geometricPrecision" : undefined,
+        fontFamily:
+          "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
+      }}
+    >
+      <div
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{
+          width: overlayWidth,
+          bottom: overlayBottom,
+        }}
+      >
+        <TemplateFourOverlayCard
+          item={item}
+          width={overlayWidth}
+          height={height}
+          obsSafe={obsSafe}
+        />
       </div>
     </div>
   );
