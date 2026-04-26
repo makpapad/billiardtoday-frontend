@@ -1588,17 +1588,34 @@ function TemplateFiveOverlayCard({
   height: number;
   obsSafe: boolean;
 }) {
-  const overlayWidth = Math.round(width * 0.7);
-  const overlayBottom = Math.max(24, Math.round(height * 0.04));
+  const [viewportSize, setViewportSize] = React.useState<{ width: number; height: number } | null>(null);
+
+  React.useEffect(() => {
+    const updateViewportSize = () => {
+      setViewportSize({
+        width: window.innerWidth || width,
+        height: window.innerHeight || height,
+      });
+    };
+
+    updateViewportSize();
+    window.addEventListener("resize", updateViewportSize);
+    return () => window.removeEventListener("resize", updateViewportSize);
+  }, [height, width]);
+
+  const availableWidth = viewportSize?.width ?? width;
+  const availableHeight = viewportSize?.height ?? height;
+  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.7));
+  const overlayBottom = Math.max(12, Math.round(availableHeight * 0.04));
 
   return (
     <div
       className="relative text-white"
       style={{
-        width,
-        height,
-        minWidth: width,
-        minHeight: height,
+        width: "100vw",
+        height: "100vh",
+        minWidth: 0,
+        minHeight: 0,
         transform: obsSafe ? "translateZ(0)" : undefined,
         backfaceVisibility: obsSafe ? "hidden" : undefined,
         WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
@@ -1617,7 +1634,7 @@ function TemplateFiveOverlayCard({
         <TemplateFourOverlayCard
           item={item}
           width={overlayWidth}
-          height={height}
+          height={availableHeight}
           obsSafe={obsSafe}
         />
       </div>
