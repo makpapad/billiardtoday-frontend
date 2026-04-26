@@ -1475,6 +1475,7 @@ function TemplateFourOverlayCard({
   const tournament = state.tournamentName ?? "Live Match";
   const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
   const table = stripLeadingWord(state.tableName ?? "-", "table") ?? "-";
+  const templateFiveRightLabel = `${stage !== "-" ? `${stage} / ` : ""}T ${table}${target ? ` / Race ${target}` : ""}`;
   const totalBlocks = 40;
   const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
   const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);
@@ -1551,7 +1552,7 @@ function TemplateFourOverlayCard({
             style={{ fontSize: raceTextSize }}
           >
             {isTemplateFive
-              ? `T ${table}${target ? ` / Race ${target}` : ""}`
+              ? templateFiveRightLabel
               : target
                 ? `Race ${target}`
                 : ""}
