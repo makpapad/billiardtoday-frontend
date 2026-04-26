@@ -1483,10 +1483,10 @@ function TemplateFourOverlayCard({
     : Math.max(180, Math.min(260, Math.round(width * 0.26)));
   const topStripColor = isTemplateFive ? "#9da4b0" : "#d6d9e1";
   const mainBarColor = isTemplateFive ? "#5f6876" : "#8a909d";
-  const topTextSize = isTemplateFive ? 13 : 11;
-  const raceTextSize = isTemplateFive ? 14 : 12;
-  const nameTextSize = isTemplateFive ? 18 : 15;
-  const inningsTextSize = isTemplateFive ? 18 : 15;
+  const topTextSize = isTemplateFive ? 16 : 11;
+  const raceTextSize = isTemplateFive ? 16 : 12;
+  const nameTextSize = isTemplateFive ? 22 : 15;
+  const inningsTextSize = isTemplateFive ? 22 : 15;
 
   return (
     <div
@@ -1510,7 +1510,9 @@ function TemplateFourOverlayCard({
         style={{ height: topStripHeight }}
       >
         <div
-          className="grid items-center rounded-t-[10px] px-4 font-normal tracking-[0.05em] text-slate-900"
+          className={`grid items-center rounded-t-[10px] px-4 font-normal tracking-[0.05em] ${
+            isTemplateFive ? "text-white" : "text-slate-900"
+          }`}
           style={{
             width: topStripWidth,
             height: topStripHeight,
@@ -1534,7 +1536,9 @@ function TemplateFourOverlayCard({
             large={isTemplateFive}
           />
           <span
-            className="justify-self-end whitespace-nowrap font-medium tracking-[0.06em] text-slate-950"
+            className={`justify-self-end whitespace-nowrap font-medium tracking-[0.06em] ${
+              isTemplateFive ? "text-white" : "text-slate-950"
+            }`}
             style={{ fontSize: raceTextSize }}
           >
             {target ? `Race ${target}` : ""}
@@ -1705,7 +1709,7 @@ function TimeStrip({
 
   return (
     <div className={`flex items-center rounded-full bg-slate-800/95 px-3 py-1 ${compact ? "gap-2.5" : "gap-3"}`}>
-      <div className={`${large ? "text-[14px]" : compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
+      <div className={`${large ? "text-[16px]" : compact ? "text-[11px]" : "text-[13px]"} font-normal leading-none ${remainingColorClass}`}>
         {remainingBlocks}
       </div>
       <div
@@ -1791,10 +1795,10 @@ function CompactOverlayStats({
 
   return (
     <div className={`flex min-w-0 items-center gap-4 leading-none whitespace-nowrap ${justifyClass}`}>
-      <span className={`${large ? "text-[14px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
+      <span className={`${large ? "text-[16px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
         AVG <span className="font-semibold text-white">{avg}</span>
       </span>
-      <span className={`${large ? "text-[14px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
+      <span className={`${large ? "text-[16px]" : "text-[12px]"} font-normal uppercase tracking-[0.08em] text-white/92`}>
         H.R. <span className="font-semibold text-white">{hr}</span>
       </span>
     </div>
@@ -1813,7 +1817,7 @@ function OverlayScoreBox({
   return (
     <div
       className={`flex shrink-0 items-center justify-center rounded-[5px] border font-semibold leading-none ${
-        large ? "h-8 min-w-[54px] px-3.5 text-[26px]" : "h-7 min-w-[46px] px-3 text-[21px]"
+        large ? "h-9 min-w-[60px] px-4 text-[30px]" : "h-7 min-w-[46px] px-3 text-[21px]"
       } ${
         tone === "accent"
           ? "border-slate-950/35 bg-amber-400 text-slate-950"
@@ -1829,7 +1833,7 @@ function OverlayRunCircle({ run, large }: { run: number; large?: boolean }) {
   return (
     <div
       className={`flex shrink-0 items-center justify-center rounded-full border border-slate-950/20 bg-white font-normal leading-none text-slate-950 ${
-        large ? "h-8 w-8 text-[17px]" : "h-7 w-7 text-[14px]"
+        large ? "h-9 w-9 text-[19px]" : "h-7 w-7 text-[14px]"
       }`}
     >
       {run}
