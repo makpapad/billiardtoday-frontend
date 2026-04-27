@@ -22,6 +22,7 @@ type Player = {
     id: number
     documentId: string
     full_name: string
+    full_name_en?: string | null
     country: string | null
     city: string | null
     date_of_birth: string | null
@@ -137,6 +138,10 @@ type Match = {
     id: string
     opponent: string
     opponentId: string | null
+    opponentFullNameEn?: string | null
+    opponent_full_name_en?: string | null
+    opponentNameEn?: string | null
+    opponent_name_en?: string | null
     result: 'win' | 'loss' | 'draw'
     scoreFor: number
     scoreAgainst: number
@@ -289,6 +294,29 @@ const buildPlayerSlug = (id: string, name: string): string => {
     const baseName = name.trim()
     const slugName = baseName ? baseName.replace(/\s+/g, "-") : ""
     return slugName ? `${trimmedId}-${slugName}` : trimmedId
+}
+
+const readCleanString = (value: unknown): string => {
+    return typeof value === 'string' ? value.trim() : ''
+}
+
+const getPlayerDisplayName = (
+    player: Pick<Player, 'full_name' | 'full_name_en'> | null | undefined,
+): string => {
+    return (
+        readCleanString(player?.full_name_en) ||
+        readCleanString(player?.full_name)
+    )
+}
+
+const getMatchOpponentDisplayName = (match: Match): string => {
+    return (
+        readCleanString(match.opponentFullNameEn) ||
+        readCleanString(match.opponent_full_name_en) ||
+        readCleanString(match.opponentNameEn) ||
+        readCleanString(match.opponent_name_en) ||
+        readCleanString(match.opponent)
+    )
 }
 
 const formatSafeDecimal = (value: number | null | undefined, digits = 3): string => {
@@ -787,7 +815,8 @@ export default function PlayerProfilePage() {
                     : null
 
             const numericId = first?.id ? String(first.id) : trimmedId
-            const nameFromApi = first?.full_name || displayName
+            const nameFromApi =
+                getPlayerDisplayName(first) || displayName
 
             router.push(buildPlayerUrl(numericId, nameFromApi))
         } catch {
@@ -854,8 +883,7 @@ export default function PlayerProfilePage() {
                         if (!isNumericPlayerId && playerData?.id) {
                             const canonicalId = String(playerData.id)
                             const canonicalName =
-                                playerData.full_name ||
-                                playerData.full_name_en ||
+                                getPlayerDisplayName(playerData) ||
                                 playerData.name ||
                                 playerId
                             const canonicalUrl = buildPlayerUrl(canonicalId, canonicalName)
@@ -1125,7 +1153,7 @@ export default function PlayerProfilePage() {
         setIsOpponentOpen(false)
         setActiveStatBreakdown(null)
         router.push(
-            `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, player?.full_name || '')}`,
+            `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(playerId, getPlayerDisplayName(player))}`,
         )
     }
 
@@ -1152,8 +1180,9 @@ export default function PlayerProfilePage() {
             params.set('match', String(match.num))
         }
 
-        if (player?.full_name) {
-            params.set('player', player.full_name)
+        const playerName = getPlayerDisplayName(player)
+        if (playerName) {
+            params.set('player', playerName)
         }
 
         return `${match.tournamentHref}${separator}${params.toString()}`
@@ -1619,6 +1648,7 @@ export default function PlayerProfilePage() {
             : baseParticipationsForH2H.flatMap((p) =>
                   p.matches.map((m) => ({
                       ...m,
+                      opponent: getMatchOpponentDisplayName(m),
                       tournament: p.tournament,
                       year: p.year,
                       tournamentHref:
@@ -1681,7 +1711,9 @@ export default function PlayerProfilePage() {
         baseParticipationsForH2H.forEach((p) => {
             p.matches.forEach((m) => {
                 if (m.opponentId) {
-                    if (!map.has(m.opponentId)) map.set(m.opponentId, m.opponent)
+                    if (!map.has(m.opponentId)) {
+                        map.set(m.opponentId, getMatchOpponentDisplayName(m))
+                    }
                 }
             })
         })
@@ -1719,6 +1751,7 @@ export default function PlayerProfilePage() {
                   .filter((m) => m.opponentId === selectedOpponentId)
                   .map((m) => ({
                       ...m,
+                      opponent: getMatchOpponentDisplayName(m),
                       tournament: p.tournament,
                       year: p.year,
                       tournamentHref:
@@ -1942,7 +1975,8 @@ export default function PlayerProfilePage() {
         }
     })()
 
-    const primaryName = (decodedSlugName || player.full_name || '').trim()
+    const primaryName =
+        getPlayerDisplayName(player) || decodedSlugName.trim()
     const nativeName = (player.full_name || '').trim()
     const playerCountryLabel = getCountryLabel(player.country)
 
@@ -3401,7 +3435,7 @@ export default function PlayerProfilePage() {
                         <div className="grid grid-cols-3 gap-4 items-center mb-6">
                             <div className="text-center">
                                 <div className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                    {player?.full_name}
+                                    {getPlayerDisplayName(player)}
                                 </div>
                                 <div className="flex flex-col items-center">
                                     <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
@@ -3436,7 +3470,7 @@ export default function PlayerProfilePage() {
                                     <div className="space-y-3">
                                         <div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                {player?.full_name} Possible points
+                                                {getPlayerDisplayName(player)} Possible points
                                             </div>
                                             <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                                 {resolvePlayerPossiblePoints(selectedMatch)}

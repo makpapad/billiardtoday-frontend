@@ -35,7 +35,7 @@ const copySearchParams = (incoming: URLSearchParams) => {
     // Only add default fields if NO fields are specified
     const hasAnyFields = Array.from(incoming.keys()).some(key => key.startsWith('fields['))
     if (!hasAnyFields) {
-        const defaultFields = ['full_name', 'country', 'documentId', 'career_stats']
+        const defaultFields = ['full_name', 'full_name_en', 'country', 'documentId', 'career_stats']
         defaultFields.forEach((field, index) => {
             params.set(`fields[${index}]`, field)
         })

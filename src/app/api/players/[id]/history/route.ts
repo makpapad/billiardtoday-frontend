@@ -32,6 +32,71 @@ const isPlayedMatch = (match: Record<string, unknown>): boolean => {
     )
 }
 
+const readString = (value: unknown): string | null => {
+    const clean = typeof value === 'string' ? value.trim() : ''
+    return clean || null
+}
+
+const fetchOpponentEnglishNames = async (
+    baseUrl: string,
+    opponentIds: string[],
+    allowAuth: boolean,
+): Promise<Map<string, string>> => {
+    const uniqueIds = Array.from(
+        new Set(opponentIds.map((id) => id.trim()).filter(Boolean)),
+    )
+    const names = new Map<string, string>()
+    if (uniqueIds.length === 0) return names
+
+    const headers =
+        allowAuth && STRAPI_API_TOKEN
+            ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+            : undefined
+
+    for (let index = 0; index < uniqueIds.length; index += 100) {
+        const batch = uniqueIds.slice(index, index + 100)
+        const url = new URL(`${baseUrl}/api/bt-players`)
+        url.searchParams.set('pagination[page]', '1')
+        url.searchParams.set('pagination[pageSize]', String(batch.length))
+        url.searchParams.set('fields[0]', 'documentId')
+        url.searchParams.set('fields[1]', 'full_name_en')
+        url.searchParams.set('fields[2]', 'full_name')
+        batch.forEach((id, batchIndex) => {
+            url.searchParams.set(`filters[documentId][$in][${batchIndex}]`, id)
+        })
+
+        let response = await fetch(url.toString(), {
+            headers,
+            cache: 'no-store',
+        })
+        if (
+            !response.ok &&
+            headers &&
+            (response.status === 401 || response.status === 403)
+        ) {
+            response = await fetch(url.toString(), { cache: 'no-store' })
+        }
+        if (!response.ok) continue
+
+        const payload = await response.json().catch(() => ({ data: [] }))
+        const rows = Array.isArray(payload?.data) ? payload.data : []
+        rows.forEach((row: Record<string, unknown>) => {
+            const entity =
+                row?.attributes && typeof row.attributes === 'object'
+                    ? { ...(row.attributes as Record<string, unknown>), ...row }
+                    : row
+            const documentId = readString(entity?.documentId)
+            const englishName = readString(entity?.full_name_en)
+            const nativeName = readString(entity?.full_name)
+            if (documentId && (englishName || nativeName)) {
+                names.set(documentId, englishName || nativeName || '')
+            }
+        })
+    }
+
+    return names
+}
+
 export async function GET(req: NextRequest, context: RouteContext) {
     try {
         const { id: playerId } = await context.params
@@ -95,10 +160,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
         }
 
         let strapiResponse: Response
+        let successfulBaseUrl = STRAPI_URL
+        let successfulAllowAuth = true
         try {
             strapiResponse = await runRequest(STRAPI_URL, true)
         } catch {
             strapiResponse = await runRequest(STRAPI_FALLBACK_URL, false)
+            successfulBaseUrl = STRAPI_FALLBACK_URL
+            successfulAllowAuth = false
         }
 
         if (!strapiResponse.ok && STRAPI_URL !== STRAPI_FALLBACK_URL) {
@@ -106,6 +175,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 const retryFallback = await runRequest(STRAPI_FALLBACK_URL, false)
                 if (retryFallback.ok) {
                     strapiResponse = retryFallback
+                    successfulBaseUrl = STRAPI_FALLBACK_URL
+                    successfulAllowAuth = false
                 }
             } catch {
                 // ignore and return original error
@@ -122,6 +193,22 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
         const payload = await strapiResponse.json()
         const rawItems = Array.isArray(payload?.data) ? payload.data : []
+        const opponentIds = rawItems.flatMap((item: { matches?: unknown }) =>
+            Array.isArray(item?.matches)
+                ? item.matches
+                      .map((match: { opponentId?: unknown }) =>
+                          readString(match?.opponentId),
+                      )
+                      .filter((id: string | null): id is string => Boolean(id))
+                : [],
+        )
+        const opponentEnglishNames = includeMatches
+            ? await fetchOpponentEnglishNames(
+                  successfulBaseUrl,
+                  opponentIds,
+                  successfulAllowAuth,
+              )
+            : new Map<string, string>()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items = rawItems.map((it: any) => {
             const rawMatches = Array.isArray(it?.matches) ? it.matches : []
@@ -132,6 +219,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
             const matches = includeMatches
                 ? playedRawMatches.map((m: any) => ({
                       ...m,
+                      opponent:
+                          opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
+                          m?.opponent,
+                      opponentFullNameEn:
+                          opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
+                          null,
                       scoreFor: Number(m?.scoreFor) || 0,
                       scoreAgainst: Number(m?.scoreAgainst) || 0,
                       innings: Number(m?.innings) || 0,
