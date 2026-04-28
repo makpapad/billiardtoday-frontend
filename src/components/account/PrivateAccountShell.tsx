@@ -428,9 +428,9 @@ export function AccountAccessCard({
 
 const NAV_ITEMS = [
   { href: "/account", label: "Overview" },
-  { href: "/account/security", label: "Security" },
   { href: "/account/tournaments", label: "Tournaments" },
   { href: "/account/friendly", label: "Friendly Matches" },
+  { href: "/account/security", label: "Security" },
   { href: "/account/devices", label: "Devices" },
 ];
 
