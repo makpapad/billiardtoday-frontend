@@ -21,7 +21,7 @@ const player = {
   country: "Greece",
   city: "Athens",
   status: "Official player verified",
-  photoUrl: null,
+  photoUrl: "/img/account/nick_poly.webp",
 };
 
 const careerStats = [
@@ -273,12 +273,12 @@ export default function AccountMockupPage() {
           </div>
         </header>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.9fr_1.1fr] lg:pt-16">
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:pt-16">
           <div className="flex flex-col justify-end pb-12 lg:pb-20">
             <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">
               {player.nickname}
             </div>
-            <h1 className="mt-4 max-w-2xl text-5xl font-black uppercase tracking-normal text-white sm:text-7xl lg:text-8xl">
+            <h1 className="mt-4 max-w-[760px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
               {player.displayName}
             </h1>
             <div className="mt-8 grid gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
@@ -296,7 +296,18 @@ export default function AccountMockupPage() {
               </div>
             </div>
           </div>
-          <InitialsPortrait />
+          {player.photoUrl ? (
+            <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={player.photoUrl}
+                alt={player.displayName}
+                className="relative z-10 max-h-[520px] w-auto object-contain object-bottom drop-shadow-[0_40px_90px_rgba(0,0,0,0.72)]"
+              />
+            </div>
+          ) : (
+            <InitialsPortrait />
+          )}
         </div>
       </section>
 
