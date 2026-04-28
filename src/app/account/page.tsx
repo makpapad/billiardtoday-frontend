@@ -261,13 +261,13 @@ export default function AccountPage() {
   const winRate = ratio(summaryStats.wins, summaryStats.friendlyMatches);
   const highestRun = Math.max(highestFriendlyRun(friendlyMatches), ...tournaments.map((item) => item.highestRun || 0), 0);
   const pressureGap = friendlyAvg > 0 && officialAvg > 0 ? Math.round(((officialAvg - friendlyAvg) / friendlyAvg) * 100) : 0;
-  const careerStats = [
+  const tournamentMatches = tournaments.reduce((sum, item) => sum + item.totalMatches, 0);
+  const heroStats = [
     { label: "Friendly Matches", value: String(summaryStats.friendlyMatches) },
-    { label: "Wins", value: String(summaryStats.wins) },
+    { label: "Tournament Matches", value: String(tournamentMatches) },
     { label: "Win Rate", value: `${winRate}%` },
     { label: "Overall AVG", value: truncateAvg(friendlyAvg || officialAvg) },
     { label: "Highest Run", value: String(highestRun) },
-    { label: "Trusted Devices", value: String(summaryStats.totalDevices) },
   ];
 
   return (
@@ -346,17 +346,16 @@ export default function AccountPage() {
               Sign out
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="border-b border-zinc-300">
-        <div className="mx-auto grid max-w-7xl gap-px bg-zinc-300 px-5 sm:grid-cols-2 lg:grid-cols-6">
-          {careerStats.map((stat) => (
-            <div key={stat.label} className="bg-[#f4f0e6] py-8">
-              <div className="text-sm text-zinc-600">{stat.label}</div>
-              <div className="mt-3 text-4xl font-semibold text-zinc-950">{stat.value}</div>
+          <div className="mx-auto max-w-7xl px-5 pb-5">
+            <div className="grid gap-5 rounded-md border border-white/25 bg-white/10 px-6 py-5 shadow-[0_20px_70px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-5">
+              {heroStats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="text-sm font-semibold text-zinc-300">{stat.label}</div>
+                  <div className="mt-3 text-3xl font-black text-white">{stat.value}</div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
