@@ -83,6 +83,75 @@ function highestFriendlyRun(matches: PlayerAccountFriendlyMatch[]) {
   );
 }
 
+function normalizeMatchText(value?: string | null) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function accountMatchSide(
+  match: PlayerAccountFriendlyMatch,
+  account: NonNullable<ReturnType<typeof useAccountSession>["account"]>,
+  displayName: string,
+) {
+  const playerDocumentId = account.player?.documentId;
+  if (playerDocumentId && match.player1DocumentId === playerDocumentId) return 1;
+  if (playerDocumentId && match.player2DocumentId === playerDocumentId) return 2;
+
+  const names = [
+    displayName,
+    account.fullName,
+    account.player?.fullName,
+    account.enrollmentRequest?.displayName,
+    account.enrollmentRequest?.fullName,
+  ].map(normalizeMatchText).filter(Boolean);
+
+  if (names.includes(normalizeMatchText(match.player1Name))) return 1;
+  if (names.includes(normalizeMatchText(match.player2Name))) return 2;
+  return null;
+}
+
+function friendlyPointsForAccount(
+  matches: PlayerAccountFriendlyMatch[],
+  account: NonNullable<ReturnType<typeof useAccountSession>["account"]>,
+  displayName: string,
+) {
+  return matches.reduce((sum, match) => {
+    const side = accountMatchSide(match, account, displayName);
+    if (side === 1) return sum + (match.player1_points || 0);
+    if (side === 2) return sum + (match.player2_points || 0);
+    return sum + Math.max(match.player1_points || 0, match.player2_points || 0);
+  }, 0);
+}
+
+function friendlyResultForAccount(
+  match: PlayerAccountFriendlyMatch,
+  account: NonNullable<ReturnType<typeof useAccountSession>["account"]>,
+  displayName: string,
+) {
+  const side = accountMatchSide(match, account, displayName);
+  const winnerSide = normalizeMatchText(match.winnerSide || match.winner);
+  if (side === 1 && ["1", "a", "player1", "player 1"].includes(winnerSide)) return "W";
+  if (side === 2 && ["2", "b", "player2", "player 2"].includes(winnerSide)) return "W";
+  if (side && winnerSide) return "L";
+
+  const playerName = normalizeMatchText(displayName);
+  const winner = normalizeMatchText(match.winner);
+  if (winner && playerName && winner.includes(playerName)) return "W";
+  return null;
+}
+
+function currentStreak(results: Array<"W" | "L">) {
+  const first = results[0];
+  if (!first) return "-";
+  let count = 0;
+  for (const result of results) {
+    if (result !== first) break;
+    count += 1;
+  }
+  return `${first}${count}`;
+}
+
 function displayNameFor(
   account: NonNullable<ReturnType<typeof useAccountSession>["account"]>,
   dashboard: PlayerAccountDashboard | null,
@@ -158,6 +227,66 @@ function PerformanceChart({
           </g>
         ))}
       </svg>
+    </div>
+  );
+}
+
+function WinRateDial({
+  winRate,
+  wins,
+  matches,
+  recentForm,
+}: {
+  winRate: number;
+  wins: number;
+  matches: number;
+  recentForm: Array<"W" | "L">;
+}) {
+  const winDegrees = Math.max(0, Math.min(100, winRate)) * 3.6;
+
+  return (
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+      <div
+        className="grid h-40 w-40 shrink-0 place-items-center rounded-full"
+        style={{
+          background: `conic-gradient(#be123c 0deg ${winDegrees}deg, #111827 ${winDegrees}deg 360deg)`,
+        }}
+      >
+        <div className="grid h-28 w-28 place-items-center rounded-full bg-[#f4f0e6] text-center">
+          <div>
+            <div className="text-3xl font-semibold text-zinc-950">{winRate}%</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-600">Wins</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <div className="text-sm text-zinc-600">Wins / Matches</div>
+          <div className="text-2xl font-semibold text-zinc-950">
+            {wins} / {matches}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-zinc-600">Last 8</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {recentForm.length ? (
+              recentForm.map((item, index) => (
+                <span
+                  key={`${item}-${index}`}
+                  className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
+                    item === "W" ? "bg-emerald-600 text-white" : "bg-zinc-950 text-white"
+                  }`}
+                >
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-zinc-500">No recent results</span>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -262,6 +391,25 @@ export default function AccountPage() {
   const highestRun = Math.max(highestFriendlyRun(friendlyMatches), ...tournaments.map((item) => item.highestRun || 0), 0);
   const pressureGap = friendlyAvg > 0 && officialAvg > 0 ? Math.round(((officialAvg - friendlyAvg) / friendlyAvg) * 100) : 0;
   const tournamentMatches = tournaments.reduce((sum, item) => sum + item.totalMatches, 0);
+  const tournamentPoints = tournaments.reduce(
+    (sum, tournament) =>
+      sum +
+      tournament.matches.reduce((matchSum, match) => matchSum + (match.scoreFor || 0), 0),
+    0,
+  );
+  const friendlyPoints = friendlyPointsForAccount(friendlyMatches, account, playerName);
+  const recentForm = friendlyMatches
+    .map((match) => friendlyResultForAccount(match, account, playerName))
+    .filter((result): result is "W" | "L" => Boolean(result))
+    .slice(0, 8);
+  const seasonStats = [
+    { label: "Matches", value: String(summaryStats.friendlyMatches + tournamentMatches) },
+    { label: "Points Scored", value: String(friendlyPoints + tournamentPoints) },
+    { label: "Average", value: truncateAvg(friendlyAvg || officialAvg) },
+    { label: "High Run", value: String(highestRun) },
+    { label: "Best Match AVG", value: truncateAvg(Math.max(friendlyAvg, officialAvg)) },
+    { label: "Current Streak", value: currentStreak(recentForm) },
+  ];
   const heroStats = [
     { label: "Friendly Matches", value: String(summaryStats.friendlyMatches) },
     { label: "Tournament Matches", value: String(tournamentMatches) },
@@ -359,6 +507,35 @@ export default function AccountPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <h2 className="text-4xl font-black uppercase tracking-normal">Season Stats</h2>
+            <select className="w-fit border border-zinc-400 bg-transparent px-4 py-3 text-sm font-semibold text-zinc-950">
+              <option>Current Season</option>
+              <option>Career</option>
+            </select>
+          </div>
+          <div className="mt-10">
+            <WinRateDial
+              winRate={winRate}
+              wins={summaryStats.wins}
+              matches={summaryStats.friendlyMatches}
+              recentForm={recentForm}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
+          {seasonStats.map((stat) => (
+            <div key={stat.label} className="border-b border-zinc-300 pb-5">
+              <div className="text-sm text-zinc-600">{stat.label}</div>
+              <div className="mt-2 text-4xl font-semibold text-zinc-950">{stat.value}</div>
+            </div>
+          ))}
         </div>
       </section>
 

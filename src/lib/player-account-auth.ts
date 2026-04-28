@@ -98,6 +98,8 @@ export type PlayerAccountFriendlyMatch = {
   tableLabel: string | null;
   player1Name: string | null;
   player2Name: string | null;
+  player1DocumentId: string | null;
+  player2DocumentId: string | null;
   player1_points: number | null;
   player2_points: number | null;
   player1_innings: number | null;
