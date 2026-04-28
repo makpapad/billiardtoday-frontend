@@ -259,10 +259,8 @@ export default function AccountMockupPage() {
   return (
     <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
       <section className="relative overflow-hidden bg-black text-white">
-        <div className="absolute left-[-5rem] top-36 h-72 w-72 rotate-45 rounded-[56px] border border-white/15" />
-        <div className="absolute bottom-8 left-48 h-80 w-80 rotate-45 rounded-[64px] border-[18px] border-red-700/75" />
-        <div className="absolute right-[-4rem] top-24 h-48 w-48 rotate-45 rounded-[42px] border-[18px] border-white/35" />
-        <div className="absolute right-20 top-80 h-40 w-96 -rotate-6 rounded-[48px] border border-red-700/60" />
+        <div className="absolute inset-0 bg-[url('/img/account/dotted_balls_3_fine.webp')] bg-cover bg-center opacity-35" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_30%,rgba(127,29,29,0.28),transparent_34%),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(0,0,0,0.56)_48%,rgba(0,0,0,0.88))]" />
 
         <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
           <Link href="/account" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300">
