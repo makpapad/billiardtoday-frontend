@@ -28,7 +28,7 @@ const careerStats = [
   { label: "Friendly Matches", value: "128" },
   { label: "Wins", value: "82" },
   { label: "Win Rate", value: "64%" },
-  { label: "Overall AVG", value: "1.423" },
+  { label: "Overall AVG", value: "1,423" },
   { label: "Highest Run", value: "19" },
   { label: "Trusted Tables", value: "6" },
 ];
@@ -36,9 +36,9 @@ const careerStats = [
 const seasonStats = [
   { label: "Matches", value: "34" },
   { label: "Points Scored", value: "1,308" },
-  { label: "Average", value: "1.506" },
+  { label: "Average", value: "1,506" },
   { label: "High Run", value: "14" },
-  { label: "Best Match AVG", value: "2.188" },
+  { label: "Best Match AVG", value: "2,188" },
   { label: "Current Streak", value: "W3" },
 ];
 
@@ -50,7 +50,7 @@ const friendlyMatches = [
     opponent: "Tayfun Tasdemir",
     result: "L",
     score: "36-40",
-    avg: "1.565",
+    avg: "1,565",
     innings: 23,
     highRun: 8,
     venue: "Billiard Today Club",
@@ -62,7 +62,7 @@ const friendlyMatches = [
     opponent: "Avraam Papadopoulos",
     result: "W",
     score: "40-29",
-    avg: "1.739",
+    avg: "1,739",
     innings: 23,
     highRun: 11,
     venue: "Athens Arena",
@@ -74,7 +74,7 @@ const friendlyMatches = [
     opponent: "Antonios Zervas",
     result: "W",
     score: "35-22",
-    avg: "1.400",
+    avg: "1,400",
     innings: 25,
     highRun: 7,
     venue: "Billiard Today Club",
@@ -86,7 +86,7 @@ const friendlyMatches = [
     opponent: "Kostas Kokkoris",
     result: "W",
     score: "40-38",
-    avg: "1.290",
+    avg: "1,290",
     innings: 31,
     highRun: 9,
     venue: "Piraeus Billiards",
@@ -108,27 +108,27 @@ const careerHistory = [
   {
     year: "2018",
     description:
-      "Starts appearing regularly in Billiard Today records, building a reliable official match sample with a 1.209 season average.",
+      "Starts appearing regularly in Billiard Today records, building a reliable official match sample with a 1,209 season average.",
   },
   {
     year: "2020",
     description:
-      "Maintains competitive rhythm in a shortened season, recording 11 official matches with a 1.123 average and a high run of 11.",
+      "Maintains competitive rhythm in a shortened season, recording 11 official matches with a 1,123 average and a high run of 11.",
   },
   {
     year: "2023",
     description:
-      "Produces his strongest recorded official season by volume and output, averaging 1.632 across 53 matches with a high run of 25.",
+      "Produces his strongest recorded official season by volume and output, averaging 1,632 across 53 matches with a high run of 25.",
   },
   {
     year: "2024",
     description:
-      "Keeps a high performance baseline through 37 official matches, posting a 1.556 average and several deep scoreboard runs.",
+      "Keeps a high performance baseline through 37 official matches, posting a 1,556 average and several deep scoreboard runs.",
   },
   {
     year: "2025",
     description:
-      "Shows steady official form with a 1.507 average, while friendly-match data suggests stronger scoring rhythm in training conditions.",
+      "Shows steady official form with a 1,507 average, while friendly-match data suggests stronger scoring rhythm in training conditions.",
   },
   {
     year: "2026",
@@ -157,6 +157,11 @@ function pathFor(key: "training" | "official") {
   return comparisonTrend
     .map((point, index) => `${index === 0 ? "M" : "L"} ${chartX(index).toFixed(1)} ${chartY(point[key]).toFixed(1)}`)
     .join(" ");
+}
+
+function formatAvg(value: number) {
+  const truncated = Math.trunc(value * 1000) / 1000;
+  return truncated.toFixed(3).replace(".", ",");
 }
 
 function InitialsPortrait() {
@@ -228,7 +233,7 @@ function TrainingVsOfficialChart() {
               strokeWidth="1"
             />
             <text x="0" y={chartY(tick) + 4} fill="#52525b" fontSize="13">
-              {tick.toFixed(1)}
+              {formatAvg(tick)}
             </text>
           </g>
         ))}
@@ -345,11 +350,11 @@ export default function AccountMockupPage() {
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <div className="border border-zinc-300 p-4">
                 <div className="text-sm text-zinc-600">Training AVG</div>
-                <div className="mt-2 text-3xl font-semibold">1.51</div>
+                <div className="mt-2 text-3xl font-semibold">1,510</div>
               </div>
               <div className="border border-zinc-300 p-4">
                 <div className="text-sm text-zinc-600">Official AVG</div>
-                <div className="mt-2 text-3xl font-semibold">1.36</div>
+                <div className="mt-2 text-3xl font-semibold">1,360</div>
               </div>
               <div className="border border-zinc-300 p-4">
                 <div className="text-sm text-zinc-600">Pressure Gap</div>
