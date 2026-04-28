@@ -21,7 +21,7 @@ const player = {
   country: "Greece",
   city: "Athens",
   status: "Official player verified",
-  photoUrl: "/img/account/nick_poly.webp",
+  photoUrl: "/img/account/nick_poly1.webp",
 };
 
 const careerStats = [
