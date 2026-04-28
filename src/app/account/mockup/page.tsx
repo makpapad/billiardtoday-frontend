@@ -104,6 +104,39 @@ const comparisonTrend = [
   { label: "Apr", training: 1.51, official: 1.36 },
 ];
 
+const careerHistory = [
+  {
+    year: "2018",
+    description:
+      "Starts appearing regularly in Billiard Today records, building a reliable official match sample with a 1.209 season average.",
+  },
+  {
+    year: "2020",
+    description:
+      "Maintains competitive rhythm in a shortened season, recording 11 official matches with a 1.123 average and a high run of 11.",
+  },
+  {
+    year: "2023",
+    description:
+      "Produces his strongest recorded official season by volume and output, averaging 1.632 across 53 matches with a high run of 25.",
+  },
+  {
+    year: "2024",
+    description:
+      "Keeps a high performance baseline through 37 official matches, posting a 1.556 average and several deep scoreboard runs.",
+  },
+  {
+    year: "2025",
+    description:
+      "Shows steady official form with a 1.507 average, while friendly-match data suggests stronger scoring rhythm in training conditions.",
+  },
+  {
+    year: "2026",
+    description:
+      "Early-season official sample is still small, so the account compares official results with friendly matches before drawing stronger conclusions.",
+  },
+];
+
 const chartWidth = 720;
 const chartHeight = 260;
 const chartPadding = { top: 26, right: 26, bottom: 42, left: 44 };
@@ -341,6 +374,33 @@ export default function AccountMockupPage() {
             <div className="mt-4 border border-zinc-300 bg-[#ebe5d8] px-5 py-4 text-sm leading-6 text-zinc-700">
               Official average is still lower than training average, but the gap is shrinking over the last three months.
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-zinc-300 bg-[#f4f0e6]">
+        <div className="mx-auto max-w-7xl px-5 py-14">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-700">Automated narrative</div>
+              <h2 className="mt-3 text-4xl font-black uppercase tracking-normal">Career History</h2>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-zinc-600">
+              These summaries are generated from official seasons, friendly-match trends and reliable milestones.
+            </p>
+          </div>
+
+          <div className="mt-8 border-y border-zinc-300">
+            <div className="grid grid-cols-[110px_1fr] border-b border-zinc-300 py-4 text-sm font-semibold text-zinc-950">
+              <div>Year</div>
+              <div>Description</div>
+            </div>
+            {careerHistory.map((item) => (
+              <article key={item.year} className="grid grid-cols-[110px_1fr] gap-6 border-b border-zinc-300 py-5 last:border-b-0">
+                <div className="text-lg font-semibold text-zinc-950">{item.year}</div>
+                <div className="max-w-5xl text-base font-medium leading-6 text-zinc-950">{item.description}</div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
