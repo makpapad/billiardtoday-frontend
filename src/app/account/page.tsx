@@ -138,6 +138,14 @@ function friendlyResultForAccount(
   const playerName = normalizeMatchText(displayName);
   const winner = normalizeMatchText(match.winner);
   if (winner && playerName && winner.includes(playerName)) return "W";
+  if (side === 1 && match.player1_points !== null && match.player2_points !== null) {
+    if (match.player1_points > match.player2_points) return "W";
+    if (match.player1_points < match.player2_points) return "L";
+  }
+  if (side === 2 && match.player1_points !== null && match.player2_points !== null) {
+    if (match.player2_points > match.player1_points) return "W";
+    if (match.player2_points < match.player1_points) return "L";
+  }
   return null;
 }
 
@@ -402,6 +410,11 @@ export default function AccountPage() {
     .map((match) => friendlyResultForAccount(match, account, playerName))
     .filter((result): result is "W" | "L" => Boolean(result))
     .slice(0, 8);
+  const friendlyWins = friendlyMatches.reduce(
+    (sum, match) => sum + (friendlyResultForAccount(match, account, playerName) === "W" ? 1 : 0),
+    0,
+  );
+  const computedWinRate = ratio(friendlyWins, summaryStats.friendlyMatches);
   const seasonStats = [
     { label: "Matches", value: String(summaryStats.friendlyMatches + tournamentMatches) },
     { label: "Points Scored", value: String(friendlyPoints + tournamentPoints) },
@@ -521,8 +534,8 @@ export default function AccountPage() {
           </div>
           <div className="mt-10">
             <WinRateDial
-              winRate={winRate}
-              wins={summaryStats.wins}
+              winRate={computedWinRate}
+              wins={friendlyWins}
               matches={summaryStats.friendlyMatches}
               recentForm={recentForm}
             />
