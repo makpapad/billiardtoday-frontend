@@ -273,15 +273,15 @@ export default function AccountMockupPage() {
           </div>
         </header>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.78fr_1.22fr] lg:pt-16">
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[minmax(0,680px)_minmax(360px,1fr)] lg:gap-14 lg:pt-16">
           <div className="flex min-w-0 flex-col justify-end pb-12 lg:pb-20">
             <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">
               {player.nickname}
             </div>
-            <h1 className="mt-4 max-w-[690px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-[4.35rem] xl:text-[4.9rem]">
+            <h1 className="mt-4 max-w-[640px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-[3.55rem] xl:text-[4.05rem]">
               {player.displayName}
             </h1>
-            <div className="mt-8 grid gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
+            <div className="mt-8 grid max-w-[640px] gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
               <div className="flex items-center gap-2 text-sm text-zinc-300">
                 <CircleDot className="h-4 w-4 text-red-500" />
                 {player.country}
@@ -297,7 +297,7 @@ export default function AccountMockupPage() {
             </div>
           </div>
           {player.photoUrl ? (
-            <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px]">
+            <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px] lg:justify-end">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={player.photoUrl}
