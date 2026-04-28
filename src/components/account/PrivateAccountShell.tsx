@@ -438,11 +438,13 @@ export function PrivateAccountShell({
   account,
   setAccount,
   activeHref,
+  variant = "card",
   children,
 }: {
   account: PlayerAccountSummary;
   setAccount: React.Dispatch<React.SetStateAction<PlayerAccountSummary | null>>;
   activeHref: string;
+  variant?: "card" | "profile";
   children: React.ReactNode;
 }) {
   const [error, setError] = React.useState<string | null>(null);
@@ -450,113 +452,129 @@ export function PrivateAccountShell({
   const [verificationNotice, setVerificationNotice] = React.useState<string | null>(null);
   const hasOwnershipProof = Boolean(account.ownership?.methods?.length);
 
+  const header = (
+    <>
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            {account.fullName ||
+              account.player?.fullName ||
+              account.enrollmentRequest?.displayName ||
+              account.enrollmentRequest?.fullName ||
+              account.email ||
+              "Player account"}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">{account.email}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            playerAccountAuth.logout();
+            setAccount(null);
+          }}
+          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
+        >
+          Sign out
+        </button>
+      </div>
+
+      {!hasOwnershipProof ? (
+        <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-4 text-sm text-amber-900">
+          <div className="font-semibold">Account ownership verification pending</div>
+          <p className="mt-2">Verify your email or phone to secure account recovery and future account actions.</p>
+          <button
+            type="button"
+            onClick={async () => {
+              setVerificationNotice(null);
+              setError(null);
+              setIsResendingVerification(true);
+              try {
+                await playerAccountAuth.resendVerificationEmail({ email: account.email });
+                setVerificationNotice("Verification email sent.");
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Verification email resend failed");
+              } finally {
+                setIsResendingVerification(false);
+              }
+            }}
+            className="mt-3 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900"
+          >
+            {isResendingVerification ? "Sending..." : "Resend verification email"}
+          </button>
+          {verificationNotice ? <div className="mt-3 text-sm text-emerald-700">{verificationNotice}</div> : null}
+        </div>
+      ) : null}
+
+      {hasOwnershipProof && !account.emailVerifiedAt ? (
+        <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Account ownership is already verified via {ownershipLabel(account).toLowerCase()}. Email verification is
+          still recommended as an extra recovery method.
+        </div>
+      ) : null}
+
+      {account.status === "pending_verification" ? (
+        <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Your account ownership still needs a verified method. Friendly matches and trusted devices are already
+          available, but official player verification remains separate.
+        </div>
+      ) : null}
+
+      {account.status === "active_unlinked" ? (
+        <div className="mt-6 rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+          Your account ownership is verified. You can use trusted devices and private account recovery, but no
+          official player profile is linked yet.
+        </div>
+      ) : null}
+
+      {account.status === "active_pending_player_review" ? (
+        <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Your account ownership is verified. Your official player profile is still pending review.
+        </div>
+      ) : null}
+
+      {account.status === "active_linked" ? (
+        <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Your account ownership is verified and an official player profile is linked.
+        </div>
+      ) : null}
+
+      {error ? <div className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+
+      <nav className="mt-6 flex flex-wrap gap-2">
+        {NAV_ITEMS.map((item) => {
+          const active = item.href === activeHref;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                active ? "bg-slate-950 text-white" : "border border-slate-200 text-slate-700"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </>
+  );
+
+  if (variant === "profile") {
+    return (
+      <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
+        <div className="bg-white px-4 py-6">
+          <div className="mx-auto max-w-7xl">{header}</div>
+        </div>
+        {children}
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe_0%,#eff6ff_38%,#f8fafc_72%,#ffffff_100%)] px-4 py-8 text-slate-950">
       <div className="mx-auto max-w-6xl rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-        <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              {account.fullName ||
-                account.player?.fullName ||
-                account.enrollmentRequest?.displayName ||
-                account.enrollmentRequest?.fullName ||
-                account.email ||
-                "Player account"}
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">{account.email}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              playerAccountAuth.logout();
-              setAccount(null);
-            }}
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
-          >
-            Sign out
-          </button>
-        </div>
-
-        {!hasOwnershipProof ? (
-          <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-4 text-sm text-amber-900">
-            <div className="font-semibold">Account ownership verification pending</div>
-            <p className="mt-2">Verify your email or phone to secure account recovery and future account actions.</p>
-            <button
-              type="button"
-              onClick={async () => {
-                setVerificationNotice(null);
-                setError(null);
-                setIsResendingVerification(true);
-                try {
-                  await playerAccountAuth.resendVerificationEmail({ email: account.email });
-                  setVerificationNotice("Verification email sent.");
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Verification email resend failed");
-                } finally {
-                  setIsResendingVerification(false);
-                }
-              }}
-              className="mt-3 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900"
-            >
-              {isResendingVerification ? "Sending..." : "Resend verification email"}
-            </button>
-            {verificationNotice ? <div className="mt-3 text-sm text-emerald-700">{verificationNotice}</div> : null}
-          </div>
-        ) : null}
-
-        {hasOwnershipProof && !account.emailVerifiedAt ? (
-          <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            Account ownership is already verified via {ownershipLabel(account).toLowerCase()}. Email verification is
-            still recommended as an extra recovery method.
-          </div>
-        ) : null}
-
-        {account.status === "pending_verification" ? (
-          <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Your account ownership still needs a verified method. Friendly matches and trusted devices are already
-            available, but official player verification remains separate.
-          </div>
-        ) : null}
-
-        {account.status === "active_unlinked" ? (
-          <div className="mt-6 rounded-2xl bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-            Your account ownership is verified. You can use trusted devices and private account recovery, but no
-            official player profile is linked yet.
-          </div>
-        ) : null}
-
-        {account.status === "active_pending_player_review" ? (
-          <div className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Your account ownership is verified. Your official player profile is still pending review.
-          </div>
-        ) : null}
-
-        {account.status === "active_linked" ? (
-          <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            Your account ownership is verified and an official player profile is linked.
-          </div>
-        ) : null}
-
-        {error ? <div className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-
-        <nav className="mt-6 flex flex-wrap gap-2">
-          {NAV_ITEMS.map((item) => {
-            const active = item.href === activeHref;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-full px-4 py-2 text-sm font-medium ${
-                  active ? "bg-slate-950 text-white" : "border border-slate-200 text-slate-700"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
+        {header}
         <div className="mt-8">{children}</div>
       </div>
     </main>

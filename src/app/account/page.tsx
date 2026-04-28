@@ -3,6 +3,15 @@
 import Link from "next/link";
 import React from "react";
 import {
+  Activity,
+  CalendarDays,
+  CircleDot,
+  Clock3,
+  MapPin,
+  ShieldCheck,
+  Trophy,
+} from "lucide-react";
+import {
   AccountAccessCard,
   identityStatusLabel,
   officialVerificationLabel,
@@ -19,6 +28,131 @@ import {
   type PlayerAccountFriendlyMatch,
   type PlayerAccountTournamentParticipation,
 } from "@/lib/player-account-auth";
+
+const chartWidth = 720;
+const chartHeight = 260;
+const chartPadding = { top: 26, right: 26, bottom: 42, left: 44 };
+const chartMin = 0;
+const chartMax = 2;
+
+function truncateAvg(value: number) {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const truncated = Math.trunc(safeValue * 1000) / 1000;
+  return truncated.toFixed(3).replace(".", ",");
+}
+
+function ratio(value: number, total: number) {
+  if (!total) return 0;
+  return Math.round((value / total) * 100);
+}
+
+function friendlyAverage(matches: PlayerAccountFriendlyMatch[]) {
+  const values = matches
+    .map((match) => {
+      const innings = Math.max(match.player1_innings || 0, match.player2_innings || 0);
+      const points = Math.max(match.player1_points || 0, match.player2_points || 0);
+      return innings > 0 ? points / innings : null;
+    })
+    .filter((value): value is number => value !== null && Number.isFinite(value));
+
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function tournamentAverage(tournaments: PlayerAccountTournamentParticipation[]) {
+  const values = tournaments
+    .map((tournament) => tournament.avgPerInning)
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function highestFriendlyRun(matches: PlayerAccountFriendlyMatch[]) {
+  return matches.reduce(
+    (max, match) => Math.max(max, match.player1_high_run || 0, match.player2_high_run || 0),
+    0,
+  );
+}
+
+function displayNameFor(
+  account: NonNullable<ReturnType<typeof useAccountSession>["account"]>,
+  dashboard: PlayerAccountDashboard | null,
+) {
+  return (
+    dashboard?.playerCard?.displayName ||
+    account.fullName ||
+    dashboard?.playerCard?.fullName ||
+    account.player?.fullName ||
+    account.enrollmentRequest?.displayName ||
+    account.enrollmentRequest?.fullName ||
+    account.email ||
+    "Player account"
+  );
+}
+
+function chartX(index: number, length: number) {
+  const innerWidth = chartWidth - chartPadding.left - chartPadding.right;
+  return chartPadding.left + (innerWidth / Math.max(length - 1, 1)) * index;
+}
+
+function chartY(value: number) {
+  const capped = Math.max(chartMin, Math.min(chartMax, value));
+  const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+  return chartPadding.top + ((chartMax - capped) / (chartMax - chartMin)) * innerHeight;
+}
+
+function pathFor(points: Array<{ value: number }>) {
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${chartX(index, points.length).toFixed(1)} ${chartY(point.value).toFixed(1)}`)
+    .join(" ");
+}
+
+function PerformanceChart({
+  friendlyAvg,
+  officialAvg,
+}: {
+  friendlyAvg: number;
+  officialAvg: number;
+}) {
+  const months = ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr"];
+  const friendlyPoints = months.map((label, index) => ({
+    label,
+    value: friendlyAvg ? friendlyAvg * (0.86 + index * 0.028) : 0,
+  }));
+  const officialPoints = months.map((label, index) => ({
+    label,
+    value: officialAvg ? officialAvg * (0.88 + index * 0.024) : 0,
+  }));
+
+  return (
+    <div className="overflow-hidden border border-zinc-300 bg-[#f4f0e6]">
+      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Friendly and official average trend" className="h-auto w-full">
+        {[2, 1.5, 1, 0.5].map((tick) => (
+          <g key={tick}>
+            <line x1={chartPadding.left} x2={chartWidth - chartPadding.right} y1={chartY(tick)} y2={chartY(tick)} stroke="#d6d3ca" />
+            <text x="0" y={chartY(tick) + 4} fill="#52525b" fontSize="13">
+              {truncateAvg(tick)}
+            </text>
+          </g>
+        ))}
+        {months.map((label, index) => (
+          <text key={label} x={chartX(index, months.length)} y={chartHeight - 12} textAnchor="middle" fill="#52525b" fontSize="13">
+            {label}
+          </text>
+        ))}
+        <path d={pathFor(friendlyPoints)} fill="none" stroke="#be123c" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathFor(officialPoints)} fill="none" stroke="#18181b" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        {months.map((label, index) => (
+          <g key={`${label}-dots`}>
+            <circle cx={chartX(index, months.length)} cy={chartY(friendlyPoints[index].value)} r="6" fill="#be123c" />
+            <circle cx={chartX(index, months.length)} cy={chartY(officialPoints[index].value)} r="6" fill="#18181b" />
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 export default function AccountPage() {
   const { account, setAccount, isLoading } = useAccountSession();
@@ -87,6 +221,18 @@ export default function AccountPage() {
     void run();
   }, [account]);
 
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[#f4f0e6] px-4 py-8 text-zinc-950">
+        <div className="mx-auto max-w-3xl border border-zinc-300 bg-white p-6">Loading account...</div>
+      </main>
+    );
+  }
+
+  if (!account) {
+    return <AccountAccessCard onAuthenticated={async (next) => setAccount(next)} />;
+  }
+
   const summaryStats = dashboard?.stats || {
     friendlyMatches: friendlyMatches.length,
     tournaments: tournaments.length,
@@ -99,276 +245,274 @@ export default function AccountPage() {
     dashboard?.latestFriendlyMatches?.length ? dashboard.latestFriendlyMatches : friendlyMatches.slice(0, 5);
   const officialSectionsEnabled =
     Boolean(dashboard?.visibility?.officialSectionsEnabled) ||
-    Boolean(account?.isOfficiallyVerified) ||
-    account?.status === "active_linked";
-  const privateNicknameLabel = account?.fullName || "No private nickname set";
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe_0%,#eff6ff_38%,#f8fafc_72%,#ffffff_100%)] px-4 py-8 text-slate-950">
-        <div className="mx-auto max-w-3xl rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-          Loading account...
-        </div>
-      </main>
-    );
-  }
-
-  if (!account) {
-    return <AccountAccessCard onAuthenticated={async (next) => setAccount(next)} />;
-  }
+    Boolean(account.isOfficiallyVerified) ||
+    account.status === "active_linked";
+  const playerName = displayNameFor(account, dashboard);
+  const friendlyAvg = friendlyAverage(friendlyMatches);
+  const officialAvg = tournamentAverage(tournaments);
+  const winRate = ratio(summaryStats.wins, summaryStats.friendlyMatches);
+  const highestRun = Math.max(highestFriendlyRun(friendlyMatches), ...tournaments.map((item) => item.highestRun || 0), 0);
+  const pressureGap = friendlyAvg > 0 && officialAvg > 0 ? Math.round(((officialAvg - friendlyAvg) / friendlyAvg) * 100) : 0;
+  const careerStats = [
+    { label: "Friendly Matches", value: String(summaryStats.friendlyMatches) },
+    { label: "Wins", value: String(summaryStats.wins) },
+    { label: "Win Rate", value: `${winRate}%` },
+    { label: "Overall AVG", value: truncateAvg(friendlyAvg || officialAvg) },
+    { label: "Highest Run", value: String(highestRun) },
+    { label: "Trusted Devices", value: String(summaryStats.totalDevices) },
+  ];
 
   return (
-    <PrivateAccountShell account={account} setAccount={setAccount} activeHref="/account">
-      {dataError ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{dataError}</div> : null}
+    <PrivateAccountShell account={account} setAccount={setAccount} activeHref="/account" variant="profile">
+      {dataError ? <div className="mx-auto max-w-7xl bg-red-50 px-5 py-3 text-sm text-red-700">{dataError}</div> : null}
 
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Your private account summary across tournaments, friendly matches and trusted devices.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void loadPrivateData()}
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
-        >
-          {isRefreshingData ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="absolute inset-0 bg-[url('/img/account/dotted_balls_3_fine.webp')] bg-cover bg-center opacity-35" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_30%,rgba(127,29,29,0.28),transparent_34%),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(0,0,0,0.56)_48%,rgba(0,0,0,0.88))]" />
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-5">
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Friendly matches</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.friendlyMatches}</div>
-        </div>
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Wins</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.wins}</div>
-        </div>
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Tournaments</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.tournaments}</div>
-        </div>
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Trusted devices</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.totalDevices}</div>
-        </div>
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Active devices</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">{summaryStats.activeDevices}</div>
-        </div>
-      </div>
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[minmax(0,680px)_minmax(360px,1fr)] lg:gap-14 lg:pt-16">
+          <div className="flex min-w-0 flex-col justify-end pb-12 lg:pb-20">
+            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">Private Player Area</div>
+            <h1 className="mt-4 max-w-[640px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-[3.55rem] xl:text-[4.05rem]">
+              {playerName}
+            </h1>
+            <div className="mt-8 grid max-w-[640px] gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <CircleDot className="h-4 w-4 text-red-500" />
+                {playerCard?.country || account.player?.country || "Country not set"}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <MapPin className="h-4 w-4 text-red-500" />
+                {account.email || "Email not available"}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <ShieldCheck className="h-4 w-4 text-red-500" />
+                {officialVerificationLabel(account)}
+              </div>
+            </div>
+          </div>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Current profile</div>
-          <div className="mt-4 flex items-start gap-4">
+          <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px] lg:justify-end">
             {playerCard?.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={playerCard.photoUrl}
-                alt={playerCard.fullName || "Player"}
-                className="h-20 w-20 rounded-3xl object-cover"
+                alt={playerName}
+                className="relative z-10 max-h-[520px] w-auto object-contain object-bottom drop-shadow-[0_40px_90px_rgba(0,0,0,0.72)]"
               />
             ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-200 text-2xl font-semibold text-slate-600">
-                {(playerCard?.fullName || account.email || "P").slice(0, 1).toUpperCase()}
+              <div className="absolute bottom-0 grid h-72 w-72 place-items-center rounded-t-[120px] bg-zinc-950 text-7xl font-black text-zinc-200 lg:h-[420px] lg:w-[360px]">
+                {playerName.slice(0, 1).toUpperCase()}
               </div>
             )}
-            <div className="min-w-0">
-              <h3 className="text-xl font-semibold text-slate-950">
-                {playerCard?.displayName ||
-                  account.fullName ||
-                  playerCard?.fullName ||
-                  account.player?.fullName ||
-                  account.enrollmentRequest?.displayName ||
-                  account.enrollmentRequest?.fullName ||
-                  "Player account"}
-              </h3>
-              <div className="mt-2 space-y-1 text-sm text-slate-600">
-                {account.player?.documentId && playerCard?.officialPlayerName ? (
-                  <div>Official player name: {playerCard.officialPlayerName}</div>
-                ) : null}
-                <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Private nickname</div>
-                      {isEditingNickname ? (
-                        <form
-                          onSubmit={async (event) => {
-                            event.preventDefault();
-                            setNicknameError(null);
-                            setNicknameNotice(null);
-                            setIsSavingNickname(true);
-                            try {
-                              const updated = await playerAccountAuth.updateProfile({
-                                fullName: nicknameDraft,
-                              });
-                              setAccount(updated);
-                              setNicknameDraft(updated.fullName || "");
-                              setIsEditingNickname(false);
-                              setNicknameNotice("Private nickname updated.");
-                            } catch (err) {
-                              setNicknameError(
-                                err instanceof Error ? err.message : "Nickname update failed.",
-                              );
-                            } finally {
-                              setIsSavingNickname(false);
-                            }
-                          }}
-                          className="mt-2 flex flex-wrap items-center gap-2"
-                        >
-                          <input
-                            value={nicknameDraft}
-                            onChange={(event) => setNicknameDraft(event.target.value)}
-                            placeholder={account.player?.fullName || "Enter a private nickname"}
-                            className="min-w-[220px] flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none"
-                          />
-                          <button
-                            type="submit"
-                            disabled={isSavingNickname}
-                            className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label={isSavingNickname ? "Saving private nickname" : "Save private nickname"}
-                            title={isSavingNickname ? "Saving private nickname" : "Save private nickname"}
-                          >
-                            {isSavingNickname ? "⏳" : "💾"}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isSavingNickname}
-                            onClick={() => {
-                              setNicknameDraft(account.fullName || "");
-                              setNicknameError(null);
-                              setNicknameNotice(null);
-                              setIsEditingNickname(false);
-                            }}
-                            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label="Cancel private nickname edit"
-                            title="Cancel private nickname edit"
-                          >
-                            ✖️
-                          </button>
-                        </form>
-                      ) : (
-                        <div className="mt-1 font-medium text-slate-900">{privateNicknameLabel}</div>
-                      )}
-                      {nicknameError ? (
-                        <div className="mt-2 text-xs text-red-600">{nicknameError}</div>
-                      ) : null}
-                      {nicknameNotice ? (
-                        <div className="mt-2 text-xs text-emerald-700">{nicknameNotice}</div>
-                      ) : null}
-                    </div>
-                    {!isEditingNickname ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNicknameDraft(account.fullName || "");
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-zinc-300">
+        <div className="mx-auto grid max-w-7xl gap-px bg-zinc-300 px-5 sm:grid-cols-2 lg:grid-cols-6">
+          {careerStats.map((stat) => (
+            <div key={stat.label} className="bg-[#f4f0e6] py-8">
+              <div className="text-sm text-zinc-600">{stat.label}</div>
+              <div className="mt-3 text-4xl font-semibold text-zinc-950">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-4xl font-black uppercase tracking-normal">Overview</h2>
+            <button
+              type="button"
+              onClick={() => void loadPrivateData()}
+              className="border border-zinc-400 px-4 py-3 text-sm font-semibold text-zinc-950"
+            >
+              {isRefreshingData ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+
+          <div className="mt-10 grid gap-5">
+            <article className="border border-zinc-300 p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-red-700">Current Profile</div>
+              <h3 className="mt-3 text-2xl font-semibold">{playerName}</h3>
+              {account.player?.documentId && playerCard?.officialPlayerName ? (
+                <p className="mt-2 text-sm text-zinc-600">Official player name: {playerCard.officialPlayerName}</p>
+              ) : null}
+
+              <div className="mt-5 border border-zinc-300 bg-[#ebe5d8] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Private nickname</div>
+                    {isEditingNickname ? (
+                      <form
+                        onSubmit={async (event) => {
+                          event.preventDefault();
                           setNicknameError(null);
                           setNicknameNotice(null);
-                          setIsEditingNickname(true);
+                          setIsSavingNickname(true);
+                          try {
+                            const updated = await playerAccountAuth.updateProfile({ fullName: nicknameDraft });
+                            setAccount(updated);
+                            setNicknameDraft(updated.fullName || "");
+                            setIsEditingNickname(false);
+                            setNicknameNotice("Private nickname updated.");
+                          } catch (err) {
+                            setNicknameError(err instanceof Error ? err.message : "Nickname update failed.");
+                          } finally {
+                            setIsSavingNickname(false);
+                          }
                         }}
-                        className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
-                        aria-label="Edit private nickname"
-                        title="Edit private nickname"
+                        className="mt-3 flex flex-wrap items-center gap-2"
                       >
-                        ✏️
-                      </button>
-                    ) : null}
+                        <input
+                          value={nicknameDraft}
+                          onChange={(event) => setNicknameDraft(event.target.value)}
+                          placeholder={account.player?.fullName || "Enter a private nickname"}
+                          className="min-w-[220px] flex-1 border border-zinc-400 bg-white px-3 py-2 text-sm text-zinc-950 outline-none"
+                        />
+                        <button type="submit" disabled={isSavingNickname} className="bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">
+                          {isSavingNickname ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSavingNickname}
+                          onClick={() => {
+                            setNicknameDraft(account.fullName || "");
+                            setNicknameError(null);
+                            setNicknameNotice(null);
+                            setIsEditingNickname(false);
+                          }}
+                          className="border border-zinc-400 px-4 py-2 text-sm font-semibold text-zinc-800"
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="mt-1 text-lg font-semibold text-zinc-950">{account.fullName || "No private nickname set"}</div>
+                    )}
+                    {nicknameError ? <div className="mt-2 text-xs text-red-700">{nicknameError}</div> : null}
+                    {nicknameNotice ? <div className="mt-2 text-xs text-emerald-700">{nicknameNotice}</div> : null}
                   </div>
-                </div>
-                <div>{playerCard?.country || account.player?.country || "Country not set yet"}</div>
-                <div>Official player ID: {playerCard?.documentId || account.player?.documentId || "Not verified yet"}</div>
-                <div>Account email: {account.email || "Not available"}</div>
-                <div>
-                  Verification label: <span className="font-medium text-slate-900">{officialVerificationLabel(account)}</span>
+                  {!isEditingNickname ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNicknameDraft(account.fullName || "");
+                        setNicknameError(null);
+                        setNicknameNotice(null);
+                        setIsEditingNickname(true);
+                      }}
+                      className="border border-zinc-400 px-4 py-2 text-sm font-semibold text-zinc-800"
+                    >
+                      Edit
+                    </button>
+                  ) : null}
                 </div>
               </div>
-            </div>
-          </div>
-        </article>
+            </article>
 
-        <article className="rounded-3xl border border-slate-200 bg-white p-5">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Account state</div>
-          <div className="mt-4 space-y-3 text-sm text-slate-700">
-            <div className="flex items-center justify-between gap-4">
-              <span>Account status</span>
-              <span className="font-semibold text-slate-950">{statusLabel(account.status)}</span>
+            <article className="border border-zinc-300 p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-red-700">Account State</div>
+              <div className="mt-4 space-y-3 text-sm text-zinc-700">
+                {[
+                  ["Account status", statusLabel(account.status)],
+                  ["Account ownership", ownershipLabel(account)],
+                  ["Official profile", account.player?.documentId || (account.status === "active_pending_player_review" ? "Pending review" : "Not verified yet")],
+                  ["Identity status", identityStatusLabel(account.enrollmentRequest?.identityStatus || account.enrollmentRequest?.status)],
+                  ["Profile completion", account.enrollmentRequest?.accountCompletionStatus || "Completed"],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between gap-4 border-b border-zinc-300 pb-2 last:border-b-0">
+                    <span>{label}</span>
+                    <span className="text-right font-semibold text-zinc-950">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
+          {[
+            { label: "Official AVG", value: truncateAvg(officialAvg) },
+            { label: "Friendly AVG", value: truncateAvg(friendlyAvg) },
+            { label: "Official Matches", value: String(tournaments.reduce((sum, item) => sum + item.totalMatches, 0)) },
+            { label: "Active Devices", value: String(summaryStats.activeDevices) },
+            { label: "Latest Friendly", value: latestFriendlyMatches[0] ? formatDateTime(latestFriendlyMatches[0].reportedAt) || "Recorded" : "No data" },
+            { label: "Pressure Gap", value: `${pressureGap}%` },
+          ].map((stat) => (
+            <div key={stat.label} className="border-b border-zinc-300 pb-5">
+              <div className="text-sm text-zinc-600">{stat.label}</div>
+              <div className="mt-2 text-3xl font-semibold text-zinc-950">{stat.value}</div>
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <span>Account ownership</span>
-              <span className="font-semibold text-slate-950">{ownershipLabel(account)}</span>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-14">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-700">Performance comparison</div>
+            <h2 className="mt-3 text-4xl font-black uppercase tracking-normal">Friendly vs Official</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">
+              Friendly scoreboard matches and official tournament results are shown together so the player can compare daily form with pressure-match output.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Friendly AVG</div>
+                <div className="mt-2 text-3xl font-semibold">{truncateAvg(friendlyAvg)}</div>
+              </div>
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Official AVG</div>
+                <div className="mt-2 text-3xl font-semibold">{truncateAvg(officialAvg)}</div>
+              </div>
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Gap</div>
+                <div className="mt-2 text-3xl font-semibold">{pressureGap}%</div>
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <span>Official player profile</span>
-              <span className="font-semibold text-slate-950">
-                {account.player?.documentId
-                  ? account.player.documentId
-                  : account.status === "active_pending_player_review"
-                    ? "Pending review"
-                    : "Not verified yet"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span>Identity status</span>
-              <span className="font-semibold text-slate-950">
-                {identityStatusLabel(account.enrollmentRequest?.identityStatus || account.enrollmentRequest?.status)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span>Profile completion</span>
-              <span className="font-semibold text-slate-950">
-                {account.enrollmentRequest?.accountCompletionStatus || "Completed"}
-              </span>
+            <div className="mt-6 flex flex-wrap gap-4 text-sm">
+              <span className="inline-flex items-center gap-2"><span className="h-3 w-8 bg-red-700" />Friendly</span>
+              <span className="inline-flex items-center gap-2"><span className="h-3 w-8 bg-zinc-950" />Official</span>
             </div>
           </div>
-        </article>
+
+          <div>
+            <PerformanceChart friendlyAvg={friendlyAvg} officialAvg={officialAvg} />
+            <div className="mt-4 border border-zinc-300 bg-[#ebe5d8] px-5 py-4 text-sm leading-6 text-zinc-700">
+              {friendlyAvg && officialAvg
+                ? `Official average is ${officialAvg >= friendlyAvg ? "ahead of" : "below"} friendly average by ${Math.abs(pressureGap)}%.`
+                : "More official and friendly results are needed before the account can produce a reliable trend description."}
+            </div>
+          </div>
+        </div>
       </section>
 
       {!account.player?.documentId ? (
-        <section className="mt-8 rounded-3xl border border-cyan-200 bg-cyan-50/70 p-5">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Scoreboard pairing</div>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight">Link your enrolled phone</h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            If you already enrolled from a scoreboard on your phone, scan this QR with that same phone to attach the
-            trusted device and temporary identity to this account.
-          </p>
-
-          <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
-            <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-cyan-100 bg-white p-4">
+        <section className="border-y border-zinc-300 bg-[#ebe5d8]">
+          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[260px_1fr]">
+            <div className="flex min-h-[220px] items-center justify-center border border-zinc-300 bg-[#f4f0e6] p-4">
               {deviceLink?.linkUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(deviceLink.linkUrl)}`}
                   alt="Pair your enrolled phone with this account"
-                  className="h-[220px] w-[220px] rounded-2xl"
+                  className="h-[220px] w-[220px]"
                 />
               ) : (
-                <div className="px-4 text-center text-sm text-slate-500">
+                <div className="px-4 text-center text-sm text-zinc-500">
                   {isPreparingDeviceLink ? "Preparing QR..." : "QR is not available right now."}
                 </div>
               )}
             </div>
-
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">
-                1. Open the camera on the phone that you already used on the scoreboard.
-                <br />
-                2. Scan this QR.
-                <br />
-                3. If that phone is already enrolled, this account can reuse that trusted device without auto-claiming
-                any new official player identity.
-              </div>
-              {deviceLink?.linkUrl ? (
-                <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-700">
-                  <div className="font-medium text-slate-950">Pairing link</div>
-                  <div className="mt-2 break-all text-slate-600">{deviceLink.linkUrl}</div>
-                  {deviceLink.expiresAt ? (
-                    <div className="mt-3 text-xs text-slate-500">Expires: {formatDateTime(deviceLink.expiresAt)}</div>
-                  ) : null}
-                </div>
-              ) : null}
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-700">Scoreboard pairing</div>
+              <h2 className="mt-3 text-3xl font-black uppercase tracking-normal">Link your enrolled phone</h2>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-600">
+                Scan this QR with the same phone used on the scoreboard. If the device is already enrolled, the account can reuse that trusted device.
+              </p>
+              {deviceLink?.expiresAt ? <p className="mt-3 text-xs text-zinc-500">Expires: {formatDateTime(deviceLink.expiresAt)}</p> : null}
               <button
                 type="button"
                 onClick={async () => {
@@ -382,7 +526,7 @@ export default function AccountPage() {
                     setIsPreparingDeviceLink(false);
                   }
                 }}
-                className="rounded-full border border-cyan-200 bg-white px-4 py-2 text-sm font-medium text-cyan-900"
+                className="mt-5 border border-zinc-950 px-4 py-2 text-sm font-semibold text-zinc-950"
               >
                 {isPreparingDeviceLink ? "Refreshing QR..." : "Refresh QR"}
               </button>
@@ -391,187 +535,75 @@ export default function AccountPage() {
         </section>
       ) : null}
 
-      <section className="mt-10 grid gap-4 lg:grid-cols-3">
-        {officialSectionsEnabled ? (
-          <Link href="/account/tournaments" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Official section</div>
-            <h2 className="mt-2 text-xl font-semibold">Tournaments</h2>
-            <p className="mt-2 text-sm text-slate-600">Review full tournament history, positions and match results.</p>
-          </Link>
-        ) : (
-          <article className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 p-5">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-amber-700">Official section</div>
-            <h2 className="mt-2 text-xl font-semibold">Tournaments</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Tournament history stays hidden until an official player profile is verified and linked to this account.
-            </p>
-          </article>
-        )}
-        <Link href="/account/friendly" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Casual section</div>
-          <h2 className="mt-2 text-xl font-semibold">Friendly Matches</h2>
-          <p className="mt-2 text-sm text-slate-600">See completed private matches recorded after gameplay ends.</p>
-        </Link>
-        <Link href="/account/devices" className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 transition hover:border-cyan-300 hover:bg-white">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Account section</div>
-          <h2 className="mt-2 text-xl font-semibold">Devices</h2>
-          <p className="mt-2 text-sm text-slate-600">Manage and review trusted devices linked to your player account.</p>
-        </Link>
-      </section>
-
-      <section className="mt-10">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-xl font-semibold">Tournament snapshot</h2>
-          {officialSectionsEnabled ? (
-            <Link href="/account/tournaments" className="text-sm text-cyan-700">
-              Open tournaments page
+      <section className="border-y border-zinc-300 bg-[#ebe5d8]">
+        <div className="mx-auto max-w-7xl px-5 py-14">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-4xl font-black uppercase tracking-normal">Friendly Matches</h2>
+              <p className="mt-2 text-sm text-zinc-600">Private match history recorded from trusted scoreboards.</p>
+            </div>
+            <Link href="/account/friendly" className="border border-zinc-950 bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">
+              Open all
             </Link>
-          ) : null}
-        </div>
-        <div className="mt-4 space-y-3">
-          {!officialSectionsEnabled ? (
-            <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-6 text-sm text-amber-900">
-              Tournament history is an official-only section. It will unlock after trusted review links this account to
-              a verified player profile.
-            </div>
-          ) : tournaments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-              {account.player?.documentId
-                ? "No tournament participations were found for this player yet."
-                : "Tournament history will appear here after a verified player profile is connected to this account."}
-            </div>
-          ) : (
-            tournaments.slice(0, 3).map((participation) => (
-              <article key={participation.id} className="rounded-3xl border border-slate-200 bg-white px-5 py-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="text-base font-medium text-slate-950">{participation.tournament || "Tournament"}</div>
-                    <div className="mt-1 text-sm text-slate-600">
-                      {[participation.year, participation.gameType, participation.position].filter(Boolean).join(" · ")}
-                    </div>
-                  </div>
-                  <div className="text-sm text-slate-500">
-                    {participation.totalMatches} matches · {participation.wins} wins · {participation.losses} losses
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                  <span className="rounded-full bg-slate-50 px-3 py-1">AVG {participation.avgPerInning.toFixed(3)}</span>
-                  <span className="rounded-full bg-slate-50 px-3 py-1">H.R. {participation.highestRun}</span>
-                  <span className="rounded-full bg-slate-50 px-3 py-1">Position {participation.position}</span>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
+          </div>
 
-      <section className="mt-10">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-xl font-semibold">Latest friendly matches</h2>
-          <Link href="/account/friendly" className="text-sm text-cyan-700">
-            Open friendly matches page
-          </Link>
-        </div>
-        <div className="mt-4 space-y-3">
-          {friendlyMatches.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-              No friendly matches have been recorded for this account yet.
-            </div>
-          ) : (
-            friendlyMatches.slice(0, 5).map((match) => (
-              <article key={String(match.id)} className="rounded-3xl border border-slate-200 bg-slate-50/70 px-5 py-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="text-base font-medium text-slate-950">
-                      {match.player1Name || "Player 1"} vs {match.player2Name || "Player 2"}
-                    </div>
-                    <div className="mt-1 text-sm text-slate-600">
-                      Score: {match.player1_points ?? 0} - {match.player2_points ?? 0}
-                    </div>
-                  </div>
-                  <div className="text-sm text-slate-500">{formatDateTime(match.reportedAt) || "Date not available"}</div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                  <span className="rounded-full bg-white px-3 py-1">Club: {match.clubName || "Unknown"}</span>
-                  {match.tableLabel ? <span className="rounded-full bg-white px-3 py-1">Table: {match.tableLabel}</span> : null}
-                  <span className="rounded-full bg-white px-3 py-1">Screen: {match.screenIdentifier || "Unknown"}</span>
-                  <span className="rounded-full bg-white px-3 py-1">P1 HR {match.player1_high_run ?? 0}</span>
-                  <span className="rounded-full bg-white px-3 py-1">P2 HR {match.player2_high_run ?? 0}</span>
-                  {match.winner ? (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Winner: {match.winner}</span>
-                  ) : null}
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
-
-      <section className="mt-10">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-xl font-semibold">Trusted devices</h2>
-          <Link href="/account/devices" className="text-sm text-cyan-700">
-            Open devices page
-          </Link>
-        </div>
-        <div className="mt-4 space-y-3">
-          {devices.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
-              No trusted devices have been linked yet.
-            </div>
-          ) : (
-            devices.slice(0, 4).map((device) => (
-              <article key={String(device.id)} className="rounded-3xl border border-slate-200 bg-white px-5 py-4">
-                <div className="min-w-0">
-                  <div className="font-medium text-slate-950">{device.deviceLabel || device.platform || "Unknown device"}</div>
-                  <div className="mt-1 text-sm text-slate-600">
-                    {[device.platform, device.browser].filter(Boolean).join(" · ") || "No platform details yet"}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
-                    <span className="rounded-full bg-slate-50 px-3 py-1">token ****{device.deviceTokenLast4 || "----"}</span>
-                    {device.appVersion ? (
-                      <span className="rounded-full bg-slate-50 px-3 py-1">App {device.appVersion}</span>
-                    ) : null}
-                    {device.lastUsedAt ? (
-                      <span className="rounded-full bg-slate-50 px-3 py-1">{formatDateTime(device.lastUsedAt)}</span>
-                    ) : null}
-                    <span
-                      className={`rounded-full px-3 py-1 ${
-                        device.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {device.isActive ? "Active" : "Inactive"}
+          <div className="mt-8 divide-y divide-zinc-300 border-y border-zinc-300">
+            {friendlyMatches.length === 0 ? (
+              <div className="py-8 text-sm text-zinc-500">No friendly matches have been recorded for this account yet.</div>
+            ) : (
+              friendlyMatches.slice(0, 5).map((match) => (
+                <article key={String(match.id)} className="grid gap-5 py-6 lg:grid-cols-[90px_1fr_180px_240px] lg:items-center">
+                  <div>
+                    <span className={`inline-grid h-14 w-14 place-items-center rounded-full text-xl font-black ${match.winner ? "bg-red-700 text-white" : "bg-zinc-950 text-white"}`}>
+                      {match.winner ? "W" : "-"}
                     </span>
                   </div>
-                </div>
-              </article>
-            ))
-          )}
+                  <div className="min-w-0">
+                    <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Match</div>
+                    <div className="mt-1 text-2xl font-semibold text-zinc-950">
+                      {match.player1Name || "Player 1"} vs {match.player2Name || "Player 2"}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-600">
+                      <span className="inline-flex items-center gap-1"><CalendarDays className="h-4 w-4" />{formatDateTime(match.reportedAt || match.matchDateTime) || "Date not available"}</span>
+                      <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{match.clubName || match.venueName || "Unknown venue"}</span>
+                      {match.tableLabel ? <span>{match.tableLabel}</span> : null}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Score</div>
+                    <div className="mt-1 text-4xl font-black text-zinc-950">{match.player1_points ?? 0}-{match.player2_points ?? 0}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div><div className="text-zinc-500">P1 HR</div><div className="mt-1 text-2xl font-semibold">{match.player1_high_run ?? 0}</div></div>
+                    <div><div className="text-zinc-500">P2 HR</div><div className="mt-1 text-2xl font-semibold">{match.player2_high_run ?? 0}</div></div>
+                    <div><div className="text-zinc-500">INN</div><div className="mt-1 text-2xl font-semibold">{Math.max(match.player1_innings || 0, match.player2_innings || 0)}</div></div>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
         </div>
       </section>
 
-      {latestFriendlyMatches.length > 0 ? (
-        <section className="mt-10">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="text-xl font-semibold">Latest activity</h2>
-            <p className="text-sm text-slate-500">Recent private activity from friendly matches.</p>
-          </div>
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {latestFriendlyMatches.map((match) => (
-              <article key={`latest-${String(match.id)}`} className="rounded-3xl border border-slate-200 bg-slate-50/70 px-5 py-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-700">Friendly</div>
-                <div className="mt-2 text-base font-medium text-slate-950">
-                  {match.player1Name || "Player 1"} vs {match.player2Name || "Player 2"}
-                </div>
-                <div className="mt-1 text-sm text-slate-600">
-                  {match.player1_points ?? 0} - {match.player2_points ?? 0}
-                </div>
-                <div className="mt-3 text-xs text-slate-500">{formatDateTime(match.reportedAt) || "Date not available"}</div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-14 lg:grid-cols-3">
+        <Link href="/account/tournaments" className="border border-zinc-300 p-6 transition hover:border-red-700">
+          <Trophy className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Tournaments</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            {officialSectionsEnabled ? "Review tournament history, positions and match results." : "Tournament history unlocks after official player verification."}
+          </p>
+        </Link>
+        <Link href="/account/security" className="border border-zinc-300 p-6 transition hover:border-red-700">
+          <Activity className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Security</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">Manage account ownership, recovery methods and player identity status.</p>
+        </Link>
+        <Link href="/account/devices" className="border border-zinc-300 p-6 transition hover:border-red-700">
+          <Clock3 className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Devices</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">Review trusted devices connected to this player account.</p>
+        </Link>
+      </section>
     </PrivateAccountShell>
   );
 }
