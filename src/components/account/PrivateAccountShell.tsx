@@ -567,55 +567,6 @@ export function PrivateAccountShell({
   if (variant === "profile") {
     return (
       <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
-        <div className="bg-white px-4 pt-5">
-          <div className="mx-auto max-w-7xl">
-            <div className="pb-5">
-              <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">{accountTitle}</h1>
-              <p className="mt-2 text-sm text-slate-600">{account.email}</p>
-            </div>
-
-            {!hasOwnershipProof ? (
-              <div className="mb-5 rounded-2xl bg-amber-50 px-4 py-4 text-sm text-amber-900">
-                <div className="font-semibold">Account ownership verification pending</div>
-                <p className="mt-2">Verify your email or phone to secure account recovery and future account actions.</p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setVerificationNotice(null);
-                    setError(null);
-                    setIsResendingVerification(true);
-                    try {
-                      await playerAccountAuth.resendVerificationEmail({ email: account.email });
-                      setVerificationNotice("Verification email sent.");
-                    } catch (err) {
-                      setError(err instanceof Error ? err.message : "Verification email resend failed");
-                    } finally {
-                      setIsResendingVerification(false);
-                    }
-                  }}
-                  className="mt-3 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900"
-                >
-                  {isResendingVerification ? "Sending..." : "Resend verification email"}
-                </button>
-                {verificationNotice ? <div className="mt-3 text-sm text-emerald-700">{verificationNotice}</div> : null}
-              </div>
-            ) : null}
-
-            {error ? <div className="mb-5 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-
-            <div className="flex flex-col gap-3 border-t border-slate-200 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <nav className="flex flex-wrap gap-2">{navItems}</nav>
-              <button
-                type="button"
-                onClick={signOut}
-                className="w-fit rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
         {children}
       </main>
     );

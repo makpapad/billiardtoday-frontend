@@ -29,6 +29,14 @@ import {
   type PlayerAccountTournamentParticipation,
 } from "@/lib/player-account-auth";
 
+const ACCOUNT_NAV_ITEMS = [
+  { href: "/account", label: "Overview" },
+  { href: "/account/tournaments", label: "Tournaments" },
+  { href: "/account/friendly", label: "Friendly Matches" },
+  { href: "/account/security", label: "Security" },
+  { href: "/account/devices", label: "Devices" },
+];
+
 const chartWidth = 720;
 const chartHeight = 260;
 const chartPadding = { top: 26, right: 26, bottom: 42, left: 44 };
@@ -272,7 +280,9 @@ export default function AccountPage() {
 
         <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[minmax(0,680px)_minmax(360px,1fr)] lg:gap-14 lg:pt-16">
           <div className="flex min-w-0 flex-col justify-end pb-12 lg:pb-20">
-            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">Private Player Area</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">
+              {officialVerificationLabel(account)}
+            </div>
             <h1 className="mt-4 max-w-[640px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-[3.55rem] xl:text-[4.05rem]">
               {playerName}
             </h1>
@@ -305,6 +315,36 @@ export default function AccountPage() {
                 {playerName.slice(0, 1).toUpperCase()}
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="relative z-10 border-t border-white/15 bg-black/40">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <nav className="flex flex-wrap gap-2">
+              {ACCOUNT_NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`rounded-full px-4 py-2 text-sm font-medium ${
+                    item.href === "/account"
+                      ? "bg-white text-zinc-950"
+                      : "border border-white/20 text-zinc-200 hover:border-white/50"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <button
+              type="button"
+              onClick={() => {
+                playerAccountAuth.logout();
+                setAccount(null);
+              }}
+              className="w-fit rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-zinc-200 hover:border-white/50"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </section>
