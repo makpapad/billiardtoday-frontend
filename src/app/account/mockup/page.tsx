@@ -95,6 +95,37 @@ const friendlyMatches = [
   },
 ];
 
+const comparisonTrend = [
+  { label: "Nov", training: 1.18, official: 1.02 },
+  { label: "Dec", training: 1.24, official: 1.08 },
+  { label: "Jan", training: 1.31, official: 1.14 },
+  { label: "Feb", training: 1.38, official: 1.19 },
+  { label: "Mar", training: 1.42, official: 1.27 },
+  { label: "Apr", training: 1.51, official: 1.36 },
+];
+
+const chartWidth = 720;
+const chartHeight = 260;
+const chartPadding = { top: 26, right: 26, bottom: 42, left: 44 };
+const chartMin = 0.9;
+const chartMax = 1.65;
+
+function chartX(index: number) {
+  const innerWidth = chartWidth - chartPadding.left - chartPadding.right;
+  return chartPadding.left + (innerWidth / (comparisonTrend.length - 1)) * index;
+}
+
+function chartY(value: number) {
+  const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+  return chartPadding.top + ((chartMax - value) / (chartMax - chartMin)) * innerHeight;
+}
+
+function pathFor(key: "training" | "official") {
+  return comparisonTrend
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${chartX(index).toFixed(1)} ${chartY(point[key]).toFixed(1)}`)
+    .join(" ");
+}
+
 function InitialsPortrait() {
   return (
     <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px]">
@@ -145,6 +176,43 @@ function WinRateDial() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TrainingVsOfficialChart() {
+  return (
+    <div className="overflow-hidden border border-zinc-300 bg-[#f4f0e6]">
+      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Training vs official average trend" className="h-auto w-full">
+        {[1.6, 1.4, 1.2, 1.0].map((tick) => (
+          <g key={tick}>
+            <line
+              x1={chartPadding.left}
+              x2={chartWidth - chartPadding.right}
+              y1={chartY(tick)}
+              y2={chartY(tick)}
+              stroke="#d6d3ca"
+              strokeWidth="1"
+            />
+            <text x="0" y={chartY(tick) + 4} fill="#52525b" fontSize="13">
+              {tick.toFixed(1)}
+            </text>
+          </g>
+        ))}
+        {comparisonTrend.map((point, index) => (
+          <text key={point.label} x={chartX(index)} y={chartHeight - 12} textAnchor="middle" fill="#52525b" fontSize="13">
+            {point.label}
+          </text>
+        ))}
+        <path d={pathFor("training")} fill="none" stroke="#be123c" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathFor("official")} fill="none" stroke="#18181b" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        {comparisonTrend.map((point, index) => (
+          <g key={`${point.label}-dots`}>
+            <circle cx={chartX(index)} cy={chartY(point.training)} r="6" fill="#be123c" />
+            <circle cx={chartX(index)} cy={chartY(point.official)} r="6" fill="#18181b" />
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }
@@ -229,6 +297,51 @@ export default function AccountMockupPage() {
               <div className="mt-2 text-4xl font-semibold text-zinc-950">{stat.value}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-14">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-700">Performance comparison</div>
+            <h2 className="mt-3 text-4xl font-black uppercase tracking-normal">Training vs Official</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">
+              Compare scoreboard friendly matches with official tournament performance to see how practice form carries into pressure matches.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Training AVG</div>
+                <div className="mt-2 text-3xl font-semibold">1.51</div>
+              </div>
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Official AVG</div>
+                <div className="mt-2 text-3xl font-semibold">1.36</div>
+              </div>
+              <div className="border border-zinc-300 p-4">
+                <div className="text-sm text-zinc-600">Pressure Gap</div>
+                <div className="mt-2 text-3xl font-semibold">-10%</div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-4 text-sm">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-8 bg-red-700" />
+                Friendly / training
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-8 bg-zinc-950" />
+                Official matches
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <TrainingVsOfficialChart />
+            <div className="mt-4 border border-zinc-300 bg-[#ebe5d8] px-5 py-4 text-sm leading-6 text-zinc-700">
+              Official average is still lower than training average, but the gap is shrinking over the last three months.
+            </div>
+          </div>
         </div>
       </section>
 
