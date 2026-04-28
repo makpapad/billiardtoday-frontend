@@ -273,12 +273,12 @@ export default function AccountMockupPage() {
           </div>
         </header>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:pt-16">
-          <div className="flex flex-col justify-end pb-12 lg:pb-20">
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.78fr_1.22fr] lg:pt-16">
+          <div className="flex min-w-0 flex-col justify-end pb-12 lg:pb-20">
             <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">
               {player.nickname}
             </div>
-            <h1 className="mt-4 max-w-[760px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
+            <h1 className="mt-4 max-w-[690px] text-5xl font-black uppercase leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-[4.35rem] xl:text-[4.9rem]">
               {player.displayName}
             </h1>
             <div className="mt-8 grid gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
