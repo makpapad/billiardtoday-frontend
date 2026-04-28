@@ -1,0 +1,327 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import {
+  Activity,
+  ArrowLeft,
+  CalendarDays,
+  CircleDot,
+  Clock3,
+  MapPin,
+  ShieldCheck,
+  Trophy,
+} from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Account Mockup",
+};
+
+const player = {
+  displayName: "Nikolaos Polychronopoulos",
+  nickname: "The Professor",
+  country: "Greece",
+  city: "Athens",
+  status: "Official player verified",
+  photoUrl: null,
+};
+
+const careerStats = [
+  { label: "Friendly Matches", value: "128" },
+  { label: "Wins", value: "82" },
+  { label: "Win Rate", value: "64%" },
+  { label: "Overall AVG", value: "1.423" },
+  { label: "Highest Run", value: "19" },
+  { label: "Trusted Tables", value: "6" },
+];
+
+const seasonStats = [
+  { label: "Matches", value: "34" },
+  { label: "Points Scored", value: "1,308" },
+  { label: "Average", value: "1.506" },
+  { label: "High Run", value: "14" },
+  { label: "Best Match AVG", value: "2.188" },
+  { label: "Current Streak", value: "W3" },
+];
+
+const recentForm = ["W", "W", "W", "L", "W", "L", "W", "W"];
+
+const friendlyMatches = [
+  {
+    id: 1,
+    opponent: "Tayfun Tasdemir",
+    result: "L",
+    score: "36-40",
+    avg: "1.565",
+    innings: 23,
+    highRun: 8,
+    venue: "Billiard Today Club",
+    table: "Table 2",
+    date: "28 Apr 2026",
+  },
+  {
+    id: 2,
+    opponent: "Avraam Papadopoulos",
+    result: "W",
+    score: "40-29",
+    avg: "1.739",
+    innings: 23,
+    highRun: 11,
+    venue: "Athens Arena",
+    table: "Table 1",
+    date: "25 Apr 2026",
+  },
+  {
+    id: 3,
+    opponent: "Antonios Zervas",
+    result: "W",
+    score: "35-22",
+    avg: "1.400",
+    innings: 25,
+    highRun: 7,
+    venue: "Billiard Today Club",
+    table: "Table 4",
+    date: "21 Apr 2026",
+  },
+  {
+    id: 4,
+    opponent: "Kostas Kokkoris",
+    result: "W",
+    score: "40-38",
+    avg: "1.290",
+    innings: 31,
+    highRun: 9,
+    venue: "Piraeus Billiards",
+    table: "TV Table",
+    date: "17 Apr 2026",
+  },
+];
+
+function InitialsPortrait() {
+  return (
+    <div className="relative flex h-[340px] min-h-[340px] items-end justify-center overflow-hidden lg:h-[520px]">
+      <div className="absolute bottom-0 h-[88%] w-[62%] rounded-t-full bg-gradient-to-b from-zinc-700 via-zinc-950 to-black" />
+      <div className="absolute bottom-24 flex h-28 w-28 items-center justify-center rounded-full border border-red-500/25 bg-zinc-900 text-4xl font-semibold text-zinc-100 shadow-[0_0_80px_rgba(225,29,72,0.24)]">
+        NP
+      </div>
+      <div className="absolute bottom-0 h-40 w-72 rounded-t-[80px] bg-zinc-950" />
+    </div>
+  );
+}
+
+function WinRateDial() {
+  return (
+    <div className="flex items-center gap-6">
+      <div
+        className="grid h-40 w-40 place-items-center rounded-full"
+        style={{
+          background:
+            "conic-gradient(#be123c 0deg 230deg, #111827 230deg 360deg)",
+        }}
+      >
+        <div className="grid h-28 w-28 place-items-center rounded-full bg-[#f4f0e6] text-center">
+          <div>
+            <div className="text-3xl font-semibold text-zinc-950">64%</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-600">Wins</div>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <div>
+          <div className="text-sm text-zinc-600">Wins / Matches</div>
+          <div className="text-2xl font-semibold text-zinc-950">82 / 128</div>
+        </div>
+        <div>
+          <div className="text-sm text-zinc-600">Last 8</div>
+          <div className="mt-2 flex gap-2">
+            {recentForm.map((item, index) => (
+              <span
+                key={`${item}-${index}`}
+                className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
+                  item === "W" ? "bg-emerald-600 text-white" : "bg-zinc-900 text-white"
+                }`}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AccountMockupPage() {
+  return (
+    <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="absolute left-[-5rem] top-36 h-72 w-72 rotate-45 rounded-[56px] border border-white/15" />
+        <div className="absolute bottom-8 left-48 h-80 w-80 rotate-45 rounded-[64px] border-[18px] border-red-700/75" />
+        <div className="absolute right-[-4rem] top-24 h-48 w-48 rotate-45 rounded-[42px] border-[18px] border-white/35" />
+        <div className="absolute right-20 top-80 h-40 w-96 -rotate-6 rounded-[48px] border border-red-700/60" />
+
+        <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
+          <Link href="/account" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300">
+            <ArrowLeft className="h-4 w-4" />
+            Back to current account
+          </Link>
+          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-zinc-400">
+            <ShieldCheck className="h-4 w-4 text-red-500" />
+            Account mockup
+          </div>
+        </header>
+
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pt-10 lg:grid-cols-[0.9fr_1.1fr] lg:pt-16">
+          <div className="flex flex-col justify-end pb-12 lg:pb-20">
+            <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">
+              {player.nickname}
+            </div>
+            <h1 className="mt-4 max-w-2xl text-5xl font-black uppercase tracking-normal text-white sm:text-7xl lg:text-8xl">
+              {player.displayName}
+            </h1>
+            <div className="mt-8 grid gap-3 border border-white/15 bg-white/5 p-4 sm:grid-cols-3">
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <CircleDot className="h-4 w-4 text-red-500" />
+                {player.country}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <MapPin className="h-4 w-4 text-red-500" />
+                {player.city}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-zinc-300">
+                <ShieldCheck className="h-4 w-4 text-red-500" />
+                {player.status}
+              </div>
+            </div>
+          </div>
+          <InitialsPortrait />
+        </div>
+      </section>
+
+      <section className="border-b border-zinc-300">
+        <div className="mx-auto grid max-w-7xl gap-px bg-zinc-300 px-5 sm:grid-cols-2 lg:grid-cols-6">
+          {careerStats.map((stat) => (
+            <div key={stat.label} className="bg-[#f4f0e6] py-8">
+              <div className="text-sm text-zinc-600">{stat.label}</div>
+              <div className="mt-3 text-4xl font-semibold text-zinc-950">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-4xl font-black uppercase tracking-normal">Season Stats</h2>
+            <select className="border border-zinc-400 bg-transparent px-4 py-3 text-sm font-semibold text-zinc-950">
+              <option>2025/2026</option>
+              <option>2024/2025</option>
+              <option>Career</option>
+            </select>
+          </div>
+          <div className="mt-10">
+            <WinRateDial />
+          </div>
+        </div>
+
+        <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
+          {seasonStats.map((stat) => (
+            <div key={stat.label} className="border-b border-zinc-300 pb-5">
+              <div className="text-sm text-zinc-600">{stat.label}</div>
+              <div className="mt-2 text-4xl font-semibold text-zinc-950">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-y border-zinc-300 bg-[#ebe5d8]">
+        <div className="mx-auto max-w-7xl px-5 py-14">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-4xl font-black uppercase tracking-normal">Friendly Matches</h2>
+              <p className="mt-2 text-sm text-zinc-600">
+                Private match history recorded from trusted scoreboards.
+              </p>
+            </div>
+            <div className="flex gap-2 text-sm">
+              <button className="border border-zinc-950 bg-zinc-950 px-4 py-2 font-semibold text-white">All</button>
+              <button className="border border-zinc-400 px-4 py-2 font-semibold text-zinc-800">Wins</button>
+              <button className="border border-zinc-400 px-4 py-2 font-semibold text-zinc-800">Losses</button>
+            </div>
+          </div>
+
+          <div className="mt-8 divide-y divide-zinc-300 border-y border-zinc-300">
+            {friendlyMatches.map((match) => (
+              <article key={match.id} className="grid gap-5 py-6 lg:grid-cols-[110px_1fr_220px_260px] lg:items-center">
+                <div>
+                  <span
+                    className={`inline-grid h-14 w-14 place-items-center rounded-full text-xl font-black ${
+                      match.result === "W" ? "bg-red-700 text-white" : "bg-zinc-950 text-white"
+                    }`}
+                  >
+                    {match.result}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Opponent</div>
+                  <div className="mt-1 text-3xl font-semibold text-zinc-950">{match.opponent}</div>
+                  <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-600">
+                    <span className="inline-flex items-center gap-1">
+                      <CalendarDays className="h-4 w-4" />
+                      {match.date}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {match.venue}
+                    </span>
+                    <span>{match.table}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Score</div>
+                  <div className="mt-1 text-5xl font-black text-zinc-950">{match.score}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <div className="text-zinc-500">AVG</div>
+                    <div className="mt-1 text-2xl font-semibold">{match.avg}</div>
+                  </div>
+                  <div>
+                    <div className="text-zinc-500">INN</div>
+                    <div className="mt-1 text-2xl font-semibold">{match.innings}</div>
+                  </div>
+                  <div>
+                    <div className="text-zinc-500">H.R.</div>
+                    <div className="mt-1 text-2xl font-semibold">{match.highRun}</div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-14 lg:grid-cols-3">
+        <div className="border border-zinc-300 p-6">
+          <Trophy className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Tournament Snapshot</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            Official tournament history can share the same visual language, with finals, positions, averages and high runs.
+          </p>
+        </div>
+        <div className="border border-zinc-300 p-6">
+          <Activity className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Performance Trend</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            The current account API can support trend charts from friendly and official match aggregates.
+          </p>
+        </div>
+        <div className="border border-zinc-300 p-6">
+          <Clock3 className="h-7 w-7 text-red-700" />
+          <h3 className="mt-4 text-2xl font-semibold">Recent Activity</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            Notes, tags, devices and scoreboard sessions should stay available, but secondary to player performance.
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
