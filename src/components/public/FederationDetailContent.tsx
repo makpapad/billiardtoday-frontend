@@ -18,11 +18,6 @@ const buildClubHref = (slug?: string | null, documentId?: string | null, embedde
   return target ? `${embedded ? "/embed" : ""}/clubs/${target}` : "#";
 };
 
-const buildFederationHref = (slug?: string | null, documentId?: string | null, embedded = false) => {
-  const target = slug || documentId;
-  return target ? `${embedded ? "/embed" : ""}/federations/${target}` : "#";
-};
-
 export function FederationDetailContent({ federation, embedded = false }: Props) {
   const logoUrl = resolveLogoUrl(federation.logo);
 
@@ -61,7 +56,7 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
         }
       />
 
-      {federation.level === "national" ? (
+      {federation.level === "national" && (
         <section>
           <SectionHeading
             eyebrow="Club network"
@@ -87,35 +82,6 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
             ) : (
               <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
                 No clubs connected to this federation yet.
-              </div>
-            )}
-          </div>
-        </section>
-      ) : (
-        <section>
-          <SectionHeading
-            eyebrow="Federation network"
-            title="Child federations"
-            description="Browse the federations that sit directly under this organization."
-          />
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {Array.isArray(federation.children) && federation.children.length > 0 ? (
-              federation.children.map((child) => (
-                <Link
-                  key={child.documentId}
-                  href={buildFederationHref(child.slug, child.documentId, embedded)}
-                  className="rounded-[26px] border border-black/5 bg-white p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                    {child.level || "federation"}
-                  </div>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-950">{child.name}</h3>
-                  <div className="mt-2 text-sm text-slate-500">{child.country || "Country pending"}</div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                No child federations connected yet.
               </div>
             )}
           </div>
