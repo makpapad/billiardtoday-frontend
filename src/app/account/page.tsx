@@ -4,7 +4,6 @@ import Link from "next/link";
 import React from "react";
 import {
   Activity,
-  CalendarDays,
   CircleDot,
   Clock3,
   MapPin,
@@ -820,56 +819,6 @@ export default function AccountPage() {
           </div>
         </section>
       ) : null}
-
-      <section className="border-y border-zinc-300 bg-[#ebe5d8]">
-        <div className="mx-auto max-w-7xl px-5 py-14">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-4xl font-black uppercase tracking-normal">Friendly Matches</h2>
-              <p className="mt-2 text-sm text-zinc-600">Private match history recorded from trusted scoreboards.</p>
-            </div>
-            <Link href="/account/friendly" className="border border-zinc-950 bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">
-              Open all
-            </Link>
-          </div>
-
-          <div className="mt-8 divide-y divide-zinc-300 border-y border-zinc-300">
-            {friendlyMatches.length === 0 ? (
-              <div className="py-8 text-sm text-zinc-500">No friendly matches have been recorded for this account yet.</div>
-            ) : (
-              friendlyMatches.slice(0, 5).map((match) => (
-                <article key={String(match.id)} className="grid gap-5 py-6 lg:grid-cols-[90px_1fr_180px_240px] lg:items-center">
-                  <div>
-                    <span className={`inline-grid h-14 w-14 place-items-center rounded-full text-xl font-black ${match.winner ? "bg-red-700 text-white" : "bg-zinc-950 text-white"}`}>
-                      {match.winner ? "W" : "-"}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Match</div>
-                    <div className="mt-1 text-2xl font-semibold text-zinc-950">
-                      {match.player1Name || "Player 1"} vs {match.player2Name || "Player 2"}
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-600">
-                      <span className="inline-flex items-center gap-1"><CalendarDays className="h-4 w-4" />{formatDateTime(match.reportedAt || match.matchDateTime) || "Date not available"}</span>
-                      <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{match.clubName || match.venueName || "Unknown venue"}</span>
-                      {match.tableLabel ? <span>{match.tableLabel}</span> : null}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Score</div>
-                    <div className="mt-1 text-4xl font-black text-zinc-950">{match.player1_points ?? 0}-{match.player2_points ?? 0}</div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 text-sm">
-                    <div><div className="text-zinc-500">P1 HR</div><div className="mt-1 text-2xl font-semibold">{match.player1_high_run ?? 0}</div></div>
-                    <div><div className="text-zinc-500">P2 HR</div><div className="mt-1 text-2xl font-semibold">{match.player2_high_run ?? 0}</div></div>
-                    <div><div className="text-zinc-500">INN</div><div className="mt-1 text-2xl font-semibold">{Math.max(match.player1_innings || 0, match.player2_innings || 0)}</div></div>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-14 lg:grid-cols-3">
         <Link href="/account/tournaments" className="border border-zinc-300 p-6 transition hover:border-red-700">
