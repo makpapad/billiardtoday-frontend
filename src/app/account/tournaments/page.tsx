@@ -154,7 +154,9 @@ export default function AccountTournamentsPage() {
 
       setTournaments(Array.isArray(payload.data) ? payload.data : []);
       setTotalCount(Number(payload.totalCount) || 0);
-      setAvailableYears(Array.isArray(payload.availableYears) ? payload.availableYears : []);
+      if (selectedYear === "all") {
+        setAvailableYears(Array.isArray(payload.availableYears) ? payload.availableYears : []);
+      }
       setAvailableGameTypes(
         (Array.isArray(payload.availableGameTypes) ? payload.availableGameTypes : [])
           .map((value) => normalizeGameTypeOrFallback(value))
@@ -395,7 +397,11 @@ export default function AccountTournamentsPage() {
 
               <select
                 value={selectedTournamentType}
-                onChange={(event) => setSelectedTournamentType(event.target.value)}
+                onChange={(event) => {
+                  setSelectedTournamentType(event.target.value);
+                  setSelectedYear("all");
+                  setOpponentQuery("");
+                }}
                 disabled={isRefreshing}
                 className="border border-zinc-400 bg-[#f4f0e6] px-4 py-3 text-sm font-semibold text-zinc-950 outline-none disabled:opacity-60"
               >
