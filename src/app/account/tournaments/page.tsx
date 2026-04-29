@@ -243,7 +243,7 @@ export default function AccountTournamentsPage() {
 
   return (
     <PrivateAccountShell account={account} setAccount={setAccount} activeHref="/account/tournaments" variant="profile">
-      {isRefreshing && !hasLoadedData ? <AccountDataLoadingModal /> : null}
+      {isRefreshing ? <AccountDataLoadingModal /> : null}
       <style jsx global>{`
         @keyframes accountLoading {
           0% {
