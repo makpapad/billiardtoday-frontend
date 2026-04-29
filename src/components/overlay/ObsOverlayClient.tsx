@@ -417,7 +417,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     getParamValue(searchParams?.screenId) ??
     getParamValue(searchParams?.screenIdentifier);
   const requestedScreenSlug = normalizeString(rawScreenParam);
-  const templateParam = (getParamValue(searchParams?.t) ?? getParamValue(searchParams?.template) ?? "classic")
+  const templateParam = (getParamValue(searchParams?.t) ?? getParamValue(searchParams?.template) ?? "5")
     .trim()
     .toLowerCase();
   const template: OverlayTemplate =
