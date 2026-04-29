@@ -124,6 +124,16 @@ export type PlayerAccountDashboard = {
     activeDevices: number;
     totalDevices: number;
     wins: number;
+    official?: {
+      totalMatches: number;
+      totalWins: number;
+      totalLosses: number;
+      totalDraws: number;
+      winPercentage: number | string | null;
+      avgPerInning: number | string | null;
+      bestAverageFromWins: number | string | null;
+      highestRun: number;
+    } | null;
   };
   visibility?: {
     officialSectionsEnabled?: boolean;

@@ -49,6 +49,13 @@ function truncateAvg(value: number) {
   return truncated.toFixed(3).replace(".", ",");
 }
 
+function parseAverage(value: number | string | null | undefined) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value !== "string") return 0;
+  const parsed = Number(value.replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function ratio(value: number, total: number) {
   if (!total) return 0;
   return Math.round((value / total) * 100);
@@ -68,10 +75,17 @@ function friendlyAverage(matches: PlayerAccountFriendlyMatch[]) {
 }
 
 function tournamentAverage(tournaments: PlayerAccountTournamentParticipation[]) {
-  const values = tournaments
-    .map((tournament) => tournament.avgPerInning)
-    .filter((value) => Number.isFinite(value) && value > 0);
+  let totalPoints = 0;
+  let totalInnings = 0;
+  tournaments.forEach((tournament) => {
+    tournament.matches.forEach((match) => {
+      totalPoints += Number(match.scoreFor) || 0;
+      totalInnings += Number(match.innings) || 0;
+    });
+  });
+  if (totalInnings > 0) return totalPoints / totalInnings;
 
+  const values = tournaments.map((tournament) => tournament.avgPerInning).filter((value) => Number.isFinite(value) && value > 0);
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -414,11 +428,17 @@ export default function AccountPage() {
     account.status === "active_linked";
   const playerName = displayNameFor(account, dashboard);
   const friendlyAvg = friendlyAverage(friendlyMatches);
-  const officialAvg = tournamentAverage(tournaments);
+  const officialStats = summaryStats.official || null;
+  const tournamentMatches = officialStats?.totalMatches || tournaments.reduce((sum, item) => sum + item.totalMatches, 0);
+  const officialAvg = parseAverage(officialStats?.avgPerInning) || tournamentAverage(tournaments);
   const winRate = ratio(summaryStats.wins, summaryStats.friendlyMatches);
-  const highestRun = Math.max(highestFriendlyRun(friendlyMatches), ...tournaments.map((item) => item.highestRun || 0), 0);
+  const highestRun = Math.max(
+    highestFriendlyRun(friendlyMatches),
+    officialStats?.highestRun || 0,
+    ...tournaments.map((item) => item.highestRun || 0),
+    0,
+  );
   const pressureGap = friendlyAvg > 0 && officialAvg > 0 ? Math.round(((officialAvg - friendlyAvg) / friendlyAvg) * 100) : 0;
-  const tournamentMatches = tournaments.reduce((sum, item) => sum + item.totalMatches, 0);
   const tournamentPoints = tournaments.reduce(
     (sum, tournament) =>
       sum +
@@ -703,7 +723,7 @@ export default function AccountPage() {
           {[
             { label: "Official AVG", value: truncateAvg(officialAvg) },
             { label: "Friendly AVG", value: truncateAvg(friendlyAvg) },
-            { label: "Official Matches", value: String(tournaments.reduce((sum, item) => sum + item.totalMatches, 0)) },
+            { label: "Official Matches", value: String(tournamentMatches) },
             { label: "Active Devices", value: String(summaryStats.activeDevices) },
             { label: "Latest Friendly", value: latestFriendlyMatches[0] ? formatDateTime(latestFriendlyMatches[0].reportedAt) || "Recorded" : "No data" },
             { label: "Pressure Gap", value: `${pressureGap}%` },
