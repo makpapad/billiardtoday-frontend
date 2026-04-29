@@ -49,8 +49,6 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
               <div className="mt-4 text-3xl font-semibold tracking-tight text-white">
                 {federation.country || "Country pending"}
               </div>
-              <div className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Connected clubs</div>
-              <div className="mt-2 text-3xl font-semibold tracking-tight text-white">{federation.clubCount || 0}</div>
             </div>
           </div>
         }
