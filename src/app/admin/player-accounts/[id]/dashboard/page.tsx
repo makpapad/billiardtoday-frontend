@@ -39,26 +39,36 @@ type DashboardData = {
   latestFriendlyMatches?: Array<{
     id?: number | string;
     documentId?: string;
-    date?: string | null;
-    venue?: string | null;
+    matchDateTime?: string | null;
+    reportedAt?: string | null;
+    venueName?: string | null;
+    clubName?: string | null;
     player1Name?: string | null;
     player2Name?: string | null;
-    score?: string | null;
+    player1_points?: number | null;
+    player2_points?: number | null;
     winner?: string | null;
   }>;
   latestTournaments?: Array<{
     id?: number | string;
     documentId?: string;
-    title?: string | null;
-    season?: number | string | null;
+    tournament?: string | null;
+    year?: number | string | null;
     gameType?: string | null;
+    totalMatches?: number;
+    wins?: number;
+    losses?: number;
+    avgPerInning?: number | string | null;
+    highestRun?: number;
   }>;
   devices?: Array<{
     id?: number | string;
     documentId?: string;
-    label?: string | null;
+    deviceLabel?: string | null;
+    platform?: string | null;
+    browser?: string | null;
     isActive?: boolean;
-    lastSeenAt?: string | null;
+    lastUsedAt?: string | null;
   }>;
   adminView?: {
     readOnly?: boolean;
@@ -88,6 +98,11 @@ function formatAverage(value?: number | string | null) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return "-";
   return parsed.toFixed(3).replace(".", ",");
+}
+
+function formatScore(player1?: number | null, player2?: number | null) {
+  if (player1 == null || player2 == null) return "-";
+  return `${player1}-${player2}`;
 }
 
 function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
@@ -199,7 +214,10 @@ export default function AdminPlayerAccountDashboardPage({ params }: Props) {
                   {(data.latestFriendlyMatches || []).map((match) => (
                     <div key={match.documentId || match.id} className="py-3 text-sm">
                       <div className="font-semibold">{match.player1Name || "-"} vs {match.player2Name || "-"}</div>
-                      <div className="mt-1 text-slate-600">{formatDateTime(match.date)} | {match.venue || "-"} | {match.score || "-"}</div>
+                      <div className="mt-1 text-slate-600">
+                        {formatDateTime(match.matchDateTime || match.reportedAt)} | {match.venueName || match.clubName || "-"} |{" "}
+                        {formatScore(match.player1_points, match.player2_points)}
+                      </div>
                     </div>
                   ))}
                   {!data.latestFriendlyMatches?.length ? <div className="py-3 text-sm text-slate-500">No friendly matches.</div> : null}
@@ -211,8 +229,12 @@ export default function AdminPlayerAccountDashboardPage({ params }: Props) {
                 <div className="mt-4 divide-y divide-slate-200">
                   {(data.latestTournaments || []).map((tournament) => (
                     <div key={tournament.documentId || tournament.id} className="py-3 text-sm">
-                      <div className="font-semibold">{tournament.title || "-"}</div>
-                      <div className="mt-1 text-slate-600">{tournament.gameType || "-"} | {tournament.season || "-"}</div>
+                      <div className="font-semibold">{tournament.tournament || "-"}</div>
+                      <div className="mt-1 text-slate-600">
+                        {tournament.gameType || "-"} | {tournament.year || "-"} | Matches {tournament.totalMatches ?? 0} | W{" "}
+                        {tournament.wins ?? 0} L {tournament.losses ?? 0} | AVG {formatAverage(tournament.avgPerInning)} | HR{" "}
+                        {tournament.highestRun ?? 0}
+                      </div>
                     </div>
                   ))}
                   {!data.latestTournaments?.length ? <div className="py-3 text-sm text-slate-500">No tournaments.</div> : null}
@@ -225,8 +247,11 @@ export default function AdminPlayerAccountDashboardPage({ params }: Props) {
               <div className="mt-4 divide-y divide-slate-200">
                 {(data.devices || []).map((device) => (
                   <div key={device.documentId || device.id} className="flex items-center justify-between gap-4 py-3 text-sm">
-                    <div className="font-semibold">{device.label || device.documentId || device.id}</div>
-                    <div className="text-slate-600">{device.isActive ? "Active" : "Inactive"} | {formatDateTime(device.lastSeenAt)}</div>
+                    <div className="font-semibold">{device.deviceLabel || device.documentId || device.id}</div>
+                    <div className="text-slate-600">
+                      {device.isActive ? "Active" : "Inactive"} | {device.platform || "-"} {device.browser || ""} |{" "}
+                      {formatDateTime(device.lastUsedAt)}
+                    </div>
                   </div>
                 ))}
                 {!data.devices?.length ? <div className="py-3 text-sm text-slate-500">No trusted devices.</div> : null}
