@@ -109,7 +109,12 @@ export function TournamentListSection({
     const [debouncedSeason, setDebouncedSeason] = useState(initialSeason)
     const [debouncedQuery, setDebouncedQuery] = useState(initialQuery)
     const isCards = section.layout === 'cards'
-    const useTitleLink = (embedded || pathname === '/tournaments' || pathname === '/embed/tournaments') && section.showResultsLink
+    const useTitleLink =
+        (embedded ||
+            pathname === '/tournaments' ||
+            pathname === '/embed/tournaments' ||
+            pathname?.startsWith('/federations/')) &&
+        section.showResultsLink
     const { tokens } = appearance
 
     useEffect(() => {
