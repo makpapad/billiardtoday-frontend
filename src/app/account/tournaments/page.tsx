@@ -134,6 +134,7 @@ export default function AccountTournamentsPage() {
   const [selectedTournamentType, setSelectedTournamentType] = React.useState("all");
   const [selectedYear, setSelectedYear] = React.useState("all");
   const [opponentQuery, setOpponentQuery] = React.useState("");
+  const [selectedStageByTournament, setSelectedStageByTournament] = React.useState<Record<string, string>>({});
 
   const fetchHistory = React.useCallback(
     async (playerId: string) => {
@@ -226,6 +227,13 @@ export default function AccountTournamentsPage() {
       }))
       .filter((tournament) => tournament.matches.length > 0);
   }, [opponentQuery, tournaments]);
+
+  const selectTournamentStage = React.useCallback((tournamentId: string, stageTitle: string) => {
+    setSelectedStageByTournament((current) => ({
+      ...current,
+      [tournamentId]: stageTitle,
+    }));
+  }, []);
 
   const heroStats = [
     { label: "Official Matches", value: String(officialMatches) },
@@ -477,7 +485,14 @@ export default function AccountTournamentsPage() {
                   {hasLoadedData ? "No tournaments match the current filters." : "Tournament history is loading."}
                 </div>
               ) : (
-                visibleTournaments.map((participation) => (
+                visibleTournaments.map((participation) => {
+                  const selectedStage = selectedStageByTournament[participation.id] || "all";
+                  const tableMatches =
+                    selectedStage === "all"
+                      ? participation.matches
+                      : participation.matches.filter((match) => match.stage === selectedStage);
+
+                  return (
                   <article key={participation.id} className="border border-zinc-300 bg-white/20 p-5">
                     <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
                       <div className="min-w-0">
@@ -508,17 +523,37 @@ export default function AccountTournamentsPage() {
 
                     {participation.stageResults.length > 0 ? (
                       <div className="mt-5 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => selectTournamentStage(participation.id, "all")}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                            selectedStage === "all"
+                              ? "border-zinc-950 bg-zinc-950 text-white"
+                              : "border-zinc-300 text-zinc-700 hover:border-zinc-950"
+                          }`}
+                        >
+                          All matches ({participation.matches.length})
+                        </button>
                         {participation.stageResults.map((stage, index) => (
-                          <span key={`${participation.id}-stage-${index}`} className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">
+                          <button
+                            key={`${participation.id}-stage-${index}`}
+                            type="button"
+                            onClick={() => selectTournamentStage(participation.id, stage.stageTitle || "")}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                              selectedStage === (stage.stageTitle || "")
+                                ? "border-zinc-950 bg-zinc-950 text-white"
+                                : "border-zinc-300 text-zinc-700 hover:border-zinc-950"
+                            }`}
+                          >
                             {[stage.stageTitle, stage.finalPosition ? `Final ${stage.finalPosition}` : null, stage.groupPosition ? `Group ${stage.groupPosition}` : null]
                               .filter(Boolean)
                               .join(" / ")}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     ) : null}
 
-                    {participation.matches.length > 0 ? (
+                    {tableMatches.length > 0 ? (
                       <div className="mt-6 overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                           <thead className="text-xs uppercase tracking-[0.22em] text-zinc-500">
@@ -533,7 +568,7 @@ export default function AccountTournamentsPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {participation.matches.map((match) => {
+                            {tableMatches.map((match) => {
                               const matchAvg = match.innings ? (Number(match.scoreFor) || 0) / match.innings : 0;
                               return (
                                 <tr key={match.id} className="border-b border-zinc-300/80 text-zinc-800 last:border-b-0">
@@ -569,9 +604,14 @@ export default function AccountTournamentsPage() {
                           </tbody>
                         </table>
                       </div>
-                    ) : null}
+                    ) : (
+                      <div className="mt-6 border border-dashed border-zinc-400 px-4 py-5 text-sm text-zinc-600">
+                        No match rows are available for this stage.
+                      </div>
+                    )}
                   </article>
-                ))
+                  );
+                })
               )}
             </div>
           </>
