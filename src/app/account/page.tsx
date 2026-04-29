@@ -299,6 +299,24 @@ function WinRateDial({
   );
 }
 
+function AccountDataLoadingModal() {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-md border border-white/20 bg-zinc-950 px-6 py-5 text-white shadow-[0_30px_120px_rgba(0,0,0,0.45)]">
+        <div className="text-xs font-semibold uppercase tracking-[0.28em] text-red-400">Loading account</div>
+        <div className="mt-3 text-2xl font-black uppercase tracking-normal">Fetching player data</div>
+        <p className="mt-3 text-sm leading-6 text-zinc-300">
+          Loading profile, friendly matches, tournament history and trusted devices.
+        </p>
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full w-1/2 animate-[accountLoading_1.35s_ease-in-out_infinite] rounded-full bg-red-600" />
+        </div>
+        <div className="mt-3 text-xs text-zinc-400">Please wait...</div>
+      </div>
+    </div>
+  );
+}
+
 export default function AccountPage() {
   const { account, setAccount, isLoading } = useAccountSession();
   const [dashboard, setDashboard] = React.useState<PlayerAccountDashboard | null>(null);
@@ -306,6 +324,7 @@ export default function AccountPage() {
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
   const [tournaments, setTournaments] = React.useState<PlayerAccountTournamentParticipation[]>([]);
   const [isRefreshingData, setIsRefreshingData] = React.useState(false);
+  const [hasLoadedPrivateData, setHasLoadedPrivateData] = React.useState(false);
   const [dataError, setDataError] = React.useState<string | null>(null);
   const [deviceLink, setDeviceLink] = React.useState<{ linkUrl: string; expiresAt: string | null } | null>(null);
   const [isPreparingDeviceLink, setIsPreparingDeviceLink] = React.useState(false);
@@ -332,6 +351,7 @@ export default function AccountPage() {
     } catch (err) {
       setDataError(err instanceof Error ? err.message : "Private account data could not be loaded.");
     } finally {
+      setHasLoadedPrivateData(true);
       setIsRefreshingData(false);
     }
   }, []);
@@ -433,7 +453,21 @@ export default function AccountPage() {
 
   return (
     <PrivateAccountShell account={account} setAccount={setAccount} activeHref="/account" variant="profile">
+      {isRefreshingData && !hasLoadedPrivateData ? <AccountDataLoadingModal /> : null}
       {dataError ? <div className="mx-auto max-w-7xl bg-red-50 px-5 py-3 text-sm text-red-700">{dataError}</div> : null}
+      <style jsx global>{`
+        @keyframes accountLoading {
+          0% {
+            transform: translateX(-120%);
+          }
+          50% {
+            transform: translateX(70%);
+          }
+          100% {
+            transform: translateX(220%);
+          }
+        }
+      `}</style>
 
       <section className="relative overflow-hidden bg-black text-white">
         <div className="absolute inset-0 bg-[url('/img/account/dotted_balls_3_fine.webp')] bg-cover bg-center opacity-35" />
