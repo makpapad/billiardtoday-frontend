@@ -61,7 +61,9 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/admin/player-enrollment-requests/:path*",
+    "/admin/player-accounts/:path*",
     "/api/admin/player-enrollment-requests/:path*",
+    "/api/admin/player-accounts/:path*",
     "/api/admin/tournament/players/:path*",
   ],
 };
