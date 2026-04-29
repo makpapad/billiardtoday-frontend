@@ -283,6 +283,11 @@ type FriendlyMatchEnvelope = {
   error?: string;
 };
 
+type FriendlyMatchDeleteEnvelope = {
+  data?: { id: number | string; documentId: string | null; deleted: boolean };
+  error?: string;
+};
+
 export type PlayerAccountFriendlyMatchCreateInput = {
   player1Name: string;
   player2Name: string;
@@ -808,6 +813,25 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as FriendlyMatchEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(extractErrorMessage(json, "Friendly match create failed"));
+    }
+    return json.data;
+  }
+
+  async deleteFriendlyMatch(matchId: number | string) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-matches/delete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ matchId }),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyMatchDeleteEnvelope | null;
+    if (!res.ok || !json?.data?.deleted) {
+      throw new Error(extractErrorMessage(json, "Friendly match delete failed"));
     }
     return json.data;
   }

@@ -183,6 +183,7 @@ export default function AccountFriendlyPage() {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoadedData, setHasLoadedData] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [draftNotes, setDraftNotes] = React.useState("");
   const [draftTags, setDraftTags] = React.useState("");
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -328,6 +329,26 @@ export default function AccountFriendlyPage() {
       setError(err instanceof Error ? err.message : "Friendly match create failed.");
     } finally {
       setIsSavingCreate(false);
+    }
+  };
+
+  const deleteManualMatch = async (match: PlayerAccountFriendlyMatch) => {
+    if (match.screenIdentifier !== "account-manual") return;
+    const confirmed = window.confirm("Delete this manually added friendly match?");
+    if (!confirmed) return;
+
+    setError(null);
+    setNotice(null);
+    setDeletingId(String(match.id));
+    try {
+      await playerAccountAuth.deleteFriendlyMatch(String(match.id ?? ""));
+      setFriendlyMatches((current) => current.filter((row) => String(row.id) !== String(match.id)));
+      if (editingId === String(match.id)) setEditingId(null);
+      setNotice("Friendly match deleted.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Friendly match delete failed.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -581,125 +602,139 @@ export default function AccountFriendlyPage() {
           ))}
         </div>
 
-        <div className="mt-12 divide-y divide-zinc-300 border-y border-zinc-300">
+        <div className="mt-12 border border-zinc-300 bg-white/10 p-5">
           {visibleMatches.length === 0 ? (
             <div className="py-8 text-sm text-zinc-500">
               {hasLoadedData ? "No friendly matches match the current filters." : "Friendly matches are loading."}
             </div>
           ) : (
-            visibleMatches.map((match) => {
-              const result = friendlyResultForAccount(match, account, playerName);
-              const innings = Math.max(match.player1_innings || 0, match.player2_innings || 0);
-              const matchAvg = innings ? Math.max(match.player1_points || 0, match.player2_points || 0) / innings : 0;
-              return (
-                <article key={String(match.id)} className="py-6">
-                  <div className="grid gap-5 lg:grid-cols-[90px_1fr_180px_300px] lg:items-center">
-                    <div>
-                      <span
-                        className={`inline-grid h-14 w-14 place-items-center rounded-full text-xl font-black ${
-                          result === "W" ? "bg-emerald-600 text-white" : result === "L" ? "bg-red-700 text-white" : "bg-zinc-950 text-white"
-                        }`}
-                      >
-                        {result || "-"}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Match</div>
-                      <div className="mt-1 text-2xl font-semibold text-zinc-950">
-                        {match.player1Name || "Player 1"} vs {match.player2Name || "Player 2"}
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-600">
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarDays className="h-4 w-4" />
-                          {formatDateTime(match.reportedAt || match.matchDateTime) || "Date not available"}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {match.clubName || match.venueName || "Unknown venue"}
-                        </span>
-                        {match.tableLabel ? <span>{match.tableLabel}</span> : null}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Score</div>
-                      <div className="mt-1 text-4xl font-black text-zinc-950">{match.player1_points ?? 0}-{match.player2_points ?? 0}</div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-3 text-sm">
-                      <div><div className="text-zinc-500">P1 HR</div><div className="mt-1 text-2xl font-semibold">{match.player1_high_run ?? 0}</div></div>
-                      <div><div className="text-zinc-500">P2 HR</div><div className="mt-1 text-2xl font-semibold">{match.player2_high_run ?? 0}</div></div>
-                      <div><div className="text-zinc-500">INN</div><div className="mt-1 text-2xl font-semibold">{innings}</div></div>
-                      <div><div className="text-zinc-500">AVG</div><div className="mt-1 text-2xl font-semibold">{truncateAvg(matchAvg)}</div></div>
-                    </div>
-                  </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-[0.28em] text-zinc-500">
+                  <tr>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Date</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Opponent</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Stage</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Score</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Avg</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">H.R.</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold">Result</th>
+                    <th className="border-b border-zinc-300 pb-3 pr-5 font-semibold"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleMatches.map((match) => {
+                    const result = friendlyResultForAccount(match, account, playerName);
+                    const side = accountMatchSide(match, account, playerName);
+                    const innings = Math.max(match.player1_innings || 0, match.player2_innings || 0);
+                    const scoreFor = side === 2 ? match.player2_points ?? 0 : match.player1_points ?? 0;
+                    const scoreAgainst = side === 2 ? match.player1_points ?? 0 : match.player2_points ?? 0;
+                    const highRun = side === 2 ? match.player2_high_run ?? 0 : match.player1_high_run ?? 0;
+                    const opponent = side === 2 ? match.player1Name || "Player 1" : match.player2Name || "Player 2";
+                    const matchAvg = innings ? scoreFor / innings : 0;
 
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {(match.tags || []).map((tag) => (
-                      <span key={`${match.id}-${tag}`} className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">
-                        #{tag}
-                      </span>
-                    ))}
-                    {match.screenIdentifier ? (
-                      <span className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">
-                        Screen {match.screenIdentifier}
-                      </span>
-                    ) : null}
-                    {match.targetPoints ? (
-                      <span className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">
-                        Target {match.targetPoints}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => (editingId === String(match.id) ? setEditingId(null) : startEditing(match))}
-                      className="border border-zinc-400 px-4 py-2 text-sm font-semibold text-zinc-800"
-                    >
-                      {editingId === String(match.id) ? "Cancel" : "Edit notes"}
-                    </button>
-                  </div>
-
-                  {editingId === String(match.id) ? (
-                    <div className="mt-4 border border-zinc-300 bg-white/20 p-4">
-                      <label className="block text-sm font-semibold text-zinc-700">Notes</label>
-                      <textarea
-                        value={draftNotes}
-                        onChange={(event) => setDraftNotes(event.target.value)}
-                        rows={4}
-                        className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-4 py-3 text-sm text-zinc-950 outline-none"
-                        placeholder="Add private notes for this match"
-                      />
-                      <label className="mt-4 block text-sm font-semibold text-zinc-700">Tags</label>
-                      <input
-                        value={draftTags}
-                        onChange={(event) => setDraftTags(event.target.value)}
-                        className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-4 py-3 text-sm text-zinc-950 outline-none"
-                        placeholder="practice, warmup, race-to-30"
-                      />
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          onClick={() => void saveMetadata(String(match.id ?? ""))}
-                          className="bg-zinc-950 px-4 py-2 text-sm font-semibold text-white"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingId(null)}
-                          className="border border-zinc-400 px-4 py-2 text-sm font-semibold text-zinc-800"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : match.notes ? (
-                    <div className="mt-4 border border-zinc-300 bg-[#ebe5d8] px-4 py-3 text-sm text-zinc-700">{match.notes}</div>
-                  ) : null}
-                </article>
-              );
-            })
+                    return (
+                      <React.Fragment key={String(match.id)}>
+                        <tr className="border-b border-zinc-300/80 text-zinc-800">
+                          <td className="py-4 pr-5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4 text-zinc-500" />
+                              {formatDateTime(match.reportedAt || match.matchDateTime)?.split(",")[0] || "Date not available"}
+                            </span>
+                          </td>
+                          <td className="py-4 pr-5 font-semibold text-zinc-950">{opponent}</td>
+                          <td className="py-4 pr-5">{match.clubName || match.venueName || match.tableLabel || "Friendly"}</td>
+                          <td className="py-4 pr-5 text-2xl font-black text-zinc-950">
+                            {scoreFor}-{scoreAgainst}
+                          </td>
+                          <td className="py-4 pr-5">{truncateAvg(matchAvg)}</td>
+                          <td className="py-4 pr-5">{highRun}</td>
+                          <td className="py-4 pr-5">
+                            <span
+                              className={`inline-flex min-w-14 justify-center rounded-full px-3 py-1 text-xs font-black uppercase ${
+                                result === "W"
+                                  ? "bg-emerald-600 text-white"
+                                  : result === "L"
+                                    ? "bg-red-700 text-white"
+                                    : "bg-zinc-800 text-white"
+                              }`}
+                            >
+                              {result === "W" ? "Win" : result === "L" ? "Loss" : "-"}
+                            </span>
+                          </td>
+                          <td className="py-4 pr-5 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => (editingId === String(match.id) ? setEditingId(null) : startEditing(match))}
+                                className="border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700 hover:border-zinc-950"
+                              >
+                                {editingId === String(match.id) ? "Cancel" : "Notes"}
+                              </button>
+                              {match.screenIdentifier === "account-manual" ? (
+                                <button
+                                  type="button"
+                                  disabled={deletingId === String(match.id)}
+                                  onClick={() => void deleteManualMatch(match)}
+                                  className="border border-red-300 px-3 py-1 text-xs font-semibold text-red-700 hover:border-red-700 disabled:opacity-60"
+                                >
+                                  {deletingId === String(match.id) ? "Deleting..." : "Delete"}
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                        {editingId === String(match.id) ? (
+                          <tr className="border-b border-zinc-300/80">
+                            <td colSpan={8} className="py-4">
+                              <div className="border border-zinc-300 bg-white/20 p-4">
+                                <label className="block text-sm font-semibold text-zinc-700">Notes</label>
+                                <textarea
+                                  value={draftNotes}
+                                  onChange={(event) => setDraftNotes(event.target.value)}
+                                  rows={4}
+                                  className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-4 py-3 text-sm text-zinc-950 outline-none"
+                                  placeholder="Add private notes for this match"
+                                />
+                                <label className="mt-4 block text-sm font-semibold text-zinc-700">Tags</label>
+                                <input
+                                  value={draftTags}
+                                  onChange={(event) => setDraftTags(event.target.value)}
+                                  className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-4 py-3 text-sm text-zinc-950 outline-none"
+                                  placeholder="practice, warmup, race-to-30"
+                                />
+                                <div className="mt-4 flex flex-wrap gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => void saveMetadata(String(match.id ?? ""))}
+                                    className="bg-zinc-950 px-4 py-2 text-sm font-semibold text-white"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingId(null)}
+                                    className="border border-zinc-400 px-4 py-2 text-sm font-semibold text-zinc-800"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : match.notes ? (
+                          <tr className="border-b border-zinc-300/80">
+                            <td colSpan={8} className="pb-4 text-sm text-zinc-600">
+                              {match.notes}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </section>
@@ -770,7 +805,18 @@ export default function AccountFriendlyPage() {
                 </div>
               </div>
 
-              <div className="grid place-items-center pt-10 text-5xl font-black text-zinc-400">VS</div>
+              <div className="grid place-items-center gap-4 pt-10">
+                <div className="text-5xl font-black text-zinc-400">VS</div>
+                <label className="w-24 text-center text-sm font-medium text-zinc-600">
+                  Innings
+                  <input
+                    type="number"
+                    value={createDraft.innings}
+                    onChange={(event) => setCreateDraft((current) => ({ ...current, innings: event.target.value }))}
+                    className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-center text-base outline-none focus:border-zinc-950"
+                  />
+                </label>
+              </div>
 
               <div>
                 <input
@@ -798,28 +844,19 @@ export default function AccountFriendlyPage() {
                       className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
                     />
                   </label>
-                  <label className="text-sm font-medium text-zinc-600">
+                  <label className="col-start-2 text-right text-sm font-medium text-zinc-600">
                     Avg
                     <input
                       readOnly
                       value={truncateAvg(averageFromDraft(createDraft.player2Points, createDraft.innings))}
-                      className="mt-2 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-base text-zinc-500 outline-none"
+                      className="mt-2 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-right text-base text-zinc-500 outline-none"
                     />
                   </label>
                 </div>
               </div>
             </div>
 
-            <div className="mt-7 grid gap-3 border-t border-zinc-200 pt-5 sm:grid-cols-4">
-              <label className="text-sm font-medium text-zinc-600">
-                Innings
-                <input
-                  type="number"
-                  value={createDraft.innings}
-                  onChange={(event) => setCreateDraft((current) => ({ ...current, innings: event.target.value }))}
-                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
-                />
-              </label>
+            <div className="mt-7 grid gap-3 border-t border-zinc-200 pt-5 sm:grid-cols-3">
               <label className="text-sm font-medium text-zinc-600">
                 Target
                 <input
