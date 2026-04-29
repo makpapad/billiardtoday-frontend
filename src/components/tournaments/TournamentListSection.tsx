@@ -109,7 +109,7 @@ export function TournamentListSection({
     const [debouncedSeason, setDebouncedSeason] = useState(initialSeason)
     const [debouncedQuery, setDebouncedQuery] = useState(initialQuery)
     const isCards = section.layout === 'cards'
-    const useTitleLink = (pathname === '/tournaments' || pathname === '/embed/tournaments') && section.showResultsLink
+    const useTitleLink = (embedded || pathname === '/tournaments' || pathname === '/embed/tournaments') && section.showResultsLink
     const { tokens } = appearance
 
     useEffect(() => {
@@ -185,7 +185,7 @@ export function TournamentListSection({
     }
 
     const wrapperClass = embedded
-        ? 'px-0 py-0'
+        ? 'px-4 py-0 sm:px-6'
         : `px-4 ${getCmsSectionPaddingClass(section.paddingY)} sm:px-6`
 
     const panelClass = embedded
@@ -206,7 +206,7 @@ export function TournamentListSection({
         <section className={wrapperClass} style={getCmsSectionSurfaceStyle(section, appearance)}>
             <div
                 className="mx-auto"
-                style={embedded ? { width: '100%', maxWidth: '100%' } : getCmsContainerStyle(appearance, 'page')}
+                style={getCmsContainerStyle(appearance, 'page')}
             >
                 {section.title || section.subtitle ? (
                     <div className="mb-8">
