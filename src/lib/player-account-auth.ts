@@ -207,6 +207,7 @@ export type PlayerAccountTournamentParticipation = {
   tournament: string | null;
   year: number | null;
   gameType: string | null;
+  tournamentType?: string | null;
   position: string;
   finals: Array<{ position: number | null }>;
   stageResults: Array<{
