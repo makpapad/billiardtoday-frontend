@@ -283,6 +283,23 @@ type FriendlyMatchEnvelope = {
   error?: string;
 };
 
+export type PlayerAccountFriendlyMatchCreateInput = {
+  player1Name: string;
+  player2Name: string;
+  player1_points?: number | null;
+  player2_points?: number | null;
+  innings?: number | null;
+  player1_high_run?: number | null;
+  player2_high_run?: number | null;
+  targetPoints?: number | null;
+  clubName?: string | null;
+  venueName?: string | null;
+  tableLabel?: string | null;
+  matchDateTime?: string | null;
+  notes?: string | null;
+  tags?: string[];
+};
+
 type TournamentsEnvelope = {
   data?: PlayerAccountTournamentParticipation[];
   error?: string;
@@ -772,6 +789,25 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as FriendlyMatchEnvelope | null;
     if (!res.ok || !json?.data) {
       throw new Error(extractErrorMessage(json, "Friendly match update failed"));
+    }
+    return json.data;
+  }
+
+  async createFriendlyMatch(input: PlayerAccountFriendlyMatchCreateInput) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-matches/create", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyMatchEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Friendly match create failed"));
     }
     return json.data;
   }

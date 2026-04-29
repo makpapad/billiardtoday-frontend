@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
-import { CalendarDays, CircleDot, MapPin, Search, ShieldCheck } from "lucide-react";
+import { CalendarDays, CircleDot, MapPin, Plus, Search, ShieldCheck, X } from "lucide-react";
 import {
   AccountAccessCard,
   formatDateTime,
@@ -144,6 +144,23 @@ function currentStreak(results: Array<"W" | "L">) {
   return `${first}${count}`;
 }
 
+function localDateTimeValue(date = new Date()) {
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function numberOrNull(value: string) {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function averageFromDraft(points: string, innings: string) {
+  const pointsValue = numberOrNull(points) || 0;
+  const inningsValue = numberOrNull(innings) || 0;
+  return inningsValue > 0 ? pointsValue / inningsValue : 0;
+}
+
 function AccountDataLoadingModal() {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/60 px-5 backdrop-blur-sm">
@@ -173,6 +190,23 @@ export default function AccountFriendlyPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [venueFilter, setVenueFilter] = React.useState("all");
   const [resultFilter, setResultFilter] = React.useState("all");
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [isSavingCreate, setIsSavingCreate] = React.useState(false);
+  const [createDraft, setCreateDraft] = React.useState({
+    player1Name: "",
+    player2Name: "",
+    player1Points: "0",
+    player2Points: "0",
+    innings: "0",
+    player1HighRun: "0",
+    player2HighRun: "0",
+    targetPoints: "",
+    clubName: "",
+    tableLabel: "",
+    matchDateTime: localDateTimeValue(),
+    notes: "",
+    tags: "",
+  });
 
   const loadData = React.useCallback(async () => {
     setIsRefreshing(true);
@@ -197,6 +231,14 @@ export default function AccountFriendlyPage() {
     if (!account) return;
     void loadData();
   }, [account, loadData]);
+
+  React.useEffect(() => {
+    if (!account) return;
+    setCreateDraft((current) => ({
+      ...current,
+      player1Name: current.player1Name || displayNameFor(account, dashboard),
+    }));
+  }, [account, dashboard]);
 
   const startEditing = (match: PlayerAccountFriendlyMatch) => {
     setEditingId(String(match.id));
@@ -225,6 +267,67 @@ export default function AccountFriendlyPage() {
       setNotice("Friendly match notes updated.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Friendly match update failed.");
+    }
+  };
+
+  const openCreateModal = () => {
+    setCreateDraft((current) => ({
+      ...current,
+      player1Name: account ? displayNameFor(account, dashboard) : current.player1Name,
+      player2Name: current.player2Name || "",
+      matchDateTime: localDateTimeValue(),
+    }));
+    setNotice(null);
+    setError(null);
+    setIsCreateOpen(true);
+  };
+
+  const saveCreatedMatch = async () => {
+    setError(null);
+    setNotice(null);
+    setIsSavingCreate(true);
+    try {
+      const created = await playerAccountAuth.createFriendlyMatch({
+        player1Name: createDraft.player1Name,
+        player2Name: createDraft.player2Name,
+        player1_points: numberOrNull(createDraft.player1Points),
+        player2_points: numberOrNull(createDraft.player2Points),
+        innings: numberOrNull(createDraft.innings),
+        player1_high_run: numberOrNull(createDraft.player1HighRun),
+        player2_high_run: numberOrNull(createDraft.player2HighRun),
+        targetPoints: numberOrNull(createDraft.targetPoints),
+        clubName: createDraft.clubName || null,
+        venueName: createDraft.clubName || null,
+        tableLabel: createDraft.tableLabel || null,
+        matchDateTime: createDraft.matchDateTime ? new Date(createDraft.matchDateTime).toISOString() : null,
+        notes: createDraft.notes || null,
+        tags: createDraft.tags
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      });
+      setFriendlyMatches((current) => [created, ...current]);
+      setIsCreateOpen(false);
+      setCreateDraft({
+        player1Name: account ? displayNameFor(account, dashboard) : "",
+        player2Name: "",
+        player1Points: "0",
+        player2Points: "0",
+        innings: "0",
+        player1HighRun: "0",
+        player2HighRun: "0",
+        targetPoints: "",
+        clubName: "",
+        tableLabel: "",
+        matchDateTime: localDateTimeValue(),
+        notes: "",
+        tags: "",
+      });
+      setNotice("Friendly match added.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Friendly match create failed.");
+    } finally {
+      setIsSavingCreate(false);
     }
   };
 
@@ -413,6 +516,14 @@ export default function AccountFriendlyPage() {
           >
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex w-fit items-center gap-2 bg-zinc-950 px-4 py-3 text-sm font-semibold text-white"
+          >
+            <Plus className="h-4 w-4" />
+            Add friendly match
+          </button>
         </div>
 
         {error ? <div className="mt-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
@@ -592,6 +703,191 @@ export default function AccountFriendlyPage() {
           )}
         </div>
       </section>
+
+      {isCreateOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 text-zinc-950 shadow-[0_30px_120px_rgba(0,0,0,0.45)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-bold">Add Friendly Match</h3>
+                <p className="mt-1 text-sm text-zinc-500">Manual entry for a completed friendly scoreboard match.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
+              <label className="font-medium text-zinc-600">Date & Time</label>
+              <input
+                type="datetime-local"
+                value={createDraft.matchDateTime}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, matchDateTime: event.target.value }))}
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-950"
+              />
+            </div>
+
+            <div className="mt-8 grid gap-8 md:grid-cols-[1fr_auto_1fr] md:items-start">
+              <div>
+                <input
+                  value={createDraft.player1Name}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, player1Name: event.target.value }))}
+                  className="w-full border-0 border-b border-zinc-300 bg-transparent px-0 py-2 text-center text-xl font-bold outline-none focus:border-zinc-950"
+                  placeholder="Player 1"
+                />
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <label className="text-sm font-medium text-zinc-600">
+                    Points
+                    <input
+                      type="number"
+                      value={createDraft.player1Points}
+                      onChange={(event) => setCreateDraft((current) => ({ ...current, player1Points: event.target.value }))}
+                      className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-zinc-600">
+                    H.R.
+                    <input
+                      type="number"
+                      value={createDraft.player1HighRun}
+                      onChange={(event) => setCreateDraft((current) => ({ ...current, player1HighRun: event.target.value }))}
+                      className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-zinc-600">
+                    Avg
+                    <input
+                      readOnly
+                      value={truncateAvg(averageFromDraft(createDraft.player1Points, createDraft.innings))}
+                      className="mt-2 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-base text-zinc-500 outline-none"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid place-items-center pt-10 text-5xl font-black text-zinc-400">VS</div>
+
+              <div>
+                <input
+                  value={createDraft.player2Name}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, player2Name: event.target.value }))}
+                  className="w-full border-0 border-b border-zinc-300 bg-transparent px-0 py-2 text-center text-xl font-bold outline-none focus:border-zinc-950"
+                  placeholder="Player 2"
+                />
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <label className="text-sm font-medium text-zinc-600">
+                    Points
+                    <input
+                      type="number"
+                      value={createDraft.player2Points}
+                      onChange={(event) => setCreateDraft((current) => ({ ...current, player2Points: event.target.value }))}
+                      className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-zinc-600">
+                    H.R.
+                    <input
+                      type="number"
+                      value={createDraft.player2HighRun}
+                      onChange={(event) => setCreateDraft((current) => ({ ...current, player2HighRun: event.target.value }))}
+                      className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-zinc-600">
+                    Avg
+                    <input
+                      readOnly
+                      value={truncateAvg(averageFromDraft(createDraft.player2Points, createDraft.innings))}
+                      className="mt-2 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-base text-zinc-500 outline-none"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-7 grid gap-3 border-t border-zinc-200 pt-5 sm:grid-cols-4">
+              <label className="text-sm font-medium text-zinc-600">
+                Innings
+                <input
+                  type="number"
+                  value={createDraft.innings}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, innings: event.target.value }))}
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-600">
+                Target
+                <input
+                  type="number"
+                  value={createDraft.targetPoints}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, targetPoints: event.target.value }))}
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-600">
+                Venue
+                <input
+                  value={createDraft.clubName}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, clubName: event.target.value }))}
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-600">
+                Table
+                <input
+                  value={createDraft.tableLabel}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, tableLabel: event.target.value }))}
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-medium text-zinc-600">
+                Notes
+                <textarea
+                  value={createDraft.notes}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, notes: event.target.value }))}
+                  rows={3}
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-600">
+                Tags
+                <input
+                  value={createDraft.tags}
+                  onChange={(event) => setCreateDraft((current) => ({ ...current, tags: event.target.value }))}
+                  placeholder="practice, warmup"
+                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-zinc-950"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 border-t border-zinc-200 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                className="rounded-md border border-zinc-300 px-5 py-2 text-sm font-semibold text-zinc-700 hover:border-zinc-950"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSavingCreate}
+                onClick={() => void saveCreatedMatch()}
+                className="rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 disabled:opacity-60"
+              >
+                {isSavingCreate ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </PrivateAccountShell>
   );
 }
