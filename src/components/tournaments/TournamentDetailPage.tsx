@@ -127,6 +127,7 @@ const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 // Set to false to disable the event countdown modal without removing the component.
 const TOURNAMENT_COUNTDOWN_MODAL_ENABLED = true;
 const TOURNAMENT_COUNTDOWN_TARGET_ISO = "2026-05-01T09:00:00+03:00";
+const GALLERY_IMAGE_BATCH_SIZE = 12;
 
 const normalizeGalleryVideoEntries = (value: unknown) => {
   if (!Array.isArray(value)) return [];
@@ -1519,6 +1520,10 @@ export function TournamentDetailPage({
     string | null
   >(null);
   const [galleryFolderMenuOpen, setGalleryFolderMenuOpen] = useState(false);
+  const [visibleGalleryImageCount, setVisibleGalleryImageCount] = useState(
+    GALLERY_IMAGE_BATCH_SIZE,
+  );
+  const galleryLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const [expandedGalleryVideoIds, setExpandedGalleryVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -4269,6 +4274,13 @@ export function TournamentDetailPage({
     if (!activeGallerySectionKey) return null;
     return gallerySections.find((section) => section.key === activeGallerySectionKey) ?? null;
   }, [activeGallerySectionKey, gallerySections]);
+  const visibleActiveGalleryImages = useMemo(
+    () => activeGallerySection?.images.slice(0, visibleGalleryImageCount) ?? [],
+    [activeGallerySection, visibleGalleryImageCount],
+  );
+  const hasMoreActiveGalleryImages =
+    Boolean(activeGallerySection) &&
+    visibleGalleryImageCount < (activeGallerySection?.images.length ?? 0);
   const selectedGalleryImage =
     selectedGalleryImageIndex !== null &&
     selectedGalleryImageIndex >= 0 &&
@@ -4302,6 +4314,32 @@ export function TournamentDetailPage({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedGalleryImageIndex]);
+
+  useEffect(() => {
+    setVisibleGalleryImageCount(GALLERY_IMAGE_BATCH_SIZE);
+  }, [activeGallerySectionKey]);
+
+  useEffect(() => {
+    if (!hasMoreActiveGalleryImages) return;
+    const target = galleryLoadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setVisibleGalleryImageCount((current) =>
+          Math.min(
+            current + GALLERY_IMAGE_BATCH_SIZE,
+            activeGallerySection?.images.length ?? current,
+          ),
+        );
+      },
+      { rootMargin: "600px 0px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [activeGallerySection, hasMoreActiveGalleryImages]);
 
   const isYouthTournament = useMemo(() => {
     const normalizedCategory = String(summary.category || "").trim().toLowerCase();
@@ -5528,7 +5566,7 @@ export function TournamentDetailPage({
                             Photos
                           </div>
                           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            {activeGallerySection.images.map((image, index) => {
+                            {visibleActiveGalleryImages.map((image, index) => {
                               const lightboxIndex = flatGalleryImages.findIndex(
                                 (entry) =>
                                   entry.id === image.id &&
@@ -5553,6 +5591,8 @@ export function TournamentDetailPage({
                                         src={image.previewUrl}
                                         alt={image.alt || image.name}
                                         className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                        loading="lazy"
+                                        decoding="async"
                                       />
                                     ) : (
                                       <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
@@ -5572,6 +5612,15 @@ export function TournamentDetailPage({
                               );
                             })}
                           </div>
+                          {hasMoreActiveGalleryImages ? (
+                            <div
+                              ref={galleryLoadMoreRef}
+                              className="flex justify-center pt-2"
+                              aria-hidden="true"
+                            >
+                              <div className="h-2 w-2 rounded-full bg-slate-300" />
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
