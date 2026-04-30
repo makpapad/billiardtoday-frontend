@@ -74,6 +74,7 @@ type EventLiveSession = LiveSessionItem & {
   eventId: string | null;
   eventStageId: string | null;
   groupNumber: number | null;
+  tableNumber?: string | number | null;
   screenIdentifier: string | null;
   player1DocumentId: string | null;
   player2DocumentId: string | null;
@@ -857,6 +858,17 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   if (namePairKey) keys.add(`name:${namePairKey}`);
 
   return keys;
+};
+
+const resolveLiveSessionTableLabel = (session: EventLiveSession) => {
+  const explicitTable = String(session.tableNumber ?? "").replace(/\s+/g, " ").trim();
+  if (explicitTable) {
+    return /^\d+$/.test(explicitTable) ? `Table ${explicitTable}` : explicitTable;
+  }
+
+  const screenIdentifier = String(session.screenIdentifier ?? session.screenId ?? "").trim();
+  const screenToken = screenIdentifier.match(/-S(\d+)-/i)?.[1] ?? null;
+  return screenToken ? `Table ${screenToken}` : null;
 };
 
 const toGroupLetter = (value: number | null | undefined): string | null => {
@@ -6275,6 +6287,7 @@ export function TournamentDetailPage({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
+              const tableLabel = resolveLiveSessionTableLabel(session);
               const photoFallback =
                 apiPhotoFallbackBySessionId.get(
                   String(
@@ -6308,6 +6321,13 @@ export function TournamentDetailPage({
                       locale={browserLocale ?? undefined}
                       tournamentContextSlug={tournamentContextSlug}
                     />
+                  ) : null}
+                  {tableLabel ? (
+                    <div className="mb-2 flex items-center gap-3 px-1">
+                      <div className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm">
+                        {tableLabel}
+                      </div>
+                    </div>
                   ) : null}
                   <div
                     className={
