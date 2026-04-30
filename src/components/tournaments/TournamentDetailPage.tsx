@@ -49,6 +49,7 @@ import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
+import { TournamentCountdownModal } from "@/components/tournaments/TournamentCountdownModal";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -123,6 +124,9 @@ type TournamentGallerySection = {
 
 const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
+// Set to false to disable the event countdown modal without removing the component.
+const TOURNAMENT_COUNTDOWN_MODAL_ENABLED = true;
+const TOURNAMENT_COUNTDOWN_TARGET_ISO = "2026-05-01T09:00:00+03:00";
 
 const normalizeGalleryVideoEntries = (value: unknown) => {
   if (!Array.isArray(value)) return [];
@@ -1400,6 +1404,9 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
+  const showTournamentCountdownModal =
+    TOURNAMENT_COUNTDOWN_MODAL_ENABLED &&
+    tournamentContextSlug === TOURNAMENT_ADS_SLUG;
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;
@@ -6632,6 +6639,13 @@ export function TournamentDetailPage({
         {mainContent}
       </div>
       {showTournamentAds ? <TournamentAdsStrip /> : null}
+      {showTournamentCountdownModal ? (
+        <TournamentCountdownModal
+          targetTimeIso={TOURNAMENT_COUNTDOWN_TARGET_ISO}
+          title="Time remaining"
+          subtitle="Counting down to 1 May 2026, 09:00 Athens time."
+        />
+      ) : null}
     </div>
   );
 }
