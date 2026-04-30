@@ -48,6 +48,7 @@ import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
+import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -6628,6 +6629,7 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-8">
         {mainContent}
       </div>
+      <TournamentAdsStrip />
     </div>
   );
 }

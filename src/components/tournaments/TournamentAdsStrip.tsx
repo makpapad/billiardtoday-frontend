@@ -1,0 +1,54 @@
+import Image from "next/image";
+
+const tournamentAds = [
+  {
+    src: "/img/logos/ads/1-eoaa_transp_blue_in white.webp",
+    alt: "EOAA",
+  },
+  {
+    src: "/img/logos/ads/2-Koralli_Logo_EST.webp",
+    alt: "Koralli",
+  },
+  {
+    src: "/img/logos/ads/3-sivis.webp",
+    alt: "Sivissidis",
+  },
+  {
+    src: "/img/logos/ads/4-ag.paraskevi copy.webp",
+    alt: "Agia Paraskevi",
+  },
+  {
+    src: "/img/logos/ads/5-Eurologic.webp",
+    alt: "Eurologic",
+  },
+  {
+    src: "/img/logos/ads/6-maxtherm.webp",
+    alt: "Maxtherm",
+  },
+];
+
+export function TournamentAdsStrip() {
+  return (
+    <section className="mt-10 border-t border-slate-200/80 bg-white/95 py-6">
+      <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
+        <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {tournamentAds.map((ad) => (
+            <div
+              key={ad.src}
+              className="flex h-20 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm"
+            >
+              <Image
+                src={ad.src}
+                alt={ad.alt}
+                width={220}
+                height={96}
+                className="max-h-14 w-full object-contain"
+                unoptimized
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
