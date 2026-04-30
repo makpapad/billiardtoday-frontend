@@ -4,26 +4,32 @@ const tournamentAds = [
   {
     src: "/img/logos/ads/1-eoaa-transp-blue-in-white.webp",
     alt: "EOAA",
+    href: "https://www.eoaa.org.gr/",
   },
   {
     src: "/img/logos/ads/2-Koralli_Logo_EST.webp",
     alt: "Koralli",
+    href: "https://www.facebook.com/KoralliBilliardClubCafe",
   },
   {
     src: "/img/logos/ads/3-sivis.webp",
     alt: "Sivissidis",
+    href: "https://sivissidis.gr/",
   },
   {
     src: "/img/logos/ads/4-ag-paraskevi-copy.webp",
     alt: "Agia Paraskevi",
+    href: "https://www.agiaparaskevi.gr/portal/",
   },
   {
     src: "/img/logos/ads/5-Eurologic.webp",
     alt: "Eurologic",
+    href: "https://www.eurologic.gr/",
   },
   {
     src: "/img/logos/ads/6-maxtherm.webp",
     alt: "Maxtherm",
+    href: "https://www.maxtherm.gr/",
   },
 ];
 
@@ -33,9 +39,12 @@ export function TournamentAdsStrip() {
       <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
         <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {tournamentAds.map((ad) => (
-            <div
+            <a
               key={ad.src}
-              className="flex h-20 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm"
+              href={ad.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-20 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
               <Image
                 src={ad.src}
@@ -45,7 +54,7 @@ export function TournamentAdsStrip() {
                 className="max-h-14 w-full object-contain"
                 unoptimized
               />
-            </div>
+            </a>
           ))}
         </div>
       </div>

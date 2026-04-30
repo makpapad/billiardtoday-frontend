@@ -122,6 +122,7 @@ type TournamentGallerySection = {
 };
 
 const GENERAL_SECTION_KEY = "general";
+const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 
 const normalizeGalleryVideoEntries = (value: unknown) => {
   if (!Array.isArray(value)) return [];
@@ -1398,6 +1399,7 @@ export function TournamentDetailPage({
   const tournamentContextSlug = summary.title
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
+  const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;
@@ -6629,7 +6631,7 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-8">
         {mainContent}
       </div>
-      <TournamentAdsStrip />
+      {showTournamentAds ? <TournamentAdsStrip /> : null}
     </div>
   );
 }
