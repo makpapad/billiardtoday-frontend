@@ -66,11 +66,11 @@ export function TournamentAdsStrip() {
               className="flex h-14 w-full max-w-[260px] items-center justify-center rounded-md border border-slate-200 bg-white px-5 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
               <Image
-                src="/img/billiard-today-logo.png"
+                src="/logo-billiardtoday-loading.png"
                 alt="Billiard Today"
-                width={320}
-                height={55}
-                className="max-h-9 w-full object-contain"
+                width={562}
+                height={180}
+                className="max-h-10 w-full object-contain"
                 unoptimized
               />
             </a>
