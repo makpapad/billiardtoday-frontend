@@ -37,25 +37,44 @@ export function TournamentAdsStrip() {
   return (
     <section className="mt-10 bg-white/95 py-6">
       <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
-        <div className="grid grid-cols-2 items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
-          {tournamentAds.map((ad) => (
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {tournamentAds.map((ad) => (
+              <a
+                key={ad.src}
+                href={ad.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              >
+                <Image
+                  src={ad.src}
+                  alt={ad.alt}
+                  width={220}
+                  height={96}
+                  className="max-h-14 w-full object-contain"
+                  unoptimized
+                />
+              </a>
+            ))}
+          </div>
+          <div className="mt-5 flex justify-center border-t border-slate-100 pt-5">
             <a
-              key={ad.src}
-              href={ad.href}
+              href="https://billiardtoday.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              className="flex h-14 w-full max-w-[260px] items-center justify-center rounded-md border border-slate-200 bg-white px-5 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
               <Image
-                src={ad.src}
-                alt={ad.alt}
-                width={220}
-                height={96}
-                className="max-h-14 w-full object-contain"
+                src="/img/billiard-today-logo.png"
+                alt="Billiard Today"
+                width={320}
+                height={55}
+                className="max-h-9 w-full object-contain"
                 unoptimized
               />
             </a>
-          ))}
+          </div>
         </div>
       </div>
     </section>
