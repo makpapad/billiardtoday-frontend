@@ -29,8 +29,8 @@ function getCountdownParts(targetMs: number): CountdownParts {
 
 function CountdownCell({ label, value }: { label: string; value: number }) {
   return (
-    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-center">
-      <div className="text-2xl font-semibold tabular-nums text-slate-950 sm:text-3xl">
+    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-4 text-center sm:px-4 sm:py-5">
+      <div className="text-3xl font-semibold tabular-nums text-slate-950 sm:text-5xl">
         {String(value).padStart(2, "0")}
       </div>
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -78,13 +78,13 @@ export function TournamentCountdownModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="tournament-countdown-title"
-        className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-5 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-6"
+        className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-8"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2
               id="tournament-countdown-title"
-              className="text-xl font-semibold tracking-tight sm:text-2xl"
+              className="text-2xl font-semibold tracking-tight sm:text-3xl"
             >
               {title}
             </h2>

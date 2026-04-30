@@ -6642,8 +6642,8 @@ export function TournamentDetailPage({
       {showTournamentCountdownModal ? (
         <TournamentCountdownModal
           targetTimeIso={TOURNAMENT_COUNTDOWN_TARGET_ISO}
-          title="Time remaining"
-          subtitle="Counting down to 1 May 2026, 09:00 Athens time."
+          title="LONGONI NEXT GEN Grand Prix 3-Cushion U21"
+          subtitle="Time remaining"
         />
       ) : null}
     </div>
