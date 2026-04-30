@@ -35,16 +35,16 @@ const tournamentAds = [
 
 export function TournamentAdsStrip() {
   return (
-    <section className="mt-10 border-t border-slate-200/80 bg-white/95 py-6">
+    <section className="mt-10 bg-white/95 py-6">
       <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
-        <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
           {tournamentAds.map((ad) => (
             <a
               key={ad.src}
               href={ad.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-20 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              className="flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
               <Image
                 src={ad.src}
