@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const tournamentAds = [
   {
-    src: "/img/logos/ads/1-eoaa_transp_blue_in white.webp",
+    src: "/img/logos/ads/1-eoaa-transp-blue-in-white.webp",
     alt: "EOAA",
   },
   {
@@ -14,7 +14,7 @@ const tournamentAds = [
     alt: "Sivissidis",
   },
   {
-    src: "/img/logos/ads/4-ag.paraskevi copy.webp",
+    src: "/img/logos/ads/4-ag-paraskevi-copy.webp",
     alt: "Agia Paraskevi",
   },
   {
