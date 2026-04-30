@@ -6,6 +6,7 @@ import { getCmsPageWidth } from "@/lib/cms/layout";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
+import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
 import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
@@ -17,13 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const summary = await resolveTournamentEventSummary(slug);
 
-  return {
-    title: summary ? `${summary.title} Embed` : "Tournament Embed",
-    robots: {
-      index: false,
-      follow: false,
-    },
-  };
+  return buildTournamentShareMetadata(summary, { embedded: true });
 }
 
 export default async function EmbedTournamentPage({ params, searchParams }: Props) {

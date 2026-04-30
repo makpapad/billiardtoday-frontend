@@ -5,6 +5,7 @@ import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
+import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
 import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
@@ -17,27 +18,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const summary = await resolveTournamentEventSummary(slug);
 
   if (!summary) {
-    return {
-      title: "Tournament not found",
-    };
+    return buildTournamentShareMetadata(null);
   }
 
-  const seasonLabel = summary.season ? ` ${summary.season}` : "";
-
-  return {
-    title: `${summary.title}${seasonLabel}`,
-    description:
-      summary.tournamentTitle
-        ? `${summary.tournamentTitle} ${seasonLabel} tournament page with stages, standings, and results.`
-        : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`,
-    alternates: {
-      canonical: `/tournaments/${buildTournamentSlug(
-        "",
-        summary.title,
-        summary.season,
-      )}`,
-    },
-  };
+  return buildTournamentShareMetadata(summary);
 }
 
 export default async function TournamentPage({ params, searchParams }: Props) {
