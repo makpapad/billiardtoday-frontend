@@ -63,14 +63,17 @@ export function TournamentAdsStrip() {
               href="https://billiardtoday.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-14 w-full max-w-[260px] items-center justify-center rounded-md border border-slate-200 bg-white px-5 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              className="flex h-20 w-full max-w-[280px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-5 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Powered by
+              </span>
               <Image
                 src="/logo-billiardtoday-loading.png"
                 alt="Billiard Today"
                 width={562}
                 height={180}
-                className="max-h-10 w-full object-contain"
+                className="max-h-11 w-full object-contain"
                 unoptimized
               />
             </a>
