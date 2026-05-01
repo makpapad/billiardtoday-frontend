@@ -376,29 +376,6 @@ export function LiveScoreBoardCard({
 
   const p1Flag = renderFlagBadge({ name: player1Name, country: player1.country });
   const p2Flag = renderFlagBadge({ name: player2Name, country: player2.country });
-  const renderMobileFlagCircle = ({ name, country }: { name?: string; country?: string | null }) => {
-    const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
-    const iso = resolveCountryCode(country)?.toLowerCase();
-    const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
-    return (
-      <div className="w-11 h-11 rounded-full bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden">
-        {flagSrc ? (
-          <img
-            src={flagSrc}
-            alt={country ?? "flag"}
-            className="w-10 h-10 rounded-full object-cover border border-white/40"
-            loading="eager"
-            fetchPriority="high"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-white/10 border border-white/40 flex items-center justify-center text-xs font-semibold">
-            {initial}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const TimeoutDots = ({
     used = 0,
@@ -705,7 +682,7 @@ export function LiveScoreBoardCard({
 
         <div className="relative z-10 md:hidden space-y-1">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-            {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
+            <AvatarCircle player={player1} fallback="P1" compact />
             <NamePlate
               variant="top"
               flag={p1Flag}
@@ -785,7 +762,7 @@ export function LiveScoreBoardCard({
             <div />
           </div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-            {renderMobileFlagCircle({ name: player2Name, country: player2.country })}
+            <AvatarCircle player={player2} fallback="P2" compact />
             <NamePlate
               variant="bottom"
               flag={p2Flag}
@@ -1078,15 +1055,15 @@ export function LiveScoreBoardCard({
 
       <div className="relative z-10 md:hidden space-y-1">
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          {renderMobileFlagCircle({ name: player1Name, country: player1.country })}
-            <NamePlate
-              variant="top"
-              flag={p1Flag}
-              name={player1Name}
-              run={resolveDisplayedRun(player1)}
-              isActive={isPlayer1Active}
-              compact
-            />
+          <AvatarCircle player={player1} fallback="P1" compact />
+          <NamePlate
+            variant="top"
+            flag={p1Flag}
+            name={player1Name}
+            run={resolveDisplayedRun(player1)}
+            isActive={isPlayer1Active}
+            compact
+          />
           <div className="h-[36px] rounded-lg border border-white/70 bg-white/95 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
             {player1.points ?? 0}
           </div>
@@ -1158,15 +1135,15 @@ export function LiveScoreBoardCard({
           <div />
         </div>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] items-center gap-1.5">
-          {renderMobileFlagCircle({ name: player2Name, country: player2.country })}
-            <NamePlate
-              variant="bottom"
-              flag={p2Flag}
-              name={player2Name}
-              run={resolveDisplayedRun(player2)}
-              isActive={isPlayer2Active}
-              compact
-            />
+          <AvatarCircle player={player2} fallback="P2" compact />
+          <NamePlate
+            variant="bottom"
+            flag={p2Flag}
+            name={player2Name}
+            run={resolveDisplayedRun(player2)}
+            isActive={isPlayer2Active}
+            compact
+          />
           <div className="h-[36px] rounded-lg border border-amber-200 bg-amber-300 text-slate-900 flex items-center justify-center text-[38px] font-black tabular-nums">
             {player2.points ?? 0}
           </div>
