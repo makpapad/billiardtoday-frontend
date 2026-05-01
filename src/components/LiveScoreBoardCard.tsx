@@ -491,12 +491,14 @@ export function LiveScoreBoardCard({
     return (
       <button
         type="button"
+        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={handleOpenLiveVideos}
-        className={`inline-flex items-center justify-center rounded-full border shadow-none transition hover:scale-[1.04] focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${
+        className={`relative z-30 inline-flex touch-manipulation items-center justify-center rounded-full border p-1.5 shadow-none transition hover:scale-[1.04] focus:outline-none focus:ring-2 focus:ring-cyan-200/60 ${
           liveVideosSelected
             ? "border-cyan-200/70 bg-cyan-300/18 shadow-[0_10px_28px_rgba(34,211,238,0.3)]"
             : "border-transparent bg-transparent"
-        } ${compact ? "h-9 w-9" : "h-10 w-10"} ${className}`}
+        } ${compact ? "h-11 w-11" : "h-12 w-12"} ${className}`}
         aria-label="Open live videos"
         title="Open live videos"
       >
@@ -1063,7 +1065,7 @@ export function LiveScoreBoardCard({
             </div>
           ) : null}
           {hasLiveVideos && onOpenLiveVideos ? (
-            <div className="absolute right-12 top-2 z-20 hidden md:block">
+            <div className="absolute right-16 top-1.5 z-30 hidden md:block">
               <LiveVideoButton />
             </div>
           ) : null}
