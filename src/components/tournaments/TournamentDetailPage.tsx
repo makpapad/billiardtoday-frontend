@@ -5437,9 +5437,15 @@ export function TournamentDetailPage({
                 {hasGalleryContent ? `Moments from ${summary.title}` : "Coming soon"}
               </h2>
               <p className="mt-4 text-sm text-slate-600 sm:text-base">
-                {hasGalleryContent
-                  ? "Photos and videos uploaded by the event organizers."
-                  : `The photo gallery for ${summary.title} is being prepared.`}
+                {hasGalleryContent ? (
+                  <>
+                    Photos and videos uploaded by the event organizers.
+                    <br />
+                    Free to download and use with credit to CEB.
+                  </>
+                ) : (
+                  `The photo gallery for ${summary.title} is being prepared.`
+                )}
               </p>
             </div>
             {hasGalleryContent && activeGallerySection ? (
