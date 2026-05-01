@@ -59,11 +59,8 @@ export function TournamentAdsStrip() {
             ))}
           </div>
           <div className="mt-5 flex justify-center border-t border-slate-100 pt-5">
-            <a
-              href="https://billiardtoday.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-20 w-full max-w-[280px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-5 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+            <div
+              className="flex h-20 w-full max-w-[280px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-5 py-3"
             >
               <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Powered by
@@ -76,7 +73,7 @@ export function TournamentAdsStrip() {
                 className="max-h-11 w-full object-contain"
                 unoptimized
               />
-            </a>
+            </div>
           </div>
         </div>
       </div>
