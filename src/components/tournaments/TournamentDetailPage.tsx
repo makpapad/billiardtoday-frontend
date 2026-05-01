@@ -1098,9 +1098,47 @@ const mergeLiveSessions = (
       existing.state?.playerAName ?? existing.player1Name ?? null;
     const existingPlayerBName =
       existing.state?.playerBName ?? existing.player2Name ?? null;
+    const authoritativePlayerAName = preferText(
+      existing.state?.playerAName ?? existing.player1Name,
+      session.state?.playerAName ?? session.player1Name,
+    );
+    const authoritativePlayerBName = preferText(
+      existing.state?.playerBName ?? existing.player2Name,
+      session.state?.playerBName ?? session.player2Name,
+    );
+    const authoritativePlayerACountry = preferText(
+      existing.state?.playerACountry,
+      session.state?.playerACountry,
+    );
+    const authoritativePlayerBCountry = preferText(
+      existing.state?.playerBCountry,
+      session.state?.playerBCountry,
+    );
+    const authoritativePlayerAPhotoUrl = preferText(
+      existing.state?.playerAPhotoUrl,
+      session.state?.playerAPhotoUrl,
+    );
+    const authoritativePlayerAPhotoMainUrl = preferText(
+      existing.state?.playerAPhotoMainUrl,
+      session.state?.playerAPhotoMainUrl,
+    );
+    const authoritativePlayerBPhotoUrl = preferText(
+      existing.state?.playerBPhotoUrl,
+      session.state?.playerBPhotoUrl,
+    );
+    const authoritativePlayerBPhotoMainUrl = preferText(
+      existing.state?.playerBPhotoMainUrl,
+      session.state?.playerBPhotoMainUrl,
+    );
     merged.set(key, {
       ...existing,
       ...session,
+      player1DocumentId:
+        preferText(existing.player1DocumentId, session.player1DocumentId) ?? null,
+      player2DocumentId:
+        preferText(existing.player2DocumentId, session.player2DocumentId) ?? null,
+      player1Name: authoritativePlayerAName ?? null,
+      player2Name: authoritativePlayerBName ?? null,
       liveVideos: normalizeLiveVideoEntries(
         session.liveVideos ?? session.state?.liveVideos ?? existing.liveVideos ?? existing.state?.liveVideos,
       ),
@@ -1114,29 +1152,33 @@ const mergeLiveSessions = (
           session.state?.liveVideos ?? session.liveVideos ?? existing.state?.liveVideos ?? existing.liveVideos,
         ),
         playerAPhotoUrl: preferText(
-          session.state?.playerAPhotoUrl,
+          authoritativePlayerAPhotoUrl,
           shouldReusePlayerPhoto(nextPlayerAName, existingPlayerAName)
-            ? existing.state?.playerAPhotoUrl
+            ? session.state?.playerAPhotoUrl
             : null,
         ),
         playerAPhotoMainUrl: preferText(
-          session.state?.playerAPhotoMainUrl,
+          authoritativePlayerAPhotoMainUrl,
           shouldReusePlayerPhoto(nextPlayerAName, existingPlayerAName)
-            ? existing.state?.playerAPhotoMainUrl
+            ? session.state?.playerAPhotoMainUrl
             : null,
         ),
         playerBPhotoUrl: preferText(
-          session.state?.playerBPhotoUrl,
+          authoritativePlayerBPhotoUrl,
           shouldReusePlayerPhoto(nextPlayerBName, existingPlayerBName)
-            ? existing.state?.playerBPhotoUrl
+            ? session.state?.playerBPhotoUrl
             : null,
         ),
         playerBPhotoMainUrl: preferText(
-          session.state?.playerBPhotoMainUrl,
+          authoritativePlayerBPhotoMainUrl,
           shouldReusePlayerPhoto(nextPlayerBName, existingPlayerBName)
-            ? existing.state?.playerBPhotoMainUrl
+            ? session.state?.playerBPhotoMainUrl
             : null,
         ),
+        playerAName: authoritativePlayerAName ?? session.state?.playerAName,
+        playerBName: authoritativePlayerBName ?? session.state?.playerBName,
+        playerACountry: authoritativePlayerACountry ?? session.state?.playerACountry,
+        playerBCountry: authoritativePlayerBCountry ?? session.state?.playerBCountry,
         isRunning: preserveRunningState
           ? existing.state?.isRunning
           : session.state?.isRunning,
