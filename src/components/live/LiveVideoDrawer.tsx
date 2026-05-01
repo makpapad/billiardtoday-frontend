@@ -360,10 +360,11 @@ function VideoTile({
 type VideoWallProps = {
   sessions: LiveVideoDrawerSession[];
   resolveVideoForSession: (session: LiveVideoDrawerSession) => LiveVideoEntry | null;
+  persistent?: boolean;
   onClose: () => void;
 };
 
-function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps) {
+function VideoWall({ sessions, resolveVideoForSession, persistent = false, onClose }: VideoWallProps) {
   const wallRef = React.useRef<HTMLDivElement | null>(null);
   const visibleSessions = sessions.slice(0, MAX_SELECTED_SESSIONS);
   const gridClass =
@@ -373,7 +374,7 @@ function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps
 
   React.useEffect(() => {
     const wallElement = wallRef.current;
-    if (!wallElement || typeof document === "undefined") return;
+    if (!wallElement || typeof document === "undefined" || persistent) return;
 
     const handleFullscreenChange = () => {
       if (document.fullscreenElement) return;
@@ -400,7 +401,7 @@ function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps
         void document.exitFullscreen().catch(() => undefined);
       }
     };
-  }, [onClose]);
+  }, [onClose, persistent]);
 
   return createPortal(
     <div
@@ -417,13 +418,15 @@ function VideoWall({ sessions, resolveVideoForSession, onClose }: VideoWallProps
               Live video wall
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-white/15"
-          >
-            Close
-          </button>
+          {persistent ? null : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-white/15"
+            >
+              Close
+            </button>
+          )}
         </div>
 
         <div className="min-h-0 flex-1">
@@ -755,6 +758,7 @@ export function LiveVideoDrawer({
         <VideoWall
           sessions={selectedVideoSessions}
           resolveVideoForSession={resolveVideoForSession}
+          persistent={autoOpenWall}
           onClose={handleWallClose}
         />
       ) : null}
