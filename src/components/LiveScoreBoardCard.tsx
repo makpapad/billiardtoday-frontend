@@ -305,11 +305,20 @@ export function LiveScoreBoardCard({
     fallback: string;
     compact?: boolean;
   }) => {
-    const src = normalizePhotoUrl(player.photoMainUrl ?? player.photoUrl);
+    const photoSources = React.useMemo(
+      () =>
+        [player.photoMainUrl, player.photoUrl]
+          .map((value) => normalizePhotoUrl(value))
+          .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index),
+      [player.photoMainUrl, player.photoUrl],
+    );
+    const [sourceIndex, setSourceIndex] = React.useState(0);
+    const src = photoSources[sourceIndex] ?? null;
     const [imageFailed, setImageFailed] = React.useState(false);
     React.useEffect(() => {
+      setSourceIndex(0);
       setImageFailed(false);
-    }, [src]);
+    }, [photoSources]);
     const initials = initialsFor(resolveDisplayName(player)) || fallback;
     const outerSize = compact ? "w-10 h-10" : "w-[60px] h-[60px]";
     const innerSize = compact ? "w-9 h-9" : "w-[52px] h-[52px]";
@@ -323,7 +332,13 @@ export function LiveScoreBoardCard({
             className={`${innerSize} rounded-full object-cover ring-1 ring-white/20 shadow-[0_8px_18px_rgba(15,23,42,0.28)]`}
             loading="eager"
             referrerPolicy="no-referrer"
-            onError={() => setImageFailed(true)}
+            onError={() => {
+              if (sourceIndex + 1 < photoSources.length) {
+                setSourceIndex((current) => current + 1);
+                return;
+              }
+              setImageFailed(true);
+            }}
           />
         ) : (
           <div
