@@ -325,10 +325,10 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         coerceNumber(playerB.innings, 0),
         item.state.inningsCount ?? 0,
       ),
-      playerAName: normalizeString(playerA.name) ?? item.state.playerAName ?? "Player A",
-      playerBName: normalizeString(playerB.name) ?? item.state.playerBName ?? "Player B",
-      playerACountry: normalizeString(playerA.country) ?? item.state.playerACountry ?? null,
-      playerBCountry: normalizeString(playerB.country) ?? item.state.playerBCountry ?? null,
+      playerAName: item.state.playerAName ?? normalizeString(playerA.name) ?? "Player A",
+      playerBName: item.state.playerBName ?? normalizeString(playerB.name) ?? "Player B",
+      playerACountry: item.state.playerACountry ?? normalizeString(playerA.country) ?? null,
+      playerBCountry: item.state.playerBCountry ?? normalizeString(playerB.country) ?? null,
       current: nextCurrent,
       progress: coerceNumber(payload.progress, item.state.progress ?? 0),
       totalBlocks: coerceNumber(payload.totalBlocks, item.state.totalBlocks ?? 40),
@@ -630,6 +630,15 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
           const payloadSessionId = normalizeString(payload.sessionId);
           if (currentSessionId && payloadSessionId && payloadSessionId !== currentSessionId) return;
+
+          if (payload.type === "SESSION_ASSIGNED" || payload.type === "SESSION_UPDATED") {
+            if (currentSessionId) {
+              void loadSession(currentSessionId, { preserveItem: true, silent: true });
+            } else if (currentScreenId) {
+              void loadScreenSession(currentScreenId, { preserveItem: true, silent: true });
+            }
+            return;
+          }
 
           if (payload.type !== "score:update") return;
           setError(null);
