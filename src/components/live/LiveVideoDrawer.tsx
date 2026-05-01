@@ -45,6 +45,7 @@ type LiveVideoDrawerProps = {
   sessions: LiveVideoDrawerSession[];
   initialSessionId?: string | null;
   initialVideoId?: string | null;
+  autoOpenWall?: boolean;
   launchOrigin?: DrawerLaunchOrigin | null;
   heading?: string;
   onSelectedSessionsChange?: (sessionIds: string[]) => void;
@@ -450,6 +451,7 @@ export function LiveVideoDrawer({
   sessions,
   initialSessionId,
   initialVideoId,
+  autoOpenWall = false,
   heading = "Live videos",
   onSelectedSessionsChange,
   onClose,
@@ -531,6 +533,26 @@ export function LiveVideoDrawer({
       return Object.fromEntries(nextEntries);
     });
   }, [open, sessionMap]);
+
+  React.useEffect(() => {
+    if (!open || !autoOpenWall) return;
+    const sessionsWithVideo = sessions
+      .filter((session) => session.liveVideos.length > 0)
+      .slice(0, MAX_SELECTED_SESSIONS);
+    if (sessionsWithVideo.length === 0) return;
+
+    const nextSessionIds = sessionsWithVideo.map((session) => session.sessionId);
+    setSelectedSessionIds(nextSessionIds);
+    setFocusedSessionId(nextSessionIds[0] ?? null);
+    setSelectedVideoBySession((prev) => {
+      const next = { ...prev };
+      sessionsWithVideo.forEach((session) => {
+        next[session.sessionId] = next[session.sessionId] ?? session.liveVideos[0].videoId;
+      });
+      return next;
+    });
+    setWallOpen(true);
+  }, [autoOpenWall, open, sessions]);
 
   React.useEffect(() => {
     if (!wallOpen) return;

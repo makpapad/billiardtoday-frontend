@@ -631,6 +631,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     React.useState<DrawerLaunchOrigin | null>(null);
   const [videoDrawerSelectedSessionIds, setVideoDrawerSelectedSessionIds] = React.useState<string[]>([]);
   const [isWideDesktop, setIsWideDesktop] = React.useState(false);
+  const [autoOpenVideoWall, setAutoOpenVideoWall] = React.useState(false);
   const mobileVideoDrawerRef = React.useRef<HTMLDivElement | null>(null);
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const delayedItemsHistoryRef = React.useRef<Map<string, DelayedLiveScoreEntry[]>>(new Map());
@@ -644,6 +645,17 @@ export function LiveClubView({ club, embedded = false }: Props) {
   React.useEffect(() => {
     liveScoreDelayByScreenIdRef.current = liveScoreDelayByScreenId;
   }, [liveScoreDelayByScreenId]);
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const requestedView = params.get("view")?.toLowerCase() ?? "";
+    setAutoOpenVideoWall(
+      params.get("multiview") === "1" ||
+        params.get("wall") === "1" ||
+        requestedView === "multi" ||
+        requestedView === "multiview",
+    );
+  }, []);
   React.useEffect(() => {
     if (!highlightItem) return;
     const fresh =
@@ -2096,6 +2108,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 sessions={videoDrawerSessions}
                 initialSessionId={videoDrawerSessionId}
                 initialVideoId={videoDrawerVideoId}
+                autoOpenWall={autoOpenVideoWall}
                 launchOrigin={videoDrawerLaunchOrigin}
                 heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
                 onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
@@ -2111,6 +2124,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
               sessions={videoDrawerSessions}
               initialSessionId={mobileVideoDrawerSessionId}
               initialVideoId={mobileVideoDrawerVideoId}
+              autoOpenWall={autoOpenVideoWall}
               launchOrigin={videoDrawerLaunchOrigin}
               heading={selectedTournament === "all" ? "Club live videos" : selectedTournament}
               onSelectedSessionsChange={setVideoDrawerSelectedSessionIds}
