@@ -10,8 +10,6 @@ type ObsOverlayClientProps = {
 
 type OverlayTemplate = "1" | "2" | "3" | "4" | "5";
 
-const DISPLAY_TIMEOUTS_PER_PLAYER = 2;
-
 type LiveScoreState = {
   scoreA?: number;
   scoreB?: number;
@@ -1885,7 +1883,7 @@ function CompactTimeoutTicks({
   reverse?: boolean;
   large?: boolean;
 }) {
-  const safeTotal = DISPLAY_TIMEOUTS_PER_PLAYER;
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
   const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
   const positions = Array.from({ length: safeTotal }, (_, index) => index);
   const orderedPositions = reverse ? [...positions].reverse() : positions;
@@ -1913,7 +1911,7 @@ function HorizontalTimeoutTicks({
   totalCount: number;
   align: "left" | "right";
 }) {
-  const safeTotal = DISPLAY_TIMEOUTS_PER_PLAYER;
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
   const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
   const positions = Array.from({ length: safeTotal }, (_, index) => index);
   const orderedPositions = align === "right" ? [...positions].reverse() : positions;
@@ -2063,7 +2061,7 @@ function TimeoutTicks({
   activeCount: number;
   totalCount: number;
 }) {
-  const safeTotal = DISPLAY_TIMEOUTS_PER_PLAYER;
+  const safeTotal = Math.max(0, totalCount || 0) || 3;
   const usedCount = Math.min(Math.max(activeCount || 0, 0), safeTotal);
 
   return (
