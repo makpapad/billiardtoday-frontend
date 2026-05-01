@@ -44,13 +44,13 @@ export function SiteHeader({
         className={`${sticky ? "sticky top-0" : ""} z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
+          <div className="flex items-center gap-3">
             <img
               src="/logo-billiardtoday.png"
               alt={`${siteName} logo`}
               className="h-14 w-auto object-contain sm:h-16"
             />
-          </Link>
+          </div>
 
           <nav className="hidden items-center gap-6 md:flex">
             {navItems.map((item) => (

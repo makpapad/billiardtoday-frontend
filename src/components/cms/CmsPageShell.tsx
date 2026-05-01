@@ -213,7 +213,7 @@ export function CmsLayoutRenderer({
 
       return (
         <div key={key} className={`flex flex-col gap-2 ${alignClass}`}>
-          <Link href={resolveContextHref("/", embedded)} className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             {customLogoUrl ? (
               <img src={customLogoUrl} alt={customLogoAlt} className="shrink-0 object-contain" style={logoImageStyle} />
             ) : (
@@ -234,7 +234,7 @@ export function CmsLayoutRenderer({
                 ) : null}
               </div>
             ) : null}
-          </Link>
+          </div>
         </div>
       );
     }
