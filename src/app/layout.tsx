@@ -6,6 +6,8 @@ import { getCmsAppearance } from "@/lib/cms/strapi";
 
 export const dynamic = "force-dynamic";
 
+const googleTagManagerId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-M2LPF82V";
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"),
   verification: {
@@ -83,7 +85,30 @@ export default async function RootLayout({
 
   return (
     <html lang="el" className={htmlClassName} suppressHydrationWarning>
+      <head>
+        {googleTagManagerId ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${googleTagManagerId}');`,
+            }}
+          />
+        ) : null}
+      </head>
       <body className="min-h-screen flex flex-col" style={bodyStyle}>
+        {googleTagManagerId ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${googleTagManagerId}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        ) : null}
         <script dangerouslySetInnerHTML={{ __html: colorModeScript }} />
         <AuthProvider>{children}</AuthProvider>
       </body>
