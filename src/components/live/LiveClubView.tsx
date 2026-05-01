@@ -471,6 +471,70 @@ const isPlaceholderPlayerName = (value?: string | null) => {
   return !normalized || normalized === "player 1" || normalized === "player 2";
 };
 
+const normalizePlayerNameKey = (value?: string | null) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+const readPhotoValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+function resolvePlayerMediaForUpdate({
+  existing,
+  nextPlayerAName,
+  nextPlayerBName,
+  incomingPlayerAPhotoUrl,
+  incomingPlayerBPhotoUrl,
+  incomingPlayerAPhotoMainUrl,
+  incomingPlayerBPhotoMainUrl,
+}: {
+  existing?: LiveScoreState | null;
+  nextPlayerAName?: string | null;
+  nextPlayerBName?: string | null;
+  incomingPlayerAPhotoUrl?: string | null;
+  incomingPlayerBPhotoUrl?: string | null;
+  incomingPlayerAPhotoMainUrl?: string | null;
+  incomingPlayerBPhotoMainUrl?: string | null;
+}) {
+  const existingAName = normalizePlayerNameKey(existing?.playerAName);
+  const existingBName = normalizePlayerNameKey(existing?.playerBName);
+  const nextAName = normalizePlayerNameKey(nextPlayerAName);
+  const nextBName = normalizePlayerNameKey(nextPlayerBName);
+  const namesWereSwapped =
+    existingAName &&
+    existingBName &&
+    nextAName &&
+    nextBName &&
+    existingAName !== existingBName &&
+    nextAName === existingBName &&
+    nextBName === existingAName;
+
+  return {
+    playerAPhotoUrl:
+      incomingPlayerAPhotoUrl ??
+      (namesWereSwapped ? existing?.playerBPhotoUrl : existing?.playerAPhotoUrl) ??
+      null,
+    playerBPhotoUrl:
+      incomingPlayerBPhotoUrl ??
+      (namesWereSwapped ? existing?.playerAPhotoUrl : existing?.playerBPhotoUrl) ??
+      null,
+    playerAPhotoMainUrl:
+      incomingPlayerAPhotoMainUrl ??
+      (namesWereSwapped ? existing?.playerBPhotoMainUrl : existing?.playerAPhotoMainUrl) ??
+      null,
+    playerBPhotoMainUrl:
+      incomingPlayerBPhotoMainUrl ??
+      (namesWereSwapped ? existing?.playerAPhotoMainUrl : existing?.playerBPhotoMainUrl) ??
+      null,
+  };
+}
+
 function toFiniteNumber(value: unknown): number | null {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -689,6 +753,31 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const nextPlayerBName = isPlaceholderPlayerName(incomingPlayerBName)
             ? (existing.state?.playerBName ?? "Player B")
             : incomingPlayerBName ?? existing.state?.playerBName ?? "Player B";
+          const incomingMedia = resolvePlayerMediaForUpdate({
+            existing: existing.state,
+            nextPlayerAName,
+            nextPlayerBName,
+            incomingPlayerAPhotoUrl:
+              readPhotoValue(payload.player1PhotoUrl) ??
+              readPhotoValue(players[0]?.photoUrl) ??
+              readPhotoValue(players[0]?.photo) ??
+              readPhotoValue(players[0]?.avatarUrl) ??
+              readPhotoValue(players[0]?.imageUrl),
+            incomingPlayerBPhotoUrl:
+              readPhotoValue(payload.player2PhotoUrl) ??
+              readPhotoValue(players[1]?.photoUrl) ??
+              readPhotoValue(players[1]?.photo) ??
+              readPhotoValue(players[1]?.avatarUrl) ??
+              readPhotoValue(players[1]?.imageUrl),
+            incomingPlayerAPhotoMainUrl:
+              readPhotoValue((payload as any).player1PhotoMainUrl) ??
+              readPhotoValue((players as any)?.[0]?.photoMainUrl) ??
+              readPhotoValue((players as any)?.[0]?.photo_main),
+            incomingPlayerBPhotoMainUrl:
+              readPhotoValue((payload as any).player2PhotoMainUrl) ??
+              readPhotoValue((players as any)?.[1]?.photoMainUrl) ??
+              readPhotoValue((players as any)?.[1]?.photo_main),
+          });
 
           return prev.map((item) =>
             item === existing
@@ -721,6 +810,10 @@ export function LiveClubView({ club, embedded = false }: Props) {
                     ended: Boolean(payload.ended),
                     playerAName: nextPlayerAName,
                     playerBName: nextPlayerBName,
+                    playerAPhotoUrl: incomingMedia.playerAPhotoUrl,
+                    playerBPhotoUrl: incomingMedia.playerBPhotoUrl,
+                    playerAPhotoMainUrl: incomingMedia.playerAPhotoMainUrl,
+                    playerBPhotoMainUrl: incomingMedia.playerBPhotoMainUrl,
                     playerACountry:
                       (typeof players[0]?.country === "string" ? players[0]?.country : null) ??
                       item.state?.playerACountry ??
@@ -1534,15 +1627,24 @@ export function LiveClubView({ club, embedded = false }: Props) {
               const mergedForResolution: LiveScoreState = { ...existing.state, ...state };
               const displayCurrent = resolveDisplayCurrent(existing.state, mergedForResolution);
               const displayLiveRuns = resolveDisplayLiveRuns(existing.state, mergedForResolution);
+              const resolvedMedia = resolvePlayerMediaForUpdate({
+                existing: existing.state,
+                nextPlayerAName: state.playerAName ?? existing.state?.playerAName,
+                nextPlayerBName: state.playerBName ?? existing.state?.playerBName,
+                incomingPlayerAPhotoUrl: readPhotoValue(state.playerAPhotoUrl),
+                incomingPlayerBPhotoUrl: readPhotoValue(state.playerBPhotoUrl),
+                incomingPlayerAPhotoMainUrl: readPhotoValue(state.playerAPhotoMainUrl),
+                incomingPlayerBPhotoMainUrl: readPhotoValue(state.playerBPhotoMainUrl),
+              });
               const mergedState: LiveScoreState = {
                 ...existing.state,
                 ...state,
                 playerAName: state.playerAName ?? existing.state?.playerAName,
                 playerBName: state.playerBName ?? existing.state?.playerBName,
-                playerAPhotoUrl: state.playerAPhotoUrl ?? existing.state?.playerAPhotoUrl ?? null,
-                playerBPhotoUrl: state.playerBPhotoUrl ?? existing.state?.playerBPhotoUrl ?? null,
-                playerAPhotoMainUrl: state.playerAPhotoMainUrl ?? existing.state?.playerAPhotoMainUrl ?? null,
-                playerBPhotoMainUrl: state.playerBPhotoMainUrl ?? existing.state?.playerBPhotoMainUrl ?? null,
+                playerAPhotoUrl: resolvedMedia.playerAPhotoUrl,
+                playerBPhotoUrl: resolvedMedia.playerBPhotoUrl,
+                playerAPhotoMainUrl: resolvedMedia.playerAPhotoMainUrl,
+                playerBPhotoMainUrl: resolvedMedia.playerBPhotoMainUrl,
                 targetPointsA: state.targetPointsA ?? existing.state?.targetPointsA ?? null,
                 targetPointsB: state.targetPointsB ?? existing.state?.targetPointsB ?? null,
                 current: displayCurrent,
