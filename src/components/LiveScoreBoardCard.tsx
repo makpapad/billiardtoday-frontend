@@ -27,6 +27,7 @@ interface Player {
 const SCORE_BOX_WIDTH = 94;
 const AVATAR_COLUMN_WIDTH = 66;
 const DESKTOP_SCORE_GUTTER = 18;
+const DISPLAY_TIMEOUTS_PER_PLAYER = 2;
 
 interface LiveScoreBoardCardProps {
   player1: Player;
@@ -399,7 +400,7 @@ export function LiveScoreBoardCard({
     used?: number;
     max?: number;
   }) => {
-    const normalizedMax = Math.max(0, max || 0) || 3;
+    const normalizedMax = DISPLAY_TIMEOUTS_PER_PLAYER;
     const consumed = Math.min(Math.max(used || 0, 0), normalizedMax);
     return (
       <div className="flex items-center gap-1" aria-label="Timeouts">
