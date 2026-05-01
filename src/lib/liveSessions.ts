@@ -339,13 +339,33 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
       playerBName: readPreferredPlayerName(playerB, attrs?.player2Name),
       playerACountry: playerA?.country ?? attrs?.player1Country ?? null,
       playerBCountry: playerB?.country ?? attrs?.player2Country ?? null,
-      playerAPhotoUrl: normalizeMediaUrl(playerA?.photoUrl ?? attrs?.player1PhotoUrl),
-      playerAPhotoMainUrl: normalizeMediaUrl(
-        playerA?.photoMainUrl ?? playerA?.photo_main ?? attrs?.player1PhotoMainUrl,
+      playerAPhotoUrl: normalizeMediaUrl(
+        playerA?.photoUrl ??
+          playerA?.photo ??
+          playerA?.avatarUrl ??
+          playerA?.imageUrl ??
+          attrs?.player1PhotoUrl ??
+          attrs?.player1Photo,
       ),
-      playerBPhotoUrl: normalizeMediaUrl(playerB?.photoUrl ?? attrs?.player2PhotoUrl),
+      playerAPhotoMainUrl: normalizeMediaUrl(
+        playerA?.photoMainUrl ??
+          playerA?.photo_main ??
+          attrs?.player1PhotoMainUrl ??
+          attrs?.player1PhotoMain,
+      ),
+      playerBPhotoUrl: normalizeMediaUrl(
+        playerB?.photoUrl ??
+          playerB?.photo ??
+          playerB?.avatarUrl ??
+          playerB?.imageUrl ??
+          attrs?.player2PhotoUrl ??
+          attrs?.player2Photo,
+      ),
       playerBPhotoMainUrl: normalizeMediaUrl(
-        playerB?.photoMainUrl ?? playerB?.photo_main ?? attrs?.player2PhotoMainUrl,
+        playerB?.photoMainUrl ??
+          playerB?.photo_main ??
+          attrs?.player2PhotoMainUrl ??
+          attrs?.player2PhotoMain,
       ),
       progress: Number(attrs?.progress ?? 0),
       totalBlocks: Number(attrs?.totalBlocks ?? 0),

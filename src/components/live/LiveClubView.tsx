@@ -870,8 +870,10 @@ export function LiveClubView({ club, embedded = false }: Props) {
       const json = await res.json();
       const row = Array.isArray(json?.data) ? json.data[0] : null;
       if (!row) return;
+      const rowState = (row as any).state && typeof (row as any).state === "object" ? (row as any).state : null;
 
       const a =
+        normalizeTargetPoints(rowState?.targetPointsA) ??
         normalizeTargetPoints((row as any).targetPointsP1) ??
         normalizeTargetPoints((row as any).targetP1) ??
         normalizeTargetPoints((row as any).targetPoints) ??
@@ -880,6 +882,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
         extractTargetPointsFromSource((row as any).sheet) ??
         null;
       const b =
+        normalizeTargetPoints(rowState?.targetPointsB) ??
         normalizeTargetPoints((row as any).targetPointsP2) ??
         normalizeTargetPoints((row as any).targetP2) ??
         normalizeTargetPoints((row as any).targetPoints) ??
@@ -888,16 +891,20 @@ export function LiveClubView({ club, embedded = false }: Props) {
         extractTargetPointsFromSource((row as any).sheet) ??
         null;
       const photoMainA =
+        rowState?.playerAPhotoMainUrl ??
         (row as any).player1PhotoMainUrl ??
         (row as any).player1PhotoMain ??
         null;
       const photoMainB =
+        rowState?.playerBPhotoMainUrl ??
         (row as any).player2PhotoMainUrl ??
         (row as any).player2PhotoMain ??
         null;
+      const photoA = rowState?.playerAPhotoUrl ?? (row as any).player1PhotoUrl ?? null;
+      const photoB = rowState?.playerBPhotoUrl ?? (row as any).player2PhotoUrl ?? null;
 
       sessionTargetsRef.current.set(sessionId, { a, b });
-      if (a === null && b === null && !photoMainA && !photoMainB) return;
+      if (a === null && b === null && !photoA && !photoB && !photoMainA && !photoMainB) return;
 
       setItems((prev) =>
         prev.map((it) =>
@@ -908,6 +915,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
                   ...it.state,
                   targetPointsA: it.state?.targetPointsA ?? a,
                   targetPointsB: it.state?.targetPointsB ?? b,
+                  playerAPhotoUrl: it.state?.playerAPhotoUrl ?? photoA,
+                  playerBPhotoUrl: it.state?.playerBPhotoUrl ?? photoB,
                   playerAPhotoMainUrl: it.state?.playerAPhotoMainUrl ?? photoMainA,
                   playerBPhotoMainUrl: it.state?.playerBPhotoMainUrl ?? photoMainB,
                 },
@@ -976,8 +985,11 @@ export function LiveClubView({ club, embedded = false }: Props) {
       // Convert sessions to live score items
       const nextItems = sessions.map((session: any) => {
         const players = Array.isArray(session.players) ? session.players : [];
+        const normalizedState =
+          session.state && typeof session.state === "object" ? session.state as LiveScoreState : null;
         const sessionKey = String(session.id || session.documentId || session.screenId || "");
         const directDetail =
+          extractInningsDetail(normalizedState?.inningsDetail) ??
           extractInningsDetail(session.inningsDetail) ??
           extractInningsDetail(session.matchSheet) ??
           extractInningsDetail(session.matchSheetJson) ??
@@ -991,24 +1003,25 @@ export function LiveClubView({ club, embedded = false }: Props) {
           session.meta,
         );
         const state: LiveScoreState = {
-          scoreA: players[0]?.points ?? 0,
-          scoreB: players[1]?.points ?? 0,
-          runA: players[0]?.run ?? 0,
-          runB: players[1]?.run ?? 0,
-          liveRunA: players[0]?.liveRun ?? 0,
-          liveRunB: players[1]?.liveRun ?? 0,
-          current: session.current ?? undefined,
-          inningsA: players[0]?.innings ?? 0,
-          inningsB: players[1]?.innings ?? 0,
-          inningsCount: session.innings ?? session.totalInnings ?? session.currentInning ?? 0,
-          bestRunA: players[0]?.hr ?? 0,
-          bestRunB: players[1]?.hr ?? 0,
-          ended: false,
-          playerAName: resolveLivePlayerDisplayName(players[0]) ?? undefined,
-          playerBName: resolveLivePlayerDisplayName(players[1]) ?? undefined,
-          playerACountry: session.player1Country ?? players[0]?.country ?? null,
-          playerBCountry: session.player2Country ?? players[1]?.country ?? null,
+          scoreA: normalizedState?.scoreA ?? players[0]?.points ?? 0,
+          scoreB: normalizedState?.scoreB ?? players[1]?.points ?? 0,
+          runA: normalizedState?.runA ?? players[0]?.run ?? 0,
+          runB: normalizedState?.runB ?? players[1]?.run ?? 0,
+          liveRunA: normalizedState?.liveRunA ?? players[0]?.liveRun ?? 0,
+          liveRunB: normalizedState?.liveRunB ?? players[1]?.liveRun ?? 0,
+          current: normalizedState?.current ?? session.current ?? undefined,
+          inningsA: normalizedState?.inningsA ?? players[0]?.innings ?? 0,
+          inningsB: normalizedState?.inningsB ?? players[1]?.innings ?? 0,
+          inningsCount: normalizedState?.inningsCount ?? session.innings ?? session.totalInnings ?? session.currentInning ?? 0,
+          bestRunA: normalizedState?.bestRunA ?? players[0]?.hr ?? 0,
+          bestRunB: normalizedState?.bestRunB ?? players[1]?.hr ?? 0,
+          ended: normalizedState?.ended ?? false,
+          playerAName: normalizedState?.playerAName ?? resolveLivePlayerDisplayName(players[0]) ?? undefined,
+          playerBName: normalizedState?.playerBName ?? resolveLivePlayerDisplayName(players[1]) ?? undefined,
+          playerACountry: normalizedState?.playerACountry ?? session.player1Country ?? players[0]?.country ?? null,
+          playerBCountry: normalizedState?.playerBCountry ?? session.player2Country ?? players[1]?.country ?? null,
           playerAPhotoUrl:
+            normalizedState?.playerAPhotoUrl ??
             session.player1PhotoUrl ??
             players[0]?.photoUrl ??
             players[0]?.photo ??
@@ -1016,11 +1029,13 @@ export function LiveClubView({ club, embedded = false }: Props) {
             players[0]?.imageUrl ??
             null,
           playerAPhotoMainUrl:
+            normalizedState?.playerAPhotoMainUrl ??
             session.player1PhotoMainUrl ??
             players[0]?.photoMainUrl ??
             players[0]?.photo_main ??
             null,
           playerBPhotoUrl:
+            normalizedState?.playerBPhotoUrl ??
             session.player2PhotoUrl ??
             players[1]?.photoUrl ??
             players[1]?.photo ??
@@ -1028,32 +1043,35 @@ export function LiveClubView({ club, embedded = false }: Props) {
             players[1]?.imageUrl ??
             null,
           playerBPhotoMainUrl:
+            normalizedState?.playerBPhotoMainUrl ??
             session.player2PhotoMainUrl ??
             players[1]?.photoMainUrl ??
             players[1]?.photo_main ??
             null,
           liveVideos: normalizeLiveVideoEntries(
-            session.liveVideos ??
+            normalizedState?.liveVideos ??
+              session.liveVideos ??
               session.live_videos ??
               session.youtubeVideoId ??
               session.videoId,
           ),
-          progress: session.progress ?? 0,
-          totalBlocks: session.totalBlocks ?? 40,
-          isRunning: Boolean(session.isRunning),
-          timeoutsA: players[0]?.timeoutsUsed ?? players[0]?.timeouts ?? 0,
-          timeoutsB: players[1]?.timeoutsUsed ?? players[1]?.timeouts ?? 0,
-          maxTimeoutsA: players[0]?.maxTimeouts ?? 3,
-          maxTimeoutsB: players[1]?.maxTimeouts ?? 3,
-          avgFormattedA: players[0]?.avgFormatted,
-          avgFormattedB: players[1]?.avgFormatted,
-          accPercentA: players[0]?.accPercent,
-          accPercentB: players[1]?.accPercent,
-          playerATimeSeconds: players[0]?.playerTimeSeconds,
-          playerBTimeSeconds: players[1]?.playerTimeSeconds,
-          secondsPerInningA: players[0]?.secondsPerInning,
-          secondsPerInningB: players[1]?.secondsPerInning,
+          progress: normalizedState?.progress ?? session.progress ?? 0,
+          totalBlocks: normalizedState?.totalBlocks ?? session.totalBlocks ?? 40,
+          isRunning: Boolean(normalizedState?.isRunning ?? session.isRunning),
+          timeoutsA: normalizedState?.timeoutsA ?? players[0]?.timeoutsUsed ?? players[0]?.timeouts ?? 0,
+          timeoutsB: normalizedState?.timeoutsB ?? players[1]?.timeoutsUsed ?? players[1]?.timeouts ?? 0,
+          maxTimeoutsA: normalizedState?.maxTimeoutsA ?? players[0]?.maxTimeouts ?? 3,
+          maxTimeoutsB: normalizedState?.maxTimeoutsB ?? players[1]?.maxTimeouts ?? 3,
+          avgFormattedA: normalizedState?.avgFormattedA ?? players[0]?.avgFormatted,
+          avgFormattedB: normalizedState?.avgFormattedB ?? players[1]?.avgFormatted,
+          accPercentA: normalizedState?.accPercentA ?? players[0]?.accPercent,
+          accPercentB: normalizedState?.accPercentB ?? players[1]?.accPercent,
+          playerATimeSeconds: normalizedState?.playerATimeSeconds ?? players[0]?.playerTimeSeconds,
+          playerBTimeSeconds: normalizedState?.playerBTimeSeconds ?? players[1]?.playerTimeSeconds,
+          secondsPerInningA: normalizedState?.secondsPerInningA ?? players[0]?.secondsPerInning,
+          secondsPerInningB: normalizedState?.secondsPerInningB ?? players[1]?.secondsPerInning,
           targetPointsA:
+            normalizedState?.targetPointsA ??
             normalizeTargetPoints(players[0]?.targetPoints) ??
             normalizeTargetPoints((players as any)?.[0]?.target_points) ??
             normalizeTargetPoints(session.targetPointsP1) ??
@@ -1066,6 +1084,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
             extractTargetPointsFromSource(session.sheet) ??
             null,
           targetPointsB:
+            normalizedState?.targetPointsB ??
             normalizeTargetPoints(players[1]?.targetPoints) ??
             normalizeTargetPoints((players as any)?.[1]?.target_points) ??
             normalizeTargetPoints(session.targetPointsP2) ??
@@ -1077,12 +1096,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
             extractTargetPointsFromSource(session.matchSheetJson) ??
             extractTargetPointsFromSource(session.sheet) ??
             null,
-          gameDurationSeconds: session.gameDurationSeconds ?? null,
+          gameDurationSeconds: normalizedState?.gameDurationSeconds ?? session.gameDurationSeconds ?? null,
           inningsDetail: directDetail,
-          tournamentName: meta.tournamentName ?? null,
-          stageName: meta.stageName ?? null,
-          groupName: meta.groupName ?? null,
-          tableName: meta.tableName ?? null,
+          tournamentName: normalizedState?.tournamentName ?? meta.tournamentName ?? null,
+          stageName: normalizedState?.stageName ?? meta.stageName ?? null,
+          groupName: normalizedState?.groupName ?? meta.groupName ?? null,
+          tableName: normalizedState?.tableName ?? meta.tableName ?? null,
         };
         recordSnapshot(sessionKey, {
           innings: (state.inningsCount ?? state.inningsA ?? state.inningsB ?? Number(session.innings)) || 1,
