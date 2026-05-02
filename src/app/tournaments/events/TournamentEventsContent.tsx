@@ -4950,9 +4950,34 @@ export function TournamentEventsContent({
                                                 };
                                               };
 
+                                              const dedupeRowsByMatch = <
+                                                T extends {
+                                                  key: string;
+                                                  sourceMatch: StageMatchGroup["matches"][number] | null;
+                                                  match: StageMatchGroup["matches"][number];
+                                                },
+                                              >(
+                                                rows: T[],
+                                              ) => {
+                                                const seen = new Set<string>();
+                                                return rows.filter((row) => {
+                                                  const dedupeKey =
+                                                    row.sourceMatch?.matchDocumentId
+                                                      ? `doc:${row.sourceMatch.matchDocumentId}`
+                                                      : row.sourceMatch?.key
+                                                        ? `key:${row.sourceMatch.key}`
+                                                        : row.match.matchDocumentId
+                                                          ? `doc:${row.match.matchDocumentId}`
+                                                          : `row:${row.key}`;
+                                                  if (seen.has(dedupeKey)) return false;
+                                                  seen.add(dedupeKey);
+                                                  return true;
+                                                });
+                                              };
+
                                               const rows =
                                                 timetableGroupSlots.length > 0
-                                                  ? timetableGroupSlots.map(
+                                                  ? dedupeRowsByMatch(timetableGroupSlots.map(
                                                       (slot) => {
                                                         const metadata =
                                                           slot.metadata ?? {};
@@ -5012,13 +5037,15 @@ export function TournamentEventsContent({
                                                             ? {
                                                                 ...sourceMatch,
                                                                 dateTime:
-                                                                  slot.dateTime ||
-                                                                  sourceMatch.dateTime,
+                                                                  sourceMatch.dateTime ||
+                                                                  slot.dateTime,
                                                               }
                                                             : {
                                                                 key: `slot-${slot.documentId}`,
                                                                 matchDocumentId:
                                                                   null,
+                                                                matchNumber:
+                                                                  slot.matchNumber,
                                                                 dateTime:
                                                                   slot.dateTime,
                                                                 top: {
@@ -5073,7 +5100,7 @@ export function TournamentEventsContent({
                                                                 ),
                                                         };
                                                       },
-                                                    )
+                                                    ))
                                                   : visibleMatches.map(
                                                       (match) => ({
                                                         key: match.key,
@@ -6351,6 +6378,7 @@ export function TournamentEventsContent({
                     hr2: null,
                     mp: selectedBracketMatch.match.matchPoints1,
                     tb: selectedBracketMatch.match.tieBreak1,
+                    country: selectedBracketMatch.match.player1Country ?? null,
                   },
                   {
                     name:
@@ -6389,29 +6417,44 @@ export function TournamentEventsContent({
                     hr2: null,
                     mp: selectedBracketMatch.match.matchPoints2,
                     tb: selectedBracketMatch.match.tieBreak2,
+                    country: selectedBracketMatch.match.player2Country ?? null,
                   },
-                ].map((row) => (
-                  <div
-                    key={row.name}
-                    className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 rounded-xl border border-gray-100 px-3 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200"
-                  >
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">
-                      {row.name}
+                ].map((row) => {
+                  const flagSrc = getCountryFlagCdnUrl(row.country, 40);
+                  return (
+                    <div
+                      key={row.name}
+                      className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 rounded-xl border border-gray-100 px-3 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200"
+                    >
+                      <div className="flex min-w-0 items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
+                        <span className="flex h-4 w-5 shrink-0 items-center justify-center">
+                          {flagSrc ? (
+                            <img
+                              src={flagSrc}
+                              alt={row.country || "flag"}
+                              className="h-3.5 w-5 rounded-[2px] object-cover"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : null}
+                        </span>
+                        <span className="truncate">{row.name}</span>
+                      </div>
+                      <div className="text-center">{row.winner ? "Yes" : "-"}</div>
+                      <div className="text-center">{row.mp ?? "-"}</div>
+                      <div className="text-center">{row.score}</div>
+                      <div className="text-center">{row.innings ?? "-"}</div>
+                      <div className="text-center">
+                        {typeof row.avg === "number"
+                          ? formatTruncatedAverage(row.avg)
+                          : "-"}
+                      </div>
+                      <div className="text-center">{row.hr1 ?? "-"}</div>
+                      <div className="text-center">{row.hr2 ?? "-"}</div>
+                      <div className="text-center">{row.tb ?? "-"}</div>
                     </div>
-                    <div className="text-center">{row.winner ? "Yes" : "-"}</div>
-                    <div className="text-center">{row.mp ?? "-"}</div>
-                    <div className="text-center">{row.score}</div>
-                    <div className="text-center">{row.innings ?? "-"}</div>
-                    <div className="text-center">
-                      {typeof row.avg === "number"
-                        ? formatTruncatedAverage(row.avg)
-                        : "-"}
-                    </div>
-                    <div className="text-center">{row.hr1 ?? "-"}</div>
-                    <div className="text-center">{row.hr2 ?? "-"}</div>
-                    <div className="text-center">{row.tb ?? "-"}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="mt-4 border-t border-gray-100 pt-3 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
                 {selectedBracketMatch.match.date

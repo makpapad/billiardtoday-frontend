@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
 
 export type BracketMatchView = {
     id: string
@@ -427,6 +428,8 @@ export default function SingleElimBracket({
                                 m.seedBottom ?? stdSeedBottom ?? null,
                                 m.globalMatchNumber,
                             )
+                            const player1FlagSrc = getCountryFlagCdnUrl(m.player1Country ?? null, 40)
+                            const player2FlagSrc = getCountryFlagCdnUrl(m.player2Country ?? null, 40)
 
                             return (
                                 <div
@@ -463,7 +466,18 @@ export default function SingleElimBracket({
                                             filter: hasActiveSearch && !isMatched ? 'grayscale(0.2)' : 'none',
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 4 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '20px minmax(0, 1fr) auto', alignItems: 'center', columnGap: 6, fontWeight: 600, marginBottom: 4 }}>
+                                            <span style={{ width: 20, display: 'inline-flex', alignItems: 'center' }}>
+                                                {player1FlagSrc && m.player1 ? (
+                                                    <img
+                                                        src={player1FlagSrc}
+                                                        alt={m.player1Country || 'flag'}
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer"
+                                                        style={{ width: 20, height: 14, borderRadius: 2, objectFit: 'cover' }}
+                                                    />
+                                                ) : null}
+                                            </span>
                                             <span
                                                 title={m.player1 || (m.byeTop ? 'BYE' : topPlaceholder)}
                                                 style={{
@@ -490,7 +504,18 @@ export default function SingleElimBracket({
                                             <div style={{ height: 15 }} />
                                         )}
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '20px minmax(0, 1fr) auto', alignItems: 'center', columnGap: 6, fontWeight: 600 }}>
+                                            <span style={{ width: 20, display: 'inline-flex', alignItems: 'center' }}>
+                                                {player2FlagSrc && m.player2 ? (
+                                                    <img
+                                                        src={player2FlagSrc}
+                                                        alt={m.player2Country || 'flag'}
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer"
+                                                        style={{ width: 20, height: 14, borderRadius: 2, objectFit: 'cover' }}
+                                                    />
+                                                ) : null}
+                                            </span>
                                             <span
                                                 title={m.player2 || (m.byeBottom ? 'BYE' : bottomPlaceholder)}
                                                 style={{
