@@ -29,6 +29,11 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
 
 const isMissingStat = (value: unknown) => value === undefined || value === null || value === ''
 
+const isKnockoutStageType = (value: unknown): boolean => {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
+    return ['single_elimination', 'double_elimination', 'knockout', 'brackets'].includes(normalized)
+}
+
 const resolveArtisticMatchPoints = (
     match: Record<string, unknown>,
     role: 'player1' | 'player2',
@@ -207,9 +212,42 @@ const fetchStoredStageResults = async (
 const fetchStageStandings = async (
     stageId: string,
     headers: HeadersInit,
+    stageType?: unknown,
 ): Promise<Record<string, unknown>[] | null> => {
-    const storedResults = await fetchStoredStageResults(stageId, headers)
-    if (storedResults) return storedResults
+    const useDirectStandings = isKnockoutStageType(stageType)
+    if (!useDirectStandings) {
+        const storedResults = await fetchStoredStageResults(stageId, headers)
+        if (storedResults) return storedResults
+    }
+
+    const normalizeKnockoutRows = (rows: Record<string, unknown>[]) => {
+        const targetPoints = rows.reduce((max, row) => Math.max(max, toNumber(row.points) ?? 0), 0)
+        return [...rows]
+            .sort((a, b) => {
+                const completedA = targetPoints > 0 && (toNumber(a.points) ?? 0) >= targetPoints ? 1 : 0
+                const completedB = targetPoints > 0 && (toNumber(b.points) ?? 0) >= targetPoints ? 1 : 0
+                if (completedA !== completedB) return completedB - completedA
+
+                const averageA = toNumber(a.average) ?? toNumber(a.best_average) ?? 0
+                const averageB = toNumber(b.average) ?? toNumber(b.best_average) ?? 0
+                if (averageA !== averageB) return averageB - averageA
+
+                const highRunDiff = (toNumber(b.high_run) ?? 0) - (toNumber(a.high_run) ?? 0)
+                if (highRunDiff !== 0) return highRunDiff
+
+                const highRun2Diff = (toNumber(b.high_run_2) ?? 0) - (toNumber(a.high_run_2) ?? 0)
+                if (highRun2Diff !== 0) return highRun2Diff
+
+                return (toNumber(b.points) ?? 0) - (toNumber(a.points) ?? 0)
+            })
+            .map((row, index) => ({
+                ...row,
+                final_position: index + 1,
+                stage_rank: index + 1,
+                place: index + 1,
+                position: index + 1,
+            }))
+    }
 
     const standingsQuery =
         'populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country'
@@ -251,7 +289,7 @@ const fetchStageStandings = async (
                 : asArray(payload.data).length > 0
                   ? asArray(payload.data)
                   : asArray(payload.standings)
-        return rows
+        return useDirectStandings ? normalizeKnockoutRows(rows) : rows
     } catch {
         return null
     }
@@ -500,7 +538,7 @@ export async function GET(
                         if (!stageDocumentId) return stage
 
                         const liveMatches = await fetchStageMatches(stageDocumentId, headers)
-                        const liveStandings = await fetchStageStandings(stageDocumentId, headers)
+                        const liveStandings = await fetchStageStandings(stageDocumentId, headers, stage.stage_type)
                         if (!liveStandings && !liveMatches) return stage
 
                         const baseGroups = asArray(stage.groups)
