@@ -110,6 +110,70 @@ const fetchDirectStageStandings = async (stageId: string): Promise<Response> => 
     return res
 }
 
+const toFiniteNumber = (value: unknown, fallback = 0): number => {
+    const num = Number(value)
+    return Number.isFinite(num) ? num : fallback
+}
+
+const knockoutAverage = (row: Record<string, unknown>): number => {
+    const explicitAverage = toFiniteNumber(row.average, Number.NaN)
+    if (Number.isFinite(explicitAverage)) return explicitAverage
+
+    const points = toFiniteNumber(row.points)
+    const innings = toFiniteNumber(row.innings)
+    return innings > 0 ? Math.trunc((points / innings) * 1000) / 1000 : 0
+}
+
+const sortKnockoutRows = (rows: unknown[]): Record<string, unknown>[] => {
+    return rows
+        .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
+        .sort((a, b) => {
+            const matchPointsDiff = toFiniteNumber(b.match_points) - toFiniteNumber(a.match_points)
+            if (matchPointsDiff !== 0) return matchPointsDiff
+
+            const averageDiff = knockoutAverage(b) - knockoutAverage(a)
+            if (averageDiff !== 0) return averageDiff
+
+            const highRunDiff = toFiniteNumber(b.high_run) - toFiniteNumber(a.high_run)
+            if (highRunDiff !== 0) return highRunDiff
+
+            const highRun2Diff = toFiniteNumber(b.high_run_2) - toFiniteNumber(a.high_run_2)
+            if (highRun2Diff !== 0) return highRun2Diff
+
+            return toFiniteNumber(b.points) - toFiniteNumber(a.points)
+        })
+        .map((row, index) => ({
+            ...row,
+            final_position: index + 1,
+            stage_rank: index + 1,
+            place: index + 1,
+            position: index + 1,
+        }))
+}
+
+const normalizeKnockoutStandingsPayload = (payload: unknown): unknown => {
+    if (!payload || typeof payload !== 'object') return payload
+    const record = payload as Record<string, unknown>
+    const sourceRows =
+        Array.isArray(record.overallRankings)
+            ? record.overallRankings
+            : Array.isArray(record.standings)
+                ? record.standings
+                : Array.isArray(record.results)
+                    ? record.results
+                    : null
+
+    if (!sourceRows) return payload
+
+    const sortedRows = sortKnockoutRows(sourceRows)
+    return {
+        ...record,
+        results: sortedRows,
+        standings: sortedRows,
+        overallRankings: sortedRows,
+    }
+}
+
 export async function GET(
     _req: NextRequest,
     context: { params: Promise<{ stageId: string }> },
@@ -152,6 +216,11 @@ export async function GET(
 
         if (!res.ok) {
             return NextResponse.json({ error: text || 'Failed to fetch stage standings' }, { status: res.status })
+        }
+
+        if (isKnockout) {
+            const payload = JSON.parse(text)
+            return NextResponse.json(normalizeKnockoutStandingsPayload(payload))
         }
 
         return new NextResponse(text, {
