@@ -151,6 +151,7 @@ const sortKnockoutRows = (rows: unknown[]): Record<string, unknown>[] => {
         })
         .map((row, index) => ({
             ...row,
+            match_points: targetPoints > 0 && toFiniteNumber(row.points) >= targetPoints ? 2 : 0,
             final_position: index + 1,
             stage_rank: index + 1,
             place: index + 1,

@@ -242,6 +242,7 @@ const fetchStageStandings = async (
             })
             .map((row, index) => ({
                 ...row,
+                match_points: targetPoints > 0 && (toNumber(row.points) ?? 0) >= targetPoints ? 2 : 0,
                 final_position: index + 1,
                 stage_rank: index + 1,
                 place: index + 1,
