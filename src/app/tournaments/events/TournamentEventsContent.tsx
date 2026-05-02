@@ -1599,7 +1599,7 @@ function StageRankingTable({
     [stage.title, stage.order, stageMatchGroups],
   );
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
-    if (stageMatchGroups.length === 1) {
+    if (!isBracketStageType(stage.stageType) && stageMatchGroups.length === 1) {
       const computedResults = stageMatchGroups.flatMap((group) =>
         buildGroupStandings(group.matches, {
           artistic,
@@ -1629,7 +1629,7 @@ function StageRankingTable({
     }
 
     return stage.results.filter(hasMeaningfulStageResult);
-  }, [artistic, stage.results, stageMatchGroups, suppressDerivedBestAverage]);
+  }, [artistic, stage.results, stage.stageType, stageMatchGroups, suppressDerivedBestAverage]);
   const showGroupColumn = visibleResults.some(
     (result) => result.groupNumber !== null,
   );
