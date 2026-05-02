@@ -61,6 +61,55 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     return rows.length > 0 ? rows : null
 }
 
+const isKnockoutStageType = (value: unknown): boolean => {
+    if (typeof value !== 'string') return false
+    const normalized = value.toLowerCase()
+    return (
+        normalized === 'single_elimination' ||
+        normalized === 'double_elimination' ||
+        normalized === 'knockout' ||
+        normalized === 'brackets' ||
+        normalized === 'bracket' ||
+        normalized.includes('bracket')
+    )
+}
+
+const fetchStageMeta = async (stageId: string): Promise<Record<string, unknown> | null> => {
+    const url = new URL(`${STRAPI_URL}/api/bt-event-stages`)
+    url.searchParams.set('filters[documentId][$eq]', stageId)
+    url.searchParams.set('fields[0]', 'id')
+    url.searchParams.set('fields[1]', 'documentId')
+    url.searchParams.set('fields[2]', 'stage_type')
+    url.searchParams.set('pagination[limit]', '1')
+
+    const res = await fetchWithOptionalAuth(url.toString())
+    if (!res.ok) return null
+    const payload = await res.json().catch(() => null)
+    const first = Array.isArray(payload?.data) ? payload.data[0] : null
+    return first && typeof first === 'object' ? first : null
+}
+
+const fetchDirectStageStandings = async (stageId: string): Promise<Response> => {
+    const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
+    let res = await fetchWithOptionalAuth(directUrl)
+
+    if (!res.ok && res.status === 404) {
+        const resolveUrl = `${STRAPI_URL}/api/bt-event-stages?filters[documentId][$eq]=${encodeURIComponent(stageId)}&fields[0]=id&pagination[limit]=1`
+        const resolveRes = await fetchWithOptionalAuth(resolveUrl)
+        if (resolveRes.ok) {
+            const resolvePayload = await resolveRes.json().catch(() => null)
+            const first = Array.isArray(resolvePayload?.data) ? resolvePayload.data[0] : null
+            const numericId = first?.id
+            if (numericId !== undefined && numericId !== null) {
+                const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
+                res = await fetchWithOptionalAuth(fallbackUrl)
+            }
+        }
+    }
+
+    return res
+}
+
 export async function GET(
     _req: NextRequest,
     context: { params: Promise<{ stageId: string }> },
@@ -71,32 +120,33 @@ export async function GET(
             return NextResponse.json({ error: 'stageId is required' }, { status: 400 })
         }
 
-        const storedResults = await fetchStoredStageResults(stageId)
-        if (storedResults) {
-            return NextResponse.json({
-                source: 'stored-results',
-                results: storedResults,
-                standings: storedResults,
-                overallRankings: storedResults,
-            })
+        const stageMeta = await fetchStageMeta(stageId)
+        const isKnockout = isKnockoutStageType(stageMeta?.stage_type)
+
+        if (!isKnockout) {
+            const storedResults = await fetchStoredStageResults(stageId)
+            if (storedResults) {
+                return NextResponse.json({
+                    source: 'stored-results',
+                    results: storedResults,
+                    standings: storedResults,
+                    overallRankings: storedResults,
+                })
+            }
         }
 
-        const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
-        let res = await fetchWithOptionalAuth(directUrl)
-        let text = await res.text()
+        const res = await fetchDirectStageStandings(stageId)
+        const text = await res.text()
 
-        if (!res.ok && res.status === 404) {
-            const resolveUrl = `${STRAPI_URL}/api/bt-event-stages?filters[documentId][$eq]=${encodeURIComponent(stageId)}&fields[0]=id&pagination[limit]=1`
-            const resolveRes = await fetchWithOptionalAuth(resolveUrl)
-            if (resolveRes.ok) {
-                const resolvePayload = await resolveRes.json().catch(() => null)
-                const first = Array.isArray(resolvePayload?.data) ? resolvePayload.data[0] : null
-                const numericId = first?.id
-                if (numericId !== undefined && numericId !== null) {
-                    const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
-                    res = await fetchWithOptionalAuth(fallbackUrl)
-                    text = await res.text()
-                }
+        if (!res.ok && isKnockout) {
+            const storedResults = await fetchStoredStageResults(stageId)
+            if (storedResults) {
+                return NextResponse.json({
+                    source: 'stored-results-fallback',
+                    results: storedResults,
+                    standings: storedResults,
+                    overallRankings: storedResults,
+                })
             }
         }
 

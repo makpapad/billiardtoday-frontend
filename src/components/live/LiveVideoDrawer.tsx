@@ -27,6 +27,8 @@ type LiveVideoDrawerSession = {
   bestRunB?: number | null;
   bestRun2A?: number | null;
   bestRun2B?: number | null;
+  inningsA?: number | null;
+  inningsB?: number | null;
   inningsCount?: number | null;
   inningsDetail?: LiveScoreState["inningsDetail"];
   current?: "A" | "B";
@@ -140,6 +142,7 @@ function PlayerMatchSheetCard({
   country,
   score,
   avg,
+  innings,
   firstHr,
   align = "left",
   active = false,
@@ -148,6 +151,7 @@ function PlayerMatchSheetCard({
   country?: string | null;
   score?: number | null;
   avg?: string | null;
+  innings?: number | null;
   firstHr?: number | null;
   align?: "left" | "right";
   active?: boolean;
@@ -185,7 +189,7 @@ function PlayerMatchSheetCard({
       <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05]">
         {[
           { label: "Score", value: normalizeStat(score) },
-          { label: "Avg", value: formatAvg(avg, score) },
+          { label: "Avg", value: formatAvg(avg, score, innings) },
           { label: "1st HR", value: normalizeStat(firstHr) },
         ].map((item) => (
           <div key={item.label} className="min-w-0 border-r border-white/10 px-1.5 py-2 last:border-r-0">
@@ -212,6 +216,7 @@ function MatchSheetView({
           country={session.playerACountry}
           score={session.scoreA}
           avg={session.avgFormattedA}
+          innings={session.inningsA}
           firstHr={session.bestRunA}
           active={session.current === "A"}
         />
@@ -220,6 +225,7 @@ function MatchSheetView({
           country={session.playerBCountry}
           score={session.scoreB}
           avg={session.avgFormattedB}
+          innings={session.inningsB}
           firstHr={session.bestRunB}
           align="right"
           active={session.current === "B"}

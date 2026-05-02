@@ -593,6 +593,14 @@ export function LiveScoreBoardCard({
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
+  const formatAverageForDisplay = (points: number, innings: number) => {
+    if (innings <= 0) return "--";
+    return (points / innings).toLocaleString("el-GR", {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
+    });
+  };
+
   const TimerBar = () => {
     const getSegmentColor = (positionRatio: number) => {
       if (positionRatio <= 0.5) return "bg-emerald-600";
@@ -882,15 +890,7 @@ export function LiveScoreBoardCard({
   const buildPlayerStats = (player: Player) => {
     const innings = Math.max(0, Number(player.innings) || 0);
     const points = Math.max(0, Number(player.points) || 0);
-    const avgFallback = innings > 0 ? points / innings : null;
-    const avgLabel =
-      player.avgFormatted ??
-      (avgFallback === null
-        ? "--"
-        : Number(avgFallback).toLocaleString("el-GR", {
-            minimumFractionDigits: 3,
-            maximumFractionDigits: 3,
-          }));
+    const avgLabel = player.avgFormatted ?? formatAverageForDisplay(points, innings);
 
     const accuracyValue =
       typeof player.accPercent === "number"

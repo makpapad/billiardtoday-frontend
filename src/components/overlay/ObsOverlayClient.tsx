@@ -87,6 +87,7 @@ type SessionApiRecord = {
     liveRun?: number | null;
     innings?: number | null;
     targetPoints?: number | null;
+    avgFormatted?: string | null;
   }>;
   current?: "A" | "B" | null;
   progress?: number | null;
@@ -261,6 +262,10 @@ function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fall
           coerceNumber(playerB.innings, 0),
           0,
         ),
+      inningsA: state.inningsA ?? coerceNumber(playerA.innings, 0),
+      inningsB: state.inningsB ?? coerceNumber(playerB.innings, 0),
+      avgFormattedA: normalizeString(state.avgFormattedA) ?? normalizeString(playerA.avgFormatted),
+      avgFormattedB: normalizeString(state.avgFormattedB) ?? normalizeString(playerB.avgFormatted),
       playerAName: state.playerAName ?? normalizeString(input.player1Name) ?? normalizeString(playerA.name) ?? "Player A",
       playerBName: state.playerBName ?? normalizeString(input.player2Name) ?? normalizeString(playerB.name) ?? "Player B",
       playerACountry: state.playerACountry ?? normalizeString(input.player1Country) ?? normalizeString(playerA.country),
@@ -301,6 +306,22 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         : payload.activePlayer === 2
           ? "B"
           : item.state.current;
+  const previousCurrent = item.state.current;
+  const nextScoreA = coerceNumber(playerA.points, item.state.scoreA ?? 0);
+  const nextScoreB = coerceNumber(playerB.points, item.state.scoreB ?? 0);
+  const nextInningsA = coerceNumber(playerA.innings, item.state.inningsA ?? item.state.inningsCount ?? 0);
+  const nextInningsB = coerceNumber(playerB.innings, item.state.inningsB ?? item.state.inningsCount ?? 0);
+  const incomingAvgA = normalizeString(playerA.avgFormatted);
+  const incomingAvgB = normalizeString(playerB.avgFormatted);
+  const ended = Boolean((payload as { ended?: boolean | null }).ended);
+  const avgFormattedA =
+    ended || (previousCurrent === "A" && nextCurrent !== "A")
+      ? formatAverage(nextScoreA, nextInningsA)
+      : item.state.avgFormattedA ?? incomingAvgA ?? formatAverage(nextScoreA, nextInningsA);
+  const avgFormattedB =
+    ended || (previousCurrent === "B" && nextCurrent !== "B")
+      ? formatAverage(nextScoreB, nextInningsB)
+      : item.state.avgFormattedB ?? incomingAvgB ?? formatAverage(nextScoreB, nextInningsB);
 
   return {
     ...item,
@@ -308,8 +329,8 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
     screenId: normalizeString(payload.screenId) ?? item.screenId,
     state: {
       ...item.state,
-      scoreA: coerceNumber(playerA.points, item.state.scoreA ?? 0),
-      scoreB: coerceNumber(playerB.points, item.state.scoreB ?? 0),
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
       runA: coerceNumber(playerA.run, item.state.runA ?? 0),
       runB: coerceNumber(playerB.run, item.state.runB ?? 0),
       liveRunA: coerceNumber(playerA.liveRun ?? playerA.run, item.state.liveRunA ?? 0),
@@ -346,8 +367,8 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         playerB.target_points,
         item.state.targetPointsB,
       ),
-      avgFormattedA: normalizeString(playerA.avgFormatted) ?? item.state.avgFormattedA ?? null,
-      avgFormattedB: normalizeString(playerB.avgFormatted) ?? item.state.avgFormattedB ?? null,
+      avgFormattedA,
+      avgFormattedB,
       accPercentA: Number.isFinite(Number(playerA.accPercent))
         ? Number(playerA.accPercent)
         : item.state.accPercentA ?? null,
@@ -369,8 +390,8 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       gameDurationSeconds: Number.isFinite(Number(payload.gameDurationSeconds))
         ? Number(payload.gameDurationSeconds)
         : item.state.gameDurationSeconds ?? null,
-      inningsA: coerceNumber(playerA.innings, item.state.inningsA ?? item.state.inningsCount ?? 0),
-      inningsB: coerceNumber(playerB.innings, item.state.inningsB ?? item.state.inningsCount ?? 0),
+      inningsA: nextInningsA,
+      inningsB: nextInningsB,
       inningsDetail: Array.isArray(payload.inningsDetail)
         ? payload.inningsDetail
         : item.state.inningsDetail,
@@ -735,6 +756,7 @@ function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
   const innings = state.inningsCount ?? Math.max(state.inningsA ?? 0, state.inningsB ?? 0, 0);
+  const activeSide = state.current;
   const totalTime = formatMMSS(state.gameDurationSeconds);
   const chartRows = buildLiveScoreChartRows({
     inningsDetail: state.inningsDetail,
@@ -775,7 +797,7 @@ function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
             label="Leading"
             name={leftName}
             score={leftScore}
-            avg={state.avgFormattedA ?? formatAverage(leftScore, innings)}
+            avg={resolvePlayerAverage(state.avgFormattedA, leftScore, state.inningsA, innings)}
             hr={state.bestRunA ?? 0}
             acc={formatPercent(state.accPercentA)}
             secPer={formatSeconds(state.secondsPerInningA)}
@@ -793,7 +815,7 @@ function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
             label="Chasing"
             name={rightName}
             score={rightScore}
-            avg={state.avgFormattedB ?? formatAverage(rightScore, innings)}
+            avg={resolvePlayerAverage(state.avgFormattedB, rightScore, state.inningsB, innings)}
             hr={state.bestRunB ?? 0}
             acc={formatPercent(state.accPercentB)}
             secPer={formatSeconds(state.secondsPerInningB)}
@@ -804,7 +826,7 @@ function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
 
         <div className="grid grid-cols-2 gap-3 px-5 pb-4">
           <BreakStatsGrid
-            avg={state.avgFormattedA ?? formatAverage(leftScore, innings)}
+            avg={resolvePlayerAverage(state.avgFormattedA, leftScore, state.inningsA, innings)}
             hr={state.bestRunA ?? 0}
             acc={formatPercent(state.accPercentA)}
             secPer={formatSeconds(state.secondsPerInningA)}
@@ -812,7 +834,7 @@ function OverlayBreakStatsModal({ item }: { item: LiveScoreItem }) {
             target={formatTargetPct(leftScore, state.targetPointsA)}
           />
           <BreakStatsGrid
-            avg={state.avgFormattedB ?? formatAverage(rightScore, innings)}
+            avg={resolvePlayerAverage(state.avgFormattedB, rightScore, state.inningsB, innings)}
             hr={state.bestRunB ?? 0}
             acc={formatPercent(state.accPercentB)}
             secPer={formatSeconds(state.secondsPerInningB)}
@@ -848,6 +870,17 @@ function formatAverage(score?: number | null, innings?: number | null) {
   const safeInnings = Number(innings ?? 0);
   if (!Number.isFinite(safeScore) || !Number.isFinite(safeInnings) || safeInnings <= 0) return "0.000";
   return (safeScore / safeInnings).toFixed(3);
+}
+
+function resolvePlayerAverage(
+  formatted: string | null | undefined,
+  score?: number | null,
+  playerInnings?: number | null,
+  fallbackInnings?: number | null,
+) {
+  const normalized = normalizeString(formatted);
+  if (normalized) return normalized;
+  return formatAverage(score, playerInnings ?? fallbackInnings ?? 0);
 }
 
 function formatPercent(value?: number | null) {
@@ -1153,8 +1186,8 @@ function RoyalProOverlayCard({
   const rightName = formatOverlayPlayerName(state.playerBName);
   const leftScore = state.scoreA ?? 0;
   const rightScore = state.scoreB ?? 0;
-  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
-  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftAvg = resolvePlayerAverage(state.avgFormattedA, leftScore, state.inningsA, state.inningsCount);
+  const rightAvg = resolvePlayerAverage(state.avgFormattedB, rightScore, state.inningsB, state.inningsCount);
   const leftRun = state.liveRunA ?? state.runA ?? 0;
   const rightRun = state.liveRunB ?? state.runB ?? 0;
   const leftHr = state.bestRunA ?? 0;
@@ -1300,8 +1333,8 @@ function TemplateThreeOverlayCard({
   const rightScore = state.scoreB ?? 0;
   const leftRun = state.liveRunA ?? state.runA ?? 0;
   const rightRun = state.liveRunB ?? state.runB ?? 0;
-  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
-  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftAvg = resolvePlayerAverage(state.avgFormattedA, leftScore, state.inningsA, state.inningsCount);
+  const rightAvg = resolvePlayerAverage(state.avgFormattedB, rightScore, state.inningsB, state.inningsCount);
   const leftHr = state.bestRunA ?? 0;
   const rightHr = state.bestRunB ?? 0;
   const target = state.targetPointsA ?? state.targetPointsB ?? null;
@@ -1464,8 +1497,8 @@ function TemplateFourOverlayCard({
   const rightScore = state.scoreB ?? 0;
   const leftRun = state.liveRunA ?? state.runA ?? 0;
   const rightRun = state.liveRunB ?? state.runB ?? 0;
-  const leftAvg = formatAverageValue(leftScore, state.inningsCount);
-  const rightAvg = formatAverageValue(rightScore, state.inningsCount);
+  const leftAvg = resolvePlayerAverage(state.avgFormattedA, leftScore, state.inningsA, state.inningsCount);
+  const rightAvg = resolvePlayerAverage(state.avgFormattedB, rightScore, state.inningsB, state.inningsCount);
   const leftHr = state.bestRunA ?? 0;
   const rightHr = state.bestRunB ?? 0;
   const target = state.targetPointsA ?? state.targetPointsB ?? null;
@@ -1957,15 +1990,6 @@ function TurnArrow({
       }}
     />
   );
-}
-
-function formatAverageValue(score?: number | null, innings?: number | null) {
-  const safeScore = Number(score ?? 0);
-  const safeInnings = Number(innings ?? 0);
-  if (!Number.isFinite(safeScore) || !Number.isFinite(safeInnings) || safeInnings <= 0) {
-    return "0.000";
-  }
-  return (safeScore / safeInnings).toFixed(3);
 }
 
 function PortraitBadge({

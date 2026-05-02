@@ -618,6 +618,42 @@ function resolveDisplayLiveRuns(
   return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
 }
 
+function formatDisplayAverage(score?: number | null, innings?: number | null) {
+  const safeScore = Math.max(0, Number(score) || 0);
+  const safeInnings = Math.max(0, Number(innings) || 0);
+  if (safeInnings <= 0) return "--";
+  return (safeScore / safeInnings).toLocaleString("el-GR", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
+}
+
+function resolveTurnAwareAverages(
+  existing: LiveScoreState | undefined,
+  incoming: LiveScoreState,
+  displayCurrent: "A" | "B" | undefined,
+): Pick<LiveScoreState, "avgFormattedA" | "avgFormattedB"> {
+  const previousCurrent = existing?.current;
+  const ended = Boolean(incoming.ended);
+  const scoreA = incoming.scoreA ?? existing?.scoreA ?? 0;
+  const scoreB = incoming.scoreB ?? existing?.scoreB ?? 0;
+  const inningsA = incoming.inningsA ?? existing?.inningsA ?? 0;
+  const inningsB = incoming.inningsB ?? existing?.inningsB ?? 0;
+  const incomingAvgA = incoming.avgFormattedA;
+  const incomingAvgB = incoming.avgFormattedB;
+
+  return {
+    avgFormattedA:
+      ended || (previousCurrent === "A" && displayCurrent !== "A")
+        ? formatDisplayAverage(scoreA, inningsA)
+        : existing?.avgFormattedA ?? incomingAvgA ?? formatDisplayAverage(scoreA, inningsA),
+    avgFormattedB:
+      ended || (previousCurrent === "B" && displayCurrent !== "B")
+        ? formatDisplayAverage(scoreB, inningsB)
+        : existing?.avgFormattedB ?? incomingAvgB ?? formatDisplayAverage(scoreB, inningsB),
+  };
+}
+
 export function LiveClubView({ club, embedded = false }: Props) {
   const clubId = club.documentId;
   const [items, setItems] = useState<LiveScoreItem[]>([]);
@@ -1658,6 +1694,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
               const mergedForResolution: LiveScoreState = { ...existing.state, ...state };
               const displayCurrent = resolveDisplayCurrent(existing.state, mergedForResolution);
               const displayLiveRuns = resolveDisplayLiveRuns(existing.state, mergedForResolution);
+              const displayAverages = resolveTurnAwareAverages(existing.state, mergedForResolution, displayCurrent);
               const resolvedMedia = resolvePlayerMediaForUpdate({
                 existing: existing.state,
                 nextPlayerAName: state.playerAName ?? existing.state?.playerAName,
@@ -1681,6 +1718,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
                 current: displayCurrent,
                 liveRunA: displayLiveRuns.liveRunA,
                 liveRunB: displayLiveRuns.liveRunB,
+                avgFormattedA: displayAverages.avgFormattedA,
+                avgFormattedB: displayAverages.avgFormattedB,
               };
               const mergedItem: LiveScoreItem = { ...item, state: mergedState };
               console.log('[live view] Updating existing item with new scores:', {
@@ -1881,6 +1920,8 @@ export function LiveClubView({ club, embedded = false }: Props) {
         bestRunB: item.state?.bestRunB ?? null,
         bestRun2A: item.state?.bestRun2A ?? null,
         bestRun2B: item.state?.bestRun2B ?? null,
+        inningsA: item.state?.inningsA ?? null,
+        inningsB: item.state?.inningsB ?? null,
         inningsCount: item.state?.inningsCount ?? null,
         inningsDetail: item.state?.inningsDetail ?? undefined,
         current: item.state?.current,
@@ -2192,13 +2233,9 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
     };
   }, [item]);
 
-  const formatAvg = (formatted?: string, fall?: number) => {
+  const formatAvg = (formatted?: string | null, score?: number | null, innings?: number | null) => {
     if (formatted) return formatted;
-    if (fall === undefined || fall === null || Number.isNaN(fall)) return "--";
-    return Number(fall).toLocaleString("el-GR", {
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3,
-    });
+    return formatDisplayAverage(score, innings);
   };
 
   const formatAcc = (value?: number | null) => {
@@ -2324,7 +2361,7 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
       score: state.scoreA ?? 0,
       hr: state.bestRunA ?? 0,
       run: state.runA ?? 0,
-      avg: formatAvg(state.avgFormattedA, state.scoreA && state.inningsA ? state.scoreA / Math.max(1, state.inningsA) : undefined),
+      avg: formatAvg(state.avgFormattedA, state.scoreA, state.inningsA),
       acc: formatAcc(state.accPercentA ?? computeFallbackAcc(state.scoreA, state.inningsA)),
       secPer: formatSeconds(state.secondsPerInningA ?? computeFallbackSecPer(state.playerATimeSeconds, state.scoreA, state.inningsA)),
       playerTime: formatMMSS(state.playerATimeSeconds),
@@ -2338,7 +2375,7 @@ export function LiveStatsHighlightModal({ item, onClose }: HighlightModalProps) 
       score: state.scoreB ?? 0,
       hr: state.bestRunB ?? 0,
       run: state.runB ?? 0,
-      avg: formatAvg(state.avgFormattedB, state.scoreB && state.inningsB ? state.scoreB / Math.max(1, state.inningsB) : undefined),
+      avg: formatAvg(state.avgFormattedB, state.scoreB, state.inningsB),
       acc: formatAcc(state.accPercentB ?? computeFallbackAcc(state.scoreB, state.inningsB)),
       secPer: formatSeconds(state.secondsPerInningB ?? computeFallbackSecPer(state.playerBTimeSeconds, state.scoreB, state.inningsB)),
       playerTime: formatMMSS(state.playerBTimeSeconds),
