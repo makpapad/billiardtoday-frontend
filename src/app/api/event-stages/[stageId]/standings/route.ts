@@ -125,11 +125,18 @@ const knockoutAverage = (row: Record<string, unknown>): number => {
 }
 
 const sortKnockoutRows = (rows: unknown[]): Record<string, unknown>[] => {
-    return rows
+    const normalizedRows = rows
         .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
+    const targetPoints = normalizedRows.reduce(
+        (max, row) => Math.max(max, toFiniteNumber(row.points)),
+        0,
+    )
+
+    return normalizedRows
         .sort((a, b) => {
-            const matchPointsDiff = toFiniteNumber(b.match_points) - toFiniteNumber(a.match_points)
-            if (matchPointsDiff !== 0) return matchPointsDiff
+            const completedA = targetPoints > 0 && toFiniteNumber(a.points) >= targetPoints ? 1 : 0
+            const completedB = targetPoints > 0 && toFiniteNumber(b.points) >= targetPoints ? 1 : 0
+            if (completedA !== completedB) return completedB - completedA
 
             const averageDiff = knockoutAverage(b) - knockoutAverage(a)
             if (averageDiff !== 0) return averageDiff
