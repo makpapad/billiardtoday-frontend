@@ -1630,12 +1630,13 @@ function StageRankingTable({
 
     return stage.results.filter(hasMeaningfulStageResult);
   }, [artistic, stage.results, stage.stageType, stageMatchGroups, suppressDerivedBestAverage]);
-  const showGroupColumn = visibleResults.some(
-    (result) => result.groupNumber !== null,
-  );
-  const showGroupPositionColumn = visibleResults.some(
-    (result) => result.groupPosition !== null,
-  );
+  const showStageGroupColumns = !isBracketStageType(stage.stageType);
+  const showGroupColumn =
+    showStageGroupColumns &&
+    visibleResults.some((result) => result.groupNumber !== null);
+  const showGroupPositionColumn =
+    showStageGroupColumns &&
+    visibleResults.some((result) => result.groupPosition !== null);
   const playerProgressByGroupKey = new Map<
     string,
     { played: number; total: number; complete: boolean }
