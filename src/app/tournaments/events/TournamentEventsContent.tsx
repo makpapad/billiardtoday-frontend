@@ -670,6 +670,17 @@ type BracketRankingStats = {
   innings: number | null;
 };
 
+type BracketRankedResult<T> = T & {
+  bracketPhaseScore: number | null;
+  bracketAverage: number | null;
+  bracketBestAverage: number | null;
+  bracketHighRun: number | null;
+  bracketPoints: number | null;
+  bracketInnings: number | null;
+  bracketMatchPoints: number | null;
+  bracketPlayerName: string;
+};
+
 const normalizeRankingPlayerName = (value: string | null | undefined) =>
   String(value ?? "")
     .normalize("NFKD")
@@ -1488,49 +1499,19 @@ function getBracketEntryAverage(player: NormalizedGroupPlayer) {
   return player.points / player.innings;
 }
 
-function compareBracketStageResults(
-  a: NormalizedStageResult,
-  b: NormalizedStageResult,
-  rankingStats: Map<string, BracketRankingStats>,
+function compareBracketRankedResults<T>(
+  a: BracketRankedResult<T>,
+  b: BracketRankedResult<T>,
 ) {
-  const aStats = rankingStats.get(rankingResultMatchKey(a));
-  const bStats = rankingStats.get(rankingResultMatchKey(b));
-
   return (
-    compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
-    compareNullableNumbersDesc(
-      getStageResultAverageValue(a),
-      getStageResultAverageValue(b),
-    ) ||
-    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
-    compareNullableNumbersDesc(a.highRun, b.highRun) ||
-    compareNullableNumbersDesc(a.points, b.points) ||
-    compareNullableNumbersAsc(a.innings, b.innings) ||
-    compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
-    a.playerName.localeCompare(b.playerName)
-  );
-}
-
-function compareBracketFinalResults(
-  a: NormalizedFinalResult,
-  b: NormalizedFinalResult,
-  rankingStats: Map<string, BracketRankingStats>,
-) {
-  const aStats = rankingStats.get(rankingFinalResultMatchKey(a));
-  const bStats = rankingStats.get(rankingFinalResultMatchKey(b));
-
-  return (
-    compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
-    compareNullableNumbersDesc(
-      getFinalResultAverageValue(a),
-      getFinalResultAverageValue(b),
-    ) ||
-    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
-    compareNullableNumbersDesc(a.highRun, b.highRun) ||
-    compareNullableNumbersDesc(a.caroms ?? a.points, b.caroms ?? b.points) ||
-    compareNullableNumbersAsc(a.innings, b.innings) ||
-    compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
-    a.playerName.localeCompare(b.playerName)
+    compareNullableNumbersDesc(a.bracketPhaseScore, b.bracketPhaseScore) ||
+    compareNullableNumbersDesc(a.bracketAverage, b.bracketAverage) ||
+    compareNullableNumbersDesc(a.bracketBestAverage, b.bracketBestAverage) ||
+    compareNullableNumbersDesc(a.bracketHighRun, b.bracketHighRun) ||
+    compareNullableNumbersDesc(a.bracketPoints, b.bracketPoints) ||
+    compareNullableNumbersAsc(a.bracketInnings, b.bracketInnings) ||
+    compareNullableNumbersDesc(a.bracketMatchPoints, b.bracketMatchPoints) ||
+    a.bracketPlayerName.localeCompare(b.bracketPlayerName)
   );
 }
 
@@ -1809,19 +1790,43 @@ function StageRankingTable({
       return results;
     }
 
-    const rankedResults = results.map((result) => {
-      const key = rankingResultMatchKey(result);
-      const rankingStats = key ? bracketRankingStatsByPlayerKey.get(key) : undefined;
-      return rankingStats === undefined
-        ? result
-        : {
-            ...result,
-            matchPoints: rankingStats.totalMatchPoints,
-            finalPosition: null,
-          };
-    }).sort((a, b) => compareBracketStageResults(a, b, bracketRankingStatsByPlayerKey));
+    const rankedResults = results
+      .map<BracketRankedResult<NormalizedStageResult>>((result) => {
+        const key = rankingResultMatchKey(result);
+        const rankingStats = key ? bracketRankingStatsByPlayerKey.get(key) : undefined;
+        const matchPoints =
+          rankingStats === undefined
+            ? result.matchPoints
+            : rankingStats.totalMatchPoints;
 
-    return rankedResults.map((result, index) => {
+        return {
+          ...result,
+          matchPoints,
+          finalPosition: null,
+          bracketPhaseScore: rankingStats?.phaseScore ?? null,
+          bracketAverage: getStageResultAverageValue(result),
+          bracketBestAverage: result.bestAverage,
+          bracketHighRun: result.highRun,
+          bracketPoints: result.points,
+          bracketInnings: result.innings,
+          bracketMatchPoints: matchPoints,
+          bracketPlayerName: result.playerName,
+        };
+      })
+      .sort(compareBracketRankedResults);
+
+    return rankedResults.map((rankedResult, index) => {
+      const {
+        bracketPhaseScore,
+        bracketAverage,
+        bracketBestAverage,
+        bracketHighRun,
+        bracketPoints,
+        bracketInnings,
+        bracketMatchPoints,
+        bracketPlayerName,
+        ...result
+      } = rankedResult;
       const rankingStats = bracketRankingStatsByPlayerKey.get(rankingResultMatchKey(result));
       const displayedPosition =
         rankingStats?.phaseScore === 11
@@ -2738,21 +2743,41 @@ export function TournamentEventsContent({
 
     if (finalStandingsBracketStatsByPlayerKey.size > 0) {
       return normalizedResults
-        .map((result) => {
+        .map<BracketRankedResult<NormalizedFinalResult>>((result) => {
           const rankingStats = finalStandingsBracketStatsByPlayerKey.get(
             rankingFinalResultMatchKey(result),
           );
-          return rankingStats === undefined
-            ? result
-            : {
-                ...result,
-                matchPoints: rankingStats.totalMatchPoints,
-              };
+          const matchPoints =
+            rankingStats === undefined
+              ? result.matchPoints
+              : rankingStats.totalMatchPoints;
+
+          return {
+            ...result,
+            matchPoints,
+            bracketPhaseScore: rankingStats?.phaseScore ?? null,
+            bracketAverage: getFinalResultAverageValue(result),
+            bracketBestAverage: result.bestAverage,
+            bracketHighRun: result.highRun,
+            bracketPoints: result.caroms ?? result.points,
+            bracketInnings: result.innings,
+            bracketMatchPoints: matchPoints,
+            bracketPlayerName: result.playerName,
+          };
         })
-        .sort((a, b) =>
-          compareBracketFinalResults(a, b, finalStandingsBracketStatsByPlayerKey),
-        )
-        .map((result, index) => {
+        .sort(compareBracketRankedResults)
+        .map((rankedResult, index) => {
+          const {
+            bracketPhaseScore,
+            bracketAverage,
+            bracketBestAverage,
+            bracketHighRun,
+            bracketPoints,
+            bracketInnings,
+            bracketMatchPoints,
+            bracketPlayerName,
+            ...result
+          } = rankedResult;
           const rankingStats = finalStandingsBracketStatsByPlayerKey.get(
             rankingFinalResultMatchKey(result),
           );
