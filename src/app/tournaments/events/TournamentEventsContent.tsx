@@ -2250,6 +2250,32 @@ function applyStageResultCountries(
   });
 }
 
+function stageResultToFinalResult(
+  result: NormalizedStageResult,
+  fallbackId: string,
+): NormalizedFinalResult {
+  return {
+    id: fallbackId,
+    documentId: result.documentId,
+    position: result.finalPosition,
+    playerId: result.playerId,
+    playerDocumentId: result.playerDocumentId,
+    playerName: result.playerName,
+    playerCountry: result.playerCountry,
+    matchPoints: result.matchPoints,
+    bestAverage: result.bestAverage,
+    bestGame: null,
+    caroms: result.points,
+    points: result.points,
+    innings: result.innings,
+    highRun: result.highRun,
+    highRun2: null,
+    rankingPoints: null,
+    penalty: null,
+    finalPoints: null,
+  };
+}
+
 function compareStageResults(
   a: NormalizedStageResult,
   b: NormalizedStageResult,
@@ -2828,9 +2854,64 @@ export function TournamentEventsContent({
         normalizeFinalResult(result, `final-result-${index}`),
       )
       .filter(hasMeaningfulFinalResult);
+    const longoniFinalStage = eventStages.find(
+      (stage) => stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID,
+    );
+    const shouldBuildLongoniFinalStandings = Boolean(longoniFinalStage);
+    const longoniFinalStageResults =
+      shouldBuildLongoniFinalStandings && longoniFinalStage
+        ? applyStageResultCountries(
+            longoniFinalStage.results.filter(hasMeaningfulStageResult),
+            buildStagePlayerCountryMap(longoniFinalStage),
+          ).map((result, index) =>
+            stageResultToFinalResult(result, `final-stage-${index}-${result.id}`),
+          )
+        : [];
+    const baseFinalResults =
+      shouldBuildLongoniFinalStandings && normalizedResults.length === 0
+        ? longoniFinalStageResults
+        : normalizedResults;
+    const longoniBasePlayerKeys = new Set(
+      baseFinalResults.map(rankingFinalResultMatchKey),
+    );
+    const longoniQualificationStage =
+      shouldBuildLongoniFinalStandings
+        ? eventStages
+            .filter((stage) => stage.documentId !== LONGONI_U21_2026_FINAL_ROUND_STAGE_ID)
+            .filter((stage) => !isBracketStageType(stage.stageType))
+            .filter((stage) => stage.results.length > 0)
+            .sort((a, b) => {
+              if (a.order !== null && b.order !== null) return b.order - a.order;
+              if (a.order !== null) return -1;
+              if (b.order !== null) return 1;
+              return b.id.localeCompare(a.id);
+            })[0]
+        : undefined;
+    const longoniQualificationResults =
+      longoniQualificationStage
+        ? applyStageResultCountries(
+            longoniQualificationStage.results.filter(hasMeaningfulStageResult),
+            buildStagePlayerCountryMap(longoniQualificationStage),
+          )
+            .filter((result) => !longoniBasePlayerKeys.has(rankingResultMatchKey(result)))
+            .sort(compareStageResults)
+            .map((result, index) =>
+              stageResultToFinalResult(
+                {
+                  ...result,
+                  finalPosition: baseFinalResults.length + index + 1,
+                },
+                `final-qualification-${index}-${result.id}`,
+              ),
+            )
+        : [];
+    const finalResultsForRanking =
+      shouldBuildLongoniFinalStandings
+        ? [...baseFinalResults, ...longoniQualificationResults]
+        : normalizedResults;
 
     if (finalStandingsBracketStatsByPlayerKey.size > 0) {
-      return normalizedResults
+      return finalResultsForRanking
         .map<BracketRankedResult<NormalizedFinalResult>>((result) => {
           const rankingStats = finalStandingsBracketStatsByPlayerKey.get(
             rankingFinalResultMatchKey(result),
@@ -2843,7 +2924,9 @@ export function TournamentEventsContent({
           return {
             ...result,
             matchPoints,
-            bracketPhaseScore: rankingStats?.phaseScore ?? null,
+            bracketPhaseScore:
+              rankingStats?.phaseScore ??
+              (result.position !== null ? -result.position : null),
             bracketAverage: getFinalResultAverageValue(result),
             bracketBestAverage: result.bestAverage,
             bracketHighRun: result.highRun,
@@ -2883,7 +2966,7 @@ export function TournamentEventsContent({
         });
     }
 
-    return normalizedResults
+    return finalResultsForRanking
       .sort((a, b) => {
         if (a.position !== null && b.position !== null)
           return a.position - b.position;
@@ -2891,7 +2974,7 @@ export function TournamentEventsContent({
         if (b.position !== null) return 1;
         return a.id.localeCompare(b.id);
       });
-  }, [eventData, finalStandingsBracketStatsByPlayerKey]);
+  }, [eventData, eventStages, finalStandingsBracketStatsByPlayerKey]);
 
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
