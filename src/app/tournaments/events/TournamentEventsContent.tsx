@@ -1549,6 +1549,36 @@ const LONGONI_U21_2026_FINAL_STANDINGS_ORDER = [
   "VERHULST Thomas",
   "BOTIS Nikolaos",
 ];
+const LONGONI_U21_2026_FINAL_STANDINGS_ROWS = [
+  ["MORALES Marcos", "ES", 14, 215, 168, 8, 1.562],
+  ["GARCIA Toni", "ES", 12, 205, 174, 10, 1.346],
+  ["IBRAIMOV Amir", "DE", 10, 176, 112, 11, 2.272],
+  ["ZOTOV Arturo", "ES", 10, 161, 174, 8, 1.19],
+  ["DURIEZ Tangui", "FR", 8, 134, 142, 7, 1.086],
+  ["MARTINEZ Bruno", "ES", 7, 139, 149, 7, 1.086],
+  ["SVENSSON Mio", "SE", 6, 118, 147, 6, 0.972],
+  ["BOLLANSEE Toon", "BE", 8, 144, 170, 8, 1.129],
+  ["DEMIR Kaan", "TR", 4, 100, 120, 6, 0.892],
+  ["VLOEDMANS Gilano", "NL", 4, 85, 123, 4, 0.735],
+  ["VAN BUREN Jayden", "NL", 4, 95, 138, 6, 0.735],
+  ["CEBEOGLU Gokalp", "TR", 4, 96, 140, 5, 0.892],
+  ["KOZLUCA Engin ali", "TR", 3, 83, 127, 5, 0.892],
+  ["KORKMAZ Cinar", "TR", 2, 73, 108, 7, 0.714],
+  ["PHILIPOOM Luca", "NL", 4, 86, 125, 6, 0.961],
+  ["WILKOWSKI Joeri", "NL", 4, 63, 98, 5, 0.714],
+  ["TURLA' Paolo", "IT", 2, 57, 84, 3, 0.757],
+  ["LEGENDRE Charles", "FR", 2, 60, 93, 6, 0.641],
+  ["SENGUL Cenk bartu", "TR", 2, 54, 99, 6, 0.46],
+  ["KARA Kuzey", "DE", 2, 47, 110, 4, 0.52],
+  ["RUSSINO Mirko", "IT", 2, 43, 121, 3, 0.38],
+  ["FIORE Lorenzo", "IT", 0, 58, 114, 4, null],
+  ["KARA Poyraz", "DE", 0, 43, 92, 5, null],
+  ["LOUBARDIAS Dimitrios", "GR", 0, 41, 112, 3, null],
+  ["PROFKA Konstantinos", "GR", 0, 34, 95, 6, null],
+  ["DEMIRIS Konstantinos", "GR", 0, 34, 100, 3, null],
+  ["VERHULST Thomas", "BE", 0, 33, 99, 4, null],
+  ["BOTIS Nikos", "GR", 0, 0, 0, 0, null],
+] as const;
 
 function getBestPositiveValue(values: Array<number | null>): number | null {
   const best = values.reduce<number | null>((currentBest, value) => {
@@ -3052,31 +3082,40 @@ export function TournamentEventsContent({
           ]
         : normalizedResults;
     if (shouldBuildLongoniFinalStandings) {
-      const explicitOrder = new Map(
-        LONGONI_U21_2026_FINAL_STANDINGS_ORDER.map((name, index) => [
-          normalizeRankingPlayerName(name),
-          index,
+      const existingByName = new Map(
+        finalResultsForRanking.map((result) => [
+          normalizeRankingPlayerName(result.playerName).replace(/['’]/g, ""),
+          result,
         ]),
       );
-      return [...finalResultsForRanking]
-        .sort((a, b) => {
-          const aOrder = explicitOrder.get(normalizeRankingPlayerName(a.playerName));
-          const bOrder = explicitOrder.get(normalizeRankingPlayerName(b.playerName));
-          if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) {
-            return aOrder - bOrder;
-          }
-          if (aOrder !== undefined) return -1;
-          if (bOrder !== undefined) return 1;
-          return a.playerName.localeCompare(b.playerName);
-        })
-        .map((result, index) => ({
-          ...result,
-          matchPoints:
-            finalStandingsBracketStatsByPlayerKey.get(
-              rankingFinalResultMatchKey(result),
-            )?.totalMatchPoints ?? result.matchPoints,
-          position: index === 3 ? 3 : index + 1,
-        }));
+      return LONGONI_U21_2026_FINAL_STANDINGS_ROWS.map((row, index) => {
+        const [playerName, country, matchPoints, caroms, innings, highRun, bestAverage] =
+          row;
+        const existing = existingByName.get(
+          normalizeRankingPlayerName(playerName).replace(/['’]/g, ""),
+        );
+        return {
+          id: existing?.id ?? `longoni-final-standing-${index + 1}`,
+          documentId:
+            existing?.documentId ?? `longoni-final-standing-${index + 1}`,
+          position: index + 1,
+          playerId: existing?.playerId ?? null,
+          playerDocumentId: existing?.playerDocumentId ?? null,
+          playerName,
+          playerCountry: country,
+          matchPoints,
+          bestAverage,
+          bestGame: null,
+          caroms,
+          points: caroms,
+          innings,
+          highRun,
+          highRun2: existing?.highRun2 ?? null,
+          rankingPoints: null,
+          penalty: null,
+          finalPoints: null,
+        };
+      });
     }
     const longoniFinalOrder =
       shouldBuildLongoniFinalStandings
