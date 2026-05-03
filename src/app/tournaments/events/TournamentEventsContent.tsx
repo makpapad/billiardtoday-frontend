@@ -1720,6 +1720,7 @@ function normalizeTimetableSlot(
 
 function StageRankingTable({
   stage,
+  allStages = [],
   embedded,
   playerProfileHref,
   artistic = false,
@@ -1727,6 +1728,7 @@ function StageRankingTable({
   suppressDerivedBestAverage = false,
 }: {
   stage: NormalizedEventStage;
+  allStages?: NormalizedEventStage[];
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
@@ -1821,9 +1823,37 @@ function StageRankingTable({
     }
 
     const countryByPlayerKey = buildStagePlayerCountryMap(stage);
+    const qualificationStageForLongoniRanking =
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID
+        ? allStages
+            .filter((candidate) => candidate.documentId !== stage.documentId)
+            .filter((candidate) => !isBracketStageType(candidate.stageType))
+            .filter((candidate) => candidate.results.length > 0)
+            .sort((a, b) => {
+              if (a.order !== null && b.order !== null) return b.order - a.order;
+              if (a.order !== null) return -1;
+              if (b.order !== null) return 1;
+              return b.id.localeCompare(a.id);
+            })[0]
+        : undefined;
+    const qualificationResultByPlayerKeyForLongoniRanking = new Map(
+      (qualificationStageForLongoniRanking?.results ?? []).map((result) => [
+        rankingResultMatchKey(result),
+        result,
+      ]),
+    );
     const results = applyStageResultCountries(
       stage.results.filter(hasMeaningfulStageResult),
       countryByPlayerKey,
+    ).map((result) =>
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID
+        ? mergeStageResultTotals(
+            result,
+            qualificationResultByPlayerKeyForLongoniRanking.get(
+              rankingResultMatchKey(result),
+            ),
+          )
+        : result,
     );
     if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {
       return results;
@@ -2266,6 +2296,27 @@ function applyStageResultCountries(
       countryByPlayerKey.get(`name:${normalizeRankingPlayerName(result.playerName)}`);
     return country ? { ...result, playerCountry: country } : result;
   });
+}
+
+function mergeStageResultTotals(
+  result: NormalizedStageResult,
+  previous: NormalizedStageResult | undefined,
+): NormalizedStageResult {
+  if (!previous) return result;
+  return {
+    ...result,
+    matchPoints: (result.matchPoints ?? 0) + (previous.matchPoints ?? 0),
+    points: (result.points ?? 0) + (previous.points ?? 0),
+    innings: (result.innings ?? 0) + (previous.innings ?? 0),
+    bestAverage:
+      result.bestAverage !== null
+        ? result.bestAverage
+        : previous.bestAverage,
+    highRun:
+      result.highRun !== null && previous.highRun !== null
+        ? Math.max(result.highRun, previous.highRun)
+        : result.highRun ?? previous.highRun,
+  };
 }
 
 function stageResultToFinalResult(
@@ -4902,6 +4953,7 @@ export function TournamentEventsContent({
                                 </div>
                                 <StageRankingTable
                                   stage={stage}
+                                  allStages={eventStages}
                                   embedded={embedded}
                                   playerProfileHref={playerProfileHref}
                                   artistic={isArtisticEvent}
