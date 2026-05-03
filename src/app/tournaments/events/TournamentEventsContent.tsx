@@ -1425,6 +1425,38 @@ function getStageResultAverageValue(result: NormalizedStageResult): number | nul
   return result.points / result.innings;
 }
 
+function compareNullableNumbersDesc(a: number | null, b: number | null) {
+  if (a !== null && b !== null && a !== b) return b - a;
+  if (a !== null) return -1;
+  if (b !== null) return 1;
+  return 0;
+}
+
+function compareNullableNumbersAsc(a: number | null, b: number | null) {
+  if (a !== null && b !== null && a !== b) return a - b;
+  if (a !== null) return -1;
+  if (b !== null) return 1;
+  return 0;
+}
+
+function compareBracketStageResults(
+  a: NormalizedStageResult,
+  b: NormalizedStageResult,
+) {
+  return (
+    compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
+    compareNullableNumbersDesc(
+      getStageResultAverageValue(a),
+      getStageResultAverageValue(b),
+    ) ||
+    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
+    compareNullableNumbersDesc(a.highRun, b.highRun) ||
+    compareNullableNumbersDesc(a.points, b.points) ||
+    compareNullableNumbersAsc(a.innings, b.innings) ||
+    a.playerName.localeCompare(b.playerName)
+  );
+}
+
 function getBestPositiveValue(values: Array<number | null>): number | null {
   const best = values.reduce<number | null>((currentBest, value) => {
     if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -1682,8 +1714,8 @@ function StageRankingTable({
       const derivedMatchPoints = key ? bracketMatchPointsByPlayerKey.get(key) : undefined;
       return derivedMatchPoints === undefined
         ? result
-        : { ...result, matchPoints: derivedMatchPoints };
-    });
+        : { ...result, matchPoints: derivedMatchPoints, finalPosition: null };
+    }).sort(compareBracketStageResults);
   }, [
     artistic,
     bracketMatchPointsByPlayerKey,
