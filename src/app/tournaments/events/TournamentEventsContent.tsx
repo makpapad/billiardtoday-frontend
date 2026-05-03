@@ -1807,7 +1807,11 @@ function StageRankingTable({
       }
     }
 
-    const results = stage.results.filter(hasMeaningfulStageResult);
+    const countryByPlayerKey = buildStagePlayerCountryMap(stage);
+    const results = applyStageResultCountries(
+      stage.results.filter(hasMeaningfulStageResult),
+      countryByPlayerKey,
+    );
     if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {
       return results;
     }
@@ -1905,8 +1909,11 @@ function StageRankingTable({
 
     if (!qualificationStage) return positionedResults;
 
-    const qualificationResults = qualificationStage.results
-      .filter(hasMeaningfulStageResult)
+    const qualificationCountryByPlayerKey = buildStagePlayerCountryMap(qualificationStage);
+    const qualificationResults = applyStageResultCountries(
+      qualificationStage.results.filter(hasMeaningfulStageResult),
+      qualificationCountryByPlayerKey,
+    )
       .filter((result) => !usedPlayerKeys.has(getStageResultIdentity(result)))
       .sort(compareStageResults)
       .map((result, index) => ({
@@ -2240,6 +2247,42 @@ function getStageResultIdentity(result: NormalizedStageResult) {
   if (result.playerDocumentId) return `doc:${result.playerDocumentId}`;
   if (result.playerId !== null) return `id:${result.playerId}`;
   return `name:${(result.playerName || "").trim().toLowerCase()}`;
+}
+
+function buildStagePlayerCountryMap(stage: NormalizedEventStage) {
+  const map = new Map<string, string>();
+  const addPlayer = (player: NormalizedGroupPlayer) => {
+    if (!player.country) return;
+    if (player.documentId) map.set(`doc:${player.documentId}`, player.country);
+    if (player.id !== null) map.set(`id:${player.id}`, player.country);
+    const nameKey = normalizeRankingPlayerName(player.name);
+    if (nameKey) map.set(`name:${nameKey}`, player.country);
+  };
+
+  stage.groups.forEach((match) => {
+    addPlayer(match.player1);
+    addPlayer(match.player2);
+  });
+
+  return map;
+}
+
+function applyStageResultCountries(
+  results: NormalizedStageResult[],
+  countryByPlayerKey: Map<string, string>,
+) {
+  return results.map((result) => {
+    if (result.playerCountry) return result;
+    const country =
+      (result.playerDocumentId
+        ? countryByPlayerKey.get(`doc:${result.playerDocumentId}`)
+        : undefined) ??
+      (result.playerId !== null
+        ? countryByPlayerKey.get(`id:${result.playerId}`)
+        : undefined) ??
+      countryByPlayerKey.get(`name:${normalizeRankingPlayerName(result.playerName)}`);
+    return country ? { ...result, playerCountry: country } : result;
+  });
 }
 
 function compareStageResults(
