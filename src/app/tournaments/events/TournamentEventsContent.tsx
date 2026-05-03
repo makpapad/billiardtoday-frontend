@@ -1705,7 +1705,6 @@ function normalizeTimetableSlot(
 
 function StageRankingTable({
   stage,
-  allStages = [],
   embedded,
   playerProfileHref,
   artistic = false,
@@ -1713,7 +1712,6 @@ function StageRankingTable({
   suppressDerivedBestAverage = false,
 }: {
   stage: NormalizedEventStage;
-  allStages?: NormalizedEventStage[];
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
@@ -1869,7 +1867,7 @@ function StageRankingTable({
         return compareBracketRankedResults(a, b);
       });
 
-    const positionedResults = rankedResults.map((rankedResult, index) => {
+    return rankedResults.map((rankedResult, index) => {
       const {
         bracketPhaseScore,
         bracketAverage,
@@ -1890,40 +1888,7 @@ function StageRankingTable({
             : index + 1;
       return { ...result, finalPosition: displayedPosition };
     });
-
-    if (stage.documentId !== LONGONI_U21_2026_FINAL_ROUND_STAGE_ID) {
-      return positionedResults;
-    }
-
-    const usedPlayerKeys = new Set(positionedResults.map(getStageResultIdentity));
-    const qualificationStage = allStages
-      .filter((candidate) => candidate.documentId !== stage.documentId)
-      .filter((candidate) => !isBracketStageType(candidate.stageType))
-      .filter((candidate) => candidate.results.length > 0)
-      .sort((a, b) => {
-        if (a.order !== null && b.order !== null) return b.order - a.order;
-        if (a.order !== null) return -1;
-        if (b.order !== null) return 1;
-        return b.id.localeCompare(a.id);
-      })[0];
-
-    if (!qualificationStage) return positionedResults;
-
-    const qualificationCountryByPlayerKey = buildStagePlayerCountryMap(qualificationStage);
-    const qualificationResults = applyStageResultCountries(
-      qualificationStage.results.filter(hasMeaningfulStageResult),
-      qualificationCountryByPlayerKey,
-    )
-      .filter((result) => !usedPlayerKeys.has(getStageResultIdentity(result)))
-      .sort(compareStageResults)
-      .map((result, index) => ({
-        ...result,
-        finalPosition: positionedResults.length + index + 1,
-      }));
-
-    return [...positionedResults, ...qualificationResults];
   }, [
-    allStages,
     artistic,
     bracketRankingStatsByPlayerKey,
     stage.results,
@@ -4718,7 +4683,6 @@ export function TournamentEventsContent({
                                 </div>
                                 <StageRankingTable
                                   stage={stage}
-                                  allStages={eventStages}
                                   embedded={embedded}
                                   playerProfileHref={playerProfileHref}
                                   artistic={isArtisticEvent}
