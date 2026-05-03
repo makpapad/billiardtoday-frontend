@@ -694,6 +694,12 @@ const rankingResultMatchKey = (result: NormalizedStageResult) =>
     ? `id:${result.playerId}`
     : normalizeRankingPlayerName(result.playerName));
 
+const rankingFinalResultMatchKey = (result: NormalizedFinalResult) =>
+  result.playerDocumentId ??
+  (result.playerId !== null
+    ? `id:${result.playerId}`
+    : normalizeRankingPlayerName(result.playerName));
+
 function rankingPlayerMatchesCandidate(
   player: NormalizedGroupPlayer,
   target: {
@@ -1501,6 +1507,25 @@ function compareBracketStageResults(
   );
 }
 
+function compareBracketFinalResults(
+  a: NormalizedFinalResult,
+  b: NormalizedFinalResult,
+  rankingStats: Map<string, BracketRankingStats>,
+) {
+  const aStats = rankingStats.get(rankingFinalResultMatchKey(a));
+  const bStats = rankingStats.get(rankingFinalResultMatchKey(b));
+
+  return (
+    compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
+    compareNullableNumbersDesc(aStats?.average ?? null, bStats?.average ?? null) ||
+    compareNullableNumbersDesc(aStats?.highRun ?? null, bStats?.highRun ?? null) ||
+    compareNullableNumbersDesc(aStats?.points ?? null, bStats?.points ?? null) ||
+    compareNullableNumbersAsc(aStats?.innings ?? null, bStats?.innings ?? null) ||
+    compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
+    a.playerName.localeCompare(b.playerName)
+  );
+}
+
 function getBestPositiveValue(values: Array<number | null>): number | null {
   const best = values.reduce<number | null>((currentBest, value) => {
     if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -1790,7 +1815,12 @@ function StageRankingTable({
 
     return rankedResults.map((result, index) => {
       const rankingStats = bracketRankingStatsByPlayerKey.get(rankingResultMatchKey(result));
-      const displayedPosition = rankingStats?.phaseScore === 10 ? 3 : index + 1;
+      const displayedPosition =
+        rankingStats?.phaseScore === 11
+          ? null
+          : rankingStats?.phaseScore === 10
+            ? 3
+            : index + 1;
       return { ...result, finalPosition: displayedPosition };
     });
   }, [
@@ -1991,7 +2021,11 @@ function StageRankingTable({
                 className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
               >
                 <td className="px-4 py-3 font-semibold">
-                  {formatNumberValue(result.finalPosition ?? index + 1)}
+                  {formatNumberValue(
+                    isBracketStageType(stage.stageType)
+                      ? result.finalPosition
+                      : result.finalPosition ?? index + 1,
+                  )}
                 </td>
                 <td className="px-4 py-3 font-medium">
                   {result.playerId ? (
@@ -2638,16 +2672,97 @@ export function TournamentEventsContent({
     [eventStages, stageMatchGroups],
   );
 
+  const finalStandingsBracketStatsByPlayerKey = useMemo(() => {
+    const statsByPlayer = new Map<string, BracketRankingStats>();
+
+    eventStages.forEach((stage) => {
+      if (!isBracketStageType(stage.stageType)) return;
+
+      (stageMatchGroups[stage.id] ?? []).forEach((group) => {
+        group.matches.forEach((match) => {
+          if (!hasPlayedStageMatch(match)) return;
+
+          [match.top, match.bottom].forEach((entry) => {
+            const key = rankingPlayerMatchKey(entry.player);
+            if (!key) return;
+
+            const roundRank = getBracketRoundRank(match.round, match.matchNumber);
+            const outcomeBonus =
+              entry.outcome === "W" ? 1 : entry.outcome === "D" ? 0.5 : 0;
+            const phaseScore = roundRank * 2 + outcomeBonus;
+            const existing = statsByPlayer.get(key);
+            const next: BracketRankingStats = {
+              phaseScore,
+              totalMatchPoints:
+                (existing?.totalMatchPoints ?? 0) + (entry.player.matchPoints ?? 0),
+              average: getBracketEntryAverage(entry.player),
+              highRun: entry.player.highRun,
+              points: entry.player.points,
+              innings: entry.player.innings,
+            };
+
+            if (!existing || phaseScore >= existing.phaseScore) {
+              statsByPlayer.set(key, next);
+            } else {
+              statsByPlayer.set(key, {
+                ...existing,
+                totalMatchPoints: next.totalMatchPoints,
+              });
+            }
+          });
+        });
+      });
+    });
+
+    return statsByPlayer;
+  }, [eventStages, stageMatchGroups]);
+
   const publishedFinalResults = useMemo<NormalizedFinalResult[]>(() => {
     if (!eventData?.data?.results_final) return [];
 
     const resultsArray = toRelationArray(eventData.data.results_final);
 
-    return resultsArray
+    const normalizedResults = resultsArray
       .map((result, index) =>
         normalizeFinalResult(result, `final-result-${index}`),
       )
-      .filter(hasMeaningfulFinalResult)
+      .filter(hasMeaningfulFinalResult);
+
+    if (finalStandingsBracketStatsByPlayerKey.size > 0) {
+      return normalizedResults
+        .map((result) => {
+          const rankingStats = finalStandingsBracketStatsByPlayerKey.get(
+            rankingFinalResultMatchKey(result),
+          );
+          return rankingStats === undefined
+            ? result
+            : {
+                ...result,
+                matchPoints: rankingStats.totalMatchPoints,
+              };
+        })
+        .sort((a, b) =>
+          compareBracketFinalResults(a, b, finalStandingsBracketStatsByPlayerKey),
+        )
+        .map((result, index) => {
+          const rankingStats = finalStandingsBracketStatsByPlayerKey.get(
+            rankingFinalResultMatchKey(result),
+          );
+          if (!rankingStats) return result;
+          if (rankingStats.phaseScore >= 12) {
+            return { ...result, position: index + 1 };
+          }
+          if (rankingStats.phaseScore === 11) {
+            return { ...result, position: null };
+          }
+          if (rankingStats.phaseScore === 10) {
+            return { ...result, position: 3 };
+          }
+          return { ...result, position: index + 1 };
+        });
+    }
+
+    return normalizedResults
       .sort((a, b) => {
         if (a.position !== null && b.position !== null)
           return a.position - b.position;
@@ -2655,7 +2770,7 @@ export function TournamentEventsContent({
         if (b.position !== null) return 1;
         return a.id.localeCompare(b.id);
       });
-  }, [eventData]);
+  }, [eventData, finalStandingsBracketStatsByPlayerKey]);
 
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
