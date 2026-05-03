@@ -669,6 +669,22 @@ const normalizeRankingPlayerName = (value: string | null | undefined) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const rankingPlayerMatchKey = (player: {
+  documentId?: string | null;
+  id?: number | null;
+  name?: string | null;
+}) =>
+  player.documentId ??
+  (player.id !== null && player.id !== undefined
+    ? `id:${player.id}`
+    : normalizeRankingPlayerName(player.name));
+
+const rankingResultMatchKey = (result: NormalizedStageResult) =>
+  result.playerDocumentId ??
+  (result.playerId !== null
+    ? `id:${result.playerId}`
+    : normalizeRankingPlayerName(result.playerName));
+
 function rankingPlayerMatchesCandidate(
   player: NormalizedGroupPlayer,
   target: {
@@ -1608,6 +1624,24 @@ function StageRankingTable({
       ),
     [stage.title, stage.order, stageMatchGroups],
   );
+  const bracketMatchPointsByPlayerKey = useMemo(() => {
+    const totals = new Map<string, number>();
+    if (!isBracketStageType(stage.stageType)) return totals;
+
+    stageMatchGroups.forEach((group) => {
+      group.matches.forEach((match) => {
+        if (!hasPlayedStageMatch(match)) return;
+
+        [match.top, match.bottom].forEach((entry) => {
+          const key = rankingPlayerMatchKey(entry.player);
+          if (!key) return;
+          totals.set(key, (totals.get(key) ?? 0) + (entry.player.matchPoints ?? 0));
+        });
+      });
+    });
+
+    return totals;
+  }, [stage.stageType, stageMatchGroups]);
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
     if (!isBracketStageType(stage.stageType) && stageMatchGroups.length === 1) {
       const computedResults = stageMatchGroups.flatMap((group) =>
@@ -1638,8 +1672,26 @@ function StageRankingTable({
       }
     }
 
-    return stage.results.filter(hasMeaningfulStageResult);
-  }, [artistic, stage.results, stage.stageType, stageMatchGroups, suppressDerivedBestAverage]);
+    const results = stage.results.filter(hasMeaningfulStageResult);
+    if (!isBracketStageType(stage.stageType) || bracketMatchPointsByPlayerKey.size === 0) {
+      return results;
+    }
+
+    return results.map((result) => {
+      const key = rankingResultMatchKey(result);
+      const derivedMatchPoints = key ? bracketMatchPointsByPlayerKey.get(key) : undefined;
+      return derivedMatchPoints === undefined
+        ? result
+        : { ...result, matchPoints: derivedMatchPoints };
+    });
+  }, [
+    artistic,
+    bracketMatchPointsByPlayerKey,
+    stage.results,
+    stage.stageType,
+    stageMatchGroups,
+    suppressDerivedBestAverage,
+  ]);
   const showStageGroupColumns = !isBracketStageType(stage.stageType);
   const showGroupColumn =
     showStageGroupColumns &&
