@@ -15,6 +15,8 @@ export type BracketMatchView = {
     innings2?: number | null
     highRun1?: number | null
     highRun2?: number | null
+    highRun1Second?: number | null
+    highRun2Second?: number | null
     matchPoints1?: number | null
     matchPoints2?: number | null
     tieBreak1?: number | null

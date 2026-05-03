@@ -6376,7 +6376,7 @@ export function TournamentEventsContent({
                           ) / 1000
                         : null,
                     hr1: selectedBracketMatch.match.highRun1,
-                    hr2: null,
+                    hr2: selectedBracketMatch.match.highRun1Second,
                     mp: selectedBracketMatch.match.matchPoints1,
                     tb: selectedBracketMatch.match.tieBreak1,
                     country: selectedBracketMatch.match.player1Country ?? null,
@@ -6415,7 +6415,7 @@ export function TournamentEventsContent({
                           ) / 1000
                         : null,
                     hr1: selectedBracketMatch.match.highRun2,
-                    hr2: null,
+                    hr2: selectedBracketMatch.match.highRun2Second,
                     mp: selectedBracketMatch.match.matchPoints2,
                     tb: selectedBracketMatch.match.tieBreak2,
                     country: selectedBracketMatch.match.player2Country ?? null,
