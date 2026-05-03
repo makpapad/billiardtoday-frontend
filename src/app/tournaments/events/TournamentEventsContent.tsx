@@ -1498,10 +1498,14 @@ function compareBracketStageResults(
 
   return (
     compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
-    compareNullableNumbersDesc(aStats?.average ?? null, bStats?.average ?? null) ||
-    compareNullableNumbersDesc(aStats?.highRun ?? null, bStats?.highRun ?? null) ||
-    compareNullableNumbersDesc(aStats?.points ?? null, bStats?.points ?? null) ||
-    compareNullableNumbersAsc(aStats?.innings ?? null, bStats?.innings ?? null) ||
+    compareNullableNumbersDesc(
+      getStageResultAverageValue(a),
+      getStageResultAverageValue(b),
+    ) ||
+    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
+    compareNullableNumbersDesc(a.highRun, b.highRun) ||
+    compareNullableNumbersDesc(a.points, b.points) ||
+    compareNullableNumbersAsc(a.innings, b.innings) ||
     compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
     a.playerName.localeCompare(b.playerName)
   );
@@ -1517,10 +1521,14 @@ function compareBracketFinalResults(
 
   return (
     compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
-    compareNullableNumbersDesc(aStats?.average ?? null, bStats?.average ?? null) ||
-    compareNullableNumbersDesc(aStats?.highRun ?? null, bStats?.highRun ?? null) ||
-    compareNullableNumbersDesc(aStats?.points ?? null, bStats?.points ?? null) ||
-    compareNullableNumbersAsc(aStats?.innings ?? null, bStats?.innings ?? null) ||
+    compareNullableNumbersDesc(
+      getFinalResultAverageValue(a),
+      getFinalResultAverageValue(b),
+    ) ||
+    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
+    compareNullableNumbersDesc(a.highRun, b.highRun) ||
+    compareNullableNumbersDesc(a.caroms ?? a.points, b.caroms ?? b.points) ||
+    compareNullableNumbersAsc(a.innings, b.innings) ||
     compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
     a.playerName.localeCompare(b.playerName)
   );
