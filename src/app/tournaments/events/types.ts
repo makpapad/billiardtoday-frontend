@@ -44,12 +44,14 @@ export type StrapiGroup = {
   player2?: unknown;
   player1_points?: number | string | null;
   player1_match_points?: number | string | null;
+  player1_match_points_override?: number | string | null;
   player1_innings?: number | string | null;
   player1_high_run?: number | string | null;
   player1_high_run_2?: number | string | null;
   player1_tie_break?: number | string | null;
   player2_points?: number | string | null;
   player2_match_points?: number | string | null;
+  player2_match_points_override?: number | string | null;
   player2_innings?: number | string | null;
   player2_high_run?: number | string | null;
   player2_high_run_2?: number | string | null;

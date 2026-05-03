@@ -160,7 +160,9 @@ export const normalizeGroup = (
       country: player1.country,
       documentId: player1.documentId,
       points: toNumber(normalized.player1_points),
-      matchPoints: toNumber(normalized.player1_match_points),
+      matchPoints:
+        toNumber(normalized.player1_match_points_override) ??
+        toNumber(normalized.player1_match_points),
       innings: toNumber(normalized.player1_innings),
       highRun: toNumber(normalized.player1_high_run),
       highRun2: toNumber(normalized.player1_high_run_2),
@@ -172,7 +174,9 @@ export const normalizeGroup = (
       country: player2.country,
       documentId: player2.documentId,
       points: toNumber(normalized.player2_points),
-      matchPoints: toNumber(normalized.player2_match_points),
+      matchPoints:
+        toNumber(normalized.player2_match_points_override) ??
+        toNumber(normalized.player2_match_points),
       innings: toNumber(normalized.player2_innings),
       highRun: toNumber(normalized.player2_high_run),
       highRun2: toNumber(normalized.player2_high_run_2),

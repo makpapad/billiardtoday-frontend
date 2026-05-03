@@ -613,6 +613,16 @@ function resolveBracketMatchPoints(params: {
   return { matchPoints1: null, matchPoints2: null };
 }
 
+function readStoredBracketMatchPoints(
+  match: Record<string, unknown>,
+  side: 1 | 2,
+): number | null {
+  return (
+    toNumber(match[`player${side}_match_points_override`]) ??
+    toNumber(match[`player${side}_match_points`])
+  );
+}
+
 function formatTruncatedAverage(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "-";
   const truncated = Math.trunc(value * 1000) / 1000;
@@ -3226,10 +3236,10 @@ export function TournamentEventsContent({
       const p2 = normalizeBracketPlayer(matchRecord.player2);
       const s1 =
         toNumber(matchRecord.player1_points) ??
-        toNumber(matchRecord.player1_match_points);
+        readStoredBracketMatchPoints(matchRecord, 1);
       const s2 =
         toNumber(matchRecord.player2_points) ??
-        toNumber(matchRecord.player2_match_points);
+        readStoredBracketMatchPoints(matchRecord, 2);
       const hasScores = s1 !== null || s2 !== null;
       const hasDate =
         typeof matchRecord.date_time === "string" &&
@@ -3338,25 +3348,19 @@ export function TournamentEventsContent({
               (
                 m as {
                   player1_points?: unknown;
-                  player1_match_points?: unknown;
                 }
               ).player1_points,
             ) ??
-            toNumber(
-              (m as { player1_match_points?: unknown }).player1_match_points,
-            );
+            readStoredBracketMatchPoints(m as Record<string, unknown>, 1);
           const score2 =
             toNumber(
               (
                 m as {
                   player2_points?: unknown;
-                  player2_match_points?: unknown;
                 }
               ).player2_points,
             ) ??
-            toNumber(
-              (m as { player2_match_points?: unknown }).player2_match_points,
-            );
+            readStoredBracketMatchPoints(m as Record<string, unknown>, 2);
           const tieBreak1 = toNumber(
             (m as { player1_tie_break?: unknown }).player1_tie_break,
           );
@@ -3376,11 +3380,13 @@ export function TournamentEventsContent({
             score2,
             tieBreak1,
             tieBreak2,
-            storedMatchPoints1: toNumber(
-              (m as { player1_match_points?: unknown }).player1_match_points,
+            storedMatchPoints1: readStoredBracketMatchPoints(
+              m as Record<string, unknown>,
+              1,
             ),
-            storedMatchPoints2: toNumber(
-              (m as { player2_match_points?: unknown }).player2_match_points,
+            storedMatchPoints2: readStoredBracketMatchPoints(
+              m as Record<string, unknown>,
+              2,
             ),
           });
           const hasScores = score1 !== null || score2 !== null;
@@ -3618,10 +3624,10 @@ export function TournamentEventsContent({
               : null;
             const score1 =
               toNumber((m as { player1_points?: unknown }).player1_points) ??
-              toNumber((m as { player1_match_points?: unknown }).player1_match_points);
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 1);
             const score2 =
               toNumber((m as { player2_points?: unknown }).player2_points) ??
-              toNumber((m as { player2_match_points?: unknown }).player2_match_points);
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 2);
             const tieBreak1 = toNumber(
               (m as { player1_tie_break?: unknown }).player1_tie_break,
             );
@@ -3684,11 +3690,13 @@ export function TournamentEventsContent({
               highRun2Second: toNumber(
                 (m as { player2_high_run_2?: unknown }).player2_high_run_2,
               ),
-              matchPoints1: toNumber(
-                (m as { player1_match_points?: unknown }).player1_match_points,
+              matchPoints1: readStoredBracketMatchPoints(
+                m as Record<string, unknown>,
+                1,
               ),
-              matchPoints2: toNumber(
-                (m as { player2_match_points?: unknown }).player2_match_points,
+              matchPoints2: readStoredBracketMatchPoints(
+                m as Record<string, unknown>,
+                2,
               ),
               tieBreak1,
               tieBreak2,
