@@ -1814,11 +1814,8 @@ function StageRankingTable({
       return results;
     }
 
-    const pendingFinalOrder =
-      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
-      !Array.from(bracketRankingStatsByPlayerKey.values()).some(
-        (stats) => stats.phaseScore >= 12,
-      )
+    const longoniStageOrder =
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID
         ? new Map(
             LONGONI_U21_2026_PENDING_FINAL_ORDER.map((name, index) => [
               normalizeRankingPlayerName(name),
@@ -1851,11 +1848,17 @@ function StageRankingTable({
         };
       })
       .sort((a, b) => {
-        if (pendingFinalOrder) {
-          const aOrder = pendingFinalOrder.get(
+        const byPhase = compareNullableNumbersDesc(
+          a.bracketPhaseScore,
+          b.bracketPhaseScore,
+        );
+        if (byPhase !== 0) return byPhase;
+
+        if (longoniStageOrder) {
+          const aOrder = longoniStageOrder.get(
             normalizeRankingPlayerName(a.playerName),
           );
-          const bOrder = pendingFinalOrder.get(
+          const bOrder = longoniStageOrder.get(
             normalizeRankingPlayerName(b.playerName),
           );
           if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) {
@@ -2937,11 +2940,8 @@ export function TournamentEventsContent({
       shouldBuildLongoniFinalStandings
         ? [...baseFinalResults, ...longoniQualificationResults]
         : normalizedResults;
-    const pendingLongoniFinalOrder =
-      shouldBuildLongoniFinalStandings &&
-      !Array.from(finalStandingsBracketStatsByPlayerKey.values()).some(
-        (stats) => stats.phaseScore >= 12,
-      )
+    const longoniFinalOrder =
+      shouldBuildLongoniFinalStandings
         ? new Map(
             LONGONI_U21_2026_PENDING_FINAL_ORDER.map((name, index) => [
               normalizeRankingPlayerName(name),
@@ -2977,11 +2977,17 @@ export function TournamentEventsContent({
           };
         })
         .sort((a, b) => {
-          if (pendingLongoniFinalOrder) {
-            const aOrder = pendingLongoniFinalOrder.get(
+          const byPhase = compareNullableNumbersDesc(
+            a.bracketPhaseScore,
+            b.bracketPhaseScore,
+          );
+          if (byPhase !== 0) return byPhase;
+
+          if (longoniFinalOrder) {
+            const aOrder = longoniFinalOrder.get(
               normalizeRankingPlayerName(a.playerName),
             );
-            const bOrder = pendingLongoniFinalOrder.get(
+            const bOrder = longoniFinalOrder.get(
               normalizeRankingPlayerName(b.playerName),
             );
             if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) {
