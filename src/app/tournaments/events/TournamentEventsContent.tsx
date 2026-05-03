@@ -661,6 +661,15 @@ type RankingMetricMatchCandidate = {
   bottom: StageMatchGroup["matches"][number]["bottom"];
 };
 
+type BracketRankingStats = {
+  phaseScore: number;
+  totalMatchPoints: number;
+  average: number | null;
+  highRun: number | null;
+  points: number | null;
+  innings: number | null;
+};
+
 const normalizeRankingPlayerName = (value: string | null | undefined) =>
   String(value ?? "")
     .normalize("NFKD")
@@ -1439,20 +1448,55 @@ function compareNullableNumbersAsc(a: number | null, b: number | null) {
   return 0;
 }
 
+function getBracketRoundRank(round: string | null, matchNumber: number | null) {
+  const normalized = String(round ?? "").trim().toLowerCase();
+  if (/\b(final|f)\b/.test(normalized)) return 6;
+  if (/\b(semi|sf)\b/.test(normalized)) return 5;
+  if (/\b(quarter|qf)\b/.test(normalized)) return 4;
+
+  const roundSizeMatch = normalized.match(/r\s*(\d+)/);
+  if (roundSizeMatch) {
+    const size = Number(roundSizeMatch[1]);
+    if (size <= 2) return 6;
+    if (size <= 4) return 5;
+    if (size <= 8) return 4;
+    if (size <= 16) return 3;
+    if (size <= 32) return 2;
+    if (size <= 64) return 1;
+  }
+
+  return matchNumber !== null ? Math.max(0, matchNumber / 1000) : 0;
+}
+
+function getBracketEntryAverage(player: NormalizedGroupPlayer) {
+  if (
+    typeof player.points !== "number" ||
+    !Number.isFinite(player.points) ||
+    typeof player.innings !== "number" ||
+    !Number.isFinite(player.innings) ||
+    player.innings <= 0
+  ) {
+    return null;
+  }
+
+  return player.points / player.innings;
+}
+
 function compareBracketStageResults(
   a: NormalizedStageResult,
   b: NormalizedStageResult,
+  rankingStats: Map<string, BracketRankingStats>,
 ) {
+  const aStats = rankingStats.get(rankingResultMatchKey(a));
+  const bStats = rankingStats.get(rankingResultMatchKey(b));
+
   return (
+    compareNullableNumbersDesc(aStats?.phaseScore ?? null, bStats?.phaseScore ?? null) ||
+    compareNullableNumbersDesc(aStats?.average ?? null, bStats?.average ?? null) ||
+    compareNullableNumbersDesc(aStats?.highRun ?? null, bStats?.highRun ?? null) ||
+    compareNullableNumbersDesc(aStats?.points ?? null, bStats?.points ?? null) ||
+    compareNullableNumbersAsc(aStats?.innings ?? null, bStats?.innings ?? null) ||
     compareNullableNumbersDesc(a.matchPoints, b.matchPoints) ||
-    compareNullableNumbersDesc(
-      getStageResultAverageValue(a),
-      getStageResultAverageValue(b),
-    ) ||
-    compareNullableNumbersDesc(a.bestAverage, b.bestAverage) ||
-    compareNullableNumbersDesc(a.highRun, b.highRun) ||
-    compareNullableNumbersDesc(a.points, b.points) ||
-    compareNullableNumbersAsc(a.innings, b.innings) ||
     a.playerName.localeCompare(b.playerName)
   );
 }
@@ -1656,9 +1700,9 @@ function StageRankingTable({
       ),
     [stage.title, stage.order, stageMatchGroups],
   );
-  const bracketMatchPointsByPlayerKey = useMemo(() => {
-    const totals = new Map<string, number>();
-    if (!isBracketStageType(stage.stageType)) return totals;
+  const bracketRankingStatsByPlayerKey = useMemo(() => {
+    const statsByPlayer = new Map<string, BracketRankingStats>();
+    if (!isBracketStageType(stage.stageType)) return statsByPlayer;
 
     stageMatchGroups.forEach((group) => {
       group.matches.forEach((match) => {
@@ -1667,12 +1711,35 @@ function StageRankingTable({
         [match.top, match.bottom].forEach((entry) => {
           const key = rankingPlayerMatchKey(entry.player);
           if (!key) return;
-          totals.set(key, (totals.get(key) ?? 0) + (entry.player.matchPoints ?? 0));
+
+          const roundRank = getBracketRoundRank(match.round, match.matchNumber);
+          const outcomeBonus =
+            entry.outcome === "W" ? 1 : entry.outcome === "D" ? 0.5 : 0;
+          const phaseScore = roundRank * 2 + outcomeBonus;
+          const existing = statsByPlayer.get(key);
+          const next: BracketRankingStats = {
+            phaseScore,
+            totalMatchPoints:
+              (existing?.totalMatchPoints ?? 0) + (entry.player.matchPoints ?? 0),
+            average: getBracketEntryAverage(entry.player),
+            highRun: entry.player.highRun,
+            points: entry.player.points,
+            innings: entry.player.innings,
+          };
+
+          if (!existing || phaseScore >= existing.phaseScore) {
+            statsByPlayer.set(key, next);
+          } else {
+            statsByPlayer.set(key, {
+              ...existing,
+              totalMatchPoints: next.totalMatchPoints,
+            });
+          }
         });
       });
     });
 
-    return totals;
+    return statsByPlayer;
   }, [stage.stageType, stageMatchGroups]);
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
     if (!isBracketStageType(stage.stageType) && stageMatchGroups.length === 1) {
@@ -1705,20 +1772,24 @@ function StageRankingTable({
     }
 
     const results = stage.results.filter(hasMeaningfulStageResult);
-    if (!isBracketStageType(stage.stageType) || bracketMatchPointsByPlayerKey.size === 0) {
+    if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {
       return results;
     }
 
     return results.map((result) => {
       const key = rankingResultMatchKey(result);
-      const derivedMatchPoints = key ? bracketMatchPointsByPlayerKey.get(key) : undefined;
-      return derivedMatchPoints === undefined
+      const rankingStats = key ? bracketRankingStatsByPlayerKey.get(key) : undefined;
+      return rankingStats === undefined
         ? result
-        : { ...result, matchPoints: derivedMatchPoints, finalPosition: null };
-    }).sort(compareBracketStageResults);
+        : {
+            ...result,
+            matchPoints: rankingStats.totalMatchPoints,
+            finalPosition: null,
+          };
+    }).sort((a, b) => compareBracketStageResults(a, b, bracketRankingStatsByPlayerKey));
   }, [
     artistic,
-    bracketMatchPointsByPlayerKey,
+    bracketRankingStatsByPlayerKey,
     stage.results,
     stage.stageType,
     stageMatchGroups,
@@ -5139,6 +5210,7 @@ export function TournamentEventsContent({
                                                                   null,
                                                                 matchNumber:
                                                                   slot.matchNumber,
+                                                                round: null,
                                                                 dateTime:
                                                                   slot.dateTime,
                                                                 top: {

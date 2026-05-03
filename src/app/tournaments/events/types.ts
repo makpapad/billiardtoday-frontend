@@ -178,6 +178,7 @@ export type NormalizedGroupMatch = {
   documentId: string;
   number: number | null;
   matchNumber: number | null;
+  round: string | null;
   dateTime: string | null;
   player1: NormalizedGroupPlayer;
   player2: NormalizedGroupPlayer;
@@ -265,6 +266,7 @@ export type StageMatchGroup = {
     key: string;
     matchDocumentId: string | null;
     matchNumber: number | null;
+    round: string | null;
     dateTime: string | null;
     inningsDetail?: unknown;
     matchSheetJson?: unknown;

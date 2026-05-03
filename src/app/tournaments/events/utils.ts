@@ -151,6 +151,7 @@ export const normalizeGroup = (
     documentId: normalized.documentId,
     number: toNumber(normalized.number),
     matchNumber: toNumber(normalized.match_number),
+    round: typeof normalized.round === "string" ? normalized.round : null,
     dateTime:
       typeof normalized.date_time === "string" ? normalized.date_time : null,
     player1: {
@@ -336,6 +337,7 @@ export const buildStageMatchGroups = (
       key: match.id ?? `${key}-match-${index}`,
       matchDocumentId: match.documentId ?? null,
       matchNumber: match.matchNumber,
+      round: match.round,
       dateTime: match.dateTime,
       inningsDetail: match.inningsDetail,
       matchSheetJson: match.matchSheetJson,
