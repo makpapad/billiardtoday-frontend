@@ -5199,24 +5199,34 @@ export function TournamentEventsContent({
                                                                 "",
                                                             },
                                                           );
-                                                        const sourceMatch =
-                                                          (slot.matchDocumentId
-                                                            ? groupMatchByDocumentId.get(
-                                                                slot.matchDocumentId,
-                                                              ) ?? null
-                                                            : null) ??
-                                                          (slot.matchNumber !==
-                                                          null
-                                                            ? groupMatchByNumber.get(
-                                                                slot.matchNumber,
-                                                              ) ?? null
-                                                            : null) ??
+                                                        let sourceMatch:
+                                                          | StageMatchGroup["matches"][number]
+                                                          | null = null;
+                                                        if (slot.matchDocumentId) {
+                                                          sourceMatch =
+                                                            groupMatchByDocumentId.get(
+                                                              slot.matchDocumentId,
+                                                            ) ?? null;
+                                                        }
+                                                        if (
+                                                          !sourceMatch &&
+                                                          slot.matchNumber !== null
+                                                        ) {
+                                                          sourceMatch =
+                                                            groupMatchByNumber.get(
+                                                              slot.matchNumber,
+                                                            ) ?? null;
+                                                        }
+                                                        if (
+                                                          !sourceMatch &&
                                                           (slot.matchPlayer1Name ||
-                                                          slot.matchPlayer2Name
-                                                            ? groupMatchByPlayerPair.get(
-                                                                slotPairKey,
-                                                              ) ?? null
-                                                            : null);
+                                                            slot.matchPlayer2Name)
+                                                        ) {
+                                                          sourceMatch =
+                                                            groupMatchByPlayerPair.get(
+                                                              slotPairKey,
+                                                            ) ?? null;
+                                                        }
                                                         const match =
                                                           sourceMatch
                                                             ? {
