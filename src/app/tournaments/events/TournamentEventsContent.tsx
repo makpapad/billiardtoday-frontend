@@ -1515,6 +1515,26 @@ function compareBracketRankedResults<T>(
   );
 }
 
+const LONGONI_U21_2026_FINAL_ROUND_STAGE_ID = "lgbl18foiq4k54vwqn0706ol";
+const LONGONI_U21_2026_PENDING_FINAL_ORDER = [
+  "MORALES Marcos",
+  "GARCIA Toni",
+  "IBRAIMOV Amir",
+  "ZOTOV Arturo",
+  "DURIEZ Tangui",
+  "MARTINEZ Bruno",
+  "SVENSSON Mio",
+  "BOLLANSEE Toon",
+  "DEMIR Kaan",
+  "VLOEDMANS Gilano",
+  "VAN BUREN Jayden",
+  "CEBEOGLU Gokalp",
+  "KOZLUCA Engin Ali",
+  "KORKMAZ Cinar",
+  "PHILIPOOM Luca",
+  "WILKOWSKI Joeri",
+];
+
 function getBestPositiveValue(values: Array<number | null>): number | null {
   const best = values.reduce<number | null>((currentBest, value) => {
     if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -1790,6 +1810,19 @@ function StageRankingTable({
       return results;
     }
 
+    const pendingFinalOrder =
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
+      !Array.from(bracketRankingStatsByPlayerKey.values()).some(
+        (stats) => stats.phaseScore >= 12,
+      )
+        ? new Map(
+            LONGONI_U21_2026_PENDING_FINAL_ORDER.map((name, index) => [
+              normalizeRankingPlayerName(name),
+              index,
+            ]),
+          )
+        : null;
+
     const rankedResults = results
       .map<BracketRankedResult<NormalizedStageResult>>((result) => {
         const key = rankingResultMatchKey(result);
@@ -1813,7 +1846,22 @@ function StageRankingTable({
           bracketPlayerName: result.playerName,
         };
       })
-      .sort(compareBracketRankedResults);
+      .sort((a, b) => {
+        if (pendingFinalOrder) {
+          const aOrder = pendingFinalOrder.get(
+            normalizeRankingPlayerName(a.playerName),
+          );
+          const bOrder = pendingFinalOrder.get(
+            normalizeRankingPlayerName(b.playerName),
+          );
+          if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+          if (aOrder !== undefined) return -1;
+          if (bOrder !== undefined) return 1;
+        }
+        return compareBracketRankedResults(a, b);
+      });
 
     return rankedResults.map((rankedResult, index) => {
       const {
