@@ -2309,9 +2309,33 @@ function mergeStageResultTotals(
     points: (result.points ?? 0) + (previous.points ?? 0),
     innings: (result.innings ?? 0) + (previous.innings ?? 0),
     bestAverage:
-      result.bestAverage !== null
-        ? result.bestAverage
-        : previous.bestAverage,
+      result.bestAverage !== null && previous.bestAverage !== null
+        ? Math.max(result.bestAverage, previous.bestAverage)
+        : result.bestAverage ?? previous.bestAverage,
+    highRun:
+      result.highRun !== null && previous.highRun !== null
+        ? Math.max(result.highRun, previous.highRun)
+        : result.highRun ?? previous.highRun,
+  };
+}
+
+function mergeFinalResultTotals(
+  result: NormalizedFinalResult,
+  previous: NormalizedStageResult | undefined,
+): NormalizedFinalResult {
+  if (!previous) return result;
+  const resultCaroms = result.caroms ?? result.points ?? 0;
+  const previousPoints = previous.points ?? 0;
+  return {
+    ...result,
+    matchPoints: (result.matchPoints ?? 0) + (previous.matchPoints ?? 0),
+    caroms: resultCaroms + previousPoints,
+    points: (result.points ?? result.caroms ?? 0) + previousPoints,
+    innings: (result.innings ?? 0) + (previous.innings ?? 0),
+    bestAverage:
+      result.bestAverage !== null && previous.bestAverage !== null
+        ? Math.max(result.bestAverage, previous.bestAverage)
+        : result.bestAverage ?? previous.bestAverage,
     highRun:
       result.highRun !== null && previous.highRun !== null
         ? Math.max(result.highRun, previous.highRun)
@@ -2993,20 +3017,16 @@ export function TournamentEventsContent({
         result,
       ]),
     );
-    const longoniBaseFinalResultsWithQualificationBestAvg = baseFinalResults.map(
+    const longoniBaseFinalResultsWithQualificationTotals = baseFinalResults.map(
       (result) => {
-        if (result.bestAverage !== null) return result;
         const qualificationResult = longoniQualificationResultByPlayerKey.get(
           rankingFinalResultMatchKey(result),
         );
-        return qualificationResult?.bestAverage !== null &&
-          qualificationResult?.bestAverage !== undefined
-          ? { ...result, bestAverage: qualificationResult.bestAverage }
-          : result;
+        return mergeFinalResultTotals(result, qualificationResult);
       },
     );
     const longoniBasePlayerKeys = new Set(
-      longoniBaseFinalResultsWithQualificationBestAvg.map(rankingFinalResultMatchKey),
+      longoniBaseFinalResultsWithQualificationTotals.map(rankingFinalResultMatchKey),
     );
     const longoniQualificationResults =
       longoniQualificationSourceResults.length > 0
@@ -3018,7 +3038,7 @@ export function TournamentEventsContent({
                 {
                   ...result,
                   finalPosition:
-                    longoniBaseFinalResultsWithQualificationBestAvg.length + index + 1,
+                    longoniBaseFinalResultsWithQualificationTotals.length + index + 1,
                 },
                 `final-qualification-${index}-${result.id}`,
               ),
@@ -3027,7 +3047,7 @@ export function TournamentEventsContent({
     const finalResultsForRanking =
       shouldBuildLongoniFinalStandings
         ? [
-            ...longoniBaseFinalResultsWithQualificationBestAvg,
+            ...longoniBaseFinalResultsWithQualificationTotals,
             ...longoniQualificationResults,
           ]
         : normalizedResults;
