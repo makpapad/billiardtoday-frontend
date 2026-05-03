@@ -1534,6 +1534,21 @@ const LONGONI_U21_2026_PENDING_FINAL_ORDER = [
   "PHILIPOOM Luca",
   "WILKOWSKI Joeri",
 ];
+const LONGONI_U21_2026_FINAL_STANDINGS_ORDER = [
+  ...LONGONI_U21_2026_PENDING_FINAL_ORDER,
+  "TURLA Paolo",
+  "LEGENDRE Charles",
+  "SENGUL Cenk Bartu",
+  "KARA Kuzey",
+  "RUSSINO Mirko",
+  "FIORE Lorenzo",
+  "KARA Poyraz",
+  "LOUBARDIAS Dimitrios",
+  "PROFKA Konstantinos",
+  "DEMIRIS Konstantinos",
+  "VERHULST Thomas",
+  "BOTIS Nikolaos",
+];
 
 function getBestPositiveValue(values: Array<number | null>): number | null {
   const best = values.reduce<number | null>((currentBest, value) => {
@@ -2940,6 +2955,33 @@ export function TournamentEventsContent({
       shouldBuildLongoniFinalStandings
         ? [...baseFinalResults, ...longoniQualificationResults]
         : normalizedResults;
+    if (shouldBuildLongoniFinalStandings) {
+      const explicitOrder = new Map(
+        LONGONI_U21_2026_FINAL_STANDINGS_ORDER.map((name, index) => [
+          normalizeRankingPlayerName(name),
+          index,
+        ]),
+      );
+      return [...finalResultsForRanking]
+        .sort((a, b) => {
+          const aOrder = explicitOrder.get(normalizeRankingPlayerName(a.playerName));
+          const bOrder = explicitOrder.get(normalizeRankingPlayerName(b.playerName));
+          if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+          if (aOrder !== undefined) return -1;
+          if (bOrder !== undefined) return 1;
+          return a.playerName.localeCompare(b.playerName);
+        })
+        .map((result, index) => ({
+          ...result,
+          matchPoints:
+            finalStandingsBracketStatsByPlayerKey.get(
+              rankingFinalResultMatchKey(result),
+            )?.totalMatchPoints ?? result.matchPoints,
+          position: index === 3 ? 3 : index + 1,
+        }));
+    }
     const longoniFinalOrder =
       shouldBuildLongoniFinalStandings
         ? new Map(
