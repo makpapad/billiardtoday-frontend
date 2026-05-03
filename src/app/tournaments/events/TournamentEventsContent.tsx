@@ -1790,7 +1790,22 @@ function StageRankingTable({
 
     return rankedResults.map((result, index) => {
       const rankingStats = bracketRankingStatsByPlayerKey.get(rankingResultMatchKey(result));
-      const displayedPosition = rankingStats?.phaseScore === 10 ? 3 : index + 1;
+      const isEliminatedPhase =
+        typeof rankingStats?.phaseScore === "number" &&
+        Number.isInteger(rankingStats.phaseScore) &&
+        rankingStats.phaseScore % 2 === 0;
+      const displayedPosition =
+        rankingStats && isEliminatedPhase
+          ? rankedResults.filter((candidate) => {
+              const candidateStats = bracketRankingStatsByPlayerKey.get(
+                rankingResultMatchKey(candidate),
+              );
+              return (
+                typeof candidateStats?.phaseScore === "number" &&
+                candidateStats.phaseScore > rankingStats.phaseScore
+              );
+            }).length + 1
+          : index + 1;
       return { ...result, finalPosition: displayedPosition };
     });
   }, [
