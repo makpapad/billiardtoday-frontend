@@ -3030,6 +3030,17 @@ export function TournamentEventsContent({
         return a.id.localeCompare(b.id);
       });
   }, [eventData, eventStages, finalStandingsBracketStatsByPlayerKey]);
+  const hideLongoniFinalStandingsUntilFinal =
+    eventStages.some(
+      (stage) => stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID,
+    ) &&
+    !Array.from(finalStandingsBracketStatsByPlayerKey.values()).some(
+      (stats) => stats.phaseScore >= 12,
+    );
+  const showVisiblePublishedFinalResults =
+    showPublishedFinalResults &&
+    publishedFinalResults.length > 0 &&
+    !hideLongoniFinalStandingsUntilFinal;
 
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
@@ -4311,16 +4322,14 @@ export function TournamentEventsContent({
             !error &&
             eventId &&
             eventStages.length === 0 &&
-            (!showPublishedFinalResults ||
-              publishedFinalResults.length === 0) && (
+            (!showPublishedFinalResults || !showVisiblePublishedFinalResults) && (
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 No stages found for this event.
               </div>
             )}
           {eventInfo &&
             (eventStages.length > 0 ||
-              (showPublishedFinalResults &&
-                publishedFinalResults.length > 0)) && (
+              showVisiblePublishedFinalResults) && (
               <div className="flex flex-col gap-4">
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
                   {showEventHeader ? (
@@ -4346,8 +4355,7 @@ export function TournamentEventsContent({
                       </div>
                     </div>
                   ) : null}
-                  {showPublishedFinalResults &&
-                    publishedFinalResults.length > 0 && (
+                  {showVisiblePublishedFinalResults && (
                       <div className="mb-6 flex flex-col gap-3">
                         <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                           Final standings
