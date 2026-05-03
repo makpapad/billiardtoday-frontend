@@ -2917,9 +2917,6 @@ export function TournamentEventsContent({
       shouldBuildLongoniFinalStandings && normalizedResults.length === 0
         ? longoniFinalStageResults
         : applyFinalResultCountries(normalizedResults, longoniCountryByPlayerKey);
-    const longoniBasePlayerKeys = new Set(
-      baseFinalResults.map(rankingFinalResultMatchKey),
-    );
     const longoniQualificationStage =
       shouldBuildLongoniFinalStandings
         ? eventStages
@@ -2933,19 +2930,44 @@ export function TournamentEventsContent({
               return b.id.localeCompare(a.id);
             })[0]
         : undefined;
+    const longoniQualificationSourceResults = longoniQualificationStage
+      ? applyStageResultCountries(
+          longoniQualificationStage.results.filter(hasMeaningfulStageResult),
+          buildStagePlayerCountryMap(longoniQualificationStage),
+        )
+      : [];
+    const longoniQualificationResultByPlayerKey = new Map(
+      longoniQualificationSourceResults.map((result) => [
+        rankingResultMatchKey(result),
+        result,
+      ]),
+    );
+    const longoniBaseFinalResultsWithQualificationBestAvg = baseFinalResults.map(
+      (result) => {
+        if (result.bestAverage !== null) return result;
+        const qualificationResult = longoniQualificationResultByPlayerKey.get(
+          rankingFinalResultMatchKey(result),
+        );
+        return qualificationResult?.bestAverage !== null &&
+          qualificationResult?.bestAverage !== undefined
+          ? { ...result, bestAverage: qualificationResult.bestAverage }
+          : result;
+      },
+    );
+    const longoniBasePlayerKeys = new Set(
+      longoniBaseFinalResultsWithQualificationBestAvg.map(rankingFinalResultMatchKey),
+    );
     const longoniQualificationResults =
-      longoniQualificationStage
-        ? applyStageResultCountries(
-            longoniQualificationStage.results.filter(hasMeaningfulStageResult),
-            buildStagePlayerCountryMap(longoniQualificationStage),
-          )
+      longoniQualificationSourceResults.length > 0
+        ? longoniQualificationSourceResults
             .filter((result) => !longoniBasePlayerKeys.has(rankingResultMatchKey(result)))
             .sort(compareStageResults)
             .map((result, index) =>
               stageResultToFinalResult(
                 {
                   ...result,
-                  finalPosition: baseFinalResults.length + index + 1,
+                  finalPosition:
+                    longoniBaseFinalResultsWithQualificationBestAvg.length + index + 1,
                 },
                 `final-qualification-${index}-${result.id}`,
               ),
@@ -2953,7 +2975,10 @@ export function TournamentEventsContent({
         : [];
     const finalResultsForRanking =
       shouldBuildLongoniFinalStandings
-        ? [...baseFinalResults, ...longoniQualificationResults]
+        ? [
+            ...longoniBaseFinalResultsWithQualificationBestAvg,
+            ...longoniQualificationResults,
+          ]
         : normalizedResults;
     if (shouldBuildLongoniFinalStandings) {
       const explicitOrder = new Map(
