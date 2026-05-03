@@ -1776,7 +1776,7 @@ function StageRankingTable({
       return results;
     }
 
-    return results.map((result) => {
+    const rankedResults = results.map((result) => {
       const key = rankingResultMatchKey(result);
       const rankingStats = key ? bracketRankingStatsByPlayerKey.get(key) : undefined;
       return rankingStats === undefined
@@ -1787,6 +1787,12 @@ function StageRankingTable({
             finalPosition: null,
           };
     }).sort((a, b) => compareBracketStageResults(a, b, bracketRankingStatsByPlayerKey));
+
+    return rankedResults.map((result, index) => {
+      const rankingStats = bracketRankingStatsByPlayerKey.get(rankingResultMatchKey(result));
+      const displayedPosition = rankingStats?.phaseScore === 10 ? 3 : index + 1;
+      return { ...result, finalPosition: displayedPosition };
+    });
   }, [
     artistic,
     bracketRankingStatsByPlayerKey,
