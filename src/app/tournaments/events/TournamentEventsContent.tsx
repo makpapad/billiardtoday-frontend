@@ -147,6 +147,8 @@ type TournamentEventsContentProps = {
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
   stageViewMode?: "results" | "ranks";
+  koRankingRound?: "r16" | "qf" | "sf" | "final";
+  onKoRankingRoundChange?: (round: "r16" | "qf" | "sf" | "final") => void;
   embeddedOverride?: boolean;
   showStandaloneTitle?: boolean;
   showEventHeader?: boolean;
@@ -1844,6 +1846,7 @@ function StageRankingTable({
           groupNumber: group.number,
           groupPosition: standing.place,
           finalPosition: null,
+          source: "computed-group-standing",
         })),
       );
 
@@ -1875,8 +1878,13 @@ function StageRankingTable({
     const results = applyStageResultCountries(
       stage.results.filter(hasMeaningfulStageResult),
       countryByPlayerKey,
-    ).map((result) =>
-      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID
+    );
+    const hasServerKnockoutStandings = results.some(
+      (result) => result.source === "knockout-standings",
+    );
+    const displayResults = results.map((result) =>
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
+      !hasServerKnockoutStandings
         ? mergeStageResultTotals(
             result,
             qualificationResultByPlayerKeyForLongoniRanking.get(
@@ -1885,8 +1893,11 @@ function StageRankingTable({
           )
         : result,
     );
+    if (hasServerKnockoutStandings) {
+      return displayResults;
+    }
     if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {
-      return results;
+      return displayResults;
     }
 
     const longoniStageOrder =
@@ -1899,7 +1910,7 @@ function StageRankingTable({
           )
         : null;
 
-    const rankedResults = results
+    const rankedResults = displayResults
       .map<BracketRankedResult<NormalizedStageResult>>((result) => {
         const key = rankingResultMatchKey(result);
         const rankingStats = key ? bracketRankingStatsByPlayerKey.get(key) : undefined;
@@ -2048,7 +2059,6 @@ function StageRankingTable({
         highRun:
           result.highRun !== null &&
           stageRankingHighlights.highRun !== null &&
-          result.highRun > 10 &&
           result.highRun === stageRankingHighlights.highRun
             ? findRankingMetricTooltipData(
                 stageMetricMatches,
@@ -2148,7 +2158,6 @@ function StageRankingTable({
               !artistic &&
               stageRankingHighlights.highRun !== null &&
               result.highRun !== null &&
-              result.highRun > 10 &&
               result.highRun === stageRankingHighlights.highRun;
             const averageDisplay = formatAverage(result.points, result.innings);
             const highRunDisplay = formatNumberValue(result.highRun);
@@ -2481,6 +2490,8 @@ export function TournamentEventsContent({
   showPublishedFinalResults = false,
   showTimetable = true,
   stageViewMode = "results",
+  koRankingRound = "r16",
+  onKoRankingRoundChange,
   embeddedOverride,
   showStandaloneTitle = true,
   showEventHeader = true,
@@ -3370,7 +3381,6 @@ export function TournamentEventsContent({
         highRun:
           result.highRun !== null &&
           finalStandingsHighlights.highRun !== null &&
-          result.highRun > 10 &&
           result.highRun === finalStandingsHighlights.highRun
             ? findRankingMetricTooltipData(
                 finalMetricMatches,
@@ -4617,7 +4627,6 @@ export function TournamentEventsContent({
                                   !isArtisticEvent &&
                                   finalStandingsHighlights.highRun !== null &&
                                   result.highRun !== null &&
-                                  result.highRun > 10 &&
                                   result.highRun === finalStandingsHighlights.highRun;
                                 const averageDisplay = isArtisticEvent
                                   ? (() => {
@@ -4997,6 +5006,11 @@ export function TournamentEventsContent({
                           showStageSearch &&
                           onTimezoneChange &&
                           timezoneOptions.length > 0;
+                        const showKoRoundRankingSelect =
+                          stageViewMode === "ranks" &&
+                          stage.isFinal &&
+                          isBracketStageType(stage.stageType) &&
+                          typeof onKoRankingRoundChange === "function";
 
                         return (
                           <div key={stage.id} className="flex flex-col gap-4">
@@ -5007,8 +5021,26 @@ export function TournamentEventsContent({
                                     {stageDateRange}
                                   </div>
                                 )}
-                                <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                  Ranking - {stage.title || stage.order || ""}
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    Ranking - {stage.title || stage.order || ""}
+                                  </div>
+                                  {showKoRoundRankingSelect ? (
+                                    <select
+                                      value={koRankingRound}
+                                      onChange={(event) =>
+                                        onKoRankingRoundChange(
+                                          event.target.value as "r16" | "qf" | "sf" | "final",
+                                        )
+                                      }
+                                      className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
+                                    >
+                                      <option value="r16">R16</option>
+                                      <option value="qf">Quarter Finals</option>
+                                      <option value="sf">Semi Finals</option>
+                                      <option value="final">Final</option>
+                                    </select>
+                                  ) : null}
                                 </div>
                                 <StageRankingTable
                                   stage={stage}

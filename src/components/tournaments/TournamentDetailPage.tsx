@@ -1585,6 +1585,9 @@ export function TournamentDetailPage({
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
+  const [koRankingRound, setKoRankingRound] = useState<
+    "r16" | "qf" | "sf" | "final"
+  >("r16");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
   >(preferredStageFromQuery ?? summary.stages[0]?.documentId ?? null);
@@ -1777,9 +1780,12 @@ export function TournamentDetailPage({
     return Array.isArray(payload?.matches) ? payload.matches : [];
   }, []);
 
-  const fetchStageStandingsPayload = useCallback(async (stageDocumentId: string) => {
+  const fetchStageStandingsPayload = useCallback(async (stageDocumentId: string, round?: string | null) => {
+    const params = new URLSearchParams();
+    if (round) params.set("round", round);
+    const suffix = params.toString() ? `?${params.toString()}` : "";
     const response = await fetch(
-      `/api/event-stages/${encodeURIComponent(stageDocumentId)}/standings`,
+      `/api/event-stages/${encodeURIComponent(stageDocumentId)}/standings${suffix}`,
       {
         cache: "no-store",
       },
@@ -1836,6 +1842,37 @@ export function TournamentDetailPage({
     [],
   );
 
+  const withStageResults = useCallback(
+    (
+      payload: EventApiResponse | null,
+      stageDocumentId: string,
+      results: unknown[],
+    ): EventApiResponse | null => {
+      if (!payload?.data?.event_stages) return payload;
+      const stages = toRelationArray(payload.data.event_stages);
+      let changed = false;
+      const nextStages = stages.map((stage, index) => {
+        const normalizedStage = normalizeEntity(
+          stage,
+          `stage-${index}`,
+        ) as { documentId?: string | null };
+        if (normalizedStage.documentId !== stageDocumentId) return stage;
+        changed = true;
+        return withEntityField(stage, "results", results);
+      }) as unknown as NonNullable<EventApiResponse["data"]>["event_stages"];
+
+      if (!changed) return payload;
+      return {
+        ...payload,
+        data: {
+          ...payload.data,
+          event_stages: nextStages,
+        },
+      };
+    },
+    [],
+  );
+
   const replaceFinalResults = useCallback((value: unknown[]) => {
     setEventData((current) => {
       if (!current?.data) return current;
@@ -1866,11 +1903,12 @@ export function TournamentDetailPage({
   );
 
   const refreshStageStandings = useCallback(
-    async (stageDocumentId: string) => {
+    async (stageDocumentId: string, round?: string | null) => {
       if (!stageDocumentId) return;
       try {
         const standings = (await fetchStageStandingsPayload(
           stageDocumentId,
+          round,
         )) as StrapiResult[];
         replaceStageField(stageDocumentId, "results", standings);
       } catch {
@@ -1891,7 +1929,19 @@ export function TournamentDetailPage({
 
   const refreshEventData = useCallback(async () => {
     try {
-      const payload = await fetchEventPayload();
+      let payload = await fetchEventPayload();
+      if (
+        activeView === "tournament" &&
+        tournamentPanelMode === "stages" &&
+        overviewMode === "ranks" &&
+        selectedStageDocumentId
+      ) {
+        const standings = await fetchStageStandingsPayload(
+          selectedStageDocumentId,
+          koRankingRound,
+        );
+        payload = withStageResults(payload, selectedStageDocumentId, standings);
+      }
       setEventData((current) => {
         const currentSerialized = JSON.stringify(current);
         const nextSerialized = JSON.stringify(payload);
@@ -1900,7 +1950,16 @@ export function TournamentDetailPage({
     } catch {
       // Keep current UI state and data on transient refresh failures.
     }
-  }, [fetchEventPayload]);
+  }, [
+    activeView,
+    fetchEventPayload,
+    fetchStageStandingsPayload,
+    koRankingRound,
+    overviewMode,
+    selectedStageDocumentId,
+    tournamentPanelMode,
+    withStageResults,
+  ]);
 
   const refreshEventLiveSessions = useCallback(async () => {
     try {
@@ -2170,7 +2229,19 @@ export function TournamentDetailPage({
         }
 
         if (payload.type === "stage_standings_dirty" && payload.stageId) {
-          void refreshStageStandings(String(payload.stageId));
+          const stageId =
+            activeView === "tournament" &&
+            tournamentPanelMode === "stages" &&
+            overviewMode === "ranks" &&
+            selectedStageDocumentId
+              ? selectedStageDocumentId
+              : String(payload.stageId);
+          const round =
+            stageId === selectedStageDocumentId &&
+            overviewMode === "ranks"
+              ? koRankingRound
+              : null;
+          void refreshStageStandings(stageId, round);
           return;
         }
 
@@ -2217,7 +2288,12 @@ export function TournamentDetailPage({
     refreshEventLiveSessions,
     refreshStageMatches,
     refreshStageStandings,
+    activeView,
+    koRankingRound,
+    overviewMode,
+    selectedStageDocumentId,
     summary.documentId,
+    tournamentPanelMode,
     applyLiveScoreDelayPayload,
   ]);
 
@@ -3776,6 +3852,42 @@ export function TournamentDetailPage({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+
+  const selectedStage = useMemo(
+    () =>
+      eventStages.find((stage) => stage.documentId === selectedStageDocumentId) ??
+      eventStages[0] ??
+      null,
+    [eventStages, selectedStageDocumentId],
+  );
+
+  const handleKoRankingRoundChange = async (
+    nextRound: "r16" | "qf" | "sf" | "final",
+  ) => {
+    setKoRankingRound(nextRound);
+    if (selectedStage?.documentId) {
+      await refreshStageStandings(selectedStage.documentId, nextRound);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      activeView !== "tournament" ||
+      tournamentPanelMode !== "stages" ||
+      overviewMode !== "ranks" ||
+      !selectedStage?.documentId
+    ) {
+      return;
+    }
+    void refreshStageStandings(selectedStage.documentId, koRankingRound);
+  }, [
+    activeView,
+    koRankingRound,
+    overviewMode,
+    refreshStageStandings,
+    selectedStage?.documentId,
+    tournamentPanelMode,
+  ]);
 
   const stageLabelModeByDocumentId = useMemo(() => {
     const map = new Map<string, GroupLabelMode>();
@@ -6270,7 +6382,7 @@ export function TournamentDetailPage({
         </section>
       ) : (
         <TournamentEventsContent
-          key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}`}
+          key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}:${overviewMode === "ranks" ? koRankingRound : "matches"}`}
           eventIdOverride={summary.documentId}
           initialEventData={initialEventData}
           eventDataOverride={eventData}
@@ -6290,6 +6402,8 @@ export function TournamentDetailPage({
           showPublishedFinalResults={tournamentPanelMode === "finals"}
           showTimetable={false}
           stageViewMode={overviewMode}
+          koRankingRound={koRankingRound}
+          onKoRankingRoundChange={handleKoRankingRoundChange}
           embeddedOverride={embedded}
           showStandaloneTitle={false}
           showEventHeader={false}
@@ -6658,53 +6772,58 @@ export function TournamentDetailPage({
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
                   Stage overview
                 </div>
-                <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOverviewMode("results");
-                      setTournamentPanelMode("stages");
-                      setActiveView("tournament");
-                    }}
-                    disabled={tournamentPanelMode === "finals"}
-                    className={
-                      overviewMode === "results"
-                        ? tournamentPanelMode === "finals"
-                          ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
-                          : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
-                        : tournamentPanelMode === "finals"
-                          ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
-                          : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
-                    }
-                    aria-pressed={overviewMode === "results"}
-                  >
-                    Matches
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOverviewMode("ranks");
-                      setTournamentPanelMode("stages");
-                      setActiveView("tournament");
-                    }}
-                    disabled={tournamentPanelMode === "finals"}
-                    className={
-                      overviewMode === "ranks"
-                        ? tournamentPanelMode === "finals"
-                          ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
-                          : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
-                        : tournamentPanelMode === "finals"
-                          ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
-                          : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
-                    }
-                    aria-pressed={overviewMode === "ranks"}
-                  >
-                    Ranking
-                  </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOverviewMode("results");
+                        setTournamentPanelMode("stages");
+                        setActiveView("tournament");
+                      }}
+                      disabled={tournamentPanelMode === "finals"}
+                      className={
+                        overviewMode === "results"
+                          ? tournamentPanelMode === "finals"
+                            ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
+                            : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                          : tournamentPanelMode === "finals"
+                            ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
+                            : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                      }
+                      aria-pressed={overviewMode === "results"}
+                    >
+                      Matches
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOverviewMode("ranks");
+                        setTournamentPanelMode("stages");
+                        setActiveView("tournament");
+                        if (selectedStage?.documentId) {
+                          void refreshStageStandings(selectedStage.documentId, koRankingRound);
+                        }
+                      }}
+                      disabled={tournamentPanelMode === "finals"}
+                      className={
+                        overviewMode === "ranks"
+                          ? tournamentPanelMode === "finals"
+                            ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
+                            : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                          : tournamentPanelMode === "finals"
+                            ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
+                            : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                      }
+                      aria-pressed={overviewMode === "ranks"}
+                    >
+                      Ranking
+                    </button>
+                  </div>
                 </div>
               </div>
               {tournamentPanelMode === "finals" ? null : stageCount > 0 ? (
@@ -6722,6 +6841,9 @@ export function TournamentDetailPage({
                           setSelectedStageDocumentId(stage.documentId);
                           setTournamentPanelMode("stages");
                           setActiveView("tournament");
+                          if (overviewMode === "ranks") {
+                            void refreshStageStandings(stage.documentId, koRankingRound);
+                          }
                         }}
                         className={
                           isSelected

@@ -203,6 +203,7 @@ export type NormalizedStageResult = {
   groupNumber: number | null;
   groupPosition: number | null;
   finalPosition: number | null;
+  source: string | null;
 };
 
 export type NormalizedFinalResult = {

@@ -192,6 +192,7 @@ export const normalizeResult = (
   fallbackId: string,
 ): NormalizedStageResult => {
   const normalized = normalizeEntity<StrapiResult>(result, fallbackId);
+  const normalizedRecord = normalized as typeof normalized & { source?: unknown };
   const player = normalizePlayer(normalized.player, `${normalized.id}-player`);
 
   return {
@@ -210,6 +211,7 @@ export const normalizeResult = (
     groupNumber: toNumber(normalized.group_number),
     groupPosition: toNumber(normalized.group_position),
     finalPosition: toNumber(normalized.final_position),
+    source: typeof normalizedRecord.source === "string" ? normalizedRecord.source : null,
   };
 };
 

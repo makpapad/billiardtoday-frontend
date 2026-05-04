@@ -89,9 +89,11 @@ const fetchStageMeta = async (stageId: string): Promise<Record<string, unknown> 
     return first && typeof first === 'object' ? first : null
 }
 
-const fetchDirectStageStandings = async (stageId: string): Promise<Response> => {
+const fetchDirectStageStandings = async (stageId: string, round: string | null): Promise<Response> => {
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
-    let res = await fetchWithOptionalAuth(directUrl)
+    const direct = new URL(directUrl)
+    if (round) direct.searchParams.set('round', round)
+    let res = await fetchWithOptionalAuth(direct.toString())
 
     if (!res.ok && res.status === 404) {
         const resolveUrl = `${STRAPI_URL}/api/bt-event-stages?filters[documentId][$eq]=${encodeURIComponent(stageId)}&fields[0]=id&pagination[limit]=1`
@@ -101,8 +103,9 @@ const fetchDirectStageStandings = async (stageId: string): Promise<Response> => 
             const first = Array.isArray(resolvePayload?.data) ? resolvePayload.data[0] : null
             const numericId = first?.id
             if (numericId !== undefined && numericId !== null) {
-                const fallbackUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
-                res = await fetchWithOptionalAuth(fallbackUrl)
+                const fallbackUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`)
+                if (round) fallbackUrl.searchParams.set('round', round)
+                res = await fetchWithOptionalAuth(fallbackUrl.toString())
             }
         }
     }
@@ -183,7 +186,7 @@ const normalizeKnockoutStandingsPayload = (payload: unknown): unknown => {
 }
 
 export async function GET(
-    _req: NextRequest,
+    req: NextRequest,
     context: { params: Promise<{ stageId: string }> },
 ) {
     try {
@@ -194,6 +197,7 @@ export async function GET(
 
         const stageMeta = await fetchStageMeta(stageId)
         const isKnockout = isKnockoutStageType(stageMeta?.stage_type)
+        const round = req.nextUrl.searchParams.get('round') || null
 
         if (!isKnockout) {
             const storedResults = await fetchStoredStageResults(stageId)
@@ -207,7 +211,7 @@ export async function GET(
             }
         }
 
-        const res = await fetchDirectStageStandings(stageId)
+        const res = await fetchDirectStageStandings(stageId, round)
         const text = await res.text()
 
         if (!res.ok && isKnockout) {
@@ -226,7 +230,7 @@ export async function GET(
             return NextResponse.json({ error: text || 'Failed to fetch stage standings' }, { status: res.status })
         }
 
-        if (isKnockout) {
+        if (isKnockout && !round) {
             const payload = JSON.parse(text)
             return NextResponse.json(normalizeKnockoutStandingsPayload(payload))
         }
