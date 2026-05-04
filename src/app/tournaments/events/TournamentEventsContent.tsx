@@ -5026,20 +5026,34 @@ export function TournamentEventsContent({
                                     Ranking - {stage.title || stage.order || ""}
                                   </div>
                                   {showKoRoundRankingSelect ? (
-                                    <select
-                                      value={koRankingRound}
-                                      onChange={(event) =>
-                                        onKoRankingRoundChange(
-                                          event.target.value as "r16" | "qf" | "sf" | "final",
-                                        )
-                                      }
-                                      className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
-                                    >
-                                      <option value="r16">R16</option>
-                                      <option value="qf">Quarter Finals</option>
-                                      <option value="sf">Semi Finals</option>
-                                      <option value="final">Final</option>
-                                    </select>
+                                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => onKoRankingRoundChange("r16")}
+                                        className={clsx(
+                                          "h-9 rounded-lg border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition",
+                                          koRankingRound === "r16"
+                                            ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                                            : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-blue-500",
+                                        )}
+                                      >
+                                        Round 16 Final Standing
+                                      </button>
+                                      <select
+                                        value={koRankingRound}
+                                        onChange={(event) =>
+                                          onKoRankingRoundChange(
+                                            event.target.value as "r16" | "qf" | "sf" | "final",
+                                          )
+                                        }
+                                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
+                                      >
+                                        <option value="r16">R16</option>
+                                        <option value="qf">Quarter Finals</option>
+                                        <option value="sf">Semi Finals</option>
+                                        <option value="final">Final</option>
+                                      </select>
+                                    </div>
                                   ) : null}
                                 </div>
                                 <StageRankingTable
