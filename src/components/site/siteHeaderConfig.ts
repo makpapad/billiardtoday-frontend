@@ -11,6 +11,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
     children: [
       { label: "Live", href: "/live" },
       { label: "Tournaments", href: "/tournaments" },
+      { label: "Rankings", href: "/rankings" },
       { label: "Clubs", href: "/clubs" },
       { label: "Federations", href: "/federations" },
       { label: "Players", href: "/players" },
