@@ -248,11 +248,15 @@ const fetchTournamentEventSummaryById = async (
     params.set("fields[3]", "end_date");
     params.set("fields[4]", "game_type");
     params.set("fields[5]", "documentId");
+    params.set("fields[6]", "ruleset_key");
+    params.set("fields[7]", "ruleset_config");
     params.set("populate[event_stages][sort][0]", "order:asc");
     params.set("populate[event_stages][fields][0]", "title");
     params.set("populate[event_stages][fields][1]", "order");
     params.set("populate[event_stages][fields][2]", "is_final");
     params.set("populate[event_stages][fields][3]", "documentId");
+    params.set("populate[event_stages][fields][4]", "ruleset_key");
+    params.set("populate[event_stages][fields][5]", "ruleset_config");
 
     if (mode === "full") {
       params.set("populate[tournament][fields][0]", "title");
@@ -262,6 +266,8 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][4]", "description");
       params.set("populate[tournament][fields][5]", "category");
       params.set("populate[tournament][fields][6]", "slug");
+      params.set("populate[tournament][fields][7]", "ruleset_key");
+      params.set("populate[tournament][fields][8]", "ruleset_config");
       params.set("populate[tournament][populate][venue][fields][0]", "name");
       params.set("populate[tournament][populate][venue][fields][1]", "city");
       params.set("populate[tournament][populate][venue][fields][2]", "country");

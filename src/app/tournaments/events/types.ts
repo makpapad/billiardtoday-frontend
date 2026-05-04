@@ -26,6 +26,8 @@ export type StrapiEventStage = {
   order?: number | null;
   is_final?: boolean | null;
   stage_type?: string | null;
+  ruleset_key?: string | null;
+  ruleset_config?: Record<string, unknown> | null;
   timetable_config?: TimetableConfig | null;
   groups?: unknown;
   results?: unknown;
@@ -125,6 +127,8 @@ export type StrapiEvent = {
   documentId?: string | null;
   title?: string | null;
   game_type?: string | null;
+  ruleset_key?: string | null;
+  ruleset_config?: Record<string, unknown> | null;
   season?: number | string | null;
   start_date?: string | null;
   end_date?: string | null;
