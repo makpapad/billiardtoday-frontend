@@ -1586,8 +1586,8 @@ export function TournamentDetailPage({
     "results",
   );
   const [koRankingRound, setKoRankingRound] = useState<
-    "r16" | "qf" | "sf" | "final"
-  >("r16");
+    "r16-final" | "r16" | "qf" | "sf" | "final"
+  >("r16-final");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
   >(preferredStageFromQuery ?? summary.stages[0]?.documentId ?? null);
@@ -1782,7 +1782,11 @@ export function TournamentDetailPage({
 
   const fetchStageStandingsPayload = useCallback(async (stageDocumentId: string, round?: string | null) => {
     const params = new URLSearchParams();
-    if (round) params.set("round", round);
+    if (round === "r16-final") {
+      params.set("mode", "round16_final_standing");
+    } else if (round) {
+      params.set("round", round);
+    }
     const suffix = params.toString() ? `?${params.toString()}` : "";
     const response = await fetch(
       `/api/event-stages/${encodeURIComponent(stageDocumentId)}/standings${suffix}`,
@@ -3862,7 +3866,7 @@ export function TournamentDetailPage({
   );
 
   const handleKoRankingRoundChange = async (
-    nextRound: "r16" | "qf" | "sf" | "final",
+    nextRound: "r16-final" | "r16" | "qf" | "sf" | "final",
   ) => {
     setKoRankingRound(nextRound);
     if (selectedStage?.documentId) {

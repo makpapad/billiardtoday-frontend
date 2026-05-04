@@ -89,10 +89,15 @@ const fetchStageMeta = async (stageId: string): Promise<Record<string, unknown> 
     return first && typeof first === 'object' ? first : null
 }
 
-const fetchDirectStageStandings = async (stageId: string, round: string | null): Promise<Response> => {
+const fetchDirectStageStandings = async (
+    stageId: string,
+    round: string | null,
+    mode: string | null,
+): Promise<Response> => {
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
     const direct = new URL(directUrl)
     if (round) direct.searchParams.set('round', round)
+    if (mode) direct.searchParams.set('mode', mode)
     let res = await fetchWithOptionalAuth(direct.toString())
 
     if (!res.ok && res.status === 404) {
@@ -105,6 +110,7 @@ const fetchDirectStageStandings = async (stageId: string, round: string | null):
             if (numericId !== undefined && numericId !== null) {
                 const fallbackUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`)
                 if (round) fallbackUrl.searchParams.set('round', round)
+                if (mode) fallbackUrl.searchParams.set('mode', mode)
                 res = await fetchWithOptionalAuth(fallbackUrl.toString())
             }
         }
@@ -198,6 +204,7 @@ export async function GET(
         const stageMeta = await fetchStageMeta(stageId)
         const isKnockout = isKnockoutStageType(stageMeta?.stage_type)
         const round = req.nextUrl.searchParams.get('round') || null
+        const mode = req.nextUrl.searchParams.get('mode') || null
 
         if (!isKnockout) {
             const storedResults = await fetchStoredStageResults(stageId)
@@ -211,7 +218,7 @@ export async function GET(
             }
         }
 
-        const res = await fetchDirectStageStandings(stageId, round)
+        const res = await fetchDirectStageStandings(stageId, round, mode)
         const text = await res.text()
 
         if (!res.ok && isKnockout) {
@@ -230,7 +237,7 @@ export async function GET(
             return NextResponse.json({ error: text || 'Failed to fetch stage standings' }, { status: res.status })
         }
 
-        if (isKnockout && !round) {
+        if (isKnockout && !round && !mode) {
             const payload = JSON.parse(text)
             return NextResponse.json(normalizeKnockoutStandingsPayload(payload))
         }

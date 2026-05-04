@@ -147,8 +147,8 @@ type TournamentEventsContentProps = {
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
   stageViewMode?: "results" | "ranks";
-  koRankingRound?: "r16" | "qf" | "sf" | "final";
-  onKoRankingRoundChange?: (round: "r16" | "qf" | "sf" | "final") => void;
+  koRankingRound?: "r16-final" | "r16" | "qf" | "sf" | "final";
+  onKoRankingRoundChange?: (round: "r16-final" | "r16" | "qf" | "sf" | "final") => void;
   embeddedOverride?: boolean;
   showStandaloneTitle?: boolean;
   showEventHeader?: boolean;
@@ -2490,7 +2490,7 @@ export function TournamentEventsContent({
   showPublishedFinalResults = false,
   showTimetable = true,
   stageViewMode = "results",
-  koRankingRound = "r16",
+  koRankingRound = "r16-final",
   onKoRankingRoundChange,
   embeddedOverride,
   showStandaloneTitle = true,
@@ -5029,10 +5029,10 @@ export function TournamentEventsContent({
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
                                       <button
                                         type="button"
-                                        onClick={() => onKoRankingRoundChange("r16")}
+                                        onClick={() => onKoRankingRoundChange("r16-final")}
                                         className={clsx(
                                           "h-9 rounded-lg border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition",
-                                          koRankingRound === "r16"
+                                          koRankingRound === "r16-final"
                                             ? "border-blue-600 bg-blue-600 text-white shadow-sm"
                                             : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-blue-500",
                                         )}
@@ -5040,7 +5040,7 @@ export function TournamentEventsContent({
                                         Round 16 Final Standing
                                       </button>
                                       <select
-                                        value={koRankingRound}
+                                        value={koRankingRound === "r16-final" ? "r16" : koRankingRound}
                                         onChange={(event) =>
                                           onKoRankingRoundChange(
                                             event.target.value as "r16" | "qf" | "sf" | "final",
