@@ -5040,7 +5040,7 @@ export function TournamentEventsContent({
                                         Round 16 Final Standing
                                       </button>
                                       <select
-                                        value={koRankingRound === "r16-final" ? "r16" : koRankingRound}
+                                        value={koRankingRound === "r16-final" ? "" : koRankingRound}
                                         onChange={(event) =>
                                           onKoRankingRoundChange(
                                             event.target.value as "r16" | "qf" | "sf" | "final",
@@ -5048,6 +5048,7 @@ export function TournamentEventsContent({
                                         }
                                         className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
                                       >
+                                        <option value="" disabled>Round</option>
                                         <option value="r16">R16</option>
                                         <option value="qf">Quarter Finals</option>
                                         <option value="sf">Semi Finals</option>
