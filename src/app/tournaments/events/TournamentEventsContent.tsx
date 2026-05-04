@@ -298,11 +298,6 @@ const hasFinishedSessionStatus = (value: string | null | undefined) => {
   return ["completed", "complete", "finished", "ended", "closed"].includes(normalized);
 };
 
-const hasCompletedTournamentStatus = (value: string | null | undefined) => {
-  const normalized = String(value || "").trim().toLowerCase();
-  return ["completed", "complete", "finished", "ended", "closed", "final"].includes(normalized);
-};
-
 function MatchSheetPlayerSummary({
   name,
   country,
@@ -3240,13 +3235,9 @@ export function TournamentEventsContent({
     showPublishedFinalResults &&
     publishedFinalResults.length > 0 &&
     !hideLongoniFinalStandingsUntilFinal;
-  const tournamentStatus =
-    typeof eventData?.data?.tournament?.tournament_status === "string"
-      ? eventData.data.tournament.tournament_status
-      : null;
   const hasFinalRoundBreakdownRankings =
     publishedFinalResults.length > 0 &&
-    (tournamentStatus === null || hasCompletedTournamentStatus(tournamentStatus));
+    !hideLongoniFinalStandingsUntilFinal;
 
   useEffect(() => {
     if (
