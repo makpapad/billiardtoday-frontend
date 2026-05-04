@@ -176,6 +176,133 @@ Frontend:
 - Το `mode=round16_final_standing` πρέπει να δείχνει cumulative KO stats μόνο για τους 16.
 - Το production `tournament_status` μπορεί να μην είναι αξιόπιστο για completed/final display logic.
 
+## 2026-05-04 Follow-up Update
+
+This section records the work completed after the original handoff.
+
+### Completed
+
+Backend / Strapi:
+
+- Added Strapi Admin ruleset selection for `ruleset_key` on tournament, bt-event, and bt-event-stage.
+- Changed `ruleset_key` schema fields from free string to enum: `default`, `ceb_youth`, `artistic_ceb`.
+- Added shared ruleset payload normalization/validation in `src/services/competitionRules.ts`.
+- Added lifecycle validation for tournament/event/stage writes.
+- Extended `ruleset_config` validation for known rule decisions: `groupRankingProfile`, `knockoutClassificationMode`, `knockoutRoundSort`, `finalRankingMode`.
+- Added explicit final standings publish state on `bt-event`: `final_standings_published`, `final_standings_published_at`.
+- Updated `finalResultsPublisher` so successful final result publishing sets the explicit state.
+- Updated custom final-results endpoint to return publish metadata without changing the existing `data` rows.
+- Added `scripts/backfill-final-standings-published.js`.
+- Production backfill was verified directly in PostgreSQL: 362 events with final-result rows have `final_standings_published=true`.
+
+Frontend / public site:
+
+- Updated `src/app/api/events/[id]/route.ts` to fetch and expose `final_standings_published` and `final_standings_published_at`.
+- Updated `src/app/tournaments/events/types.ts`.
+- Updated `src/app/tournaments/events/TournamentEventsContent.tsx` so published final standings / KO round dropdown gating uses `final_standings_published === true`, not only `results_final.length`.
+- Kept `Round 16 Final Standing` live/cumulative mode separate from per-round final breakdown rankings.
+
+### New Commits
+
+Backend:
+
+- `5898229 Add competition ruleset admin validation`
+- `47e1c01 Add final standings published flag`
+- `3107d0f Optimize final standings published backfill`
+
+Frontend:
+
+- `7714c50 Use explicit final standings published flag`
+
+### Production Deploys
+
+Backend:
+
+```powershell
+plink -batch -i D:\.ssh\billiard_admin.ppk root@138.201.29.162 "bt-sync app"
+```
+
+Frontend:
+
+```powershell
+plink -batch -i D:\.ssh\billiard_admin.ppk root@138.201.29.162 "bt-sync frontend"
+```
+
+Note: the OpenSSH key path in the original handoff was missing locally. The working production key on this machine is:
+
+```text
+D:\.ssh\billiard_admin.ppk
+```
+
+Use PuTTY `plink.exe` unless an OpenSSH-converted key is recreated.
+
+### Verification Completed
+
+Local builds:
+
+- Backend `npm run build`: passed.
+- Frontend `npm run build`: passed.
+
+Production health:
+
+- `frontend:200`
+- `strapi:200`
+- `strapi-prod`: online
+- `billiardtoday-frontend`: online
+
+Targeted production API check:
+
+```text
+https://billiardtoday.com/api/events/v8nc64onx1l242seiui2wjng
+```
+
+Observed:
+
+```json
+{
+  "final_standings_published": true,
+  "finalRows": 28
+}
+```
+
+CEB comparison for:
+
+- BilliardToday: `https://billiardtoday.com/tournaments/longoni-next-gen-grand-prix-3-cushion-u21-2026`
+- CEB: `https://www.eurobillard.org/events/Youth%20gp%20u21-497.html#classification`
+
+Result:
+
+- General final classification matches CEB for all 28 rows.
+- Qualification structure matches CEB: 7 groups of 4, 42 qualification matches.
+- KO stage matches CEB: 15 KO matches.
+- `Round 16 Final Standing` is correct as KO-only cumulative standing for the 16 KO players.
+- Per-round rankings (`round=r16`, `round=qf`, `round=sf`, `round=final`) are correct and remain separate from cumulative mode.
+- Minor display-only name differences remain:
+  - CEB `KOZLUCA Engin ali` vs BT `KOZLUCA Engin Ali`
+  - CEB `BOTIS Nikos` vs BT English name `BOTIS Nikolaos`
+  - Some Greek `full_name` values have encoding/mojibake, but `full_name_en` is correct.
+
+### Current State
+
+The scoped task is complete and deployed:
+
+- Ruleset selection/validation exists.
+- Explicit final standings published state exists and is used by frontend.
+- Longoni U21 rankings have been verified against CEB.
+- Backend and frontend working trees were clean after deploy.
+
+### Remaining Future Scope
+
+The larger Competition Rules Engine is still not fully complete. Remaining items:
+
+- Versioned rulesets, e.g. `ceb_youth_v1`, `umb_world_cup_v1`, `national_gr_v1`.
+- Full modular isolation of CEB/UMB/National rule logic.
+- Automated tests per ruleset.
+- Structured editor for `ruleset_config` beyond raw JSON.
+- Migration/assignment of known tournaments to explicit rulesets where still missing.
+- More formal lifecycle model for live/completed/final/published tournament state.
+- Documentation for adding a new ruleset.
+
 ## Quick Verification Commands
 
 Frontend build:
