@@ -1,7 +1,6 @@
 "use client";
 
-import { ImageIcon, Play, X } from "lucide-react";
-import { useState } from "react";
+import { Play } from "lucide-react";
 
 type TeamEntry = {
   name: string;
@@ -156,110 +155,32 @@ function BroadcastCard() {
 }
 
 export default function KozoomModalDummyPage() {
-  const [isOpen, setIsOpen] = useState(true);
-
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="w-full overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-2xl">
-          <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="flex flex-col justify-between gap-8 bg-slate-900 p-6 sm:p-8">
-              <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-red-400/30 bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-100">
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
-                  Dummy live graphic
-                </div>
-                <h1 className="text-3xl font-black tracking-normal text-white sm:text-4xl">
-                  Broadcast modal preview
-                </h1>
-                <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
-                  Data-driven dummy card with teams, logos, and a live label.
-                  The same component renders in the preview and inside the modal.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(true)}
-                className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-500"
-              >
-                <ImageIcon className="h-4 w-4" />
-                Open modal
-              </button>
+      <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center gap-6 px-4 py-8 sm:px-6 lg:px-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-red-400/30 bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-100">
+              <span className="h-2 w-2 rounded-full bg-red-500" />
+              Dummy live graphic
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="group relative block bg-black text-left"
-              aria-label="Open dummy broadcast modal"
-            >
-              <BroadcastCard />
-              <div className="absolute inset-0 ring-inset ring-white/0 transition group-hover:bg-white/5 group-hover:ring-2 group-hover:ring-white/25" />
-            </button>
+            <h1 className="text-3xl font-black tracking-normal text-white sm:text-4xl">
+              Broadcast page preview
+            </h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
+              Data-driven dummy card with teams, logos, and a live label,
+              rendered directly as a page.
+            </p>
           </div>
+          <p className="text-sm font-medium text-slate-400">
+            Dummy teams are defined in this page component.
+          </p>
+        </header>
+
+        <div className="overflow-hidden rounded-lg border border-white/15 bg-black shadow-2xl">
+          <BroadcastCard />
         </div>
       </section>
-
-      {isOpen ? (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsOpen(false);
-            }
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="broadcast-modal-title"
-            className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-white/15 bg-slate-950 shadow-2xl sm:max-h-[calc(100vh-3rem)]"
-          >
-            <header className="flex items-center justify-between gap-4 border-b border-white/10 bg-slate-900 px-4 py-3 sm:px-5">
-              <div className="min-w-0">
-                <h2
-                  id="broadcast-modal-title"
-                  className="truncate text-base font-black text-white sm:text-lg"
-                >
-                  Billiard Today Top League 1
-                </h2>
-                <p className="mt-0.5 truncate text-xs font-medium text-slate-400 sm:text-sm">
-                  Dummy data modal preview
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
-                aria-label="Close modal"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </header>
-
-            <div className="min-h-0 flex-1 overflow-auto bg-black p-2 sm:p-4">
-              <div className="mx-auto w-full max-w-[1100px] overflow-hidden rounded">
-                <BroadcastCard />
-              </div>
-            </div>
-
-            <footer className="flex flex-col gap-3 border-t border-white/10 bg-slate-900 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <p className="text-xs font-medium text-slate-400">
-                Dummy teams are defined in this page component.
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="inline-flex min-h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-500"
-              >
-                Close
-              </button>
-            </footer>
-          </section>
-        </div>
-      ) : null}
     </main>
   );
 }
