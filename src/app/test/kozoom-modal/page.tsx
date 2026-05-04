@@ -141,12 +141,6 @@ function BroadcastCard() {
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-5 z-10 text-sm font-black italic tracking-wide text-white drop-shadow sm:text-lg">
-        DRAW SHEETS
-        <span className="block text-[0.6em] tracking-[0.55em] text-cyan-200">
-          STUDIO
-        </span>
-      </div>
       <div className="absolute bottom-5 right-5 z-10 text-xl font-black tracking-tight text-white drop-shadow sm:text-3xl">
         BILLIARD<span className="text-red-500">TODAY</span>
       </div>
