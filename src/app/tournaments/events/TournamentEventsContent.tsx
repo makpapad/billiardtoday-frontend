@@ -3233,9 +3233,11 @@ export function TournamentEventsContent({
     );
   const showVisiblePublishedFinalResults =
     showPublishedFinalResults &&
+    eventData?.data?.final_standings_published === true &&
     publishedFinalResults.length > 0 &&
     !hideLongoniFinalStandingsUntilFinal;
   const hasFinalRoundBreakdownRankings =
+    eventData?.data?.final_standings_published === true &&
     publishedFinalResults.length > 0 &&
     !hideLongoniFinalStandingsUntilFinal;
 

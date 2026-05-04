@@ -498,6 +498,8 @@ export async function GET(
             queryParams.set('fields[8]', 'gallery_sections')
             queryParams.set('fields[9]', 'ruleset_key')
             queryParams.set('fields[10]', 'ruleset_config')
+            queryParams.set('fields[11]', 'final_standings_published')
+            queryParams.set('fields[12]', 'final_standings_published_at')
             queryParams.set('populate[gallery_images][fields][0]', 'name')
             queryParams.set('populate[gallery_images][fields][1]', 'url')
             queryParams.set('populate[gallery_images][fields][2]', 'alternativeText')

@@ -129,6 +129,8 @@ export type StrapiEvent = {
   game_type?: string | null;
   ruleset_key?: string | null;
   ruleset_config?: Record<string, unknown> | null;
+  final_standings_published?: boolean | null;
+  final_standings_published_at?: string | null;
   season?: number | string | null;
   start_date?: string | null;
   end_date?: string | null;
