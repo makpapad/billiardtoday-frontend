@@ -298,6 +298,11 @@ const hasFinishedSessionStatus = (value: string | null | undefined) => {
   return ["completed", "complete", "finished", "ended", "closed"].includes(normalized);
 };
 
+const hasCompletedTournamentStatus = (value: string | null | undefined) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["completed", "complete", "finished", "ended", "closed", "final"].includes(normalized);
+};
+
 function MatchSheetPlayerSummary({
   name,
   country,
@@ -3235,6 +3240,24 @@ export function TournamentEventsContent({
     showPublishedFinalResults &&
     publishedFinalResults.length > 0 &&
     !hideLongoniFinalStandingsUntilFinal;
+  const tournamentStatus =
+    typeof eventData?.data?.tournament?.tournament_status === "string"
+      ? eventData.data.tournament.tournament_status
+      : null;
+  const hasFinalRoundBreakdownRankings =
+    publishedFinalResults.length > 0 &&
+    (tournamentStatus === null || hasCompletedTournamentStatus(tournamentStatus));
+
+  useEffect(() => {
+    if (
+      hasFinalRoundBreakdownRankings ||
+      koRankingRound === "r16-final" ||
+      typeof onKoRankingRoundChange !== "function"
+    ) {
+      return;
+    }
+    onKoRankingRoundChange("r16-final");
+  }, [hasFinalRoundBreakdownRankings, koRankingRound, onKoRankingRoundChange]);
 
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
@@ -5039,21 +5062,23 @@ export function TournamentEventsContent({
                                       >
                                         Round 16 Final Standing
                                       </button>
-                                      <select
-                                        value={koRankingRound === "r16-final" ? "" : koRankingRound}
-                                        onChange={(event) =>
-                                          onKoRankingRoundChange(
-                                            event.target.value as "r16" | "qf" | "sf" | "final",
-                                          )
-                                        }
-                                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
-                                      >
-                                        <option value="" disabled>Round</option>
-                                        <option value="r16">R16</option>
-                                        <option value="qf">Quarter Finals</option>
-                                        <option value="sf">Semi Finals</option>
-                                        <option value="final">Final</option>
-                                      </select>
+                                      {hasFinalRoundBreakdownRankings ? (
+                                        <select
+                                          value={koRankingRound === "r16-final" ? "" : koRankingRound}
+                                          onChange={(event) =>
+                                            onKoRankingRoundChange(
+                                              event.target.value as "r16" | "qf" | "sf" | "final",
+                                            )
+                                          }
+                                          className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
+                                        >
+                                          <option value="" disabled>Round</option>
+                                          <option value="r16">R16</option>
+                                          <option value="qf">Quarter Finals</option>
+                                          <option value="sf">Semi Finals</option>
+                                          <option value="final">Final</option>
+                                        </select>
+                                      ) : null}
                                     </div>
                                   ) : null}
                                 </div>

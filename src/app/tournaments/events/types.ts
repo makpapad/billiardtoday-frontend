@@ -141,6 +141,9 @@ export type StrapiEvent = {
   event_stages?: StrapiEventStage[] | null;
   results_final?: StrapiFinalResult[] | null;
   timetable_slots?: StrapiEventTimetableSlot[] | null;
+  tournament?: {
+    tournament_status?: string | null;
+  } | null;
 };
 
 export type EventApiResponse = {

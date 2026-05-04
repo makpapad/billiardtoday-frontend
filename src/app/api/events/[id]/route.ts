@@ -442,6 +442,7 @@ export async function GET(
 
             queryParams.set('populate[tournament][fields][0]', 'ruleset_key')
             queryParams.set('populate[tournament][fields][1]', 'ruleset_config')
+            queryParams.set('populate[tournament][fields][2]', 'tournament_status')
             queryParams.set('populate[tournament][populate][participants][sort][0]', 'registration_date:asc')
             queryParams.set('populate[tournament][populate][participants][sort][1]', 'ranking:asc')
             queryParams.set('populate[tournament][populate][participants][fields][0]', 'participant_status')
