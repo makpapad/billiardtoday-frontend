@@ -540,6 +540,39 @@ Default για internal club tournament:
 
 Δεν εμφανίζεται BT subscription status στο club manager.
 
+## Automatic Player Account Onboarding Email
+
+Το player account onboarding είναι BilliardToday-owned automation.
+
+Δεν υπάρχει club action τύπου `Send invite`.
+
+Το club δεν πρέπει να έχει καμία ανάμειξη στη δημιουργία, ενεργοποίηση, συνδρομή ή ownership verification του BilliardToday account.
+
+Μελλοντική ροή:
+
+- όταν δημιουργείται player identity / participation / membership με email, για οποιονδήποτε λόγο, το σύστημα ελέγχει αν υπάρχει ήδη `player-account`
+- αν δεν υπάρχει `player-account`, δημιουργείται onboarding token και στέλνεται αυτόματα email από BilliardToday
+- το email οδηγεί τον παίκτη σε BilliardToday-owned account creation / account linking page
+- μετά τη δημιουργία account, το σύστημα συνδέει το account με την αρχική εγγραφή όπου είναι ασφαλές
+- το club UI βλέπει μόνο passive operational ένδειξη όπως `Account missing`, `Account invited`, `Account active`
+
+Πιθανά trigger points:
+
+- δημιουργία `club-player-membership` με email
+- δημιουργία `player-enrollment-request` με email
+- tournament registration με email
+- scoreboard / enroll flow με email
+- μελλοντικές public registration φόρμες
+
+Απαιτήσεις:
+
+- central Strapi service για onboarding email
+- reusable email template
+- token expiration
+- cooldown / anti-spam, π.χ. όχι πάνω από ένα email ανά email/source ανά 24 ώρες
+- audit fields όπως `sentAt`, `acceptedAt`, `lastReminderAt`
+- καμία έκθεση subscription status ή account billing στο club manager
+
 ## Proposed Implementation Phases
 
 ### Phase 1
@@ -596,6 +629,15 @@ Club player management actions:
 
 ### Phase 7
 
+Automatic player account onboarding:
+
+- central BilliardToday-owned onboarding email service
+- automatic trigger from player identity creation flows with email
+- public account creation/linking page from secure token
+- no club manager action or subscription visibility
+
+### Phase 8
+
 Tournament registration for clubs:
 
 - members registration
@@ -605,7 +647,7 @@ Tournament registration for clubs:
 - temporary participation allowed
 - clear stats scope per tournament
 
-### Phase 8
+### Phase 9
 
 Subscription readiness:
 
@@ -616,7 +658,7 @@ Subscription readiness:
 - keep payment enforcement disabled during initial free/early-access period
 - decide exact free-period messaging before public launch
 
-### Phase 9
+### Phase 10
 
 Potential future extraction:
 
@@ -667,4 +709,5 @@ This document is the new starting point for:
 - club player memberships
 - BT Player change requests
 - scoped Player Enrollment Request approval
+- automatic player account onboarding email
 - future player subscription readiness
