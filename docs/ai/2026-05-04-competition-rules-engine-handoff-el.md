@@ -332,3 +332,102 @@ ssh -i D:\.ssh\billiard_admin_openssh.key root@138.201.29.162 "bt-sync app"
 ssh -i D:\.ssh\billiard_admin_openssh.key root@138.201.29.162 "bt-sync frontend"
 ```
 
+## 2026-05-05 Closure Update
+
+This section closes the scoped Competition Rules Engine task that started in this handoff.
+
+### What Was Completed After The Original Handoff
+
+Backend / Strapi:
+
+- Migrated rulesets to canonical versioned keys:
+  - `default_v1`
+  - `ceb_youth_v1`
+  - `artistic_ceb_v1`
+- Added normalization so legacy keys still resolve correctly.
+- Added tests for:
+  - ruleset resolution / normalization
+  - knockout standings builder
+  - final results publisher
+- Rewrote `scripts/backfill-ruleset-keys.js` to a lighter set-based PostgreSQL backfill flow.
+- Deployed the backend updates to production.
+- Ran production data backfill for safe explicit non-default rulesets:
+  - CEB Youth records
+  - Artistic CEB records
+- Verified production event behavior for:
+  - Longoni U21 / CEB Youth
+  - Artistic sample events
+
+Public frontend:
+
+- Added tournament slug fallback resolution so backend/legacy tournament slugs resolve and redirect to the canonical public slug instead of returning `404`.
+- Deployed the frontend fix to production.
+- Verified:
+  - `https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-522`
+  - now redirects to the canonical public slug and returns `200`
+
+Admin app:
+
+- Repo used: `D:\Projects\2-billiardtoday-admin`
+- Added a new `Rules` tab in the existing tournament editor:
+  - tournament-level ruleset selection
+  - event-level ruleset selection
+  - stage-level ruleset selection
+  - explicit/inherited visibility
+  - structured editor for `ruleset_config`
+  - `final_standings_published` event control
+- Fixed the initial `414 Request-URI Too Large` issue by reducing the payload requested by the event edit route.
+- Fixed tab label fallback so missing translations do not render raw translation keys.
+- Deployed the admin updates to production.
+
+### Production References
+
+Public frontend:
+
+- Commit: `877e8b9` - `Resolve tournament pages by tournament slug fallback`
+
+Admin app:
+
+- Commit: `8b1ba37` - `Add rules management to tournament admin`
+- Commit: `0fc2ea2` - `Reduce tournament admin event payload size`
+- Commit: `576f313` - `Fix tournament admin tab label fallback`
+
+Backend:
+
+- Production already updated earlier in the same workstream with the versioned rules engine, tests, and backfill support.
+
+### Final Scoped Status
+
+The scoped task from this handoff is now complete in production.
+
+Completed and verified:
+
+- versioned competition rules engine foundation
+- explicit ruleset assignment for supported cases
+- final standings published state
+- production backfill for safe non-default rulesets
+- Longoni U21 verification against CEB
+- public frontend slug fallback / redirect
+- internal admin rules management UI
+
+### What Is Explicitly Out Of Scope For This Closed Task
+
+These are not blockers for the completed engine task, but remain future product work:
+
+- simplified SaaS-facing rules UI for club and federation users
+- role-based admin surfaces with different complexity levels
+- inline multilingual guidance for non-technical operators
+- broader ruleset coverage beyond current supported profiles
+- additional ruleset versions such as future `*_v2`
+- deeper lifecycle/product workflows around publish/final/live states
+
+### Decision
+
+Mark this handoff as closed for the original Competition Rules Engine scope.
+
+Next work should continue in a new document focused on:
+
+- simplified rules UX
+- club/federation role flows
+- multilingual inline guidance
+- SaaS-ready admin ergonomics
