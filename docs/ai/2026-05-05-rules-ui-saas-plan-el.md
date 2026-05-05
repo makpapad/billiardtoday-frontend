@@ -9,12 +9,14 @@
 - να μετατρέψει το σημερινό internal rules UI σε SaaS-friendly experience
 - να γίνει κατάλληλο για μελλοντικά admin surfaces για `club` και `federation` χρήστες
 - να κρατήσει τον ίδιο backend engine, αλλά με πολύ πιο απλό και καθοδηγούμενο UI
+- να ξεκινήσει η club SaaS εμπειρία με ξεκάθαρο dashboard, player onboarding και μελλοντική συνδρομή player account ως player-facing / BilliardToday admin θέμα
 
 ## Repos
 
 - Backend / Strapi: `D:\Projects\1-billiards-strapi`
 - Public frontend: `D:\Projects\4-billiardtoday-frontend`
 - Admin app: `D:\Projects\2-billiardtoday-admin`
+- Scoreboard app: `D:\Projects\3-BilliatdToday-Scoreboard`
 
 ## Current State
 
@@ -30,7 +32,7 @@
 
 - tournament-level rules
 - event-level rules
-- stage-level overrides
+- phase-level overrides
 - explicit / inherited visibility
 - structured `ruleset_config` editing
 
@@ -65,7 +67,7 @@
 
 - `ruleset_key`
 - inheritance hierarchy
-- stage override complexity
+- phase override complexity
 - low-level ranking terminology
 
 Ο νέος χρήστης πρέπει να απαντά εύκολα:
@@ -108,7 +110,7 @@ Default view:
    - publish manually
    - custom behavior
 
-4. `Stage-specific Exceptions`
+4. `Phase-specific Exceptions`
    - collapsed by default
    - hidden unless really needed
 
@@ -118,7 +120,7 @@ Default view:
 
 - Tournament
 - Linked Event
-- Stages
+- Phases
 - structured config overrides
 
 Αλλά θα πρέπει να εμφανίζεται μόνο σε:
@@ -148,7 +150,7 @@ Default view:
 - `rules.profile.ceb_youth.help`
 - `rules.profile.artistic.help`
 - `rules.advanced.title`
-- `rules.stages.optionalHelp`
+- `rules.phases.optionalHelp`
 
 ## Naming Changes
 
@@ -157,7 +159,10 @@ Default view:
 - `Ruleset Key` -> `Competition Rules Profile`
 - `Inherited / heuristic` -> `Using default tournament rules`
 - `Explicit ruleset` -> `Custom rules for this section`
-- `Stage overrides` -> `Stage-specific exceptions`
+- `Stage overrides` -> `Phase-specific exceptions`
+- `Stages` -> `Φάσεις` στα ελληνικά user-facing labels
+- `Groups` -> `Όμιλοι` όπου αφορά tournament groups, όχι ομάδες συλλόγων
+- `Advance per Group` -> `Προκρίνονται ανά όμιλο`
 
 ## Permission Strategy
 
@@ -174,8 +179,300 @@ Default view:
 
 - Club admin:
   - only basic mode
-  - no raw stage/event/tournament hierarchy exposure
+  - no raw phase/event/tournament hierarchy exposure
   - no low-level config field editing
+
+## Club SaaS Dashboard
+
+Ξεκινάμε το club-facing SaaS surface από απλό dashboard στο admin app.
+
+Αρχική σελίδα:
+
+- `/clubs`
+
+Boxes:
+
+- `Players`
+- `Tournaments`
+- `Club Management`
+- `Ads`
+
+Απαιτήσεις:
+
+- EL / EN translations από την αρχή
+- όχι internal admin table ως πρώτη εμπειρία
+- κάθε box οδηγεί σε καθαρή περιοχή εργασίας
+- το Club UI πρέπει να μπορεί αργότερα να γίνει wizard-based, ειδικά για tournaments
+
+## Player Identity Model
+
+Δεν πρέπει να γεμίσει το official `BT Players` registry με casual ή internal club players.
+
+Χωρίζουμε τα concepts:
+
+### `player-account`
+
+Η προσωπική ταυτότητα/login του ανθρώπου.
+
+Χρησιμοποιείται για:
+
+- login
+- trusted devices
+- private account dashboard
+- friendly/internal match history
+- subscription status μόνο στο player account / BilliardToday billing context
+- σύνδεση με official BT Player όταν εγκριθεί
+
+### `bt-player`
+
+Το official/canonical αγωνιστικό προφίλ στο BilliardToday.
+
+Χρησιμοποιείται για:
+
+- official tournaments
+- public player profile
+- rankings
+- overall official statistics
+- federation/BT verified player identity
+
+Δεν δημιουργείται αυτόματα από club manager.
+
+### `club-player-membership`
+
+Η σχέση ενός player account με ένα club.
+
+Δεν είναι duplicate player.
+
+Παράδειγμα:
+
+- ίδιο `player-account`
+- linked optional `bt-player`
+- membership στο Club A ως `member`
+- guest participation στο Club B ως `guest`
+
+Προτεινόμενα fields:
+
+- `club`
+- `playerAccount`
+- optional `btPlayer` ή derived από `playerAccount.player`
+- `status`: `active`, `invited`, `pending`, `blocked`
+- `role`: `member`, `guest`, `staff`
+- `joinedAt`
+- `createdByClub`
+
+## Club Player / Guest Tournament Flow
+
+Ένας παίκτης άλλου συλλόγου πρέπει να μπορεί να παίξει σε club tournament χωρίς να αλλάζει “ιδιοκτησία”.
+
+Προτεινόμενες ροές:
+
+### 1. Search / Invite
+
+Ο club manager προσθέτει guest player με:
+
+- email
+- phone
+- existing player account search
+- existing BT Player search
+
+Αν υπάρχει account, δημιουργείται tournament participation ως guest.
+
+Αν δεν υπάρχει account, δημιουργείται invite / temporary enrollment.
+
+### 2. Self-registration link
+
+Το club tournament έχει registration link.
+
+Ο παίκτης:
+
+- κάνει login με player account
+- ή δημιουργεί player account
+- ή μπαίνει προσωρινά ως temporary player
+
+### 3. Scoreboard QR / on-site registration
+
+Ο παίκτης σκανάρει QR στο club.
+
+Το σύστημα ξέρει το club από το screen και αργότερα μπορεί να ξέρει και το tournament/session.
+
+Η υπάρχουσα ροή ήδη υποστηρίζει temporary enrollment μέσω:
+
+- `/claim`
+- `/enroll`
+- `player-enrollment-request`
+- `player-device`
+- `player-account`
+- admin approval queue
+
+Χρειάζεται επέκταση ώστε να αποθηκεύεται `club` relation, όχι μόνο `clubName`.
+
+## Existing Player Account Flow To Extend
+
+Σήμερα υπάρχουν ήδη:
+
+- Strapi `player-account`
+- Strapi `player-enrollment-request`
+- Strapi `player-device`
+- public frontend `/claim`
+- public frontend `/enroll`
+- public frontend `/account`
+- admin approval queue `/admin/player-enrollment-requests`
+
+Σημερινή ροή:
+
+1. Ο παίκτης σκανάρει scoreboard QR.
+2. Αν δεν έχει trusted device, πάει στο `/enroll`.
+3. Δημιουργείται temporary `player-enrollment-request`.
+4. Δημιουργείται `player-device`.
+5. Ο παίκτης μπορεί να παίξει ως temporary identity.
+6. Αν ολοκληρώσει account, δημιουργείται `player-account`.
+7. Αν ζητηθεί official verification, ο admin εγκρίνει ή απορρίπτει.
+8. Μόνο μετά από admin approval γίνεται link/create σε `bt-player`.
+
+Αυτό είναι σωστή βάση και πρέπει να επεκταθεί, όχι να αντικατασταθεί.
+
+Νέα tasks:
+
+- προσθήκη `club` relation στο `player-enrollment-request`
+- προσθήκη `homeClub` ή `createdByClub` στο `player-account`
+- δημιουργία `club-player-membership`
+- όταν enrollment γίνεται από scoreboard screen, να αποθηκεύεται το πραγματικό `club.id`
+- όταν account δημιουργείται από enrollment, να μεταφέρεται το club context
+- club players page να δείχνει memberships/player accounts scoped στο current club
+- tournament registration να μπορεί να προσθέτει members και guests
+
+## Tournament Participation / Statistics Scope
+
+Τα club tournaments πρέπει να μπορούν να δεχτούν:
+
+- club members
+- guest player accounts από άλλα clubs
+- linked BT Players
+- local/temporary player identities
+
+Τα στατιστικά δεν πρέπει να γράφονται πάντα στο official overall BT stats.
+
+Προτεινόμενο field:
+
+`statistics_scope`
+
+Τιμές:
+
+- `private_club`
+- `player_account`
+- `bt_overall_eligible`
+- `official`
+
+Default για internal club tournament:
+
+- `player_account`
+
+Κανόνας:
+
+- Αν participant έχει linked `BT Player` και το tournament είναι eligible, τότε τα αποτελέσματα μπορούν να γράφονται και στο overall statistics.
+- Αν participant έχει μόνο `player-account`, τότε τα αποτελέσματα φαίνονται στον account του και στο club tournament history.
+- Αν αργότερα γίνει link σε `BT Player`, να υπάρχει δυνατότητα backfill/merge για eligible stats.
+
+## Player Account Subscription
+
+Μελλοντικά όσοι έχουν `player-account` μπορεί να έχουν υποχρεωτική ετήσια συνδρομή.
+
+Η συνδρομή δεν μπαίνει υποχρεωτικά από την αρχή.
+
+Πρέπει όμως να προβλεφθεί από τώρα στο data model και στο UX.
+
+Σημαντικό product boundary:
+
+- η συνδρομή είναι σχέση παίκτη με το BilliardToday
+- ο club manager δεν βλέπει και δεν διαχειρίζεται συνδρομές προς το BilliardToday
+- το club UI βλέπει μόνο αν ο παίκτης είναι usable για club/tournament operations
+- subscription status εμφανίζεται μόνο στο player account dashboard και σε internal BilliardToday billing/admin surfaces
+
+### Product Decision Pending
+
+Υπάρχουν δύο πιθανές go-to-market επιλογές:
+
+1. Να ενημερώνονται από την αρχή:
+   - “Σου δίνουμε 1 χρόνο δωρεάν χρήση.”
+   - Πλεονέκτημα: διαφάνεια, χτίζει εμπιστοσύνη.
+   - Μειονέκτημα: μπορεί να δημιουργήσει friction πριν δουν αξία.
+
+2. Να μη δοθεί εμπορική έμφαση στην αρχή και να ενημερωθούν 5-6 μήνες πριν τη λήξη:
+   - Πλεονέκτημα: πρώτα δένονται με το προϊόν και βλέπουν αξία.
+   - Μειονέκτημα: αν δεν έχει αναφερθεί καθόλου, μπορεί να φανεί αιφνιδιαστικό.
+
+Προτεινόμενη μέση λύση:
+
+- από την αρχή να υπάρχει ήπιο μήνυμα “Early access / free period”
+- να μην εμφανίζεται επιθετικό payment CTA στην αρχή
+- στο account dashboard να φαίνεται subscription status αλλά ως informational
+- 5-6 μήνες πριν τη λήξη να ξεκινά structured reminder campaign
+
+Παράδειγμα copy:
+
+> Ο λογαριασμός σου είναι σε δωρεάν περίοδο γνωριμίας. Θα ενημερωθείς έγκαιρα πριν χρειαστεί ανανέωση.
+
+Όχι:
+
+> Σε 12 μήνες πρέπει να πληρώσεις.
+
+### Subscription Model
+
+Η συνδρομή αφορά `player-account`, όχι απαραίτητα `bt-player`.
+
+Πιθανά content types:
+
+`subscription-plan`
+
+- `code`: `bt_player_annual`
+- `name`
+- `scope`: `bt`, `club`, `federation`
+- `period`: `annual`
+- `amount`
+- `currency`
+- `isActive`
+
+`player-subscription`
+
+- `playerAccount`
+- `plan`
+- optional `club`
+- optional `federation`
+- `status`: `trial`, `active`, `pending`, `expired`, `grace_period`, `waived`
+- `startsAt`
+- `expiresAt`
+- `amount`
+- `currency`
+- `paymentStatus`: `not_required`, `unpaid`, `paid`, `failed`, `refunded`
+- `paymentProvider`
+- `paymentReference`
+- `notifiedAt`
+- `reminderCount`
+
+Στο `player-account` μπορεί να υπάρχει denormalized summary:
+
+- `subscriptionStatus`
+- `subscriptionExpiresAt`
+
+### Subscription UX
+
+Στο player account dashboard:
+
+- `Membership / Subscription`
+- status badge
+- expiration date
+- renewal information
+- later payment CTA
+
+Στο club manager:
+
+- `Account missing`
+- `Account invited`
+- `Account active`
+- `BT Player linked`
+- `BT Player not linked`
+
+Δεν εμφανίζεται BT subscription status στο club manager.
 
 ## Proposed Implementation Phases
 
@@ -185,7 +482,7 @@ Refactor current internal admin rules tab:
 
 - add `Basic / Advanced` toggle
 - improve labels
-- collapse stage overrides by default
+- collapse phase overrides by default
 - add inline help
 
 ### Phase 2
@@ -206,11 +503,54 @@ Prepare role-based simplified views:
 
 ### Phase 4
 
+Start Club SaaS surface:
+
+- `/clubs` dashboard with Players, Tournaments, Club Management, Ads
+- EL / EN translations
+- clubs players area as scoped club roster
+- avoid exposing internal admin tables as first screen
+
+### Phase 5
+
+Player account / club membership foundation:
+
+- add club context to enrollment requests
+- add created/home club context to player accounts
+- create `club-player-membership`
+- design club players page around memberships and player accounts
+- add guest participation concept for tournaments
+
+### Phase 6
+
+Tournament registration for clubs:
+
+- members registration
+- guest registration
+- invite links
+- player account onboarding prompt
+- temporary participation allowed
+- clear stats scope per tournament
+
+### Phase 7
+
+Subscription readiness:
+
+- add subscription data model
+- show subscription status in player account dashboard
+- show account readiness / BT Player link status in club manager
+- keep BT subscription status out of the club manager workflow
+- keep payment enforcement disabled during initial free/early-access period
+- decide exact free-period messaging before public launch
+
+### Phase 8
+
 Potential future extraction:
 
 - reusable rules form components
 - reusable presets card selector
+- reusable club dashboard widgets
 - shared role-based rules UI module
+- shared player onboarding components
 
 ## Non-Goals For This New Task
 
@@ -222,6 +562,8 @@ Out of scope unless needed by a discovered blocker:
 - reworking production ruleset backfills
 - changing existing verified CEB Youth ranking behavior
 - redesigning the public tournament pages
+- enforcing paid subscriptions immediately
+- auto-creating BT Players from club-created players
 
 ## Success Criteria
 
@@ -231,6 +573,10 @@ Out of scope unless needed by a discovered blocker:
 - ο internal admin δεν χάνει advanced control
 - οι οδηγίες είναι διαθέσιμες inline στη σωστή γλώσσα
 - το club/federation SaaS surface μπορεί να στηριχτεί στον ίδιο engine χωρίς να εκθέτει περιττή πολυπλοκότητα
+- το club μπορεί να διαχειρίζεται δικούς του παίκτες χωρίς να μολύνει το official BT Players registry
+- παίκτης άλλου club μπορεί να παίξει ως guest σε club tournament
+- player account onboarding γίνεται φυσικά μέσα από tournament/scoreboard/club flows
+- η μελλοντική συνδρομή έχει προβλεφθεί στο model και στο player-facing UX χωρίς να μπαίνει στο club manager workflow ή να μπλοκάρει το αρχικό adoption
 
 ## Starting Point
 
@@ -241,3 +587,7 @@ This document is the new starting point for:
 - simplified rules UX
 - club / federation future admin flows
 - multilingual operator guidance
+- club SaaS dashboard
+- player account onboarding
+- club player memberships
+- future player subscription readiness
