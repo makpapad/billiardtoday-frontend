@@ -439,6 +439,65 @@ Default για internal club tournament:
 - Αν participant έχει μόνο `player-account`, τότε τα αποτελέσματα φαίνονται στο account του και στο club tournament history.
 - Αν αργότερα γίνει link σε `BT Player`, να υπάρχει δυνατότητα backfill/merge για eligible stats.
 
+## Club Tournament Management
+
+Το club-facing tournament surface πρέπει να ξεκινήσει πολύ πιο απλά από το internal tournament admin.
+
+Αρχική υλοποίηση:
+
+- `/clubs/tournaments`
+- scoped λίστα τουρνουά ανά club
+- οι `Club Owner` και `Club Manager` βλέπουν μόνο το δικό τους club
+- δεν υπάρχει επιλογή club για scoped club χρήστες
+- δημιουργία τουρνουά με wizard οθόνες
+- ασφαλείς default τιμές για rules / format / statistics scope
+
+Προτεινόμενα wizard βήματα:
+
+1. Βασικά στοιχεία
+   - όνομα τουρνουά
+   - ημερομηνία έναρξης / λήξης
+   - τύπος παιχνιδιού
+   - κατηγορία
+
+2. Μορφή διοργάνωσης
+   - Όμιλοι + Νοκ άουτ
+   - Όλοι με όλους
+   - Μόνο νοκ άουτ
+
+3. Έλεγχος και δημιουργία
+   - περίληψη επιλογών
+   - δημιουργία με recommended defaults
+
+Default για club-created tournament:
+
+- `organizer_type`: `club`
+- `competitionScope`: `club`
+- `participantMode`: `club_members_and_guests`
+- `statisticsScope`: `player_account`
+- `ruleset_key`: default engine profile
+- advanced phase/rules editing να μην εμφανίζεται στο πρώτο wizard
+
+### Federation Tournament Hosted In Clubs
+
+Υπάρχει μελλοντική περίπτωση μια ομοσπονδία να διοργανώνει τουρνουά σε πολλά clubs.
+
+Σε αυτή την περίπτωση:
+
+- το tournament ownership ανήκει στην ομοσπονδία
+- το club δεν πρέπει να βλέπει ή να αλλάζει federation-level setup
+- το club πρέπει να μπορεί να διαχειριστεί μόνο το operational κομμάτι που γίνεται στο χώρο του
+- παραδείγματα operational access:
+  - αποστολή αγώνα σε οθόνες του club
+  - καταγραφή αποτελεσμάτων
+  - διαχείριση table/screen assignment για τους αγώνες που φιλοξενεί
+
+Πιθανή μελλοντική απαίτηση στο data model:
+
+- `hostClub` ή venue/screen scoped relation σε match/session/timetable slot
+- permission rule: club user μπορεί να κάνει operate μόνο matches/sessions με `hostClub` το δικό του club
+- federation/internal users κρατούν το full tournament configuration
+
 ## Player Account Subscription
 
 Μελλοντικά όσοι έχουν `player-account` μπορεί να έχουν υποχρεωτική ετήσια συνδρομή.
@@ -638,6 +697,16 @@ Automatic player account onboarding:
 
 ### Phase 8
 
+Club tournament creation:
+
+- scoped club tournament list
+- wizard-based creation
+- safe defaults for club tournaments
+- no club selector for `Club Owner` / `Club Manager`
+- document future federation-hosted-in-clubs operational model
+
+### Phase 9
+
 Tournament registration for clubs:
 
 - members registration
@@ -647,7 +716,7 @@ Tournament registration for clubs:
 - temporary participation allowed
 - clear stats scope per tournament
 
-### Phase 9
+### Phase 10
 
 Subscription readiness:
 
@@ -658,7 +727,7 @@ Subscription readiness:
 - keep payment enforcement disabled during initial free/early-access period
 - decide exact free-period messaging before public launch
 
-### Phase 10
+### Phase 11
 
 Potential future extraction:
 
