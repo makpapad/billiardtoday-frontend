@@ -483,23 +483,32 @@ Default για club-created tournament:
 
 1. Players
    - επιλογή παικτών από το club roster
-   - προσωρινά μπορούν να μπουν στο engine μόνο όσοι έχουν linked `BT Player`
+   - επιτρέπονται και local club players χωρίς σύνδεση με `BT Player`
+   - δεν δημιουργείται αυτόματα official `BT Player` από club action
 
 2. Prepare Structure
-   - μετατρέπει το club preset σε πραγματικό `format_definition.stages`
-   - δημιουργεί `bt-event`, φάσεις και πρώτους αγώνες μέσω του υπάρχοντος generator
+   - μετατρέπει το club preset σε απλή local δομή αγώνων για το συγκεκριμένο τουρνουά
+   - για club-created tournaments η αρχική υλοποίηση αποθηκεύει participants, matches και standings στο `tournament.format_definition.clubRuntime`
+   - δεν απαιτείται `bt-event` για να τρέξει εσωτερικό club tournament
 
 3. Matches / Results
    - club-scoped προβολή αγώνων
    - καταχώρηση βασικού αποτελέσματος
-   - υπολογισμός βαθμολογίας φάσης
+   - υπολογισμός βαθμολογίας φάσης μέσα στο local runtime
+
+Τρέχουσα απόφαση υλοποίησης:
+
+- Τα club-created tournaments μπορούν να τρέξουν με `club-player-membership` participants, ακόμα και όταν δεν υπάρχει linked `BT Player`.
+- Τα αποτελέσματα local-only παικτών παραμένουν στο club tournament runtime και δεν γράφονται στα official BT statistics.
+- Αν ένας participant έχει linked `BT Player`, η πληροφορία κρατιέται στο runtime για μελλοντική σύνδεση με overall/player-account statistics.
+- Δεν δημιουργούμε hidden ή placeholder `BT Player` records για να ξεπεράσουμε περιορισμούς του engine.
+- Μελλοντικό backend task: ενιαίο participant identity model που να μπορεί να δείχνει σε `bt-player`, `player-account` ή `club-player-membership`, ώστε το local runtime να αντικατασταθεί από κανονικό shared engine model.
 
 Προσωρινός τεχνικός περιορισμός:
 
-- το σημερινό `tournament-participant` και `bt-group` model δείχνουν σε `bt-player`
-- local-only club players δεν μπορούν ακόμη να μπουν σε generated matches χωρίς επέκταση του engine/model
-- επόμενο backend task: να υποστηριχθεί participant identity που μπορεί να είναι `bt-player`, `player-account` ή `club-player-membership`
-- μέχρι τότε το UI πρέπει να δείχνει καθαρά ποιοι παίκτες χρειάζονται BT Player link
+- Το υπάρχον official match engine παραμένει σχεδιασμένο γύρω από `bt-player` records.
+- Το club local runtime είναι bridge για να μπορούν τα clubs να τρέχουν εσωτερικά τουρνουά τώρα, χωρίς να ανοίξουμε ξανά το verified rules/statistics engine.
+- Official BT statistics γράφονται μόνο όταν υπάρξει ρητή, εγκεκριμένη σύνδεση με official `BT Player` και υλοποιηθεί το αντίστοιχο statistics sync.
 
 ### Federation Tournament Hosted In Clubs
 
