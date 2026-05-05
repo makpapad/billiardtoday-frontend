@@ -470,6 +470,9 @@ export const resolveTournamentEventSummary = async (
   const bySlug = await fetchTournamentEventSummaryBySlug(cleanValue);
   if (bySlug) return bySlug;
 
+  const byTournamentSlug = await fetchTournamentEventSummaryByTournamentSlug(cleanValue);
+  if (byTournamentSlug) return byTournamentSlug;
+
   return fetchTournamentEventSummaryById(cleanValue);
 };
 
