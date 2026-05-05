@@ -446,6 +446,7 @@ Default για internal club tournament:
 Αρχική υλοποίηση:
 
 - `/clubs/tournaments`
+- `/clubs/tournaments/[id]` για run/manage flow
 - scoped λίστα τουρνουά ανά club
 - οι `Club Owner` και `Club Manager` βλέπουν μόνο το δικό τους club
 - δεν υπάρχει επιλογή club για scoped club χρήστες
@@ -477,6 +478,28 @@ Default για club-created tournament:
 - `statisticsScope`: `player_account`
 - `ruleset_key`: default engine profile
 - advanced phase/rules editing να μην εμφανίζεται στο πρώτο wizard
+
+Αρχικό run flow:
+
+1. Players
+   - επιλογή παικτών από το club roster
+   - προσωρινά μπορούν να μπουν στο engine μόνο όσοι έχουν linked `BT Player`
+
+2. Prepare Structure
+   - μετατρέπει το club preset σε πραγματικό `format_definition.stages`
+   - δημιουργεί `bt-event`, φάσεις και πρώτους αγώνες μέσω του υπάρχοντος generator
+
+3. Matches / Results
+   - club-scoped προβολή αγώνων
+   - καταχώρηση βασικού αποτελέσματος
+   - υπολογισμός βαθμολογίας φάσης
+
+Προσωρινός τεχνικός περιορισμός:
+
+- το σημερινό `tournament-participant` και `bt-group` model δείχνουν σε `bt-player`
+- local-only club players δεν μπορούν ακόμη να μπουν σε generated matches χωρίς επέκταση του engine/model
+- επόμενο backend task: να υποστηριχθεί participant identity που μπορεί να είναι `bt-player`, `player-account` ή `club-player-membership`
+- μέχρι τότε το UI πρέπει να δείχνει καθαρά ποιοι παίκτες χρειάζονται BT Player link
 
 ### Federation Tournament Hosted In Clubs
 
