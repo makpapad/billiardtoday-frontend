@@ -38,7 +38,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   }
 
   const canonicalSlug = buildTournamentSlug(
-    "",
+    summary.source === "club_tournament"
+      ? summary.canonicalId || summary.tournamentSlug || summary.documentId
+      : "",
     summary.title,
     summary.season,
   );

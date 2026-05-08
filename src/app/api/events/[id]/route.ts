@@ -141,6 +141,245 @@ const buildParticipantPlayerSnapshot = (
     }
 }
 
+const resolveClubTournamentDocumentId = (value: string): string | null => {
+    const trimmed = String(value || '').trim()
+    if (trimmed.startsWith('club-tournament:')) {
+        return trimmed.slice('club-tournament:'.length).trim() || null
+    }
+    if (trimmed.startsWith('club-tournament-')) {
+        return trimmed.slice('club-tournament-'.length).trim() || null
+    }
+    return null
+}
+
+const readDateYear = (value: unknown): number | null => {
+    if (typeof value !== 'string' || !value.trim()) return null
+    const date = new Date(value)
+    if (!Number.isNaN(date.getTime())) return date.getFullYear()
+    const match = value.match(/\b(\d{4})\b/)
+    return match ? Number(match[1]) : null
+}
+
+const readString = (value: unknown): string | null => {
+    const cleaned = String(value || '').trim()
+    return cleaned || null
+}
+
+const groupNumberFromLabel = (value: unknown, fallback: number): number => {
+    const label = typeof value === 'string' ? value : ''
+    const match = label.match(/\d+/)
+    return match ? Number(match[0]) : fallback
+}
+
+const getClubRuntime = (tournament: Record<string, unknown>) => {
+    const formatDefinition = asObject(tournament.format_definition) ?? {}
+    return asObject(formatDefinition.clubRuntime) ?? {}
+}
+
+const buildClubRuntimePlayer = (
+    participantById: Map<string, Record<string, unknown>>,
+    participantId: unknown,
+    fallbackName: unknown,
+    fallbackDocumentId: unknown,
+): Record<string, unknown> => {
+    const participantKey = readString(participantId)
+    const participant = participantKey ? participantById.get(participantKey) : null
+    const displayName =
+        readString(participant?.displayName) ??
+        readString(participant?.btPlayerName) ??
+        readString(fallbackName) ??
+        'Club player'
+    const documentId =
+        readString(participant?.btPlayerDocumentId) ??
+        readString(participant?.membershipDocumentId) ??
+        readString(fallbackDocumentId) ??
+        participantKey ??
+        displayName
+
+    return {
+        id: null,
+        documentId,
+        full_name: displayName,
+        full_name_en: displayName,
+        country: readString(participant?.country),
+    }
+}
+
+const mapClubRuntimeMatch = (
+    match: Record<string, unknown>,
+    index: number,
+    participantById: Map<string, Record<string, unknown>>,
+) => {
+    const player1Source = asObject(match.player1) ?? {}
+    const player2Source = asObject(match.player2) ?? {}
+    const groupNumber = groupNumberFromLabel(match.group_label, 1)
+
+    return {
+        id: readString(match.documentId) ?? readString(match.id) ?? `club-match-${index + 1}`,
+        documentId: readString(match.documentId) ?? readString(match.id) ?? `club-match-${index + 1}`,
+        number: groupNumber,
+        date_time: readString(match.date_time),
+        player1_points: toNumber(match.player1_points) ?? 0,
+        player1_match_points: toNumber(match.player1_match_points) ?? 0,
+        player1_innings: toNumber(match.player1_innings) ?? 0,
+        player1_high_run: toNumber(match.player1_high_run) ?? 0,
+        player1_high_run_2: toNumber(match.player1_high_run2) ?? toNumber(match.player1_high_run_2) ?? 0,
+        player2_points: toNumber(match.player2_points) ?? 0,
+        player2_match_points: toNumber(match.player2_match_points) ?? 0,
+        player2_innings: toNumber(match.player2_innings) ?? 0,
+        player2_high_run: toNumber(match.player2_high_run) ?? 0,
+        player2_high_run_2: toNumber(match.player2_high_run2) ?? toNumber(match.player2_high_run_2) ?? 0,
+        match_number: toNumber(match.match_number) ?? index + 1,
+        round: readString(match.round),
+        bracket_type: readString(match.bracket_type),
+        global_match_number: toNumber(match.global_match_number),
+        winner_to_global_match_number: toNumber(match.winner_to_global_match_number),
+        winner_to_slot: toNumber(match.winner_to_slot),
+        loser_to_global_match_number: toNumber(match.loser_to_global_match_number),
+        loser_to_slot: toNumber(match.loser_to_slot),
+        inningsDetail: match.inningsDetail,
+        matchSheetJson: match.matchSheetJson,
+        player1: buildClubRuntimePlayer(
+            participantById,
+            match.player1ParticipantId,
+            player1Source.full_name,
+            match.player1MembershipDocumentId,
+        ),
+        player2: buildClubRuntimePlayer(
+            participantById,
+            match.player2ParticipantId,
+            player2Source.full_name,
+            match.player2MembershipDocumentId,
+        ),
+    }
+}
+
+const mapClubRuntimeStanding = (
+    standing: Record<string, unknown>,
+    index: number,
+    participantById: Map<string, Record<string, unknown>>,
+) => {
+    const player = buildClubRuntimePlayer(
+        participantById,
+        standing.membershipDocumentId,
+        standing.displayName,
+        standing.membershipDocumentId,
+    )
+
+    return {
+        id: readString(standing.documentId) ?? `club-standing-${index + 1}`,
+        documentId: readString(standing.documentId) ?? `club-standing-${index + 1}`,
+        match_points: toNumber(standing.match_points) ?? 0,
+        points: toNumber(standing.points) ?? 0,
+        innings: toNumber(standing.innings) ?? 0,
+        best_average: toNumber(standing.best_average) ?? 0,
+        high_run: toNumber(standing.high_run) ?? 0,
+        high_run_2: toNumber(standing.high_run2) ?? toNumber(standing.high_run_2) ?? 0,
+        group_number: groupNumberFromLabel(standing.group_label, 1),
+        group_position: toNumber(standing.position) ?? index + 1,
+        final_position: toNumber(standing.final_position),
+        source: 'club-runtime',
+        player,
+    }
+}
+
+const buildClubTournamentEventPayload = async (
+    clubTournamentDocumentId: string,
+    headers: HeadersInit,
+) => {
+    const queryParams = new URLSearchParams()
+    queryParams.set('filters[documentId][$eq]', clubTournamentDocumentId)
+    queryParams.set('pagination[limit]', '1')
+    queryParams.set('fields[0]', 'documentId')
+    queryParams.set('fields[1]', 'title')
+    queryParams.set('fields[2]', 'slug')
+    queryParams.set('fields[3]', 'startDate')
+    queryParams.set('fields[4]', 'endDate')
+    queryParams.set('fields[5]', 'game_type')
+    queryParams.set('fields[6]', 'format_definition')
+    queryParams.set('fields[7]', 'tournament_status')
+
+    const url = `${STRAPI_URL}/api/tournaments?${queryParams.toString()}`
+    const res = await fetch(url, {
+        cache: 'no-store',
+        headers,
+    })
+    if (!res.ok) return null
+
+    const payload = (await res.json().catch(() => null)) as { data?: unknown[] } | null
+    const tournament = asObject(Array.isArray(payload?.data) ? payload.data[0] : null)
+    if (!tournament) return null
+
+    const runtime = getClubRuntime(tournament)
+    const participants = asArray(runtime.participants)
+    const participantById = new Map(
+        participants
+            .map((participant) => [readString(participant.id), participant] as const)
+            .filter((entry): entry is readonly [string, Record<string, unknown>] => Boolean(entry[0])),
+    )
+    const stages = asArray(runtime.stages).map((stage, stageIndex) => {
+        const stageType = readString(stage.stage_type) ?? readString(stage.type)
+        const stageDocumentId =
+            readString(stage.documentId) ??
+            readString(stage.id) ??
+            `club-stage-${stageIndex + 1}`
+        const matches = asArray(stage.matches).map((match, matchIndex) =>
+            mapClubRuntimeMatch(match, matchIndex, participantById),
+        )
+        const standings = asArray(stage.standings).map((standing, standingIndex) =>
+            mapClubRuntimeStanding(standing, standingIndex, participantById),
+        )
+
+        return {
+            id: stageDocumentId,
+            documentId: stageDocumentId,
+            title: readString(stage.title) ?? `Stage ${stageIndex + 1}`,
+            start_date: null,
+            end_date: null,
+            order: toNumber(stage.order) ?? stageIndex + 1,
+            is_final: stageIndex === asArray(runtime.stages).length - 1,
+            stage_type: stageType,
+            timetable_config: null,
+            groups: matches,
+            results: standings,
+        }
+    })
+    const startDate = readString(tournament.startDate)
+    const endDate = readString(tournament.endDate)
+
+    return {
+        data: {
+            id: `club-tournament:${clubTournamentDocumentId}`,
+            documentId: `club-tournament:${clubTournamentDocumentId}`,
+            title: readString(tournament.title) ?? 'Club tournament',
+            season: readDateYear(startDate),
+            start_date: startDate,
+            end_date: endDate,
+            game_type: readString(tournament.game_type),
+            final_standings_published: true,
+            final_standings_published_at: null,
+            event_stages: stages,
+            results_final: [],
+            timetable_slots: [],
+            tournament: {
+                tournament_status: readString(tournament.tournament_status),
+                participants: participants.map((participant) => ({
+                    participant_status: readString(participant.participant_status) ?? 'confirmed',
+                    registration_date: null,
+                    ranking: toNumber(participant.seed),
+                    seed: toNumber(participant.seed),
+                    player: buildClubRuntimePlayer(
+                        participantById,
+                        participant.id,
+                        participant.displayName,
+                        participant.membershipDocumentId,
+                    ),
+                })),
+            },
+        },
+    }
+}
+
 const mergeLiveStageMatches = (
     baseMatches: Record<string, unknown>[],
     liveMatches: Record<string, unknown>[],
@@ -531,6 +770,21 @@ export async function GET(
         const headers: HeadersInit = {}
         if (STRAPI_API_TOKEN) {
             headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`
+        }
+
+        const clubTournamentDocumentId = resolveClubTournamentDocumentId(documentId)
+        if (clubTournamentDocumentId) {
+            const clubPayload = await buildClubTournamentEventPayload(
+                clubTournamentDocumentId,
+                headers,
+            )
+            if (!clubPayload) {
+                return NextResponse.json(
+                    { error: 'Club tournament event data not found' },
+                    { status: 404 },
+                )
+            }
+            return NextResponse.json(clubPayload, { status: 200 })
         }
 
         let queryParams = buildQueryParams()

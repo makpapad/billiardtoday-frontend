@@ -217,6 +217,21 @@ export function TournamentListSection({
       embedded,
     );
 
+  const tournamentHrefForItem = (item: Tournament) => {
+    if (item.source === "club_tournament") {
+      return `${embedded ? "/embed" : ""}/tournaments/events?eventId=${encodeURIComponent(
+        `club-tournament:${item.documentId}`,
+      )}`;
+    }
+
+    return tournamentEventHref(
+      item.documentId,
+      item.title,
+      item.season,
+      resolveTournamentCanonicalId(item),
+    );
+  };
+
   const handlePageChange = (nextPage: number) => {
     setCurrentPage(nextPage);
   };
@@ -369,12 +384,7 @@ export function TournamentListSection({
                         {useTitleLink ? (
                           canOpenTournament(item) ? (
                             <Link
-                              href={tournamentEventHref(
-                                item.documentId,
-                                item.title,
-                                item.season,
-                                resolveTournamentCanonicalId(item),
-                              )}
+                              href={tournamentHrefForItem(item)}
                               className="transition hover:text-sky-700"
                             >
                               {item.title}
@@ -412,12 +422,7 @@ export function TournamentListSection({
                   canOpenTournament(item) ? (
                     <div className="mt-5">
                       <Link
-                        href={tournamentEventHref(
-                          item.documentId,
-                          item.title,
-                          item.season,
-                          resolveTournamentCanonicalId(item),
-                        )}
+                        href={tournamentHrefForItem(item)}
                         className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                       >
                         View tournament
@@ -478,12 +483,7 @@ export function TournamentListSection({
                           {useTitleLink ? (
                             canOpenTournament(item) ? (
                               <Link
-                                href={tournamentEventHref(
-                                  item.documentId,
-                                  item.title,
-                                  item.season,
-                                  resolveTournamentCanonicalId(item),
-                                )}
+                                href={tournamentHrefForItem(item)}
                                 className="transition hover:text-sky-700"
                               >
                                 {item.title}
@@ -524,12 +524,7 @@ export function TournamentListSection({
                           <td className="px-6 py-4 text-sm">
                             {canOpenTournament(item) ? (
                               <Link
-                                href={tournamentEventHref(
-                                  item.documentId,
-                                  item.title,
-                                  item.season,
-                                  resolveTournamentCanonicalId(item),
-                                )}
+                                href={tournamentHrefForItem(item)}
                                 className="font-semibold text-sky-700 transition hover:text-sky-900"
                               >
                                 View tournament

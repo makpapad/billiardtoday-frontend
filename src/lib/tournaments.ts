@@ -7,6 +7,8 @@ export type TournamentEventStageSummary = {
 
 export type TournamentEventSummary = {
   documentId: string;
+  source?: "bt_event" | "club_tournament";
+  canonicalId?: string | null;
   tournamentSlug: string | null;
   title: string;
   description: string | null;
@@ -98,6 +100,14 @@ const readString = (value: unknown): string | null => {
   return cleaned || null;
 };
 
+const readDateYear = (value: unknown): number | null => {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  if (!Number.isNaN(date.getTime())) return date.getFullYear();
+  const match = value.match(/\b(\d{4})\b/);
+  return match ? Number(match[1]) : null;
+};
+
 const unwrapEntitySource = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== "object") return {};
   const candidate = value as Record<string, unknown>;
@@ -180,6 +190,102 @@ const normalizeStage = (value: unknown, index: number): TournamentEventStageSumm
   };
 };
 
+const readClubRuntimeStages = (tournament: Record<string, unknown>) => {
+  const formatDefinition = tournament.format_definition;
+  const formatRecord =
+    formatDefinition && typeof formatDefinition === "object"
+      ? (formatDefinition as Record<string, unknown>)
+      : {};
+  const runtime =
+    formatRecord.clubRuntime && typeof formatRecord.clubRuntime === "object"
+      ? (formatRecord.clubRuntime as Record<string, unknown>)
+      : {};
+  return Array.isArray(runtime.stages) ? runtime.stages : [];
+};
+
+const normalizeClubTournamentSummary = (
+  tournament: Record<string, unknown>,
+): TournamentEventSummary | null => {
+  const documentId = readString(tournament.documentId);
+  if (!documentId) return null;
+
+  const clubSource = unwrapEntitySource(tournament.club);
+  const clubLogoSource = unwrapEntitySource(clubSource.logo);
+  const startDate = readString(tournament.startDate) ?? readString(tournament.start_date);
+  const endDate = readString(tournament.endDate) ?? readString(tournament.end_date);
+  const title = readString(tournament.title) || "Club tournament";
+
+  return {
+    documentId: `club-tournament:${documentId}`,
+    source: "club_tournament",
+    canonicalId: readString(tournament.slug) || documentId,
+    tournamentSlug: readString(tournament.slug),
+    title,
+    description: readString(tournament.description),
+    season: readDateYear(startDate),
+    startDate,
+    endDate,
+    gameType: readString(tournament.game_type),
+    tournamentTitle: title,
+    clubDocumentId: readString(clubSource.documentId),
+    clubName:
+      readString(clubSource.name) ??
+      readString(clubSource.title),
+    clubCity: readString(clubSource.city),
+    clubCountry: readString(clubSource.country),
+    venueName: null,
+    venueCity: null,
+    venueCountry: null,
+    organizerType: "club",
+    organizerLogoUrl: readString(clubLogoSource.url),
+    organizerLogoName: readString(clubLogoSource.name),
+    category: readString(tournament.category),
+    rankingSeriesDocumentId: null,
+    rankingSeriesSlug: null,
+    rankingSeriesTitle: null,
+    stages: readClubRuntimeStages(tournament).map((stage, index) =>
+      normalizeStage(stage, index),
+    ),
+  };
+};
+
+const fetchClubTournamentSummaryBySlug = async (
+  tournamentSlug: string,
+): Promise<TournamentEventSummary | null> => {
+  const cleanSlug = slugify(String(tournamentSlug || "").trim());
+  if (!cleanSlug) return null;
+
+  const params = new URLSearchParams();
+  params.set("pagination[limit]", "1");
+  params.set("filters[slug][$eq]", cleanSlug);
+  params.set("fields[0]", "documentId");
+  params.set("fields[1]", "title");
+  params.set("fields[2]", "slug");
+  params.set("fields[3]", "startDate");
+  params.set("fields[4]", "endDate");
+  params.set("fields[5]", "game_type");
+  params.set("fields[6]", "description");
+  params.set("fields[7]", "category");
+  params.set("fields[8]", "format_definition");
+  params.set("populate[club][fields][0]", "documentId");
+  params.set("populate[club][fields][1]", "name");
+  params.set("populate[club][fields][2]", "city");
+  params.set("populate[club][fields][3]", "country");
+  params.set("populate[club][populate][logo][fields][0]", "url");
+  params.set("populate[club][populate][logo][fields][1]", "name");
+
+  const response = await fetchWithOptionalAuth(
+    `/api/tournaments?${params.toString()}`,
+    { retryWithoutAuth: true },
+  );
+  if (!response?.ok) return null;
+
+  const json = await response.json().catch(() => null);
+  const first = Array.isArray(json?.data) ? json.data[0] : null;
+  const source = unwrapEntitySource(first);
+  return normalizeClubTournamentSummary(source);
+};
+
 export const buildTournamentSlug = (
   canonicalId: string,
   title: string,
@@ -231,7 +337,9 @@ const fetchTournamentEventSummaryByTournamentSlug = async (
         }
       : (first as Record<string, unknown> | null);
   const documentId = readString(source?.documentId);
-  return documentId ? fetchTournamentEventSummaryById(documentId) : null;
+  return documentId
+    ? fetchTournamentEventSummaryById(documentId)
+    : fetchClubTournamentSummaryBySlug(cleanSlug);
 };
 
 const fetchTournamentEventSummaryById = async (
@@ -366,6 +474,8 @@ const fetchTournamentEventSummaryById = async (
 
   return {
     documentId: readString(event.documentId) || cleanId,
+    source: "bt_event",
+    canonicalId: null,
     tournamentSlug: readString((tournamentSource as Record<string, unknown>).slug),
     title: readString(event.title) || "Tournament Event",
     description: readString((tournamentSource as Record<string, unknown>).description),
@@ -472,6 +582,9 @@ export const resolveTournamentEventSummary = async (
 
   const byTournamentSlug = await fetchTournamentEventSummaryByTournamentSlug(cleanValue);
   if (byTournamentSlug) return byTournamentSlug;
+
+  const byClubTournamentSlug = await fetchClubTournamentSummaryBySlug(cleanValue);
+  if (byClubTournamentSlug) return byClubTournamentSlug;
 
   return fetchTournamentEventSummaryById(cleanValue);
 };

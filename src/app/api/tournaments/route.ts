@@ -75,7 +75,7 @@ function normalizeClubTournamentItem(item: any) {
     id: `club-tournament:${item?.documentId ?? item?.id}`,
     documentId: item?.documentId ?? String(item?.id ?? ""),
     source: "club_tournament",
-    canOpen: false,
+    canOpen: true,
     title: item?.title ?? "Club tournament",
     game_type: item?.game_type ?? null,
     season: readDateYear(startDate),
