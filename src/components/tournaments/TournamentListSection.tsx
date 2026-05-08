@@ -218,12 +218,6 @@ export function TournamentListSection({
     );
 
   const tournamentHrefForItem = (item: Tournament) => {
-    if (item.source === "club_tournament") {
-      return `${embedded ? "/embed" : ""}/tournaments/events?eventId=${encodeURIComponent(
-        `club-tournament:${item.documentId}`,
-      )}`;
-    }
-
     return tournamentEventHref(
       item.documentId,
       item.title,
