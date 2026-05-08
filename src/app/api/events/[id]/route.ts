@@ -385,6 +385,12 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][groups][fields][22]', 'matchSheetJson')
             queryParams.set('populate[event_stages][populate][groups][fields][23]', 'player1_match_points_override')
             queryParams.set('populate[event_stages][populate][groups][fields][24]', 'player2_match_points_override')
+            queryParams.set('populate[event_stages][populate][groups][fields][25]', 'player1_local_key')
+            queryParams.set('populate[event_stages][populate][groups][fields][26]', 'player1_local_name')
+            queryParams.set('populate[event_stages][populate][groups][fields][27]', 'player1_local_country')
+            queryParams.set('populate[event_stages][populate][groups][fields][28]', 'player2_local_key')
+            queryParams.set('populate[event_stages][populate][groups][fields][29]', 'player2_local_name')
+            queryParams.set('populate[event_stages][populate][groups][fields][30]', 'player2_local_country')
 
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')
@@ -414,6 +420,9 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][results][fields][10]', 'qualified')
             queryParams.set('populate[event_stages][populate][results][fields][11]', 'qualification_type')
             queryParams.set('populate[event_stages][populate][results][fields][12]', 'source')
+            queryParams.set('populate[event_stages][populate][results][fields][13]', 'local_player_key')
+            queryParams.set('populate[event_stages][populate][results][fields][14]', 'local_player_name')
+            queryParams.set('populate[event_stages][populate][results][fields][15]', 'local_player_country')
 
             queryParams.set('populate[event_stages][populate][results][populate][player][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][results][populate][player][fields][1]', 'documentId')

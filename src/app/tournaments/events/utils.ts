@@ -143,8 +143,22 @@ export const normalizeGroup = (
 ): NormalizedGroupMatch => {
   const normalized = normalizeEntity<StrapiGroup>(group, fallbackId);
 
-  const player1 = normalizePlayer(normalized.player1, `${normalized.id}-p1`);
-  const player2 = normalizePlayer(normalized.player2, `${normalized.id}-p2`);
+  const localPlayer = (side: "player1" | "player2") => {
+    const key = (normalized as Record<string, unknown>)[`${side}_local_key`];
+    if (typeof key !== "string" || !key.trim()) return null;
+    const name = (normalized as Record<string, unknown>)[`${side}_local_name`];
+    const country = (normalized as Record<string, unknown>)[`${side}_local_country`];
+    return {
+      id: null,
+      documentId: key,
+      full_name: typeof name === "string" ? name : "Club player",
+      full_name_en: typeof name === "string" ? name : "Club player",
+      country: typeof country === "string" ? country : null,
+    };
+  };
+
+  const player1 = normalizePlayer(normalized.player1 ?? localPlayer("player1"), `${normalized.id}-p1`);
+  const player2 = normalizePlayer(normalized.player2 ?? localPlayer("player2"), `${normalized.id}-p2`);
 
   return {
     id: normalized.id,
@@ -193,7 +207,26 @@ export const normalizeResult = (
 ): NormalizedStageResult => {
   const normalized = normalizeEntity<StrapiResult>(result, fallbackId);
   const normalizedRecord = normalized as typeof normalized & { source?: unknown };
-  const player = normalizePlayer(normalized.player, `${normalized.id}-player`);
+  const localPlayer =
+    typeof (normalized as Record<string, unknown>).local_player_key === "string"
+      ? {
+          id: null,
+          documentId: (normalized as Record<string, unknown>).local_player_key,
+          full_name:
+            typeof (normalized as Record<string, unknown>).local_player_name === "string"
+              ? (normalized as Record<string, unknown>).local_player_name
+              : "Club player",
+          full_name_en:
+            typeof (normalized as Record<string, unknown>).local_player_name === "string"
+              ? (normalized as Record<string, unknown>).local_player_name
+              : "Club player",
+          country:
+            typeof (normalized as Record<string, unknown>).local_player_country === "string"
+              ? (normalized as Record<string, unknown>).local_player_country
+              : null,
+        }
+      : null;
+  const player = normalizePlayer(normalized.player ?? localPlayer, `${normalized.id}-player`);
 
   return {
     id: normalized.id,
