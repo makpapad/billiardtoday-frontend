@@ -1,373 +1,249 @@
-# Club Tournament Public Detail Handoff
+# Club Tournament Public Results Handoff
 
 Ημερομηνία: 2026-05-06
 
-Αυτό το document είναι handoff για να συνεχιστεί αργότερα η δουλειά από άλλο μηχάνημα.
+Τελευταία διόρθωση: 2026-05-08
 
-## Context
+Αυτό το document αντικαθιστά την προηγούμενη λανθασμένη κατεύθυνση για ξεχωριστό public detail renderer των club-local tournaments.
 
-Ξεκίνησε το νέο club SaaS scope στο admin και στο public frontend.
+## Διορθωμένη απόφαση
 
-Έχουν ήδη υλοποιηθεί:
+Τα αποτελέσματα των club tournaments πρέπει να δημοσιεύονται με τον ίδιο τρόπο που δημοσιεύονται τα επίσημα tournaments.
 
-- club dashboard στο admin
-- club players / memberships
-- club tournament creation wizard
-- club tournament run page
-- επιλογή παικτών με smart search
-- group setup πιο κοντά στη λογική του internal admin
-- αποστολή αγώνα σε club screens
-- χρήση του shared `MatchEditorModal` για καταχώρηση / διόρθωση αποτελέσματος σε club tournament matches
-- εμφάνιση club-local tournaments στη public σελίδα του club
+Δεν θέλουμε δεύτερο public results model.
 
-Σημαντικό: Δεν αλλάχτηκαν production env files.
+Σωστή κατεύθυνση:
 
-## Latest Commits
+- το public frontend διαβάζει published tournament results από `bt-events`
+- τα official tournaments και τα club-published tournaments ανοίγουν από την ίδια public detail route
+- τα groups, matches, standings και results εμφανίζονται από το ίδιο data shape
+- το club-local JSON runtime δεν είναι public results source
+- το club-local JSON runtime μπορεί να μείνει μόνο σαν προσωρινό draft/manage state μέχρι να παραχθεί κανονικό event structure
 
-Admin repo:
+## Τι ήταν λάθος στο προηγούμενο handoff
 
-- `D:\Projects\2-billiardtoday-admin`
-- commit: `79c36a3 Use match editor modal for club results`
+Το προηγούμενο document πρότεινε:
 
-Public frontend repo:
-
-- `D:\Projects\4-billiardtoday-frontend`
-- commit: `30c34ad Show club-local tournaments on club pages`
-
-Έγινε deploy με:
-
-- `bt-sync admin`
-- `bt-sync frontend`
-
-## Current Problem
-
-Τα club-local tournaments εμφανίζονται πλέον στη σελίδα του club, αλλά δεν ανοίγουν σε αναλυτική public σελίδα όπως τα official tournaments.
-
-Ο λόγος είναι ότι το public detail page των tournaments είναι φτιαγμένο γύρω από `bt-events`.
-
-Σήμερα:
-
-- official tournament detail: φορτώνει από `bt-events`
-- club-local tournament list item: φορτώνει από `tournaments`
-- club-local tournament detail: δεν υπάρχει ακόμα
-
-Άρα ένα club-local tournament μπορεί να εμφανιστεί στη λίστα, αλλά δεν έχει ακόμη public detail route που να ξέρει να το διαβάσει.
-
-## Relevant Files
-
-Public tournament detail route:
-
-- `src/app/tournaments/[slug]/page.tsx`
-
-Tournament summary resolver:
-
-- `src/lib/tournaments.ts`
-
-Public club / tournament list data:
-
-- `src/lib/publicSiteData.ts`
-- `src/app/api/tournaments/route.ts`
-- `src/components/tournaments/TournamentListSection.tsx`
-
-Existing tournament detail component:
-
-- `src/components/tournaments/TournamentDetailPage.tsx`
-
-Existing event data API used by detail page:
-
-- `src/app/api/events/[id]/route.ts`
-- server-side detail page currently fetches:
-  - `http://127.0.0.1:3022/event-data/{eventDocumentId}`
-
-## Current Behavior
-
-`src/app/api/tournaments/route.ts` now supports `clubSlug`.
-
-For club pages it returns a merged list:
-
-- official `bt_event` rows
-- local `tournaments` rows without `bt_event`
-
-Local club tournaments are returned with:
-
-- `source: "club_tournament"`
-- `canOpen: false`
-
-This was intentional as a temporary safe state, because the detail page cannot yet render them correctly.
-
-## Desired Behavior
-
-Club-local tournaments should appear under the organizing club and should be clickable.
-
-When opened, they should show an analytical page similar to official tournaments:
-
-- title
-- dates
-- game type
-- organizer / club
-- phases
-- groups
-- matches
-- standings
-- results
-
-If the tournament has only local players without official BT Player links, it must still display correctly.
-
-Important distinction:
-
-- If a player is linked to a BT Player, results may later be written to official / overall statistics.
-- If a player is only club-local, results should remain visible inside that club tournament but should not be written to official BT statistics.
-
-## Product Decision
-
-Do not create fake `bt_event` records just to make club-local tournaments public.
-
-Correct direction:
-
-- keep official tournaments as `bt_event`
-- keep club-local tournaments as `tournaments`
-- make the public frontend support both data sources:
+- public support για δύο data sources:
   - `bt_event`
   - `club_tournament`
+- νέο public detail endpoint για `club_tournament`
+- renderer που θα διάβαζε `tournaments.format_definition.clubRuntime`
 
-This keeps the engine and public model honest.
+Αυτό δεν είναι σωστό για παραγωγή.
 
-## Implementation Plan
+Αν το public site αρχίσει να δημοσιεύει αποτελέσματα από JSON μέσα στο `tournaments.format_definition`, τότε:
 
-### 1. Extend the public tournament resolver
+- θα έχουμε δύο διαφορετικούς τρόπους δημοσίευσης αποτελεσμάτων
+- τα club tournaments δεν θα έχουν ίδια συμπεριφορά με τα official tournaments
+- θα δυσκολέψουν τα live results, τα standings, τα brackets, το SEO και τα player statistics
+- θα χρειαστεί αργότερα ακριβό refactor
 
-File:
+## Κανόνας δημοσίευσης
 
-- `src/lib/tournaments.ts`
+Ένα club tournament εμφανίζεται δημόσια ως αναλυτικό tournament μόνο όταν έχει κανονικό `bt_event`.
 
-Today `resolveTournamentEventSummary()` only resolves from `bt-events`.
+Το public club tournaments section πρέπει να δείχνει μόνο rows που έρχονται από:
 
-Add fallback lookup for club-local tournaments:
+```text
+bt_events
+```
 
-- by `tournament.slug`
-- by `tournament.documentId`
-- optionally by canonical slug if needed
+με relation:
 
-Suggested new helper:
+```text
+bt_events.tournament.club
+```
 
-- `fetchClubTournamentSummaryBySlug(slug: string)`
-- `fetchClubTournamentSummaryById(documentId: string)`
+Δεν πρέπει να εμφανίζει ως public result page τα `tournaments` που δεν έχουν `bt_event`.
 
-The helper should fetch from:
+## Ρόλος του `tournaments`
 
-- `/api/tournaments`
+Ο πίνακας `tournaments` παραμένει το parent record.
 
-and populate:
+Για club tournaments:
 
-- `club`
-- `venue`
-- `stages`
-- relations needed for matches / groups if available
+```text
+tournaments.organizer_type = "club"
+tournaments.club = relation προς clubs
+tournaments.bt_event = relation προς bt_events όταν το tournament δημοσιευτεί/παραχθεί
+```
 
-The returned shape should match `TournamentEventSummary` as much as possible, with an added source flag if needed:
+Το `format_definition` μπορεί να χρησιμοποιείται για:
 
-- `source: "club_tournament"`
+- wizard setup
+- draft επιλογές διοργάνωσης
+- προσωρινό club manage/runtime state
+- backward compatibility για τα πρώτα test tournaments
 
-If changing the `TournamentEventSummary` type is too risky, add an optional field:
+Δεν πρέπει να είναι το τελικό public results store.
 
-- `source?: "bt_event" | "club_tournament"`
+## Σωστό public club tournaments section
 
-### 2. Build a summary mapper for club-local tournaments
+Στο public club page:
 
-Map Strapi `tournaments` fields to `TournamentEventSummary`:
+```text
+/clubs/{clubSlug}
+```
 
-- `documentId`
-- `slug`
-- `title`
-- `description`
-- `startDate`
-- `endDate`
-- `game_type`
-- `season`
-- `club.name`
-- `club.city`
-- `club.country`
-- `venue.name`
-- `venue.city`
-- `venue.country`
+το section `Club tournaments` πρέπει να φορτώνει μόνο tournaments που έχουν published event data.
 
-For title:
+Η σωστή πηγή είναι:
 
-- use `tournament.title`
+```text
+GET /api/tournaments?clubSlug={clubSlug}
+```
 
-For `tournamentTitle`:
+και αυτό το endpoint πρέπει να επιστρέφει μόνο normalized `bt_event` rows για το συγκεκριμένο club.
 
-- also use `tournament.title`
+Δεν πρέπει να κάνει merge `tournaments` rows χωρίς `bt_event`.
 
-For stages:
+Αν ένα club έχει μόνο draft/local tournaments, το public section πρέπει να δείχνει empty state:
 
-- use existing club tournament phases / generated stages if exposed
-- if not available yet, return an empty stages array and let the detail UI show a graceful empty state
+```text
+No published tournaments found for this club.
+```
 
-### 3. Make detail page canonical slug work for both sources
+## Detail pages
 
-File:
+Η detail page παραμένει η ίδια:
 
-- `src/app/tournaments/[slug]/page.tsx`
+```text
+/tournaments/{slug}
+```
 
-Current canonical slug is built from:
+και συνεχίζει να δουλεύει με:
 
-- empty canonical id
-- `summary.title`
-- `summary.season`
+```text
+src/app/tournaments/[slug]/page.tsx
+src/lib/tournaments.ts
+src/components/tournaments/TournamentDetailPage.tsx
+```
 
-That is okay for old official pages, but for club-local tournaments we should prefer their real `tournamentSlug`.
+Δεν πρέπει να φτιαχτεί ξεχωριστό:
 
-For club-local tournaments:
+```text
+/club-tournament-data/{id}
+/api/club-tournaments/[id]/public-data
+```
 
-- canonical URL should probably be `/tournaments/{tournament.slug}`
+εκτός αν στο μέλλον αποφασιστεί να γίνει μόνο σαν internal migration/debug endpoint, όχι σαν public canonical source.
 
-For official tournaments:
+## Live αποτελέσματα
 
-- keep existing behavior unless changing it is required.
+Τα live αποτελέσματα πρέπει να έρχονται από το ίδιο operational/live layer που χρησιμοποιούν και τα official matches.
 
-### 4. Add public data endpoint for club-local tournament details
+Για αγώνα που παίζεται σε club screen:
 
-The current detail page fetches:
+```text
+scoreboard_sessions
+```
 
-- `/event-data/{btEventDocumentId}`
+είναι το live source.
 
-That endpoint is for official `bt-events`.
+Όταν τελειώνει ο αγώνας, το αποτέλεσμα πρέπει να καταλήγει στο κανονικό match/result structure:
 
-Club-local tournaments need one of these:
+```text
+bt_groups
+bt_results / calculated standings
+```
 
-Option A:
+ή στο αντίστοιχο υπάρχον official engine path.
 
-- create a new endpoint:
-  - `/api/club-tournaments/[id]/public-data`
-  - or `/club-tournament-data/{tournamentDocumentId}` if following the current internal style
+Δεν πρέπει το public live/results UI να βασίζεται σε parsing του `format_definition.clubRuntime`.
 
-Option B:
+## Club-local players
 
-- extend existing `/event-data/[eventId]` logic to also recognize club tournament document ids
+Τα club tournaments μπορούν να δεχτούν:
 
-Preferred:
+- official BT Players
+- player accounts
+- club-local/guest players
 
-- Option A, because it keeps official event data and club-local tournament data separate.
+Για public προβολή αποτελέσματος, όλοι πρέπει να εμφανίζονται κανονικά στο match.
 
-The public data endpoint should return a shape close to `EventApiResponse`, because `TournamentDetailPage` already knows how to render that.
+Για statistics:
 
-Needed data:
+- αν participant είναι linked σε BT Player, το αποτέλεσμα μπορεί να μετρήσει στα αντίστοιχα official/overall stats όταν το rules policy το επιτρέπει
+- αν participant είναι μόνο club-local/guest, το αποτέλεσμα εμφανίζεται στο tournament αλλά δεν γράφεται σε official BT Player statistics
 
-- stages / phases
-- groups
-- matches
-- players
-- results
-- standings
+Αυτό πρέπει να λυθεί στο participant/result model του engine, όχι με ξεχωριστό public renderer.
 
-### 5. Update `TournamentDetailPage` only where needed
+## Απαιτούμενο backend/admin refactor
 
-File:
+Το σημερινό club-local runtime είναι χρήσιμο ως bridge για να δοκιμαστεί το club UX.
 
-- `src/components/tournaments/TournamentDetailPage.tsx`
+Πριν ανοίξει μαζικά σε clubs, χρειάζεται refactor ώστε το `Prepare structure` ή το `Publish tournament` να δημιουργεί κανονικά:
 
-Try not to fork the whole page.
+```text
+bt_event
+bt_event_stages
+bt_groups
+bt_results / standings
+tournament_participants
+```
 
-Preferred approach:
+ή να χρησιμοποιεί τον ίδιο υπάρχοντα engine path που χρησιμοποιεί το internal admin.
 
-- keep one shared detail component
-- pass `summary.source`
-- pass `initialEventData` or `initialTournamentData` in a compatible shape
+Το club UI μπορεί να μείνει απλό/wizard-based, αλλά από κάτω πρέπει να γράφει στο ίδιο results model.
 
-If data shape can match `EventApiResponse`, the component may need very few changes.
+## Frontend αλλαγή που έγινε
 
-### 6. Make club-local list items clickable
+Το public endpoint:
 
-Files:
+```text
+src/app/api/tournaments/route.ts
+```
 
-- `src/app/api/tournaments/route.ts`
-- `src/components/tournaments/TournamentListSection.tsx`
-- `src/lib/publicSiteData.ts`
+διορθώθηκε ώστε, όταν υπάρχει `clubSlug`, να επιστρέφει μόνο `bt-events` filtered με:
 
-When detail support is ready:
+```text
+filters[tournament][club][slug][$eq] = clubSlug
+```
 
-- set `canOpen: true` for `source: "club_tournament"`
-- set href to `/tournaments/{tournament.slug}`
+και να μη συγχωνεύει πλέον `tournaments` χωρίς `bt_event`.
 
-For club page cards, `mapTournamentCard()` currently sets `href: null` if there is no `bt_event`.
+Τα public club pages ενημερώθηκαν ώστε το section να μιλά για published tournaments/results:
 
-Change it so local tournaments get:
+```text
+src/app/clubs/[slug]/page.tsx
+src/app/embed/clubs/[slug]/page.tsx
+```
 
-- `href: /tournaments/{tournament.slug}`
+## Verification
 
-only after the resolver/detail endpoint can handle them.
+Το σωστό αποτέλεσμα είναι:
 
-## Important Data Caveat
-
-Official tournaments and club-local tournaments may not have exactly the same backend structure.
-
-Before implementing the public detail endpoint, inspect actual Strapi records:
-
-- a club-local tournament with generated groups/matches
-- an official tournament with `bt_event`
-
-Compare where the following are stored:
-
-- phases / stages
-- group memberships
-- matches
-- match results
-- standings
-
-Do not assume that `bt_event` relations exist for club-local tournaments.
-
-## Expected Result
-
-After implementation:
-
-- club page lists both official and local club tournaments
-- local club tournaments are clickable
-- public detail page opens for local club tournaments
-- groups, matches and results are visible
-- local-only players display correctly
-- official BT statistics are not affected by local-only players
-
-## Suggested Verification
+- club page δείχνει μόνο tournaments που ανοίγουν σε public detail route
+- δεν εμφανίζονται JSON-only local draft tournaments σαν public results
+- όλα τα clickable tournament links οδηγούν σε `/tournaments/{slug}`
+- η detail page χρησιμοποιεί την υπάρχουσα official results παρουσίαση
+- τα groups/matches/results δημοσιεύονται με τον ίδιο τρόπο όπως τα official tournaments
 
 Local checks:
 
-- `npx tsc --noEmit --pretty false`
-- `npm run build`
+```bash
+npx tsc --noEmit --pretty false
+npm run build
+```
 
 Production deploy:
 
-- `bt-sync frontend`
+```bash
+bt-sync frontend
+```
 
 Smoke checks:
 
-- `https://www.billiardtoday.com/clubs/dev`
-- `https://www.billiardtoday.com/api/tournaments?clubSlug=dev&page=1&pageSize=10`
-- click/open a club-local tournament such as:
-  - `L' AMORTI OPEN`
-  - `test123`
-  - another current local tournament under club `dev`
+```text
+https://www.billiardtoday.com/clubs/dev
+https://www.billiardtoday.com/api/tournaments?clubSlug=dev&page=1&pageSize=10
+```
 
 Expected:
 
-- no 404
-- detail page renders
-- groups/matches/results appear if tournament structure has been prepared
-
-## Open Decision
-
-Public detail URL for club-local tournaments:
-
-Recommended:
-
-- `/tournaments/{tournament.slug}`
-
-Avoid:
-
-- `/clubs/{clubSlug}/tournaments/{slug}`
-
-Reason:
-
-- keeps public tournament URLs consistent with official tournaments
-- club relationship is already shown in the detail page
+- δεν υπάρχουν rows με `source: "club_tournament"`
+- όλα τα rows έχουν `source: "bt_event"`
+- όλα τα rows είναι clickable
+- τα results εμφανίζονται από το ίδιο public tournament detail UI
 

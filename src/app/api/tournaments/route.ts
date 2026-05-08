@@ -51,36 +51,11 @@ function emptyPayload(page: number, pageSize: number) {
   };
 }
 
-function readDateYear(value: unknown): number | null {
-  if (typeof value !== "string" || !value.trim()) return null;
-  const date = new Date(value);
-  if (!Number.isNaN(date.getTime())) return date.getFullYear();
-  const match = value.match(/\b(\d{4})\b/);
-  return match ? Number(match[1]) : null;
-}
-
 function normalizeEventItem(item: any) {
   return {
     ...item,
     source: "bt_event",
     canOpen: true,
-  };
-}
-
-function normalizeClubTournamentItem(item: any) {
-  const startDate = item?.startDate ?? item?.start_date ?? null;
-  const endDate = item?.endDate ?? item?.end_date ?? null;
-  return {
-    id: `club-tournament:${item?.documentId ?? item?.id}`,
-    documentId: item?.documentId ?? String(item?.id ?? ""),
-    source: "club_tournament",
-    canOpen: false,
-    title: item?.title ?? "Club tournament",
-    game_type: item?.game_type ?? null,
-    season: readDateYear(startDate),
-    start_date: startDate,
-    end_date: endDate,
-    tournament: item?.slug ? { slug: item.slug } : null,
   };
 }
 
@@ -145,34 +120,6 @@ export async function GET(req: NextRequest) {
         eventParams.set("filters[season][$eq]", season);
       }
 
-      const tournamentParams = new URLSearchParams();
-      tournamentParams.set("pagination[page]", "1");
-      tournamentParams.set("pagination[pageSize]", String(pageSizeForMerge));
-      tournamentParams.set("sort[0]", "startDate:desc");
-      tournamentParams.set("fields[0]", "title");
-      tournamentParams.set("fields[1]", "slug");
-      tournamentParams.set("fields[2]", "documentId");
-      tournamentParams.set("fields[3]", "startDate");
-      tournamentParams.set("fields[4]", "endDate");
-      tournamentParams.set("fields[5]", "game_type");
-      tournamentParams.set("populate[bt_event][fields][0]", "documentId");
-      tournamentParams.set("filters[club][slug][$eq]", clubSlug);
-
-      let tournamentAndIndex = 0;
-      for (const token of searchTokens) {
-        if (token === "season") continue;
-        if (/^\d{4}$/.test(token)) continue;
-        tournamentParams.set(
-          `filters[$and][${tournamentAndIndex}][$or][0][title][$containsi]`,
-          token,
-        );
-        tournamentParams.set(
-          `filters[$and][${tournamentAndIndex}][$or][1][game_type][$containsi]`,
-          token,
-        );
-        tournamentAndIndex++;
-      }
-
       const fetchFromStrapi = async (path: string, useAuth: boolean) => {
         const headers: HeadersInit = {};
         if (useAuth && STRAPI_API_TOKEN) {
@@ -196,19 +143,8 @@ export async function GET(req: NextRequest) {
         return Array.isArray(json?.data) ? json.data : [];
       };
 
-      const [eventRows, tournamentRows] = await Promise.all([
-        fetchCollection(`bt-events?${eventParams.toString()}`),
-        fetchCollection(`tournaments?${tournamentParams.toString()}`),
-      ]);
-
-      const localRows = tournamentRows
-        .filter((item: any) => !item?.bt_event?.documentId)
-        .map(normalizeClubTournamentItem)
-        .filter((item: any) => !season || String(item.season ?? "") === season);
-
-      const merged = [...eventRows.map(normalizeEventItem), ...localRows].sort(
-        sortTournamentItems,
-      );
+      const eventRows = await fetchCollection(`bt-events?${eventParams.toString()}`);
+      const merged = eventRows.map(normalizeEventItem).sort(sortTournamentItems);
       const total = merged.length;
       const pageCount = Math.max(1, Math.ceil(total / pageSize));
       const start = (page - 1) * pageSize;

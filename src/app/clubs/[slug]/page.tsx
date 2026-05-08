@@ -100,14 +100,14 @@ export default async function ClubPage({ params }: Props) {
         section={{
           __component: "cms.tournament-list-section",
           title: "Club tournaments",
-          subtitle: `All tournaments belonging to ${club.name}.`,
+          subtitle: `Published tournaments and results for ${club.name}.`,
           layout: "table",
           itemsPerPage: 10,
           showSeasonFilter: true,
           showDate: true,
           showStatus: true,
           showResultsLink: true,
-          emptyStateText: "No tournaments found for this club.",
+          emptyStateText: "No published tournaments found for this club.",
         }}
         appearance={appearance}
         clubSlug={club.slug}
