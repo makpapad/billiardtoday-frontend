@@ -79,6 +79,26 @@ const embedUrlForVideo = (
 const watchUrlForVideo = (videoId: string) =>
   `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
+const providerLabelForVideo = (video: LiveVideoEntry) => {
+  switch (video.provider) {
+    case "youtube":
+      return "YouTube";
+    case "mediamtx":
+      return "MediaMTX";
+    case "hls":
+      return "HLS";
+    case "webrtc":
+      return "WebRTC";
+    case "iframe":
+      return "Open stream";
+    default:
+      return "Stream";
+  }
+};
+
+const openUrlForVideo = (video: LiveVideoEntry) =>
+  video.provider === "youtube" ? watchUrlForVideo(video.videoId) : video.url ?? video.videoId;
+
 function resolveInitialSession(
   sessions: LiveVideoDrawerSession[],
   requestedSessionId?: string | null,
@@ -319,13 +339,32 @@ function VideoTile({
     >
       {video ? (
         <div className={fillHeight ? "min-h-0 flex-1 bg-black" : "aspect-video bg-black"}>
-          <iframe
-            src={embedUrlForVideo(video.videoId, { muted })}
-            title={video.title || session.title || "Live video"}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
+          {video.provider === "youtube" ? (
+            <iframe
+              src={embedUrlForVideo(video.videoId, { muted })}
+              title={video.title || session.title || "Live video"}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          ) : video.provider === "hls" ? (
+            <video
+              src={video.url ?? video.videoId}
+              className="h-full w-full"
+              controls
+              autoPlay
+              muted={muted}
+              playsInline
+            />
+          ) : (
+            <iframe
+              src={video.url ?? video.videoId}
+              title={video.title || session.title || "Live video"}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          )}
         </div>
       ) : (
         <div className="flex aspect-video items-center justify-center bg-slate-950 px-4 text-center text-sm text-slate-300">
@@ -722,12 +761,12 @@ export function LiveVideoDrawer({
                 </div>
                 {activeTab === "video" && focusedVideo ? (
                   <a
-                    href={watchUrlForVideo(focusedVideo.videoId)}
+                    href={openUrlForVideo(focusedVideo)}
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15"
                   >
-                    YouTube
+                    {providerLabelForVideo(focusedVideo)}
                   </a>
                 ) : null}
               </div>

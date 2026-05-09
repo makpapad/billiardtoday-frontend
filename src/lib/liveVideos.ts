@@ -1,6 +1,8 @@
 export type LiveVideoEntry = {
   id: string;
   videoId: string;
+  provider: string;
+  url: string | null;
   title: string | null;
   label: string | null;
   youtubeUrl: string | null;
@@ -75,6 +77,8 @@ export function normalizeLiveVideoEntries(rawValue: unknown): LiveVideoEntry[] {
         return {
           id: `${videoId}-${index}`,
           videoId,
+          provider: "youtube",
+          url: null,
           title: null,
           label: null,
           youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
@@ -85,6 +89,39 @@ export function normalizeLiveVideoEntries(rawValue: unknown): LiveVideoEntry[] {
 
       if (!entry || typeof entry !== "object") return null;
       const record = entry as Record<string, unknown>;
+      const provider = asTrimmedString(record.provider)?.toLowerCase() ?? "youtube";
+      const streamUrl = asTrimmedString(
+        record.url ??
+          record.streamUrl ??
+          record.webrtcUrl ??
+          record.hlsUrl ??
+          record.embedUrl,
+      );
+      const sortOrder = toFiniteNumber(record.sortOrder ?? record.order ?? index);
+
+      if (provider !== "youtube") {
+        if (!streamUrl) return null;
+        const id =
+          asTrimmedString(record.id) ??
+          asTrimmedString(record.key) ??
+          `${provider}-${sortOrder ?? index}`;
+        return {
+          id,
+          videoId: streamUrl,
+          provider,
+          url: streamUrl,
+          title: asTrimmedString(record.title),
+          label: asTrimmedString(record.label),
+          youtubeUrl: null,
+          isPrimary:
+            record.isPrimary === true ||
+            record.primary === true ||
+            sortOrder === 0 ||
+            index === 0,
+          sortOrder,
+        };
+      }
+
       const rawVideoId =
         record.videoId ??
         record.youtubeVideoId ??
@@ -94,13 +131,14 @@ export function normalizeLiveVideoEntries(rawValue: unknown): LiveVideoEntry[] {
       const videoId = extractYouTubeVideoId(rawVideoId);
       if (!videoId) return null;
 
-      const sortOrder = toFiniteNumber(record.sortOrder ?? record.order ?? index);
       return {
         id:
           asTrimmedString(record.id) ??
           asTrimmedString(record.key) ??
           `${videoId}-${sortOrder ?? index}`,
         videoId,
+        provider: "youtube",
+        url: null,
         title: asTrimmedString(record.title),
         label: asTrimmedString(record.label),
         youtubeUrl:
@@ -125,4 +163,3 @@ export function normalizeLiveVideoEntries(rawValue: unknown): LiveVideoEntry[] {
     return left.videoId.localeCompare(right.videoId);
   });
 }
-
