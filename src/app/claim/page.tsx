@@ -105,7 +105,16 @@ export default function ClaimPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nonce, screenIdentifier: screenId, deviceToken }),
       });
-      const data = await res.json().catch(() => null);
+      const responseText = await res.text();
+      const data = responseText
+        ? (() => {
+            try {
+              return JSON.parse(responseText);
+            } catch {
+              return responseText;
+            }
+          })()
+        : null;
       if (!res.ok) {
         const errorText = extractErrorText(data);
         if (/device not found/i.test(errorText)) {
@@ -119,7 +128,7 @@ export default function ClaimPage() {
           }
           return;
         }
-        setStatus(presentClaimError(data || "Claim failed."));
+        setStatus(presentClaimError(data || `Claim failed with status ${res.status}.`));
         return;
       }
       setStatus("The scoreboard link was completed.");
