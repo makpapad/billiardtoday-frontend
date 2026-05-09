@@ -23,6 +23,20 @@ const toFiniteNumber = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const normalizePlaybackUrl = (provider: string, rawUrl: string): string => {
+  if (provider !== "mediamtx" && provider !== "webrtc") return rawUrl;
+
+  try {
+    const url = new URL(rawUrl);
+    if (url.protocol !== "rtsp:") return rawUrl;
+
+    const path = url.pathname && url.pathname !== "/" ? url.pathname : "/btdroitcamera";
+    return `https://${url.hostname}${path.replace(/\/?$/, "/")}`;
+  } catch {
+    return rawUrl;
+  }
+};
+
 export function extractYouTubeVideoId(value: unknown): string | null {
   const raw = asTrimmedString(value);
   if (!raw) return null;
@@ -101,15 +115,16 @@ export function normalizeLiveVideoEntries(rawValue: unknown): LiveVideoEntry[] {
 
       if (provider !== "youtube") {
         if (!streamUrl) return null;
+        const playbackUrl = normalizePlaybackUrl(provider, streamUrl);
         const id =
           asTrimmedString(record.id) ??
           asTrimmedString(record.key) ??
           `${provider}-${sortOrder ?? index}`;
         return {
           id,
-          videoId: streamUrl,
+          videoId: playbackUrl,
           provider,
-          url: streamUrl,
+          url: playbackUrl,
           title: asTrimmedString(record.title),
           label: asTrimmedString(record.label),
           youtubeUrl: null,

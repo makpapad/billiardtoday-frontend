@@ -59,7 +59,7 @@ export default async function LiveOverlayTestPage({ searchParams }: LiveOverlayT
   const provider = (firstParam(params?.provider) || "demo").toLowerCase();
   const stream =
     firstParam(params?.stream) ||
-    (provider === "mediamtx" ? "http://localhost:8889/btdroitcamera/" : "");
+    (provider === "mediamtx" ? "https://live.billiardtoday.com/btdroitcamera/" : "");
   const overlayUrl = buildOverlayUrl(params);
   const isYoutube = provider === "youtube" && stream;
   const isMediaMtx = provider === "mediamtx" && stream;
