@@ -4,6 +4,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveVideoEntry } from "@/lib/liveVideos";
+import MediaMtxWebRtcPlayer from "@/components/live/MediaMtxWebRtcPlayer";
 import type { LiveScoreState } from "@/components/live/types";
 
 type LiveVideoDrawerSession = {
@@ -347,6 +348,8 @@ function VideoTile({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
+          ) : video.provider === "mediamtx" || video.provider === "webrtc" ? (
+            <MediaMtxWebRtcPlayer baseUrl={video.url ?? video.videoId} />
           ) : video.provider === "hls" ? (
             <video
               src={video.url ?? video.videoId}
