@@ -487,7 +487,7 @@ class PlayerAccountAuth {
 
   async socialLogin(
     provider: "google" | "facebook",
-    payload: { idToken?: string | null; accessToken?: string | null },
+    payload: { idToken?: string | null; accessToken?: string | null; claimToken?: string | null },
   ) {
     this.hydrateFromStorage();
     const res = await fetch("/account-access/social/login", {
@@ -497,6 +497,7 @@ class PlayerAccountAuth {
         provider,
         idToken: payload.idToken || null,
         accessToken: payload.accessToken || null,
+        claimToken: payload.claimToken || null,
       }),
       cache: "no-store",
     });

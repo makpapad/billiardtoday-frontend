@@ -1,13 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import {
   playerAccountAuth,
+  type PlayerAccountAuthOptions,
   type PlayerAccountClaimInfo,
   type PlayerAccountSummary,
 } from "@/lib/player-account-auth";
+
+declare global {
+  interface Window {
+    google?: any;
+    FB?: any;
+    fbAsyncInit?: () => void;
+  }
+}
 
 function friendlyStatus(status: string | null) {
   if (status === "verified") return "Verified";
@@ -20,6 +30,15 @@ function friendlyStatus(status: string | null) {
   return status || "Unknown";
 }
 
+function claimDisplayName(claimInfo: PlayerAccountClaimInfo | null) {
+  return (
+    claimInfo?.fullNameSubmitted?.trim() ||
+    claimInfo?.displayName?.trim() ||
+    claimInfo?.fullName?.trim() ||
+    ""
+  );
+}
+
 export default function CompleteProfilePage() {
   const searchParams = useSearchParams();
   const claimToken = searchParams?.get("claim")?.trim() || "";
@@ -30,8 +49,13 @@ export default function CompleteProfilePage() {
   const [fullName, setFullName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [authOptions, setAuthOptions] = React.useState<PlayerAccountAuthOptions | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isSocialPending, setIsSocialPending] = React.useState(false);
+  const [googleSdkReady, setGoogleSdkReady] = React.useState(false);
+  const [facebookSdkReady, setFacebookSdkReady] = React.useState(false);
+  const googleButtonRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     const run = async () => {
@@ -48,7 +72,7 @@ export default function CompleteProfilePage() {
         const next = await playerAccountAuth.getClaimInfo(claimToken);
         setClaimInfo(next);
         setEmail(next.email || "");
-        setFullName(next.displayName || next.fullName || "");
+        setFullName(claimDisplayName(next));
       } catch (err) {
         setClaimInfo(null);
         setError(err instanceof Error ? err.message : "Claim lookup failed");
@@ -59,6 +83,81 @@ export default function CompleteProfilePage() {
 
     void run();
   }, [claimToken]);
+
+  React.useEffect(() => {
+    const run = async () => {
+      try {
+        setAuthOptions(await playerAccountAuth.getAuthOptions());
+      } catch {
+        setAuthOptions(null);
+      }
+    };
+
+    void run();
+  }, []);
+
+  const handleSocialLogin = React.useCallback(
+    async (provider: "google" | "facebook", payload: { idToken?: string | null; accessToken?: string | null }) => {
+      if (!claimToken) {
+        setError("Missing claim token");
+        return;
+      }
+      setError(null);
+      setIsSocialPending(true);
+      try {
+        const next = await playerAccountAuth.socialLogin(provider, {
+          ...payload,
+          claimToken,
+        });
+        setAccount(next);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Social sign-in failed");
+      } finally {
+        setIsSocialPending(false);
+      }
+    },
+    [claimToken],
+  );
+
+  React.useEffect(() => {
+    const clientId = authOptions?.socialProviders.google.clientId;
+    if (!clientId || !googleSdkReady || !window.google?.accounts?.id || !googleButtonRef.current) return;
+
+    googleButtonRef.current.innerHTML = "";
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response: { credential?: string }) => {
+        void handleSocialLogin("google", { idToken: response?.credential || null });
+      },
+    });
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      theme: "outline",
+      size: "large",
+      shape: "pill",
+      text: "signup_with",
+      width: 320,
+    });
+  }, [authOptions?.socialProviders.google.clientId, googleSdkReady, handleSocialLogin]);
+
+  React.useEffect(() => {
+    const facebookAppId = authOptions?.socialProviders.facebook.appId;
+    const graphVersion = authOptions?.socialProviders.facebook.graphVersion || "v21.0";
+    if (!facebookAppId) return;
+
+    const initFacebook = () => {
+      if (!window.FB) return;
+      window.FB.init({
+        appId: facebookAppId,
+        cookie: false,
+        xfbml: false,
+        version: graphVersion,
+      });
+      setFacebookSdkReady(true);
+    };
+
+    window.fbAsyncInit = initFacebook;
+    if (window.FB) initFacebook();
+  }, [authOptions?.socialProviders.facebook.appId, authOptions?.socialProviders.facebook.graphVersion]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -130,6 +229,22 @@ export default function CompleteProfilePage() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe_0%,#eff6ff_38%,#f8fafc_72%,#ffffff_100%)] px-4 py-8 text-slate-950">
+      {authOptions?.socialProviders.google.clientId ? (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={() => setGoogleSdkReady(true)}
+        />
+      ) : null}
+      {authOptions?.socialProviders.facebook.appId ? (
+        <Script
+          src="https://connect.facebook.net/en_US/sdk.js"
+          strategy="afterInteractive"
+          onLoad={() => {
+            if (window.fbAsyncInit) window.fbAsyncInit();
+          }}
+        />
+      ) : null}
       <div className="mx-auto max-w-3xl rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
         <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-700">Private Player Area</div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Complete your profile</h1>
@@ -171,6 +286,52 @@ export default function CompleteProfilePage() {
             </div>
           </div>
         ) : null}
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            {authOptions?.socialProviders.google.enabled && authOptions?.socialProviders.google.clientId ? (
+              <div className="space-y-2">
+                <div ref={googleButtonRef} className="min-h-[44px]" />
+                <div className="text-xs text-slate-500">
+                  {googleSdkReady ? "Google sign-in is ready." : "Loading Google sign-in..."}
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm font-medium text-slate-700">Google login is not configured yet.</div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!window.FB || !facebookSdkReady) {
+                setError("Facebook login is not ready yet.");
+                return;
+              }
+              window.FB.login(
+                (response: { authResponse?: { accessToken?: string } }) => {
+                  const accessToken = response?.authResponse?.accessToken;
+                  if (!accessToken) {
+                    setError("Facebook login was cancelled or not authorized.");
+                    return;
+                  }
+                  void handleSocialLogin("facebook", { accessToken });
+                },
+                { scope: "public_profile,email" },
+              );
+            }}
+            disabled={!authOptions?.socialProviders.facebook.enabled || !authOptions?.socialProviders.facebook.appId || isSocialPending}
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Continue with Facebook
+            <div className="mt-1 text-xs font-normal text-slate-500">
+              {authOptions?.socialProviders.facebook.enabled && authOptions?.socialProviders.facebook.appId
+                ? facebookSdkReady
+                  ? "Facebook sign-in is ready."
+                  : "Loading Facebook sign-in..."
+                : "Not configured yet."}
+            </div>
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
