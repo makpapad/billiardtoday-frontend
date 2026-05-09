@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import MediaMtxWebRtcPlayer from "@/components/live/MediaMtxWebRtcPlayer";
+import MediaMtxHlsPlayer from "@/components/live/MediaMtxHlsPlayer";
 
 type LiveOverlayTestPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -84,7 +84,7 @@ export default async function LiveOverlayTestPage({ searchParams }: LiveOverlayT
 
         <div className="relative aspect-video w-full overflow-hidden bg-black shadow-2xl shadow-black/50">
           {isMediaMtx ? (
-            <MediaMtxWebRtcPlayer baseUrl={stream} />
+            <MediaMtxHlsPlayer baseUrl={stream} muted={false} />
           ) : isYoutube ? (
             <iframe
               src={buildYoutubeEmbed(stream)}
