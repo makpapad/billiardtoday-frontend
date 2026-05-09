@@ -86,7 +86,7 @@ const providerLabelForVideo = (video: LiveVideoEntry) => {
     case "youtube":
       return "YouTube";
     case "mediamtx":
-      return "MediaMTX";
+      return "BilliardToday Live";
     case "hls":
       return "HLS";
     case "webrtc":
