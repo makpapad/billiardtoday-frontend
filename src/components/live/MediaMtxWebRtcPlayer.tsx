@@ -110,7 +110,7 @@ export default function MediaMtxWebRtcPlayer({ baseUrl }: MediaMtxWebRtcPlayerPr
     <>
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full bg-black object-cover"
+        className="absolute inset-0 h-full w-full bg-black object-contain"
         muted
         autoPlay
         playsInline

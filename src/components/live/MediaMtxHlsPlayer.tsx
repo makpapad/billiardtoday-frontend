@@ -79,7 +79,7 @@ export default function MediaMtxHlsPlayer({ baseUrl, muted = true }: MediaMtxHls
     <>
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full bg-black object-cover"
+        className="absolute inset-0 h-full w-full bg-black object-contain"
         controls
         muted={muted}
         autoPlay
