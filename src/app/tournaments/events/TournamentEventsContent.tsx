@@ -40,6 +40,7 @@ import {
   buildStageMatchGroups,
   buildGroupStandings,
   hasPlayedStageMatch,
+  isDynamicPlaceholderPlayer,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
@@ -1105,6 +1106,7 @@ function getGroupPreviewPlayers(
     new Map(
       group.matches
         .flatMap((match) => [match.top.player, match.bottom.player])
+        .filter((player) => !isDynamicPlaceholderPlayer(player))
         .map((player) => [
           player.documentId || `${player.name}-${player.country || "xx"}`,
           player,
