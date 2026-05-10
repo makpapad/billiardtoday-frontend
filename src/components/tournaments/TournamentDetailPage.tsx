@@ -1296,7 +1296,8 @@ const normalizeLookupText = (value: string | null | undefined) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-const PUBLIC_TIMEZONE_STORAGE_KEY = "bt-public-timezone-offset-minutes";
+const publicTimezoneStorageKey = (eventId: string | number | null | undefined) =>
+  `bt-public-timezone-offset-minutes.${eventId ?? "global"}`;
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
@@ -4779,27 +4780,29 @@ export function TournamentDetailPage({
   }, [timetableSlots]);
 
   useEffect(() => {
+    const storageKey = publicTimezoneStorageKey(summary.documentId);
     if (typeof window === "undefined") {
       setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
       return;
     }
-    const stored = window.localStorage.getItem(PUBLIC_TIMEZONE_STORAGE_KEY);
+    const stored = window.localStorage.getItem(storageKey);
     const parsed = stored !== null ? Number(stored) : Number.NaN;
     if (Number.isFinite(parsed)) {
       setSelectedTimezoneOffsetMinutes(parsed);
       return;
     }
     setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
-  }, [eventTimezoneOffsetMinutes]);
+  }, [eventTimezoneOffsetMinutes, summary.documentId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (selectedTimezoneOffsetMinutes === null) return;
+    const storageKey = publicTimezoneStorageKey(summary.documentId);
     window.localStorage.setItem(
-      PUBLIC_TIMEZONE_STORAGE_KEY,
+      storageKey,
       String(selectedTimezoneOffsetMinutes),
     );
-  }, [selectedTimezoneOffsetMinutes]);
+  }, [selectedTimezoneOffsetMinutes, summary.documentId]);
 
   const timezoneOptions = useMemo(
     () =>
