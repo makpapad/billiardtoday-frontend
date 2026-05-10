@@ -449,17 +449,31 @@ export const aggregateRecord = (
   return record;
 };
 
+export const isDynamicPlaceholderName = (
+  value: string | null | undefined,
+): boolean => {
+  const normalized = String(value || "").trim();
+  return /^(Winner|Loser)_M\d+$/i.test(normalized) || /^[A-Z]+_Player_\d+$/i.test(normalized);
+};
+
+export const isDynamicPlaceholderPlayer = (
+  player: Pick<NormalizedGroupPlayer, "name" | "documentId">,
+): boolean =>
+  isDynamicPlaceholderName(player.name) ||
+  isDynamicPlaceholderName(player.documentId);
+
 export const hasPlayedStageMatch = (
   match: StageMatchGroup["matches"][number],
 ): boolean =>
   [match.top, match.bottom].some(
     (entry) =>
-      entry.outcome !== null ||
-      (entry.player.points ?? 0) > 0 ||
-      (entry.player.innings ?? 0) > 0 ||
-      (entry.player.highRun ?? 0) > 0 ||
-      (entry.player.highRun2 ?? 0) > 0 ||
-      (entry.player.matchPoints ?? 0) > 0,
+      !isDynamicPlaceholderPlayer(entry.player) &&
+      (entry.outcome !== null ||
+        (entry.player.points ?? 0) > 0 ||
+        (entry.player.innings ?? 0) > 0 ||
+        (entry.player.highRun ?? 0) > 0 ||
+        (entry.player.highRun2 ?? 0) > 0 ||
+        (entry.player.matchPoints ?? 0) > 0),
   );
 
 export const buildGroupStandings = (
@@ -608,6 +622,8 @@ export const buildGroupStandings = (
         entry: typeof match.top,
         position: "top" | "bottom",
       ) => {
+        if (isDynamicPlaceholderPlayer(entry.player)) return;
+
         const key =
           entry.player.documentId ?? `${entry.player.name}-${position}`;
         if (!acc[key]) {
