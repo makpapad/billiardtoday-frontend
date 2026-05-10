@@ -1897,10 +1897,9 @@ function StageRankingTable({
     const countryByPlayerKey = buildStagePlayerCountryMap(stage);
     const isOpeningRoundFinalRanking =
       koRankingRound === "opening-final" || koRankingRound === "r16-final";
-    const isCebLadiesRuleset = eventRulesetKey === "ceb_ladies_v1";
     const qualificationStageForOpeningFinalRanking =
-      ((isCebLadiesRuleset && isOpeningRoundFinalRanking) ||
-        stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID) &&
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
+      isOpeningRoundFinalRanking &&
       isBracketStageType(stage.stageType)
         ? allStages
             .filter((candidate) => candidate.documentId !== stage.documentId)
@@ -1927,9 +1926,9 @@ function StageRankingTable({
       (result) => result.source === "knockout-standings",
     );
     const shouldMergeQualificationTotals =
-      (isCebLadiesRuleset && isOpeningRoundFinalRanking) ||
-      (stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
-        !hasServerKnockoutStandings);
+      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
+      isOpeningRoundFinalRanking &&
+      !hasServerKnockoutStandings;
     const displayResults = results.map((result) =>
       shouldMergeQualificationTotals
         ? mergeStageResultTotals(
