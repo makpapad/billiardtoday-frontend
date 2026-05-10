@@ -181,6 +181,16 @@ const normalizeKnockoutStandingsPayload = (payload: unknown): unknown => {
                     : null
 
     if (!sourceRows) return payload
+    if (
+        sourceRows.some(
+            (row) =>
+                row &&
+                typeof row === 'object' &&
+                (row as Record<string, unknown>).source === 'knockout-standings',
+        )
+    ) {
+        return payload
+    }
 
     const sortedRows = sortKnockoutRows(sourceRows)
     return {

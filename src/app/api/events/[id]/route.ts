@@ -460,6 +460,10 @@ const fetchStageStandings = async (
     }
 
     const normalizeKnockoutRows = (rows: Record<string, unknown>[]) => {
+        if (rows.some((row) => row?.source === 'knockout-standings')) {
+            return rows
+        }
+
         const targetPoints = rows.reduce((max, row) => Math.max(max, toNumber(row.points) ?? 0), 0)
         return [...rows]
             .sort((a, b) => {
