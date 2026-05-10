@@ -458,9 +458,12 @@ export const isDynamicPlaceholderName = (
 
 export const isDynamicPlaceholderPlayer = (
   player: Pick<NormalizedGroupPlayer, "name" | "documentId">,
-): boolean =>
-  isDynamicPlaceholderName(player.name) ||
-  isDynamicPlaceholderName(player.documentId);
+): boolean => {
+  const name = String(player.name || "").trim();
+  const documentId = String(player.documentId || "").trim();
+  if (!name && !documentId) return true;
+  return isDynamicPlaceholderName(name) || isDynamicPlaceholderName(documentId);
+};
 
 export const hasPlayedStageMatch = (
   match: StageMatchGroup["matches"][number],
