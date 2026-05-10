@@ -124,7 +124,7 @@ type TournamentGallerySection = {
 
 const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
-type KoRankingRound = "opening-final" | "r16-final" | "r16" | "qf" | "sf" | "final";
+type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
 
 const normalizeGalleryVideoEntries = (value: unknown) => {

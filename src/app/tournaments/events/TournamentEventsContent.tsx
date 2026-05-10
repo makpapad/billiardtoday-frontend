@@ -55,7 +55,7 @@ const BRACKET_STAGE_TYPES = new Set([
 ]);
 
 type GroupLabelMode = "numbers" | "letters";
-type KoRankingRound = "opening-final" | "r16-final" | "r16" | "qf" | "sf" | "final";
+type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 
 function isBracketStageType(stageType: string | null | undefined): boolean {
   return (
@@ -134,6 +134,7 @@ function canRenderBracketPyramid(
 }
 
 const KO_ROUND_OPTIONS: Array<{ value: Exclude<KoRankingRound, "opening-final" | "r16-final">; label: string; size: number }> = [
+  { value: "r32", label: "R32", size: 32 },
   { value: "r16", label: "R16", size: 16 },
   { value: "qf", label: "Quarter Finals", size: 8 },
   { value: "sf", label: "Semi Finals", size: 4 },
@@ -143,6 +144,7 @@ const KO_ROUND_OPTIONS: Array<{ value: Exclude<KoRankingRound, "opening-final" |
 const knockoutRoundSize = (round: string | null | undefined): number | null => {
   const normalized = String(round ?? "").trim().toLowerCase();
   if (!normalized) return null;
+  if (["r32", "round 32", "round32", "1/16", "last 32", "last32"].includes(normalized)) return 32;
   if (["r16", "round 16", "round16", "1/8", "last 16", "last16"].includes(normalized)) return 16;
   if (["qf", "quarter", "quarters", "quarter final", "quarter finals", "quarterfinal", "quarterfinals", "1/4", "last 8", "last8"].includes(normalized)) return 8;
   if (["sf", "semi", "semis", "semi final", "semi finals", "semifinal", "semifinals", "1/2", "last 4", "last4"].includes(normalized)) return 4;
