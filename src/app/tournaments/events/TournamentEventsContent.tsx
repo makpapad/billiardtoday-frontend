@@ -55,6 +55,7 @@ const BRACKET_STAGE_TYPES = new Set([
 ]);
 
 type GroupLabelMode = "numbers" | "letters";
+type KoRankingRound = "opening-final" | "r16-final" | "r16" | "qf" | "sf" | "final";
 
 function isBracketStageType(stageType: string | null | undefined): boolean {
   return (
@@ -132,6 +133,38 @@ function canRenderBracketPyramid(
   );
 }
 
+const KO_ROUND_OPTIONS: Array<{ value: Exclude<KoRankingRound, "opening-final" | "r16-final">; label: string; size: number }> = [
+  { value: "r16", label: "R16", size: 16 },
+  { value: "qf", label: "Quarter Finals", size: 8 },
+  { value: "sf", label: "Semi Finals", size: 4 },
+  { value: "final", label: "Final", size: 2 },
+];
+
+const knockoutRoundSize = (round: string | null | undefined): number | null => {
+  const normalized = String(round ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (["r16", "round 16", "round16", "1/8", "last 16", "last16"].includes(normalized)) return 16;
+  if (["qf", "quarter", "quarters", "quarter final", "quarter finals", "quarterfinal", "quarterfinals", "1/4", "last 8", "last8"].includes(normalized)) return 8;
+  if (["sf", "semi", "semis", "semi final", "semi finals", "semifinal", "semifinals", "1/2", "last 4", "last4"].includes(normalized)) return 4;
+  if (["f", "final", "finals"].includes(normalized)) return 2;
+  const rMatch = normalized.match(/^r(\d+)$/);
+  if (rMatch?.[1]) {
+    const parsed = Number(rMatch[1]);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const getOpeningKnockoutRoundSize = (stage: NormalizedEventStage): number => {
+  const sizes = new Set<number>();
+  for (const match of stage.groups) {
+    const size = knockoutRoundSize(match.round);
+    if (size) sizes.add(size);
+  }
+  if (sizes.size > 0) return Math.max(...sizes);
+  return Math.max(2, stage.groups.length * 2);
+};
+
 type TournamentEventsContentProps = {
   eventIdOverride?: string | null;
   initialEventData?: EventApiResponse | null;
@@ -147,8 +180,8 @@ type TournamentEventsContentProps = {
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
   stageViewMode?: "results" | "ranks";
-  koRankingRound?: "r16-final" | "r16" | "qf" | "sf" | "final";
-  onKoRankingRoundChange?: (round: "r16-final" | "r16" | "qf" | "sf" | "final") => void;
+  koRankingRound?: KoRankingRound;
+  onKoRankingRoundChange?: (round: KoRankingRound) => void;
   embeddedOverride?: boolean;
   showStandaloneTitle?: boolean;
   showEventHeader?: boolean;
@@ -2490,7 +2523,7 @@ export function TournamentEventsContent({
   showPublishedFinalResults = false,
   showTimetable = true,
   stageViewMode = "results",
-  koRankingRound = "r16-final",
+  koRankingRound = "opening-final",
   onKoRankingRoundChange,
   embeddedOverride,
   showStandaloneTitle = true,
@@ -3244,12 +3277,13 @@ export function TournamentEventsContent({
   useEffect(() => {
     if (
       hasFinalRoundBreakdownRankings ||
+      koRankingRound === "opening-final" ||
       koRankingRound === "r16-final" ||
       typeof onKoRankingRoundChange !== "function"
     ) {
       return;
     }
-    onKoRankingRoundChange("r16-final");
+    onKoRankingRoundChange("opening-final");
   }, [hasFinalRoundBreakdownRankings, koRankingRound, onKoRankingRoundChange]);
 
   const eventGameType = useMemo(
@@ -5027,6 +5061,14 @@ export function TournamentEventsContent({
                           stage.isFinal &&
                           isBracketStageType(stage.stageType) &&
                           typeof onKoRankingRoundChange === "function";
+                        const openingRoundSize = getOpeningKnockoutRoundSize(stage);
+                        const openingRoundFinalLabel = `Round ${openingRoundSize} Final Standing`;
+                        const koRoundOptions = KO_ROUND_OPTIONS.filter(
+                          (option) => option.size <= openingRoundSize,
+                        );
+                        const isOpeningRoundFinalSelected =
+                          koRankingRound === "opening-final" ||
+                          koRankingRound === "r16-final";
 
                         return (
                           <div key={stage.id} className="flex flex-col gap-4">
@@ -5045,31 +5087,32 @@ export function TournamentEventsContent({
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
                                       <button
                                         type="button"
-                                        onClick={() => onKoRankingRoundChange("r16-final")}
+                                        onClick={() => onKoRankingRoundChange("opening-final")}
                                         className={clsx(
                                           "h-9 rounded-lg border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition",
-                                          koRankingRound === "r16-final"
+                                          isOpeningRoundFinalSelected
                                             ? "border-blue-600 bg-blue-600 text-white shadow-sm"
                                             : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-blue-500",
                                         )}
                                       >
-                                        Round 16 Final Standing
+                                        {openingRoundFinalLabel}
                                       </button>
                                       {hasFinalRoundBreakdownRankings ? (
                                         <select
-                                          value={koRankingRound === "r16-final" ? "" : koRankingRound}
+                                          value={isOpeningRoundFinalSelected ? "" : koRankingRound}
                                           onChange={(event) =>
                                             onKoRankingRoundChange(
-                                              event.target.value as "r16" | "qf" | "sf" | "final",
+                                              event.target.value as KoRankingRound,
                                             )
                                           }
                                           className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 sm:w-52"
                                         >
                                           <option value="" disabled>Round</option>
-                                          <option value="r16">R16</option>
-                                          <option value="qf">Quarter Finals</option>
-                                          <option value="sf">Semi Finals</option>
-                                          <option value="final">Final</option>
+                                          {koRoundOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                              {option.label}
+                                            </option>
+                                          ))}
                                         </select>
                                       ) : null}
                                     </div>

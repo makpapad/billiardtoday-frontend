@@ -124,6 +124,7 @@ type TournamentGallerySection = {
 
 const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
+type KoRankingRound = "opening-final" | "r16-final" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
 
 const normalizeGalleryVideoEntries = (value: unknown) => {
@@ -1586,8 +1587,8 @@ export function TournamentDetailPage({
     "results",
   );
   const [koRankingRound, setKoRankingRound] = useState<
-    "r16-final" | "r16" | "qf" | "sf" | "final"
-  >("r16-final");
+    KoRankingRound
+  >("opening-final");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
   >(preferredStageFromQuery ?? summary.stages[0]?.documentId ?? null);
@@ -1782,8 +1783,8 @@ export function TournamentDetailPage({
 
   const fetchStageStandingsPayload = useCallback(async (stageDocumentId: string, round?: string | null) => {
     const params = new URLSearchParams();
-    if (round === "r16-final") {
-      params.set("mode", "round16_final_standing");
+    if (round === "opening-final" || round === "r16-final") {
+      params.set("mode", "opening_round_final_standing");
     } else if (round) {
       params.set("round", round);
     }
@@ -3866,7 +3867,7 @@ export function TournamentDetailPage({
   );
 
   const handleKoRankingRoundChange = async (
-    nextRound: "r16-final" | "r16" | "qf" | "sf" | "final",
+    nextRound: KoRankingRound,
   ) => {
     setKoRankingRound(nextRound);
     if (selectedStage?.documentId) {
