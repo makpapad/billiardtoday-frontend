@@ -3269,23 +3269,6 @@ export function TournamentEventsContent({
     eventData?.data?.final_standings_published === true &&
     publishedFinalResults.length > 0 &&
     !hideLongoniFinalStandingsUntilFinal;
-  const hasFinalRoundBreakdownRankings =
-    eventData?.data?.final_standings_published === true &&
-    publishedFinalResults.length > 0 &&
-    !hideLongoniFinalStandingsUntilFinal;
-
-  useEffect(() => {
-    if (
-      hasFinalRoundBreakdownRankings ||
-      koRankingRound === "opening-final" ||
-      koRankingRound === "r16-final" ||
-      typeof onKoRankingRoundChange !== "function"
-    ) {
-      return;
-    }
-    onKoRankingRoundChange("opening-final");
-  }, [hasFinalRoundBreakdownRankings, koRankingRound, onKoRankingRoundChange]);
-
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
     [eventData],
@@ -5097,7 +5080,7 @@ export function TournamentEventsContent({
                                       >
                                         {openingRoundFinalLabel}
                                       </button>
-                                      {hasFinalRoundBreakdownRankings ? (
+                                      {koRoundOptions.length > 0 ? (
                                         <select
                                           value={isOpeningRoundFinalSelected ? "" : koRankingRound}
                                           onChange={(event) =>
