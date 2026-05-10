@@ -1791,6 +1791,8 @@ function StageRankingTable({
   artistic = false,
   groupLabelMode = "numbers",
   suppressDerivedBestAverage = false,
+  koRankingRound = "opening-final",
+  eventRulesetKey = null,
 }: {
   stage: NormalizedEventStage;
   allStages?: NormalizedEventStage[];
@@ -1799,6 +1801,8 @@ function StageRankingTable({
   artistic?: boolean;
   groupLabelMode?: GroupLabelMode;
   suppressDerivedBestAverage?: boolean;
+  koRankingRound?: KoRankingRound;
+  eventRulesetKey?: string | null;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
@@ -1889,8 +1893,13 @@ function StageRankingTable({
     }
 
     const countryByPlayerKey = buildStagePlayerCountryMap(stage);
-    const qualificationStageForLongoniRanking =
-      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID
+    const isOpeningRoundFinalRanking =
+      koRankingRound === "opening-final" || koRankingRound === "r16-final";
+    const isCebLadiesRuleset = eventRulesetKey === "ceb_ladies_v1";
+    const qualificationStageForOpeningFinalRanking =
+      ((isCebLadiesRuleset && isOpeningRoundFinalRanking) ||
+        stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID) &&
+      isBracketStageType(stage.stageType)
         ? allStages
             .filter((candidate) => candidate.documentId !== stage.documentId)
             .filter((candidate) => !isBracketStageType(candidate.stageType))
@@ -1903,7 +1912,7 @@ function StageRankingTable({
             })[0]
         : undefined;
     const qualificationResultByPlayerKeyForLongoniRanking = new Map(
-      (qualificationStageForLongoniRanking?.results ?? []).map((result) => [
+      (qualificationStageForOpeningFinalRanking?.results ?? []).map((result) => [
         rankingResultMatchKey(result),
         result,
       ]),
@@ -1915,9 +1924,12 @@ function StageRankingTable({
     const hasServerKnockoutStandings = results.some(
       (result) => result.source === "knockout-standings",
     );
+    const shouldMergeQualificationTotals =
+      (isCebLadiesRuleset && isOpeningRoundFinalRanking) ||
+      (stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
+        !hasServerKnockoutStandings);
     const displayResults = results.map((result) =>
-      stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
-      !hasServerKnockoutStandings
+      shouldMergeQualificationTotals
         ? mergeStageResultTotals(
             result,
             qualificationResultByPlayerKeyForLongoniRanking.get(
@@ -2017,6 +2029,8 @@ function StageRankingTable({
     stage.stageType,
     stageMatchGroups,
     suppressDerivedBestAverage,
+    koRankingRound,
+    eventRulesetKey,
   ]);
   const showStageGroupColumns = !isBracketStageType(stage.stageType);
   const showGroupColumn =
@@ -2850,6 +2864,18 @@ export function TournamentEventsContent({
         if (b.order !== null) return 1;
         return a.id.localeCompare(b.id);
       });
+  }, [eventData]);
+  const eventRulesetKey = useMemo(() => {
+    const direct = eventData?.data?.ruleset_key;
+    if (typeof direct === "string" && direct.trim()) return direct.trim();
+    const tournament = eventData?.data?.tournament;
+    const tournamentRuleset =
+      tournament && typeof tournament === "object"
+        ? (tournament as { ruleset_key?: unknown }).ruleset_key
+        : null;
+    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
+      ? tournamentRuleset.trim()
+      : null;
   }, [eventData]);
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
@@ -5109,6 +5135,8 @@ export function TournamentEventsContent({
                                   artistic={isArtisticEvent}
                                   groupLabelMode={groupLabelMode}
                                   suppressDerivedBestAverage={suppressDerivedBestAverage}
+                                  koRankingRound={koRankingRound}
+                                  eventRulesetKey={eventRulesetKey}
                                 />
                               </div>
                             ) : (
