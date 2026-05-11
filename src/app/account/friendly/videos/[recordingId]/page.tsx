@@ -38,12 +38,16 @@ type ScoreState = {
   innings?: number;
 };
 
-function hlsUrlFor(recording: PlayerAccountFriendlyRecording | null) {
+function streamFor(recording: PlayerAccountFriendlyRecording | null) {
   const direct = recording?.hlsUrl?.trim();
-  if (direct) return direct;
-  const base = recording?.playbackUrl?.trim();
-  if (!base) return "";
-  return `${base.replace(/\/+$/, "")}/index.m3u8`;
+  if (direct) return { url: direct, type: "hls" as const };
+
+  const playback = recording?.playbackUrl?.trim();
+  if (!playback) return null;
+  if (playback.includes("/playback/get?") || playback.includes("format=mp4")) {
+    return { url: playback, type: "mp4" as const };
+  }
+  return { url: `${playback.replace(/\/+$/, "")}/index.m3u8`, type: "hls" as const };
 }
 
 function stateAt(events: PlayerAccountFriendlyRecordingEvent[], currentTimeSec: number): ScoreState | null {
@@ -99,7 +103,7 @@ function RecordingVideo({
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = React.useState("Opening recording...");
   const [currentTime, setCurrentTime] = React.useState(0);
-  const streamUrl = hlsUrlFor(recording);
+  const stream = streamFor(recording);
   const overlayState = React.useMemo(() => stateAt(events, currentTime), [events, currentTime]);
   const templateState = React.useMemo(
     () => templateStateForRecorded(overlayState, recording),
@@ -108,14 +112,24 @@ function RecordingVideo({
 
   React.useEffect(() => {
     const video = videoRef.current;
-    if (!video || !streamUrl) return;
+    if (!video || !stream?.url) return;
     let hls: Hls | null = null;
     let cancelled = false;
 
     const onTimeUpdate = () => setCurrentTime(video.currentTime || 0);
+    const onError = () => {
+      if (!cancelled) setStatus("Recording video is not available yet.");
+    };
+    const onLoadedMetadata = () => {
+      if (!cancelled) setStatus("");
+    };
     video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("error", onError);
 
-    if (Hls.isSupported()) {
+    if (stream.type === "mp4") {
+      video.src = stream.url;
+      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+    } else if (Hls.isSupported()) {
       hls = new Hls({ backBufferLength: 60 });
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (!cancelled && data.fatal) setStatus(data.details || "HLS recording error");
@@ -123,11 +137,11 @@ function RecordingVideo({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!cancelled) setStatus("");
       });
-      hls.loadSource(streamUrl);
+      hls.loadSource(stream.url);
       hls.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = streamUrl;
-      video.addEventListener("loadedmetadata", () => !cancelled && setStatus(""), { once: true });
+      video.src = stream.url;
+      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
     } else {
       setStatus("HLS is not supported in this browser");
     }
@@ -135,11 +149,13 @@ function RecordingVideo({
     return () => {
       cancelled = true;
       video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("error", onError);
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
       hls?.destroy();
       video.removeAttribute("src");
       video.load();
     };
-  }, [streamUrl]);
+  }, [stream?.type, stream?.url]);
 
   return (
     <div className="relative aspect-video overflow-hidden bg-black">
@@ -220,7 +236,7 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
               <div className="flex aspect-video items-center justify-center text-sm text-white/70">Loading recording...</div>
             ) : error ? (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-red-200">{error}</div>
-            ) : recording && hlsUrlFor(recording) ? (
+            ) : recording && streamFor(recording) ? (
               <RecordingVideo recording={recording} events={events} />
             ) : (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-white/70">
