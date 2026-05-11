@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSearchParams } from "next/navigation";
 import {
   clearTrustedDeviceToken,
   getTrustedDevicePlayer,
@@ -47,13 +48,29 @@ function formatLocalDate(value?: string | null) {
 }
 
 export default function MePage() {
+  const params = useSearchParams();
+  const scannedScreenId = params?.get("screenId") || "";
+  const scannedSlot = params?.get("slot") || "";
   const [player, setPlayer] = React.useState<any>(null);
   const [matches, setMatches] = React.useState<FriendlyMatch[]>([]);
   const [devices, setDevices] = React.useState<TrustedDeviceRow[]>([]);
   const [currentDeviceId, setCurrentDeviceId] = React.useState<number | string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
+  const [screenId, setScreenId] = React.useState("");
+  const [slot, setSlot] = React.useState("");
+  const [recordingStatus, setRecordingStatus] = React.useState<string | null>(null);
+  const [recordingBusy, setRecordingBusy] = React.useState(false);
 
   React.useEffect(() => {
+    const savedScreenId = localStorage.getItem("bt.lastClaimedScreenId") || "";
+    const savedSlot = localStorage.getItem("bt.lastClaimedSlot") || "";
+    const nextScreenId = scannedScreenId || savedScreenId;
+    const nextSlot = scannedSlot || savedSlot;
+    setScreenId(nextScreenId);
+    setSlot(nextSlot);
+    if (scannedScreenId) localStorage.setItem("bt.lastClaimedScreenId", scannedScreenId);
+    if (scannedSlot) localStorage.setItem("bt.lastClaimedSlot", scannedSlot);
+
     const token = getTrustedDeviceToken();
     const cachedPlayer = getTrustedDevicePlayer();
     if (cachedPlayer) setPlayer(cachedPlayer);
@@ -91,7 +108,43 @@ export default function MePage() {
     };
 
     void run();
-  }, []);
+  }, [scannedScreenId, scannedSlot]);
+
+  const requestVideoCommand = async (command: "start" | "stop") => {
+    const token = getTrustedDeviceToken();
+    if (!token) {
+      setRecordingStatus("There is no trusted device token on this device.");
+      return;
+    }
+    if (!screenId) {
+      setRecordingStatus("Scan a scoreboard QR first so the app knows which scoreboard to control.");
+      return;
+    }
+
+    setRecordingBusy(true);
+    setRecordingStatus(null);
+    try {
+      const res = await fetch(`/api/player-devices/friendly-recordings/request-${command}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceToken: token, screenIdentifier: screenId, slot }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setRecordingStatus(data?.error?.message || data?.error || `${command} request failed.`);
+        return;
+      }
+      setRecordingStatus(
+        command === "start"
+          ? "Start command sent. The scoreboard PC will start recording in a few seconds."
+          : "Stop command sent. The scoreboard PC will stop recording in a few seconds.",
+      );
+    } catch (error) {
+      setRecordingStatus(error instanceof Error ? error.message : `${command} request failed.`);
+    } finally {
+      setRecordingBusy(false);
+    }
+  };
 
   const revokeDevice = async (deviceId: number | string) => {
     const token = getTrustedDeviceToken();
@@ -181,6 +234,38 @@ export default function MePage() {
               verification remains a separate later step.
             </div>
           ) : null}
+
+          <section className="mt-8 rounded-3xl border border-cyan-200 bg-cyan-50/70 px-4 py-5 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-950">Friendly video</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {screenId
+                    ? `Connected scoreboard: ${screenId}${slot ? ` (${slot})` : ""}`
+                    : "Scan a scoreboard QR to control recording from this phone."}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={recordingBusy || !screenId}
+                  onClick={() => void requestVideoCommand("start")}
+                  className="rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Start video
+                </button>
+                <button
+                  type="button"
+                  disabled={recordingBusy || !screenId}
+                  onClick={() => void requestVideoCommand("stop")}
+                  className="rounded-2xl border border-cyan-700 px-5 py-3 text-sm font-semibold text-cyan-800 disabled:opacity-50"
+                >
+                  Stop video
+                </button>
+              </div>
+            </div>
+            {recordingStatus ? <div className="mt-3 text-sm text-cyan-900">{recordingStatus}</div> : null}
+          </section>
 
           <section className="mt-8 sm:mt-10">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

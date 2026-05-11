@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
-import { CalendarDays, CircleDot, MapPin, Plus, Search, ShieldCheck, X } from "lucide-react";
+import { CalendarDays, CircleDot, Film, MapPin, Play, Plus, Search, ShieldCheck, Trash2, X } from "lucide-react";
 import {
   AccountAccessCard,
   formatDateTime,
@@ -14,6 +14,7 @@ import {
   playerAccountAuth,
   type PlayerAccountDashboard,
   type PlayerAccountFriendlyMatch,
+  type PlayerAccountFriendlyRecording,
 } from "@/lib/player-account-auth";
 
 const ACCOUNT_NAV_ITEMS = [
@@ -161,6 +162,16 @@ function averageFromDraft(points: string, innings: string) {
   return inningsValue > 0 ? pointsValue / inningsValue : 0;
 }
 
+function formatDuration(seconds: number | null) {
+  if (!seconds || seconds < 0) return "-";
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}:${String(remainingMinutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 function AccountDataLoadingModal() {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/60 px-5 backdrop-blur-sm">
@@ -180,10 +191,12 @@ export default function AccountFriendlyPage() {
   const { account, setAccount, isLoading } = useAccountSession();
   const [dashboard, setDashboard] = React.useState<PlayerAccountDashboard | null>(null);
   const [friendlyMatches, setFriendlyMatches] = React.useState<PlayerAccountFriendlyMatch[]>([]);
+  const [friendlyRecordings, setFriendlyRecordings] = React.useState<PlayerAccountFriendlyRecording[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoadedData, setHasLoadedData] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [deletingRecordingId, setDeletingRecordingId] = React.useState<string | null>(null);
   const [draftNotes, setDraftNotes] = React.useState("");
   const [draftTags, setDraftTags] = React.useState("");
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -217,8 +230,10 @@ export default function AccountFriendlyPage() {
         playerAccountAuth.dashboard(),
         playerAccountAuth.friendlyMatches(),
       ]);
+      const recordingsData = await playerAccountAuth.friendlyRecordings().catch(() => []);
       setDashboard(dashboardData);
       setFriendlyMatches(matchesData);
+      setFriendlyRecordings(recordingsData);
       setHasLoadedData(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Friendly match history could not be loaded.");
@@ -349,6 +364,25 @@ export default function AccountFriendlyPage() {
       setError(err instanceof Error ? err.message : "Friendly match delete failed.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const deleteRecording = async (recording: PlayerAccountFriendlyRecording) => {
+    if (!recording.id) return;
+    const confirmed = window.confirm("Remove this video from your friendly match videos?");
+    if (!confirmed) return;
+
+    setError(null);
+    setNotice(null);
+    setDeletingRecordingId(String(recording.id));
+    try {
+      await playerAccountAuth.deleteFriendlyRecording(recording.id);
+      setFriendlyRecordings((current) => current.filter((row) => String(row.id) !== String(recording.id)));
+      setNotice("Friendly video removed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Friendly video delete failed.");
+    } finally {
+      setDeletingRecordingId(null);
     }
   };
 
@@ -520,6 +554,82 @@ export default function AccountFriendlyPage() {
                 <div className="mt-3 text-3xl font-black text-zinc-950">{stat.value}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-zinc-300 bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-10">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.28em] text-red-700">
+                <Film className="h-4 w-4" />
+                My match videos
+              </div>
+              <h2 className="mt-2 text-3xl font-black uppercase tracking-normal text-zinc-950">Latest Friendly Videos</h2>
+            </div>
+            <div className="text-sm text-zinc-600">Showing up to the latest 5 recordings kept for the pilot retention window.</div>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-5">
+            {friendlyRecordings.length === 0 ? (
+              <div className="border border-dashed border-zinc-300 bg-[#f4f0e6] p-5 text-sm text-zinc-600 lg:col-span-5">
+                No friendly videos yet. When a scoreboard recording is started, it will appear here.
+              </div>
+            ) : (
+              friendlyRecordings.map((recording) => (
+                <article key={String(recording.id)} className="flex min-h-[220px] flex-col justify-between border border-zinc-300 bg-[#f4f0e6] p-4">
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-black uppercase ${
+                          recording.status === "stopped"
+                            ? "bg-emerald-700 text-white"
+                            : recording.status === "failed"
+                              ? "bg-red-700 text-white"
+                              : "bg-zinc-950 text-white"
+                        }`}
+                      >
+                        {recording.status || "video"}
+                      </span>
+                      <span className="text-xs font-semibold text-zinc-500">{formatDuration(recording.durationSec)}</span>
+                    </div>
+                    <div className="mt-4 text-sm font-semibold text-zinc-500">
+                      {formatDateTime(recording.startedAt)?.split(",")[0] || "Date not available"}
+                    </div>
+                    <h3 className="mt-2 text-lg font-black text-zinc-950">
+                      {recording.tableLabel || recording.clubName || recording.screenIdentifier || "Friendly recording"}
+                    </h3>
+                    <div className="mt-3 space-y-1 text-xs text-zinc-600">
+                      <div>{recording.resolution || "720p"} {recording.fps ? `${recording.fps} FPS` : ""}</div>
+                      <div>{recording.encoder || recording.source || "scoreboard-ffmpeg"}</div>
+                      {recording.expiresAt ? <div>Expires: {formatDateTime(recording.expiresAt)?.split(",")[0]}</div> : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {recording.hlsUrl ? (
+                      <Link
+                        href={`/account/friendly/videos/${encodeURIComponent(String(recording.id))}`}
+                        className="inline-flex items-center gap-2 bg-zinc-950 px-3 py-2 text-xs font-semibold text-white"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                        Open
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={deletingRecordingId === String(recording.id)}
+                      onClick={() => void deleteRecording(recording)}
+                      className="inline-flex items-center gap-2 border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:border-red-700 disabled:opacity-60"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {deletingRecordingId === String(recording.id) ? "Removing..." : "Remove"}
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </div>
       </section>

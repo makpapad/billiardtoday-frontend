@@ -116,6 +116,44 @@ export type PlayerAccountFriendlyMatch = {
   tags: string[];
 };
 
+export type PlayerAccountFriendlyRecording = {
+  id: number | null;
+  documentId: string | null;
+  status: "starting" | "live" | "stopped" | "failed" | "expired" | "deleted" | null;
+  streamPath: string | null;
+  publishUrl: string | null;
+  playbackUrl: string | null;
+  hlsUrl: string | null;
+  recordingPath: string | null;
+  screenIdentifier: string | null;
+  tableLabel: string | null;
+  source: string | null;
+  encoder: string | null;
+  resolution: string | null;
+  fps: number | null;
+  bitrateKbps: number | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  expiresAt: string | null;
+  durationSec: number | null;
+  failureReason: string | null;
+  clubName: string | null;
+  friendlyMatchId: number | string | null;
+};
+
+export type PlayerAccountFriendlyRecordingEvent = {
+  id: number | null;
+  documentId: string | null;
+  recordingId: number | string | null;
+  offsetMs: number;
+  eventType: string | null;
+  sequence: number | null;
+  screenIdentifier: string | null;
+  state: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string | null;
+};
+
 export type PlayerAccountDashboard = {
   account: PlayerAccountSummary | null;
   stats: {
@@ -255,6 +293,21 @@ type VerifyEnvelope = {
 
 type SimpleSuccessEnvelope = {
   data?: { sent?: boolean } | PlayerAccountSummary;
+  error?: string;
+};
+
+type FriendlyRecordingsEnvelope = {
+  data?: PlayerAccountFriendlyRecording[];
+  error?: string;
+};
+
+type FriendlyRecordingEventsEnvelope = {
+  data?: PlayerAccountFriendlyRecordingEvent[];
+  error?: string;
+};
+
+type FriendlyRecordingDeleteEnvelope = {
+  data?: (PlayerAccountFriendlyRecording & { deleted?: boolean }) | { deleted?: boolean };
   error?: string;
 };
 
@@ -833,6 +886,53 @@ class PlayerAccountAuth {
     const json = (await res.json().catch(() => null)) as FriendlyMatchDeleteEnvelope | null;
     if (!res.ok || !json?.data?.deleted) {
       throw new Error(extractErrorMessage(json, "Friendly match delete failed"));
+    }
+    return json.data;
+  }
+
+  async friendlyRecordings() {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-recordings", {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyRecordingsEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Friendly recordings request failed"));
+    }
+    return json.data;
+  }
+
+  async friendlyRecordingEvents(recordingId: number | string) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch(`/account-access/friendly-recordings/${encodeURIComponent(String(recordingId))}/events`, {
+      headers: { Authorization: `Bearer ${this.jwt}` },
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyRecordingEventsEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Friendly recording events request failed"));
+    }
+    return json.data;
+  }
+
+  async deleteFriendlyRecording(recordingId: number | string) {
+    this.hydrateFromStorage();
+    if (!this.jwt) throw new Error("Not authenticated");
+    const res = await fetch("/account-access/friendly-recordings/delete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ recordingId }),
+      cache: "no-store",
+    });
+    const json = (await res.json().catch(() => null)) as FriendlyRecordingDeleteEnvelope | null;
+    if (!res.ok || !json?.data) {
+      throw new Error(extractErrorMessage(json, "Friendly recording delete failed"));
     }
     return json.data;
   }

@@ -134,7 +134,10 @@ export default function ClaimPage() {
       setStatus("The scoreboard link was completed.");
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
-          window.location.assign("/me");
+          const next = new URL("/me", window.location.origin);
+          next.searchParams.set("screenId", screenId);
+          next.searchParams.set("slot", slot);
+          window.location.assign(`${next.pathname}${next.search}`);
         }, 700);
       }
     } catch (err) {

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { buildLiveScoreChartRows, LiveSheetScoreChart } from "@/components/live/LiveSheetScoreChart";
+import TemplateFiveOverlay from "@/components/overlay/TemplateFiveOverlay";
 
 type ObsOverlayClientProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -1700,59 +1701,7 @@ function TemplateFiveOverlayCard({
   height: number;
   obsSafe: boolean;
 }) {
-  const [viewportSize, setViewportSize] = React.useState<{ width: number; height: number } | null>(null);
-
-  React.useEffect(() => {
-    const updateViewportSize = () => {
-      setViewportSize({
-        width: window.innerWidth || width,
-        height: window.innerHeight || height,
-      });
-    };
-
-    updateViewportSize();
-    window.addEventListener("resize", updateViewportSize);
-    return () => window.removeEventListener("resize", updateViewportSize);
-  }, [height, width]);
-
-  const availableWidth = viewportSize?.width ?? width;
-  const availableHeight = viewportSize?.height ?? height;
-  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.7));
-  const overlayBottom = Math.max(12, Math.round(availableHeight * 0.04));
-
-  return (
-    <div
-      className="relative text-white"
-      style={{
-        width: "100vw",
-        height: "100vh",
-        minWidth: 0,
-        minHeight: 0,
-        transform: obsSafe ? "translateZ(0)" : undefined,
-        backfaceVisibility: obsSafe ? "hidden" : undefined,
-        WebkitFontSmoothing: obsSafe ? "antialiased" : undefined,
-        textRendering: obsSafe ? "geometricPrecision" : undefined,
-        fontFamily:
-          "'Barlow Condensed', 'Barlow', 'Roboto Condensed', 'Inter', system-ui, sans-serif",
-      }}
-    >
-      <div
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{
-          width: overlayWidth,
-          bottom: overlayBottom,
-        }}
-      >
-        <TemplateFourOverlayCard
-          item={item}
-          width={overlayWidth}
-          height={availableHeight}
-          obsSafe={obsSafe}
-          variant="template5"
-        />
-      </div>
-    </div>
-  );
+  return <TemplateFiveOverlay state={item.state} width={width} height={height} obsSafe={obsSafe} fillViewport />;
 }
 
 function TimeStrip({
