@@ -255,3 +255,165 @@ Scoreboard Electron -> hidden FFmpeg -> MediaMTX recording -> player account vid
 ```
 
 Έτσι κρατάμε το OBS μόνο εκεί που πραγματικά χρειάζεται, και τα friendly recordings γίνονται πιο ελαφριά και πιο απλά για τον παίκτη.
+
+## 12. Πιθανό billing model
+
+Η υπηρεσία μπορεί να χρεωθεί είτε στον τελικό χρήστη είτε στο club. Τα δύο μοντέλα καλύπτουν διαφορετική αξία.
+
+### Χρέωση στον παίκτη
+
+Ταιριάζει όταν το video είναι προσωπικό αρχείο του παίκτη.
+
+Παράδειγμα:
+
+```text
+Player pays for personal match video history.
+```
+
+Πιθανά plans:
+
+```text
+Free:
+  1 τελευταίο video
+  retention 7 ημέρες
+
+Premium:
+  5 τελευταία videos
+  retention 30 ημέρες
+
+Pro:
+  περισσότερα videos
+  μεγαλύτερο retention
+  πιθανό download/export
+```
+
+Πλεονέκτημα:
+
+- καθαρή σύνδεση με player account
+- ο παίκτης πληρώνει για το προσωπικό του ιστορικό
+- δεν χρειάζεται το club να διαχειριστεί billing για κάθε παίκτη
+
+Μειονέκτημα:
+
+- ο παίκτης πρέπει να έχει account/payment
+- ίσως δυσκολέψει το adoption στην αρχή
+
+### Χρέωση στο club
+
+Ταιριάζει όταν το club θέλει να προσφέρει recording ως υπηρεσία στα τραπέζια του.
+
+Παράδειγμα:
+
+```text
+Club pays for recording-enabled tables.
+```
+
+Πιθανά plans:
+
+```text
+Club Basic:
+  1-2 recording-enabled tables
+  limited monthly recording hours
+
+Club Pro:
+  περισσότερα tables
+  περισσότερες ώρες
+  retention 30 ημέρες
+
+Club Sponsor:
+  branding/sponsor overlays
+  club video page
+```
+
+Πλεονέκτημα:
+
+- πιο εύκολο rollout σε οργανωμένο χώρο
+- το club μπορεί να το πουλάει ως παροχή
+- καλύτερο για σταθερά scoreboard PCs/cameras
+
+Μειονέκτημα:
+
+- χρειάζεται quota ανά club/table
+- αν οι παίκτες θέλουν προσωπικό ιστορικό, πάλι χρειάζεται σύνδεση με user account
+
+### Hybrid model
+
+Πιο δυνατό εμπορικά μακροπρόθεσμα:
+
+```text
+Club plan:
+  ενεργοποιεί recording στα τραπέζια
+
+Player plan:
+  ξεκλειδώνει προσωπικό ιστορικό, μεγαλύτερο retention ή downloads
+```
+
+Παράδειγμα:
+
+```text
+Το club πληρώνει για να υπάρχει η δυνατότητα recording.
+Ο παίκτης πληρώνει αν θέλει να κρατάει τα videos στο προσωπικό του αρχείο.
+```
+
+Αυτό κρατάει χαμηλό friction στο club και δίνει upsell στον παίκτη.
+
+## 13. MVP billing πρόταση
+
+Για πρώτη έκδοση δεν προτείνεται σύνθετη χρέωση.
+
+Προτεινόμενο pilot:
+
+```text
+Free pilot για επιλεγμένα clubs/users
+5 τελευταία videos ανά user
+retention 14 ή 30 ημέρες
+χωρίς downloads στην αρχή
+```
+
+Στόχος του pilot:
+
+- να μετρήσουμε πραγματική χρήση
+- να δούμε αν οι παίκτες ξαναβλέπουν τα videos
+- να δούμε κόστος storage/bandwidth
+- να δούμε αν το club το θεωρεί selling point
+
+Μετά το pilot αποφασίζουμε τιμολόγηση με βάση δεδομένα.
+
+## 14. Metrics που πρέπει να κρατάμε
+
+Για να αποφασίσουμε σωστή χρέωση, χρειαζόμαστε μετρήσεις:
+
+```text
+recordings ανά ημέρα
+recordings ανά club
+recordings ανά player
+μέση διάρκεια video
+μέσο μέγεθος αρχείου
+storage ανά user/club
+playback views ανά video
+bandwidth playback
+πόσα videos λήγουν χωρίς να παιχτούν ξανά
+πόσοι χρήστες πατάνε Start recording
+πόσοι χρήστες ολοκληρώνουν enrollment για να κρατήσουν video
+```
+
+Αυτές οι μετρήσεις πρέπει να συνδεθούν με backend metadata και cleanup job.
+
+## 15. Billing συμπέρασμα
+
+Για την αρχή:
+
+```text
+Build feature first.
+Measure usage.
+Keep 5 latest videos for limited time.
+Do not add payment in MVP.
+```
+
+Μετά:
+
+```text
+Friendly personal archive -> player billing
+Recording-enabled tables -> club billing
+Best long-term option -> hybrid
+```
