@@ -10,6 +10,98 @@ const STRAPI_URL =
     'http://localhost:1337'
 const STRAPI_API_TOKEN = getServerEnv('STRAPI_API_TOKEN') || process.env.STRAPI_API_TOKEN
 
+const toNumber = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+    if (typeof value === 'string' && value.trim().length > 0) {
+        const parsed = Number(value)
+        return Number.isFinite(parsed) ? parsed : null
+    }
+    return null
+}
+
+const asObject = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+
+const asArray = (value: unknown): Record<string, unknown>[] =>
+    Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(asObject(item))) : []
+
+const buildStageMatchPointsMap = async (
+    eventStages: unknown[],
+    headers: HeadersInit,
+): Promise<Map<string, number>> => {
+    const totals = new Map<string, number>()
+
+    for (const stage of asArray(eventStages)) {
+        const target =
+            typeof stage.documentId === 'string' && stage.documentId.trim().length > 0
+                ? stage.documentId
+                : typeof stage.id === 'number'
+                  ? String(stage.id)
+                  : null
+        if (!target) continue
+
+        const stageUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(target)}/standings`)
+        stageUrl.searchParams.set('populate[player][fields][0]', 'documentId')
+        stageUrl.searchParams.set('populate[player][fields][1]', 'full_name')
+
+        const res = await fetch(stageUrl.toString(), {
+            cache: 'no-store',
+            headers,
+        })
+        const text = await res.text()
+        if (!res.ok) continue
+
+        let payload: { data?: unknown[]; results?: unknown[] } | null = null
+        try {
+            payload = JSON.parse(text) as { data?: unknown[]; results?: unknown[] }
+        } catch {
+            payload = null
+        }
+        const rows = Array.isArray(payload?.results)
+            ? payload!.results!
+            : Array.isArray(payload?.data)
+              ? payload!.data!
+              : []
+
+        for (const row of asArray(rows)) {
+            const player = asObject(row.player)
+            const documentId =
+                typeof player?.documentId === "string" && player.documentId.trim().length > 0
+                    ? player.documentId
+                    : null
+            const matchPoints = toNumber(row.match_points)
+            if (!documentId || matchPoints === null) continue
+            totals.set(documentId, (totals.get(documentId) ?? 0) + matchPoints)
+        }
+    }
+
+    return totals
+}
+
+const enrichFinalRows = (
+    rows: unknown[],
+    stageMatchPoints: Map<string, number>,
+): Record<string, unknown>[] =>
+    asArray(rows).map((row) => {
+        const player = asObject(row.player)
+        const playerDocumentId =
+            typeof player?.documentId === 'string' && player.documentId.trim().length > 0
+                ? player.documentId
+                : null
+        const explicitMatchPoints = toNumber(row.match_points)
+        const derivedMatchPoints =
+            (playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null) ??
+            explicitMatchPoints ??
+            toNumber(row.points)
+
+        return derivedMatchPoints === null
+            ? row
+            : {
+                  ...row,
+                  match_points: derivedMatchPoints,
+              }
+    })
+
 export async function GET(
     _req: NextRequest,
     context: { params: Promise<{ id: string }> },
@@ -28,6 +120,8 @@ export async function GET(
         const eventUrl = new URL(`${STRAPI_URL}/api/bt-events/${encodeURIComponent(id)}`)
         eventUrl.searchParams.set('fields[0]', 'final_standings_published')
         eventUrl.searchParams.set('fields[1]', 'final_standings_published_at')
+        eventUrl.searchParams.set('populate[event_stages][fields][0]', 'documentId')
+        eventUrl.searchParams.set('populate[event_stages][fields][1]', 'id')
         eventUrl.searchParams.set('populate[results_final][sort][0]', 'position:asc')
         eventUrl.searchParams.set('populate[results_final][fields][0]', 'position')
         eventUrl.searchParams.set('populate[results_final][fields][1]', 'best_average')
@@ -56,6 +150,7 @@ export async function GET(
             const payload = JSON.parse(eventText) as {
                 data?: {
                     results_final?: unknown[]
+                    event_stages?: unknown[]
                     final_standings_published?: boolean
                     final_standings_published_at?: string | null
                 } | null
@@ -64,9 +159,13 @@ export async function GET(
                 ? payload.data.results_final
                 : []
             if ((payload.data?.final_standings_published === true && rows.length > 0) || rows.length > 0) {
+                const stageMatchPoints = await buildStageMatchPointsMap(
+                    Array.isArray(payload.data?.event_stages) ? payload.data.event_stages : [],
+                    headers,
+                )
                 return NextResponse.json(
                     {
-                        data: rows,
+                        data: enrichFinalRows(rows, stageMatchPoints),
                         meta: {
                             final_standings_published: payload.data?.final_standings_published === true,
                             final_standings_published_at:
