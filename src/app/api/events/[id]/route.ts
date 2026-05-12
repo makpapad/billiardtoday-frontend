@@ -909,10 +909,13 @@ export async function GET(
                     const playerDocumentId =
                         typeof player?.documentId === 'string' ? player.documentId : null
                     const explicitMatchPoints = toNumber(result.match_points)
+                    const legacyMatchPoints = toNumber(result.points)
                     const derivedMatchPoints =
-                        explicitMatchPoints === null && playerDocumentId
+                        explicitMatchPoints === null && legacyMatchPoints === null && playerDocumentId
                             ? (stageMatchPoints.get(playerDocumentId) ?? null)
                             : null
+                    const resolvedMatchPoints =
+                        explicitMatchPoints ?? legacyMatchPoints ?? derivedMatchPoints
                     const hasExplicitBestGameField =
                         Object.prototype.hasOwnProperty.call(result, 'best_game')
                     const explicitBestGame =
@@ -926,7 +929,7 @@ export async function GET(
                     const restrictedBestAverage = toNumber(result.restricted_best_avg)
 
                     if (
-                        derivedMatchPoints === null &&
+                        resolvedMatchPoints === null &&
                         derivedBestGame === null &&
                         explicitBestGame === null &&
                         restrictedBestAverage === null
@@ -939,7 +942,7 @@ export async function GET(
                         ...(restrictedBestAverage === null
                             ? {}
                             : { best_average: restrictedBestAverage }),
-                        ...(derivedMatchPoints === null ? {} : { match_points: derivedMatchPoints }),
+                        ...(resolvedMatchPoints === null ? {} : { match_points: resolvedMatchPoints }),
                         ...(hasExplicitBestGameField
                             ? { best_game: explicitBestGame }
                             : derivedBestGame === null

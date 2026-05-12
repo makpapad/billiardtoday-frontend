@@ -108,8 +108,8 @@ const enrichFinalRows = (
         const explicitMatchPoints = toNumber(row.match_points)
         const derivedMatchPoints =
             explicitMatchPoints ??
-            (playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null) ??
-            toNumber(row.points)
+            toNumber(row.points) ??
+            (playerDocumentId ? (stageMatchPoints.get(playerDocumentId) ?? null) : null)
 
         return derivedMatchPoints === null
             ? row
