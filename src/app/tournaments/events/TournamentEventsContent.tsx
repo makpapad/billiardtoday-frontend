@@ -3062,6 +3062,9 @@ export function TournamentEventsContent({
     if (!eventData?.data?.results_final) return [];
 
     const resultsArray = toRelationArray(eventData.data.results_final);
+    const hasPublishedStoredFinalResults =
+      eventData?.data?.final_standings_published === true &&
+      resultsArray.length > 0;
 
     const normalizedResults = resultsArray
       .map((result, index) =>
@@ -3147,6 +3150,19 @@ export function TournamentEventsContent({
               ),
             )
         : [];
+
+    if (hasPublishedStoredFinalResults) {
+      return applyFinalResultCountries(normalizedResults, longoniCountryByPlayerKey)
+        .sort((a, b) => {
+          if (a.position !== null && b.position !== null) {
+            return a.position - b.position;
+          }
+          if (a.position !== null) return -1;
+          if (b.position !== null) return 1;
+          return a.id.localeCompare(b.id);
+        });
+    }
+
     const finalResultsForRanking =
       shouldBuildLongoniFinalStandings
         ? [
