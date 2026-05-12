@@ -263,7 +263,7 @@ export const normalizeFinalResult = (
     playerDocumentId: player.documentId ?? null,
     playerName: player.name,
     playerCountry: player.country ?? null,
-    matchPoints: toNumber((normalized as typeof normalized & { match_points?: unknown }).match_points) ?? toNumber(normalized.points),
+    matchPoints: toNumber((normalized as typeof normalized & { match_points?: unknown }).match_points),
     bestAverage: toNumber(normalized.best_average),
     bestGame: toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game),
     caroms: toNumber(normalized.caroms),

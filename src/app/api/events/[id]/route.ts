@@ -677,15 +677,16 @@ export async function GET(
             queryParams.set('populate[results_final][fields][0]', 'position')
             queryParams.set('populate[results_final][fields][1]', 'best_average')
             queryParams.set('populate[results_final][fields][2]', 'caroms')
-            queryParams.set('populate[results_final][fields][3]', 'points')
-            queryParams.set('populate[results_final][fields][4]', 'innings')
-            queryParams.set('populate[results_final][fields][5]', 'high_run')
-            queryParams.set('populate[results_final][fields][6]', 'high_run_2')
-            queryParams.set('populate[results_final][fields][7]', 'ranking_points')
-            queryParams.set('populate[results_final][fields][8]', 'penalty')
-            queryParams.set('populate[results_final][fields][9]', 'final_points')
-            queryParams.set('populate[results_final][fields][10]', 'documentId')
-            queryParams.set('populate[results_final][fields][11]', 'restricted_best_avg')
+            queryParams.set('populate[results_final][fields][3]', 'match_points')
+            queryParams.set('populate[results_final][fields][4]', 'points')
+            queryParams.set('populate[results_final][fields][5]', 'innings')
+            queryParams.set('populate[results_final][fields][6]', 'high_run')
+            queryParams.set('populate[results_final][fields][7]', 'high_run_2')
+            queryParams.set('populate[results_final][fields][8]', 'ranking_points')
+            queryParams.set('populate[results_final][fields][9]', 'penalty')
+            queryParams.set('populate[results_final][fields][10]', 'final_points')
+            queryParams.set('populate[results_final][fields][11]', 'documentId')
+            queryParams.set('populate[results_final][fields][12]', 'restricted_best_avg')
             queryParams.set('populate[results_final][populate][player][fields][0]', 'full_name')
             queryParams.set('populate[results_final][populate][player][fields][1]', 'documentId')
             queryParams.set('populate[results_final][populate][player][fields][2]', 'full_name_en')
@@ -907,8 +908,7 @@ export async function GET(
                     const player = asObject(result.player)
                     const playerDocumentId =
                         typeof player?.documentId === 'string' ? player.documentId : null
-                    const explicitMatchPoints =
-                        toNumber(result.match_points) ?? toNumber(result.points)
+                    const explicitMatchPoints = toNumber(result.match_points)
                     const derivedMatchPoints =
                         explicitMatchPoints === null && playerDocumentId
                             ? (stageMatchPoints.get(playerDocumentId) ?? null)
