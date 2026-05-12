@@ -386,6 +386,13 @@ export default function AccountFriendlyPage() {
     }
   };
 
+  const recordingHasPlayableVideo = (recording: PlayerAccountFriendlyRecording) => {
+    if (recording.processingStatus === "ready" && recording.processedPlaybackUrl) return true;
+    const playerOnlyRequested = recording.requestedPlayerSlot === "p1" || recording.requestedPlayerSlot === "p2";
+    if (playerOnlyRequested && recording.processingStatus !== "not-requested") return false;
+    return Boolean(recording.hlsUrl || recording.playbackUrl);
+  };
+
   const playerName = account ? displayNameFor(account, dashboard) : "Player account";
   const playerCard = dashboard?.playerCard || null;
 
@@ -603,12 +610,17 @@ export default function AccountFriendlyPage() {
                     <div className="mt-3 space-y-1 text-xs text-zinc-600">
                       <div>{recording.resolution || "720p"} {recording.fps ? `${recording.fps} FPS` : ""}</div>
                       <div>{recording.encoder || recording.source || "scoreboard-ffmpeg"}</div>
+                      {recording.processingStatus === "pending" || recording.processingStatus === "processing" ? (
+                        <div>Preparing player-only video</div>
+                      ) : null}
+                      {recording.processingStatus === "ready" ? <div>Player-only video ready</div> : null}
+                      {recording.processingStatus === "failed" ? <div>Processing failed</div> : null}
                       {recording.expiresAt ? <div>Expires: {formatDateTime(recording.expiresAt)?.split(",")[0]}</div> : null}
                     </div>
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    {recording.hlsUrl || recording.playbackUrl ? (
+                    {recordingHasPlayableVideo(recording) ? (
                       <Link
                         href={`/account/friendly/videos/${encodeURIComponent(String(recording.id))}`}
                         className="inline-flex items-center gap-2 bg-zinc-950 px-3 py-2 text-xs font-semibold text-white"

@@ -39,6 +39,16 @@ type ScoreState = {
 };
 
 function streamFor(recording: PlayerAccountFriendlyRecording | null) {
+  if (recording?.processingStatus === "ready" && recording.processedPlaybackUrl?.trim()) {
+    return { url: recording.processedPlaybackUrl.trim(), type: "mp4" as const };
+  }
+
+  const playerOnlyRequested =
+    recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
+  if (playerOnlyRequested && recording?.processingStatus !== "not-requested") {
+    return null;
+  }
+
   const direct = recording?.hlsUrl?.trim();
   if (direct) return { url: direct, type: "hls" as const };
 
@@ -227,6 +237,7 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
               </h1>
               <p className="mt-2 text-sm text-white/60">
                 {recording?.startedAt ? formatDateTime(recording.startedAt) : "Recording date not available"} | {events.length} timeline events
+                {recording?.processingStatus === "ready" ? " | Player-only video" : ""}
               </p>
             </div>
           </div>
@@ -240,7 +251,11 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
               <RecordingVideo recording={recording} events={events} />
             ) : (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-white/70">
-                Recording stream URL is not available.
+                {recording?.processingStatus === "pending" || recording?.processingStatus === "processing"
+                  ? "Player-only video is being prepared."
+                  : recording?.processingStatus === "failed"
+                    ? recording.processingError || "Player-only video processing failed."
+                    : "Recording stream URL is not available."}
               </div>
             )}
           </div>

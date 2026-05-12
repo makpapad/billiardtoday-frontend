@@ -125,6 +125,13 @@ export type PlayerAccountFriendlyRecording = {
   playbackUrl: string | null;
   hlsUrl: string | null;
   recordingPath: string | null;
+  processedPlaybackUrl: string | null;
+  processedPath: string | null;
+  processedAt: string | null;
+  processedDurationSec: number | null;
+  processingStatus: "not-requested" | "pending" | "processing" | "ready" | "failed" | null;
+  processingError: string | null;
+  requestedPlayerSlot: "p1" | "p2" | "both" | "unknown" | null;
   screenIdentifier: string | null;
   tableLabel: string | null;
   source: string | null;
