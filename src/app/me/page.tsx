@@ -60,6 +60,7 @@ export default function MePage() {
   const [slot, setSlot] = React.useState("");
   const [recordingStatus, setRecordingStatus] = React.useState<string | null>(null);
   const [recordingBusy, setRecordingBusy] = React.useState(false);
+  const [recordingRequested, setRecordingRequested] = React.useState(false);
 
   React.useEffect(() => {
     const savedScreenId = localStorage.getItem("bt.lastClaimedScreenId") || "";
@@ -142,9 +143,10 @@ export default function MePage() {
       }
       setRecordingStatus(
         command === "start"
-          ? "Start command sent. The scoreboard PC will start recording in a few seconds."
+          ? "Recording request sent. Start New Game on the scoreboard to choose who receives the video."
           : "Stop command sent. The scoreboard PC will stop recording in a few seconds.",
       );
+      setRecordingRequested(command === "start");
     } catch (error) {
       setRecordingStatus(error instanceof Error ? error.message : `${command} request failed.`);
     } finally {
@@ -254,11 +256,11 @@ export default function MePage() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
-                  disabled={recordingBusy || !screenId}
+                  disabled={recordingBusy || !screenId || recordingRequested}
                   onClick={() => void requestVideoCommand("start")}
                   className="rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  Start video
+                  {recordingRequested ? "Video requested" : "Start video"}
                 </button>
                 <button
                   type="button"
