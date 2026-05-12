@@ -40,9 +40,13 @@ const buildStageMatchPointsMap = async (
                   : null
         if (!target) continue
 
-        const stageUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(target)}/standings`)
-        stageUrl.searchParams.set('populate[player][fields][0]', 'documentId')
-        stageUrl.searchParams.set('populate[player][fields][1]', 'full_name')
+        const stageUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(target)}`)
+        stageUrl.searchParams.set('populate[groups][fields][0]', 'player1_match_points')
+        stageUrl.searchParams.set('populate[groups][fields][1]', 'player2_match_points')
+        stageUrl.searchParams.set('populate[groups][populate][player1][fields][0]', 'documentId')
+        stageUrl.searchParams.set('populate[groups][populate][player1][fields][1]', 'full_name')
+        stageUrl.searchParams.set('populate[groups][populate][player2][fields][0]', 'documentId')
+        stageUrl.searchParams.set('populate[groups][populate][player2][fields][1]', 'full_name')
 
         const res = await fetch(stageUrl.toString(), {
             cache: 'no-store',
@@ -51,27 +55,40 @@ const buildStageMatchPointsMap = async (
         const text = await res.text()
         if (!res.ok) continue
 
-        let payload: { data?: unknown[]; results?: unknown[] } | null = null
+        let payload: { data?: { groups?: unknown[] } | null } | null = null
         try {
-            payload = JSON.parse(text) as { data?: unknown[]; results?: unknown[] }
+            payload = JSON.parse(text) as { data?: { groups?: unknown[] } | null }
         } catch {
             payload = null
         }
-        const rows = Array.isArray(payload?.results)
-            ? payload!.results!
-            : Array.isArray(payload?.data)
-              ? payload!.data!
-              : []
+        const groups = asArray(payload?.data?.groups)
 
-        for (const row of asArray(rows)) {
-            const player = asObject(row.player)
-            const documentId =
-                typeof player?.documentId === "string" && player.documentId.trim().length > 0
-                    ? player.documentId
+        for (const group of groups) {
+            const player1 = asObject(group.player1)
+            const player2 = asObject(group.player2)
+            const player1DocumentId =
+                typeof player1?.documentId === 'string' && player1.documentId.trim().length > 0
+                    ? player1.documentId
                     : null
-            const matchPoints = toNumber(row.match_points)
-            if (!documentId || matchPoints === null) continue
-            totals.set(documentId, (totals.get(documentId) ?? 0) + matchPoints)
+            const player2DocumentId =
+                typeof player2?.documentId === 'string' && player2.documentId.trim().length > 0
+                    ? player2.documentId
+                    : null
+            const player1MatchPoints = toNumber(group.player1_match_points)
+            const player2MatchPoints = toNumber(group.player2_match_points)
+
+            if (player1DocumentId && player1MatchPoints !== null) {
+                totals.set(
+                    player1DocumentId,
+                    (totals.get(player1DocumentId) ?? 0) + player1MatchPoints,
+                )
+            }
+            if (player2DocumentId && player2MatchPoints !== null) {
+                totals.set(
+                    player2DocumentId,
+                    (totals.get(player2DocumentId) ?? 0) + player2MatchPoints,
+                )
+            }
         }
     }
 
