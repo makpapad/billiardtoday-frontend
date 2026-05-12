@@ -45,7 +45,11 @@ function streamFor(recording: PlayerAccountFriendlyRecording | null) {
 
   const playerOnlyRequested =
     recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
-  if (playerOnlyRequested && recording?.processingStatus !== "not-requested") {
+  if (
+    playerOnlyRequested &&
+    recording?.processingStatus !== "not-requested" &&
+    recording?.processingStatus !== "failed"
+  ) {
     return null;
   }
 
@@ -58,6 +62,12 @@ function streamFor(recording: PlayerAccountFriendlyRecording | null) {
     return { url: playback, type: "mp4" as const };
   }
   return { url: `${playback.replace(/\/+$/, "")}/index.m3u8`, type: "hls" as const };
+}
+
+function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null) {
+  const playerOnlyRequested =
+    recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
+  return playerOnlyRequested && recording?.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
 }
 
 function stateAt(events: PlayerAccountFriendlyRecordingEvent[], currentTimeSec: number): ScoreState | null {
@@ -238,7 +248,13 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
               <p className="mt-2 text-sm text-white/60">
                 {recording?.startedAt ? formatDateTime(recording.startedAt) : "Recording date not available"} | {events.length} timeline events
                 {recording?.processingStatus === "ready" ? " | Player-only video" : ""}
+                {usesFullVideoFallback(recording) ? " | Full video fallback" : ""}
               </p>
+              {usesFullVideoFallback(recording) ? (
+                <p className="mt-2 max-w-2xl text-sm text-amber-200">
+                  Player-only processing failed. Showing the full recording instead.
+                </p>
+              ) : null}
             </div>
           </div>
 

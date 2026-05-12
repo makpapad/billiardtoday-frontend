@@ -389,8 +389,19 @@ export default function AccountFriendlyPage() {
   const recordingHasPlayableVideo = (recording: PlayerAccountFriendlyRecording) => {
     if (recording.processingStatus === "ready" && recording.processedPlaybackUrl) return true;
     const playerOnlyRequested = recording.requestedPlayerSlot === "p1" || recording.requestedPlayerSlot === "p2";
-    if (playerOnlyRequested && recording.processingStatus !== "not-requested") return false;
+    if (
+      playerOnlyRequested &&
+      recording.processingStatus !== "not-requested" &&
+      recording.processingStatus !== "failed"
+    ) {
+      return false;
+    }
     return Boolean(recording.hlsUrl || recording.playbackUrl);
+  };
+
+  const recordingUsesFullVideoFallback = (recording: PlayerAccountFriendlyRecording) => {
+    const playerOnlyRequested = recording.requestedPlayerSlot === "p1" || recording.requestedPlayerSlot === "p2";
+    return playerOnlyRequested && recording.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
   };
 
   const playerName = account ? displayNameFor(account, dashboard) : "Player account";
@@ -614,7 +625,16 @@ export default function AccountFriendlyPage() {
                         <div>Preparing player-only video</div>
                       ) : null}
                       {recording.processingStatus === "ready" ? <div>Player-only video ready</div> : null}
-                      {recording.processingStatus === "failed" ? <div>Processing failed</div> : null}
+                      {recording.processingStatus === "failed" ? (
+                        <div>
+                          {recordingUsesFullVideoFallback(recording)
+                            ? "Player-only failed; full video available"
+                            : "Processing failed"}
+                        </div>
+                      ) : null}
+                      {recording.processingStatus === "failed" && recording.processingError ? (
+                        <div className="line-clamp-2 text-red-700">{recording.processingError}</div>
+                      ) : null}
                       {recording.expiresAt ? <div>Expires: {formatDateTime(recording.expiresAt)?.split(",")[0]}</div> : null}
                     </div>
                   </div>
@@ -626,7 +646,7 @@ export default function AccountFriendlyPage() {
                         className="inline-flex items-center gap-2 bg-zinc-950 px-3 py-2 text-xs font-semibold text-white"
                       >
                         <Play className="h-3.5 w-3.5" />
-                        Open
+                        {recordingUsesFullVideoFallback(recording) ? "Open full video" : "Open"}
                       </Link>
                     ) : null}
                     <button
