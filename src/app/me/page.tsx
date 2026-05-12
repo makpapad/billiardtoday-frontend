@@ -120,6 +120,12 @@ export default function MePage() {
       setRecordingStatus("Scan a scoreboard QR first so the app knows which scoreboard to control.");
       return;
     }
+    if (
+      command === "start" &&
+      !window.confirm("This match will be recorded and linked to your BilliardToday account.")
+    ) {
+      return;
+    }
 
     setRecordingBusy(true);
     setRecordingStatus(null);
