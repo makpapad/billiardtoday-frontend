@@ -81,6 +81,16 @@ const formatPct = (value: unknown) => {
   return Number.isFinite(parsed) ? `${parsed.toFixed(1)}%` : "-";
 };
 
+const avgPair = (
+  playerA: RecommendationPayload["players"][number] | null,
+  playerB: RecommendationPayload["players"][number] | null,
+  selector: (player: RecommendationPayload["players"][number]) => number,
+  formatter: (value: number) => string,
+) => {
+  if (!playerA || !playerB) return "-";
+  return `${formatter(selector(playerA))} / ${formatter(selector(playerB))}`;
+};
+
 const readOptionalNumber = (value: string) => {
   const clean = value.trim().replace(",", ".");
   if (!clean) return null;
@@ -575,10 +585,16 @@ export function HandicapToolContent() {
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
           <div className="grid gap-4 md:grid-cols-4">
-            <Metric label="Επίσημη δύναμη" value="AVG, νίκες %, H.R., καλύτερο AVG" />
-            <Metric label="Δύναμη φιλικών" value="Χειροκίνητα τώρα, dataset αργότερα" />
+            <Metric
+              label="Δυναμική στα επίσημα"
+              value={`AVG ${avgPair(resultPlayerA, resultPlayerB, (player) => player.overallAvg, formatAvg)} | Win ${avgPair(resultPlayerA, resultPlayerB, (player) => player.winPercentage, formatPct)}`}
+            />
+            <Metric
+              label="Δυναμική στα φιλικά"
+              value={`AVG ${formatAvg(readOptionalNumber(playerAFriendlyAvg))} / ${formatAvg(readOptionalNumber(playerBFriendlyAvg))}`}
+            />
             <Metric label="Παράγοντας πίεσης" value="Επίσημο AVG / AVG φιλικών" />
-            <Metric label="Learning status" value="Συλλογή δειγμάτων" />
+            <Metric label="Κατάσταση εκμάθησης" value="Συλλογή δειγμάτων" />
           </div>
         </section>
       </div>
