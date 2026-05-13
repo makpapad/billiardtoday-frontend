@@ -85,6 +85,13 @@ function streamCandidatesFor(recording: PlayerAccountFriendlyRecording | null): 
   const live = recording?.hlsUrl?.trim();
   const isRecorded = recording?.status === "stopped" || recording?.status === "expired" || Boolean(recording?.endedAt);
   if (isRecorded) {
+    const token = playerAccountAuth.getJwt();
+    if (recording?.id && token) {
+      pushStream({
+        url: `/account-access/friendly-recordings/${encodeURIComponent(String(recording.id))}/video?token=${encodeURIComponent(token)}`,
+        type: "mp4",
+      });
+    }
     pushStreamsFromUrl(playback);
     pushStreamsFromUrl(live);
   } else {
