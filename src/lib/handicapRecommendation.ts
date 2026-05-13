@@ -313,7 +313,7 @@ const buildCalibration = (
     });
   }
 
-  if (strongerAvg < 0.8 && weakerAvg >= 0.4 && avgGap <= 0.25) {
+  if (baseHandicap > 0 && strongerAvg < 0.8 && weakerAvg >= 0.4 && avgGap <= 0.25) {
     adjustments.push({
       label: "Low-band compression",
       points: -roundAdjustment(1, targetPoints),
