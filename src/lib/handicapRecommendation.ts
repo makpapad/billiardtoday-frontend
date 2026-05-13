@@ -21,6 +21,7 @@ export type HandicapPlayerRating = {
   bestAverage: number;
   internalHandy: number;
   calibrationBand: string;
+  statsScope: "game-type" | "overall-fallback";
 };
 
 export type HandicapAdjustment = {
@@ -61,6 +62,83 @@ const isThreeCushionKey = (value: unknown) => {
   return normalized === "threecushion" || normalized === "3cushion";
 };
 
+const gameTypeMatches = (candidate: unknown, requested: string) => {
+  const normalizedCandidate = normalizeGameType(candidate);
+  const normalizedRequested = normalizeGameType(requested);
+
+  if (normalizedCandidate === normalizedRequested) return true;
+  if (isThreeCushionKey(normalizedRequested)) return isThreeCushionKey(candidate);
+  return false;
+};
+
+const mergeAggregates = (aggregates: Record<string, any>[]) => {
+  if (aggregates.length === 0) return null;
+  if (aggregates.length === 1) return aggregates[0];
+
+  const totals = aggregates.reduce(
+    (acc, aggregate) => {
+      const totalMatches = finiteNumber(aggregate.totalMatches);
+      const totalWins = finiteNumber(aggregate.totalWins);
+      const totalLosses = finiteNumber(aggregate.totalLosses);
+      const totalDraws =
+        finiteNumber(aggregate.totalDraws) ||
+        Math.max(0, totalMatches - totalWins - totalLosses);
+
+      acc.totalMatches += totalMatches;
+      acc.totalWins += totalWins;
+      acc.totalLosses += totalLosses;
+      acc.totalDraws += totalDraws;
+      acc.totalPoints += finiteNumber(aggregate.totalPoints);
+      acc.totalInnings += finiteNumber(aggregate.totalInnings);
+      acc.highestRun = Math.max(acc.highestRun, finiteNumber(aggregate.highestRun));
+      acc.bestAverage = Math.max(
+        acc.bestAverage,
+        finiteNumber(aggregate.bestAverage ?? aggregate.bestAverageFromWins),
+      );
+
+      const yearsActive = aggregate.yearsActive;
+      if (Array.isArray(yearsActive)) {
+        yearsActive.forEach((year) => {
+          const parsed = Number(year);
+          if (Number.isFinite(parsed)) acc.yearsActive.add(parsed);
+        });
+      }
+
+      return acc;
+    },
+    {
+      totalMatches: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      totalDraws: 0,
+      totalPoints: 0,
+      totalInnings: 0,
+      highestRun: 0,
+      bestAverage: 0,
+      yearsActive: new Set<number>(),
+    },
+  );
+
+  return {
+    totalMatches: totals.totalMatches,
+    totalWins: totals.totalWins,
+    totalLosses: totals.totalLosses,
+    totalDraws: totals.totalDraws,
+    totalPoints: totals.totalPoints,
+    totalInnings: totals.totalInnings,
+    highestRun: totals.highestRun,
+    bestAverage: totals.bestAverage,
+    bestAverageFromWins: totals.bestAverage,
+    yearsActive: Array.from(totals.yearsActive)
+      .map(Number)
+      .sort((a, b) => b - a),
+    avgPerInning:
+      totals.totalInnings > 0 ? totals.totalPoints / totals.totalInnings : 0,
+    winPercentage:
+      totals.totalMatches > 0 ? (totals.totalWins / totals.totalMatches) * 100 : 0,
+  };
+};
+
 const pickAggregate = (
   careerStats: Record<string, any> | null | undefined,
   gameType: string,
@@ -73,18 +151,48 @@ const pickAggregate = (
       : null;
 
   if (byGameType) {
-    const requestedKey = normalizeGameType(gameType);
-    const entry = Object.entries(byGameType).find(([key]) => {
-      if (requestedKey && normalizeGameType(key) === requestedKey) return true;
-      return isThreeCushionKey(key);
-    });
-    if (entry && entry[1] && typeof entry[1] === "object") {
-      return entry[1] as Record<string, any>;
-    }
+    const matchingAggregates = Object.entries(byGameType)
+      .filter(([key]) => gameTypeMatches(key, gameType))
+      .map(([, value]) => value)
+      .filter((value): value is Record<string, any> =>
+        Boolean(value && typeof value === "object"),
+      );
+    const mergedAggregate = mergeAggregates(matchingAggregates);
+    if (mergedAggregate) return mergedAggregate;
   }
 
   return careerStats.overall && typeof careerStats.overall === "object"
     ? careerStats.overall
+    : null;
+};
+
+const pickRatingAggregate = (
+  careerStats: Record<string, any> | null | undefined,
+  gameType: string,
+) => {
+  const gameTypeAggregate = pickAggregate(careerStats, gameType);
+  const gameTypeMatches = finiteNumber(gameTypeAggregate?.totalMatches);
+  const overallAggregate =
+    careerStats?.overall && typeof careerStats.overall === "object"
+      ? careerStats.overall
+      : careerStats && typeof careerStats === "object"
+        ? careerStats
+        : null;
+  const overallMatches = finiteNumber(overallAggregate?.totalMatches);
+
+  if (
+    gameTypeAggregate &&
+    (gameTypeMatches >= MIN_MATCHES || overallMatches < MIN_MATCHES)
+  ) {
+    return { aggregate: gameTypeAggregate, scope: "game-type" as const };
+  }
+
+  if (overallAggregate && overallMatches >= MIN_MATCHES) {
+    return { aggregate: overallAggregate, scope: "overall-fallback" as const };
+  }
+
+  return gameTypeAggregate
+    ? { aggregate: gameTypeAggregate, scope: "game-type" as const }
     : null;
 };
 
@@ -203,7 +311,8 @@ const ratePlayer = (
   gameType: string,
   now: Date,
 ): HandicapPlayerRating | null => {
-  const aggregate = pickAggregate(player.careerStats, gameType);
+  const ratingAggregate = pickRatingAggregate(player.careerStats, gameType);
+  const aggregate = ratingAggregate?.aggregate;
   if (!aggregate) return null;
 
   const overallScore = scoreAggregate(aggregate);
@@ -232,6 +341,7 @@ const ratePlayer = (
     bestAverage: finiteNumber(aggregate.bestAverage ?? aggregate.bestAverageFromWins),
     internalHandy: koreanHandyFromAverage(handyAverage),
     calibrationBand: calibrationBandForAverage(handyAverage),
+    statsScope: ratingAggregate.scope,
   };
 };
 
@@ -353,9 +463,13 @@ const buildReason = (
   calibration: HandicapCalibration,
 ) => {
   if (mode === "race-to") {
+    const scopeText =
+      stronger.statsScope === "overall-fallback" || weaker.statsScope === "overall-fallback"
+        ? " Some rating inputs use overall stats because the selected game-type sample is too small."
+        : "";
     return {
-      reason: `${displayName(stronger.name)} maps to internal handy ${stronger.internalHandy}, while ${displayName(weaker.name)} maps to ${weaker.internalHandy}. Race-to mode keeps separate targets, while calibration is shown for comparison.`,
-      reasonEl: `Ο ${displayName(stronger.name)} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${displayName(weaker.name)} σε ${weaker.internalHandy}. Στο race-to mode κάθε παίκτης παίζει μέχρι τον δικό του στόχο, ενώ το calibration εμφανίζεται για σύγκριση.`,
+      reason: `${displayName(stronger.name)} maps to internal handy ${stronger.internalHandy}, while ${displayName(weaker.name)} maps to ${weaker.internalHandy}. Race-to mode keeps separate targets, while calibration is shown for comparison.${scopeText}`,
+      reasonEl: `Ο ${displayName(stronger.name)} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${displayName(weaker.name)} σε ${weaker.internalHandy}. Στο race-to mode κάθε παίκτης παίζει μέχρι τον δικό του στόχο, ενώ το calibration εμφανίζεται για σύγκριση.${scopeText ? " Κάποια δεδομένα rating χρησιμοποιούν overall stats επειδή το δείγμα του επιλεγμένου game type είναι μικρό." : ""}`,
     };
   }
 
@@ -371,9 +485,14 @@ const buildReason = (
   const strongerName = displayName(stronger.name);
   const weakerName = displayName(weaker.name);
 
+  const scopeText =
+    stronger.statsScope === "overall-fallback" || weaker.statsScope === "overall-fallback"
+      ? " Some rating inputs use overall stats because the selected game-type sample is too small."
+      : "";
+
   return {
-    reason: `${strongerName} maps to internal handy ${stronger.internalHandy}, while ${weakerName} maps to ${weaker.internalHandy}. Base handicap is ${calibration.baseHandicap}, calibration adjustment is ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, final suggestion is ${handicapPoints}.`,
-    reasonEl: `Ο ${strongerName} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${weakerName} σε ${weaker.internalHandy}. Η βάση είναι ${calibration.baseHandicap}, το calibration δίνει ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, τελική πρόταση ${handicapPoints} πόντ${handicapPoints === 1 ? "ος" : "οι"} εκκίνησης.`,
+    reason: `${strongerName} maps to internal handy ${stronger.internalHandy}, while ${weakerName} maps to ${weaker.internalHandy}. Base handicap is ${calibration.baseHandicap}, calibration adjustment is ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, final suggestion is ${handicapPoints}.${scopeText}`,
+    reasonEl: `Ο ${strongerName} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${weakerName} σε ${weaker.internalHandy}. Η βάση είναι ${calibration.baseHandicap}, το calibration δίνει ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, τελική πρόταση ${handicapPoints} πόντ${handicapPoints === 1 ? "ος" : "οι"} εκκίνησης.${scopeText ? " Κάποια δεδομένα rating χρησιμοποιούν overall stats επειδή το δείγμα του επιλεγμένου game type είναι μικρό." : ""}`,
   };
 };
 

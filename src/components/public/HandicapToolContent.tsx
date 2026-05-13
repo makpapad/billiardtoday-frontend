@@ -53,6 +53,7 @@ type RecommendationPayload = {
     bestAverage: number;
     internalHandy: number;
     calibrationBand: string;
+    statsScope: "game-type" | "overall-fallback";
   }>;
 };
 
