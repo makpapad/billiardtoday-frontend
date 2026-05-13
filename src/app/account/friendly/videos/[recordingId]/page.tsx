@@ -39,8 +39,20 @@ type ScoreState = {
 };
 
 function streamFor(recording: PlayerAccountFriendlyRecording | null) {
+  const streamFromUrl = (rawUrl: string | null | undefined) => {
+    const url = rawUrl?.trim();
+    if (!url) return null;
+    if (url.includes("/playback/get?") || url.includes("format=mp4") || /\.mp4(?:[?#]|$)/i.test(url)) {
+      return { url, type: "mp4" as const };
+    }
+    if (/\.m3u8(?:[?#]|$)/i.test(url)) {
+      return { url, type: "hls" as const };
+    }
+    return { url: `${url.replace(/\/+$/, "")}/index.m3u8`, type: "hls" as const };
+  };
+
   if (recording?.processingStatus === "ready" && recording.processedPlaybackUrl?.trim()) {
-    return { url: recording.processedPlaybackUrl.trim(), type: "mp4" as const };
+    return streamFromUrl(recording.processedPlaybackUrl);
   }
 
   const playerOnlyRequested =
@@ -53,15 +65,12 @@ function streamFor(recording: PlayerAccountFriendlyRecording | null) {
     return null;
   }
 
-  const direct = recording?.hlsUrl?.trim();
-  if (direct) return { url: direct, type: "hls" as const };
-
   const playback = recording?.playbackUrl?.trim();
-  if (!playback) return null;
-  if (playback.includes("/playback/get?") || playback.includes("format=mp4")) {
-    return { url: playback, type: "mp4" as const };
-  }
-  return { url: `${playback.replace(/\/+$/, "")}/index.m3u8`, type: "hls" as const };
+  const live = recording?.hlsUrl?.trim();
+  const isRecorded = recording?.status === "stopped" || recording?.status === "expired" || Boolean(recording?.endedAt);
+  return isRecorded
+    ? streamFromUrl(playback) ?? streamFromUrl(live)
+    : streamFromUrl(live) ?? streamFromUrl(playback);
 }
 
 function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null) {

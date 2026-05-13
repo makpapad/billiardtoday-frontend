@@ -10,7 +10,7 @@ type MediaMtxHlsPlayerProps = {
 
 function hlsUrlForBase(baseUrl: string) {
   const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
-  if (cleanBaseUrl.endsWith(".m3u8")) return cleanBaseUrl;
+  if (/\.m3u8(?:[?#]|$)/i.test(cleanBaseUrl)) return cleanBaseUrl;
   return `${cleanBaseUrl}/index.m3u8`;
 }
 
