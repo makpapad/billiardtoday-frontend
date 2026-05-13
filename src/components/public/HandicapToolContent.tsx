@@ -59,7 +59,7 @@ const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
 const modeLabels: Record<HandicapMode, string> = {
-  "starting-points": "Ευρωπαϊκοί πόντοι εκκίνησης",
+  "starting-points": "Υπολογισμός με πόντους",
   "race-to": "Korean race-to",
   "avg-ratio": "Αναλογία AVG",
 };
@@ -451,7 +451,7 @@ export function HandicapToolContent() {
                   }}
                   className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                 >
-                  <option value="starting-points">Ευρωπαϊκοί πόντοι εκκίνησης</option>
+                  <option value="starting-points">Υπολογισμός με πόντους</option>
                   <option value="race-to">Korean race-to</option>
                   <option value="avg-ratio">Αναλογία AVG</option>
                 </select>
@@ -594,7 +594,7 @@ export function HandicapToolContent() {
               value={`AVG ${formatAvg(readOptionalNumber(playerAFriendlyAvg))} / ${formatAvg(readOptionalNumber(playerBFriendlyAvg))}`}
             />
             <Metric label="Παράγοντας πίεσης" value="Επίσημο AVG / AVG φιλικών" />
-            <Metric label="Κατάσταση εκμάθησης" value="Συλλογή δειγμάτων" />
+            <Metric label="Κατάσταση εκμάθησης" value="Δεν συλλέγονται ακόμα δείγματα" />
           </div>
         </section>
       </div>
