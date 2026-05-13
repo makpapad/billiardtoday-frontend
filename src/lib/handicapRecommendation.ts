@@ -18,6 +18,7 @@ export type HandicapPlayerRating = {
   overallAvg: number;
   recentAvg: number;
   totalMatches: number;
+  winPercentage: number;
   highestRun: number;
   bestAverage: number;
   internalHandy: number;
@@ -348,6 +349,7 @@ const ratePlayer = (
     overallAvg,
     recentAvg,
     totalMatches,
+    winPercentage: finiteNumber(aggregate.winPercentage),
     highestRun: finiteNumber(aggregate.highestRun),
     bestAverage: finiteNumber(aggregate.bestAverage ?? aggregate.bestAverageFromWins),
     internalHandy: koreanHandyFromAverage(handyAverage),
