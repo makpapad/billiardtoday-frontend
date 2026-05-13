@@ -464,8 +464,8 @@ const buildAvgRatioCalibration = (
   weaker: HandicapPlayerRating,
   targetPoints: number,
 ): HandicapCalibration => {
-  const strongerAvg = calibrationAverageFor(stronger);
-  const weakerAvg = calibrationAverageFor(weaker);
+  const strongerAvg = stronger.overallAvg;
+  const weakerAvg = weaker.overallAvg;
   const strongerHundred = Math.floor(strongerAvg * 100);
   const weakerHundred = Math.floor(weakerAvg * 100);
   const weakerExpectedPoints =
@@ -504,8 +504,8 @@ const buildReason = (
   if (mode === "avg-ratio") {
     const strongerName = displayName(stronger.name);
     const weakerName = displayName(weaker.name);
-    const strongerAvg = calibrationAverageFor(stronger);
-    const weakerAvg = calibrationAverageFor(weaker);
+    const strongerAvg = stronger.overallAvg;
+    const weakerAvg = weaker.overallAvg;
     const strongerHundred = Math.floor(strongerAvg * 100);
     const weakerHundred = Math.floor(weakerAvg * 100);
     const expectedPoints =
@@ -514,8 +514,8 @@ const buildReason = (
         : 0;
 
     return {
-      reason: `${strongerName} AVG ${strongerAvg.toFixed(3)} compared with ${weakerName} AVG ${weakerAvg.toFixed(3)}. Formula: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, so ${weakerName} plays to ${expectedPoints} or starts with +${handicapPoints}.`,
-      reasonEl: `${strongerName} AVG ${strongerAvg.toFixed(3)} με ${weakerName} AVG ${weakerAvg.toFixed(3)}. Τύπος: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, άρα ο ${weakerName} παίζει μέχρι ${expectedPoints} ή ξεκινάει με +${handicapPoints}.`,
+      reason: `${strongerName} overall AVG ${strongerAvg.toFixed(3)} compared with ${weakerName} overall AVG ${weakerAvg.toFixed(3)}. Formula: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, so ${weakerName} plays to ${expectedPoints} or starts with +${handicapPoints}.`,
+      reasonEl: `${strongerName} overall AVG ${strongerAvg.toFixed(3)} με ${weakerName} overall AVG ${weakerAvg.toFixed(3)}. Τύπος: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, άρα ο ${weakerName} παίζει μέχρι ${expectedPoints} ή ξεκινάει με +${handicapPoints}.`,
     };
   }
 
@@ -605,7 +605,7 @@ export function buildHandicapRecommendation(input: {
   const stronger = playerA.effectiveScore >= playerB.effectiveScore ? playerA : playerB;
   const weaker = stronger === playerA ? playerB : playerA;
   const strongerByAvg =
-    calibrationAverageFor(playerA) >= calibrationAverageFor(playerB) ? playerA : playerB;
+    playerA.overallAvg >= playerB.overallAvg ? playerA : playerB;
   const weakerByAvg = strongerByAvg === playerA ? playerB : playerA;
   const handyDiff = Math.abs(playerA.internalHandy - playerB.internalHandy);
   const baseHandicap = clamp(
