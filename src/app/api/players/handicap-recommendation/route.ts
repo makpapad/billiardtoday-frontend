@@ -64,6 +64,23 @@ const isPlayedMatch = (match: Record<string, unknown>) =>
   toFiniteNumber(match.innings) > 0 ||
   toFiniteNumber(match.highRun) > 0;
 
+const isUsableFormMatch = (match: Record<string, unknown>) => {
+  if (!isPlayedMatch(match)) return false;
+
+  const scoreFor = toFiniteNumber(match.scoreFor);
+  const scoreAgainst = toFiniteNumber(match.scoreAgainst);
+  const playerPossiblePoints = toFiniteNumber(match.playerPossiblePoints);
+  const opponentPossiblePoints = toFiniteNumber(match.opponentPossiblePoints);
+  const matchSize = Math.max(
+    scoreFor,
+    scoreAgainst,
+    playerPossiblePoints,
+    opponentPossiblePoints,
+  );
+
+  return matchSize >= 10;
+};
+
 const confidenceForWindow = (matches: number): HandicapConfidence => {
   if (matches >= 12) return "high";
   if (matches >= 6) return "medium";
@@ -118,7 +135,7 @@ const fetchRollingForm = async (
     );
     const rawMatches = Array.isArray(row?.matches) ? row.matches : [];
     return rawMatches
-      .filter((match: Record<string, unknown>) => isPlayedMatch(match))
+      .filter((match: Record<string, unknown>) => isUsableFormMatch(match))
       .map((match: any) => {
         const date = readDate(
           match?.date,
