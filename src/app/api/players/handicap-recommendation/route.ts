@@ -19,6 +19,15 @@ const unwrapEntity = (value: any) => {
     : value;
 };
 
+const readManualAvg = (...values: unknown[]) => {
+  for (const value of values) {
+    if (typeof value === "string" && !value.trim()) continue;
+    const parsed = Number(String(value ?? "").replace(",", "."));
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+};
+
 const resolvePlayer = async (input: unknown) => {
   const raw = readString(input);
   if (!raw) return null;
@@ -86,8 +95,28 @@ export async function POST(req: Request) {
     }
 
     const data = buildHandicapRecommendation({
-      playerA,
-      playerB,
+      playerA: {
+        ...playerA,
+        manualAvg: readManualAvg(
+          body.playerAAvg,
+          body.player_a_avg,
+          body.player1Avg,
+          body.player1_avg,
+          body.manualAverages?.playerA,
+          body.manualAverages?.player1,
+        ),
+      },
+      playerB: {
+        ...playerB,
+        manualAvg: readManualAvg(
+          body.playerBAvg,
+          body.player_b_avg,
+          body.player2Avg,
+          body.player2_avg,
+          body.manualAverages?.playerB,
+          body.manualAverages?.player2,
+        ),
+      },
       targetPoints: body.targetPoints ?? body.target_points ?? 40,
       gameType: body.gameType ?? body.game_type ?? "Three-Cushion",
       mode: body.mode ?? body.handicapMode ?? body.handicap_mode ?? "starting-points",

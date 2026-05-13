@@ -55,6 +55,7 @@ type RecommendationPayload = {
     internalHandy: number;
     calibrationBand: string;
     statsScope: "game-type" | "overall-fallback";
+    manualAvg: number | null;
   }>;
 };
 
@@ -227,6 +228,8 @@ function PlayerSearchBox({
 export function HandicapToolContent() {
   const [playerA, setPlayerA] = useState<PlayerOption | null>(null);
   const [playerB, setPlayerB] = useState<PlayerOption | null>(null);
+  const [playerAAvg, setPlayerAAvg] = useState("");
+  const [playerBAvg, setPlayerBAvg] = useState("");
   const [targetPoints, setTargetPoints] = useState(40);
   const [mode, setMode] = useState<"starting-points" | "race-to" | "avg-ratio">("starting-points");
   const [result, setResult] = useState<RecommendationPayload | null>(null);
@@ -253,6 +256,8 @@ export function HandicapToolContent() {
           playerB: playerB.documentId,
           targetPoints,
           mode,
+          playerAAvg,
+          playerBAvg,
           gameType: "Three-Cushion",
         }),
       });
@@ -267,7 +272,7 @@ export function HandicapToolContent() {
     } finally {
       setBusy(false);
     }
-  }, [mode, playerA, playerB, targetPoints]);
+  }, [mode, playerA, playerAAvg, playerB, playerBAvg, targetPoints]);
 
   useEffect(() => {
     if (!hasResult || !canCalculate) return;
@@ -277,7 +282,7 @@ export function HandicapToolContent() {
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [calculate, canCalculate, hasResult, mode, targetPoints]);
+  }, [calculate, canCalculate, hasResult, mode, playerAAvg, playerBAvg, targetPoints]);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -348,8 +353,32 @@ export function HandicapToolContent() {
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-6">
             <div className="grid gap-5 md:grid-cols-2">
-              <PlayerSearchBox label="Player A" value={playerA} onSelect={setPlayerA} />
-              <PlayerSearchBox label="Player B" value={playerB} onSelect={setPlayerB} />
+              <div>
+                <PlayerSearchBox label="Player A" value={playerA} onSelect={setPlayerA} />
+                <label className="mt-4 mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  AVG override
+                </label>
+                <input
+                  value={playerAAvg}
+                  onChange={(event) => setPlayerAAvg(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="Optional AVG..."
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                />
+              </div>
+              <div>
+                <PlayerSearchBox label="Player B" value={playerB} onSelect={setPlayerB} />
+                <label className="mt-4 mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  AVG override
+                </label>
+                <input
+                  value={playerBAvg}
+                  onChange={(event) => setPlayerBAvg(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="Optional AVG..."
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                />
+              </div>
             </div>
 
             {playerA && playerB && playerA.documentId === playerB.documentId ? (
@@ -487,7 +516,7 @@ export function HandicapToolContent() {
                           <strong className="text-sm text-slate-950">{player.totalMatches}</strong>
                         </div>
                         <div>
-                          <div>Overall avg</div>
+                          <div>{player.manualAvg ? "Manual avg" : "Overall avg"}</div>
                           <strong className="text-sm text-slate-950">{formatAvg(player.overallAvg)}</strong>
                         </div>
                         <div>

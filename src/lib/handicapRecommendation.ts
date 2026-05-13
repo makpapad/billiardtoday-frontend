@@ -7,6 +7,7 @@ export type HandicapPlayerInput = {
   documentId?: string | null;
   name?: string | null;
   careerStats?: Record<string, any> | null;
+  manualAvg?: number | string | null;
 };
 
 export type HandicapPlayerRating = {
@@ -22,6 +23,7 @@ export type HandicapPlayerRating = {
   internalHandy: number;
   calibrationBand: string;
   statsScope: "game-type" | "overall-fallback";
+  manualAvg: number | null;
 };
 
 export type HandicapAdjustment = {
@@ -48,6 +50,12 @@ const CALIBRATION_SOURCE: HandicapCalibrationSource = "baseline-calibration-v1";
 const finiteNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const finitePositiveNumber = (value: unknown) => {
+  if (typeof value === "string" && !value.trim()) return null;
+  const parsed = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
 const clamp = (value: number, min: number, max: number) =>
@@ -326,9 +334,11 @@ const ratePlayer = (
   const effectiveScore =
     rawEffectiveScore * confidenceFactor + DEFAULT_SCORE * (1 - confidenceFactor);
 
-  const overallAvg = finiteNumber(aggregate.avgPerInning);
+  const manualAvg = finitePositiveNumber(player.manualAvg);
+  const overallAvg = manualAvg ?? finiteNumber(aggregate.avgPerInning);
   const recentAvg = Number(recent.avg.toFixed(3));
-  const handyAverage = recentAvg > 0 && totalMatches >= 15 ? recentAvg : overallAvg;
+  const handyAverage =
+    manualAvg ?? (recentAvg > 0 && totalMatches >= 15 ? recentAvg : overallAvg);
 
   return {
     id: Number.isFinite(Number(player.id)) ? Number(player.id) : null,
@@ -343,6 +353,7 @@ const ratePlayer = (
     internalHandy: koreanHandyFromAverage(handyAverage),
     calibrationBand: calibrationBandForAverage(handyAverage),
     statsScope: ratingAggregate.scope,
+    manualAvg,
   };
 };
 
@@ -356,9 +367,10 @@ const confidenceFor = (minimumMatches: number): HandicapConfidence => {
 const displayName = (value: string | null) => value?.trim() || "Player";
 
 const calibrationAverageFor = (player: HandicapPlayerRating) =>
-  player.recentAvg > 0 && player.totalMatches >= 15
+  player.manualAvg ??
+  (player.recentAvg > 0 && player.totalMatches >= 15
     ? player.recentAvg
-    : player.overallAvg;
+    : player.overallAvg);
 
 const calibrationBandForAverage = (average: number) => {
   if (average >= 1.5) return "1.500+";
@@ -464,8 +476,8 @@ const buildAvgRatioCalibration = (
   weaker: HandicapPlayerRating,
   targetPoints: number,
 ): HandicapCalibration => {
-  const strongerAvg = stronger.overallAvg;
-  const weakerAvg = weaker.overallAvg;
+  const strongerAvg = stronger.manualAvg ?? stronger.overallAvg;
+  const weakerAvg = weaker.manualAvg ?? weaker.overallAvg;
   const strongerHundred = Math.floor(strongerAvg * 100);
   const weakerHundred = Math.floor(weakerAvg * 100);
   const weakerExpectedPoints =
@@ -504,8 +516,8 @@ const buildReason = (
   if (mode === "avg-ratio") {
     const strongerName = displayName(stronger.name);
     const weakerName = displayName(weaker.name);
-    const strongerAvg = stronger.overallAvg;
-    const weakerAvg = weaker.overallAvg;
+    const strongerAvg = stronger.manualAvg ?? stronger.overallAvg;
+    const weakerAvg = weaker.manualAvg ?? weaker.overallAvg;
     const strongerHundred = Math.floor(strongerAvg * 100);
     const weakerHundred = Math.floor(weakerAvg * 100);
     const expectedPoints =
@@ -514,8 +526,8 @@ const buildReason = (
         : 0;
 
     return {
-      reason: `${strongerName} overall AVG ${strongerAvg.toFixed(3)} compared with ${weakerName} overall AVG ${weakerAvg.toFixed(3)}. Formula: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, so ${weakerName} plays to ${expectedPoints} or starts with +${handicapPoints}.`,
-      reasonEl: `${strongerName} overall AVG ${strongerAvg.toFixed(3)} με ${weakerName} overall AVG ${weakerAvg.toFixed(3)}. Τύπος: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, άρα ο ${weakerName} παίζει μέχρι ${expectedPoints} ή ξεκινάει με +${handicapPoints}.`,
+      reason: `${strongerName} AVG ${strongerAvg.toFixed(3)} compared with ${weakerName} AVG ${weakerAvg.toFixed(3)}. Formula: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, so ${weakerName} plays to ${expectedPoints} or starts with +${handicapPoints}.`,
+      reasonEl: `${strongerName} AVG ${strongerAvg.toFixed(3)} με ${weakerName} AVG ${weakerAvg.toFixed(3)}. Τύπος: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, άρα ο ${weakerName} παίζει μέχρι ${expectedPoints} ή ξεκινάει με +${handicapPoints}.`,
     };
   }
 
@@ -605,7 +617,9 @@ export function buildHandicapRecommendation(input: {
   const stronger = playerA.effectiveScore >= playerB.effectiveScore ? playerA : playerB;
   const weaker = stronger === playerA ? playerB : playerA;
   const strongerByAvg =
-    playerA.overallAvg >= playerB.overallAvg ? playerA : playerB;
+    (playerA.manualAvg ?? playerA.overallAvg) >= (playerB.manualAvg ?? playerB.overallAvg)
+      ? playerA
+      : playerB;
   const weakerByAvg = strongerByAvg === playerA ? playerB : playerA;
   const handyDiff = Math.abs(playerA.internalHandy - playerB.internalHandy);
   const baseHandicap = clamp(
