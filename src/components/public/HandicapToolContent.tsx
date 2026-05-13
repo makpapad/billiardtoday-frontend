@@ -91,6 +91,47 @@ const avgPair = (
   return `${formatter(selector(playerA))} / ${formatter(selector(playerB))}`;
 };
 
+const calibrationText = (label: string, reason: string) => {
+  if (label === "Low-band compression") {
+    return {
+      label: "Συμπίεση χαμηλής κατηγορίας",
+      reason:
+        "Μικρή μείωση γιατί κοντινά χαμηλά AVG δεν πρέπει να δημιουργούν υπερβολικούς πόντους εκκίνησης.",
+    };
+  }
+
+  if (label === "Elite gap") {
+    return {
+      label: "Μεγάλη διαφορά επιπέδου",
+      reason: "Πρόσθετη διόρθωση για πολύ δυνατό παίκτη απέναντι σε παίκτη χαμηλού AVG.",
+    };
+  }
+
+  if (label === "Strong-player pressure") {
+    return {
+      label: "Πίεση δυνατού παίκτη",
+      reason:
+        "Μικρή αύξηση γιατί τα μεγάλα σερί γίνονται πιο καθοριστικά όσο ανεβαίνει το επίπεδο του δυνατότερου παίκτη.",
+    };
+  }
+
+  if (label === "Longer match") {
+    return {
+      label: "Μεγαλύτερος στόχος",
+      reason: "Οι μεγαλύτεροι στόχοι ευνοούν λίγο περισσότερο τον δυνατότερο παίκτη.",
+    };
+  }
+
+  if (label === "AVG ratio") {
+    return {
+      label: "Αναλογία AVG",
+      reason: "Χρησιμοποιεί την αναλογία των AVG για να εκτιμήσει τον στόχο του πιο αδύναμου παίκτη.",
+    };
+  }
+
+  return { label, reason };
+};
+
 const readOptionalNumber = (value: string) => {
   const clean = value.trim().replace(",", ".");
   if (!clean) return null;
@@ -534,21 +575,24 @@ export function HandicapToolContent() {
                     </div>
                     <div className="mt-4 grid gap-2">
                       {result.recommendation.calibration.adjustments.length > 0 ? (
-                        result.recommendation.calibration.adjustments.map((adjustment) => (
-                          <div
-                            key={`${adjustment.label}-${adjustment.points}`}
-                            className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2 text-xs text-slate-600"
-                          >
-                            <div>
-                              <div className="font-semibold text-slate-950">{adjustment.label}</div>
-                              <div className="mt-1">{adjustment.reason}</div>
+                        result.recommendation.calibration.adjustments.map((adjustment) => {
+                          const text = calibrationText(adjustment.label, adjustment.reason);
+                          return (
+                            <div
+                              key={`${adjustment.label}-${adjustment.points}`}
+                              className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2 text-xs text-slate-600"
+                            >
+                              <div>
+                                <div className="font-semibold text-slate-950">{text.label}</div>
+                                <div className="mt-1">{text.reason}</div>
+                              </div>
+                              <strong className="shrink-0 text-sm text-slate-950">
+                                {adjustment.points >= 0 ? "+" : ""}
+                                {adjustment.points}
+                              </strong>
                             </div>
-                            <strong className="shrink-0 text-sm text-slate-950">
-                              {adjustment.points >= 0 ? "+" : ""}
-                              {adjustment.points}
-                            </strong>
-                          </div>
-                        ))
+                          );
+                        })
                       ) : (
                         <div className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">
                           Δεν υπάρχει calibration adjustment για αυτή τη σύγκριση.
