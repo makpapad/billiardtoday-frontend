@@ -44,6 +44,31 @@ type RecommendationPayload = {
     effectiveScore: number;
     overallAvg: number;
     recentAvg: number;
+    recentMatches: number;
+    recentWindow: string | null;
+    rollingForm: {
+      source: "participations-history" | "career-yearly";
+      selected: {
+        label: "3M" | "6M" | "12M";
+        months: number;
+        avg: number;
+        matches: number;
+        wins: number;
+        winPercentage: number;
+        highestRun: number;
+        confidence: "none" | "low" | "medium" | "high";
+      } | null;
+      windows: Array<{
+        label: "3M" | "6M" | "12M";
+        months: number;
+        avg: number;
+        matches: number;
+        wins: number;
+        winPercentage: number;
+        highestRun: number;
+        confidence: "none" | "low" | "medium" | "high";
+      }>;
+    } | null;
     totalMatches: number;
     winPercentage: number;
     highestRun: number;
@@ -144,6 +169,23 @@ const scoreLabel = (score: number) => {
   if (score >= 55) return "Μέτριο";
   if (score > 0) return "Χαμηλό";
   return "Άγνωστο";
+};
+
+const recentWindowLabel = (player: RecommendationPayload["players"][number] | null) => {
+  if (!player?.recentWindow) return "-";
+  if (player.recentWindow === "3M") return "3 μήνες";
+  if (player.recentWindow === "6M") return "6 μήνες";
+  if (player.recentWindow === "12M") return "12 μήνες";
+  return "Ετήσιο fallback";
+};
+
+const formWindowValue = (
+  player: RecommendationPayload["players"][number] | null,
+  label: "3M" | "6M" | "12M",
+) => {
+  const window = player?.rollingForm?.windows.find((item) => item.label === label);
+  if (!window || window.matches <= 0) return "-";
+  return `${formatAvg(window.avg)} (${window.matches})`;
 };
 
 function PlayerSearchBox({
@@ -341,9 +383,13 @@ function PlayerLabCard({
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500 sm:grid-cols-4">
         <Metric label="Επίσημο" value={formatAvg(officialValue)} />
-        <Metric label="Πρόσφατο" value={formatAvg(player?.recentAvg)} />
+        <Metric label="Πρόσφατο" value={`${formatAvg(player?.recentAvg)} ${player?.recentMatches ? `(${player.recentMatches})` : ""}`} />
         <Metric label="Φιλικά" value={formatAvg(friendlyValue)} />
         <Metric label="Πίεση" value={pressureFactor ? `${pressureFactor}%` : "-"} />
+        <Metric label="3 μήνες" value={formWindowValue(player, "3M")} />
+        <Metric label="6 μήνες" value={formWindowValue(player, "6M")} />
+        <Metric label="12 μήνες" value={formWindowValue(player, "12M")} />
+        <Metric label="Παράθυρο" value={recentWindowLabel(player)} />
         <Metric label="Αγώνες" value={String(player?.totalMatches ?? "-")} />
         <Metric label="Νίκες" value={formatPct(player?.winPercentage)} />
         <Metric label="H.R." value={String(player?.highestRun ?? "-")} />

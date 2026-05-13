@@ -8,6 +8,24 @@ export type HandicapPlayerInput = {
   name?: string | null;
   careerStats?: Record<string, any> | null;
   manualAvg?: number | string | null;
+  rollingForm?: HandicapRollingForm | null;
+};
+
+export type HandicapFormWindow = {
+  label: "3M" | "6M" | "12M";
+  months: number;
+  avg: number;
+  matches: number;
+  wins: number;
+  winPercentage: number;
+  highestRun: number;
+  confidence: HandicapConfidence;
+};
+
+export type HandicapRollingForm = {
+  source: "participations-history" | "career-yearly";
+  selected: HandicapFormWindow | null;
+  windows: HandicapFormWindow[];
 };
 
 export type HandicapPlayerRating = {
@@ -17,6 +35,9 @@ export type HandicapPlayerRating = {
   effectiveScore: number;
   overallAvg: number;
   recentAvg: number;
+  recentMatches: number;
+  recentWindow: string | null;
+  rollingForm: HandicapRollingForm | null;
   totalMatches: number;
   winPercentage: number;
   highestRun: number;
@@ -269,6 +290,29 @@ const recentAggregateScore = (
   };
 };
 
+const scoreFormWindow = (window: HandicapFormWindow | null) => {
+  if (!window) return DEFAULT_SCORE;
+
+  return (
+    window.avg * 420 +
+    window.winPercentage * 2 +
+    Math.min(window.highestRun, 30) * 5
+  );
+};
+
+const pickRecentFormWindow = (
+  rollingForm: HandicapRollingForm | null | undefined,
+) => {
+  if (!rollingForm?.windows?.length) return null;
+
+  const sortedWindows = [...rollingForm.windows].sort((a, b) => a.months - b.months);
+  return (
+    sortedWindows.find((window) => window.matches >= 5) ??
+    sortedWindows.find((window) => window.matches >= 3) ??
+    null
+  );
+};
+
 const momentumScore = (
   careerStats: Record<string, any> | null | undefined,
   gameType: string,
@@ -327,19 +371,26 @@ const ratePlayer = (
 
   const overallScore = scoreAggregate(aggregate);
   const recent = recentAggregateScore(player.careerStats, gameType, now);
+  const recentFormWindow = pickRecentFormWindow(player.rollingForm);
+  const recentFormScore = scoreFormWindow(recentFormWindow);
   const momentum = momentumScore(player.careerStats, gameType, now);
   const totalMatches = finiteNumber(aggregate.totalMatches);
   const confidenceFactor = clamp(totalMatches / 30, 0, 1);
+  const recentScore = recentFormWindow ? recentFormScore : recent.score;
   const rawEffectiveScore =
-    overallScore * 0.5 + recent.score * 0.35 + (overallScore + momentum) * 0.15;
+    overallScore * 0.5 + recentScore * 0.35 + (overallScore + momentum) * 0.15;
   const effectiveScore =
     rawEffectiveScore * confidenceFactor + DEFAULT_SCORE * (1 - confidenceFactor);
 
   const manualAvg = finitePositiveNumber(player.manualAvg);
   const overallAvg = manualAvg ?? finiteNumber(aggregate.avgPerInning);
-  const recentAvg = Number(recent.avg.toFixed(3));
+  const recentAvg = Number((recentFormWindow?.avg ?? recent.avg).toFixed(3));
+  const recentMatches = recentFormWindow?.matches ?? 0;
   const handyAverage =
-    manualAvg ?? (recentAvg > 0 && totalMatches >= 15 ? recentAvg : overallAvg);
+    manualAvg ??
+    (recentAvg > 0 && (recentMatches >= 5 || (!recentFormWindow && totalMatches >= 15))
+      ? recentAvg
+      : overallAvg);
 
   return {
     id: Number.isFinite(Number(player.id)) ? Number(player.id) : null,
@@ -348,6 +399,9 @@ const ratePlayer = (
     effectiveScore: Math.round(effectiveScore),
     overallAvg,
     recentAvg,
+    recentMatches,
+    recentWindow: recentFormWindow?.label ?? (recent.avg > 0 ? "yearly" : null),
+    rollingForm: player.rollingForm ?? null,
     totalMatches,
     winPercentage: finiteNumber(aggregate.winPercentage),
     highestRun: finiteNumber(aggregate.highestRun),
@@ -370,7 +424,10 @@ const displayName = (value: string | null) => value?.trim() || "Player";
 
 const calibrationAverageFor = (player: HandicapPlayerRating) =>
   player.manualAvg ??
-  (player.recentAvg > 0 && player.totalMatches >= 15
+  (player.recentAvg > 0 &&
+  (player.recentMatches >= 5 ||
+    ((!player.recentWindow || player.recentWindow === "yearly") &&
+      player.totalMatches >= 15))
     ? player.recentAvg
     : player.overallAvg);
 
