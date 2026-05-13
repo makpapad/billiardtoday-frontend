@@ -17,7 +17,7 @@ type PlayerOption = {
 type RecommendationPayload = {
   targetPoints: number;
   gameType: string;
-  mode: "starting-points" | "race-to";
+  mode: "starting-points" | "race-to" | "avg-ratio";
   recommendation: {
     available: boolean;
     label: string | null;
@@ -28,6 +28,7 @@ type RecommendationPayload = {
     weakerPlayerDocumentId?: string | null;
     calibration?: {
       source: "baseline-calibration-v1" | "match-history";
+      targetPoints: number;
       baseHandicap: number;
       adjustment: number;
       finalHandicap: number;
@@ -227,7 +228,7 @@ export function HandicapToolContent() {
   const [playerA, setPlayerA] = useState<PlayerOption | null>(null);
   const [playerB, setPlayerB] = useState<PlayerOption | null>(null);
   const [targetPoints, setTargetPoints] = useState(40);
-  const [mode, setMode] = useState<"starting-points" | "race-to">("starting-points");
+  const [mode, setMode] = useState<"starting-points" | "race-to" | "avg-ratio">("starting-points");
   const [result, setResult] = useState<RecommendationPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -317,13 +318,19 @@ export function HandicapToolContent() {
                 </label>
                 <select
                   value={mode}
-                  onChange={(event) =>
-                    setMode(event.target.value === "race-to" ? "race-to" : "starting-points")
-                  }
+                  onChange={(event) => {
+                    const nextMode = event.target.value;
+                    setMode(
+                      nextMode === "race-to" || nextMode === "avg-ratio"
+                        ? nextMode
+                        : "starting-points",
+                    );
+                  }}
                   className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                 >
                   <option value="starting-points">European starting points</option>
                   <option value="race-to">Korean race-to</option>
+                  <option value="avg-ratio">AVG ratio</option>
                 </select>
               </div>
               <div>
@@ -385,7 +392,11 @@ export function HandicapToolContent() {
                     Target {result.targetPoints}
                   </span>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {result.mode === "race-to" ? "Korean race-to" : "European starting points"}
+                    {result.mode === "race-to"
+                      ? "Korean race-to"
+                      : result.mode === "avg-ratio"
+                        ? "AVG ratio"
+                        : "European starting points"}
                   </span>
                 </div>
 

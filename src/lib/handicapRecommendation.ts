@@ -1,5 +1,5 @@
 export type HandicapConfidence = "none" | "low" | "medium" | "high";
-export type HandicapMode = "starting-points" | "race-to";
+export type HandicapMode = "starting-points" | "race-to" | "avg-ratio";
 export type HandicapCalibrationSource = "baseline-calibration-v1" | "match-history";
 
 export type HandicapPlayerInput = {
@@ -32,6 +32,7 @@ export type HandicapAdjustment = {
 
 export type HandicapCalibration = {
   source: HandicapCalibrationSource;
+  targetPoints: number;
   baseHandicap: number;
   adjustment: number;
   finalHandicap: number;
@@ -393,6 +394,8 @@ const targetScale = (targetPoints: number) => Math.sqrt(targetPoints / 40);
 const normalizeMode = (value: unknown): HandicapMode =>
   value === "race-to" || value === "korean-race-to"
     ? "race-to"
+    : value === "avg-ratio" || value === "average-ratio"
+      ? "avg-ratio"
     : DEFAULT_MODE;
 
 const roundAdjustment = (points: number, targetPoints: number) =>
@@ -448,10 +451,46 @@ const buildCalibration = (
 
   return {
     source: CALIBRATION_SOURCE,
+    targetPoints,
     baseHandicap,
     adjustment: finalHandicap - baseHandicap,
     finalHandicap,
     adjustments,
+  };
+};
+
+const buildAvgRatioCalibration = (
+  stronger: HandicapPlayerRating,
+  weaker: HandicapPlayerRating,
+  targetPoints: number,
+): HandicapCalibration => {
+  const strongerAvg = calibrationAverageFor(stronger);
+  const weakerAvg = calibrationAverageFor(weaker);
+  const strongerHundred = Math.floor(strongerAvg * 100);
+  const weakerHundred = Math.floor(weakerAvg * 100);
+  const weakerExpectedPoints =
+    strongerHundred > 0
+      ? clamp(Math.round((targetPoints / strongerHundred) * weakerHundred), 1, targetPoints)
+      : targetPoints;
+  const baseHandicap = clamp(
+    targetPoints - weakerExpectedPoints,
+    0,
+    Math.max(0, targetPoints - 1),
+  );
+
+  return {
+    source: CALIBRATION_SOURCE,
+    targetPoints,
+    baseHandicap,
+    adjustment: 0,
+    finalHandicap: baseHandicap,
+    adjustments: [
+      {
+        label: "AVG ratio",
+        points: 0,
+        reason: "Uses the ratio between player averages to estimate the weaker player's target.",
+      },
+    ],
   };
 };
 
@@ -462,6 +501,24 @@ const buildReason = (
   mode: HandicapMode,
   calibration: HandicapCalibration,
 ) => {
+  if (mode === "avg-ratio") {
+    const strongerName = displayName(stronger.name);
+    const weakerName = displayName(weaker.name);
+    const strongerAvg = calibrationAverageFor(stronger);
+    const weakerAvg = calibrationAverageFor(weaker);
+    const strongerHundred = Math.floor(strongerAvg * 100);
+    const weakerHundred = Math.floor(weakerAvg * 100);
+    const expectedPoints =
+      strongerHundred > 0
+        ? Math.round((calibration.targetPoints / strongerHundred) * weakerHundred)
+        : 0;
+
+    return {
+      reason: `${strongerName} AVG ${strongerAvg.toFixed(3)} compared with ${weakerName} AVG ${weakerAvg.toFixed(3)}. Formula: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, so ${weakerName} plays to ${expectedPoints} or starts with +${handicapPoints}.`,
+      reasonEl: `${strongerName} AVG ${strongerAvg.toFixed(3)} με ${weakerName} AVG ${weakerAvg.toFixed(3)}. Τύπος: (${calibration.targetPoints} / ${strongerHundred}) * ${weakerHundred} = ${expectedPoints}, άρα ο ${weakerName} παίζει μέχρι ${expectedPoints} ή ξεκινάει με +${handicapPoints}.`,
+    };
+  }
+
   if (mode === "race-to") {
     const scopeText =
       stronger.statsScope === "overall-fallback" || weaker.statsScope === "overall-fallback"
@@ -547,16 +604,32 @@ export function buildHandicapRecommendation(input: {
 
   const stronger = playerA.effectiveScore >= playerB.effectiveScore ? playerA : playerB;
   const weaker = stronger === playerA ? playerB : playerA;
+  const strongerByAvg =
+    calibrationAverageFor(playerA) >= calibrationAverageFor(playerB) ? playerA : playerB;
+  const weakerByAvg = strongerByAvg === playerA ? playerB : playerA;
   const handyDiff = Math.abs(playerA.internalHandy - playerB.internalHandy);
   const baseHandicap = clamp(
     Math.round(handyDiff * targetScale(targetPoints)),
     0,
     Math.max(0, targetPoints - 1),
   );
-  const calibration = buildCalibration(stronger, weaker, baseHandicap, targetPoints);
+  const calibration =
+    mode === "avg-ratio"
+      ? buildAvgRatioCalibration(strongerByAvg, weakerByAvg, targetPoints)
+      : buildCalibration(stronger, weaker, baseHandicap, targetPoints);
   const handicapPoints = calibration.finalHandicap;
-  const playerARaceTo = Math.max(1, Math.round(playerA.internalHandy * targetScale(targetPoints)));
-  const playerBRaceTo = Math.max(1, Math.round(playerB.internalHandy * targetScale(targetPoints)));
+  const avgRatioPlayerATarget =
+    playerA === strongerByAvg ? targetPoints : targetPoints - handicapPoints;
+  const avgRatioPlayerBTarget =
+    playerB === strongerByAvg ? targetPoints : targetPoints - handicapPoints;
+  const playerARaceTo =
+    mode === "avg-ratio"
+      ? Math.max(1, avgRatioPlayerATarget)
+      : Math.max(1, Math.round(playerA.internalHandy * targetScale(targetPoints)));
+  const playerBRaceTo =
+    mode === "avg-ratio"
+      ? Math.max(1, avgRatioPlayerBTarget)
+      : Math.max(1, Math.round(playerB.internalHandy * targetScale(targetPoints)));
 
   return {
     targetPoints,
@@ -575,11 +648,19 @@ export function buildHandicapRecommendation(input: {
       label:
         mode === "race-to"
           ? `${displayName(playerA.name)} to ${playerARaceTo} / ${displayName(playerB.name)} to ${playerBRaceTo}`
+          : mode === "avg-ratio"
+            ? `${displayName(playerA.name)} to ${playerARaceTo} / ${displayName(playerB.name)} to ${playerBRaceTo}`
           : handicapPoints > 0
           ? `${displayName(weaker.name)} +${handicapPoints}`
           : "Play even",
       confidence,
-      ...buildReason(stronger, weaker, handicapPoints, mode, calibration),
+      ...buildReason(
+        mode === "avg-ratio" ? strongerByAvg : stronger,
+        mode === "avg-ratio" ? weakerByAvg : weaker,
+        handicapPoints,
+        mode,
+        calibration,
+      ),
     },
     players: [playerA, playerB],
   };
