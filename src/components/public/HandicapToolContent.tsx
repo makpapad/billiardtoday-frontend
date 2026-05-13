@@ -59,16 +59,16 @@ const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
 const modeLabels: Record<HandicapMode, string> = {
-  "starting-points": "European starting points",
+  "starting-points": "Ευρωπαϊκοί πόντοι εκκίνησης",
   "race-to": "Korean race-to",
-  "avg-ratio": "AVG ratio",
+  "avg-ratio": "Αναλογία AVG",
 };
 
 const confidenceLabel: Record<string, string> = {
-  none: "No confidence",
-  low: "Low confidence",
-  medium: "Medium confidence",
-  high: "High confidence",
+  none: "Χωρίς αξιοπιστία",
+  low: "Χαμηλή αξιοπιστία",
+  medium: "Μέτρια αξιοπιστία",
+  high: "Υψηλή αξιοπιστία",
 };
 
 const formatAvg = (value: unknown) => {
@@ -89,10 +89,10 @@ const readOptionalNumber = (value: string) => {
 };
 
 const scoreLabel = (score: number) => {
-  if (score >= 80) return "High";
-  if (score >= 55) return "Medium";
-  if (score > 0) return "Low";
-  return "Unknown";
+  if (score >= 80) return "Υψηλό";
+  if (score >= 55) return "Μέτριο";
+  if (score > 0) return "Χαμηλό";
+  return "Άγνωστο";
 };
 
 function PlayerSearchBox({
@@ -173,7 +173,7 @@ function PlayerSearchBox({
           onFocus={() => {
             if (results.length > 0) setOpen(true);
           }}
-          placeholder="Search player..."
+          placeholder="Αναζήτηση παίκτη..."
           className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
         />
         {busy ? (
@@ -214,13 +214,13 @@ function PlayerSearchBox({
                 </span>
                 <span className="mt-1 flex items-center gap-2 truncate text-xs text-slate-500">
                   <CountryFlag country={player.country ?? null} />
-                  {player.country || player.city || player.clubName || "Player profile"}
+                  {player.country || player.city || player.clubName || "Προφίλ παίκτη"}
                 </span>
               </span>
             </button>
           ))
         ) : (
-          <div className="px-3 py-4 text-sm text-slate-500">No players found.</div>
+          <div className="px-3 py-4 text-sm text-slate-500">Δεν βρέθηκαν παίκτες.</div>
         )}
       </div>
     </div>
@@ -262,48 +262,48 @@ function PlayerLabCard({
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</div>
       <div className="mt-3 min-h-[42px] text-base font-semibold text-slate-950">
-        {player?.name || selected?.fullNameEn || selected?.fullName || "No player selected"}
+        {player?.name || selected?.fullNameEn || selected?.fullName || "Δεν έχει επιλεγεί παίκτης"}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-500">Official AVG override</label>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">Επίσημο AVG override</label>
           <input
             value={officialAvg}
             onChange={(event) => onOfficialAvg(event.target.value)}
             inputMode="decimal"
-            placeholder="Official AVG"
+            placeholder="Επίσημο AVG"
             className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-500">Friendly AVG</label>
+          <label className="mb-1 block text-xs font-semibold text-slate-500">AVG φιλικών</label>
           <input
             value={friendlyAvg}
             onChange={(event) => onFriendlyAvg(event.target.value)}
             inputMode="decimal"
-            placeholder="Friendly AVG"
+            placeholder="AVG φιλικών"
             className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
           />
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500 sm:grid-cols-4">
-        <Metric label="Official" value={formatAvg(officialValue)} />
-        <Metric label="Recent" value={formatAvg(player?.recentAvg)} />
-        <Metric label="Friendly" value={formatAvg(friendlyValue)} />
-        <Metric label="Pressure" value={pressureFactor ? `${pressureFactor}%` : "-"} />
-        <Metric label="Matches" value={String(player?.totalMatches ?? "-")} />
-        <Metric label="Win" value={formatPct(player?.winPercentage)} />
+        <Metric label="Επίσημο" value={formatAvg(officialValue)} />
+        <Metric label="Πρόσφατο" value={formatAvg(player?.recentAvg)} />
+        <Metric label="Φιλικά" value={formatAvg(friendlyValue)} />
+        <Metric label="Πίεση" value={pressureFactor ? `${pressureFactor}%` : "-"} />
+        <Metric label="Αγώνες" value={String(player?.totalMatches ?? "-")} />
+        <Metric label="Νίκες" value={formatPct(player?.winPercentage)} />
         <Metric label="H.R." value={String(player?.highestRun ?? "-")} />
-        <Metric label="Best AVG" value={formatAvg(player?.bestAverage)} />
+        <Metric label="Καλύτερο AVG" value={formatAvg(player?.bestAverage)} />
       </div>
 
       <div className="mt-4 grid gap-2 text-xs">
-        <Signal label="Form" value={formDelta === null ? "Unknown" : `${formDelta >= 0 ? "+" : ""}${formDelta}%`} />
-        <Signal label="Toughness" value={scoreLabel(toughness)} />
-        <Signal label="Run danger" value={scoreLabel(runDanger)} />
-        <Signal label="Data confidence" value={player ? confidenceLabelForMatches(player.totalMatches) : "Unknown"} />
+        <Signal label="Φόρμα" value={formDelta === null ? "Άγνωστο" : `${formDelta >= 0 ? "+" : ""}${formDelta}%`} />
+        <Signal label="Σκληρότητα" value={scoreLabel(toughness)} />
+        <Signal label="Κίνδυνος σερί" value={scoreLabel(runDanger)} />
+        <Signal label="Αξιοπιστία δεδομένων" value={player ? confidenceLabelForMatches(player.totalMatches) : "Άγνωστο"} />
       </div>
     </div>
   );
@@ -328,10 +328,10 @@ function Signal({ label, value }: { label: string; value: string }) {
 }
 
 function confidenceLabelForMatches(matches: number) {
-  if (matches < 5) return "No confidence";
-  if (matches < 15) return "Low";
-  if (matches < 30) return "Medium";
-  return "High";
+  if (matches < 5) return "Χωρίς αξιοπιστία";
+  if (matches < 15) return "Χαμηλή";
+  if (matches < 30) return "Μέτρια";
+  return "Υψηλή";
 }
 
 export function HandicapToolContent() {
@@ -405,19 +405,19 @@ export function HandicapToolContent() {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-                Internal handicap lab
+                Εσωτερικό handicap lab
               </div>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                3-Cushion Handicap Research
+                Έρευνα Handicap 3-Cushion
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Private comparison tool for official stats, friendly form, pressure signals and experimental handicap modes.
+                Ιδιωτικό εργαλείο σύγκρισης για επίσημα στατιστικά, φιλικά, φόρμα, πίεση και πειραματικά handicap modes.
               </p>
             </div>
 
             <div className="grid w-full grid-cols-2 gap-3 md:grid-cols-[110px_220px_140px] xl:w-auto">
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Target</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Στόχος</label>
                 <input
                   type="number"
                   min={1}
@@ -428,7 +428,7 @@ export function HandicapToolContent() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Mode</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Τρόπος</label>
                 <select
                   value={mode}
                   onChange={(event) => {
@@ -441,15 +441,15 @@ export function HandicapToolContent() {
                   }}
                   className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                 >
-                  <option value="starting-points">European starting points</option>
+                  <option value="starting-points">Ευρωπαϊκοί πόντοι εκκίνησης</option>
                   <option value="race-to">Korean race-to</option>
-                  <option value="avg-ratio">AVG ratio</option>
+                  <option value="avg-ratio">Αναλογία AVG</option>
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Context</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Πλαίσιο</label>
                 <div className="flex h-12 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
-                  Research only
+                  Μόνο για έρευνα
                 </div>
               </div>
             </div>
@@ -459,8 +459,8 @@ export function HandicapToolContent() {
         <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
             <div className="grid gap-4 md:grid-cols-2">
-              <PlayerSearchBox label="Player A" value={playerA} onSelect={setPlayerA} />
-              <PlayerSearchBox label="Player B" value={playerB} onSelect={setPlayerB} />
+              <PlayerSearchBox label="Παίκτης A" value={playerA} onSelect={setPlayerA} />
+              <PlayerSearchBox label="Παίκτης B" value={playerB} onSelect={setPlayerB} />
             </div>
 
             {playerA && playerB && playerA.documentId === playerB.documentId ? (
@@ -483,7 +483,7 @@ export function HandicapToolContent() {
                 className="inline-flex h-12 items-center gap-2 rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
-                Calculate lab view
+                Υπολογισμός lab
               </button>
             </div>
           </div>
@@ -491,7 +491,7 @@ export function HandicapToolContent() {
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
             {!result ? (
               <div className="flex min-h-[245px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm leading-6 text-slate-500">
-                Select two players to compare official strength, friendly signals, form and handicap modes.
+                Επίλεξε δύο παίκτες για σύγκριση επίσημων στοιχείων, φιλικών, φόρμας και handicap modes.
               </div>
             ) : (
               <div>
@@ -500,7 +500,7 @@ export function HandicapToolContent() {
                     {confidenceLabel[result.recommendation.confidence] ?? result.recommendation.confidence}
                   </span>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    Target {result.targetPoints}
+                    Στόχος {result.targetPoints}
                   </span>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                     {modeLabels[result.mode]}
@@ -508,19 +508,19 @@ export function HandicapToolContent() {
                 </div>
 
                 <div className="text-3xl font-semibold tracking-tight text-slate-950">
-                  {result.recommendation.label || "No recommendation"}
+                  {result.recommendation.label || "Δεν υπάρχει πρόταση"}
                 </div>
                 <p className="mt-4 text-sm leading-6 text-slate-800">{result.recommendation.reason}</p>
 
                 {result.recommendation.calibration ? (
                   <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
                     <div className="grid grid-cols-3 gap-3 text-xs text-slate-500">
-                      <Metric label="Base" value={String(result.recommendation.calibration.baseHandicap)} />
+                      <Metric label="Βάση" value={String(result.recommendation.calibration.baseHandicap)} />
                       <Metric
                         label="Calibration"
                         value={`${result.recommendation.calibration.adjustment >= 0 ? "+" : ""}${result.recommendation.calibration.adjustment}`}
                       />
-                      <Metric label="Final" value={String(result.recommendation.calibration.finalHandicap)} />
+                      <Metric label="Τελικό" value={String(result.recommendation.calibration.finalHandicap)} />
                     </div>
                     <div className="mt-4 grid gap-2">
                       {result.recommendation.calibration.adjustments.length > 0 ? (
@@ -541,7 +541,7 @@ export function HandicapToolContent() {
                         ))
                       ) : (
                         <div className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">
-                          No calibration adjustment for this comparison.
+                          Δεν υπάρχει calibration adjustment για αυτή τη σύγκριση.
                         </div>
                       )}
                     </div>
@@ -554,7 +554,7 @@ export function HandicapToolContent() {
 
         <section className="grid gap-5 lg:grid-cols-2">
           <PlayerLabCard
-            title="Player A profile"
+            title="Προφίλ Παίκτη A"
             selected={playerA}
             player={resultPlayerA}
             officialAvg={playerAAvg}
@@ -563,7 +563,7 @@ export function HandicapToolContent() {
             onFriendlyAvg={setPlayerAFriendlyAvg}
           />
           <PlayerLabCard
-            title="Player B profile"
+            title="Προφίλ Παίκτη B"
             selected={playerB}
             player={resultPlayerB}
             officialAvg={playerBAvg}
@@ -575,10 +575,10 @@ export function HandicapToolContent() {
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
           <div className="grid gap-4 md:grid-cols-4">
-            <Metric label="Official strength" value="Official AVG, win%, H.R., best AVG" />
-            <Metric label="Friendly strength" value="Manual now, dataset later" />
-            <Metric label="Pressure factor" value="Official AVG / Friendly AVG" />
-            <Metric label="Learning status" value="Collecting samples" />
+            <Metric label="Επίσημη δύναμη" value="AVG, νίκες %, H.R., καλύτερο AVG" />
+            <Metric label="Δύναμη φιλικών" value="Χειροκίνητα τώρα, dataset αργότερα" />
+            <Metric label="Παράγοντας πίεσης" value="Επίσημο AVG / AVG φιλικών" />
+            <Metric label="Learning status" value="Συλλογή δειγμάτων" />
           </div>
         </section>
       </div>
