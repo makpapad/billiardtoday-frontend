@@ -1,7 +1,7 @@
 "use client";
 
 import { Calculator, Loader2, Search, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CountryFlag } from "@/components/public/PresentationBlocks";
 
 type PlayerOption = {
@@ -216,8 +216,9 @@ export function HandicapToolContent() {
     () => Boolean(playerA && playerB && playerA.documentId !== playerB.documentId),
     [playerA, playerB],
   );
+  const hasResult = Boolean(result);
 
-  const calculate = async () => {
+  const calculate = useCallback(async () => {
     if (!playerA || !playerB) return;
     setBusy(true);
     setError(null);
@@ -244,7 +245,17 @@ export function HandicapToolContent() {
     } finally {
       setBusy(false);
     }
-  };
+  }, [playerA, playerB, targetPoints]);
+
+  useEffect(() => {
+    if (!hasResult || !canCalculate) return;
+
+    const timer = window.setTimeout(() => {
+      void calculate();
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [calculate, canCalculate, hasResult, targetPoints]);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -272,7 +283,10 @@ export function HandicapToolContent() {
                   min={1}
                   max={100}
                   value={targetPoints}
-                  onChange={(event) => setTargetPoints(Number(event.target.value) || 40)}
+                  onChange={(event) => {
+                    const nextTarget = Math.max(1, Number(event.target.value) || 1);
+                    setTargetPoints(nextTarget);
+                  }}
                   className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 sm:w-28"
                 />
               </div>

@@ -293,7 +293,9 @@ export function buildHandicapRecommendation(input: {
   const weaker = stronger === playerA ? playerB : playerA;
   const scoreDiff = Math.abs(playerA.effectiveScore - playerB.effectiveScore);
   const maxHandicap = Math.round(targetPoints * 0.35);
-  const handicapPoints = clamp(Math.round(scoreDiff / 35), 0, maxHandicap);
+  const baseHandicapFor40 = scoreDiff / 35;
+  const scaledHandicap = baseHandicapFor40 * (targetPoints / 40);
+  const handicapPoints = clamp(Math.round(scaledHandicap), 0, maxHandicap);
 
   return {
     targetPoints,
