@@ -351,7 +351,6 @@ export function HandicapToolContent() {
     () => Boolean(playerA && playerB && playerA.documentId !== playerB.documentId),
     [playerA, playerB],
   );
-  const hasResult = Boolean(result);
 
   const calculate = useCallback(async () => {
     if (!playerA || !playerB) return;
@@ -384,12 +383,17 @@ export function HandicapToolContent() {
   }, [mode, playerA, playerAAvg, playerB, playerBAvg, targetPoints]);
 
   useEffect(() => {
-    if (!hasResult || !canCalculate) return;
+    if (!canCalculate) {
+      setResult(null);
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       void calculate();
-    }, 300);
+    }, 250);
+
     return () => window.clearTimeout(timer);
-  }, [calculate, canCalculate, hasResult, mode, playerAAvg, playerBAvg, targetPoints]);
+  }, [calculate, canCalculate]);
 
   const resultPlayerA = result?.players.find((player) => player.documentId === playerA?.documentId) ?? null;
   const resultPlayerB = result?.players.find((player) => player.documentId === playerB?.documentId) ?? null;
