@@ -17,6 +17,7 @@ type PlayerOption = {
 type RecommendationPayload = {
   targetPoints: number;
   gameType: string;
+  mode: "starting-points" | "race-to";
   recommendation: {
     available: boolean;
     label: string | null;
@@ -25,6 +26,21 @@ type RecommendationPayload = {
     reasonEl: string;
     handicapPoints?: number;
     weakerPlayerDocumentId?: string | null;
+    calibration?: {
+      source: "baseline-calibration-v1" | "match-history";
+      baseHandicap: number;
+      adjustment: number;
+      finalHandicap: number;
+      adjustments: Array<{
+        label: string;
+        points: number;
+        reason: string;
+      }>;
+    };
+    raceTo?: {
+      playerA: number;
+      playerB: number;
+    };
   };
   players: Array<{
     documentId: string | null;
@@ -35,6 +51,8 @@ type RecommendationPayload = {
     totalMatches: number;
     highestRun: number;
     bestAverage: number;
+    internalHandy: number;
+    calibrationBand: string;
   }>;
 };
 
@@ -208,6 +226,7 @@ export function HandicapToolContent() {
   const [playerA, setPlayerA] = useState<PlayerOption | null>(null);
   const [playerB, setPlayerB] = useState<PlayerOption | null>(null);
   const [targetPoints, setTargetPoints] = useState(40);
+  const [mode, setMode] = useState<"starting-points" | "race-to">("starting-points");
   const [result, setResult] = useState<RecommendationPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -231,6 +250,7 @@ export function HandicapToolContent() {
           playerA: playerA.documentId,
           playerB: playerB.documentId,
           targetPoints,
+          mode,
           gameType: "Three-Cushion",
         }),
       });
@@ -245,7 +265,7 @@ export function HandicapToolContent() {
     } finally {
       setBusy(false);
     }
-  }, [playerA, playerB, targetPoints]);
+  }, [mode, playerA, playerB, targetPoints]);
 
   useEffect(() => {
     if (!hasResult || !canCalculate) return;
@@ -255,7 +275,7 @@ export function HandicapToolContent() {
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [calculate, canCalculate, hasResult, targetPoints]);
+  }, [calculate, canCalculate, hasResult, mode, targetPoints]);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -273,7 +293,7 @@ export function HandicapToolContent() {
                 Επίλεξε δύο παίκτες από τη λίστα και πάρε προτεινόμενο handicap με reason text από τα καταγεγραμμένα στατιστικά τους.
               </p>
             </div>
-            <div className="grid w-full grid-cols-2 gap-3 sm:w-auto">
+            <div className="grid w-full grid-cols-2 gap-3 sm:w-auto lg:grid-cols-[112px_220px_120px]">
               <div>
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   Target
@@ -289,6 +309,21 @@ export function HandicapToolContent() {
                   }}
                   className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 sm:w-28"
                 />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Mode
+                </label>
+                <select
+                  value={mode}
+                  onChange={(event) =>
+                    setMode(event.target.value === "race-to" ? "race-to" : "starting-points")
+                  }
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                >
+                  <option value="starting-points">European starting points</option>
+                  <option value="race-to">Korean race-to</option>
+                </select>
               </div>
               <div>
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -348,6 +383,9 @@ export function HandicapToolContent() {
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                     Target {result.targetPoints}
                   </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {result.mode === "race-to" ? "Korean race-to" : "European starting points"}
+                  </span>
                 </div>
 
                 <div className="text-4xl font-semibold tracking-tight text-slate-950">
@@ -360,6 +398,58 @@ export function HandicapToolContent() {
                   {result.recommendation.reasonEl}
                 </p>
 
+                {result.recommendation.calibration ? (
+                  <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="grid grid-cols-3 gap-3 text-xs text-slate-500">
+                      <div>
+                        <div>Base</div>
+                        <strong className="text-base text-slate-950">
+                          {result.recommendation.calibration.baseHandicap}
+                        </strong>
+                      </div>
+                      <div>
+                        <div>Calibration</div>
+                        <strong className="text-base text-slate-950">
+                          {result.recommendation.calibration.adjustment >= 0 ? "+" : ""}
+                          {result.recommendation.calibration.adjustment}
+                        </strong>
+                      </div>
+                      <div>
+                        <div>Final</div>
+                        <strong className="text-base text-slate-950">
+                          {result.recommendation.calibration.finalHandicap}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {result.recommendation.calibration.adjustments.length > 0 ? (
+                      <div className="mt-4 space-y-2">
+                        {result.recommendation.calibration.adjustments.map((adjustment) => (
+                          <div
+                            key={`${adjustment.label}-${adjustment.points}`}
+                            className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2 text-xs text-slate-600"
+                          >
+                            <div>
+                              <div className="font-semibold text-slate-950">
+                                {adjustment.label}
+                              </div>
+                              <div className="mt-1">{adjustment.reason}</div>
+                            </div>
+                            <strong className="shrink-0 text-sm text-slate-950">
+                              {adjustment.points >= 0 ? "+" : ""}
+                              {adjustment.points}
+                            </strong>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-lg bg-white px-3 py-2 text-xs text-slate-500">
+                        No calibration adjustment for this comparison.
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
                 <div className="mt-6 grid gap-3">
                   {result.players.map((player) => (
                     <div
@@ -368,6 +458,14 @@ export function HandicapToolContent() {
                     >
                       <div className="font-semibold text-slate-950">{player.name || "Player"}</div>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-500 sm:grid-cols-3">
+                        <div>
+                          <div>Internal handy</div>
+                          <strong className="text-sm text-slate-950">{player.internalHandy}</strong>
+                        </div>
+                        <div>
+                          <div>Band</div>
+                          <strong className="text-sm text-slate-950">{player.calibrationBand}</strong>
+                        </div>
                         <div>
                           <div>Rating</div>
                           <strong className="text-sm text-slate-950">{player.effectiveScore}</strong>

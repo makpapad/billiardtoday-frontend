@@ -1,4 +1,6 @@
 export type HandicapConfidence = "none" | "low" | "medium" | "high";
+export type HandicapMode = "starting-points" | "race-to";
+export type HandicapCalibrationSource = "baseline-calibration-v1" | "match-history";
 
 export type HandicapPlayerInput = {
   id?: number | null;
@@ -17,10 +19,29 @@ export type HandicapPlayerRating = {
   totalMatches: number;
   highestRun: number;
   bestAverage: number;
+  internalHandy: number;
+  calibrationBand: string;
+};
+
+export type HandicapAdjustment = {
+  label: string;
+  points: number;
+  reason: string;
+};
+
+export type HandicapCalibration = {
+  source: HandicapCalibrationSource;
+  baseHandicap: number;
+  adjustment: number;
+  finalHandicap: number;
+  adjustments: HandicapAdjustment[];
 };
 
 const DEFAULT_SCORE = 500;
 const MIN_MATCHES = 5;
+const DEFAULT_MODE: HandicapMode = "starting-points";
+
+const CALIBRATION_SOURCE: HandicapCalibrationSource = "baseline-calibration-v1";
 
 const finiteNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
@@ -195,16 +216,22 @@ const ratePlayer = (
   const effectiveScore =
     rawEffectiveScore * confidenceFactor + DEFAULT_SCORE * (1 - confidenceFactor);
 
+  const overallAvg = finiteNumber(aggregate.avgPerInning);
+  const recentAvg = Number(recent.avg.toFixed(3));
+  const handyAverage = recentAvg > 0 && totalMatches >= 15 ? recentAvg : overallAvg;
+
   return {
     id: Number.isFinite(Number(player.id)) ? Number(player.id) : null,
     documentId: player.documentId ?? null,
     name: player.name ?? null,
     effectiveScore: Math.round(effectiveScore),
-    overallAvg: finiteNumber(aggregate.avgPerInning),
-    recentAvg: Number(recent.avg.toFixed(3)),
+    overallAvg,
+    recentAvg,
     totalMatches,
     highestRun: finiteNumber(aggregate.highestRun),
     bestAverage: finiteNumber(aggregate.bestAverage ?? aggregate.bestAverageFromWins),
+    internalHandy: koreanHandyFromAverage(handyAverage),
+    calibrationBand: calibrationBandForAverage(handyAverage),
   };
 };
 
@@ -217,11 +244,121 @@ const confidenceFor = (minimumMatches: number): HandicapConfidence => {
 
 const displayName = (value: string | null) => value?.trim() || "Player";
 
+const calibrationAverageFor = (player: HandicapPlayerRating) =>
+  player.recentAvg > 0 && player.totalMatches >= 15
+    ? player.recentAvg
+    : player.overallAvg;
+
+const calibrationBandForAverage = (average: number) => {
+  if (average >= 1.5) return "1.500+";
+  if (average >= 1.15) return "1.150-1.499";
+  if (average >= 0.9) return "0.900-1.149";
+  if (average >= 0.7) return "0.700-0.899";
+  if (average >= 0.55) return "0.550-0.699";
+  if (average >= 0.4) return "0.400-0.549";
+  return "<0.400";
+};
+
+const koreanHandyFromAverage = (average: number) => {
+  if (average >= 1.7) return 44;
+  if (average >= 1.5) return 40;
+  if (average >= 1.3) return 36;
+  if (average >= 1.15) return 35;
+  if (average >= 1.11) return 33;
+  if (average >= 0.96) return 32;
+  if (average >= 0.86) return 30;
+  if (average >= 0.77) return 28;
+  if (average >= 0.7) return 27;
+  if (average >= 0.64) return 26;
+  if (average >= 0.59) return 25;
+  if (average >= 0.54) return 24;
+  if (average >= 0.495) return 23;
+  if (average >= 0.45) return 22;
+  if (average >= 0.405) return 21;
+  return 20;
+};
+
+const targetScale = (targetPoints: number) => Math.sqrt(targetPoints / 40);
+
+const normalizeMode = (value: unknown): HandicapMode =>
+  value === "race-to" || value === "korean-race-to"
+    ? "race-to"
+    : DEFAULT_MODE;
+
+const roundAdjustment = (points: number, targetPoints: number) =>
+  Math.round(points * targetScale(targetPoints));
+
+const buildCalibration = (
+  stronger: HandicapPlayerRating,
+  weaker: HandicapPlayerRating,
+  baseHandicap: number,
+  targetPoints: number,
+): HandicapCalibration => {
+  const strongerAvg = calibrationAverageFor(stronger);
+  const weakerAvg = calibrationAverageFor(weaker);
+  const avgGap = Math.max(0, strongerAvg - weakerAvg);
+  const adjustments: HandicapAdjustment[] = [];
+
+  if (strongerAvg >= 1.45 && weakerAvg > 0 && weakerAvg <= 0.58) {
+    adjustments.push({
+      label: "Elite gap",
+      points: roundAdjustment(8, targetPoints),
+      reason: "Large correction for a high-level player against a low-average player.",
+    });
+  } else if (strongerAvg >= 1.15 && weakerAvg > 0 && weakerAvg <= 0.8 && avgGap >= 0.35) {
+    adjustments.push({
+      label: "Strong-player pressure",
+      points: roundAdjustment(2, targetPoints),
+      reason: "Small increase because longer runs become more decisive as the stronger player rises.",
+    });
+  }
+
+  if (strongerAvg < 0.8 && weakerAvg >= 0.4 && avgGap <= 0.25) {
+    adjustments.push({
+      label: "Low-band compression",
+      points: -roundAdjustment(1, targetPoints),
+      reason: "Small reduction because close low-band averages should not create an inflated start.",
+    });
+  }
+
+  if (targetPoints >= 50 && avgGap >= 0.4) {
+    adjustments.push({
+      label: "Longer match",
+      points: 1,
+      reason: "Longer targets slightly favor the stronger player.",
+    });
+  }
+
+  const adjustment = adjustments.reduce((sum, item) => sum + item.points, 0);
+  const finalHandicap = clamp(
+    baseHandicap + adjustment,
+    0,
+    Math.max(0, targetPoints - 1),
+  );
+
+  return {
+    source: CALIBRATION_SOURCE,
+    baseHandicap,
+    adjustment: finalHandicap - baseHandicap,
+    finalHandicap,
+    adjustments,
+  };
+};
+
 const buildReason = (
   stronger: HandicapPlayerRating,
   weaker: HandicapPlayerRating,
   handicapPoints: number,
+  mode: HandicapMode,
+  calibration: HandicapCalibration,
 ) => {
+  if (mode === "race-to") {
+    return {
+      reason: `${displayName(stronger.name)} maps to internal handy ${stronger.internalHandy}, while ${displayName(weaker.name)} maps to ${weaker.internalHandy}. Race-to mode keeps separate targets, while calibration is shown for comparison.`,
+      reasonEl: `Ο ${displayName(stronger.name)} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${displayName(weaker.name)} σε ${weaker.internalHandy}. Στο race-to mode κάθε παίκτης παίζει μέχρι τον δικό του στόχο, ενώ το calibration εμφανίζεται για σύγκριση.`,
+    };
+  }
+
   if (handicapPoints <= 0) {
     return {
       reason:
@@ -233,14 +370,10 @@ const buildReason = (
 
   const strongerName = displayName(stronger.name);
   const weakerName = displayName(weaker.name);
-  const avgText =
-    stronger.recentAvg > 0 && stronger.recentAvg > weaker.recentAvg
-      ? "recent"
-      : "overall";
 
   return {
-    reason: `${strongerName} has the stronger ${avgText} average from recorded 3-cushion stats, so ${weakerName} gets ${handicapPoints} starting point${handicapPoints === 1 ? "" : "s"}.`,
-    reasonEl: `Ο ${strongerName} έχει ισχυρότερο ${avgText === "recent" ? "πρόσφατο" : "συνολικό"} μέσο όρο στα καταγεγραμμένα 3-cushion στατιστικά, οπότε ο ${weakerName} παίρνει ${handicapPoints} πόντ${handicapPoints === 1 ? "ο" : "ους"} εκκίνησης.`,
+    reason: `${strongerName} maps to internal handy ${stronger.internalHandy}, while ${weakerName} maps to ${weaker.internalHandy}. Base handicap is ${calibration.baseHandicap}, calibration adjustment is ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, final suggestion is ${handicapPoints}.`,
+    reasonEl: `Ο ${strongerName} αντιστοιχεί σε internal handy ${stronger.internalHandy}, ενώ ο ${weakerName} σε ${weaker.internalHandy}. Η βάση είναι ${calibration.baseHandicap}, το calibration δίνει ${calibration.adjustment >= 0 ? "+" : ""}${calibration.adjustment}, τελική πρόταση ${handicapPoints} πόντ${handicapPoints === 1 ? "ος" : "οι"} εκκίνησης.`,
   };
 };
 
@@ -249,10 +382,12 @@ export function buildHandicapRecommendation(input: {
   playerB: HandicapPlayerInput;
   targetPoints?: number | null;
   gameType?: string | null;
+  mode?: HandicapMode | string | null;
   now?: Date;
 }) {
   const targetPoints = Math.max(1, Math.round(finiteNumber(input.targetPoints, 40)));
   const gameType = input.gameType?.trim() || "Three-Cushion";
+  const mode = normalizeMode(input.mode);
   const now = input.now ?? new Date();
 
   const playerA = ratePlayer(input.playerA, gameType, now);
@@ -262,6 +397,7 @@ export function buildHandicapRecommendation(input: {
     return {
       targetPoints,
       gameType,
+      mode,
       recommendation: {
         available: false,
         label: null,
@@ -278,6 +414,7 @@ export function buildHandicapRecommendation(input: {
     return {
       targetPoints,
       gameType,
+      mode,
       recommendation: {
         available: false,
         label: null,
@@ -291,26 +428,39 @@ export function buildHandicapRecommendation(input: {
 
   const stronger = playerA.effectiveScore >= playerB.effectiveScore ? playerA : playerB;
   const weaker = stronger === playerA ? playerB : playerA;
-  const scoreDiff = Math.abs(playerA.effectiveScore - playerB.effectiveScore);
-  const maxHandicap = Math.round(targetPoints * 0.35);
-  const baseHandicapFor40 = scoreDiff / 35;
-  const scaledHandicap = baseHandicapFor40 * (targetPoints / 40);
-  const handicapPoints = clamp(Math.round(scaledHandicap), 0, maxHandicap);
+  const handyDiff = Math.abs(playerA.internalHandy - playerB.internalHandy);
+  const baseHandicap = clamp(
+    Math.round(handyDiff * targetScale(targetPoints)),
+    0,
+    Math.max(0, targetPoints - 1),
+  );
+  const calibration = buildCalibration(stronger, weaker, baseHandicap, targetPoints);
+  const handicapPoints = calibration.finalHandicap;
+  const playerARaceTo = Math.max(1, Math.round(playerA.internalHandy * targetScale(targetPoints)));
+  const playerBRaceTo = Math.max(1, Math.round(playerB.internalHandy * targetScale(targetPoints)));
 
   return {
     targetPoints,
     gameType,
+    mode,
     recommendation: {
       available: true,
       weakerPlayerId: weaker.id,
       weakerPlayerDocumentId: weaker.documentId,
       handicapPoints,
+      calibration,
+      raceTo: {
+        playerA: playerARaceTo,
+        playerB: playerBRaceTo,
+      },
       label:
-        handicapPoints > 0
+        mode === "race-to"
+          ? `${displayName(playerA.name)} to ${playerARaceTo} / ${displayName(playerB.name)} to ${playerBRaceTo}`
+          : handicapPoints > 0
           ? `${displayName(weaker.name)} +${handicapPoints}`
           : "Play even",
       confidence,
-      ...buildReason(stronger, weaker, handicapPoints),
+      ...buildReason(stronger, weaker, handicapPoints, mode, calibration),
     },
     players: [playerA, playerB],
   };

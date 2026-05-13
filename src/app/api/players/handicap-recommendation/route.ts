@@ -90,6 +90,7 @@ export async function POST(req: Request) {
       playerB,
       targetPoints: body.targetPoints ?? body.target_points ?? 40,
       gameType: body.gameType ?? body.game_type ?? "Three-Cushion",
+      mode: body.mode ?? body.handicapMode ?? body.handicap_mode ?? "starting-points",
     });
 
     return NextResponse.json({ data });
