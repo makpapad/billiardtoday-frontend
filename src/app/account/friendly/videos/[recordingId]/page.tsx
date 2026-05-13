@@ -38,21 +38,37 @@ type ScoreState = {
   innings?: number;
 };
 
-function streamFor(recording: PlayerAccountFriendlyRecording | null) {
-  const streamFromUrl = (rawUrl: string | null | undefined) => {
+type RecordingStream = {
+  url: string;
+  type: "hls" | "mp4";
+};
+
+function streamCandidatesFor(recording: PlayerAccountFriendlyRecording | null): RecordingStream[] {
+  const seen = new Set<string>();
+  const streams: RecordingStream[] = [];
+  const pushStream = (stream: RecordingStream | null) => {
+    if (!stream || seen.has(`${stream.type}:${stream.url}`)) return;
+    seen.add(`${stream.type}:${stream.url}`);
+    streams.push(stream);
+  };
+  const pushStreamsFromUrl = (rawUrl: string | null | undefined) => {
     const url = rawUrl?.trim();
-    if (!url) return null;
+    if (!url) return;
     if (url.includes("/playback/get?") || url.includes("format=mp4") || /\.mp4(?:[?#]|$)/i.test(url)) {
-      return { url, type: "mp4" as const };
+      pushStream({ url, type: "mp4" });
+      return;
     }
     if (/\.m3u8(?:[?#]|$)/i.test(url)) {
-      return { url, type: "hls" as const };
+      pushStream({ url, type: "hls" });
+      return;
     }
-    return { url: `${url.replace(/\/+$/, "")}/index.m3u8`, type: "hls" as const };
+    pushStream({ url: `${url.replace(/\/+$/, "")}/index.m3u8`, type: "hls" });
+    pushStream({ url, type: "mp4" });
   };
 
   if (recording?.processingStatus === "ready" && recording.processedPlaybackUrl?.trim()) {
-    return streamFromUrl(recording.processedPlaybackUrl);
+    pushStreamsFromUrl(recording.processedPlaybackUrl);
+    return streams;
   }
 
   const playerOnlyRequested =
@@ -62,15 +78,24 @@ function streamFor(recording: PlayerAccountFriendlyRecording | null) {
     recording?.processingStatus !== "not-requested" &&
     recording?.processingStatus !== "failed"
   ) {
-    return null;
+    return [];
   }
 
   const playback = recording?.playbackUrl?.trim();
   const live = recording?.hlsUrl?.trim();
   const isRecorded = recording?.status === "stopped" || recording?.status === "expired" || Boolean(recording?.endedAt);
-  return isRecorded
-    ? streamFromUrl(playback) ?? streamFromUrl(live)
-    : streamFromUrl(live) ?? streamFromUrl(playback);
+  if (isRecorded) {
+    pushStreamsFromUrl(playback);
+    pushStreamsFromUrl(live);
+  } else {
+    pushStreamsFromUrl(live);
+    pushStreamsFromUrl(playback);
+  }
+  return streams;
+}
+
+function streamFor(recording: PlayerAccountFriendlyRecording | null) {
+  return streamCandidatesFor(recording)[0] ?? null;
 }
 
 function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null) {
@@ -132,7 +157,9 @@ function RecordingVideo({
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = React.useState("Opening recording...");
   const [currentTime, setCurrentTime] = React.useState(0);
-  const stream = streamFor(recording);
+  const streams = React.useMemo(() => streamCandidatesFor(recording), [recording]);
+  const [streamIndex, setStreamIndex] = React.useState(0);
+  const stream = streams[streamIndex] ?? null;
   const overlayState = React.useMemo(() => stateAt(events, currentTime), [events, currentTime]);
   const templateState = React.useMemo(
     () => templateStateForRecorded(overlayState, recording),
@@ -140,14 +167,28 @@ function RecordingVideo({
   );
 
   React.useEffect(() => {
+    setStreamIndex(0);
+    setStatus("Opening recording...");
+  }, [recording.id, recording.playbackUrl, recording.hlsUrl, recording.processedPlaybackUrl]);
+
+  React.useEffect(() => {
     const video = videoRef.current;
     if (!video || !stream?.url) return;
     let hls: Hls | null = null;
     let cancelled = false;
 
+    const tryNextStream = (message: string) => {
+      if (cancelled) return;
+      if (streamIndex < streams.length - 1) {
+        setStatus("Trying another recording source...");
+        setStreamIndex((current) => Math.min(current + 1, streams.length - 1));
+        return;
+      }
+      setStatus(message);
+    };
     const onTimeUpdate = () => setCurrentTime(video.currentTime || 0);
     const onError = () => {
-      if (!cancelled) setStatus("Recording video is not available yet.");
+      tryNextStream("Recording video is not available yet.");
     };
     const onLoadedMetadata = () => {
       if (!cancelled) setStatus("");
@@ -161,7 +202,7 @@ function RecordingVideo({
     } else if (Hls.isSupported()) {
       hls = new Hls({ backBufferLength: 60 });
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (!cancelled && data.fatal) setStatus(data.details || "HLS recording error");
+        if (!cancelled && data.fatal) tryNextStream(data.details || "HLS recording error");
       });
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!cancelled) setStatus("");
@@ -184,7 +225,7 @@ function RecordingVideo({
       video.removeAttribute("src");
       video.load();
     };
-  }, [stream?.type, stream?.url]);
+  }, [stream?.type, stream?.url, streamIndex, streams.length]);
 
   return (
     <div className="relative aspect-video overflow-hidden bg-black">
