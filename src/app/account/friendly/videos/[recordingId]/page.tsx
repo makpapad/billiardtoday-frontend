@@ -15,27 +15,9 @@ import {
   type PlayerAccountFriendlyRecording,
   type PlayerAccountFriendlyRecordingEvent,
 } from "@/lib/player-account-auth";
-import TemplateFiveOverlay, { type TemplateFiveOverlayState } from "@/components/overlay/TemplateFiveOverlay";
 
 type PageProps = {
   params: Promise<{ recordingId: string }>;
-};
-
-type ScoreState = {
-  player1?: {
-    name?: string;
-    score?: number;
-    currentRun?: number;
-    highRun?: number;
-  };
-  player2?: {
-    name?: string;
-    score?: number;
-    currentRun?: number;
-    highRun?: number;
-  };
-  activePlayer?: 1 | 2;
-  innings?: number;
 };
 
 type RecordingStream = {
@@ -111,67 +93,12 @@ function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null)
   return playerOnlyRequested && recording?.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
 }
 
-function stateAt(events: PlayerAccountFriendlyRecordingEvent[], currentTimeSec: number): ScoreState | null {
-  const currentMs = Math.max(0, currentTimeSec * 1000);
-  let selected: PlayerAccountFriendlyRecordingEvent | null = null;
-  for (const event of events) {
-    if ((event.offsetMs ?? 0) <= currentMs) selected = event;
-    else break;
-  }
-  return (selected?.state as ScoreState | null) ?? null;
-}
-
-function clampName(value: unknown, fallback: string) {
-  const text = String(value || "").trim();
-  return text || fallback;
-}
-
-function scoreNumber(value: unknown) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function templateStateForRecorded(state: ScoreState | null, recording: PlayerAccountFriendlyRecording): TemplateFiveOverlayState {
-  const p1 = state?.player1 ?? {};
-  const p2 = state?.player2 ?? {};
-  return {
-    playerAName: clampName(p1.name, "Player 1"),
-    playerBName: clampName(p2.name, "Player 2"),
-    scoreA: scoreNumber(p1.score),
-    scoreB: scoreNumber(p2.score),
-    liveRunA: scoreNumber(p1.currentRun),
-    liveRunB: scoreNumber(p2.currentRun),
-    bestRunA: scoreNumber(p1.highRun),
-    bestRunB: scoreNumber(p2.highRun),
-    current: state?.activePlayer === 2 ? "B" : "A",
-    inningsCount: scoreNumber(state?.innings || 1),
-    tournamentName: "Recorded friendly match",
-    stageName: "Friendly",
-    tableName: recording.tableLabel || recording.screenIdentifier || "-",
-    progress: 0,
-    maxTimeoutsA: 3,
-    maxTimeoutsB: 3,
-  };
-}
-
-function RecordingVideo({
-  recording,
-  events,
-}: {
-  recording: PlayerAccountFriendlyRecording;
-  events: PlayerAccountFriendlyRecordingEvent[];
-}) {
+function RecordingVideo({ recording }: { recording: PlayerAccountFriendlyRecording }) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = React.useState("Opening recording...");
-  const [currentTime, setCurrentTime] = React.useState(0);
   const streams = React.useMemo(() => streamCandidatesFor(recording), [recording]);
   const [streamIndex, setStreamIndex] = React.useState(0);
   const stream = streams[streamIndex] ?? null;
-  const overlayState = React.useMemo(() => stateAt(events, currentTime), [events, currentTime]);
-  const templateState = React.useMemo(
-    () => templateStateForRecorded(overlayState, recording),
-    [overlayState, recording],
-  );
 
   React.useEffect(() => {
     setStreamIndex(0);
@@ -207,20 +134,18 @@ function RecordingVideo({
       }
       setStatus(message);
     };
-    const onTimeUpdate = () => setCurrentTime(video.currentTime || 0);
     const onError = () => {
       tryNextStream("Recording video is not available yet.");
     };
     const onLoadedMetadata = () => {
       clearOpeningStatusIfReady();
     };
-    video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("error", onError);
     video.addEventListener("loadedmetadata", onLoadedMetadata);
     video.addEventListener("durationchange", onLoadedMetadata);
     video.addEventListener("loadeddata", onLoadedMetadata);
     video.addEventListener("canplay", onLoadedMetadata);
-    video.preload = "metadata";
+    video.preload = "auto";
 
     if (stream.type === "mp4") {
       video.src = stream.url;
@@ -249,7 +174,6 @@ function RecordingVideo({
     return () => {
       cancelled = true;
       clearReadyCheckTimer();
-      video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("error", onError);
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("durationchange", onLoadedMetadata);
@@ -268,9 +192,8 @@ function RecordingVideo({
         className="absolute inset-0 h-full w-full object-contain"
         controls
         playsInline
-        preload="metadata"
+        preload="auto"
       />
-      <TemplateFiveOverlay state={templateState} />
       {status ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 px-6 text-center text-sm font-semibold text-white">
           {status}
@@ -354,7 +277,7 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
             ) : error ? (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-red-200">{error}</div>
             ) : recording && streamFor(recording) ? (
-              <RecordingVideo recording={recording} events={events} />
+              <RecordingVideo recording={recording} />
             ) : (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-white/70">
                 {recording?.processingStatus === "pending" || recording?.processingStatus === "processing"
