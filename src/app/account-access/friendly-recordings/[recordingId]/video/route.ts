@@ -3,6 +3,8 @@ import { SERVER_API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+const INITIAL_VIDEO_CHUNK_BYTES = 1024 * 1024;
+
 type Context = {
   params: Promise<{ recordingId: string }>;
 };
@@ -17,8 +19,8 @@ export async function GET(req: Request, context: Context) {
 
   const { recordingId } = await context.params;
   const headers: Record<string, string> = { Authorization: auth };
-  const range = req.headers.get("range");
-  if (range) headers.Range = range;
+  const range = req.headers.get("range") || `bytes=0-${INITIAL_VIDEO_CHUNK_BYTES - 1}`;
+  headers.Range = range;
 
   const res = await fetch(
     `${SERVER_API_URL}/api/player-accounts/friendly-recordings/${encodeURIComponent(recordingId)}/video`,
