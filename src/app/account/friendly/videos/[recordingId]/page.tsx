@@ -93,6 +93,13 @@ function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null)
   return playerOnlyRequested && recording?.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
 }
 
+function processedVideoLabel(recording: PlayerAccountFriendlyRecording | null) {
+  if (recording?.processingStatus !== "ready") return "";
+  return recording.requestedPlayerSlot === "p1" || recording.requestedPlayerSlot === "p2"
+    ? " | Player-only video"
+    : " | Optimized video";
+}
+
 function RecordingVideo({ recording }: { recording: PlayerAccountFriendlyRecording }) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = React.useState("Opening recording...");
@@ -260,7 +267,7 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
               </h1>
               <p className="mt-2 text-sm text-white/60">
                 {recording?.startedAt ? formatDateTime(recording.startedAt) : "Recording date not available"} | {events.length} timeline events
-                {recording?.processingStatus === "ready" ? " | Player-only video" : ""}
+                {processedVideoLabel(recording)}
                 {usesFullVideoFallback(recording) ? " | Full video fallback" : ""}
               </p>
               {usesFullVideoFallback(recording) ? (
