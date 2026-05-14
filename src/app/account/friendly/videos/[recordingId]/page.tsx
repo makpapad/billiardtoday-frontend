@@ -25,6 +25,22 @@ type RecordingStream = {
   type: "hls" | "mp4";
 };
 
+function isPlayerOnlyRecording(recording: PlayerAccountFriendlyRecording | null) {
+  return recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
+}
+
+function isRecordedRecording(recording: PlayerAccountFriendlyRecording | null) {
+  return recording?.status === "stopped" || recording?.status === "expired" || Boolean(recording?.endedAt);
+}
+
+function isFullRecordingPreparing(recording: PlayerAccountFriendlyRecording | null) {
+  return (
+    isRecordedRecording(recording) &&
+    !isPlayerOnlyRecording(recording) &&
+    (recording?.processingStatus === "pending" || recording?.processingStatus === "processing")
+  );
+}
+
 function streamCandidatesFor(recording: PlayerAccountFriendlyRecording | null): RecordingStream[] {
   const seen = new Set<string>();
   const streams: RecordingStream[] = [];
@@ -53,19 +69,15 @@ function streamCandidatesFor(recording: PlayerAccountFriendlyRecording | null): 
     return streams;
   }
 
-  const playerOnlyRequested =
-    recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
-  if (
-    playerOnlyRequested &&
-    recording?.processingStatus !== "not-requested" &&
-    recording?.processingStatus !== "failed"
-  ) {
+  const playerOnlyRequested = isPlayerOnlyRecording(recording);
+  if (isFullRecordingPreparing(recording)) return [];
+  if (playerOnlyRequested && recording?.processingStatus !== "not-requested" && recording?.processingStatus !== "failed") {
     return [];
   }
 
   const playback = recording?.playbackUrl?.trim();
   const live = recording?.hlsUrl?.trim();
-  const isRecorded = recording?.status === "stopped" || recording?.status === "expired" || Boolean(recording?.endedAt);
+  const isRecorded = isRecordedRecording(recording);
   if (isRecorded) {
     const token = playerAccountAuth.getJwt();
     if (recording?.id && token) {
@@ -88,9 +100,7 @@ function streamFor(recording: PlayerAccountFriendlyRecording | null) {
 }
 
 function usesFullVideoFallback(recording: PlayerAccountFriendlyRecording | null) {
-  const playerOnlyRequested =
-    recording?.requestedPlayerSlot === "p1" || recording?.requestedPlayerSlot === "p2";
-  return playerOnlyRequested && recording?.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
+  return isPlayerOnlyRecording(recording) && recording?.processingStatus === "failed" && Boolean(recording.hlsUrl || recording.playbackUrl);
 }
 
 function processedVideoLabel(recording: PlayerAccountFriendlyRecording | null) {
@@ -245,6 +255,24 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
     };
   }, [account, recordingId]);
 
+  React.useEffect(() => {
+    if (!account || !isFullRecordingPreparing(recording)) return;
+    let cancelled = false;
+    const timer = window.setInterval(async () => {
+      try {
+        const recordingsData = await playerAccountAuth.friendlyRecordings();
+        if (cancelled) return;
+        setRecording(recordingsData.find((item) => String(item.id) === String(recordingId)) ?? null);
+      } catch {
+        // Keep the current recording state and try again on the next poll.
+      }
+    }, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [account, recording?.endedAt, recording?.id, recording?.processingStatus, recording?.requestedPlayerSlot, recording?.status, recordingId]);
+
   if (isLoading) return <main className="min-h-screen bg-[#f4f0e6] px-5 py-8">Loading account...</main>;
   if (!account) return <AccountAccessCard onAuthenticated={async (next) => setAccount(next)} />;
 
@@ -288,7 +316,9 @@ export default function FriendlyRecordingPlaybackPage({ params }: PageProps) {
             ) : (
               <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-white/70">
                 {recording?.processingStatus === "pending" || recording?.processingStatus === "processing"
-                  ? "Player-only video is being prepared."
+                  ? isPlayerOnlyRecording(recording)
+                    ? "Player-only video is being prepared."
+                    : "Optimized video is being prepared. It will open automatically."
                   : recording?.processingStatus === "failed"
                     ? recording.processingError || "Player-only video processing failed."
                     : "Recording stream URL is not available."}
