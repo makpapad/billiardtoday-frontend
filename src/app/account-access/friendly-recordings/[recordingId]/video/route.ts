@@ -5,6 +5,18 @@ export const dynamic = "force-dynamic";
 
 const INITIAL_VIDEO_CHUNK_BYTES = 1024 * 1024;
 
+function boundedInitialRange(range: string | null) {
+  const trimmed = range?.trim();
+  if (!trimmed) return `bytes=0-${INITIAL_VIDEO_CHUNK_BYTES - 1}`;
+
+  const openEnded = trimmed.match(/^bytes=(\d+)-$/i);
+  if (!openEnded) return trimmed;
+
+  const start = Number(openEnded[1]);
+  if (!Number.isSafeInteger(start) || start < 0) return trimmed;
+  return `bytes=${start}-${start + INITIAL_VIDEO_CHUNK_BYTES - 1}`;
+}
+
 type Context = {
   params: Promise<{ recordingId: string }>;
 };
@@ -19,8 +31,7 @@ export async function GET(req: Request, context: Context) {
 
   const { recordingId } = await context.params;
   const headers: Record<string, string> = { Authorization: auth };
-  const range = req.headers.get("range") || `bytes=0-${INITIAL_VIDEO_CHUNK_BYTES - 1}`;
-  headers.Range = range;
+  headers.Range = boundedInitialRange(req.headers.get("range"));
 
   const res = await fetch(
     `${SERVER_API_URL}/api/player-accounts/friendly-recordings/${encodeURIComponent(recordingId)}/video`,

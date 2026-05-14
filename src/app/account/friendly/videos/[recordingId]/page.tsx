@@ -225,6 +225,7 @@ function RecordingVideo({
     if (stream.type === "mp4") {
       video.src = stream.url;
       video.load();
+      setStatus("");
     } else if (Hls.isSupported()) {
       hls = new Hls({ backBufferLength: 60 });
       hls.on(Hls.Events.ERROR, (_event, data) => {
