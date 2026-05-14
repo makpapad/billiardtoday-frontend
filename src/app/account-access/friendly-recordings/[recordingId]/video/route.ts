@@ -37,6 +37,8 @@ export async function GET(req: Request, context: Context) {
     const value = res.headers.get(key);
     if (value) responseHeaders.set(key, value);
   }
+  responseHeaders.set("Content-Disposition", "inline");
+  responseHeaders.set("X-Accel-Buffering", "no");
 
   return new NextResponse(res.body, {
     status: res.status,

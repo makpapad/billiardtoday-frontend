@@ -183,6 +183,20 @@ function RecordingVideo({
     if (!video || !stream?.url) return;
     let hls: Hls | null = null;
     let cancelled = false;
+    let readyCheckTimer: number | null = null;
+
+    const clearReadyCheckTimer = () => {
+      if (readyCheckTimer === null) return;
+      window.clearInterval(readyCheckTimer);
+      readyCheckTimer = null;
+    };
+    const clearOpeningStatusIfReady = () => {
+      if (cancelled) return;
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        setStatus("");
+        clearReadyCheckTimer();
+      }
+    };
 
     const tryNextStream = (message: string) => {
       if (cancelled) return;
@@ -198,14 +212,19 @@ function RecordingVideo({
       tryNextStream("Recording video is not available yet.");
     };
     const onLoadedMetadata = () => {
-      if (!cancelled) setStatus("");
+      clearOpeningStatusIfReady();
     };
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("error", onError);
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
+    video.addEventListener("durationchange", onLoadedMetadata);
+    video.addEventListener("loadeddata", onLoadedMetadata);
+    video.addEventListener("canplay", onLoadedMetadata);
+    video.preload = "metadata";
 
     if (stream.type === "mp4") {
       video.src = stream.url;
-      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+      video.load();
     } else if (Hls.isSupported()) {
       hls = new Hls({ backBufferLength: 60 });
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -218,16 +237,23 @@ function RecordingVideo({
       hls.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = stream.url;
-      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+      video.load();
     } else {
       setStatus("HLS is not supported in this browser");
     }
 
+    clearOpeningStatusIfReady();
+    readyCheckTimer = window.setInterval(clearOpeningStatusIfReady, 250);
+
     return () => {
       cancelled = true;
+      clearReadyCheckTimer();
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("error", onError);
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
+      video.removeEventListener("durationchange", onLoadedMetadata);
+      video.removeEventListener("loadeddata", onLoadedMetadata);
+      video.removeEventListener("canplay", onLoadedMetadata);
       hls?.destroy();
       video.removeAttribute("src");
       video.load();
@@ -236,7 +262,13 @@ function RecordingVideo({
 
   return (
     <div className="relative aspect-video overflow-hidden bg-black">
-      <video ref={videoRef} className="absolute inset-0 h-full w-full object-contain" controls playsInline />
+      <video
+        ref={videoRef}
+        className="absolute inset-0 h-full w-full object-contain"
+        controls
+        playsInline
+        preload="metadata"
+      />
       <TemplateFiveOverlay state={templateState} />
       {status ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 px-6 text-center text-sm font-semibold text-white">
