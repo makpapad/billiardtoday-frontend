@@ -4040,9 +4040,11 @@ export function TournamentEventsContent({
       2: ["SF", "F"],
       1: ["F"],
     };
+    const expectedLabels = expectedByCount[initialCount]?.filter((label) =>
+      orderedLabels.includes(label),
+    );
     const constrainedLabels =
-      expectedByCount[initialCount]?.filter((label) => orderedLabels.includes(label)) ??
-      orderedLabels;
+      expectedLabels && expectedLabels.length > 0 ? expectedLabels : orderedLabels;
 
     const scoreOf = (match: unknown) => {
       const matchRecord =
