@@ -391,22 +391,38 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
         p2.high_run_2 = Math.max(toNumber(p2.high_run_2) ?? 0, toNumber(match.player2_high_run_2) ?? 0)
     })
 
-    return Array.from(rows.values())
-        .sort((a, b) => {
-            const groupDiff = (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
-            if (groupDiff !== 0) return groupDiff
-            return compareClubRuntimeStandingRows(a, b)
-        })
-        .map((row, index, allRows) => {
-            const groupRowsBefore = allRows
-                .slice(0, index)
-                .filter((candidate) => candidate.group_number === row.group_number).length
-            return {
+    const rankedByGroup = new Map<number, Record<string, unknown>[]>()
+    Array.from(rows.values()).forEach((row) => {
+        const groupNumber = toNumber(row.group_number) ?? 1
+        const groupRows = rankedByGroup.get(groupNumber) ?? []
+        groupRows.push(row)
+        rankedByGroup.set(groupNumber, groupRows)
+    })
+
+    const rankedRows = Array.from(rankedByGroup.entries()).flatMap(([groupNumber, groupRows]) =>
+        [...groupRows]
+            .sort(compareClubRuntimeStandingRows)
+            .map((row, index) => ({
                 ...row,
-                group_position: groupRowsBefore + 1,
-                final_position: index + 1,
-            }
+                group_number: groupNumber,
+                group_position: index + 1,
+            })),
+    )
+
+    return rankedRows
+        .sort((a, b) => {
+            const positionDiff = (toNumber(a.group_position) ?? 9999) - (toNumber(b.group_position) ?? 9999)
+            if (positionDiff !== 0) return positionDiff
+
+            const metricDiff = compareClubRuntimeStandingRows(a, b)
+            if (metricDiff !== 0) return metricDiff
+
+            return (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
         })
+        .map((row, index) => ({
+            ...row,
+            final_position: index + 1,
+        }))
 }
 
 const buildClubTournamentEventPayload = async (
@@ -955,11 +971,19 @@ export async function GET(
                         const mergedGroups = liveMatches
                             ? mergeLiveStageMatches(baseGroups, liveMatches)
                             : null
+                        const stageGroups = mergedGroups ?? baseGroups
+                        const computedGroupStandings = !isKnockoutStageType(stage.stage_type)
+                            ? buildClubRuntimeStandingsFromMatches(stageGroups)
+                            : []
 
                         return {
                             ...stage,
                             ...(mergedGroups ? { groups: mergedGroups } : {}),
-                            ...(liveStandings ? { results: liveStandings } : {}),
+                            ...(computedGroupStandings.length > 0
+                                ? { results: computedGroupStandings }
+                                : liveStandings
+                                  ? { results: liveStandings }
+                                  : {}),
                         }
                     }),
                 )
