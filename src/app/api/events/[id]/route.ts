@@ -171,6 +171,32 @@ const groupNumberFromLabel = (value: unknown, fallback: number): number => {
     return match ? Number(match[0]) : fallback
 }
 
+const hasClubRuntimeMatchResult = (match: Record<string, unknown>): boolean =>
+    [
+        'player1_points',
+        'player2_points',
+        'player1_innings',
+        'player2_innings',
+        'player1_high_run',
+        'player2_high_run',
+        'player1_high_run2',
+        'player2_high_run2',
+        'player1_high_run_2',
+        'player2_high_run_2',
+    ].some((field) => (toNumber(match[field]) ?? 0) > 0)
+
+const clubRuntimeMatchPoints = (match: Record<string, unknown>, role: 'player1' | 'player2'): number => {
+    if (!hasClubRuntimeMatchResult(match)) return 0
+
+    const playerPoints = toNumber(match[`${role}_points`]) ?? 0
+    const opponentRole = role === 'player1' ? 'player2' : 'player1'
+    const opponentPoints = toNumber(match[`${opponentRole}_points`]) ?? 0
+
+    if (playerPoints > opponentPoints) return 2
+    if (playerPoints < opponentPoints) return 0
+    return 1
+}
+
 const getClubRuntime = (tournament: Record<string, unknown>) => {
     const formatDefinition = asObject(tournament.format_definition) ?? {}
     return asObject(formatDefinition.clubRuntime) ?? {}
@@ -220,12 +246,12 @@ const mapClubRuntimeMatch = (
         number: groupNumber,
         date_time: readString(match.date_time),
         player1_points: toNumber(match.player1_points) ?? 0,
-        player1_match_points: toNumber(match.player1_match_points) ?? 0,
+        player1_match_points: clubRuntimeMatchPoints(match, 'player1'),
         player1_innings: toNumber(match.player1_innings) ?? 0,
         player1_high_run: toNumber(match.player1_high_run) ?? 0,
         player1_high_run_2: toNumber(match.player1_high_run2) ?? toNumber(match.player1_high_run_2) ?? 0,
         player2_points: toNumber(match.player2_points) ?? 0,
-        player2_match_points: toNumber(match.player2_match_points) ?? 0,
+        player2_match_points: clubRuntimeMatchPoints(match, 'player2'),
         player2_innings: toNumber(match.player2_innings) ?? 0,
         player2_high_run: toNumber(match.player2_high_run) ?? 0,
         player2_high_run_2: toNumber(match.player2_high_run2) ?? toNumber(match.player2_high_run_2) ?? 0,
@@ -283,6 +309,106 @@ const mapClubRuntimeStanding = (
     }
 }
 
+const compareClubRuntimeStandingRows = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+    const matchPointsDiff = (toNumber(b.match_points) ?? 0) - (toNumber(a.match_points) ?? 0)
+    if (matchPointsDiff !== 0) return matchPointsDiff
+
+    const averageA =
+        (toNumber(a.innings) ?? 0) > 0
+            ? Math.trunc(((toNumber(a.points) ?? 0) / (toNumber(a.innings) ?? 1)) * 1000) / 1000
+            : 0
+    const averageB =
+        (toNumber(b.innings) ?? 0) > 0
+            ? Math.trunc(((toNumber(b.points) ?? 0) / (toNumber(b.innings) ?? 1)) * 1000) / 1000
+            : 0
+    if (averageA !== averageB) return averageB - averageA
+
+    const highRunDiff = (toNumber(b.high_run) ?? 0) - (toNumber(a.high_run) ?? 0)
+    if (highRunDiff !== 0) return highRunDiff
+
+    const bestAverageDiff = (toNumber(b.best_average) ?? 0) - (toNumber(a.best_average) ?? 0)
+    if (bestAverageDiff !== 0) return bestAverageDiff
+
+    const highRun2Diff = (toNumber(b.high_run_2) ?? 0) - (toNumber(a.high_run_2) ?? 0)
+    if (highRun2Diff !== 0) return highRun2Diff
+
+    return (toNumber(b.points) ?? 0) - (toNumber(a.points) ?? 0)
+}
+
+const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]): Record<string, unknown>[] => {
+    const rows = new Map<string, Record<string, unknown>>()
+
+    const ensureRow = (player: Record<string, unknown>, groupNumber: number, keyFallback: string) => {
+        const key = readString(player.documentId) ?? keyFallback
+        if (!rows.has(key)) {
+            rows.set(key, {
+                id: `club-standing:${key}`,
+                documentId: `club-standing:${key}`,
+                match_points: 0,
+                points: 0,
+                innings: 0,
+                best_average: 0,
+                high_run: 0,
+                high_run_2: 0,
+                group_number: groupNumber,
+                group_position: 0,
+                final_position: null,
+                source: 'club-runtime-computed',
+                player,
+            })
+        }
+        return rows.get(key)!
+    }
+
+    matches.forEach((match) => {
+        if (!hasClubRuntimeMatchResult(match)) return
+
+        const groupNumber = toNumber(match.number) ?? 1
+        const player1 = asObject(match.player1) ?? {}
+        const player2 = asObject(match.player2) ?? {}
+        const p1 = ensureRow(player1, groupNumber, `p1:${readString(match.id) ?? rows.size}`)
+        const p2 = ensureRow(player2, groupNumber, `p2:${readString(match.id) ?? rows.size}`)
+
+        const p1Points = toNumber(match.player1_points) ?? 0
+        const p2Points = toNumber(match.player2_points) ?? 0
+        const p1Innings = toNumber(match.player1_innings) ?? 0
+        const p2Innings = toNumber(match.player2_innings) ?? 0
+        const p1Average = p1Innings > 0 ? Math.trunc((p1Points / p1Innings) * 1000) / 1000 : 0
+        const p2Average = p2Innings > 0 ? Math.trunc((p2Points / p2Innings) * 1000) / 1000 : 0
+
+        p1.match_points = (toNumber(p1.match_points) ?? 0) + (toNumber(match.player1_match_points) ?? 0)
+        p1.points = (toNumber(p1.points) ?? 0) + p1Points
+        p1.innings = (toNumber(p1.innings) ?? 0) + p1Innings
+        p1.best_average = Math.max(toNumber(p1.best_average) ?? 0, p1Average)
+        p1.high_run = Math.max(toNumber(p1.high_run) ?? 0, toNumber(match.player1_high_run) ?? 0)
+        p1.high_run_2 = Math.max(toNumber(p1.high_run_2) ?? 0, toNumber(match.player1_high_run_2) ?? 0)
+
+        p2.match_points = (toNumber(p2.match_points) ?? 0) + (toNumber(match.player2_match_points) ?? 0)
+        p2.points = (toNumber(p2.points) ?? 0) + p2Points
+        p2.innings = (toNumber(p2.innings) ?? 0) + p2Innings
+        p2.best_average = Math.max(toNumber(p2.best_average) ?? 0, p2Average)
+        p2.high_run = Math.max(toNumber(p2.high_run) ?? 0, toNumber(match.player2_high_run) ?? 0)
+        p2.high_run_2 = Math.max(toNumber(p2.high_run_2) ?? 0, toNumber(match.player2_high_run_2) ?? 0)
+    })
+
+    return Array.from(rows.values())
+        .sort((a, b) => {
+            const groupDiff = (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
+            if (groupDiff !== 0) return groupDiff
+            return compareClubRuntimeStandingRows(a, b)
+        })
+        .map((row, index, allRows) => {
+            const groupRowsBefore = allRows
+                .slice(0, index)
+                .filter((candidate) => candidate.group_number === row.group_number).length
+            return {
+                ...row,
+                group_position: groupRowsBefore + 1,
+                final_position: index + 1,
+            }
+        })
+}
+
 const buildClubTournamentEventPayload = async (
     clubTournamentDocumentId: string,
     headers: HeadersInit,
@@ -326,9 +452,13 @@ const buildClubTournamentEventPayload = async (
         const matches = asArray(stage.matches).map((match, matchIndex) =>
             mapClubRuntimeMatch(match, matchIndex, participantById),
         )
-        const standings = asArray(stage.standings).map((standing, standingIndex) =>
-            mapClubRuntimeStanding(standing, standingIndex, participantById),
-        )
+        const computedStandings = buildClubRuntimeStandingsFromMatches(matches)
+        const standings =
+            computedStandings.length > 0
+                ? computedStandings
+                : asArray(stage.standings).map((standing, standingIndex) =>
+                      mapClubRuntimeStanding(standing, standingIndex, participantById),
+                  )
 
         return {
             id: stageDocumentId,
