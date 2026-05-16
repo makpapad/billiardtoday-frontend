@@ -351,20 +351,37 @@ export default function AccountPage() {
     setIsRefreshingData(true);
     setDataError(null);
     try {
-      const [dashboardData, devicesData, friendlyMatchesData, tournamentsData] = await Promise.all([
-        playerAccountAuth.dashboard(),
+      const dashboardData = await playerAccountAuth.dashboard();
+      setDashboard(dashboardData);
+      setDevices(dashboardData.devices || []);
+      setFriendlyMatches(dashboardData.latestFriendlyMatches || []);
+      setTournaments(dashboardData.latestTournaments || []);
+      setHasLoadedPrivateData(true);
+
+      const [devicesResult, friendlyMatchesResult, tournamentsResult] = await Promise.allSettled([
         playerAccountAuth.devices(),
         playerAccountAuth.friendlyMatches(),
         playerAccountAuth.tournaments(),
       ]);
-      setDashboard(dashboardData);
-      setDevices(devicesData);
-      setFriendlyMatches(friendlyMatchesData);
-      setTournaments(tournamentsData);
+
+      if (devicesResult.status === "fulfilled") setDevices(devicesResult.value);
+      if (friendlyMatchesResult.status === "fulfilled") setFriendlyMatches(friendlyMatchesResult.value);
+      if (tournamentsResult.status === "fulfilled") setTournaments(tournamentsResult.value);
+
+      const failedResult = [devicesResult, friendlyMatchesResult, tournamentsResult].find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      if (failedResult) {
+        setDataError(
+          failedResult.reason instanceof Error
+            ? failedResult.reason.message
+            : "Some account details could not be loaded.",
+        );
+      }
     } catch (err) {
       setDataError(err instanceof Error ? err.message : "Private account data could not be loaded.");
-    } finally {
       setHasLoadedPrivateData(true);
+    } finally {
       setIsRefreshingData(false);
     }
   }, []);
