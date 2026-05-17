@@ -100,6 +100,54 @@ const mapStandingToFinalResult = (
     }
 }
 
+const maxNumber = (a: unknown, b: unknown): number | null => {
+    const numA = toNumber(a)
+    const numB = toNumber(b)
+    if (numA === null) return numB
+    if (numB === null) return numA
+    return Math.max(numA, numB)
+}
+
+const mergeStandingTotals = (
+    current: Record<string, unknown> | undefined,
+    row: Record<string, unknown>,
+): Record<string, unknown> => {
+    const currentPoints = toNumber(current?.points) ?? toNumber(current?.caroms) ?? 0
+    const rowPoints = toNumber(row.points) ?? toNumber(row.caroms) ?? 0
+    const totalPoints = currentPoints + rowPoints
+
+    return {
+        ...(current ?? row),
+        player: current?.player ?? row.player,
+        match_points: (toNumber(current?.match_points) ?? 0) + (toNumber(row.match_points) ?? 0),
+        points: totalPoints,
+        caroms: totalPoints,
+        innings: (toNumber(current?.innings) ?? 0) + (toNumber(row.innings) ?? 0),
+        high_run: maxNumber(current?.high_run, row.high_run),
+        high_run_2: maxNumber(current?.high_run_2, row.high_run_2),
+        best_average: maxNumber(
+            current?.best_average ?? current?.average,
+            row.best_average ?? row.average,
+        ),
+    }
+}
+
+const buildStandingTotalsByPlayer = (
+    stageRows: Record<string, unknown>[][],
+): Map<string, Record<string, unknown>> => {
+    const totals = new Map<string, Record<string, unknown>>()
+
+    for (const rows of stageRows) {
+        for (const row of rows) {
+            const key = playerRankingKey(row)
+            if (!key) continue
+            totals.set(key, mergeStandingTotals(totals.get(key), row))
+        }
+    }
+
+    return totals
+}
+
 const normalizeStageStandingRows = (rows: unknown[]): Record<string, unknown>[] =>
     asArray(rows)
         .filter((row) => Boolean(asObject(row.player)))
@@ -148,13 +196,25 @@ const buildFullFinalRowsFromStageStandings = (
 ): Record<string, unknown>[] => {
     const usedPlayerKeys = new Set<string>()
     const finalRows: Record<string, unknown>[] = []
+    const totalsByPlayer = buildStandingTotalsByPlayer(stageRows)
 
     for (const rows of stageRows) {
         for (const row of rows) {
             const key = playerRankingKey(row)
             if (!key || usedPlayerKeys.has(key)) continue
             usedPlayerKeys.add(key)
-            finalRows.push(mapStandingToFinalResult(row, finalRows.length, finalRows.length + 1))
+            const totals = totalsByPlayer.get(key)
+            finalRows.push(
+                mapStandingToFinalResult(
+                    {
+                        ...row,
+                        ...(totals ?? {}),
+                        player: row.player ?? totals?.player,
+                    },
+                    finalRows.length,
+                    finalRows.length + 1,
+                ),
+            )
         }
     }
 

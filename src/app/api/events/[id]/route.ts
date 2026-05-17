@@ -784,6 +784,54 @@ const mapStageResultToFinalResult = (
     }
 }
 
+const maxNumber = (a: unknown, b: unknown): number | null => {
+    const numA = toNumber(a)
+    const numB = toNumber(b)
+    if (numA === null) return numB
+    if (numB === null) return numA
+    return Math.max(numA, numB)
+}
+
+const mergeStandingTotals = (
+    current: Record<string, unknown> | undefined,
+    row: Record<string, unknown>,
+): Record<string, unknown> => {
+    const currentPoints = toNumber(current?.points) ?? toNumber(current?.caroms) ?? 0
+    const rowPoints = toNumber(row.points) ?? toNumber(row.caroms) ?? 0
+    const totalPoints = currentPoints + rowPoints
+
+    return {
+        ...(current ?? row),
+        player: current?.player ?? row.player,
+        match_points: (toNumber(current?.match_points) ?? 0) + (toNumber(row.match_points) ?? 0),
+        points: totalPoints,
+        caroms: totalPoints,
+        innings: (toNumber(current?.innings) ?? 0) + (toNumber(row.innings) ?? 0),
+        high_run: maxNumber(current?.high_run, row.high_run),
+        high_run_2: maxNumber(current?.high_run_2, row.high_run_2),
+        best_average: maxNumber(
+            current?.best_average ?? current?.average,
+            row.best_average ?? row.average,
+        ),
+    }
+}
+
+const buildStandingTotalsByPlayer = (
+    stages: Record<string, unknown>[],
+): Map<string, Record<string, unknown>> => {
+    const totals = new Map<string, Record<string, unknown>>()
+
+    stages.forEach((stage) => {
+        asArray(stage.results).forEach((row) => {
+            const key = playerRankingKey(row)
+            if (!key) return
+            totals.set(key, mergeStandingTotals(totals.get(key), row))
+        })
+    })
+
+    return totals
+}
+
 const buildFinalResultsFromFinalStages = (
     stages: Record<string, unknown>[],
 ): Record<string, unknown>[] => {
@@ -798,6 +846,7 @@ const buildFinalResultsFromFinalStages = (
 
     const usedPlayerKeys = new Set<string>()
     const finalRows: Record<string, unknown>[] = []
+    const totalsByPlayer = buildStandingTotalsByPlayer(orderedStages.slice(finalStageIndex))
 
     orderedStages.slice(finalStageIndex).forEach((stage) => {
         const rows = asArray(stage.results)
@@ -814,7 +863,18 @@ const buildFinalResultsFromFinalStages = (
             const key = playerRankingKey(row)
             if (!key || usedPlayerKeys.has(key)) return
             usedPlayerKeys.add(key)
-            finalRows.push(mapStageResultToFinalResult(row, finalRows.length, finalRows.length + 1))
+            const totals = totalsByPlayer.get(key)
+            finalRows.push(
+                mapStageResultToFinalResult(
+                    {
+                        ...row,
+                        ...(totals ?? {}),
+                        player: row.player ?? totals?.player,
+                    },
+                    finalRows.length,
+                    finalRows.length + 1,
+                ),
+            )
         })
     })
 
