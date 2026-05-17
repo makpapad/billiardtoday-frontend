@@ -127,6 +127,43 @@ const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
 
+const isBracketStageType = (stageType: string | null | undefined) =>
+  stageType === "single_elimination" ||
+  stageType === "double_elimination" ||
+  stageType === "knockout";
+
+const getStageRankingRoundParam = (
+  stage: NormalizedEventStage | null | undefined,
+  round: KoRankingRound | null,
+) => {
+  if (!stage || !stage.isFinal || !isBracketStageType(stage.stageType)) return null;
+  return round;
+};
+
+const getEventDataStageRankingRoundParam = (
+  eventData: EventApiResponse | null,
+  stageDocumentId: string | null | undefined,
+  round: KoRankingRound | null,
+) => {
+  if (!stageDocumentId) return null;
+  const stage = toRelationArray(eventData?.data?.event_stages)
+    .map((entry, index) => {
+      const normalizedStage = normalizeEntity(entry, `stage-${index}`);
+      return {
+        documentId: normalizedStage.documentId,
+        isFinal: Boolean(normalizedStage.is_final),
+        stageType:
+          typeof normalizedStage.stage_type === "string"
+            ? normalizedStage.stage_type.trim().toLowerCase()
+            : null,
+      };
+    })
+    .find((entry) => entry.documentId === stageDocumentId);
+
+  if (!stage?.isFinal || !isBracketStageType(stage.stageType)) return null;
+  return round;
+};
+
 const normalizeGalleryVideoEntries = (value: unknown) => {
   if (!Array.isArray(value)) return [];
 
@@ -1946,9 +1983,14 @@ export function TournamentDetailPage({
         overviewMode === "ranks" &&
         selectedStageDocumentId
       ) {
-        const standings = await fetchStageStandingsPayload(
+        const round = getEventDataStageRankingRoundParam(
+          payload,
           selectedStageDocumentId,
           koRankingRound,
+        );
+        const standings = await fetchStageStandingsPayload(
+          selectedStageDocumentId,
+          round,
         );
         payload = withStageResults(payload, selectedStageDocumentId, standings);
       }
@@ -2249,7 +2291,7 @@ export function TournamentDetailPage({
           const round =
             stageId === selectedStageDocumentId &&
             overviewMode === "ranks"
-              ? koRankingRound
+              ? getEventDataStageRankingRoundParam(eventData, stageId, koRankingRound)
               : null;
           void refreshStageStandings(stageId, round);
           return;
@@ -2299,6 +2341,7 @@ export function TournamentDetailPage({
     refreshStageMatches,
     refreshStageStandings,
     activeView,
+    eventData,
     koRankingRound,
     overviewMode,
     selectedStageDocumentId,
@@ -3876,7 +3919,10 @@ export function TournamentDetailPage({
   ) => {
     setKoRankingRound(nextRound);
     if (selectedStage?.documentId) {
-      await refreshStageStandings(selectedStage.documentId, nextRound);
+      await refreshStageStandings(
+        selectedStage.documentId,
+        getStageRankingRoundParam(selectedStage, nextRound),
+      );
     }
   };
 
@@ -3889,7 +3935,10 @@ export function TournamentDetailPage({
     ) {
       return;
     }
-    void refreshStageStandings(selectedStage.documentId, koRankingRound);
+    void refreshStageStandings(
+      selectedStage.documentId,
+      getStageRankingRoundParam(selectedStage, koRankingRound),
+    );
   }, [
     activeView,
     koRankingRound,
@@ -6819,7 +6868,10 @@ export function TournamentDetailPage({
                         setTournamentPanelMode("stages");
                         setActiveView("tournament");
                         if (selectedStage?.documentId) {
-                          void refreshStageStandings(selectedStage.documentId, koRankingRound);
+                          void refreshStageStandings(
+                            selectedStage.documentId,
+                            getStageRankingRoundParam(selectedStage, koRankingRound),
+                          );
                         }
                       }}
                       disabled={tournamentPanelMode === "finals"}
@@ -6855,7 +6907,13 @@ export function TournamentDetailPage({
                           setTournamentPanelMode("stages");
                           setActiveView("tournament");
                           if (overviewMode === "ranks") {
-                            void refreshStageStandings(stage.documentId, koRankingRound);
+                            const eventStage =
+                              eventStages.find((entry) => entry.documentId === stage.documentId) ??
+                              null;
+                            void refreshStageStandings(
+                              stage.documentId,
+                              getStageRankingRoundParam(eventStage, koRankingRound),
+                            );
                           }
                         }}
                         className={
