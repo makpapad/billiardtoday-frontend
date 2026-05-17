@@ -334,6 +334,24 @@ const enrichFinalRows = (
               }
     })
 
+const applyStageMatchPointTotals = (
+    rows: Record<string, unknown>[],
+    stageMatchPoints: Map<string, number>,
+): Record<string, unknown>[] =>
+    rows.map((row) => {
+        const player = asObject(row.player)
+        const playerDocumentId =
+            typeof player?.documentId === 'string' && player.documentId.trim().length > 0
+                ? player.documentId
+                : null
+        if (!playerDocumentId || !stageMatchPoints.has(playerDocumentId)) return row
+
+        return {
+            ...row,
+            match_points: stageMatchPoints.get(playerDocumentId),
+        }
+    })
+
 export async function GET(
     _req: NextRequest,
     context: { params: Promise<{ id: string }> },
@@ -416,9 +434,13 @@ export async function GET(
                 headers,
             )
             if (stageFallbackRows.length > 0) {
+                const stageMatchPoints = await buildStageMatchPointsMap(
+                    Array.isArray(payload.data?.event_stages) ? payload.data.event_stages : [],
+                    headers,
+                )
                 return NextResponse.json(
                     {
-                        data: stageFallbackRows,
+                        data: applyStageMatchPointTotals(stageFallbackRows, stageMatchPoints),
                         meta: {
                             final_standings_published: true,
                             final_standings_published_at:
