@@ -43,15 +43,46 @@ const stageOrderValue = (stage: Record<string, unknown>, index: number): number 
     return index + 1
 }
 
-const mapKnockoutStandingToFinalResult = (
+const playerRankingKey = (row: Record<string, unknown>): string | null => {
+    const player = asObject(row.player)
+    const playerDocumentId =
+        typeof player?.documentId === 'string' && player.documentId.trim().length > 0
+            ? player.documentId.trim()
+            : null
+    if (playerDocumentId) return `doc:${playerDocumentId}`
+
+    const localKey =
+        typeof row.local_player_key === 'string' && row.local_player_key.trim().length > 0
+            ? row.local_player_key.trim()
+            : null
+    if (localKey) return `local:${localKey}`
+
+    const playerName =
+        typeof player?.full_name === 'string' && player.full_name.trim().length > 0
+            ? player.full_name.trim().toLowerCase()
+            : typeof row.player_name === 'string' && row.player_name.trim().length > 0
+              ? row.player_name.trim().toLowerCase()
+              : null
+    return playerName ? `name:${playerName}` : null
+}
+
+const stageStandingPosition = (row: Record<string, unknown>, fallback: number): number =>
+    toNumber(row.final_position) ??
+    toNumber(row.position) ??
+    toNumber(row.place) ??
+    toNumber(row.group_position) ??
+    fallback
+
+const mapStandingToFinalResult = (
     row: Record<string, unknown>,
     index: number,
+    finalPosition?: number,
 ): Record<string, unknown> => {
-    const position = toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place) ?? index + 1
+    const position = finalPosition ?? stageStandingPosition(row, index + 1)
     const documentId =
         typeof row.documentId === 'string' && row.documentId.trim().length > 0
             ? row.documentId
-            : `knockout-final-${position}`
+            : `stage-final-${position}`
 
     return {
         id: row.id ?? documentId,
@@ -65,20 +96,19 @@ const mapKnockoutStandingToFinalResult = (
         high_run: toNumber(row.high_run),
         high_run_2: toNumber(row.high_run_2),
         player: row.player,
-        source: row.source ?? 'knockout-final-standings',
+        source: row.source ?? 'stage-final-standings',
     }
 }
 
-const normalizeKnockoutFinalRows = (rows: unknown[]): Record<string, unknown>[] =>
+const normalizeStageStandingRows = (rows: unknown[]): Record<string, unknown>[] =>
     asArray(rows)
         .filter((row) => Boolean(asObject(row.player)))
         .sort((a, b) => {
-            const positionA = toNumber(a.final_position) ?? toNumber(a.position) ?? toNumber(a.place) ?? 9999
-            const positionB = toNumber(b.final_position) ?? toNumber(b.position) ?? toNumber(b.place) ?? 9999
+            const positionA = stageStandingPosition(a, 9999)
+            const positionB = stageStandingPosition(b, 9999)
             if (positionA !== positionB) return positionA - positionB
             return String(a.id ?? a.documentId ?? '').localeCompare(String(b.id ?? b.documentId ?? ''))
         })
-        .map(mapKnockoutStandingToFinalResult)
 
 const extractStandingsRows = (payload: unknown): Record<string, unknown>[] => {
     const record = asObject(payload)
@@ -90,7 +120,7 @@ const extractStandingsRows = (payload: unknown): Record<string, unknown>[] => {
     return []
 }
 
-const fetchKnockoutStageFinalRows = async (
+const fetchStageStandingRows = async (
     stage: Record<string, unknown>,
     headers: HeadersInit,
 ): Promise<Record<string, unknown>[]> => {
@@ -110,24 +140,44 @@ const fetchKnockoutStageFinalRows = async (
     if (!res.ok) return []
 
     const payload = await res.json().catch(() => null)
-    return normalizeKnockoutFinalRows(extractStandingsRows(payload))
+    return normalizeStageStandingRows(extractStandingsRows(payload))
 }
 
-const fetchFinalKnockoutFallbackRows = async (
+const buildFullFinalRowsFromStageStandings = (
+    stageRows: Record<string, unknown>[][],
+): Record<string, unknown>[] => {
+    const usedPlayerKeys = new Set<string>()
+    const finalRows: Record<string, unknown>[] = []
+
+    for (const rows of stageRows) {
+        for (const row of rows) {
+            const key = playerRankingKey(row)
+            if (!key || usedPlayerKeys.has(key)) continue
+            usedPlayerKeys.add(key)
+            finalRows.push(mapStandingToFinalResult(row, finalRows.length, finalRows.length + 1))
+        }
+    }
+
+    return finalRows
+}
+
+const fetchFinalStageFallbackRows = async (
     eventStages: unknown[],
     headers: HeadersInit,
 ): Promise<Record<string, unknown>[]> => {
     const stages = asArray(eventStages)
         .map((stage, index) => ({ stage, index }))
-        .filter(({ stage }) => isKnockoutStageType(stage.stage_type))
         .sort((a, b) => stageOrderValue(b.stage, b.index) - stageOrderValue(a.stage, a.index))
 
-    for (const { stage } of stages) {
-        const rows = await fetchKnockoutStageFinalRows(stage, headers)
-        if (rows.length > 0) return rows
-    }
+    const finalStageIndex = stages.findIndex(({ stage }) => isKnockoutStageType(stage.stage_type))
+    if (finalStageIndex === -1) return []
 
-    return []
+    const relevantStages = stages.slice(finalStageIndex)
+    const stageRows = await Promise.all(
+        relevantStages.map(({ stage }) => fetchStageStandingRows(stage, headers)),
+    )
+
+    return buildFullFinalRowsFromStageStandings(stageRows)
 }
 
 const buildStageMatchPointsMap = async (
@@ -301,19 +351,19 @@ export async function GET(
                 )
             }
 
-            const knockoutFallbackRows = await fetchFinalKnockoutFallbackRows(
+            const stageFallbackRows = await fetchFinalStageFallbackRows(
                 Array.isArray(payload.data?.event_stages) ? payload.data.event_stages : [],
                 headers,
             )
-            if (knockoutFallbackRows.length > 0) {
+            if (stageFallbackRows.length > 0) {
                 return NextResponse.json(
                     {
-                        data: knockoutFallbackRows,
+                        data: stageFallbackRows,
                         meta: {
                             final_standings_published: true,
                             final_standings_published_at:
                                 payload.data?.final_standings_published_at ?? null,
-                            source: 'knockout-stage-standings',
+                            source: 'stage-standings',
                         },
                     },
                     { status: 200 },

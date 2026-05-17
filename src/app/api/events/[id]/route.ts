@@ -727,15 +727,46 @@ const fetchStageMatches = async (
     }
 }
 
-const mapKnockoutStageResultToFinalResult = (
+const playerRankingKey = (row: Record<string, unknown>): string | null => {
+    const player = asObject(row.player)
+    const playerDocumentId =
+        typeof player?.documentId === 'string' && player.documentId.trim().length > 0
+            ? player.documentId.trim()
+            : null
+    if (playerDocumentId) return `doc:${playerDocumentId}`
+
+    const localKey =
+        typeof row.local_player_key === 'string' && row.local_player_key.trim().length > 0
+            ? row.local_player_key.trim()
+            : null
+    if (localKey) return `local:${localKey}`
+
+    const playerName =
+        typeof player?.full_name === 'string' && player.full_name.trim().length > 0
+            ? player.full_name.trim().toLowerCase()
+            : typeof row.player_name === 'string' && row.player_name.trim().length > 0
+              ? row.player_name.trim().toLowerCase()
+              : null
+    return playerName ? `name:${playerName}` : null
+}
+
+const stageStandingPosition = (row: Record<string, unknown>, fallback: number): number =>
+    toNumber(row.final_position) ??
+    toNumber(row.position) ??
+    toNumber(row.place) ??
+    toNumber(row.group_position) ??
+    fallback
+
+const mapStageResultToFinalResult = (
     row: Record<string, unknown>,
     index: number,
+    finalPosition?: number,
 ): Record<string, unknown> => {
-    const position = toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place) ?? index + 1
+    const position = finalPosition ?? stageStandingPosition(row, index + 1)
     const documentId =
         typeof row.documentId === 'string' && row.documentId.trim().length > 0
             ? row.documentId
-            : `knockout-final-${position}`
+            : `stage-final-${position}`
 
     return {
         id: row.id ?? documentId,
@@ -749,33 +780,45 @@ const mapKnockoutStageResultToFinalResult = (
         high_run: toNumber(row.high_run),
         high_run_2: toNumber(row.high_run_2),
         player: row.player,
-        source: row.source ?? 'knockout-final-standings',
+        source: row.source ?? 'stage-final-standings',
     }
 }
 
-const buildFinalResultsFromKnockoutStage = (
+const buildFinalResultsFromFinalStages = (
     stages: Record<string, unknown>[],
 ): Record<string, unknown>[] => {
-    const finalKnockoutStage = [...stages]
-        .filter((stage) => isKnockoutStageType(stage.stage_type))
+    const orderedStages = [...stages]
         .sort((a, b) => {
             const orderA = toNumber(a.order) ?? 0
             const orderB = toNumber(b.order) ?? 0
             return orderB - orderA
-        })[0]
-    if (!finalKnockoutStage) return []
-
-    const rows = asArray(finalKnockoutStage.results)
-        .filter((row) => Boolean(asObject(row.player)))
-        .filter((row) => (toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place)) !== null)
-        .sort((a, b) => {
-            const positionA = toNumber(a.final_position) ?? toNumber(a.position) ?? toNumber(a.place) ?? 9999
-            const positionB = toNumber(b.final_position) ?? toNumber(b.position) ?? toNumber(b.place) ?? 9999
-            if (positionA !== positionB) return positionA - positionB
-            return String(a.id ?? a.documentId ?? '').localeCompare(String(b.id ?? b.documentId ?? ''))
         })
+    const finalStageIndex = orderedStages.findIndex((stage) => isKnockoutStageType(stage.stage_type))
+    if (finalStageIndex === -1) return []
 
-    return rows.map(mapKnockoutStageResultToFinalResult)
+    const usedPlayerKeys = new Set<string>()
+    const finalRows: Record<string, unknown>[] = []
+
+    orderedStages.slice(finalStageIndex).forEach((stage) => {
+        const rows = asArray(stage.results)
+            .filter((row) => Boolean(asObject(row.player)))
+            .filter((row) => Number.isFinite(stageStandingPosition(row, Number.NaN)))
+            .sort((a, b) => {
+                const positionA = stageStandingPosition(a, 9999)
+                const positionB = stageStandingPosition(b, 9999)
+                if (positionA !== positionB) return positionA - positionB
+                return String(a.id ?? a.documentId ?? '').localeCompare(String(b.id ?? b.documentId ?? ''))
+            })
+
+        rows.forEach((row) => {
+            const key = playerRankingKey(row)
+            if (!key || usedPlayerKeys.has(key)) return
+            usedPlayerKeys.add(key)
+            finalRows.push(mapStageResultToFinalResult(row, finalRows.length, finalRows.length + 1))
+        })
+    })
+
+    return finalRows
 }
 
 export async function GET(
@@ -1110,12 +1153,12 @@ export async function GET(
                 })
 
                 const storedFinalResults = asArray(event.results_final)
-                const knockoutFinalResults =
+                const stageFinalResults =
                     storedFinalResults.length === 0
-                        ? buildFinalResultsFromKnockoutStage(stages)
+                        ? buildFinalResultsFromFinalStages(stages)
                         : []
                 const sourceFinalResults =
-                    storedFinalResults.length > 0 ? storedFinalResults : knockoutFinalResults
+                    storedFinalResults.length > 0 ? storedFinalResults : stageFinalResults
                 const enrichedFinalResults = sourceFinalResults.map((result) => {
                     const player = asObject(result.player)
                     const playerDocumentId =
@@ -1173,7 +1216,7 @@ export async function GET(
                 payload.data = {
                     ...event,
                     final_standings_published:
-                        event.final_standings_published === true || knockoutFinalResults.length > 0,
+                        event.final_standings_published === true || stageFinalResults.length > 0,
                     event_stages: stages,
                     results_final: enrichedFinalResults,
                     ...(registeredPlayers.length > 0 ? { players: registeredPlayers } : {}),
