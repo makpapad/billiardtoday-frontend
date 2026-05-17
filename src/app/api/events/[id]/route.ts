@@ -727,6 +727,57 @@ const fetchStageMatches = async (
     }
 }
 
+const mapKnockoutStageResultToFinalResult = (
+    row: Record<string, unknown>,
+    index: number,
+): Record<string, unknown> => {
+    const position = toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place) ?? index + 1
+    const documentId =
+        typeof row.documentId === 'string' && row.documentId.trim().length > 0
+            ? row.documentId
+            : `knockout-final-${position}`
+
+    return {
+        id: row.id ?? documentId,
+        documentId,
+        position,
+        best_average: toNumber(row.best_average) ?? toNumber(row.average),
+        caroms: toNumber(row.caroms) ?? toNumber(row.points),
+        match_points: toNumber(row.match_points),
+        points: toNumber(row.points),
+        innings: toNumber(row.innings),
+        high_run: toNumber(row.high_run),
+        high_run_2: toNumber(row.high_run_2),
+        player: row.player,
+        source: row.source ?? 'knockout-final-standings',
+    }
+}
+
+const buildFinalResultsFromKnockoutStage = (
+    stages: Record<string, unknown>[],
+): Record<string, unknown>[] => {
+    const finalKnockoutStage = [...stages]
+        .filter((stage) => isKnockoutStageType(stage.stage_type))
+        .sort((a, b) => {
+            const orderA = toNumber(a.order) ?? 0
+            const orderB = toNumber(b.order) ?? 0
+            return orderB - orderA
+        })[0]
+    if (!finalKnockoutStage) return []
+
+    const rows = asArray(finalKnockoutStage.results)
+        .filter((row) => Boolean(asObject(row.player)))
+        .filter((row) => (toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place)) !== null)
+        .sort((a, b) => {
+            const positionA = toNumber(a.final_position) ?? toNumber(a.position) ?? toNumber(a.place) ?? 9999
+            const positionB = toNumber(b.final_position) ?? toNumber(b.position) ?? toNumber(b.place) ?? 9999
+            if (positionA !== positionB) return positionA - positionB
+            return String(a.id ?? a.documentId ?? '').localeCompare(String(b.id ?? b.documentId ?? ''))
+        })
+
+    return rows.map(mapKnockoutStageResultToFinalResult)
+}
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -1058,7 +1109,14 @@ export async function GET(
                     }
                 })
 
-                const enrichedFinalResults = asArray(event.results_final).map((result) => {
+                const storedFinalResults = asArray(event.results_final)
+                const knockoutFinalResults =
+                    storedFinalResults.length === 0
+                        ? buildFinalResultsFromKnockoutStage(stages)
+                        : []
+                const sourceFinalResults =
+                    storedFinalResults.length > 0 ? storedFinalResults : knockoutFinalResults
+                const enrichedFinalResults = sourceFinalResults.map((result) => {
                     const player = asObject(result.player)
                     const playerDocumentId =
                         typeof player?.documentId === 'string' ? player.documentId : null
@@ -1114,6 +1172,8 @@ export async function GET(
 
                 payload.data = {
                     ...event,
+                    final_standings_published:
+                        event.final_standings_published === true || knockoutFinalResults.length > 0,
                     event_stages: stages,
                     results_final: enrichedFinalResults,
                     ...(registeredPlayers.length > 0 ? { players: registeredPlayers } : {}),

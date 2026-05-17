@@ -25,6 +25,111 @@ const asObject = (value: unknown): Record<string, unknown> | null =>
 const asArray = (value: unknown): Record<string, unknown>[] =>
     Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(asObject(item))) : []
 
+const isKnockoutStageType = (value: unknown): boolean => {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
+    return (
+        normalized === 'single_elimination' ||
+        normalized === 'double_elimination' ||
+        normalized === 'knockout' ||
+        normalized === 'brackets' ||
+        normalized === 'bracket' ||
+        normalized.includes('bracket')
+    )
+}
+
+const stageOrderValue = (stage: Record<string, unknown>, index: number): number => {
+    const explicitOrder = toNumber(stage.order)
+    if (explicitOrder !== null) return explicitOrder
+    return index + 1
+}
+
+const mapKnockoutStandingToFinalResult = (
+    row: Record<string, unknown>,
+    index: number,
+): Record<string, unknown> => {
+    const position = toNumber(row.final_position) ?? toNumber(row.position) ?? toNumber(row.place) ?? index + 1
+    const documentId =
+        typeof row.documentId === 'string' && row.documentId.trim().length > 0
+            ? row.documentId
+            : `knockout-final-${position}`
+
+    return {
+        id: row.id ?? documentId,
+        documentId,
+        position,
+        best_average: toNumber(row.best_average) ?? toNumber(row.average),
+        caroms: toNumber(row.caroms) ?? toNumber(row.points),
+        match_points: toNumber(row.match_points),
+        points: toNumber(row.points),
+        innings: toNumber(row.innings),
+        high_run: toNumber(row.high_run),
+        high_run_2: toNumber(row.high_run_2),
+        player: row.player,
+        source: row.source ?? 'knockout-final-standings',
+    }
+}
+
+const normalizeKnockoutFinalRows = (rows: unknown[]): Record<string, unknown>[] =>
+    asArray(rows)
+        .filter((row) => Boolean(asObject(row.player)))
+        .sort((a, b) => {
+            const positionA = toNumber(a.final_position) ?? toNumber(a.position) ?? toNumber(a.place) ?? 9999
+            const positionB = toNumber(b.final_position) ?? toNumber(b.position) ?? toNumber(b.place) ?? 9999
+            if (positionA !== positionB) return positionA - positionB
+            return String(a.id ?? a.documentId ?? '').localeCompare(String(b.id ?? b.documentId ?? ''))
+        })
+        .map(mapKnockoutStandingToFinalResult)
+
+const extractStandingsRows = (payload: unknown): Record<string, unknown>[] => {
+    const record = asObject(payload)
+    if (!record) return []
+    if (Array.isArray(record.results)) return asArray(record.results)
+    if (Array.isArray(record.data)) return asArray(record.data)
+    if (Array.isArray(record.standings)) return asArray(record.standings)
+    if (Array.isArray(record.overallRankings)) return asArray(record.overallRankings)
+    return []
+}
+
+const fetchKnockoutStageFinalRows = async (
+    stage: Record<string, unknown>,
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[]> => {
+    const stageId =
+        typeof stage.documentId === 'string' && stage.documentId.trim().length > 0
+            ? stage.documentId
+            : typeof stage.id === 'number' || typeof stage.id === 'string'
+              ? String(stage.id)
+              : null
+    if (!stageId) return []
+
+    const url = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
+    const res = await fetch(url, {
+        cache: 'no-store',
+        headers,
+    })
+    if (!res.ok) return []
+
+    const payload = await res.json().catch(() => null)
+    return normalizeKnockoutFinalRows(extractStandingsRows(payload))
+}
+
+const fetchFinalKnockoutFallbackRows = async (
+    eventStages: unknown[],
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[]> => {
+    const stages = asArray(eventStages)
+        .map((stage, index) => ({ stage, index }))
+        .filter(({ stage }) => isKnockoutStageType(stage.stage_type))
+        .sort((a, b) => stageOrderValue(b.stage, b.index) - stageOrderValue(a.stage, a.index))
+
+    for (const { stage } of stages) {
+        const rows = await fetchKnockoutStageFinalRows(stage, headers)
+        if (rows.length > 0) return rows
+    }
+
+    return []
+}
+
 const buildStageMatchPointsMap = async (
     eventStages: unknown[],
     headers: HeadersInit,
@@ -139,6 +244,9 @@ export async function GET(
         eventUrl.searchParams.set('fields[1]', 'final_standings_published_at')
         eventUrl.searchParams.set('populate[event_stages][fields][0]', 'documentId')
         eventUrl.searchParams.set('populate[event_stages][fields][1]', 'id')
+        eventUrl.searchParams.set('populate[event_stages][fields][2]', 'stage_type')
+        eventUrl.searchParams.set('populate[event_stages][fields][3]', 'order')
+        eventUrl.searchParams.set('populate[event_stages][fields][4]', 'is_final')
         eventUrl.searchParams.set('populate[results_final][sort][0]', 'position:asc')
         eventUrl.searchParams.set('populate[results_final][fields][0]', 'position')
         eventUrl.searchParams.set('populate[results_final][fields][1]', 'best_average')
@@ -192,6 +300,25 @@ export async function GET(
                     { status: 200 },
                 )
             }
+
+            const knockoutFallbackRows = await fetchFinalKnockoutFallbackRows(
+                Array.isArray(payload.data?.event_stages) ? payload.data.event_stages : [],
+                headers,
+            )
+            if (knockoutFallbackRows.length > 0) {
+                return NextResponse.json(
+                    {
+                        data: knockoutFallbackRows,
+                        meta: {
+                            final_standings_published: true,
+                            final_standings_published_at:
+                                payload.data?.final_standings_published_at ?? null,
+                            source: 'knockout-stage-standings',
+                        },
+                    },
+                    { status: 200 },
+                )
+            }
         }
 
         const url = `${STRAPI_URL}/api/bt-events/${encodeURIComponent(id)}/final-results`
@@ -208,10 +335,18 @@ export async function GET(
             )
         }
 
-        return new NextResponse(text, {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        })
+        const finalPayload = JSON.parse(text) as { data?: unknown[]; meta?: Record<string, unknown> } | null
+        if (Array.isArray(finalPayload?.data) && finalPayload.data.length > 0) {
+            return NextResponse.json(finalPayload, { status: 200 })
+        }
+
+        return NextResponse.json(
+            {
+                data: [],
+                meta: finalPayload?.meta ?? { final_standings_published: false },
+            },
+            { status: 200 },
+        )
     } catch (error) {
         console.error('[events.final-results][GET]', error)
         return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })

@@ -1886,6 +1886,10 @@ export function TournamentDetailPage({
         ...current,
         data: {
           ...current.data,
+          final_standings_published:
+            value.length > 0
+              ? true
+              : current.data.final_standings_published,
           results_final:
             value as unknown as StrapiFinalResult[],
         },
@@ -5266,6 +5270,7 @@ export function TournamentDetailPage({
     if (finalStageDocumentId) {
       setSelectedStageDocumentId(finalStageDocumentId);
     }
+    void refreshFinalResults();
     if (
       typeof document !== "undefined" &&
       document.activeElement instanceof HTMLElement
