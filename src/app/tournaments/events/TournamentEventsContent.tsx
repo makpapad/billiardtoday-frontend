@@ -2082,6 +2082,14 @@ function StageRankingTable({
     );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
+  const showStageHighRun2Column =
+    !artistic &&
+    visibleResults.some(
+      (result) =>
+        typeof result.highRun2 === "number" &&
+        Number.isFinite(result.highRun2) &&
+        result.highRun2 > 0,
+    );
   const stageGeneralAverage = useMemo(() => {
     const totals = visibleResults.reduce(
       (acc, result) => {
@@ -2221,6 +2229,11 @@ function StageRankingTable({
               <th className="px-4 py-3 text-center font-semibold">
                 {artistic ? "Best run" : "H.R."}
               </th>
+              {showStageHighRun2Column && (
+                <th className="px-4 py-3 text-center font-semibold">
+                  H.R.2
+                </th>
+              )}
               {showBestAverageColumn && (
                 <th className="px-4 py-3 text-center font-semibold">
                   Best AVG
@@ -2360,6 +2373,11 @@ function StageRankingTable({
                       groupLabelMode,
                     )}
                 </td>
+                {showStageHighRun2Column && (
+                  <td className="px-4 py-3 text-center">
+                    {formatNumberValue(result.highRun2)}
+                  </td>
+                )}
                 {showBestAverageColumn && (
                   <td className="px-4 py-3 text-center">
                     {renderRankingMetricBadge(
