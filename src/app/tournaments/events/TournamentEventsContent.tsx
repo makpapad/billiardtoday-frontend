@@ -1106,7 +1106,11 @@ function getGroupPreviewPlayers(
     new Map(
       group.matches
         .flatMap((match) => [match.top.player, match.bottom.player])
-        .filter((player) => !isDynamicPlaceholderPlayer(player))
+        .filter(
+          (player) =>
+            Boolean(player.name || player.nativeName) &&
+            !isDynamicPlaceholderPlayer(player),
+        )
         .map((player) => [
           player.documentId || `${player.name}-${player.country || "xx"}`,
           player,
