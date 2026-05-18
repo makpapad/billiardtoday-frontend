@@ -2082,6 +2082,32 @@ function StageRankingTable({
     );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
+  const stageGeneralAverage = useMemo(() => {
+    const totals = visibleResults.reduce(
+      (acc, result) => {
+        const points = result.points;
+        const innings = result.innings;
+        if (
+          typeof points !== "number" ||
+          !Number.isFinite(points) ||
+          typeof innings !== "number" ||
+          !Number.isFinite(innings) ||
+          innings <= 0
+        ) {
+          return acc;
+        }
+
+        return {
+          points: acc.points + points,
+          innings: acc.innings + innings,
+        };
+      },
+      { points: 0, innings: 0 },
+    );
+
+    if (totals.innings <= 0) return null;
+    return totals.points / totals.innings;
+  }, [visibleResults]);
   const stageRankingHighlights = useMemo(
     () => ({
       average: getBestPositiveValue(
@@ -2152,48 +2178,63 @@ function StageRankingTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-      <table className="min-w-full text-sm">
-        <thead className="bg-blue-600 text-white">
-          <tr>
-            <th className="px-4 py-3 text-left font-semibold">#</th>
-            <th className="px-4 py-3 text-left font-semibold">Player</th>
-            {showProgressColumn && (
-              <th className="px-4 py-3 text-center font-semibold">Progress</th>
-            )}
-            {showGroupColumn && (
-              <th className="px-4 py-3 text-center font-semibold">Group</th>
-            )}
-            {showGroupPositionColumn && (
+    <div className="flex flex-col gap-2">
+      {stageGeneralAverage !== null && (
+        <div className="flex justify-end">
+          <div className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900">
+            <span className="font-medium text-gray-500 dark:text-gray-400">
+              {artistic ? "General %" : "General AVG"}
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {artistic
+                ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
+                : formatTruncatedAverage(stageGeneralAverage)}
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full text-sm">
+          <thead className="bg-blue-600 text-white">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold">#</th>
+              <th className="px-4 py-3 text-left font-semibold">Player</th>
+              {showProgressColumn && (
+                <th className="px-4 py-3 text-center font-semibold">Progress</th>
+              )}
+              {showGroupColumn && (
+                <th className="px-4 py-3 text-center font-semibold">Group</th>
+              )}
+              {showGroupPositionColumn && (
+                <th className="px-4 py-3 text-center font-semibold">
+                  Pos in group
+                </th>
+              )}
+              <th className="px-4 py-3 text-center font-semibold">MP</th>
+              <th className="px-4 py-3 text-center font-semibold">Points</th>
               <th className="px-4 py-3 text-center font-semibold">
-                Pos in group
+                {artistic ? "Possible points" : "Innings"}
               </th>
-            )}
-            <th className="px-4 py-3 text-center font-semibold">MP</th>
-            <th className="px-4 py-3 text-center font-semibold">Points</th>
-            <th className="px-4 py-3 text-center font-semibold">
-              {artistic ? "Possible points" : "Innings"}
-            </th>
-            <th className="px-4 py-3 text-center font-semibold">
-              {artistic ? "%" : "AVG"}
-            </th>
-            <th className="px-4 py-3 text-center font-semibold">
-              {artistic ? "Best run" : "H.R."}
-            </th>
-            {showBestAverageColumn && (
               <th className="px-4 py-3 text-center font-semibold">
-                Best AVG
+                {artistic ? "%" : "AVG"}
               </th>
-            )}
-            {artistic && (
               <th className="px-4 py-3 text-center font-semibold">
-                Best game
+                {artistic ? "Best run" : "H.R."}
               </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {visibleResults.map((result, index) => {
+              {showBestAverageColumn && (
+                <th className="px-4 py-3 text-center font-semibold">
+                  Best AVG
+                </th>
+              )}
+              {artistic && (
+                <th className="px-4 py-3 text-center font-semibold">
+                  Best game
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {visibleResults.map((result, index) => {
             const stageAverageValue = getStageResultAverageValue(result);
             const highlightAverage =
               !artistic &&
@@ -2339,9 +2380,10 @@ function StageRankingTable({
                 )}
               </tr>
             );
-          })}
-        </tbody>
-      </table>
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
