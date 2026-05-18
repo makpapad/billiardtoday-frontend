@@ -75,6 +75,7 @@ export type StrapiResult = {
   innings?: number | string | null;
   best_average?: number | string | null;
   high_run?: number | string | null;
+  high_run_2?: number | string | null;
   group_number?: number | string | null;
   group_position?: number | string | null;
   final_position?: number | string | null;
@@ -210,6 +211,7 @@ export type NormalizedStageResult = {
   innings: number | null;
   bestAverage: number | null;
   highRun: number | null;
+  highRun2: number | null;
   groupNumber: number | null;
   groupPosition: number | null;
   finalPosition: number | null;

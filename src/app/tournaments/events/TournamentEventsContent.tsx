@@ -1884,6 +1884,7 @@ function StageRankingTable({
           innings: standing.totalInnings,
           bestAverage: standing.bestAverage,
           highRun: standing.highRun,
+          highRun2: standing.highRun2,
           groupNumber: group.number,
           groupPosition: standing.place,
           finalPosition: null,

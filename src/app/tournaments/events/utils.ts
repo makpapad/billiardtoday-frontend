@@ -241,6 +241,7 @@ export const normalizeResult = (
     innings: toNumber(normalized.innings),
     bestAverage: toNumber((normalized as typeof normalized & { best_average?: unknown }).best_average),
     highRun: toNumber(normalized.high_run),
+    highRun2: toNumber(normalized.high_run_2),
     groupNumber: toNumber(normalized.group_number),
     groupPosition: toNumber(normalized.group_position),
     finalPosition: toNumber(normalized.final_position),

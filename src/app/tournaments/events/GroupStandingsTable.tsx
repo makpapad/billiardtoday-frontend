@@ -16,6 +16,7 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
     }
 
     const showBestAverageColumn = standings.some((player) => player.bestAverage !== null)
+    const showHighRun2Column = !artistic && standings.some((player) => typeof player.highRun2 === 'number' && player.highRun2 > 0)
 
     return (
         <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -33,7 +34,7 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                         {showBestAverageColumn && (
                             <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best game' : 'Best AVG'}</th>
                         )}
-                        {!artistic && <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>}
+                        {showHighRun2Column && <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -101,7 +102,7 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                                     {formatTruncatedNumber(player.bestAverage)}
                                 </td>
                             )}
-                            {!artistic && (
+                            {showHighRun2Column && (
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
                             )}
                         </tr>
