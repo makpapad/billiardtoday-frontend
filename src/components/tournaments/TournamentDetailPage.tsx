@@ -1314,6 +1314,51 @@ const formatDateRange = (
   return startText || endText || null;
 };
 
+const normalizeDateKey = (value: string | null | undefined) => {
+  if (!value) return null;
+  const dateOnly = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  if (dateOnly) return dateOnly;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, "0"),
+    String(parsed.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+const getTodayDateKey = () => {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+const isDateKeyWithinRange = (
+  dateKey: string,
+  start: string | null | undefined,
+  end: string | null | undefined,
+) => {
+  const startKey = normalizeDateKey(start);
+  const endKey = normalizeDateKey(end);
+  if (startKey && dateKey < startKey) return false;
+  if (endKey && dateKey > endKey) return false;
+  return Boolean(startKey || endKey);
+};
+
+const findStageForToday = <
+  T extends { documentId: string | null | undefined; startDate?: string | null; endDate?: string | null },
+>(
+  stages: T[],
+) => {
+  const todayKey = getTodayDateKey();
+  return stages.find((stage) =>
+    isDateKeyWithinRange(todayKey, stage.startDate, stage.endDate),
+  );
+};
+
 const formatGmtOffsetLabel = (offsetMinutes: number) => {
   const sign = offsetMinutes >= 0 ? "+" : "-";
   const absolute = Math.abs(offsetMinutes);
@@ -1621,6 +1666,10 @@ export function TournamentDetailPage({
     stageFromLocation ??
     searchParams?.get("stage") ??
     null;
+  const todayStageFromSummary = useMemo(
+    () => findStageForToday(summary.stages),
+    [summary.stages],
+  );
   const [overviewMode, setOverviewMode] = useState<"results" | "ranks">(
     "results",
   );
@@ -1629,7 +1678,12 @@ export function TournamentDetailPage({
   >("opening-final");
   const [selectedStageDocumentId, setSelectedStageDocumentId] = useState<
     string | null
-  >(preferredStageFromQuery ?? summary.stages[0]?.documentId ?? null);
+  >(
+    preferredStageFromQuery ??
+      todayStageFromSummary?.documentId ??
+      summary.stages[0]?.documentId ??
+      null,
+  );
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -3913,6 +3967,27 @@ export function TournamentDetailPage({
       null,
     [eventStages, selectedStageDocumentId],
   );
+  const selectedStageScheduleLabel = formatDateRange(
+    selectedStage?.startDate ?? null,
+    selectedStage?.endDate ?? null,
+    browserLocale ?? undefined,
+  );
+
+  useEffect(() => {
+    if (preferredStageFromQuery || selectedStageDocumentId !== summary.stages[0]?.documentId) {
+      return;
+    }
+
+    const todayStage = findStageForToday(eventStages);
+    if (todayStage?.documentId && todayStage.documentId !== selectedStageDocumentId) {
+      setSelectedStageDocumentId(todayStage.documentId);
+    }
+  }, [
+    eventStages,
+    preferredStageFromQuery,
+    selectedStageDocumentId,
+    summary.stages,
+  ]);
 
   const handleKoRankingRoundChange = async (
     nextRound: KoRankingRound,
@@ -6805,7 +6880,7 @@ export function TournamentDetailPage({
                   Schedule
                 </div>
                 <div className="mt-2 text-sm font-semibold text-white">
-                  {scheduleLabel || "To be announced"}
+                  {selectedStageScheduleLabel || scheduleLabel || "To be announced"}
                 </div>
               </div>
               <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
@@ -6922,7 +6997,22 @@ export function TournamentDetailPage({
                             : "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
                         }
                       >
-                        {label}
+                        <span>{label}</span>
+                        {stage.startDate || stage.endDate ? (
+                          <span
+                            className={
+                              isSelected
+                                ? "ml-2 border-l border-slate-300 pl-2 text-[10px] text-slate-600"
+                                : "ml-2 border-l border-white/15 pl-2 text-[10px] text-white/55"
+                            }
+                          >
+                            {formatDateRange(
+                              stage.startDate ?? null,
+                              stage.endDate ?? null,
+                              browserLocale ?? undefined,
+                            )}
+                          </span>
+                        ) : null}
                       </button>
                     );
                   })}

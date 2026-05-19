@@ -1,6 +1,8 @@
 export type TournamentEventStageSummary = {
   documentId: string;
   title: string;
+  startDate: string | null;
+  endDate: string | null;
   order: number | null;
   isFinal: boolean;
 };
@@ -185,6 +187,8 @@ const normalizeStage = (value: unknown, index: number): TournamentEventStageSumm
   return {
     documentId: readString(raw.documentId) || `stage-${index + 1}`,
     title: readString(raw.title) || `Stage ${index + 1}`,
+    startDate: readString(raw.start_date) ?? readString(raw.startDate),
+    endDate: readString(raw.end_date) ?? readString(raw.endDate),
     order: toNumber(raw.order),
     isFinal: Boolean(raw.is_final),
   };
@@ -365,6 +369,8 @@ const fetchTournamentEventSummaryById = async (
     params.set("populate[event_stages][fields][3]", "documentId");
     params.set("populate[event_stages][fields][4]", "ruleset_key");
     params.set("populate[event_stages][fields][5]", "ruleset_config");
+    params.set("populate[event_stages][fields][6]", "start_date");
+    params.set("populate[event_stages][fields][7]", "end_date");
 
     if (mode === "full") {
       params.set("populate[tournament][fields][0]", "title");
