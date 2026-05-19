@@ -309,9 +309,13 @@ const mapClubRuntimeStanding = (
     }
 }
 
-const compareClubRuntimeStandingRows = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+const compareClubRuntimeStandingRows = (
+    a: Record<string, unknown>,
+    b: Record<string, unknown>,
+    options: { includeMatchPoints?: boolean; bestAverageBeforeHighRun?: boolean } = {},
+) => {
     const matchPointsDiff = (toNumber(b.match_points) ?? 0) - (toNumber(a.match_points) ?? 0)
-    if (matchPointsDiff !== 0) return matchPointsDiff
+    if (options.includeMatchPoints !== false && matchPointsDiff !== 0) return matchPointsDiff
 
     const averageA =
         (toNumber(a.innings) ?? 0) > 0
@@ -323,6 +327,11 @@ const compareClubRuntimeStandingRows = (a: Record<string, unknown>, b: Record<st
             : 0
     if (averageA !== averageB) return averageB - averageA
 
+    if (options.bestAverageBeforeHighRun) {
+        const bestAverageDiff = (toNumber(b.best_average) ?? 0) - (toNumber(a.best_average) ?? 0)
+        if (bestAverageDiff !== 0) return bestAverageDiff
+    }
+
     const highRunDiff = (toNumber(b.high_run) ?? 0) - (toNumber(a.high_run) ?? 0)
     if (highRunDiff !== 0) return highRunDiff
 
@@ -333,6 +342,15 @@ const compareClubRuntimeStandingRows = (a: Record<string, unknown>, b: Record<st
     if (highRun2Diff !== 0) return highRun2Diff
 
     return (toNumber(b.points) ?? 0) - (toNumber(a.points) ?? 0)
+}
+
+const hasUnequalClubRuntimeGroups = (rows: Record<string, unknown>[]) => {
+    const sizes = new Map<number, number>()
+    rows.forEach((row) => {
+        const groupNumber = toNumber(row.group_number) ?? 1
+        sizes.set(groupNumber, (sizes.get(groupNumber) ?? 0) + 1)
+    })
+    return new Set(Array.from(sizes.values()).filter((size) => size > 0)).size > 1
 }
 
 const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]): Record<string, unknown>[] => {
@@ -401,7 +419,7 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
 
     const rankedRows = Array.from(rankedByGroup.entries()).flatMap(([groupNumber, groupRows]) =>
         [...groupRows]
-            .sort(compareClubRuntimeStandingRows)
+            .sort((a, b) => compareClubRuntimeStandingRows(a, b, { includeMatchPoints: true }))
             .map((row, index) => ({
                 ...row,
                 group_number: groupNumber,
@@ -409,12 +427,17 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
             })),
     )
 
+    const useUnequalGroupRanking = hasUnequalClubRuntimeGroups(rankedRows)
+
     return rankedRows
         .sort((a, b) => {
             const positionDiff = (toNumber(a.group_position) ?? 9999) - (toNumber(b.group_position) ?? 9999)
             if (positionDiff !== 0) return positionDiff
 
-            const metricDiff = compareClubRuntimeStandingRows(a, b)
+            const metricDiff = compareClubRuntimeStandingRows(a, b, {
+                includeMatchPoints: !useUnequalGroupRanking,
+                bestAverageBeforeHighRun: useUnequalGroupRanking,
+            })
             if (metricDiff !== 0) return metricDiff
 
             return (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
