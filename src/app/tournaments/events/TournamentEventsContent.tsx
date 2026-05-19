@@ -2661,7 +2661,7 @@ export function TournamentEventsContent({
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
-  const [previewColumnCount, setPreviewColumnCount] = useState(4);
+  const [previewColumnCount, setPreviewColumnCount] = useState(7);
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
   );
@@ -3662,10 +3662,10 @@ export function TournamentEventsContent({
         setPreviewColumnCount(1);
       } else if (width < 900) {
         setPreviewColumnCount(2);
-      } else if (width < 1280) {
-        setPreviewColumnCount(3);
-      } else {
+      } else if (width < 1100) {
         setPreviewColumnCount(4);
+      } else {
+        setPreviewColumnCount(7);
       }
     };
 
@@ -3842,6 +3842,10 @@ export function TournamentEventsContent({
   ]);
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
+
+    if (previewColumnCount >= 5) {
+      return `repeat(${previewColumnCount}, minmax(0, 1fr))`;
+    }
 
     const maxLengths: number[] = [];
     filteredActiveStageGroups.forEach((group) => {
