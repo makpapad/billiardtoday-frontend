@@ -3865,10 +3865,11 @@ export function TournamentEventsContent({
   }, [filteredActiveStageGroups, previewColumnCount]);
   const previewHeaderCount = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return 0;
-    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
-      return Math.max(max, getGroupPreviewPlayers(group).length);
-    }, 0);
-    return Math.max(1, Math.min(maxPlayers, previewColumnCount));
+    const minPlayers = filteredActiveStageGroups.reduce((min, group) => {
+      return Math.min(min, getGroupPreviewPlayers(group).length);
+    }, Number.POSITIVE_INFINITY);
+    if (!Number.isFinite(minPlayers) || minPlayers <= 0) return 0;
+    return Math.min(minPlayers, previewColumnCount);
   }, [filteredActiveStageGroups, previewColumnCount]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
