@@ -50,6 +50,9 @@ import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
 
+const EXTERNAL_LIVE_TABLES_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_EXTERNAL_LIVE_TABLES === "true";
+
 type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
@@ -2117,6 +2120,12 @@ export function TournamentDetailPage({
   }, [summary.documentId]);
 
   useEffect(() => {
+    if (!EXTERNAL_LIVE_TABLES_ENABLED) {
+      setExternalLiveTableSessions([]);
+      setExternalLiveTablesUpdatedAt(null);
+      return;
+    }
+
     if (activeView !== "live") {
       return;
     }
