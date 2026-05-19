@@ -5377,14 +5377,17 @@ export function TournamentDetailPage({
 
   useEffect(() => {
     setExpandedLiveSessionIds((prev) => {
-      const valid = new Set(liveCards.map((session) => session.sessionId));
+      const valid = new Set([
+        ...liveCards.map((session) => session.sessionId),
+        ...externalLiveTableSessions.map((session) => session.sessionId),
+      ]);
       const next = new Set<string>();
       prev.forEach((sessionId) => {
         if (valid.has(sessionId)) next.add(sessionId);
       });
       return next;
     });
-  }, [liveCards]);
+  }, [externalLiveTableSessions, liveCards]);
 
   const toggleGroupPopover = (sessionId: string) => {
     const targetSession = liveCards.find((session) => session.sessionId === sessionId);
