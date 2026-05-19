@@ -1883,7 +1883,11 @@ function StageRankingTable({
     return statsByPlayer;
   }, [stage.stageType, stageMatchGroups]);
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
-    if (!isBracketStageType(stage.stageType) && stageMatchGroups.length === 1) {
+    if (
+      !isBracketStageType(stage.stageType) &&
+      stageMatchGroups.length === 1 &&
+      stage.results.filter(hasMeaningfulStageResult).length === 0
+    ) {
       const computedResults = stageMatchGroups.flatMap((group) =>
         buildGroupStandings(group.matches, {
           artistic,
