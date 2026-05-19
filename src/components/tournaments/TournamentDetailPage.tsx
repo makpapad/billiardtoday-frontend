@@ -1684,6 +1684,7 @@ export function TournamentDetailPage({
       summary.stages[0]?.documentId ??
       null,
   );
+  const userSelectedStageRef = useRef(false);
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -3974,7 +3975,7 @@ export function TournamentDetailPage({
   );
 
   useEffect(() => {
-    if (preferredStageFromQuery || selectedStageDocumentId !== summary.stages[0]?.documentId) {
+    if (preferredStageFromQuery || userSelectedStageRef.current) {
       return;
     }
 
@@ -3986,7 +3987,6 @@ export function TournamentDetailPage({
     eventStages,
     preferredStageFromQuery,
     selectedStageDocumentId,
-    summary.stages,
   ]);
 
   const handleKoRankingRoundChange = async (
@@ -6978,6 +6978,7 @@ export function TournamentDetailPage({
                         key={stage.documentId || `${label}-${index}`}
                         type="button"
                         onClick={() => {
+                          userSelectedStageRef.current = true;
                           setSelectedStageDocumentId(stage.documentId);
                           setTournamentPanelMode("stages");
                           setActiveView("tournament");
@@ -6997,22 +6998,7 @@ export function TournamentDetailPage({
                             : "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
                         }
                       >
-                        <span>{label}</span>
-                        {stage.startDate || stage.endDate ? (
-                          <span
-                            className={
-                              isSelected
-                                ? "ml-2 border-l border-slate-300 pl-2 text-[10px] text-slate-600"
-                                : "ml-2 border-l border-white/15 pl-2 text-[10px] text-white/55"
-                            }
-                          >
-                            {formatDateRange(
-                              stage.startDate ?? null,
-                              stage.endDate ?? null,
-                              browserLocale ?? undefined,
-                            )}
-                          </span>
-                        ) : null}
+                        {label}
                       </button>
                     );
                   })}
