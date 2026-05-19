@@ -48,8 +48,8 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     url.searchParams.set('fields[11]', 'qualification_type')
     url.searchParams.set('fields[12]', 'source')
     url.searchParams.set('pagination[pageSize]', '1000')
-    url.searchParams.set('sort[0]', 'group_number:asc')
-    url.searchParams.set('sort[1]', 'final_position:asc')
+    url.searchParams.set('sort[0]', 'final_position:asc')
+    url.searchParams.set('sort[1]', 'group_number:asc')
     url.searchParams.set('sort[2]', 'group_position:asc')
 
     const res = await fetchWithOptionalAuth(url.toString())
@@ -58,7 +58,7 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     const rows = Array.isArray(payload?.data)
         ? payload.data.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
         : []
-    return rows.length > 0 ? rows : null
+    return rows.length > 0 ? rows.sort(compareStoredResultRows) : null
 }
 
 const toText = (value: unknown): string | null => {
@@ -120,13 +120,32 @@ const matchPointsForSide = (match: Record<string, unknown>, side: 1 | 2) => {
     return 1
 }
 
-const compareGroupRows = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+const compareStoredResultRows = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+    const finalPositionDiff = toFiniteNumber(a.final_position, 9999) - toFiniteNumber(b.final_position, 9999)
+    if (finalPositionDiff !== 0) return finalPositionDiff
+
+    const groupNumberDiff = toFiniteNumber(a.group_number, 1) - toFiniteNumber(b.group_number, 1)
+    if (groupNumberDiff !== 0) return groupNumberDiff
+
+    return toFiniteNumber(a.group_position, 9999) - toFiniteNumber(b.group_position, 9999)
+}
+
+const compareGroupRows = (
+    a: Record<string, unknown>,
+    b: Record<string, unknown>,
+    options: { includeMatchPoints?: boolean; bestAverageBeforeHighRun?: boolean } = {},
+) => {
     const matchPointsDiff = toFiniteNumber(b.match_points) - toFiniteNumber(a.match_points)
-    if (matchPointsDiff !== 0) return matchPointsDiff
+    if (options.includeMatchPoints !== false && matchPointsDiff !== 0) return matchPointsDiff
 
     const averageA = toFiniteNumber(a.innings) > 0 ? Math.trunc((toFiniteNumber(a.points) / toFiniteNumber(a.innings)) * 1000) / 1000 : 0
     const averageB = toFiniteNumber(b.innings) > 0 ? Math.trunc((toFiniteNumber(b.points) / toFiniteNumber(b.innings)) * 1000) / 1000 : 0
     if (averageA !== averageB) return averageB - averageA
+
+    if (options.bestAverageBeforeHighRun) {
+        const bestAverageDiff = toFiniteNumber(b.best_average) - toFiniteNumber(a.best_average)
+        if (bestAverageDiff !== 0) return bestAverageDiff
+    }
 
     const highRunDiff = toFiniteNumber(b.high_run) - toFiniteNumber(a.high_run)
     if (highRunDiff !== 0) return highRunDiff
@@ -138,6 +157,16 @@ const compareGroupRows = (a: Record<string, unknown>, b: Record<string, unknown>
     if (highRun2Diff !== 0) return highRun2Diff
 
     return toFiniteNumber(b.points) - toFiniteNumber(a.points)
+}
+
+const hasUnequalGroupSizes = (rows: Record<string, unknown>[]) => {
+    const sizes = new Map<number, number>()
+    rows.forEach((row) => {
+        const groupNumber = Math.max(toFiniteNumber(row.group_number, 1), 1)
+        sizes.set(groupNumber, (sizes.get(groupNumber) ?? 0) + 1)
+    })
+
+    return new Set(Array.from(sizes.values()).filter((size) => size > 0)).size > 1
 }
 
 const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record<string, unknown>[] => {
@@ -212,18 +241,23 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
     })
 
     const rankedRows = Array.from(groupedRows.entries()).flatMap(([groupNumber, groupRows]) =>
-        [...groupRows].sort(compareGroupRows).map((row, index) => ({
+        [...groupRows].sort((a, b) => compareGroupRows(a, b, { includeMatchPoints: true })).map((row, index) => ({
             ...row,
             group_number: groupNumber,
             group_position: index + 1,
         })),
     )
 
+    const useUnequalGroupRanking = hasUnequalGroupSizes(rankedRows)
+
     return rankedRows
         .sort((a, b) => {
             const positionDiff = toFiniteNumber(a.group_position, 9999) - toFiniteNumber(b.group_position, 9999)
             if (positionDiff !== 0) return positionDiff
-            const metricDiff = compareGroupRows(a, b)
+            const metricDiff = compareGroupRows(a, b, {
+                includeMatchPoints: !useUnequalGroupRanking,
+                bestAverageBeforeHighRun: useUnequalGroupRanking,
+            })
             if (metricDiff !== 0) return metricDiff
             return toFiniteNumber(a.group_number, 1) - toFiniteNumber(b.group_number, 1)
         })
@@ -386,6 +420,16 @@ export async function GET(
         const mode = req.nextUrl.searchParams.get('mode') || null
 
         if (!isKnockout) {
+            const storedResults = await fetchStoredStageResults(stageId)
+            if (storedResults) {
+                return NextResponse.json({
+                    source: 'stored-results',
+                    results: storedResults,
+                    standings: storedResults,
+                    overallRankings: storedResults,
+                })
+            }
+
             const matches = await fetchStageMatches(stageId)
             const computedResults = matches ? buildComputedGroupStandings(matches) : []
             if (computedResults.length > 0) {
@@ -394,16 +438,6 @@ export async function GET(
                     results: computedResults,
                     standings: computedResults,
                     overallRankings: computedResults,
-                })
-            }
-
-            const storedResults = await fetchStoredStageResults(stageId)
-            if (storedResults) {
-                return NextResponse.json({
-                    source: 'stored-results',
-                    results: storedResults,
-                    standings: storedResults,
-                    overallRankings: storedResults,
                 })
             }
         }
