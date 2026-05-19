@@ -334,6 +334,16 @@ const hasFinishedSessionStatus = (value: string | null | undefined) => {
   return ["completed", "complete", "finished", "ended", "closed"].includes(normalized);
 };
 
+function stageHasIncompleteMatches(stage: NormalizedEventStage): boolean {
+  return buildStageMatchGroups(stage.groups).some((group) =>
+    group.matches.some((match) => !hasPlayedStageMatch(match)),
+  );
+}
+
+function eventStagesHaveIncompleteMatches(stages: NormalizedEventStage[]): boolean {
+  return stages.some(stageHasIncompleteMatches);
+}
+
 function MatchSheetPlayerSummary({
   name,
   country,
@@ -1813,6 +1823,9 @@ function StageRankingTable({
   eventRulesetKey?: string | null;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
+    allStages.length > 0 ? allStages : [stage],
+  );
   const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
     () =>
       stageMatchGroups.flatMap((group) =>
@@ -2084,13 +2097,6 @@ function StageRankingTable({
     Array.from(playerProgressByGroupKey.values()).some(
       (progress) => progress.total > 0 && progress.played < progress.total,
     );
-  const hasIncompleteEventMatches =
-    !isBracketStageType(stage.stageType) &&
-    allStages.some((eventStage) =>
-      buildStageMatchGroups(eventStage.groups).some((group) =>
-        group.matches.some((match) => !hasPlayedStageMatch(match)),
-      ),
-    );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
   const showStageHighRun2Column =
@@ -2310,7 +2316,7 @@ function StageRankingTable({
             const slottedDisplayRank = displayRankByResultId.get(result.id);
             const displayRank = isBracketStageType(stage.stageType)
               ? result.finalPosition
-              : hasIncompleteEventMatches
+              : eventRankIsProvisional
                 ? slottedDisplayRank ?? index + 1
                 : result.finalPosition ?? slottedDisplayRank ?? index + 1;
 
@@ -2967,6 +2973,10 @@ export function TournamentEventsContent({
         return a.id.localeCompare(b.id);
       });
   }, [eventData]);
+  const eventHasIncompleteMatches = useMemo(
+    () => eventStagesHaveIncompleteMatches(eventStages),
+    [eventStages],
+  );
   const eventRulesetKey = useMemo(() => {
     const direct = eventData?.data?.ruleset_key;
     if (typeof direct === "string" && direct.trim()) return direct.trim();
@@ -3412,6 +3422,7 @@ export function TournamentEventsContent({
     showPublishedFinalResults &&
     eventData?.data?.final_standings_published === true &&
     publishedFinalResults.length > 0 &&
+    !eventHasIncompleteMatches &&
     !hideLongoniFinalStandingsUntilFinal;
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
