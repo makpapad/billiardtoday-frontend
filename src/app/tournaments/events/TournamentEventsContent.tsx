@@ -2189,6 +2189,31 @@ function StageRankingTable({
     );
   }
 
+  const groupCountForRankSlots = new Set(
+    stageMatchGroups
+      .map((group) => group.number)
+      .filter((value): value is number => value !== null),
+  ).size;
+  const rankCountersByGroupPosition = new Map<number, number>();
+  const displayRankByResultId = new Map<string, number>();
+  visibleResults.forEach((result) => {
+    if (
+      isBracketStageType(stage.stageType) ||
+      result.groupPosition === null ||
+      groupCountForRankSlots <= 0
+    ) {
+      return;
+    }
+
+    const rankWithinPosition =
+      (rankCountersByGroupPosition.get(result.groupPosition) ?? 0) + 1;
+    rankCountersByGroupPosition.set(result.groupPosition, rankWithinPosition);
+    displayRankByResultId.set(
+      result.id,
+      (result.groupPosition - 1) * groupCountForRankSlots + rankWithinPosition,
+    );
+  });
+
   return (
     <div className="flex flex-col gap-2">
       {stageGeneralAverage !== null && (
@@ -2275,6 +2300,7 @@ function StageRankingTable({
                 ? formatTruncatedAverage(result.bestAverage)
                 : "-";
             const metricTooltip = stageMetricTooltipByResultId.get(result.id);
+            const slottedDisplayRank = displayRankByResultId.get(result.id);
 
             return (
               <tr
@@ -2285,7 +2311,7 @@ function StageRankingTable({
                   {formatNumberValue(
                     isBracketStageType(stage.stageType)
                       ? result.finalPosition
-                      : result.finalPosition ?? index + 1,
+                      : result.finalPosition ?? slottedDisplayRank ?? index + 1,
                   )}
                 </td>
                 <td className="px-4 py-3 font-medium">
