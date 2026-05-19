@@ -9,7 +9,6 @@ import {
   LiveStatsHighlightModal,
   type LiveScoreItem,
 } from "@/components/live/LiveClubView";
-import { LiveScoreBoardCard as ExternalLiveScoreBoardCard } from "@/components/live/LiveScoreBoardCard";
 import {
   LiveVideoDrawer,
   type DrawerLaunchOrigin,
@@ -2118,7 +2117,7 @@ export function TournamentDetailPage({
   }, [summary.documentId]);
 
   useEffect(() => {
-    if (activeView !== "tournament" || tournamentPanelMode !== "stages") {
+    if (activeView !== "live") {
       return;
     }
 
@@ -2153,7 +2152,7 @@ export function TournamentDetailPage({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeView, summary.documentId, tournamentPanelMode]);
+  }, [activeView, summary.documentId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -6562,37 +6561,7 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : (
-        <>
-          {externalLiveTableSessions.length > 0 ? (
-            <section className="mb-6 rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-5">
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
-                    Five&amp;Six live
-                  </div>
-                  <h2 className="mt-1 text-xl font-black tracking-normal text-slate-950">
-                    Live tables
-                  </h2>
-                </div>
-                {externalLiveTablesUpdatedAt ? (
-                  <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
-                    Updated{" "}
-                    {new Date(externalLiveTablesUpdatedAt).toLocaleTimeString("el-GR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })}
-                  </div>
-                ) : null}
-              </div>
-              <div className="grid gap-4 xl:grid-cols-2">
-                {externalLiveTableSessions.map((item) => (
-                  <ExternalLiveScoreBoardCard key={item.sessionId} item={item} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-          <TournamentEventsContent
+        <TournamentEventsContent
             key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}:${overviewMode === "ranks" ? koRankingRound : "matches"}`}
             eventIdOverride={summary.documentId}
             initialEventData={initialEventData}
@@ -6625,7 +6594,6 @@ export function TournamentDetailPage({
               switchToLive();
             }}
           />
-        </>
       )
     ) : (
       <section ref={liveContentRef} className="space-y-6">
@@ -6638,19 +6606,99 @@ export function TournamentDetailPage({
           style={videoDrawerShellStyle}
         >
           <div className="min-w-0 flex-1">
-        {isLiveLoading && liveCards.length === 0 ? (
+            {externalLiveTableSessions.length > 0 ? (
+              <section className="mb-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
+                      Five&amp;Six live
+                    </div>
+                    <h2 className="mt-1 text-xl font-black tracking-normal text-slate-950">
+                      Live tables
+                    </h2>
+                  </div>
+                  {externalLiveTablesUpdatedAt ? (
+                    <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
+                      Updated{" "}
+                      {new Date(externalLiveTablesUpdatedAt).toLocaleTimeString("el-GR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {externalLiveTableSessions.map((session) => {
+                    const state = session.state ?? {};
+                    const tableLabel = state.tableName ? `Table ${state.tableName}` : session.screenId;
+                    return (
+                      <div key={session.sessionId} className="relative">
+                        {tableLabel ? (
+                          <div className="mb-2 flex items-center gap-3 px-1">
+                            <div className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm">
+                              {tableLabel}
+                            </div>
+                          </div>
+                        ) : null}
+                        <LiveScoreBoardCard
+                          sessionId={session.sessionId}
+                          inlineExpandable
+                          expanded={expandedLiveSessionIds.has(session.sessionId)}
+                          onExpandedChange={handleInlineCardExpandedChange}
+                          clubName="Five&Six"
+                          updatedAt={session.updatedAt}
+                          timerRunning={state.isRunning}
+                          inningsCount={state.inningsCount}
+                          player1={{
+                            name: state.playerAName || "Player A",
+                            country: state.playerACountry ?? null,
+                            photoUrl: state.playerAPhotoUrl ?? null,
+                            photoMainUrl: state.playerAPhotoMainUrl ?? null,
+                            points: state.scoreA ?? 0,
+                            run: state.runA ?? 0,
+                            liveRun: state.liveRunA ?? 0,
+                            innings: state.inningsA ?? state.inningsCount ?? 0,
+                            hr: state.bestRunA ?? 0,
+                            avgFormatted: state.avgFormattedA,
+                            targetPoints: state.targetPointsA ?? null,
+                          }}
+                          player2={{
+                            name: state.playerBName || "Player B",
+                            country: state.playerBCountry ?? null,
+                            photoUrl: state.playerBPhotoUrl ?? null,
+                            photoMainUrl: state.playerBPhotoMainUrl ?? null,
+                            points: state.scoreB ?? 0,
+                            run: state.runB ?? 0,
+                            liveRun: state.liveRunB ?? 0,
+                            innings: state.inningsB ?? state.inningsCount ?? 0,
+                            hr: state.bestRunB ?? 0,
+                            avgFormatted: state.avgFormattedB,
+                            targetPoints: state.targetPointsB ?? null,
+                          }}
+                          current={state.current}
+                          onNavigate={() => undefined}
+                          hasLiveVideos={false}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+        {isLiveLoading && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Loading live scores...
           </div>
-        ) : liveError && liveCards.length === 0 ? (
+        ) : liveError && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
           <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-6 text-sm text-red-700 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             {liveError}
           </div>
-        ) : liveCards.length === 0 ? (
+        ) : liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Waiting for live scores...
           </div>
-        ) : (
+        ) : liveCards.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
@@ -6812,7 +6860,7 @@ export function TournamentDetailPage({
               );
             })}
           </div>
-        )}
+        ) : null}
           </div>
           {videoDrawerOpen && isWideDesktop ? (
             <div className="hidden w-full shrink-0 xl:sticky xl:top-6 xl:block">
