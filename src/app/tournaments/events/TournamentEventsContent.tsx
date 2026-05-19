@@ -2084,6 +2084,13 @@ function StageRankingTable({
     Array.from(playerProgressByGroupKey.values()).some(
       (progress) => progress.total > 0 && progress.played < progress.total,
     );
+  const hasIncompleteEventMatches =
+    !isBracketStageType(stage.stageType) &&
+    allStages.some((eventStage) =>
+      buildStageMatchGroups(eventStage.groups).some((group) =>
+        group.matches.some((match) => !hasPlayedStageMatch(match)),
+      ),
+    );
   const showBestAverageColumn =
     visibleResults.some((result) => result.bestAverage !== null);
   const showStageHighRun2Column =
@@ -2301,6 +2308,11 @@ function StageRankingTable({
                 : "-";
             const metricTooltip = stageMetricTooltipByResultId.get(result.id);
             const slottedDisplayRank = displayRankByResultId.get(result.id);
+            const displayRank = isBracketStageType(stage.stageType)
+              ? result.finalPosition
+              : hasIncompleteEventMatches
+                ? slottedDisplayRank ?? index + 1
+                : result.finalPosition ?? slottedDisplayRank ?? index + 1;
 
             return (
               <tr
@@ -2308,11 +2320,7 @@ function StageRankingTable({
                 className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
               >
                 <td className="px-4 py-3 font-semibold">
-                  {formatNumberValue(
-                    isBracketStageType(stage.stageType)
-                      ? result.finalPosition
-                      : result.finalPosition ?? slottedDisplayRank ?? index + 1,
-                  )}
+                  {formatNumberValue(displayRank)}
                 </td>
                 <td className="px-4 py-3 font-medium">
                   {result.playerId ? (
