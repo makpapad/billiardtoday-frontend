@@ -9,6 +9,7 @@ import {
   LiveStatsHighlightModal,
   type LiveScoreItem,
 } from "@/components/live/LiveClubView";
+import { LiveScoreBoardCard as ExternalLiveScoreBoardCard } from "@/components/live/LiveScoreBoardCard";
 import {
   LiveVideoDrawer,
   type DrawerLaunchOrigin,
@@ -1697,6 +1698,11 @@ export function TournamentDetailPage({
   const [displayEventLiveSessions, setDisplayEventLiveSessions] = useState<
     EventLiveSession[]
   >([]);
+  const [externalLiveTableSessions, setExternalLiveTableSessions] = useState<
+    LiveSessionItem[]
+  >([]);
+  const [externalLiveTablesUpdatedAt, setExternalLiveTablesUpdatedAt] =
+    useState<string | null>(null);
   const [liveScoreDelayByScreenId, setLiveScoreDelayByScreenId] = useState<
     Record<string, number>
   >({});
@@ -2110,6 +2116,44 @@ export function TournamentDetailPage({
       setEventLiveSessions([]);
     }
   }, [summary.documentId]);
+
+  useEffect(() => {
+    if (activeView !== "tournament" || tournamentPanelMode !== "stages") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const refreshExternalLiveTables = async () => {
+      try {
+        const response = await fetch(
+          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables`,
+          { cache: "no-store" },
+        );
+        const payload = (await response.json().catch(() => ({ data: [] }))) as {
+          data?: LiveSessionItem[];
+          updatedAt?: string | null;
+        };
+        if (cancelled) return;
+        setExternalLiveTableSessions(Array.isArray(payload.data) ? payload.data : []);
+        setExternalLiveTablesUpdatedAt(
+          typeof payload.updatedAt === "string" ? payload.updatedAt : null,
+        );
+      } catch {
+        if (!cancelled) {
+          setExternalLiveTableSessions([]);
+          setExternalLiveTablesUpdatedAt(null);
+        }
+      }
+    };
+
+    void refreshExternalLiveTables();
+    const interval = window.setInterval(refreshExternalLiveTables, 10000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [activeView, summary.documentId, tournamentPanelMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -6518,39 +6562,70 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : (
-        <TournamentEventsContent
-          key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}:${overviewMode === "ranks" ? koRankingRound : "matches"}`}
-          eventIdOverride={summary.documentId}
-          initialEventData={initialEventData}
-          eventDataOverride={eventData}
-          disableAutoRefresh
-          preferredStageDocumentId={selectedStageDocumentId}
-          preferredGroupParam={preferredGroupParam}
-          preferredMatchParam={preferredMatchParam}
-          timezoneOffsetMinutes={
-            selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
-          }
-          timezoneOptions={timezoneOptions}
-          onTimezoneChange={setSelectedTimezoneOffsetMinutes}
-          onStageSelect={(stageDocumentId) => {
-            setTournamentPanelMode("stages");
-            setSelectedStageDocumentId(stageDocumentId);
-          }}
-          showPublishedFinalResults={tournamentPanelMode === "finals"}
-          showTimetable={false}
-          stageViewMode={overviewMode}
-          koRankingRound={koRankingRound}
-          onKoRankingRoundChange={handleKoRankingRoundChange}
-          embeddedOverride={embedded}
-          showStandaloneTitle={false}
-          showEventHeader={false}
-          emptyStateMessage="This tournament page is missing event data."
-          liveSessionsOverride={presentedEventLiveSessions}
-          onLiveMatchOpen={(sessionId) => {
-            setHighlightedLiveSessionId(sessionId);
-            switchToLive();
-          }}
-        />
+        <>
+          {externalLiveTableSessions.length > 0 ? (
+            <section className="mb-6 rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-5">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
+                    Five&amp;Six live
+                  </div>
+                  <h2 className="mt-1 text-xl font-black tracking-normal text-slate-950">
+                    Live tables
+                  </h2>
+                </div>
+                {externalLiveTablesUpdatedAt ? (
+                  <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
+                    Updated{" "}
+                    {new Date(externalLiveTablesUpdatedAt).toLocaleTimeString("el-GR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </div>
+                ) : null}
+              </div>
+              <div className="grid gap-4 xl:grid-cols-2">
+                {externalLiveTableSessions.map((item) => (
+                  <ExternalLiveScoreBoardCard key={item.sessionId} item={item} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <TournamentEventsContent
+            key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}:${overviewMode === "ranks" ? koRankingRound : "matches"}`}
+            eventIdOverride={summary.documentId}
+            initialEventData={initialEventData}
+            eventDataOverride={eventData}
+            disableAutoRefresh
+            preferredStageDocumentId={selectedStageDocumentId}
+            preferredGroupParam={preferredGroupParam}
+            preferredMatchParam={preferredMatchParam}
+            timezoneOffsetMinutes={
+              selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
+            }
+            timezoneOptions={timezoneOptions}
+            onTimezoneChange={setSelectedTimezoneOffsetMinutes}
+            onStageSelect={(stageDocumentId) => {
+              setTournamentPanelMode("stages");
+              setSelectedStageDocumentId(stageDocumentId);
+            }}
+            showPublishedFinalResults={tournamentPanelMode === "finals"}
+            showTimetable={false}
+            stageViewMode={overviewMode}
+            koRankingRound={koRankingRound}
+            onKoRankingRoundChange={handleKoRankingRoundChange}
+            embeddedOverride={embedded}
+            showStandaloneTitle={false}
+            showEventHeader={false}
+            emptyStateMessage="This tournament page is missing event data."
+            liveSessionsOverride={presentedEventLiveSessions}
+            onLiveMatchOpen={(sessionId) => {
+              setHighlightedLiveSessionId(sessionId);
+              switchToLive();
+            }}
+          />
+        </>
       )
     ) : (
       <section ref={liveContentRef} className="space-y-6">
