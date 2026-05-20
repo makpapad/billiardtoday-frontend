@@ -419,6 +419,18 @@ export async function GET(
         const round = req.nextUrl.searchParams.get('round') || null
         const mode = req.nextUrl.searchParams.get('mode') || null
 
+        if (isKnockout && !round && !mode) {
+            const storedResults = await fetchStoredStageResults(stageId)
+            if (storedResults) {
+                return NextResponse.json({
+                    source: 'stored-results',
+                    results: storedResults,
+                    standings: storedResults,
+                    overallRankings: storedResults,
+                })
+            }
+        }
+
         if (!isKnockout) {
             const storedResults = await fetchStoredStageResults(stageId)
             if (storedResults) {

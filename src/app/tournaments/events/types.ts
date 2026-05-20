@@ -79,6 +79,7 @@ export type StrapiResult = {
   group_number?: number | string | null;
   group_position?: number | string | null;
   final_position?: number | string | null;
+  source?: string | null;
   player?: unknown;
 };
 

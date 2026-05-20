@@ -1456,6 +1456,9 @@ function hasMeaningfulStageResult(
   result: NormalizedStageResult,
 ): boolean {
   return (
+    (typeof result.source === "string" &&
+      result.source.includes("standings") &&
+      result.finalPosition !== null) ||
     (result.points ?? 0) > 0 ||
     (result.innings ?? 0) > 0 ||
     (result.highRun ?? 0) > 0
