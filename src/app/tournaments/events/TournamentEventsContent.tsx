@@ -1949,13 +1949,16 @@ function StageRankingTable({
       stage.results.filter(hasMeaningfulStageResult),
       countryByPlayerKey,
     );
-    const hasServerKnockoutStandings = results.some(
-      (result) => result.source === "knockout-standings",
+    const hasStoredStageStandings = results.some(
+      (result) =>
+        typeof result.source === "string" &&
+        result.source.includes("standings") &&
+        result.finalPosition !== null,
     );
     const shouldMergeQualificationTotals =
       stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
       isOpeningRoundFinalRanking &&
-      !hasServerKnockoutStandings;
+      !hasStoredStageStandings;
     const displayResults = results.map((result) =>
       shouldMergeQualificationTotals
         ? mergeStageResultTotals(
@@ -1966,7 +1969,7 @@ function StageRankingTable({
           )
         : result,
     );
-    if (hasServerKnockoutStandings) {
+    if (hasStoredStageStandings) {
       return displayResults;
     }
     if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {

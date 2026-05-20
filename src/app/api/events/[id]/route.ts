@@ -798,7 +798,7 @@ const mapStageResultToFinalResult = (
     const documentId =
         typeof row.documentId === 'string' && row.documentId.trim().length > 0
             ? row.documentId
-            : `stage-final-${position}`
+            : `stage-standing-${position}`
 
     return {
         id: row.id ?? documentId,
@@ -812,7 +812,7 @@ const mapStageResultToFinalResult = (
         high_run: toNumber(row.high_run),
         high_run_2: toNumber(row.high_run_2),
         player: row.player,
-        source: row.source ?? 'stage-final-standings',
+        source: row.source ?? 'stage-standings',
     }
 }
 
