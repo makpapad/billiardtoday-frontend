@@ -386,13 +386,32 @@ const normalizeKnockoutStandingsPayload = (payload: unknown): unknown => {
     if (!sourceRows) return payload
     if (
         sourceRows.some(
-            (row) =>
-                row &&
-                typeof row === 'object' &&
-                (row as Record<string, unknown>).source === 'knockout-standings',
+            (row) => {
+                if (!row || typeof row !== 'object') return false
+                const record = row as Record<string, unknown>
+                const source = typeof record.source === 'string' ? record.source : ''
+                return (
+                    record.source === 'knockout-standings' ||
+                    (source.includes('standings') &&
+                        toFiniteNumber(record.final_position) > 0)
+                )
+            },
         )
     ) {
-        return payload
+        const sortedRows = [...sourceRows].sort((a, b) => {
+            const left = a as Record<string, unknown>
+            const right = b as Record<string, unknown>
+            const posA = toFiniteNumber(left.final_position) || Number.POSITIVE_INFINITY
+            const posB = toFiniteNumber(right.final_position) || Number.POSITIVE_INFINITY
+            if (posA !== posB) return posA - posB
+            return toFiniteNumber(left.id) - toFiniteNumber(right.id)
+        })
+        return {
+            ...record,
+            results: sortedRows,
+            standings: sortedRows,
+            overallRankings: sortedRows,
+        }
     }
 
     const sortedRows = sortKnockoutRows(sourceRows)

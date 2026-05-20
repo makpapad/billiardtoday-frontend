@@ -629,8 +629,17 @@ const fetchStageStandings = async (
     }
 
     const normalizeKnockoutRows = (rows: Record<string, unknown>[]) => {
-        if (rows.some((row) => row?.source === 'knockout-standings')) {
-            return rows
+        const hasStoredFinalPositions = rows.some((row) => {
+            const source = typeof row?.source === 'string' ? row.source : ''
+            return source.includes('standings') && (toNumber(row.final_position) ?? 0) > 0
+        })
+        if (hasStoredFinalPositions || rows.some((row) => row?.source === 'knockout-standings')) {
+            return [...rows].sort((a, b) => {
+                const posA = toNumber(a.final_position) ?? Number.POSITIVE_INFINITY
+                const posB = toNumber(b.final_position) ?? Number.POSITIVE_INFINITY
+                if (posA !== posB) return posA - posB
+                return (toNumber(a.id) ?? 0) - (toNumber(b.id) ?? 0)
+            })
         }
 
         const targetPoints = rows.reduce((max, row) => Math.max(max, toNumber(row.points) ?? 0), 0)
