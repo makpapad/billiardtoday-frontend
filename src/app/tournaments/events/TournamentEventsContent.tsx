@@ -4786,7 +4786,7 @@ export function TournamentEventsContent({
                           {finalGeneralAverage !== null && (
                             <div className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900">
                               <span className="font-medium text-gray-500 dark:text-gray-400">
-                                {isArtisticEvent ? "General %" : "General AVG"}
+                                {isArtisticEvent ? "Tournament General %" : "Tournament General AVG"}
                               </span>
                               <span className="font-semibold text-gray-900 dark:text-gray-100">
                                 {isArtisticEvent
