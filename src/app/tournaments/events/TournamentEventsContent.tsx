@@ -3551,6 +3551,30 @@ export function TournamentEventsContent({
       ),
     [publishedFinalResults],
   );
+  const finalGeneralAverage = useMemo(() => {
+    const totals = publishedFinalResults.reduce(
+      (acc, result) => {
+        const points = result.caroms ?? result.points;
+        if (
+          typeof points !== "number" ||
+          !Number.isFinite(points) ||
+          typeof result.innings !== "number" ||
+          !Number.isFinite(result.innings) ||
+          result.innings <= 0
+        ) {
+          return acc;
+        }
+
+        return {
+          points: acc.points + points,
+          innings: acc.innings + result.innings,
+        };
+      },
+      { points: 0, innings: 0 },
+    );
+
+    return totals.innings > 0 ? totals.points / totals.innings : null;
+  }, [publishedFinalResults]);
   const finalStandingsHighlights = useMemo(
     () => ({
       average: getBestPositiveValue(
@@ -4755,8 +4779,22 @@ export function TournamentEventsContent({
                   ) : null}
                   {showVisiblePublishedFinalResults && (
                       <div className="mb-6 flex flex-col gap-3">
-                        <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                          Final standings
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                            Final standings
+                          </div>
+                          {finalGeneralAverage !== null && (
+                            <div className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900">
+                              <span className="font-medium text-gray-500 dark:text-gray-400">
+                                {isArtisticEvent ? "General %" : "General AVG"}
+                              </span>
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                {isArtisticEvent
+                                  ? `${formatTruncatedAverage(finalGeneralAverage * 100)}%`
+                                  : formatTruncatedAverage(finalGeneralAverage)}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
                           <table className="min-w-full border-collapse text-sm">
