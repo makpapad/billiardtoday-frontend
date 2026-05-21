@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { LiveSessionItem } from "@/components/live/types";
 
 const DEFAULT_EVENT_ID = "ac6fd1dd-487b-409d-9424-606d8b683ed8";
@@ -41,6 +41,8 @@ const fallbackSoopEmbedUrlForTable = (table: string) =>
   `https://play.sooplive.com/afbilliards${encodeURIComponent(table || DEFAULT_TABLE)}/embed`;
 
 function SoopLiveTableContent() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("eventId")?.trim() || DEFAULT_EVENT_ID;
   const competitionIdx =
@@ -100,6 +102,28 @@ function SoopLiveTableContent() {
     );
   }, [sessions, table]);
 
+  const availableTables = useMemo(() => {
+    const values = sessions
+      .map((session) => normalizeTable(session.state?.tableName || session.screenId))
+      .filter(Boolean);
+    return Array.from(new Set(values)).sort((left, right) => {
+      const leftNumber = Number(left);
+      const rightNumber = Number(right);
+      if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+        return leftNumber - rightNumber;
+      }
+      return left.localeCompare(right);
+    });
+  }, [sessions]);
+
+  const handleTableChange = (nextTable: string) => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    params.set("eventId", eventId);
+    params.set("competitionIdx", competitionIdx);
+    params.set("table", nextTable);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const state = selectedSession?.state;
   const sessionVideoUrl = selectedSession?.liveVideos?.find((video) => {
     const url = typeof video.url === "string" ? video.url.trim() : "";
@@ -141,9 +165,25 @@ function SoopLiveTableContent() {
                 </p>
                 <h1 className="text-xl font-semibold">Table {table}</h1>
               </div>
-              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase">
-                Live
-              </span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={table}
+                  onChange={(event) => handleTableChange(event.target.value)}
+                  className="h-9 rounded border border-white/10 bg-neutral-800 px-3 text-sm font-semibold text-white outline-none transition hover:bg-neutral-700 focus:border-cyan-300"
+                  aria-label="Select table"
+                >
+                  {(availableTables.length > 0 ? availableTables : [table]).map(
+                    (tableOption) => (
+                      <option key={tableOption} value={tableOption}>
+                        Table {tableOption}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase">
+                  Live
+                </span>
+              </div>
             </div>
 
             {isLoading ? (
