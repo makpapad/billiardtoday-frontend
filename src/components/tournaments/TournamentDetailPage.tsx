@@ -49,6 +49,7 @@ import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
+import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
 
 const EXTERNAL_LIVE_TABLES_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_EXTERNAL_LIVE_TABLES === "true";
@@ -311,6 +312,7 @@ type HeroMenuButtonProps = {
   iconSrc: string;
   active: boolean;
   onClick: () => void;
+  href?: string | null;
 };
 
 type TournamentParticipantRow = {
@@ -333,19 +335,15 @@ function HeroMenuButton({
   iconSrc,
   active,
   onClick,
+  href,
 }: HeroMenuButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      className={`group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
-        active
-          ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
-          : "border-white/15 bg-white/10 hover:bg-white/15"
-      }`}
-    >
+  const className = `group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
+    active
+      ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
+      : "border-white/15 bg-white/10 hover:bg-white/15"
+  }`;
+  const content = (
+    <>
       <Image
         src={iconSrc}
         alt={label}
@@ -359,6 +357,31 @@ function HeroMenuButton({
       <span className="pointer-events-none absolute -bottom-11 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(15,23,42,0.38)] group-hover:block group-focus-visible:block">
         {label}
       </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+      title={label}
+      aria-label={label}
+        className={className}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={className}
+    >
+      {content}
     </button>
   );
 }
@@ -1542,6 +1565,10 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
+  const externalLiveTablesHref = buildExternalLiveTablesHref(
+    summary.documentId,
+    { table: 1 },
+  );
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;
@@ -6953,6 +6980,7 @@ export function TournamentDetailPage({
                   iconSrc="/icons%20webp/live3.webp"
                   active={activeView === "live"}
                   onClick={switchToLive}
+                  href={externalLiveTablesHref}
                 />
                 <HeroMenuButton
                   label="Tournament"

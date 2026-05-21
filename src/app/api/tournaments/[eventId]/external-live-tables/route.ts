@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { LiveSessionItem } from "@/components/live/types";
+import { getExternalLiveTablesCompetitionIdx } from "@/lib/externalLiveTables";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,10 +23,6 @@ const cache = new Map<string, CacheEntry>();
 const EXTERNAL_LIVE_TABLES_ENABLED =
   process.env.ENABLE_EXTERNAL_LIVE_TABLES === "true";
 
-const TEMP_COMPETITION_BY_EVENT_ID: Record<string, string> = {
-  "ac6fd1dd-487b-409d-9424-606d8b683ed8": "204",
-};
-
 const decodeHtml = (value: string) =>
   value
     .replace(/&nbsp;/g, " ")
@@ -45,6 +42,26 @@ const absolutizeUrl = (value: string | null) => {
   if (trimmed.startsWith("//")) return `https:${trimmed}`;
   if (trimmed.startsWith("/")) return `http://umbeu.cueuny.com${trimmed}`;
   return `http://umbeu.cueuny.com/${trimmed}`;
+};
+
+const normalizeSoopEmbedUrl = (value: string | null) => {
+  const absolute = absolutizeUrl(value);
+  if (!absolute) return null;
+  try {
+    const url = new URL(absolute);
+    if (!/(^|\.)sooplive\.(com|co\.kr)$/i.test(url.hostname)) return absolute;
+    const parts = url.pathname.split("/").filter(Boolean);
+    const channel = parts[0];
+    if (!channel) return absolute;
+    if (parts[parts.length - 1] === "embed") {
+      url.hostname = "play.sooplive.com";
+      url.protocol = "https:";
+      return url.toString();
+    }
+    return `https://play.sooplive.com/${encodeURIComponent(channel)}/embed`;
+  } catch {
+    return absolute;
+  }
 };
 
 const firstMatch = (input: string, pattern: RegExp) => {
@@ -83,6 +100,7 @@ const parseFiveSixLiveTables = (
       const score = panel.match(/<div class="count">\s*([0-9]+)\s*<span>\s*:\s*<\/span>\s*([0-9]+)\s*<\/div>/i);
       const innings = panel.match(/<p>\s*INN\s*([0-9]+)\s*<\/p>/i);
       const videoUrl = panel.match(/<a href="([^"]+)"[^>]*class="btn_normal btn_o"/i)?.[1] || null;
+      const embedUrl = normalizeSoopEmbedUrl(videoUrl);
 
       const playerAName = names[0] || "Player A";
       const playerBName = names[1] || "Player B";
@@ -100,6 +118,21 @@ const parseFiveSixLiveTables = (
         id: sessionId,
         sessionId,
         screenId: tableLabel || `Table ${index + 1}`,
+        liveVideos: embedUrl
+          ? [
+              {
+                id: `five-six-${competitionIdx}-table-${tableNumber || index + 1}-video`,
+                provider: "embed",
+                videoId: embedUrl,
+                url: embedUrl,
+                title: tableLabel || `Table ${index + 1}`,
+                label: tableLabel || `Table ${index + 1}`,
+                youtubeUrl: null,
+                isPrimary: true,
+                sortOrder: 0,
+              },
+            ]
+          : undefined,
         updatedAt,
         clubName: "Five&Six",
         state: {
@@ -139,7 +172,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
   const searchParams = req.nextUrl.searchParams;
   const competitionIdx =
     searchParams.get("competitionIdx")?.trim() ||
-    TEMP_COMPETITION_BY_EVENT_ID[eventId] ||
+    getExternalLiveTablesCompetitionIdx(eventId) ||
     "";
 
   if (!competitionIdx) {
