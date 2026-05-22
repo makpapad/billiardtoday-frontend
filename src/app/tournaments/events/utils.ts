@@ -207,6 +207,8 @@ export const normalizeResult = (
 ): NormalizedStageResult => {
   const normalized = normalizeEntity<StrapiResult>(result, fallbackId);
   const normalizedRecord = normalized as typeof normalized & { source?: unknown };
+  const qualifiedRaw = (normalized as typeof normalized & { qualified?: unknown }).qualified;
+  const qualificationTypeRaw = (normalized as typeof normalized & { qualification_type?: unknown }).qualification_type;
   const localPlayer =
     typeof (normalized as Record<string, unknown>).local_player_key === "string"
       ? {
@@ -245,6 +247,8 @@ export const normalizeResult = (
     groupNumber: toNumber(normalized.group_number),
     groupPosition: toNumber(normalized.group_position),
     finalPosition: toNumber(normalized.final_position),
+    qualified: typeof qualifiedRaw === "boolean" ? qualifiedRaw : null,
+    qualificationType: typeof qualificationTypeRaw === "string" ? qualificationTypeRaw : null,
     source: typeof normalizedRecord.source === "string" ? normalizedRecord.source : null,
   };
 };

@@ -1912,6 +1912,8 @@ function StageRankingTable({
           groupNumber: group.number,
           groupPosition: standing.place,
           finalPosition: null,
+          qualified: null,
+          qualificationType: null,
           source: "computed-group-standing",
         })),
       );
@@ -2143,6 +2145,21 @@ function StageRankingTable({
     if (totals.innings <= 0) return null;
     return totals.points / totals.innings;
   }, [visibleResults]);
+  const stageTotals = useMemo(
+    () =>
+      visibleResults.reduce(
+        (acc, result) => ({
+          points: acc.points + (result.points ?? 0),
+          innings: acc.innings + (result.innings ?? 0),
+        }),
+        { points: 0, innings: 0 },
+      ),
+    [visibleResults],
+  );
+  const stageHasCompletedRequiredMatches = useMemo(() => {
+    const matches = stageMatchGroups.flatMap((group) => group.matches);
+    return matches.length > 0 && matches.every(hasPlayedStageMatch);
+  }, [stageMatchGroups]);
   const stageRankingHighlights = useMemo(
     () => ({
       average: getBestPositiveValue(
@@ -2256,6 +2273,31 @@ function StageRankingTable({
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
           <thead className="bg-blue-600 text-white">
+            <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
+              <th className="px-4 py-2" />
+              <th className="px-4 py-2" />
+              {showProgressColumn && <th className="px-4 py-2" />}
+              {showGroupColumn && <th className="px-4 py-2" />}
+              {showGroupPositionColumn && <th className="px-4 py-2" />}
+              <th className="px-4 py-2" />
+              <th className="px-4 py-2 text-center">
+                <span className="block text-blue-100">Total</span>
+                <span className="text-sm font-semibold text-white">
+                  {formatNumberValue(stageTotals.points)}
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="block text-blue-100">Total</span>
+                <span className="text-sm font-semibold text-white">
+                  {formatNumberValue(stageTotals.innings)}
+                </span>
+              </th>
+              <th className="px-4 py-2" />
+              <th className="px-4 py-2" />
+              {showStageHighRun2Column && <th className="px-4 py-2" />}
+              {showBestAverageColumn && <th className="px-4 py-2" />}
+              {artistic && <th className="px-4 py-2" />}
+            </tr>
             <tr>
               <th className="px-4 py-3 text-left font-semibold">#</th>
               <th className="px-4 py-3 text-left font-semibold">Player</th>
@@ -2329,11 +2371,26 @@ function StageRankingTable({
               : eventRankIsProvisional
                 ? slottedDisplayRank ?? index + 1
                 : result.finalPosition ?? slottedDisplayRank ?? index + 1;
+            const qualifierTone =
+              stageHasCompletedRequiredMatches && result.qualified === true
+                ? result.qualificationType === "best_runner_up" ||
+                  result.qualificationType === "group_2nd" ||
+                  result.qualificationType === "best_third_place"
+                  ? "runnerUp"
+                  : "winner"
+                : null;
 
             return (
               <tr
                 key={result.id}
-                className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                className={clsx(
+                  "border-t border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-100",
+                  qualifierTone === "winner" &&
+                    "bg-emerald-50 dark:bg-emerald-950/35",
+                  qualifierTone === "runnerUp" &&
+                    "bg-[#EDC1BB] text-gray-900 dark:bg-[#EDC1BB]/75 dark:text-gray-950",
+                  qualifierTone === null && "bg-white dark:bg-gray-900",
+                )}
               >
                 <td className="px-4 py-3 font-semibold">
                   {formatNumberValue(displayRank)}

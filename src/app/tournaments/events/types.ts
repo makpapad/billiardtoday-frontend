@@ -79,6 +79,8 @@ export type StrapiResult = {
   group_number?: number | string | null;
   group_position?: number | string | null;
   final_position?: number | string | null;
+  qualified?: boolean | null;
+  qualification_type?: string | null;
   source?: string | null;
   player?: unknown;
 };
@@ -216,6 +218,8 @@ export type NormalizedStageResult = {
   groupNumber: number | null;
   groupPosition: number | null;
   finalPosition: number | null;
+  qualified: boolean | null;
+  qualificationType: string | null;
   source: string | null;
 };
 
