@@ -3,7 +3,7 @@
 import { Suspense, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const DEFAULT_TABLES = ["1", "2", "3", "4"];
+const DEFAULT_TABLES = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const DEFAULT_TABLE = "1";
 
 const normalizeTable = (value: string | null | undefined) =>
