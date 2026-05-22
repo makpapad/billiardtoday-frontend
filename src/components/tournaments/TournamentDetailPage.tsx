@@ -100,9 +100,10 @@ type TournamentGalleryImage = {
 type TournamentGallerySectionVideo = {
   id: string;
   title: string;
-  kind: "youtube" | "upload";
+  kind: "youtube" | "upload" | "soop";
   createdAt: string | null;
   youtubeUrl: string | null;
+  soopUrl: string | null;
   videoId: string | null;
   mediaId: number | null;
   fileUrl: string | null;
@@ -191,6 +192,18 @@ const normalizeGalleryVideoEntries = (value: unknown) => {
           : typeof record.label === "string" && record.label.trim()
             ? record.label.trim()
             : "";
+      const explicitKind =
+        typeof record.kind === "string" && record.kind.trim()
+          ? record.kind.trim().toLowerCase()
+          : "";
+      const soopUrl =
+        typeof record.soopUrl === "string" && record.soopUrl.trim()
+          ? record.soopUrl.trim()
+          : explicitKind === "soop" &&
+              typeof record.url === "string" &&
+              record.url.trim()
+            ? record.url.trim()
+            : null;
 
       if (mediaId !== null) {
         return {
@@ -202,6 +215,22 @@ const normalizeGalleryVideoEntries = (value: unknown) => {
           kind: "upload" as const,
           mediaId,
           youtubeUrl: null,
+          soopUrl: null,
+        };
+      }
+
+      if (soopUrl) {
+        return {
+          id:
+            typeof record.id === "string" && record.id.trim()
+              ? record.id.trim()
+              : `gallery-soop-${index + 1}`,
+          title,
+          kind: "soop" as const,
+          mediaId: null,
+          youtubeUrl: null,
+          soopUrl,
+          videoId: undefined,
         };
       }
 
@@ -217,15 +246,17 @@ const normalizeGalleryVideoEntries = (value: unknown) => {
         kind: "youtube" as const,
         mediaId: null,
         youtubeUrl: youtubeUrl ?? normalizedYoutube.youtubeUrl ?? null,
+        soopUrl: null,
         videoId: normalizedYoutube.videoId,
       };
     })
     .filter(Boolean) as Array<{
     id: string;
     title: string;
-    kind: "youtube" | "upload";
+    kind: "youtube" | "upload" | "soop";
     mediaId: number | null;
     youtubeUrl: string | null;
+    soopUrl: string | null;
     videoId?: string;
   }>;
 };
@@ -4556,10 +4587,27 @@ export function TournamentDetailPage({
               kind: "upload",
               createdAt: uploadedVideo.createdAt,
               youtubeUrl: null,
+              soopUrl: null,
               videoId: null,
               mediaId: video.mediaId,
               fileUrl: uploadedVideo.fileUrl,
               fileName: uploadedVideo.name,
+            });
+            return accumulator;
+          }
+
+          if (video.kind === "soop" && video.soopUrl) {
+            accumulator.push({
+              id: video.id,
+              title: video.title || "SOOP video",
+              kind: "soop",
+              createdAt: null,
+              youtubeUrl: null,
+              soopUrl: video.soopUrl,
+              videoId: null,
+              mediaId: null,
+              fileUrl: null,
+              fileName: null,
             });
             return accumulator;
           }
@@ -4571,6 +4619,7 @@ export function TournamentDetailPage({
               kind: "youtube",
               createdAt: null,
               youtubeUrl: video.youtubeUrl,
+              soopUrl: null,
               videoId: video.videoId,
               mediaId: null,
               fileUrl: null,
@@ -4608,6 +4657,7 @@ export function TournamentDetailPage({
             kind: "upload" as const,
             createdAt: video.createdAt,
             youtubeUrl: null,
+            soopUrl: null,
             videoId: null,
             mediaId: video.mediaId,
             fileUrl: video.fileUrl,
@@ -4621,6 +4671,7 @@ export function TournamentDetailPage({
               kind: "youtube" as const,
               createdAt: null,
               youtubeUrl: video.youtubeUrl,
+              soopUrl: null,
               videoId: video.videoId ?? null,
               mediaId: null,
               fileUrl: null,
@@ -5914,6 +5965,14 @@ export function TournamentDetailPage({
                                           </div>
                                         </button>
                                       )
+                                    ) : video.kind === "soop" && video.soopUrl ? (
+                                      <iframe
+                                        src={video.soopUrl}
+                                        title={video.title || `SOOP video ${index + 1}`}
+                                        className="h-full w-full"
+                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        allowFullScreen
+                                      />
                                     ) : video.fileUrl ? (
                                       <video
                                         src={video.fileUrl}
@@ -5932,6 +5991,8 @@ export function TournamentDetailPage({
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                       {video.kind === "youtube"
                                         ? `YouTube video ${index + 1}`
+                                        : video.kind === "soop"
+                                          ? `SOOP video ${index + 1}`
                                         : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
                                     </div>
                                     <div className="text-base font-bold text-slate-950">
@@ -6151,6 +6212,14 @@ export function TournamentDetailPage({
                                 </div>
                               </button>
                             )
+                          ) : video.kind === "soop" && video.soopUrl ? (
+                            <iframe
+                              src={video.soopUrl}
+                              title={video.title || `SOOP video ${index + 1}`}
+                              className="h-full w-full"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                            />
                           ) : video.fileUrl ? (
                             <video
                               src={video.fileUrl}
@@ -6169,6 +6238,8 @@ export function TournamentDetailPage({
                             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                               {video.kind === "youtube"
                                 ? `YouTube video ${index + 1}`
+                                : video.kind === "soop"
+                                  ? `SOOP video ${index + 1}`
                                 : formatGalleryCapturedAt(video.createdAt) || "Uploaded video"}
                             </div>
                           <div className="text-base font-bold text-slate-950">
@@ -6182,6 +6253,15 @@ export function TournamentDetailPage({
                               className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
                             >
                               Open on YouTube
+                            </a>
+                          ) : video.kind === "soop" && video.soopUrl ? (
+                            <a
+                              href={video.soopUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+                            >
+                              Open on SOOP
                             </a>
                           ) : video.kind === "upload" && video.fileUrl ? (
                             <a
