@@ -2269,18 +2269,7 @@ function StageRankingTable({
         <table className="min-w-full text-sm">
           <thead className="bg-blue-600 text-white">
             <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
-              <th className="px-4 py-2 text-center">
-                <span className="block text-blue-100">
-                  {artistic ? "General %" : "General AVG"}
-                </span>
-                <span className="text-sm font-semibold text-white">
-                  {stageGeneralAverage !== null
-                    ? artistic
-                      ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
-                      : formatTruncatedAverage(stageGeneralAverage)
-                    : "-"}
-                </span>
-              </th>
+              <th className="px-4 py-2" />
               <th className="px-4 py-2" />
               {showProgressColumn && <th className="px-4 py-2" />}
               {showGroupColumn && <th className="px-4 py-2" />}
@@ -2303,6 +2292,20 @@ function StageRankingTable({
               {showStageHighRun2Column && <th className="px-4 py-2" />}
               {showBestAverageColumn && <th className="px-4 py-2" />}
               {artistic && <th className="px-4 py-2" />}
+              <th className="px-4 py-2 text-right normal-case">
+                <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
+                  <span className="font-medium text-blue-100">
+                    {artistic ? "General %" : "General AVG"}
+                  </span>
+                  <span className="font-semibold text-white">
+                    {stageGeneralAverage !== null
+                      ? artistic
+                        ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
+                        : formatTruncatedAverage(stageGeneralAverage)
+                      : "-"}
+                  </span>
+                </span>
+              </th>
             </tr>
             <tr>
               <th className="px-4 py-3 text-left font-semibold">#</th>
