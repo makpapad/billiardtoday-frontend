@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DEFAULT_TABLES = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -41,6 +41,8 @@ function SoopLiveTableContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const multiviewRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const requestedSrc = searchParams.get("src")?.trim() || "";
   const table = normalizeTable(searchParams.get("table") || DEFAULT_TABLE);
   const requestedView = searchParams.get("view")?.toLowerCase() || "";
@@ -106,6 +108,26 @@ function SoopLiveTableContent() {
     requestedSrc && isAllowedEmbedUrl(requestedSrc)
       ? requestedSrc
       : soopEmbedUrlForTable(table);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === multiviewRef.current);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const handleFullscreenToggle = async () => {
+    const element = multiviewRef.current;
+    if (!element) return;
+    if (document.fullscreenElement === element) {
+      await document.exitFullscreen();
+      return;
+    }
+    await element.requestFullscreen();
+  };
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -189,31 +211,55 @@ function SoopLiveTableContent() {
                 </details>
               </div>
             )}
+            {isMultiview ? (
+              <button
+                type="button"
+                onClick={handleFullscreenToggle}
+                className="h-9 rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300"
+                aria-pressed={isFullscreen}
+              >
+                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              </button>
+            ) : null}
           </div>
         </div>
 
         <section className="flex flex-1 items-center">
           {isMultiview ? (
-            <div className="grid w-full gap-3 lg:grid-cols-2">
-              {selectedTables.map((tableOption) => (
-                <div
-                  key={tableOption}
-                  className="overflow-hidden border border-white/10 bg-black"
-                >
-                  <div className="border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold">
-                    Table {tableOption}
+            <div
+              ref={multiviewRef}
+              className="relative w-full bg-black p-0 fullscreen:flex fullscreen:min-h-screen fullscreen:items-center fullscreen:p-4"
+            >
+              <div className="grid w-full gap-3 lg:grid-cols-2">
+                {selectedTables.map((tableOption) => (
+                  <div
+                    key={tableOption}
+                    className="overflow-hidden border border-white/10 bg-black"
+                  >
+                    <div className="border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold">
+                      Table {tableOption}
+                    </div>
+                    <div className="aspect-video w-full">
+                      <iframe
+                        src={soopEmbedUrlForTable(tableOption)}
+                        title={`SOOP live video table ${tableOption}`}
+                        className="h-full w-full"
+                        allowFullScreen
+                        allow="autoplay; fullscreen; picture-in-picture"
+                      />
+                    </div>
                   </div>
-                  <div className="aspect-video w-full">
-                    <iframe
-                      src={soopEmbedUrlForTable(tableOption)}
-                      title={`SOOP live video table ${tableOption}`}
-                      className="h-full w-full"
-                      allowFullScreen
-                      allow="autoplay; fullscreen; picture-in-picture"
-                    />
-                  </div>
+                ))}
+              </div>
+              {selectedTables.length >= 4 ? (
+                <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 p-3 shadow-[0_0_36px_rgba(0,0,0,0.8)] lg:flex">
+                  <img
+                    src="/logo-billiardtoday.png"
+                    alt=""
+                    className="max-h-full max-w-full object-contain"
+                  />
                 </div>
-              ))}
+              ) : null}
             </div>
           ) : (
             <div className="w-full overflow-hidden bg-black">
