@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DEFAULT_TABLES = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const DEFAULT_TABLE = "1";
-const MAX_MULTIVIEW_TABLES = 3;
+const MAX_MULTIVIEW_TABLES = 4;
 
 const normalizeTable = (value: string | null | undefined) =>
   String(value || "")
@@ -37,6 +37,9 @@ const parseSelectedTables = (value: string | null | undefined) => {
     .filter((table) => DEFAULT_TABLES.includes(table));
   return Array.from(new Set(selected)).slice(0, MAX_MULTIVIEW_TABLES);
 };
+
+const formatSelectedTablesLabel = (tables: string[]) =>
+  `${tables.length === 1 ? "Table" : "Tables"} ${tables.join(", ")}`;
 
 function SoopLiveTableContent() {
   const router = useRouter();
@@ -181,7 +184,7 @@ function SoopLiveTableContent() {
               <div className="relative">
                 <details className="group">
                   <summary className="flex h-9 cursor-pointer list-none items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white outline-none transition hover:bg-neutral-800 focus:border-cyan-300">
-                    Tables {selectedTables.join(", ")}
+                    {formatSelectedTablesLabel(selectedTables)}
                   </summary>
                   <div className="absolute right-0 z-20 mt-2 w-48 rounded border border-white/10 bg-neutral-950 p-2 shadow-2xl">
                     {DEFAULT_TABLES.map((tableOption) => {
@@ -256,7 +259,7 @@ function SoopLiveTableContent() {
                 ))}
               </div>
               {selectedTables.length >= MAX_MULTIVIEW_TABLES ? (
-                <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 p-3 shadow-[0_0_36px_rgba(0,0,0,0.8)] fullscreen:flex">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 p-3 shadow-[0_0_36px_rgba(0,0,0,0.8)] fullscreen:flex lg:flex">
                   <img
                     src="/logo-billiardtoday.png"
                     alt=""
