@@ -1,10 +1,10 @@
 "use client";
 
-import { Calculator, Loader2, Search, X } from "lucide-react";
+import { Calculator, Loader2, Search, ShieldCheck, Target, TrendingUp, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CountryFlag } from "@/components/public/PresentationBlocks";
 
-type HandicapMode = "starting-points" | "race-to" | "avg-ratio";
+type PredictionMode = "starting-points" | "avg-ratio";
 
 type PlayerOption = {
   id: number;
@@ -16,21 +16,29 @@ type PlayerOption = {
   clubName?: string | null;
 };
 
-type RecommendationPayload = {
+type FormWindow = {
+  label: "3M" | "6M" | "12M";
+  months: number;
+  avg: number;
+  matches: number;
+  wins: number;
+  winPercentage: number;
+  highestRun: number;
+  confidence: "none" | "low" | "medium" | "high";
+};
+
+type PredictionPayload = {
   targetPoints: number;
   gameType: string;
-  mode: HandicapMode;
+  mode: PredictionMode;
   recommendation: {
     available: boolean;
     label: string | null;
     confidence: "none" | "low" | "medium" | "high";
     reason: string;
-    reasonEl: string;
     handicapPoints?: number;
     weakerPlayerDocumentId?: string | null;
     calibration?: {
-      source: "baseline-calibration-v1" | "match-history";
-      targetPoints: number;
       baseHandicap: number;
       adjustment: number;
       finalHandicap: number;
@@ -48,33 +56,13 @@ type RecommendationPayload = {
     recentWindow: string | null;
     rollingForm: {
       source: "participations-history" | "career-yearly";
-      selected: {
-        label: "3M" | "6M" | "12M";
-        months: number;
-        avg: number;
-        matches: number;
-        wins: number;
-        winPercentage: number;
-        highestRun: number;
-        confidence: "none" | "low" | "medium" | "high";
-      } | null;
-      windows: Array<{
-        label: "3M" | "6M" | "12M";
-        months: number;
-        avg: number;
-        matches: number;
-        wins: number;
-        winPercentage: number;
-        highestRun: number;
-        confidence: "none" | "low" | "medium" | "high";
-      }>;
+      selected: FormWindow | null;
+      windows: FormWindow[];
     } | null;
     totalMatches: number;
     winPercentage: number;
     highestRun: number;
     bestAverage: number;
-    internalHandy: number;
-    calibrationBand: string;
     statsScope: "game-type" | "overall-fallback";
     manualAvg: number | null;
   }>;
@@ -83,78 +71,26 @@ type RecommendationPayload = {
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
-const modeLabels: Record<HandicapMode, string> = {
-  "starting-points": "Υπολογισμός με πόντους",
-  "race-to": "Korean race-to",
-  "avg-ratio": "Αναλογία AVG",
+const modeLabels: Record<PredictionMode, string> = {
+  "starting-points": "Starting points",
+  "avg-ratio": "AVG ratio targets",
 };
 
 const confidenceLabel: Record<string, string> = {
-  none: "Χωρίς αξιοπιστία",
-  low: "Χαμηλή αξιοπιστία",
-  medium: "Μέτρια αξιοπιστία",
-  high: "Υψηλή αξιοπιστία",
+  none: "No confidence",
+  low: "Low confidence",
+  medium: "Medium confidence",
+  high: "High confidence",
 };
 
 const formatAvg = (value: unknown) => {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed.toFixed(3) : "-";
+  return Number.isFinite(parsed) && parsed > 0 ? parsed.toFixed(3) : "-";
 };
 
 const formatPct = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? `${parsed.toFixed(1)}%` : "-";
-};
-
-const avgPair = (
-  playerA: RecommendationPayload["players"][number] | null,
-  playerB: RecommendationPayload["players"][number] | null,
-  selector: (player: RecommendationPayload["players"][number]) => number,
-  formatter: (value: number) => string,
-) => {
-  if (!playerA || !playerB) return "-";
-  return `${formatter(selector(playerA))} / ${formatter(selector(playerB))}`;
-};
-
-const calibrationText = (label: string, reason: string) => {
-  if (label === "Low-band compression") {
-    return {
-      label: "Συμπίεση χαμηλής κατηγορίας",
-      reason:
-        "Μικρή μείωση γιατί κοντινά χαμηλά AVG δεν πρέπει να δημιουργούν υπερβολικούς πόντους εκκίνησης.",
-    };
-  }
-
-  if (label === "Elite gap") {
-    return {
-      label: "Μεγάλη διαφορά επιπέδου",
-      reason: "Πρόσθετη διόρθωση για πολύ δυνατό παίκτη απέναντι σε παίκτη χαμηλού AVG.",
-    };
-  }
-
-  if (label === "Strong-player pressure") {
-    return {
-      label: "Πίεση δυνατού παίκτη",
-      reason:
-        "Μικρή αύξηση γιατί τα μεγάλα σερί γίνονται πιο καθοριστικά όσο ανεβαίνει το επίπεδο του δυνατότερου παίκτη.",
-    };
-  }
-
-  if (label === "Longer match") {
-    return {
-      label: "Μεγαλύτερος στόχος",
-      reason: "Οι μεγαλύτεροι στόχοι ευνοούν λίγο περισσότερο τον δυνατότερο παίκτη.",
-    };
-  }
-
-  if (label === "AVG ratio") {
-    return {
-      label: "Αναλογία AVG",
-      reason: "Χρησιμοποιεί την αναλογία των AVG για να εκτιμήσει τον στόχο του πιο αδύναμου παίκτη.",
-    };
-  }
-
-  return { label, reason };
 };
 
 const readOptionalNumber = (value: string) => {
@@ -164,33 +100,39 @@ const readOptionalNumber = (value: string) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
-const scoreLabel = (score: number) => {
-  if (score >= 80) return "Υψηλό";
-  if (score >= 55) return "Μέτριο";
-  if (score > 0) return "Χαμηλό";
-  return "Άγνωστο";
-};
-
-const recentWindowLabel = (player: RecommendationPayload["players"][number] | null) => {
-  if (!player?.recentWindow) return "-";
-  if (player.recentWindow === "3M") return "3 μήνες";
-  if (player.recentWindow === "6M") return "6 μήνες";
-  if (player.recentWindow === "12M") return "12 μήνες";
-  return "Ετήσιο fallback";
-};
-
 const formWindowValue = (
-  player: RecommendationPayload["players"][number] | null,
+  player: PredictionPayload["players"][number] | null,
   label: "3M" | "6M" | "12M",
 ) => {
   const window = player?.rollingForm?.windows.find((item) => item.label === label);
-  if (!window || window.matches <= 0) return "-";
-  return `${formatAvg(window.avg)} (${window.matches})`;
+  if (!window || window.matches <= 0) return "No dated matches";
+  return `${formatAvg(window.avg)} / ${window.matches} matches`;
+};
+
+const selectedWindowLabel = (player: PredictionPayload["players"][number] | null) => {
+  if (!player?.recentWindow) return "Career fallback";
+  if (player.recentWindow === "3M") return "Last 3 months";
+  if (player.recentWindow === "6M") return "Last 6 months";
+  if (player.recentWindow === "12M") return "Last 12 months";
+  return "Yearly fallback";
+};
+
+const scoreLabel = (score: number) => {
+  if (score >= 80) return "High";
+  if (score >= 55) return "Medium";
+  if (score > 0) return "Low";
+  return "Unknown";
+};
+
+const dataConfidence = (matches: number) => {
+  if (matches < 5) return "Not enough";
+  if (matches < 15) return "Low";
+  if (matches < 30) return "Medium";
+  return "High";
 };
 
 function PlayerSearchBox({
   label,
-  value,
   onSelect,
 }: {
   label: string;
@@ -252,11 +194,9 @@ function PlayerSearchBox({
 
   return (
     <div className="relative">
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-        {label}
-      </label>
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">{label}</label>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
         <input
           value={query}
           onChange={(event) => {
@@ -266,141 +206,37 @@ function PlayerSearchBox({
           onFocus={() => {
             if (results.length > 0) setOpen(true);
           }}
-          placeholder="Αναζήτηση παίκτη..."
-          className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+          placeholder="Search player..."
+          className="h-12 w-full border border-zinc-400 bg-[#f4f0e6] pl-10 pr-10 text-sm font-semibold text-zinc-950 outline-none"
         />
         {busy ? (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-500" />
         ) : query ? (
-          <button
-            type="button"
-            onClick={clear}
-            className="absolute right-2 top-1/2 rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Clear player"
-          >
+          <button type="button" onClick={clear} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500" aria-label="Clear player">
             <X className="h-4 w-4" />
           </button>
         ) : null}
       </div>
 
-      <div
-        className={
-          open
-            ? "absolute left-0 right-0 top-[76px] z-20 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.14)]"
-            : "hidden"
-        }
-      >
+      <div className={open ? "absolute left-0 right-0 top-[76px] z-20 max-h-72 overflow-auto border border-zinc-300 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.18)]" : "hidden"}>
         {results.length > 0 ? (
           results.map((player) => (
-            <button
-              key={player.documentId}
-              type="button"
-              onClick={() => selectPlayer(player)}
-              className="flex w-full items-start gap-3 border-b border-slate-100 px-3 py-3 text-left transition hover:bg-emerald-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
+            <button key={player.documentId} type="button" onClick={() => selectPlayer(player)} className="flex w-full items-start gap-3 border-b border-zinc-200 px-3 py-3 text-left hover:bg-[#f4f0e6]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center bg-zinc-950 text-sm font-semibold text-white">
                 {(player.fullNameEn || player.fullName).charAt(0).toUpperCase()}
               </div>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-slate-950">
-                  {player.fullNameEn || player.fullName}
-                </span>
-                <span className="mt-1 flex items-center gap-2 truncate text-xs text-slate-500">
+                <span className="block truncate text-sm font-semibold text-zinc-950">{player.fullNameEn || player.fullName}</span>
+                <span className="mt-1 flex items-center gap-2 truncate text-xs text-zinc-500">
                   <CountryFlag country={player.country ?? null} />
-                  {player.country || player.city || player.clubName || "Προφίλ παίκτη"}
+                  {player.country || player.city || player.clubName || "Player profile"}
                 </span>
               </span>
             </button>
           ))
         ) : (
-          <div className="px-3 py-4 text-sm text-slate-500">Δεν βρέθηκαν παίκτες.</div>
+          <div className="px-3 py-4 text-sm text-zinc-500">No players found.</div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function PlayerLabCard({
-  title,
-  player,
-  selected,
-  officialAvg,
-  friendlyAvg,
-  onOfficialAvg,
-  onFriendlyAvg,
-}: {
-  title: string;
-  player: RecommendationPayload["players"][number] | null;
-  selected: PlayerOption | null;
-  officialAvg: string;
-  friendlyAvg: string;
-  onOfficialAvg: (value: string) => void;
-  onFriendlyAvg: (value: string) => void;
-}) {
-  const manualFriendlyAvg = readOptionalNumber(friendlyAvg);
-  const officialValue = player?.overallAvg ?? readOptionalNumber(officialAvg);
-  const friendlyValue = manualFriendlyAvg;
-  const pressureFactor =
-    officialValue && friendlyValue ? Math.round((officialValue / friendlyValue) * 100) : null;
-  const formDelta =
-    player && player.recentAvg > 0 && player.overallAvg > 0
-      ? Math.round(((player.recentAvg - player.overallAvg) / player.overallAvg) * 100)
-      : null;
-  const toughness = player ? Math.min(100, Math.max(0, player.winPercentage)) : 0;
-  const runDanger = player
-    ? Math.min(100, Math.round((Math.min(player.highestRun, 20) / 20) * 60 + (Math.min(player.bestAverage, 2.5) / 2.5) * 40))
-    : 0;
-
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</div>
-      <div className="mt-3 min-h-[42px] text-base font-semibold text-slate-950">
-        {player?.name || selected?.fullNameEn || selected?.fullName || "Δεν έχει επιλεγεί παίκτης"}
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-500">Επίσημο AVG override</label>
-          <input
-            value={officialAvg}
-            onChange={(event) => onOfficialAvg(event.target.value)}
-            inputMode="decimal"
-            placeholder="Επίσημο AVG"
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-500">AVG φιλικών</label>
-          <input
-            value={friendlyAvg}
-            onChange={(event) => onFriendlyAvg(event.target.value)}
-            inputMode="decimal"
-            placeholder="AVG φιλικών"
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500 sm:grid-cols-4">
-        <Metric label="Επίσημο" value={formatAvg(officialValue)} />
-        <Metric label="Πρόσφατο" value={`${formatAvg(player?.recentAvg)} ${player?.recentMatches ? `(${player.recentMatches})` : ""}`} />
-        <Metric label="Φιλικά" value={formatAvg(friendlyValue)} />
-        <Metric label="Πίεση" value={pressureFactor ? `${pressureFactor}%` : "-"} />
-        <Metric label="3 μήνες" value={formWindowValue(player, "3M")} />
-        <Metric label="6 μήνες" value={formWindowValue(player, "6M")} />
-        <Metric label="12 μήνες" value={formWindowValue(player, "12M")} />
-        <Metric label="Παράθυρο" value={recentWindowLabel(player)} />
-        <Metric label="Αγώνες" value={String(player?.totalMatches ?? "-")} />
-        <Metric label="Νίκες" value={formatPct(player?.winPercentage)} />
-        <Metric label="H.R." value={String(player?.highestRun ?? "-")} />
-        <Metric label="Καλύτερο AVG" value={formatAvg(player?.bestAverage)} />
-      </div>
-
-      <div className="mt-4 grid gap-2 text-xs">
-        <Signal label="Φόρμα" value={formDelta === null ? "Άγνωστο" : `${formDelta >= 0 ? "+" : ""}${formDelta}%`} />
-        <Signal label="Σκληρότητα" value={scoreLabel(toughness)} />
-        <Signal label="Κίνδυνος σερί" value={scoreLabel(runDanger)} />
-        <Signal label="Αξιοπιστία δεδομένων" value={player ? confidenceLabelForMatches(player.totalMatches) : "Άγνωστο"} />
       </div>
     </div>
   );
@@ -408,27 +244,84 @@ function PlayerLabCard({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 px-3 py-2">
-      <div>{label}</div>
-      <strong className="mt-1 block text-sm text-slate-950">{value}</strong>
+    <div className="border border-zinc-300 bg-white/20 px-3 py-2">
+      <div className="text-xs text-zinc-600">{label}</div>
+      <strong className="mt-1 block text-sm text-zinc-950">{value}</strong>
     </div>
   );
 }
 
 function Signal({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-slate-600">
+    <div className="flex items-center justify-between gap-3 border border-zinc-300 bg-[#ebe5d8] px-3 py-2 text-xs text-zinc-700">
       <span>{label}</span>
-      <strong className="text-slate-950">{value}</strong>
+      <strong className="text-right text-zinc-950">{value}</strong>
     </div>
   );
 }
 
-function confidenceLabelForMatches(matches: number) {
-  if (matches < 5) return "Χωρίς αξιοπιστία";
-  if (matches < 15) return "Χαμηλή";
-  if (matches < 30) return "Μέτρια";
-  return "Υψηλή";
+function PlayerCard({
+  title,
+  player,
+  selected,
+  manualAvg,
+  onManualAvg,
+}: {
+  title: string;
+  player: PredictionPayload["players"][number] | null;
+  selected: PlayerOption | null;
+  manualAvg: string;
+  onManualAvg: (value: string) => void;
+}) {
+  const formDelta =
+    player && player.recentAvg > 0 && player.overallAvg > 0
+      ? Math.round(((player.recentAvg - player.overallAvg) / player.overallAvg) * 100)
+      : null;
+  const runDanger = player
+    ? Math.min(100, Math.round((Math.min(player.highestRun, 20) / 20) * 60 + (Math.min(player.bestAverage, 2.5) / 2.5) * 40))
+    : 0;
+
+  return (
+    <article className="border border-zinc-300 bg-white/35 p-5">
+      <div className="text-xs font-semibold uppercase tracking-[0.22em] text-red-700">{title}</div>
+      <h3 className="mt-3 min-h-8 text-2xl font-semibold text-zinc-950">
+        {player?.name || selected?.fullNameEn || selected?.fullName || "No player selected"}
+      </h3>
+
+      <label className="mt-5 block">
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600">Manual AVG override</span>
+        <input
+          value={manualAvg}
+          onChange={(event) => onManualAvg(event.target.value)}
+          inputMode="decimal"
+          placeholder="Optional, e.g. 0.850"
+          className="mt-2 h-11 w-full border border-zinc-400 bg-[#f4f0e6] px-3 text-sm font-semibold text-zinc-950 outline-none"
+        />
+      </label>
+
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Metric label="Overall AVG" value={formatAvg(player?.overallAvg ?? readOptionalNumber(manualAvg))} />
+        <Metric label="Selected form" value={`${formatAvg(player?.recentAvg)} (${selectedWindowLabel(player)})`} />
+        <Metric label="Matches" value={String(player?.totalMatches ?? "-")} />
+        <Metric label="Win rate" value={formatPct(player?.winPercentage)} />
+        <Metric label="3 months" value={formWindowValue(player, "3M")} />
+        <Metric label="6 months" value={formWindowValue(player, "6M")} />
+        <Metric label="12 months" value={formWindowValue(player, "12M")} />
+        <Metric label="Data confidence" value={player ? dataConfidence(player.totalMatches) : "-"} />
+        <Metric label="High run" value={String(player?.highestRun ?? "-")} />
+        <Metric label="Best AVG" value={formatAvg(player?.bestAverage)} />
+        <Metric label="Momentum" value={formDelta === null ? "-" : `${formDelta >= 0 ? "+" : ""}${formDelta}%`} />
+        <Metric label="Run threat" value={scoreLabel(runDanger)} />
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <Signal label="Form" value={formDelta === null ? "Unknown" : `${formDelta >= 0 ? "+" : ""}${formDelta}%`} />
+        <Signal label="Toughness" value={scoreLabel(Math.min(100, Math.max(0, player?.winPercentage ?? 0)))} />
+        <Signal label="Run danger" value={scoreLabel(runDanger)} />
+        <Signal label="Data confidence" value={player ? dataConfidence(player.totalMatches) : "Unknown"} />
+      </div>
+    </article>
+  );
 }
 
 export function HandicapToolContent() {
@@ -436,11 +329,9 @@ export function HandicapToolContent() {
   const [playerB, setPlayerB] = useState<PlayerOption | null>(null);
   const [playerAAvg, setPlayerAAvg] = useState("");
   const [playerBAvg, setPlayerBAvg] = useState("");
-  const [playerAFriendlyAvg, setPlayerAFriendlyAvg] = useState("");
-  const [playerBFriendlyAvg, setPlayerBFriendlyAvg] = useState("");
   const [targetPoints, setTargetPoints] = useState(40);
-  const [mode, setMode] = useState<HandicapMode>("starting-points");
-  const [result, setResult] = useState<RecommendationPayload | null>(null);
+  const [mode, setMode] = useState<PredictionMode>("starting-points");
+  const [result, setResult] = useState<PredictionPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -469,11 +360,11 @@ export function HandicapToolContent() {
         }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error || "Failed to calculate handicap");
+      if (!res.ok) throw new Error(payload?.error || "Prediction failed");
       setResult(payload.data ?? null);
     } catch (err) {
       setResult(null);
-      setError("Δεν ήταν δυνατός ο υπολογισμός handicap για αυτούς τους παίκτες.");
+      setError(err instanceof Error ? err.message : "Prediction could not be calculated for these players.");
     } finally {
       setBusy(false);
     }
@@ -484,208 +375,147 @@ export function HandicapToolContent() {
       setResult(null);
       return;
     }
-
     const timer = window.setTimeout(() => {
       void calculate();
     }, 250);
-
     return () => window.clearTimeout(timer);
   }, [calculate, canCalculate]);
 
   const resultPlayerA = result?.players.find((player) => player.documentId === playerA?.documentId) ?? null;
   const resultPlayerB = result?.players.find((player) => player.documentId === playerB?.documentId) ?? null;
+  const raceA = result?.recommendation.raceTo?.playerA;
+  const raceB = result?.recommendation.raceTo?.playerB;
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-5 px-4 py-6 sm:px-6">
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-                Εσωτερικό handicap lab
-              </div>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                Έρευνα Handicap 3-Cushion
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Ιδιωτικό εργαλείο σύγκρισης για επίσημα στατιστικά, φιλικά, φόρμα, πίεση και πειραματικά handicap modes.
-              </p>
-            </div>
+    <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
+      <section className="border-b border-zinc-300 bg-black text-white">
+        <div className="mx-auto max-w-7xl px-5 py-12">
+          <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">Stats Lab</div>
+          <h1 className="mt-4 text-5xl font-black uppercase leading-none tracking-normal">Head 2 Head Predictions</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300">
+            Compare two 3-cushion players and generate a match setup from official history, recent form and average ratios.
+          </p>
+        </div>
+      </section>
 
-            <div className="grid w-full grid-cols-2 gap-3 md:grid-cols-[110px_220px_140px] xl:w-auto">
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Στόχος</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={targetPoints}
-                  onChange={(event) => setTargetPoints(Math.max(1, Number(event.target.value) || 1))}
-                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Τρόπος</label>
-                <select
-                  value={mode}
-                  onChange={(event) => {
-                    const nextMode = event.target.value;
-                    setMode(
-                      nextMode === "race-to" || nextMode === "avg-ratio"
-                        ? nextMode
-                        : "starting-points",
-                    );
-                  }}
-                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                >
-                  <option value="starting-points">Υπολογισμός με πόντους</option>
-                  <option value="race-to">Korean race-to</option>
-                  <option value="avg-ratio">Αναλογία AVG</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Πλαίσιο</label>
-                <div className="flex h-12 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
-                  Μόνο για έρευνα
-                </div>
-              </div>
-            </div>
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8">
+        <section className="grid items-end gap-3 border border-zinc-400/70 bg-white/30 p-4 shadow-[0_16px_50px_rgba(39,39,42,0.08)] lg:grid-cols-[1fr_1fr_110px_190px_auto]">
+          <PlayerSearchBox label="Player A" value={playerA} onSelect={setPlayerA} />
+          <PlayerSearchBox label="Player B" value={playerB} onSelect={setPlayerB} />
+          <label className="block">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">Race to</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={targetPoints}
+              onChange={(event) => setTargetPoints(Math.max(1, Number(event.target.value) || 1))}
+              className="h-12 w-full border border-zinc-400 bg-[#f4f0e6] px-3 text-sm font-semibold outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">Prediction mode</span>
+            <select
+              value={mode}
+              onChange={(event) => setMode(event.target.value === "avg-ratio" ? "avg-ratio" : "starting-points")}
+              className="h-12 w-full border border-zinc-400 bg-[#f4f0e6] px-3 text-sm font-semibold outline-none"
+            >
+              <option value="starting-points">Starting points</option>
+              <option value="avg-ratio">AVG ratio targets</option>
+            </select>
+          </label>
+          <div>
+            <button
+              type="button"
+              disabled={!canCalculate || busy}
+              onClick={calculate}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 bg-zinc-950 px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
+              Predict
+            </button>
           </div>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-            <div className="grid gap-4 md:grid-cols-2">
-              <PlayerSearchBox label="Παίκτης A" value={playerA} onSelect={setPlayerA} />
-              <PlayerSearchBox label="Παίκτης B" value={playerB} onSelect={setPlayerB} />
-            </div>
+        {playerA && playerB && playerA.documentId === playerB.documentId ? (
+          <div className="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">Select two different players.</div>
+        ) : null}
+        {error ? <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-            {playerA && playerB && playerA.documentId === playerB.documentId ? (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Επίλεξε δύο διαφορετικούς παίκτες.
-              </div>
-            ) : null}
-
-            {error ? (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
-
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                disabled={!canCalculate || busy}
-                onClick={calculate}
-                className="inline-flex h-12 items-center gap-2 rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
-                Υπολογισμός lab
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+        <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="border border-zinc-300 bg-white/35 p-5">
             {!result ? (
-              <div className="flex min-h-[245px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm leading-6 text-slate-500">
-                Επίλεξε δύο παίκτες για σύγκριση επίσημων στοιχείων, φιλικών, φόρμας και handicap modes.
+              <div className="grid min-h-[260px] place-items-center border border-dashed border-zinc-300 bg-white/20 p-6 text-center text-sm leading-6 text-zinc-600">
+                Select two players to generate a head-to-head prediction.
               </div>
             ) : (
               <div>
-                <div className="mb-4 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-red-700 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
                     {confidenceLabel[result.recommendation.confidence] ?? result.recommendation.confidence}
                   </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    Στόχος {result.targetPoints}
-                  </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {modeLabels[result.mode]}
-                  </span>
+                  <span className="border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">Race to {result.targetPoints}</span>
+                  <span className="border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700">{modeLabels[result.mode]}</span>
                 </div>
 
-                <div className="text-3xl font-semibold tracking-tight text-slate-950">
-                  {result.recommendation.label || "Δεν υπάρχει πρόταση"}
+                <h2 className="mt-6 text-4xl font-black uppercase tracking-normal">{result.recommendation.label || "No prediction available"}</h2>
+                <p className="mt-4 text-sm leading-6 text-zinc-700">{result.recommendation.reason}</p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <Metric label="Player A target" value={raceA ? String(raceA) : mode === "starting-points" ? String(result.targetPoints) : "-"} />
+                  <Metric label="Player B target" value={raceB ? String(raceB) : mode === "starting-points" ? String(result.targetPoints) : "-"} />
+                  <Metric label="Starting edge" value={result.recommendation.handicapPoints ? `+${result.recommendation.handicapPoints}` : "Even"} />
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-800">{result.recommendation.reason}</p>
 
                 {result.recommendation.calibration ? (
-                  <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <div className="grid grid-cols-3 gap-3 text-xs text-slate-500">
-                      <Metric label="Βάση" value={String(result.recommendation.calibration.baseHandicap)} />
-                      <Metric
-                        label="Calibration"
-                        value={`${result.recommendation.calibration.adjustment >= 0 ? "+" : ""}${result.recommendation.calibration.adjustment}`}
-                      />
-                      <Metric label="Τελικό" value={String(result.recommendation.calibration.finalHandicap)} />
+                  <div className="mt-5 border border-zinc-300 bg-[#ebe5d8] p-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      <Metric label="Base edge" value={String(result.recommendation.calibration.baseHandicap)} />
+                      <Metric label="Adjustment" value={`${result.recommendation.calibration.adjustment >= 0 ? "+" : ""}${result.recommendation.calibration.adjustment}`} />
+                      <Metric label="Final edge" value={String(result.recommendation.calibration.finalHandicap)} />
                     </div>
                     <div className="mt-4 grid gap-2">
-                      {result.recommendation.calibration.adjustments.length > 0 ? (
-                        result.recommendation.calibration.adjustments.map((adjustment) => {
-                          const text = calibrationText(adjustment.label, adjustment.reason);
-                          return (
-                            <div
-                              key={`${adjustment.label}-${adjustment.points}`}
-                              className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2 text-xs text-slate-600"
-                            >
-                              <div>
-                                <div className="font-semibold text-slate-950">{text.label}</div>
-                                <div className="mt-1">{text.reason}</div>
-                              </div>
-                              <strong className="shrink-0 text-sm text-slate-950">
-                                {adjustment.points >= 0 ? "+" : ""}
-                                {adjustment.points}
-                              </strong>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">
-                          Δεν υπάρχει calibration adjustment για αυτή τη σύγκριση.
+                      {result.recommendation.calibration.adjustments.map((adjustment) => (
+                        <div key={`${adjustment.label}-${adjustment.points}`} className="flex items-start justify-between gap-3 border border-zinc-300 bg-white/30 px-3 py-2 text-xs text-zinc-700">
+                          <div>
+                            <div className="font-semibold text-zinc-950">{adjustment.label}</div>
+                            <div className="mt-1">{adjustment.reason}</div>
+                          </div>
+                          <strong className="shrink-0 text-sm text-zinc-950">{adjustment.points >= 0 ? "+" : ""}{adjustment.points}</strong>
                         </div>
-                      )}
+                      ))}
                     </div>
                   </div>
                 ) : null}
               </div>
             )}
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { icon: Target, label: "Match Setup", value: result?.recommendation.label || "Waiting for players" },
+              { icon: TrendingUp, label: "Form Window", value: `${selectedWindowLabel(resultPlayerA)} / ${selectedWindowLabel(resultPlayerB)}` },
+              { icon: ShieldCheck, label: "Data Quality", value: result ? confidenceLabel[result.recommendation.confidence] : "No sample" },
+            ].map((item) => (
+              <div key={item.label} className="border border-zinc-300 bg-[#ebe5d8] p-5">
+                <item.icon className="h-6 w-6 text-red-700" />
+                <div className="mt-4 text-sm text-zinc-600">{item.label}</div>
+                <div className="mt-2 text-xl font-semibold text-zinc-950">{item.value}</div>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-5 lg:grid-cols-2">
-          <PlayerLabCard
-            title="Προφίλ Παίκτη A"
-            selected={playerA}
-            player={resultPlayerA}
-            officialAvg={playerAAvg}
-            friendlyAvg={playerAFriendlyAvg}
-            onOfficialAvg={setPlayerAAvg}
-            onFriendlyAvg={setPlayerAFriendlyAvg}
-          />
-          <PlayerLabCard
-            title="Προφίλ Παίκτη B"
-            selected={playerB}
-            player={resultPlayerB}
-            officialAvg={playerBAvg}
-            friendlyAvg={playerBFriendlyAvg}
-            onOfficialAvg={setPlayerBAvg}
-            onFriendlyAvg={setPlayerBFriendlyAvg}
-          />
+          <PlayerCard title="Player A profile" selected={playerA} player={resultPlayerA} manualAvg={playerAAvg} onManualAvg={setPlayerAAvg} />
+          <PlayerCard title="Player B profile" selected={playerB} player={resultPlayerB} manualAvg={playerBAvg} onManualAvg={setPlayerBAvg} />
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-          <div className="grid gap-4 md:grid-cols-4">
-            <Metric
-              label="Δυναμική στα επίσημα"
-              value={`AVG ${avgPair(resultPlayerA, resultPlayerB, (player) => player.overallAvg, formatAvg)} | Win ${avgPair(resultPlayerA, resultPlayerB, (player) => player.winPercentage, formatPct)}`}
-            />
-            <Metric
-              label="Δυναμική στα φιλικά"
-              value={`AVG ${formatAvg(readOptionalNumber(playerAFriendlyAvg))} / ${formatAvg(readOptionalNumber(playerBFriendlyAvg))}`}
-            />
-            <Metric label="Παράγοντας πίεσης" value="Επίσημο AVG / AVG φιλικών" />
-            <Metric label="Κατάσταση εκμάθησης" value="Δεν συλλέγονται ακόμα δείγματα" />
-          </div>
+        <section className="border border-zinc-300 bg-white/35 p-5">
+          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-red-700">How the form windows work</div>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-zinc-700">
+            The 3, 6 and 12 month values are calculated from the player's recorded matches when those matches have usable dates. The predictor uses the smallest recent period with enough data: first the last 3 months with at least 5 matches, otherwise 6 or 12 months, otherwise yearly or career numbers. If all three periods look identical, it usually means all dated matches we found are already inside the last 3 months. If they all show no data, the imported match history probably does not include usable match dates, so the prediction falls back to career statistics.
+          </p>
         </section>
       </div>
     </main>

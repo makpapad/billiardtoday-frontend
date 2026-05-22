@@ -6,6 +6,15 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
   { label: "Live screens", href: "/#screenshots" },
   { label: "For clubs", href: "/#benefits" },
   {
+    label: "Stats Lab",
+    href: "/stats",
+    children: [
+      { label: "Player Lab", href: "/stats/player-rankings" },
+      { label: "Tournament Comparison", href: "/stats/tournament-comparison" },
+      { label: "Head 2 Head Predictions", href: "/handicap" },
+    ],
+  },
+  {
     label: "More",
     href: "#",
     children: [
