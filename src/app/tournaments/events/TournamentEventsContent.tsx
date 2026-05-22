@@ -2403,7 +2403,7 @@ function StageRankingTable({
                   qualifierTone === "winner" &&
                     "bg-emerald-50 dark:bg-emerald-950/35",
                   qualifierTone === "runnerUp" &&
-                    "bg-[#EDC1BB] text-gray-900 dark:bg-[#EDC1BB]/75 dark:text-gray-950",
+                    "bg-[#FFE8E5] text-gray-900 dark:bg-[#FFE8E5]/80 dark:text-gray-950",
                   qualifierTone === null && "bg-white dark:bg-gray-900",
                 )}
               >
