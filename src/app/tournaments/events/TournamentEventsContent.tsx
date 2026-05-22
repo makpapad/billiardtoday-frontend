@@ -2156,9 +2156,18 @@ function StageRankingTable({
       ),
     [visibleResults],
   );
-  const stageHasCompletedRequiredMatches = useMemo(() => {
-    const matches = stageMatchGroups.flatMap((group) => group.matches);
-    return matches.length > 0 && matches.every(hasPlayedStageMatch);
+  const completedStageGroups = useMemo(() => {
+    const completed = new Set<number>();
+    stageMatchGroups.forEach((group) => {
+      if (
+        group.number !== null &&
+        group.matches.length > 0 &&
+        group.matches.every(hasPlayedStageMatch)
+      ) {
+        completed.add(group.number);
+      }
+    });
+    return completed;
   }, [stageMatchGroups]);
   const stageRankingHighlights = useMemo(
     () => ({
@@ -2256,25 +2265,22 @@ function StageRankingTable({
 
   return (
     <div className="flex flex-col gap-2">
-      {stageGeneralAverage !== null && (
-        <div className="flex justify-end">
-          <div className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900">
-            <span className="font-medium text-gray-500 dark:text-gray-400">
-              {artistic ? "General %" : "General AVG"}
-            </span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {artistic
-                ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
-                : formatTruncatedAverage(stageGeneralAverage)}
-            </span>
-          </div>
-        </div>
-      )}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
           <thead className="bg-blue-600 text-white">
             <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
-              <th className="px-4 py-2" />
+              <th className="px-4 py-2 text-center">
+                <span className="block text-blue-100">
+                  {artistic ? "General %" : "General AVG"}
+                </span>
+                <span className="text-sm font-semibold text-white">
+                  {stageGeneralAverage !== null
+                    ? artistic
+                      ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
+                      : formatTruncatedAverage(stageGeneralAverage)
+                    : "-"}
+                </span>
+              </th>
               <th className="px-4 py-2" />
               {showProgressColumn && <th className="px-4 py-2" />}
               {showGroupColumn && <th className="px-4 py-2" />}
@@ -2371,8 +2377,17 @@ function StageRankingTable({
               : eventRankIsProvisional
                 ? slottedDisplayRank ?? index + 1
                 : result.finalPosition ?? slottedDisplayRank ?? index + 1;
+            const resultGroupComplete =
+              result.groupNumber !== null
+                ? completedStageGroups.has(result.groupNumber)
+                : stageMatchGroups.length > 0 &&
+                  stageMatchGroups.every(
+                    (group) =>
+                      group.matches.length > 0 &&
+                      group.matches.every(hasPlayedStageMatch),
+                  );
             const qualifierTone =
-              stageHasCompletedRequiredMatches && result.qualified === true
+              resultGroupComplete && result.qualified === true
                 ? result.qualificationType === "best_runner_up" ||
                   result.qualificationType === "group_2nd" ||
                   result.qualificationType === "best_third_place"
