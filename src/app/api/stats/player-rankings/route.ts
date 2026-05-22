@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SERVER_API_URL } from "@/lib/api";
+import { normalizeGameTypeOrFallback } from "@/lib/gameTypes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,10 +22,53 @@ const readString = (value: unknown) => {
   return clean || null;
 };
 
-const gameTypeMatches = (candidate: string, requested: string) => {
+const gameTypeMatches = (candidate: unknown, requested: string) => {
   if (requested === "All") return true;
-  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
-  return normalize(candidate) === normalize(requested);
+  const normalizedCandidate = normalizeGameTypeOrFallback(candidate);
+  const normalizedRequested = normalizeGameTypeOrFallback(requested);
+  return Boolean(normalizedCandidate && normalizedRequested && normalizedCandidate === normalizedRequested);
+};
+
+const mergeStats = (items: any[]) => {
+  if (items.length === 0) return null;
+  if (items.length === 1) return items[0];
+
+  const totals = items.reduce(
+    (acc, item) => {
+      const matches = toNumber(item?.totalMatches);
+      const wins = toNumber(item?.totalWins);
+      const losses = toNumber(item?.totalLosses);
+      const draws = toNumber(item?.totalDraws) || Math.max(0, matches - wins - losses);
+
+      acc.totalMatches += matches;
+      acc.totalWins += wins;
+      acc.totalLosses += losses;
+      acc.totalDraws += draws;
+      acc.totalPoints += toNumber(item?.totalPoints);
+      acc.totalInnings += toNumber(item?.totalInnings);
+      acc.highestRun = Math.max(acc.highestRun, toNumber(item?.highestRun));
+      acc.bestAverage = Math.max(acc.bestAverage, toNumber(item?.bestAverage ?? item?.bestAverageFromWins));
+      acc.bestAverageFromWins = Math.max(acc.bestAverageFromWins, toNumber(item?.bestAverageFromWins ?? item?.bestAverage));
+      return acc;
+    },
+    {
+      totalMatches: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      totalDraws: 0,
+      totalPoints: 0,
+      totalInnings: 0,
+      highestRun: 0,
+      bestAverage: 0,
+      bestAverageFromWins: 0,
+    },
+  );
+
+  return {
+    ...totals,
+    avgPerInning: totals.totalInnings > 0 ? totals.totalPoints / totals.totalInnings : 0,
+    winPercentage: totals.totalMatches > 0 ? (totals.totalWins / totals.totalMatches) * 100 : 0,
+  };
 };
 
 const metricValue = (stats: any, metric: string) => {
@@ -46,13 +90,17 @@ const pickStats = (careerStats: any, year: string, gameType: string) => {
     const yearBucket = careerStats.byYear?.[year];
     if (!yearBucket) return null;
     if (gameType === "All") return yearBucket.overall ?? null;
-    const entry = Object.entries(yearBucket.byGameType || {}).find(([key]) => gameTypeMatches(key, gameType));
-    return entry?.[1] ?? null;
+    const matches = Object.entries(yearBucket.byGameType || {})
+      .filter(([key]) => gameTypeMatches(key, gameType))
+      .map(([, value]) => value);
+    return mergeStats(matches);
   }
 
   if (gameType !== "All") {
-    const entry = Object.entries(careerStats.byGameType || {}).find(([key]) => gameTypeMatches(key, gameType));
-    return entry?.[1] ?? null;
+    const matches = Object.entries(careerStats.byGameType || {})
+      .filter(([key]) => gameTypeMatches(key, gameType))
+      .map(([, value]) => value);
+    return mergeStats(matches);
   }
 
   return careerStats.overall ?? null;
@@ -79,7 +127,7 @@ export async function GET(req: Request) {
     let page = 1;
     const pageSize = 300;
 
-    while (page <= 8) {
+    while (page <= 50) {
       const params = new URLSearchParams();
       params.set("pagination[page]", String(page));
       params.set("pagination[pageSize]", String(pageSize));
