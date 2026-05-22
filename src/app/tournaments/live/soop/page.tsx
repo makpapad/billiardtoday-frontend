@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DEFAULT_TABLES = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const DEFAULT_TABLE = "1";
+const MAX_MULTIVIEW_TABLES = 3;
 
 const normalizeTable = (value: string | null | undefined) =>
   String(value || "")
@@ -34,7 +35,7 @@ const parseSelectedTables = (value: string | null | undefined) => {
     .split(",")
     .map(normalizeTable)
     .filter((table) => DEFAULT_TABLES.includes(table));
-  return Array.from(new Set(selected)).slice(0, 4);
+  return Array.from(new Set(selected)).slice(0, MAX_MULTIVIEW_TABLES);
 };
 
 function SoopLiveTableContent() {
@@ -52,7 +53,9 @@ function SoopLiveTableContent() {
     requestedView === "multiview";
   const selectedTables = useMemo(() => {
     const selected = parseSelectedTables(searchParams.get("tables"));
-    return selected.length > 0 ? selected : DEFAULT_TABLES.slice(0, 4);
+    return selected.length > 0
+      ? selected
+      : DEFAULT_TABLES.slice(0, MAX_MULTIVIEW_TABLES);
   }, [searchParams]);
 
   const availableTables = useMemo(() => {
@@ -92,7 +95,7 @@ function SoopLiveTableContent() {
   const handleSelectedTableToggle = (tableOption: string) => {
     const nextSelected = selectedTables.includes(tableOption)
       ? selectedTables.filter((selectedTable) => selectedTable !== tableOption)
-      : selectedTables.length < 4
+      : selectedTables.length < MAX_MULTIVIEW_TABLES
         ? [...selectedTables, tableOption]
         : selectedTables;
     if (nextSelected.length === 0) return;
@@ -183,7 +186,8 @@ function SoopLiveTableContent() {
                   <div className="absolute right-0 z-20 mt-2 w-48 rounded border border-white/10 bg-neutral-950 p-2 shadow-2xl">
                     {DEFAULT_TABLES.map((tableOption) => {
                       const checked = selectedTables.includes(tableOption);
-                      const disabled = !checked && selectedTables.length >= 4;
+                      const disabled =
+                        !checked && selectedTables.length >= MAX_MULTIVIEW_TABLES;
                       return (
                         <label
                           key={tableOption}
@@ -205,7 +209,7 @@ function SoopLiveTableContent() {
                       );
                     })}
                     <div className="border-t border-white/10 px-2 pt-2 text-xs text-neutral-400">
-                      Select up to 4
+                      Select up to {MAX_MULTIVIEW_TABLES}
                     </div>
                   </div>
                 </details>
@@ -230,7 +234,7 @@ function SoopLiveTableContent() {
               ref={multiviewRef}
               className="relative w-full bg-black p-0 fullscreen:flex fullscreen:min-h-screen fullscreen:items-center fullscreen:p-4"
             >
-              <div className="grid w-full gap-3 lg:grid-cols-2">
+              <div className="grid w-full gap-3 fullscreen:gap-4 lg:grid-cols-2">
                 {selectedTables.map((tableOption) => (
                   <div
                     key={tableOption}
@@ -251,8 +255,8 @@ function SoopLiveTableContent() {
                   </div>
                 ))}
               </div>
-              {selectedTables.length >= 4 ? (
-                <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 p-3 shadow-[0_0_36px_rgba(0,0,0,0.8)] lg:flex">
+              {selectedTables.length >= MAX_MULTIVIEW_TABLES ? (
+                <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 p-3 shadow-[0_0_36px_rgba(0,0,0,0.8)] fullscreen:flex">
                   <img
                     src="/logo-billiardtoday.png"
                     alt=""
