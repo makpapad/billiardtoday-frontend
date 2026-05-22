@@ -235,18 +235,18 @@ function SoopLiveTableContent() {
           {isMultiview ? (
             <div
               ref={multiviewRef}
-              className="relative w-full bg-black p-0 fullscreen:flex fullscreen:min-h-screen fullscreen:items-center fullscreen:p-4"
+              className="relative w-full bg-black p-0 fullscreen:flex fullscreen:h-screen fullscreen:items-start fullscreen:p-3"
             >
-              <div className="grid w-full gap-3 fullscreen:gap-4 lg:grid-cols-2">
+              <div className="grid w-full gap-3 fullscreen:h-full fullscreen:gap-3 lg:grid-cols-2">
                 {selectedTables.map((tableOption) => (
                   <div
                     key={tableOption}
-                    className="overflow-hidden border border-white/10 bg-black"
+                    className="overflow-hidden border border-white/10 bg-black fullscreen:flex fullscreen:min-h-0 fullscreen:flex-col"
                   >
-                    <div className="border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold">
+                    <div className="border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold fullscreen:shrink-0 fullscreen:py-1">
                       Table {tableOption}
                     </div>
-                    <div className="aspect-video w-full">
+                    <div className="aspect-video w-full fullscreen:min-h-0 fullscreen:flex-1 fullscreen:aspect-auto">
                       <iframe
                         src={soopEmbedUrlForTable(tableOption)}
                         title={`SOOP live video table ${tableOption}`}
