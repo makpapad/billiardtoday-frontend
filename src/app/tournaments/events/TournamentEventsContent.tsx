@@ -2291,7 +2291,7 @@ function StageRankingTable({
               <th className="px-4 py-2" />
               {showStageHighRun2Column && <th className="px-4 py-2" />}
               {showBestAverageColumn ? (
-                <th className="px-4 py-2 text-right normal-case">
+                <th className="px-8 py-2 text-right normal-case">
                   <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
                     <span className="font-medium text-blue-100">
                       {artistic ? "General %" : "General AVG"}
@@ -2306,7 +2306,7 @@ function StageRankingTable({
                   </span>
                 </th>
               ) : artistic ? (
-                <th className="px-4 py-2 text-right normal-case">
+                <th className="px-8 py-2 text-right normal-case">
                   <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
                     <span className="font-medium text-blue-100">General %</span>
                     <span className="font-semibold text-white">
