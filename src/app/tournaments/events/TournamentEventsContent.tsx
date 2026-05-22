@@ -2117,8 +2117,10 @@ function StageRankingTable({
       (result) =>
         typeof result.highRun2 === "number" &&
         Number.isFinite(result.highRun2) &&
-        result.highRun2 > 0,
+      result.highRun2 > 0,
     );
+  const trailingTotalsColSpan =
+    2 + (showStageHighRun2Column ? 1 : 0) + (showBestAverageColumn || artistic ? 1 : 0);
   const stageGeneralAverage = useMemo(() => {
     const totals = visibleResults.reduce(
       (acc, result) => {
@@ -2287,36 +2289,20 @@ function StageRankingTable({
                   {formatNumberValue(stageTotals.innings)}
                 </span>
               </th>
-              <th className="px-4 py-2" />
-              <th className="px-4 py-2" />
-              {showStageHighRun2Column && <th className="px-4 py-2" />}
-              {showBestAverageColumn ? (
-                <th className="px-8 py-2 text-right normal-case">
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
-                    <span className="font-medium text-blue-100">
-                      {artistic ? "General %" : "General AVG"}
-                    </span>
-                    <span className="font-semibold text-white">
-                      {stageGeneralAverage !== null
-                        ? artistic
-                          ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
-                          : formatTruncatedAverage(stageGeneralAverage)
-                        : "-"}
-                    </span>
+              <th className="px-4 py-2 text-left normal-case" colSpan={trailingTotalsColSpan}>
+                <span className="inline-flex translate-x-8 items-center gap-2 whitespace-nowrap text-sm">
+                  <span className="font-medium text-blue-100">
+                    {artistic ? "General %" : "General AVG"}
                   </span>
-                </th>
-              ) : artistic ? (
-                <th className="px-8 py-2 text-right normal-case">
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
-                    <span className="font-medium text-blue-100">General %</span>
-                    <span className="font-semibold text-white">
-                      {stageGeneralAverage !== null
+                  <span className="font-semibold text-white">
+                    {stageGeneralAverage !== null
+                      ? artistic
                         ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
-                        : "-"}
-                    </span>
+                        : formatTruncatedAverage(stageGeneralAverage)
+                      : "-"}
                   </span>
-                </th>
-              ) : null}
+                </span>
+              </th>
             </tr>
             <tr>
               <th className="px-4 py-3 text-left font-semibold">#</th>
