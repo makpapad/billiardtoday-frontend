@@ -2290,22 +2290,33 @@ function StageRankingTable({
               <th className="px-4 py-2" />
               <th className="px-4 py-2" />
               {showStageHighRun2Column && <th className="px-4 py-2" />}
-              {showBestAverageColumn && <th className="px-4 py-2" />}
-              {artistic && <th className="px-4 py-2" />}
-              <th className="px-4 py-2 text-right normal-case">
-                <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
-                  <span className="font-medium text-blue-100">
-                    {artistic ? "General %" : "General AVG"}
+              {showBestAverageColumn ? (
+                <th className="px-4 py-2 text-right normal-case">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
+                    <span className="font-medium text-blue-100">
+                      {artistic ? "General %" : "General AVG"}
+                    </span>
+                    <span className="font-semibold text-white">
+                      {stageGeneralAverage !== null
+                        ? artistic
+                          ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
+                          : formatTruncatedAverage(stageGeneralAverage)
+                        : "-"}
+                    </span>
                   </span>
-                  <span className="font-semibold text-white">
-                    {stageGeneralAverage !== null
-                      ? artistic
+                </th>
+              ) : artistic ? (
+                <th className="px-4 py-2 text-right normal-case">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
+                    <span className="font-medium text-blue-100">General %</span>
+                    <span className="font-semibold text-white">
+                      {stageGeneralAverage !== null
                         ? `${formatTruncatedAverage(stageGeneralAverage * 100)}%`
-                        : formatTruncatedAverage(stageGeneralAverage)
-                      : "-"}
+                        : "-"}
+                    </span>
                   </span>
-                </span>
-              </th>
+                </th>
+              ) : null}
             </tr>
             <tr>
               <th className="px-4 py-3 text-left font-semibold">#</th>
