@@ -24,7 +24,14 @@ const normalizeStage = (title: unknown, index: number) => {
   if (upper.includes("PRE-PRE") || upper.includes("PPQ")) return "PPQ";
   if (upper.includes("PRE-QUAL") || upper.includes("PRE QUAL") || upper.includes("PQ")) return "PQ";
   if (upper === "QUAL" || upper === "Q" || upper.includes("QUALIFICATION")) return "Q";
-  if (upper.includes("FINAL 16") || upper.includes("LAST 16")) return "FINAL 16";
+  if (
+    upper.includes("FINAL 16") ||
+    upper.includes("LAST 16") ||
+    upper.includes("RANK 16") ||
+    upper.includes("1/8")
+  ) {
+    return "FINAL 16";
+  }
   if (upper.includes("MAIN")) return "MAIN";
   return raw;
 };
