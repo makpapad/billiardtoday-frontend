@@ -29,6 +29,14 @@ const soopEmbedUrlForTable = (table: string) =>
     table || DEFAULT_TABLE,
   )}/embed`;
 
+const parseSelectedTables = (value: string | null | undefined) => {
+  const selected = String(value || "")
+    .split(",")
+    .map(normalizeTable)
+    .filter((table) => DEFAULT_TABLES.includes(table));
+  return Array.from(new Set(selected)).slice(0, 4);
+};
+
 function SoopLiveTableContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,6 +48,10 @@ function SoopLiveTableContent() {
     searchParams.get("multiview") === "1" ||
     requestedView === "multi" ||
     requestedView === "multiview";
+  const selectedTables = useMemo(() => {
+    const selected = parseSelectedTables(searchParams.get("tables"));
+    return selected.length > 0 ? selected : DEFAULT_TABLES.slice(0, 4);
+  }, [searchParams]);
 
   const availableTables = useMemo(() => {
     const tableSet = new Set(DEFAULT_TABLES);
@@ -68,9 +80,25 @@ function SoopLiveTableContent() {
     params.set("table", table || DEFAULT_TABLE);
     if (nextMultiview) {
       params.set("view", "multiview");
+      params.set("tables", selectedTables.join(","));
     } else if (requestedSrc && isAllowedEmbedUrl(requestedSrc)) {
       params.set("src", requestedSrc);
     }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSelectedTableToggle = (tableOption: string) => {
+    const nextSelected = selectedTables.includes(tableOption)
+      ? selectedTables.filter((selectedTable) => selectedTable !== tableOption)
+      : selectedTables.length < 4
+        ? [...selectedTables, tableOption]
+        : selectedTables;
+    if (nextSelected.length === 0) return;
+
+    const params = new URLSearchParams();
+    params.set("table", table || DEFAULT_TABLE);
+    params.set("view", "multiview");
+    params.set("tables", nextSelected.join(","));
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -124,14 +152,50 @@ function SoopLiveTableContent() {
                   </option>
                 ))}
               </select>
-            ) : null}
+            ) : (
+              <div className="relative">
+                <details className="group">
+                  <summary className="flex h-9 cursor-pointer list-none items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white outline-none transition hover:bg-neutral-800 focus:border-cyan-300">
+                    Tables {selectedTables.join(", ")}
+                  </summary>
+                  <div className="absolute right-0 z-20 mt-2 w-48 rounded border border-white/10 bg-neutral-950 p-2 shadow-2xl">
+                    {DEFAULT_TABLES.map((tableOption) => {
+                      const checked = selectedTables.includes(tableOption);
+                      const disabled = !checked && selectedTables.length >= 4;
+                      return (
+                        <label
+                          key={tableOption}
+                          className={`flex items-center gap-2 rounded px-2 py-2 text-sm font-semibold ${
+                            disabled
+                              ? "cursor-not-allowed text-neutral-500"
+                              : "cursor-pointer text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={disabled}
+                            onChange={() => handleSelectedTableToggle(tableOption)}
+                            className="h-4 w-4 accent-cyan-300"
+                          />
+                          <span>Table {tableOption}</span>
+                        </label>
+                      );
+                    })}
+                    <div className="border-t border-white/10 px-2 pt-2 text-xs text-neutral-400">
+                      Select up to 4
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
         </div>
 
         <section className="flex flex-1 items-center">
           {isMultiview ? (
             <div className="grid w-full gap-3 lg:grid-cols-2">
-              {DEFAULT_TABLES.map((tableOption) => (
+              {selectedTables.map((tableOption) => (
                 <div
                   key={tableOption}
                   className="overflow-hidden border border-white/10 bg-black"
