@@ -4513,6 +4513,12 @@ export function TournamentEventsContent({
             highRun2: toNumber(
               (m as { player2_high_run?: unknown }).player2_high_run,
             ),
+            highRun1Second: toNumber(
+              (m as { player1_high_run_2?: unknown }).player1_high_run_2,
+            ),
+            highRun2Second: toNumber(
+              (m as { player2_high_run_2?: unknown }).player2_high_run_2,
+            ),
             matchPoints1,
             matchPoints2,
             tieBreak1,
@@ -4579,6 +4585,14 @@ export function TournamentEventsContent({
     }
     return null;
   }, [activeBracketRounds, selectedBracketMatchId]);
+
+  const selectedBracketShowsTieBreak =
+    selectedBracketMatch !== null &&
+    (typeof selectedBracketMatch.match.tieBreak1 === "number" ||
+      typeof selectedBracketMatch.match.tieBreak2 === "number");
+  const selectedBracketDetailsGridClass = selectedBracketShowsTieBreak
+    ? "grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3"
+    : "grid min-w-[800px] grid-cols-[minmax(180px,1.6fr)_repeat(7,minmax(56px,0.75fr))] items-center gap-3";
 
   const activeBracketIncomingMatchNumbers = useMemo(() => {
     const incoming = new Map<string, number[]>();
@@ -5628,6 +5642,12 @@ export function TournamentEventsContent({
                                                           const isExpanded =
                                                             deExpandedMatchId ===
                                                             match.id;
+                                                          const showTieBreak =
+                                                            typeof match.tieBreak1 === "number" ||
+                                                            typeof match.tieBreak2 === "number";
+                                                          const detailsGridClass = showTieBreak
+                                                            ? "grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3"
+                                                            : "grid min-w-[800px] grid-cols-[minmax(180px,1.6fr)_repeat(7,minmax(56px,0.75fr))] items-center gap-3";
 
                                                           return (
                                                             <div key={match.id}>
@@ -5702,7 +5722,7 @@ export function TournamentEventsContent({
                                                               {isExpanded ? (
                                                                 <div className="border-t border-slate-200 px-5 pb-5 dark:border-slate-800">
                                                                   <div className="mx-auto mt-4 w-[95%] max-w-[1600px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                                                                    <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                                                    <div className={`${detailsGridClass} text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}>
                                                                       <div>Player</div>
                                                                       <div className="text-center">Winner</div>
                                                                     <div className="text-center">MP</div>
@@ -5711,10 +5731,12 @@ export function TournamentEventsContent({
                                                                     <div className="text-center">Avg</div>
                                                                     <div className="text-center">H.R.1</div>
                                                                     <div className="text-center">H.R.2</div>
-                                                                    <div className="text-center">T.B.</div>
+                                                                    {showTieBreak ? (
+                                                                      <div className="text-center">T.B.</div>
+                                                                    ) : null}
                                                                     </div>
                                                                     <div className="mt-3 space-y-2">
-                                                                      <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                                                                      <div className={`${detailsGridClass} text-sm text-gray-700 dark:text-gray-200`}>
                                                                         <div className="font-medium">
                                                                           {match.player1}
                                                                         </div>
@@ -5747,12 +5769,14 @@ export function TournamentEventsContent({
                                                                           {match.highRun1Second ??
                                                                             "-"}
                                                                         </div>
-                                                                        <div className="text-center">
-                                                                          {match.tieBreak1 ??
-                                                                            "-"}
-                                                                        </div>
+                                                                        {showTieBreak ? (
+                                                                          <div className="text-center">
+                                                                            {match.tieBreak1 ??
+                                                                              "-"}
+                                                                          </div>
+                                                                        ) : null}
                                                                       </div>
-                                                                      <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                                                                      <div className={`${detailsGridClass} text-sm text-gray-700 dark:text-gray-200`}>
                                                                         <div className="font-medium">
                                                                           {match.player2}
                                                                         </div>
@@ -5785,10 +5809,12 @@ export function TournamentEventsContent({
                                                                           {match.highRun2Second ??
                                                                             "-"}
                                                                         </div>
-                                                                        <div className="text-center">
-                                                                          {match.tieBreak2 ??
-                                                                            "-"}
-                                                                        </div>
+                                                                        {showTieBreak ? (
+                                                                          <div className="text-center">
+                                                                            {match.tieBreak2 ??
+                                                                              "-"}
+                                                                          </div>
+                                                                        ) : null}
                                                                       </div>
                                                                     </div>
                                                                     <div className="mt-4 grid min-w-[860px] grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
@@ -7491,7 +7517,7 @@ export function TournamentEventsContent({
               </button>
             </div>
             <div className="overflow-x-auto p-5">
-              <div className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <div className={`${selectedBracketDetailsGridClass} text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}>
                 <div>Player</div>
                 <div className="text-center">Winner</div>
                 <div className="text-center">MP</div>
@@ -7500,7 +7526,9 @@ export function TournamentEventsContent({
                 <div className="text-center">Avg</div>
                 <div className="text-center">H.R.1</div>
                 <div className="text-center">H.R.2</div>
-                <div className="text-center">T.B.</div>
+                {selectedBracketShowsTieBreak ? (
+                  <div className="text-center">T.B.</div>
+                ) : null}
               </div>
               <div className="mt-3 space-y-2">
                 {[
@@ -7587,7 +7615,7 @@ export function TournamentEventsContent({
                   return (
                     <div
                       key={row.name}
-                      className="grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3 rounded-xl border border-gray-100 px-3 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200"
+                      className={`${selectedBracketDetailsGridClass} rounded-xl border border-gray-100 px-3 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200`}
                     >
                       <div className="flex min-w-0 items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
                         <span className="flex h-4 w-5 shrink-0 items-center justify-center">
@@ -7614,7 +7642,9 @@ export function TournamentEventsContent({
                       </div>
                       <div className="text-center">{row.hr1 ?? "-"}</div>
                       <div className="text-center">{row.hr2 ?? "-"}</div>
-                      <div className="text-center">{row.tb ?? "-"}</div>
+                      {selectedBracketShowsTieBreak ? (
+                        <div className="text-center">{row.tb ?? "-"}</div>
+                      ) : null}
                     </div>
                   );
                 })}
