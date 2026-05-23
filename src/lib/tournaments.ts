@@ -174,6 +174,19 @@ const slugify = (value: string) =>
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
 
+const stripTrailingSeasonFromTitle = (
+  title: string,
+  season?: number | null,
+) => {
+  const cleanTitle = String(title || "").trim();
+  const cleanSeason =
+    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
+
+  if (!cleanTitle || !cleanSeason) return cleanTitle;
+
+  return cleanTitle.replace(new RegExp(`(?:[\\s\\-(),/]+)?${cleanSeason}$`), "").trim();
+};
+
 const normalizeStage = (value: unknown, index: number): TournamentEventStageSummary => {
   const source =
     value && typeof value === "object" && "attributes" in (value as Record<string, unknown>)
@@ -296,6 +309,20 @@ export const buildTournamentSlug = (
   season?: number | null,
 ) => {
   const safeCanonicalId = slugify(String(canonicalId || "").trim());
+  const normalizedTitle = stripTrailingSeasonFromTitle(title, season);
+  const safeTitle = slugify(normalizedTitle || String(title || "").trim()) || "event";
+  const safeSeason =
+    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
+  const readableSlug = safeSeason ? `${safeTitle}-${safeSeason}` : safeTitle;
+  return safeCanonicalId ? `${safeCanonicalId}--${readableSlug}` : readableSlug;
+};
+
+const buildLegacyTournamentSlug = (
+  canonicalId: string,
+  title: string,
+  season?: number | null,
+) => {
+  const safeCanonicalId = slugify(String(canonicalId || "").trim());
   const safeTitle = slugify(String(title || "").trim()) || "event";
   const safeSeason =
     typeof season === "number" && Number.isFinite(season) ? String(season) : "";
@@ -312,6 +339,20 @@ export const buildTournamentHref = (
 
 export const extractTournamentDocumentId = (slug: string) =>
   String(slug || "").split("--")[0]?.trim() || "";
+
+const matchesTournamentSlug = (
+  slug: string,
+  title: string,
+  season?: number | null,
+) => {
+  const cleanSlug = slugify(String(slug || "").trim());
+  if (!cleanSlug) return false;
+
+  return (
+    buildTournamentSlug("", title, season) === cleanSlug ||
+    buildLegacyTournamentSlug("", title, season) === cleanSlug
+  );
+};
 
 const fetchTournamentEventSummaryByTournamentSlug = async (
   tournamentSlug: string,
@@ -549,7 +590,7 @@ const fetchTournamentEventSummaryBySlug = async (
           : itemRecord;
       const title = readString((source as Record<string, unknown>)?.title);
       const season = toNumber((source as Record<string, unknown>)?.season);
-      return title ? buildTournamentSlug("", title, season) === cleanSlug : false;
+      return title ? matchesTournamentSlug(cleanSlug, title, season) : false;
     });
 
     if (match) {

@@ -11,6 +11,17 @@ const absoluteUrl = (path: string) =>
     ? path
     : `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
+const appendSeasonIfMissing = (title: string, season?: number | null) => {
+  const cleanTitle = String(title || "").trim();
+  const cleanSeason =
+    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
+
+  if (!cleanSeason || !cleanTitle) return cleanTitle;
+  return new RegExp(`(?:^|[\\s\\-(),/])${cleanSeason}$`).test(cleanTitle)
+    ? cleanTitle
+    : `${cleanTitle} ${cleanSeason}`;
+};
+
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
   options?: { embedded?: boolean },
@@ -22,11 +33,10 @@ export function buildTournamentShareMetadata(
   }
 
   const slug = buildTournamentSlug("", summary.title, summary.season);
-  const seasonLabel = summary.season ? ` ${summary.season}` : "";
-  const title = `${summary.title}${seasonLabel}`;
+  const title = appendSeasonIfMissing(summary.title, summary.season);
   const description = summary.tournamentTitle
-    ? `${summary.tournamentTitle} ${seasonLabel} tournament page with stages, standings, and results.`
-    : `${summary.title}${seasonLabel} tournament page with stages, standings, and results.`;
+    ? `${appendSeasonIfMissing(summary.tournamentTitle, summary.season)} tournament page with stages, standings, and results.`
+    : `${title} tournament page with stages, standings, and results.`;
   const path = `${options?.embedded ? "/embed" : ""}/tournaments/${slug}`;
   const canonicalPath = `/tournaments/${slug}`;
   const ogImage = slug === LONGONI_U21_SLUG ? absoluteUrl(LONGONI_U21_OG_IMAGE) : null;
