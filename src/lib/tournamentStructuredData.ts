@@ -1,5 +1,12 @@
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentSlug } from "@/lib/tournaments";
+import {
+  buildTournamentDateRangeLabel,
+  buildTournamentDescription,
+  buildTournamentLocationLabel,
+  buildTournamentTitle,
+  buildTournamentVenueLabel,
+} from "@/lib/tournamentSeo";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 
@@ -11,28 +18,11 @@ const absoluteUrl = (path: string) =>
 const cleanText = (value: string | null | undefined) =>
   String(value || "").trim() || undefined;
 
-const appendSeasonIfMissing = (title: string, season?: number | null) => {
-  const cleanTitle = String(title || "").trim();
-  const cleanSeason =
-    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
-
-  if (!cleanTitle || !cleanSeason) return cleanTitle;
-  return new RegExp(`(?:^|[\\s\\-(),/])${cleanSeason}$`).test(cleanTitle)
-    ? cleanTitle
-    : `${cleanTitle} ${cleanSeason}`;
-};
-
 const buildTournamentUrl = (summary: TournamentEventSummary) =>
   absoluteUrl(`/tournaments/${buildTournamentSlug("", summary.title, summary.season)}`);
 
 const buildLocationName = (summary: TournamentEventSummary) =>
-  cleanText(
-    summary.venueName ||
-      summary.clubName ||
-      [summary.venueCity || summary.clubCity, summary.venueCountry || summary.clubCountry]
-        .filter(Boolean)
-        .join(", "),
-  );
+  cleanText(buildTournamentVenueLabel(summary) || buildTournamentLocationLabel(summary));
 
 const buildAddress = (summary: TournamentEventSummary) => {
   const city = cleanText(summary.venueCity || summary.clubCity);
@@ -48,17 +38,16 @@ const buildAddress = (summary: TournamentEventSummary) => {
 };
 
 export function buildTournamentStructuredData(summary: TournamentEventSummary) {
-  const title = appendSeasonIfMissing(summary.title, summary.season);
+  const title = buildTournamentTitle(summary);
   const url = buildTournamentUrl(summary);
   const description =
     cleanText(summary.description) ||
+    buildTournamentDescription(summary) ||
     cleanText(
       [
         title,
         summary.gameType ? `${summary.gameType} event` : "billiards event",
-        summary.startDate && summary.endDate
-          ? `scheduled from ${summary.startDate} to ${summary.endDate}`
-          : null,
+        buildTournamentDateRangeLabel(summary.startDate, summary.endDate),
         buildLocationName(summary),
       ]
         .filter(Boolean)

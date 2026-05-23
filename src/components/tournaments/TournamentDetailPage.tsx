@@ -51,6 +51,13 @@ import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
 import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
+import {
+  buildTournamentDateRangeLabel,
+  buildTournamentLocationLabel,
+  buildTournamentTitle,
+  buildTournamentVenueLabel,
+  formatTournamentDate,
+} from "@/lib/tournamentSeo";
 
 const EXTERNAL_LIVE_TABLES_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_EXTERNAL_LIVE_TABLES === "true";
@@ -1357,29 +1364,14 @@ type TournamentLiveScreensResponse = {
   error?: string;
 };
 
-const formatDate = (value: string | null, locale?: string) => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString(locale, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
+const formatDate = (value: string | null, locale?: string) =>
+  formatTournamentDate(value, locale ?? "en-US");
 
 const formatDateRange = (
   start: string | null,
   end: string | null,
   locale?: string,
-) => {
-  const startText = formatDate(start, locale);
-  const endText = formatDate(end, locale);
-  if (startText && endText) {
-    return startText === endText ? startText : `${startText} - ${endText}`;
-  }
-  return startText || endText || null;
-};
+) => buildTournamentDateRangeLabel(start, end, locale ?? "en-US");
 
 const normalizeDateKey = (value: string | null | undefined) => {
   if (!value) return null;
@@ -1622,10 +1614,83 @@ export function TournamentDetailPage({
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;
+  const tournamentTitle = buildTournamentTitle(summary);
   const scheduleLabel = formatDateRange(
     summary.startDate,
     summary.endDate,
     browserLocale ?? undefined,
+  );
+  const venueLabel = buildTournamentVenueLabel(summary);
+  const locationLabel = buildTournamentLocationLabel(summary);
+  const rankingSeriesHref = summary.rankingSeriesSlug
+    ? `${embedded ? "/embed" : ""}/rankings/${summary.rankingSeriesSlug}`
+    : null;
+  const tournamentsIndexHref = `${embedded ? "/embed" : ""}/tournaments`;
+  const overviewParagraphs = useMemo(() => {
+    const descriptionParagraph =
+      typeof summary.description === "string" && summary.description.trim().length > 0
+        ? summary.description.trim()
+        : null;
+    const introSegments = [
+      tournamentTitle,
+      summary.gameType ? `is a ${summary.gameType} tournament` : "is a billiards tournament",
+      scheduleLabel ? `scheduled for ${scheduleLabel}` : "",
+      venueLabel ? `at ${venueLabel}` : "",
+      locationLabel ? `in ${locationLabel}` : "",
+    ].filter(Boolean);
+    const intro = `${introSegments.join(" ")}.`
+      .replace(/\s+\./g, ".")
+      .replace(/\s{2,}/g, " ");
+
+    const coverageSegments = [
+      "This event page tracks every published stage, timetable slot, participant list, live table update, and final standing",
+      summary.stages.length > 0 ? `across ${summary.stages.length} stage${summary.stages.length === 1 ? "" : "s"}` : "",
+      summary.rankingSeriesTitle ? `for the ${summary.rankingSeriesTitle} ranking series` : "",
+    ].filter(Boolean);
+    const coverage = `${coverageSegments.join(" ")}.`
+      .replace(/\s+\./g, ".")
+      .replace(/\s{2,}/g, " ");
+
+    const organizerSubject = summary.organizerType || "event organizers";
+    const planning = `${
+      scheduleLabel
+        ? `Players and fans can use this page to follow the ${scheduleLabel} schedule`
+        : "Players and fans can use this page to follow the published schedule"
+    }${
+      venueLabel || locationLabel
+        ? `, venue details${venueLabel ? ` at ${venueLabel}` : ""}${locationLabel ? ` in ${locationLabel}` : ""}`
+        : ""
+    }, and results as they are released by the ${organizerSubject}.`;
+
+    return [descriptionParagraph, intro, coverage, planning].filter(
+      (paragraph): paragraph is string => Boolean(paragraph),
+    );
+  }, [
+    locationLabel,
+    scheduleLabel,
+    summary.description,
+    summary.gameType,
+    summary.organizerType,
+    summary.rankingSeriesTitle,
+    summary.stages.length,
+    tournamentTitle,
+    venueLabel,
+  ]);
+  const overviewFacts = useMemo(
+    () =>
+      [
+        { label: "Game type", value: summary.gameType || "Billiards" },
+        { label: "Dates", value: scheduleLabel || "To be announced" },
+        { label: "Venue", value: venueLabel || locationLabel || "To be announced" },
+        { label: "Series", value: summary.rankingSeriesTitle || "Independent event" },
+      ].filter((item) => item.value),
+    [
+      locationLabel,
+      scheduleLabel,
+      summary.gameType,
+      summary.rankingSeriesTitle,
+      venueLabel,
+    ],
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const venueMetaParts = useMemo(() => {
@@ -7407,6 +7472,64 @@ export function TournamentDetailPage({
                 </div>
               ) : null}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] lg:items-start">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+              Tournament Overview
+            </div>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+              {tournamentTitle}
+            </h2>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700 sm:text-[15px]">
+              {overviewParagraphs.map((paragraph, index) => (
+                <p key={`overview-${index}`}>{paragraph}</p>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3 text-sm">
+              <Link
+                href={tournamentsIndexHref}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+              >
+                Browse all tournaments
+              </Link>
+              {rankingSeriesHref ? (
+                <Link
+                  href={rankingSeriesHref}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                >
+                  View ranking series
+                </Link>
+              ) : null}
+              {embedded ? (
+                <Link
+                  href={fullPageHref}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                >
+                  Open full tournament page
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {overviewFacts.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4"
+              >
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {item.label}
+                </div>
+                <div className="mt-2 text-sm font-semibold text-slate-950">
+                  {item.value}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
