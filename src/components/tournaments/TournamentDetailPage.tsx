@@ -7476,6 +7476,9 @@ export function TournamentDetailPage({
         </div>
       </section>
 
+      <div ref={tournamentContentRef} className="mt-8">
+        {mainContent}
+      </div>
       <section className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] lg:items-start">
           <div className="max-w-3xl">
@@ -7533,10 +7536,6 @@ export function TournamentDetailPage({
           </div>
         </div>
       </section>
-
-      <div ref={tournamentContentRef} className="mt-8">
-        {mainContent}
-      </div>
       {showTournamentAds ? <TournamentAdsStrip /> : null}
       {showBackToTopButton ? (
         <button
