@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
   LiveStatsHighlightModal,
@@ -1742,6 +1743,7 @@ export function TournamentDetailPage({
   );
   const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
     useState<number | null>(null);
+  const [showBackToTopButton, setShowBackToTopButton] = useState(false);
   const searchParams = useSearchParams();
   const preferredStageFromQuery =
     preferredStageDocumentId ??
@@ -5402,6 +5404,18 @@ export function TournamentDetailPage({
     return () => media.removeEventListener("change", update);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const update = () => {
+      setShowBackToTopButton(window.scrollY > 640);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
   const groupPopoverBySessionId = useMemo(() => {
     const result = new Map<string, GroupPopoverData>();
 
@@ -7401,6 +7415,17 @@ export function TournamentDetailPage({
         {mainContent}
       </div>
       {showTournamentAds ? <TournamentAdsStrip /> : null}
+      {showBackToTopButton ? (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-5 right-5 z-50 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/70 bg-slate-950 text-white shadow-[0_14px_38px_rgba(15,23,42,0.28)] transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:bottom-7 sm:right-7"
+          aria-label="Back to top"
+          title="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }
