@@ -4035,10 +4035,16 @@ export function TournamentEventsContent({
             : src;
 
         if (!attr || typeof attr !== "object") return { name: "", country: null };
+        const fullNameEn = (attr as Record<string, unknown>).full_name_en;
         const fullName = (attr as Record<string, unknown>).full_name;
         const country = (attr as Record<string, unknown>).country;
         return {
-          name: typeof fullName === "string" ? fullName : "",
+          name:
+            typeof fullNameEn === "string" && fullNameEn.trim()
+              ? fullNameEn.trim()
+              : typeof fullName === "string"
+                ? fullName
+                : "",
           country: typeof country === "string" ? country : null,
         };
       } catch {
