@@ -6,6 +6,7 @@ import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
+import { buildTournamentStructuredData } from "@/lib/tournamentStructuredData";
 import type { EventApiResponse } from "@/app/tournaments/events/types";
 
 type Props = {
@@ -64,6 +65,12 @@ export default async function TournamentPage({ params, searchParams }: Props) {
 
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildTournamentStructuredData(summary)),
+        }}
+      />
       <TournamentDetailPage
         summary={summary}
         initialEventData={initialEventData}

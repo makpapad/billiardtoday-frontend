@@ -22,6 +22,31 @@ const appendSeasonIfMissing = (title: string, season?: number | null) => {
     : `${cleanTitle} ${cleanSeason}`;
 };
 
+const buildTournamentDescription = (summary: TournamentEventSummary) => {
+  const title = appendSeasonIfMissing(summary.title, summary.season);
+  const gameType = String(summary.gameType || "").trim();
+  const venueName = String(summary.venueName || summary.clubName || "").trim();
+  const location = [summary.venueCity || summary.clubCity, summary.venueCountry || summary.clubCountry]
+    .filter(Boolean)
+    .join(", ")
+    .trim();
+  const dateWindow =
+    summary.startDate && summary.endDate
+      ? `${summary.startDate} to ${summary.endDate}`
+      : summary.startDate || summary.endDate || "";
+
+  const parts = [
+    title,
+    gameType ? `${gameType} tournament` : "billiard tournament",
+    venueName || location ? `held at ${venueName || location}` : "",
+    location && venueName ? `in ${location}` : "",
+    dateWindow ? `running ${dateWindow}` : "",
+    "with schedule, stages, standings, live updates, and results.",
+  ].filter(Boolean);
+
+  return parts.join(" ");
+};
+
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
   options?: { embedded?: boolean },
@@ -34,9 +59,7 @@ export function buildTournamentShareMetadata(
 
   const slug = buildTournamentSlug("", summary.title, summary.season);
   const title = appendSeasonIfMissing(summary.title, summary.season);
-  const description = summary.tournamentTitle
-    ? `${appendSeasonIfMissing(summary.tournamentTitle, summary.season)} tournament page with stages, standings, and results.`
-    : `${title} tournament page with stages, standings, and results.`;
+  const description = buildTournamentDescription(summary);
   const path = `${options?.embedded ? "/embed" : ""}/tournaments/${slug}`;
   const canonicalPath = `/tournaments/${slug}`;
   const ogImage = slug === LONGONI_U21_SLUG ? absoluteUrl(LONGONI_U21_OG_IMAGE) : null;
