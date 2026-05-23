@@ -4054,9 +4054,14 @@ export function TournamentEventsContent({
     [],
   );
 
-  const fetchBracketMatches = useCallback(async (stageDocumentId: string) => {
+  const fetchBracketMatches = useCallback(async (
+    stageDocumentId: string,
+    options?: { silent?: boolean },
+  ) => {
     if (!stageDocumentId) return;
-    setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: true }));
+    if (!options?.silent) {
+      setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: true }));
+    }
     try {
       const res = await fetch(
         `/api/event-stages/${encodeURIComponent(stageDocumentId)}/matches`,
@@ -4073,9 +4078,13 @@ export function TournamentEventsContent({
       setBrMatchesByStage((prev) => ({ ...prev, [stageDocumentId]: arr }));
     } catch (e) {
       console.warn("[TournamentEvents] Failed to fetch bracket matches:", e);
-      setBrMatchesByStage((prev) => ({ ...prev, [stageDocumentId]: [] }));
+      if (!options?.silent) {
+        setBrMatchesByStage((prev) => ({ ...prev, [stageDocumentId]: [] }));
+      }
     } finally {
-      setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: false }));
+      if (!options?.silent) {
+        setBrLoadingByStage((prev) => ({ ...prev, [stageDocumentId]: false }));
+      }
     }
   }, []);
 
@@ -4092,6 +4101,32 @@ export function TournamentEventsContent({
     activeStage,
     brLoadingByStage,
     brMatchesByStage,
+    fetchBracketMatches,
+  ]);
+
+  useEffect(() => {
+    if (!activeStage || !isBracketStageType(activeStage.stageType)) return;
+    const chain =
+      activeBracketStageChain.length > 0 ? activeBracketStageChain : [activeStage];
+    if (chain.length === 0) return;
+
+    let cancelled = false;
+    const refreshActiveBracketMatches = () => {
+      if (cancelled || document.visibilityState === "hidden") return;
+      chain.forEach((stage) => {
+        void fetchBracketMatches(stage.documentId, { silent: true });
+      });
+    };
+
+    const intervalId = window.setInterval(refreshActiveBracketMatches, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [
+    activeBracketStageChain,
+    activeStage,
     fetchBracketMatches,
   ]);
 
