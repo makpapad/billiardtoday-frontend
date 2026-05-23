@@ -7479,62 +7479,87 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-8">
         {mainContent}
       </div>
-      <section className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] lg:items-start">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-              Tournament Overview
+      <section className="mt-8">
+        <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">
+          <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Tournament Overview
+              </div>
+              <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                {tournamentTitle}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-[15px]">
+                {overviewParagraphs[0]}
+              </p>
             </div>
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-              {tournamentTitle}
-            </h2>
-            <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700 sm:text-[15px]">
-              {overviewParagraphs.map((paragraph, index) => (
-                <p key={`overview-${index}`}>{paragraph}</p>
+            <div className="flex flex-wrap gap-2 lg:max-w-[320px] lg:justify-end">
+              {overviewFacts.slice(0, 3).map((item) => (
+                <span
+                  key={item.label}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600"
+                >
+                  {item.label}: {item.value}
+                </span>
               ))}
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition group-open:bg-slate-950 group-open:text-white">
+                More details
+              </span>
             </div>
-            <div className="mt-5 flex flex-wrap gap-3 text-sm">
-              <Link
-                href={tournamentsIndexHref}
-                className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
-              >
-                Browse all tournaments
-              </Link>
-              {rankingSeriesHref ? (
-                <Link
-                  href={rankingSeriesHref}
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
-                >
-                  View ranking series
-                </Link>
-              ) : null}
-              {embedded ? (
-                <Link
-                  href={fullPageHref}
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
-                >
-                  Open full tournament page
-                </Link>
-              ) : null}
-            </div>
-          </div>
+          </summary>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {overviewFacts.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4"
-              >
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {item.label}
+          <div className="border-t border-slate-200 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] lg:items-start">
+              <div className="max-w-3xl">
+                <div className="space-y-3 text-sm leading-7 text-slate-700 sm:text-[15px]">
+                  {overviewParagraphs.slice(1).map((paragraph, index) => (
+                    <p key={`overview-detail-${index}`}>{paragraph}</p>
+                  ))}
                 </div>
-                <div className="mt-2 text-sm font-semibold text-slate-950">
-                  {item.value}
+                <div className="mt-5 flex flex-wrap gap-3 text-sm">
+                  <Link
+                    href={tournamentsIndexHref}
+                    className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                  >
+                    Browse all tournaments
+                  </Link>
+                  {rankingSeriesHref ? (
+                    <Link
+                      href={rankingSeriesHref}
+                      className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                    >
+                      View ranking series
+                    </Link>
+                  ) : null}
+                  {embedded ? (
+                    <Link
+                      href={fullPageHref}
+                      className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                    >
+                      Open full tournament page
+                    </Link>
+                  ) : null}
                 </div>
               </div>
-            ))}
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {overviewFacts.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4"
+                  >
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {item.label}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-slate-950">
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        </details>
       </section>
       {showTournamentAds ? <TournamentAdsStrip /> : null}
       {showBackToTopButton ? (
