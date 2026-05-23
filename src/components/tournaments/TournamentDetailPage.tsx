@@ -131,6 +131,15 @@ const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
+const ALL_TIMETABLE_PHASE_KEY = "all";
+
+type TimetablePhaseTab = {
+  key: string;
+  label: string;
+  count: number;
+  order: number;
+  firstSlotIndex: number;
+};
 
 const isBracketStageType = (stageType: string | null | undefined) =>
   stageType === "single_elimination" ||
@@ -1435,6 +1444,15 @@ const normalizeLookupText = (value: string | null | undefined) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+const getTimetablePhaseKey = (slot: NormalizedTimetableSlot) => {
+  if (slot.stageDocumentId) return `stage:${slot.stageDocumentId}`;
+  const labelKey = normalizeLookupText(slot.customStageLabel || slot.stageTitle || "other");
+  return `label:${labelKey || "other"}`;
+};
+
+const getTimetablePhaseLabel = (slot: NormalizedTimetableSlot) =>
+  slot.stageTitle || slot.customStageLabel || "Other";
+
 const publicTimezoneStorageKey = (eventId: string | number | null | undefined) =>
   `bt-public-timezone-offset-minutes.${eventId ?? "global"}`;
 const formatDateTimeWithOffset = (
@@ -1704,6 +1722,9 @@ export function TournamentDetailPage({
   const [timetableViewMode, setTimetableViewMode] = useState<
     "matches" | "training"
   >("matches");
+  const [activeTimetablePhaseKey, setActiveTimetablePhaseKey] = useState(
+    ALL_TIMETABLE_PHASE_KEY,
+  );
   const [timetableSearchQuery, setTimetableSearchQuery] = useState("");
   const [selectedGalleryImageIndex, setSelectedGalleryImageIndex] = useState<
     number | null
@@ -5088,6 +5109,76 @@ export function TournamentDetailPage({
       tournamentContextSlug,
     );
 
+  const timetablePhaseTabs = useMemo<TimetablePhaseTab[]>(() => {
+    if (timetableViewMode !== "matches") return [];
+
+    const stageOrderByDocumentId = new Map(
+      eventStages.map((stage, index) => [
+        stage.documentId,
+        stage.order ?? index,
+      ]),
+    );
+    const tabsByKey = new Map<string, TimetablePhaseTab>();
+    let allCount = 0;
+
+    timetableSlots.forEach((slot, index) => {
+      if (slot.slotType === "training") return;
+      allCount += 1;
+
+      const key = getTimetablePhaseKey(slot);
+      const existing = tabsByKey.get(key);
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+
+      tabsByKey.set(key, {
+        key,
+        label: getTimetablePhaseLabel(slot),
+        count: 1,
+        order:
+          slot.stageDocumentId && stageOrderByDocumentId.has(slot.stageDocumentId)
+            ? stageOrderByDocumentId.get(slot.stageDocumentId)!
+            : 10_000 + index,
+        firstSlotIndex: index,
+      });
+    });
+
+    if (allCount === 0) return [];
+
+    const phaseTabs = [...tabsByKey.values()].sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order;
+      if (a.firstSlotIndex !== b.firstSlotIndex) {
+        return a.firstSlotIndex - b.firstSlotIndex;
+      }
+      return a.label.localeCompare(b.label);
+    });
+
+    return [
+      {
+        key: ALL_TIMETABLE_PHASE_KEY,
+        label: "All",
+        count: allCount,
+        order: -1,
+        firstSlotIndex: -1,
+      },
+      ...phaseTabs,
+    ];
+  }, [eventStages, timetableSlots, timetableViewMode]);
+
+  useEffect(() => {
+    if (timetableViewMode !== "matches") {
+      setActiveTimetablePhaseKey(ALL_TIMETABLE_PHASE_KEY);
+      return;
+    }
+
+    setActiveTimetablePhaseKey((current) => {
+      const hasCurrent = timetablePhaseTabs.some((tab) => tab.key === current);
+      if (hasCurrent && current !== ALL_TIMETABLE_PHASE_KEY) return current;
+      return timetablePhaseTabs[1]?.key ?? ALL_TIMETABLE_PHASE_KEY;
+    });
+  }, [timetablePhaseTabs, timetableViewMode]);
+
   const visibleTimetableSlots = useMemo(() => {
     const trimmedQuery = normalizeLookupText(timetableSearchQuery);
     if (timetableViewMode === "training") {
@@ -5111,6 +5202,12 @@ export function TournamentDetailPage({
     }
     return timetableSlots.filter((slot) => {
       if (slot.slotType === "training") return false;
+      if (
+        activeTimetablePhaseKey !== ALL_TIMETABLE_PHASE_KEY &&
+        getTimetablePhaseKey(slot) !== activeTimetablePhaseKey
+      ) {
+        return false;
+      }
       if (!trimmedQuery) return true;
       const placeholder =
         typeof slot.metadata?.placeholderLabel === "string"
@@ -5149,7 +5246,12 @@ export function TournamentDetailPage({
         .trim();
       return haystack.includes(trimmedQuery);
     });
-  }, [timetableSearchQuery, timetableSlots, timetableViewMode]);
+  }, [
+    activeTimetablePhaseKey,
+    timetableSearchQuery,
+    timetableSlots,
+    timetableViewMode,
+  ]);
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () =>
@@ -6465,6 +6567,38 @@ export function TournamentDetailPage({
                 Training
               </button>
             </div>
+            {timetableViewMode === "matches" && timetablePhaseTabs.length > 1 ? (
+              <div className="-mx-1 overflow-x-auto pb-1">
+                <div className="flex min-w-max gap-2 px-1">
+                  {timetablePhaseTabs.map((tab) => {
+                    const isActive = tab.key === activeTimetablePhaseKey;
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveTimetablePhaseKey(tab.key)}
+                        className={
+                          isActive
+                            ? "inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                            : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                        }
+                      >
+                        <span>{tab.label}</span>
+                        <span
+                          className={
+                            isActive
+                              ? "rounded-full bg-white/15 px-2 py-0.5 text-xs text-white"
+                              : "rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
+                          }
+                        >
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
               <input
                 type="search"
