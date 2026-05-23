@@ -7,10 +7,17 @@ type GroupStandingsTableProps = {
     standings: GroupStanding[]
     embedded?: boolean
     artistic?: boolean
+    showNativeNames?: boolean
     tournamentContextSlug?: string | null
 }
 
-export default function GroupStandingsTable({ standings, embedded = false, artistic = false, tournamentContextSlug = null }: GroupStandingsTableProps) {
+export default function GroupStandingsTable({
+    standings,
+    embedded = false,
+    artistic = false,
+    showNativeNames = true,
+    tournamentContextSlug = null,
+}: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
     }
@@ -62,7 +69,8 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                                             ) : null}
                                             <div className="flex flex-col leading-tight">
                                             <span>{player.playerName || '-'}</span>
-                                            {player.playerNativeName &&
+                                            {showNativeNames &&
+                                                player.playerNativeName &&
                                                 player.playerNativeName.trim() !== player.playerName.trim() && (
                                                     <span className="text-[10px] text-gray-200/80">
                                                         {player.playerNativeName}
@@ -78,7 +86,8 @@ export default function GroupStandingsTable({ standings, embedded = false, artis
                                         ) : null}
                                         <div className="flex flex-col leading-tight">
                                             <span>{player.playerName || '-'}</span>
-                                            {player.playerNativeName &&
+                                            {showNativeNames &&
+                                                player.playerNativeName &&
                                                 player.playerNativeName.trim() !== player.playerName.trim() && (
                                                     <span className="text-[10px] text-gray-500 dark:text-gray-400">
                                                         {player.playerNativeName}

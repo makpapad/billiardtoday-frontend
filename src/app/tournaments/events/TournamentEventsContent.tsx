@@ -243,11 +243,13 @@ function PlayerNameWithFlag({
   nativeName,
   country,
   highlight = false,
+  showNativeName = true,
 }: {
   name: string;
   nativeName?: string | null;
   country?: string | null;
   highlight?: boolean;
+  showNativeName?: boolean;
 }) {
   const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
   return (
@@ -270,7 +272,7 @@ function PlayerNameWithFlag({
         >
           {name || "Unknown"}
         </span>
-        {nativeName && nativeName.trim() !== name.trim() && (
+        {showNativeName && nativeName && nativeName.trim() !== name.trim() && (
           <span
             className={clsx(
               "text-[10px] text-gray-500 dark:text-gray-400",
@@ -1345,6 +1347,29 @@ function shouldSuppressDerivedBestAverage(params: {
   );
 }
 
+function shouldPreferEnglishOnlyNames(params: {
+  title: string | null | undefined;
+  rulesetKey: string | null | undefined;
+  tournamentRulesetKey: string | null | undefined;
+}) {
+  const haystack = [
+    params.title,
+    params.rulesetKey,
+    params.tournamentRulesetKey,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    /\b(umb|ceb|ubm)\b/.test(haystack) ||
+    haystack.includes("world cup 3-cushion") ||
+    haystack.includes("world cup three cushion") ||
+    haystack.includes("confederation europeenne") ||
+    haystack.includes("union mondiale")
+  );
+}
+
 function resolveLivePlayerSide(params: {
   playerDocumentId: string | null | undefined;
   playerName: string | null | undefined;
@@ -1748,6 +1773,12 @@ function normalizeTimetableSlot(
     typeof (normalized.metadata as Record<string, unknown>).trainingPlayerCountry === "string"
       ? ((normalized.metadata as Record<string, unknown>).trainingPlayerCountry as string)
       : null;
+  const linkedMatchDocumentId =
+    normalized.metadata &&
+    typeof normalized.metadata === "object" &&
+    typeof (normalized.metadata as Record<string, unknown>).linkedMatchDocumentId === "string"
+      ? ((normalized.metadata as Record<string, unknown>).linkedMatchDocumentId as string)
+      : null;
 
   return {
     id: normalized.id,
@@ -1800,7 +1831,7 @@ function normalizeTimetableSlot(
       player1Country,
     matchPlayer2Country:
       player2Country,
-    matchDocumentId: match?.documentId ?? null,
+    matchDocumentId: match?.documentId ?? linkedMatchDocumentId,
   };
 }
 
@@ -1814,6 +1845,7 @@ function StageRankingTable({
   suppressDerivedBestAverage = false,
   koRankingRound = "opening-final",
   eventRulesetKey = null,
+  showNativePlayerNames = true,
 }: {
   stage: NormalizedEventStage;
   allStages?: NormalizedEventStage[];
@@ -1824,6 +1856,7 @@ function StageRankingTable({
   suppressDerivedBestAverage?: boolean;
   koRankingRound?: KoRankingRound;
   eventRulesetKey?: string | null;
+  showNativePlayerNames?: boolean;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
@@ -2420,6 +2453,7 @@ function StageRankingTable({
                         name={result.playerName || "Unknown"}
                         nativeName={result.playerNativeName}
                         country={result.playerCountry}
+                        showNativeName={showNativePlayerNames}
                       />
                     </Link>
                   ) : (
@@ -2427,6 +2461,7 @@ function StageRankingTable({
                       name={result.playerName || "Unknown"}
                       nativeName={result.playerNativeName}
                       country={result.playerCountry}
+                      showNativeName={showNativePlayerNames}
                     />
                   )}
                 </td>
@@ -3071,6 +3106,25 @@ export function TournamentEventsContent({
       ? tournamentRuleset.trim()
       : null;
   }, [eventData]);
+  const tournamentRulesetKey = useMemo(() => {
+    const tournament = eventData?.data?.tournament;
+    const tournamentRuleset =
+      tournament && typeof tournament === "object"
+        ? (tournament as { ruleset_key?: unknown }).ruleset_key
+        : null;
+    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
+      ? tournamentRuleset.trim()
+      : null;
+  }, [eventData]);
+  const showNativePlayerNames = useMemo(
+    () =>
+      !shouldPreferEnglishOnlyNames({
+        title: eventData?.data?.title,
+        rulesetKey: eventRulesetKey,
+        tournamentRulesetKey,
+      }),
+    [eventData?.data?.title, eventRulesetKey, tournamentRulesetKey],
+  );
 
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () => {
@@ -5448,6 +5502,7 @@ export function TournamentEventsContent({
                                   suppressDerivedBestAverage={suppressDerivedBestAverage}
                                   koRankingRound={koRankingRound}
                                   eventRulesetKey={eventRulesetKey}
+                                  showNativePlayerNames={showNativePlayerNames}
                                 />
                               </div>
                             ) : (
@@ -7094,6 +7149,7 @@ export function TournamentEventsContent({
                                                                                   .player
                                                                                   ?.nativeName
                                                                           }
+                                                                          showNativeName={showNativePlayerNames}
                                                                           country={
                                                                             displayPlayers
                                                                               .top
@@ -7138,6 +7194,7 @@ export function TournamentEventsContent({
                                                                                 .player
                                                                                 ?.nativeName
                                                                         }
+                                                                        showNativeName={showNativePlayerNames}
                                                                         country={
                                                                           displayPlayers
                                                                             .top
@@ -7319,6 +7376,7 @@ export function TournamentEventsContent({
                                                                                   .player
                                                                                   ?.nativeName
                                                                           }
+                                                                          showNativeName={showNativePlayerNames}
                                                                           country={
                                                                             displayPlayers
                                                                               .bottom
@@ -7363,6 +7421,7 @@ export function TournamentEventsContent({
                                                                                 .player
                                                                                 ?.nativeName
                                                                         }
+                                                                        showNativeName={showNativePlayerNames}
                                                                         country={
                                                                           displayPlayers
                                                                             .bottom
@@ -7457,6 +7516,7 @@ export function TournamentEventsContent({
                                                   )}
                                                   embedded={embedded}
                                                   artistic={isArtisticEvent}
+                                                  showNativeNames={showNativePlayerNames}
                                                   tournamentContextSlug={tournamentContextSlug}
                                                 />
                                               ) : null}

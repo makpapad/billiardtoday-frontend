@@ -4273,6 +4273,12 @@ export function TournamentDetailPage({
           typeof (normalized.metadata as Record<string, unknown>).trainingPlayerCountry === "string"
             ? ((normalized.metadata as Record<string, unknown>).trainingPlayerCountry as string)
             : null;
+        const linkedMatchDocumentId =
+          normalized.metadata &&
+          typeof normalized.metadata === "object" &&
+          typeof (normalized.metadata as Record<string, unknown>).linkedMatchDocumentId === "string"
+            ? ((normalized.metadata as Record<string, unknown>).linkedMatchDocumentId as string)
+            : null;
         const resolvedTrainingPlayer =
           normalized.slot_type === "training"
             ? timetableTrainingPlayers.resolve(
@@ -4349,7 +4355,7 @@ export function TournamentDetailPage({
             player1Country,
           matchPlayer2Country:
             player2Country,
-          matchDocumentId: match?.documentId ?? null,
+          matchDocumentId: match?.documentId ?? linkedMatchDocumentId,
         } satisfies NormalizedTimetableSlot;
       })
       .filter((slot) => slot.isVisible);

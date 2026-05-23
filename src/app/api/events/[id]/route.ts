@@ -774,7 +774,9 @@ const playerRankingKey = (row: Record<string, unknown>): string | null => {
     if (localKey) return `local:${localKey}`
 
     const playerName =
-        typeof player?.full_name === 'string' && player.full_name.trim().length > 0
+        typeof player?.full_name_en === 'string' && player.full_name_en.trim().length > 0
+            ? player.full_name_en.trim().toLowerCase()
+            : typeof player?.full_name === 'string' && player.full_name.trim().length > 0
             ? player.full_name.trim().toLowerCase()
             : typeof row.player_name === 'string' && row.player_name.trim().length > 0
               ? row.player_name.trim().toLowerCase()
