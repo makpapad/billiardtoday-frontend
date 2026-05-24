@@ -187,10 +187,17 @@ const formatMonthHeading = (value: string) => {
   });
 };
 
+const getEndOfDayTime = (value: string | null | undefined) => {
+  if (!value) return null;
+  const key = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const end = key ? new Date(`${key}T23:59:59.999`) : new Date(value);
+  return Number.isNaN(end.getTime()) ? null : end.getTime();
+};
+
 const getStatus = (startDate: string | null | undefined, endDate: string | null | undefined) => {
   const now = Date.now();
   const start = startDate ? new Date(startDate).getTime() : null;
-  const end = endDate ? new Date(endDate).getTime() : null;
+  const end = getEndOfDayTime(endDate);
   if (start && start > now) return "Upcoming";
   if (end && end < now) return "Completed";
   return "Live";

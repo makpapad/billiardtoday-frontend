@@ -72,14 +72,21 @@ const formatDate = (date: string | null) => {
   return new Date(date).toLocaleDateString("el-GR");
 };
 
-const getStatus = (startDate: string | null, endDate: string | null) => {
-  const now = new Date();
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate) : null;
+const getEndOfDayTime = (value: string | null) => {
+  if (!value) return null;
+  const key = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const end = key ? new Date(`${key}T23:59:59.999`) : new Date(value);
+  return Number.isNaN(end.getTime()) ? null : end.getTime();
+};
 
-  if (start && start > now) return "Upcoming";
-  if (end && end < now) return "Completed";
-  if (start || end) return "Live";
+const getStatus = (startDate: string | null, endDate: string | null) => {
+  const now = Date.now();
+  const start = startDate ? new Date(startDate) : null;
+  const endTime = getEndOfDayTime(endDate);
+
+  if (start && start.getTime() > now) return "Upcoming";
+  if (endTime !== null && endTime < now) return "Completed";
+  if (start || endTime !== null) return "Live";
   return "Scheduled";
 };
 
