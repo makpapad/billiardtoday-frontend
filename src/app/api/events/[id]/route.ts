@@ -915,6 +915,23 @@ const buildFinalResultsFromFinalStages = (
     return finalRows
 }
 
+const fetchAutomaticFinalResultsPreview = async (
+    eventDocumentId: string,
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[] | null> => {
+    const url = `${STRAPI_URL}/api/bt-events/${encodeURIComponent(eventDocumentId)}/final-results/preview`
+    const res = await fetch(url, {
+        cache: 'no-store',
+        headers,
+    })
+    if (!res.ok) return null
+    const payload = (await res.json().catch(() => null)) as { data?: unknown[] } | null
+    const rows = Array.isArray(payload?.data)
+        ? payload.data.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
+        : []
+    return rows.length > 0 ? rows : null
+}
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -1249,7 +1266,8 @@ export async function GET(
                 const storedFinalResults = asArray(event.results_final)
                 const stageFinalResults =
                     storedFinalResults.length === 0
-                        ? buildFinalResultsFromFinalStages(stages)
+                        ? ((await fetchAutomaticFinalResultsPreview(documentId, headers)) ??
+                            buildFinalResultsFromFinalStages(stages))
                         : []
                 const sourceFinalResults =
                     storedFinalResults.length > 0 ? storedFinalResults : stageFinalResults
