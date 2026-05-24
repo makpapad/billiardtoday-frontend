@@ -74,7 +74,13 @@ const formatDate = (date: string | null) => {
 
 const getEndOfDayTime = (value: string | null) => {
   if (!value) return null;
-  const key = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const dateTime = /^\d{4}-\d{2}-\d{2}T/.test(value) ? new Date(value) : null;
+  if (dateTime && !Number.isNaN(dateTime.getTime())) {
+    dateTime.setUTCDate(dateTime.getUTCDate() + 1);
+  }
+  const key = dateTime
+    ? dateTime.toISOString().slice(0, 10)
+    : value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
   const end = key ? new Date(`${key}T23:59:59.999`) : new Date(value);
   return Number.isNaN(end.getTime()) ? null : end.getTime();
 };
