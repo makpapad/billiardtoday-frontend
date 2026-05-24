@@ -971,6 +971,29 @@ export default function PlayerProfilePage() {
                     }),
                 ]
 
+                const metadataParams = new URLSearchParams()
+                if (selectedGameType !== 'all') {
+                    metadataParams.set('gameType', selectedGameType)
+                }
+                if (selectedTournamentType !== 'all') {
+                    metadataParams.set('tournamentType', selectedTournamentType)
+                }
+                if (tournamentContextSlug) {
+                    metadataParams.set('tournament', tournamentContextSlug)
+                }
+                metadataParams.set('limit', '5000')
+
+                fetchPromises.push(
+                    fetch(
+                        buildApiUrl(
+                            `/api/players/${playerId}/history?${metadataParams.toString()}`,
+                        ),
+                        {
+                            signal: abortController.signal,
+                        },
+                    ),
+                )
+
                 const responses = await Promise.all(fetchPromises)
                 if (!isActive) return
                 const [historyResponse, metadataResponse] = responses
@@ -1137,7 +1160,6 @@ export default function PlayerProfilePage() {
 
     const handleTournamentTypeChange = (tournamentType: string) => {
         setSelectedTournamentType(tournamentType)
-        setSelectedYear('all')
         setTournamentsToShow(3)
     }
 
@@ -1314,6 +1336,61 @@ export default function PlayerProfilePage() {
           ? allParticipations
           : participations
 
+    const aggregateParticipations = (sourceParticipations: TournamentParticipation[]) => {
+        const totalMatches = sourceParticipations.reduce(
+            (sum, p) => sum + (Number(p.totalMatches) || 0),
+            0,
+        )
+        const totalWins = sourceParticipations.reduce(
+            (sum, p) => sum + (Number(p.wins) || 0),
+            0,
+        )
+        const totalLosses = sourceParticipations.reduce(
+            (sum, p) => sum + (Number(p.losses) || 0),
+            0,
+        )
+
+        let totalPointsSum = 0
+        let totalInningsSum = 0
+        let weightedAvgSum = 0
+        let weightedAvgMatches = 0
+        sourceParticipations.forEach((p) => {
+            if (Array.isArray(p.matches) && p.matches.length > 0) {
+                p.matches.forEach((m) => {
+                    totalPointsSum += Number(m.scoreFor) || 0
+                    totalInningsSum += Number(m.innings) || 0
+                })
+                return
+            }
+
+            const avgValue = parseAverageValue(p.avgPerInning)
+            const matchesWeight = Number(p.totalMatches) || 0
+            if (matchesWeight > 0) {
+                weightedAvgSum += avgValue * matchesWeight
+                weightedAvgMatches += matchesWeight
+            }
+        })
+
+        const avgPerInningValue =
+            totalInningsSum > 0
+                ? totalPointsSum / totalInningsSum
+                : weightedAvgMatches > 0
+                  ? weightedAvgSum / weightedAvgMatches
+                  : 0
+
+        return {
+            totalMatches,
+            totalWins,
+            totalLosses,
+            winPercentage:
+                totalMatches > 0
+                    ? ((totalWins / totalMatches) * 100).toFixed(1)
+                    : '0.0',
+            avgPerInningValue,
+            avgPerInning: avgPerInningValue.toFixed(3).replace('.', ','),
+        }
+    }
+
     const calculateFilteredStats = () => {
         const eventsSource = (() => {
             if (selectedYear === 'all') {
@@ -1354,53 +1431,13 @@ export default function PlayerProfilePage() {
             return true
         })
 
-        const totalMatches = sourceParticipations.reduce(
-            (sum, p) => sum + p.totalMatches,
-            0,
-        )
-        const totalWins = sourceParticipations.reduce(
-            (sum, p) => sum + p.wins,
-            0,
-        )
-        const totalLosses = sourceParticipations.reduce(
-            (sum, p) => sum + p.losses,
-            0,
-        )
-        const winPercentage =
-            totalMatches > 0
-                ? ((totalWins / totalMatches) * 100).toFixed(1)
-                : '0.0'
-
-        let totalPointsSum = 0
-        let totalInningsSum = 0
-        let weightedAvgSum = 0
-        let weightedAvgMatches = 0
-        sourceParticipations.forEach((p) => {
-            if (Array.isArray(p.matches) && p.matches.length > 0) {
-                p.matches.forEach((m) => {
-                    totalPointsSum += m.scoreFor
-                    totalInningsSum += m.innings
-                })
-                return
-            }
-
-            const avgValue = parseAverageValue(p.avgPerInning)
-            const matchesWeight = Number(p.totalMatches) || 0
-            if (matchesWeight > 0) {
-                weightedAvgSum += avgValue * matchesWeight
-                weightedAvgMatches += matchesWeight
-            }
-        })
-        const avgPerInning =
-            totalInningsSum > 0
-                ? (totalPointsSum / totalInningsSum)
-                      .toFixed(3)
-                      .replace('.', ',')
-                : weightedAvgMatches > 0
-                  ? (weightedAvgSum / weightedAvgMatches)
-                        .toFixed(3)
-                        .replace('.', ',')
-                : '0,000'
+        const {
+            totalMatches,
+            totalWins,
+            totalLosses,
+            winPercentage,
+            avgPerInning,
+        } = aggregateParticipations(sourceParticipations)
 
         const highestRun = sourceParticipations.reduce(
             (max, p) => Math.max(max, p.highestRun),
@@ -1806,7 +1843,30 @@ export default function PlayerProfilePage() {
         selectedGameType === 'all'
             ? []
             : (() => {
-                  if (allParticipations.length === 0) {
+                  const chartParticipations = completeParticipationsSource.filter((p) => {
+                      if (
+                          normalizeGameTypeOrFallback(p.gameType) !==
+                          selectedGameType
+                      ) {
+                          return false
+                      }
+                      if (
+                          selectedTournamentType !== 'all' &&
+                          p.tournamentType !== selectedTournamentType
+                      ) {
+                          return false
+                      }
+                      return true
+                  })
+
+                  if (
+                      chartParticipations.length === 0 &&
+                      selectedTournamentType !== 'all'
+                  ) {
+                      return []
+                  }
+
+                  if (chartParticipations.length === 0) {
                       const byYear =
                           (
                               player?.career_stats as
@@ -1866,91 +1926,27 @@ export default function PlayerProfilePage() {
                           .sort((a, b) => a.year - b.year)
                   }
 
-                  const createYearAggregate = () => ({
-                      totalPoints: 0,
-                      totalInnings: 0,
-                      weightedAvgSum: 0,
-                      weightedAvgMatches: 0,
-                      wins: 0,
-                      losses: 0,
-                  })
-
                   const yearData = new Map<
                       number,
-                      {
-                          totalPoints: number
-                          totalInnings: number
-                          weightedAvgSum: number
-                          weightedAvgMatches: number
-                          wins: number
-                          losses: number
-                      }
+                      TournamentParticipation[]
                   >()
 
-                  allParticipations
-                      .filter(
-                          (p) =>
-                              normalizeGameTypeOrFallback(p.gameType) ===
-                              selectedGameType,
-                      )
-                      .forEach((p) => {
-                          const existing = yearData.get(p.year) || createYearAggregate()
-
-                          if (!Array.isArray(p.matches) || p.matches.length === 0) {
-                              const avgValue = parseAverageValue(p.avgPerInning)
-                              const matchWeight = Number(p.totalMatches) || 0
-                              yearData.set(p.year, {
-                                  totalPoints: existing.totalPoints,
-                                  totalInnings: existing.totalInnings,
-                                  weightedAvgSum:
-                                      existing.weightedAvgSum +
-                                      avgValue * matchWeight,
-                                  weightedAvgMatches:
-                                      existing.weightedAvgMatches + matchWeight,
-                                  wins: existing.wins + (Number(p.wins) || 0),
-                                  losses:
-                                      existing.losses +
-                                      (Number(p.losses) || 0),
-                              })
-                              return
-                          }
-
-                          p.matches.forEach((m) => {
-                              const running =
-                                  yearData.get(p.year) || existing
-                              yearData.set(p.year, {
-                                  totalPoints: running.totalPoints + m.scoreFor,
-                                  totalInnings:
-                                      running.totalInnings + m.innings,
-                                  weightedAvgSum: running.weightedAvgSum,
-                                  weightedAvgMatches:
-                                      running.weightedAvgMatches,
-                                  wins:
-                                      running.wins +
-                                      (m.result === 'win' ? 1 : 0),
-                                  losses:
-                                      running.losses +
-                                      (m.result === 'loss' ? 1 : 0),
-                              })
-                          })
-                      })
+                  chartParticipations.forEach((p) => {
+                      yearData.set(p.year, [...(yearData.get(p.year) || []), p])
+                  })
 
                   return Array.from(yearData.entries())
-                      .map(([year, data]) => ({
-                          year,
-                          avg:
-                              data.totalInnings > 0
-                                  ? data.totalPoints / data.totalInnings
-                                  : data.weightedAvgMatches > 0
-                                    ? data.weightedAvgSum /
-                                      data.weightedAvgMatches
-                                  : 0,
-                          winPct:
-                              data.wins + data.losses > 0
-                                  ? (data.wins / (data.wins + data.losses)) * 100
-                                  : 0,
-                          wins: data.wins,
-                      }))
+                      .map(([year, yearParticipations]) => {
+                          const aggregate = aggregateParticipations(
+                              yearParticipations,
+                          )
+                          return {
+                              year,
+                              avg: aggregate.avgPerInningValue,
+                              winPct: Number(aggregate.winPercentage) || 0,
+                              wins: aggregate.totalWins,
+                          }
+                      })
                       .sort((a, b) => a.year - b.year)
               })()
 
