@@ -54,6 +54,7 @@ import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
 import {
   buildTournamentDateRangeLabel,
   buildTournamentLocationLabel,
+  buildTournamentOverviewParagraphs,
   buildTournamentTitle,
   buildTournamentVenueLabel,
   formatTournamentDate,
@@ -1626,56 +1627,10 @@ export function TournamentDetailPage({
     ? `${embedded ? "/embed" : ""}/rankings/${summary.rankingSeriesSlug}`
     : null;
   const tournamentsIndexHref = `${embedded ? "/embed" : ""}/tournaments`;
-  const overviewParagraphs = useMemo(() => {
-    const descriptionParagraph =
-      typeof summary.description === "string" && summary.description.trim().length > 0
-        ? summary.description.trim()
-        : null;
-    const introSegments = [
-      tournamentTitle,
-      summary.gameType ? `is a ${summary.gameType} tournament` : "is a billiards tournament",
-      scheduleLabel ? `scheduled for ${scheduleLabel}` : "",
-      venueLabel ? `at ${venueLabel}` : "",
-      locationLabel ? `in ${locationLabel}` : "",
-    ].filter(Boolean);
-    const intro = `${introSegments.join(" ")}.`
-      .replace(/\s+\./g, ".")
-      .replace(/\s{2,}/g, " ");
-
-    const coverageSegments = [
-      "This event page tracks every published stage, timetable slot, participant list, live table update, and final standing",
-      summary.stages.length > 0 ? `across ${summary.stages.length} stage${summary.stages.length === 1 ? "" : "s"}` : "",
-      summary.rankingSeriesTitle ? `for the ${summary.rankingSeriesTitle} ranking series` : "",
-    ].filter(Boolean);
-    const coverage = `${coverageSegments.join(" ")}.`
-      .replace(/\s+\./g, ".")
-      .replace(/\s{2,}/g, " ");
-
-    const organizerSubject = summary.organizerType || "event organizers";
-    const planning = `${
-      scheduleLabel
-        ? `Players and fans can use this page to follow the ${scheduleLabel} schedule`
-        : "Players and fans can use this page to follow the published schedule"
-    }${
-      venueLabel || locationLabel
-        ? `, venue details${venueLabel ? ` at ${venueLabel}` : ""}${locationLabel ? ` in ${locationLabel}` : ""}`
-        : ""
-    }, and results as they are released by the ${organizerSubject}.`;
-
-    return [descriptionParagraph, intro, coverage, planning].filter(
-      (paragraph): paragraph is string => Boolean(paragraph),
-    );
-  }, [
-    locationLabel,
-    scheduleLabel,
-    summary.description,
-    summary.gameType,
-    summary.organizerType,
-    summary.rankingSeriesTitle,
-    summary.stages.length,
-    tournamentTitle,
-    venueLabel,
-  ]);
+  const overviewParagraphs = useMemo(
+    () => buildTournamentOverviewParagraphs(summary, browserLocale ?? "en-US"),
+    [browserLocale, summary],
+  );
   const overviewFacts = useMemo(
     () =>
       [

@@ -58,7 +58,16 @@ export const buildTournamentDateRangeLabel = (
   return startText || endText || null;
 };
 
-export const buildTournamentDescription = (
+const joinClauses = (parts: Array<string | null | undefined>) =>
+  parts
+    .map((part) => cleanText(part))
+    .filter(Boolean)
+    .join(" ");
+
+const addSentencePeriod = (value: string) =>
+  value.trim().replace(/\s{2,}/g, " ").replace(/\s+\./g, ".").replace(/[.!?]$/, "") + ".";
+
+export const buildTournamentOverviewParagraphs = (
   summary: TournamentEventSummary,
   locale = "en-US",
 ) => {
@@ -71,15 +80,55 @@ export const buildTournamentDescription = (
     summary.endDate,
     locale,
   );
+  const sourceDescription = cleanText(summary.description);
 
-  const parts = [
-    title,
-    gameType ? `${gameType} tournament` : "billiard tournament",
-    venueName || location ? `held at ${venueName || location}` : "",
-    location && venueName ? `in ${location}` : "",
-    dateWindow ? `scheduled for ${dateWindow}` : "",
-    "with schedule, stages, standings, participants, live updates, and results.",
-  ].filter(Boolean);
+  const opening = addSentencePeriod(
+    joinClauses([
+      title,
+      gameType ? `brings together ${gameType.toLowerCase()} competition` : "brings together billiards competition",
+      dateWindow ? `from ${dateWindow}` : "",
+      venueName ? `at ${venueName}` : "",
+      location ? `in ${location}` : "",
+    ]),
+  );
 
-  return parts.join(" ");
+  const coverageParts = [
+    "This page brings the event schedule, stage-by-stage progress, participant list, standings, and published results into one place",
+    summary.stages.length > 0
+      ? `across ${summary.stages.length} stage${summary.stages.length === 1 ? "" : "s"}`
+      : "",
+    summary.rankingSeriesTitle
+      ? `within the ${summary.rankingSeriesTitle} series`
+      : "",
+  ];
+  const coverage = addSentencePeriod(joinClauses(coverageParts));
+
+  const venueContext = venueName
+    ? `at ${venueName}${location ? ` in ${location}` : ""}`
+    : location
+      ? `in ${location}`
+      : "";
+  const followAlong = addSentencePeriod(
+    joinClauses([
+      dateWindow
+        ? `Follow the event through ${dateWindow}`
+        : "Follow the event as updates are published",
+      venueContext,
+      "with live updates, draw changes, and final results as they become available",
+    ]),
+  );
+
+  return [sourceDescription, opening, coverage, followAlong].filter(Boolean);
+};
+
+export const buildTournamentDescription = (
+  summary: TournamentEventSummary,
+  locale = "en-US",
+) => {
+  const title = buildTournamentTitle(summary);
+  const overviewParagraphs = buildTournamentOverviewParagraphs(summary, locale);
+  const lead = overviewParagraphs[0] || "";
+  const fallback = overviewParagraphs[1] || "";
+
+  return cleanText(lead) || cleanText(fallback) || `${title} tournament page with schedule and results.`;
 };
