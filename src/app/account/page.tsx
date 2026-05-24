@@ -346,6 +346,10 @@ export default function AccountPage() {
   const [isSavingNickname, setIsSavingNickname] = React.useState(false);
   const [nicknameError, setNicknameError] = React.useState<string | null>(null);
   const [nicknameNotice, setNicknameNotice] = React.useState<string | null>(null);
+  const [profileDraft, setProfileDraft] = React.useState("");
+  const [isSavingProfileConfirmation, setIsSavingProfileConfirmation] = React.useState(false);
+  const [profileConfirmationError, setProfileConfirmationError] = React.useState<string | null>(null);
+  const [profileConfirmationNotice, setProfileConfirmationNotice] = React.useState<string | null>(null);
 
   const loadPrivateData = React.useCallback(async () => {
     setIsRefreshingData(true);
@@ -396,6 +400,10 @@ export default function AccountPage() {
   }, [account?.fullName]);
 
   React.useEffect(() => {
+    setProfileDraft(account?.fullName || account?.player?.fullName || "");
+  }, [account?.fullName, account?.player?.fullName]);
+
+  React.useEffect(() => {
     if (!account || account.player?.documentId) {
       setDeviceLink(null);
       return;
@@ -443,6 +451,9 @@ export default function AccountPage() {
     Boolean(account.isOfficiallyVerified) ||
     account.status === "active_linked";
   const playerName = displayNameFor(account, dashboard);
+  const officialPlayerName = playerCard?.officialPlayerName || account.player?.fullName || null;
+  const needsProfileConfirmation =
+    Boolean(account.player?.documentId) && !account.profileCompletedAt;
   const friendlyAvg = friendlyAverage(friendlyMatches);
   const officialStats = summaryStats.official || null;
   const tournamentMatches = officialStats?.totalMatches || tournaments.reduce((sum, item) => sum + item.totalMatches, 0);
@@ -579,6 +590,84 @@ export default function AccountPage() {
           </div>
         </div>
       </section>
+
+      {needsProfileConfirmation ? (
+        <section className="border-b border-zinc-300 bg-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[0.72fr_1fr] lg:items-start">
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-700">Confirm your details</div>
+              <h2 className="mt-3 text-3xl font-black uppercase tracking-normal">Your player profile is ready</h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">
+                Check the official player link and choose the name that will appear inside your private account.
+              </p>
+            </div>
+
+            <form
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setProfileConfirmationError(null);
+                setProfileConfirmationNotice(null);
+                setIsSavingProfileConfirmation(true);
+                try {
+                  const updated = await playerAccountAuth.updateProfile({ fullName: profileDraft });
+                  setAccount(updated);
+                  setNicknameDraft(updated.fullName || "");
+                  setProfileDraft(updated.fullName || officialPlayerName || "");
+                  setProfileConfirmationNotice("Details confirmed.");
+                  void loadPrivateData();
+                } catch (err) {
+                  setProfileConfirmationError(err instanceof Error ? err.message : "Profile confirmation failed.");
+                } finally {
+                  setIsSavingProfileConfirmation(false);
+                }
+              }}
+              className="grid gap-4 border border-zinc-300 bg-[#f4f0e6] p-5"
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Official player</span>
+                  <input
+                    value={officialPlayerName || ""}
+                    readOnly
+                    className="mt-2 w-full border border-zinc-300 bg-white/70 px-3 py-3 text-sm font-semibold text-zinc-700 outline-none"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Email</span>
+                  <input
+                    value={account.email || ""}
+                    readOnly
+                    className="mt-2 w-full border border-zinc-300 bg-white/70 px-3 py-3 text-sm font-semibold text-zinc-700 outline-none"
+                  />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Account display name</span>
+                <input
+                  value={profileDraft}
+                  onChange={(event) => setProfileDraft(event.target.value)}
+                  placeholder={officialPlayerName || "Your name"}
+                  className="mt-2 w-full border border-zinc-400 bg-white px-3 py-3 text-sm text-zinc-950 outline-none"
+                />
+              </label>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={isSavingProfileConfirmation}
+                  className="bg-zinc-950 px-5 py-3 text-sm font-semibold text-white"
+                >
+                  {isSavingProfileConfirmation ? "Saving..." : "Confirm details"}
+                </button>
+                <Link href="/account/security" className="border border-zinc-400 px-5 py-3 text-sm font-semibold text-zinc-900">
+                  Add phone
+                </Link>
+              </div>
+              {profileConfirmationError ? <div className="text-sm text-red-700">{profileConfirmationError}</div> : null}
+              {profileConfirmationNotice ? <div className="text-sm text-emerald-700">{profileConfirmationNotice}</div> : null}
+            </form>
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-b border-zinc-300 bg-[#f4f0e6]">
         <div className="mx-auto max-w-7xl px-5 py-5">

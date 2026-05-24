@@ -14,6 +14,7 @@ export type PlayerAccountSummary = {
     | null;
   isOfficiallyVerified?: boolean;
   emailVerifiedAt: string | null;
+  profileCompletedAt?: string | null;
   mobile?: string | null;
   phoneVerifiedAt?: string | null;
   socialProvider?: "google" | "facebook" | null;
