@@ -297,9 +297,11 @@ export function AccountAccessCard({
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             {authOptions?.socialProviders.google.enabled && authOptions?.socialProviders.google.clientId ? (
               <div className="space-y-2">
-                <div ref={googleButtonRef} className="min-h-[44px]" />
+                <div className="overflow-hidden rounded-full border border-slate-300 bg-white">
+                  <div ref={googleButtonRef} className="min-h-[44px]" />
+                </div>
                 <div className="text-xs text-slate-500">
-                  {googleSdkReady ? "Έτοιμο για σύνδεση." : "Φόρτωση σύνδεσης..."}
+                  {googleSdkReady ? "Ready to sign in." : "Loading sign-in..."}
                 </div>
               </div>
             ) : (
@@ -326,10 +328,10 @@ export function AccountAccessCard({
               );
             }}
             disabled={!authOptions?.socialProviders.facebook.enabled || !authOptions?.socialProviders.facebook.appId || isSocialPending}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <span className="flex items-center gap-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1877f2] text-xl font-black leading-none text-white">
+            <span className="flex min-h-[44px] items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#1877f2] text-base font-black leading-none text-white">
                 f
               </span>
               <span>Continue with Facebook</span>
@@ -337,8 +339,8 @@ export function AccountAccessCard({
             <div className="mt-1 text-xs font-normal text-slate-500">
               {authOptions?.socialProviders.facebook.enabled && authOptions?.socialProviders.facebook.appId
                 ? facebookSdkReady
-                  ? "Έτοιμο για σύνδεση."
-                  : "Φόρτωση σύνδεσης..."
+                  ? "Ready to sign in."
+                  : "Loading sign-in..."
                 : "Not configured yet."}
             </div>
           </button>
