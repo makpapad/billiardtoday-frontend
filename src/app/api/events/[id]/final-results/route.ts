@@ -242,6 +242,20 @@ const fetchFinalStageFallbackRows = async (
     return buildFullFinalRowsFromStageStandings(stageRows)
 }
 
+const fetchAutomaticFinalResultsPreview = async (
+    eventId: string,
+    headers: HeadersInit,
+): Promise<Record<string, unknown>[]> => {
+    const url = `${STRAPI_URL}/api/bt-events/${encodeURIComponent(eventId)}/final-results/preview`
+    const res = await fetch(url, {
+        cache: 'no-store',
+        headers,
+    })
+    if (!res.ok) return []
+    const payload = (await res.json().catch(() => null)) as { data?: unknown[] } | null
+    return Array.isArray(payload?.data) ? asArray(payload.data) : []
+}
+
 const buildStageMatchPointsMap = async (
     eventStages: unknown[],
     headers: HeadersInit,
@@ -425,6 +439,22 @@ export async function GET(
                             final_standings_published: payload.data?.final_standings_published === true,
                             final_standings_published_at:
                                 payload.data?.final_standings_published_at ?? null,
+                        },
+                    },
+                    { status: 200 },
+                )
+            }
+
+            const automaticPreviewRows = await fetchAutomaticFinalResultsPreview(id, headers)
+            if (automaticPreviewRows.length > 0) {
+                return NextResponse.json(
+                    {
+                        data: automaticPreviewRows,
+                        meta: {
+                            final_standings_published: true,
+                            final_standings_published_at:
+                                payload.data?.final_standings_published_at ?? null,
+                            source: 'automatic-final-results-preview',
                         },
                     },
                     { status: 200 },
