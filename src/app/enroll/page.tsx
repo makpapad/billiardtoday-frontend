@@ -18,13 +18,11 @@ export default function EnrollPage() {
   const screenId = params?.get("screenId") || "";
   const inheritsClubFromScreen = Boolean(screenId.trim());
   const [trustedPlayerName, setTrustedPlayerName] = React.useState<string | null>(null);
+  const [screenClubName, setScreenClubName] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [requestForm, setRequestForm] = React.useState({
     displayName: "",
-    country: "",
-    clubName: "",
-    mobile: "",
     email: "",
   });
 
@@ -32,6 +30,32 @@ export default function EnrollPage() {
     const trusted = getTrustedDevicePlayer();
     setTrustedPlayerName(trusted?.displayName ?? trusted?.fullName ?? null);
   }, []);
+
+  React.useEffect(() => {
+    if (!screenId) {
+      setScreenClubName(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/scoreboard/screens/by-identifier/${encodeURIComponent(screenId)}`, {
+      cache: "no-store",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const clubName =
+          typeof data?.data?.club?.name === "string" && data.data.club.name.trim()
+            ? data.data.club.name.trim()
+            : null;
+        setScreenClubName(clubName);
+      })
+      .catch(() => {
+        if (!cancelled) setScreenClubName(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [screenId]);
 
   const finish = React.useCallback(() => {
     if (typeof window === "undefined") return;
@@ -69,7 +93,11 @@ export default function EnrollPage() {
         setTrustedDevicePlayer(data.data.player);
         setTrustedPlayerName(data.data.player.displayName ?? data.data.player.fullName ?? null);
       }
-      setStatus("Temporary profile created. You can continue to the scoreboard now.");
+      setStatus(
+        data.data.accountInstructionsEmailSent
+          ? "You're in. We also sent an account link to your email."
+          : "You're in. You can play now.",
+      );
       setTimeout(finish, 700);
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Temporary enrollment failed.");
@@ -81,15 +109,14 @@ export default function EnrollPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#0f172a,#020617_60%)] px-5 py-8 text-white">
       <div className="mx-auto max-w-xl rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur">
-        <div className="text-xs uppercase tracking-[0.24em] text-amber-300">Temporary Enrollment</div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Play Now</h1>
+        <div className="text-xs uppercase tracking-[0.24em] text-amber-300">Player Setup</div>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Play now</h1>
         <p className="mt-3 text-sm text-white/70">
-          Create a temporary player profile for this device. Official player verification happens later and is not part
-          of this step.
+          Add your name and email. You can play immediately; account verification happens later.
         </p>
         {inheritsClubFromScreen ? (
           <div className="mt-4 rounded-2xl bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
-            Club will be inherited automatically from the scanned scoreboard screen.
+            {screenClubName ? `Club: ${screenClubName}` : "This scoreboard will add the club automatically."}
           </div>
         ) : null}
 
@@ -136,33 +163,15 @@ export default function EnrollPage() {
           <input
             value={requestForm.displayName}
             onChange={(e) => setRequestForm((prev) => ({ ...prev, displayName: e.target.value }))}
-            placeholder="Display name"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
-          />
-          <input
-            value={requestForm.country}
-            onChange={(e) => setRequestForm((prev) => ({ ...prev, country: e.target.value }))}
-            placeholder="Country"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
-          />
-          {!inheritsClubFromScreen ? (
-            <input
-              value={requestForm.clubName}
-              onChange={(e) => setRequestForm((prev) => ({ ...prev, clubName: e.target.value }))}
-              placeholder="Club"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
-            />
-          ) : null}
-          <input
-            value={requestForm.mobile}
-            onChange={(e) => setRequestForm((prev) => ({ ...prev, mobile: e.target.value }))}
-            placeholder="Mobile (optional)"
+            placeholder="Your name"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
           />
           <input
             value={requestForm.email}
             onChange={(e) => setRequestForm((prev) => ({ ...prev, email: e.target.value }))}
             placeholder="Email"
+            type="email"
+            autoComplete="email"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
           />
           <button
@@ -170,14 +179,12 @@ export default function EnrollPage() {
             disabled={
               busy ||
               !requestForm.displayName.trim() ||
-              !requestForm.country.trim() ||
-              (!inheritsClubFromScreen && !requestForm.clubName.trim()) ||
               !requestForm.email.trim()
             }
             onClick={() => void submitEnrollmentRequest()}
             className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-medium text-slate-950 disabled:opacity-50"
           >
-            Create temporary profile and continue
+            Continue to scoreboard
           </button>
         </div>
       </div>
