@@ -260,7 +260,13 @@ const isDraftTournament = (entity: Record<string, unknown>): boolean => {
     formatDefinition.publication && typeof formatDefinition.publication === "object"
       ? (formatDefinition.publication as Record<string, unknown>)
       : {};
-  return String(publication.state ?? "").toLowerCase() === "draft";
+  const publicationState = String(publication.state ?? "").toLowerCase();
+  if (publicationState) return publicationState !== "published";
+
+  return Boolean(
+    formatDefinition.clubRuntime ||
+      String(formatDefinition.setupMode ?? "").startsWith("club_"),
+  );
 };
 
 const mapClubCard = (value: unknown): PublicClubCard | null => {

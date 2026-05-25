@@ -100,7 +100,13 @@ function isDraftTournament(item: any): boolean {
   const tournament = asRecord(item?.tournament) ?? asRecord(item);
   const formatDefinition = asRecord(tournament?.format_definition);
   const publication = asRecord(formatDefinition?.publication);
-  return String(publication?.state ?? "").toLowerCase() === "draft";
+  const publicationState = String(publication?.state ?? "").toLowerCase();
+  if (publicationState) return publicationState !== "published";
+
+  return Boolean(
+    formatDefinition?.clubRuntime ||
+      String(formatDefinition?.setupMode ?? "").startsWith("club_"),
+  );
 }
 
 function sortTournamentItems(left: any, right: any) {
