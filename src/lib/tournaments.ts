@@ -220,11 +220,24 @@ const readClubRuntimeStages = (tournament: Record<string, unknown>) => {
   return Array.isArray(runtime.stages) ? runtime.stages : [];
 };
 
+const isDraftTournament = (tournament: Record<string, unknown>) => {
+  const formatDefinition =
+    tournament.format_definition && typeof tournament.format_definition === "object"
+      ? (tournament.format_definition as Record<string, unknown>)
+      : {};
+  const publication =
+    formatDefinition.publication && typeof formatDefinition.publication === "object"
+      ? (formatDefinition.publication as Record<string, unknown>)
+      : {};
+  return String(publication.state ?? "").toLowerCase() === "draft";
+};
+
 const normalizeClubTournamentSummary = (
   tournament: Record<string, unknown>,
 ): TournamentEventSummary | null => {
   const documentId = readString(tournament.documentId);
   if (!documentId) return null;
+  if (isDraftTournament(tournament)) return null;
 
   const clubSource = unwrapEntitySource(tournament.club);
   const clubLogoSource = unwrapEntitySource(clubSource.logo);
@@ -423,6 +436,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][6]", "slug");
       params.set("populate[tournament][fields][7]", "ruleset_key");
       params.set("populate[tournament][fields][8]", "ruleset_config");
+      params.set("populate[tournament][fields][9]", "format_definition");
       params.set("populate[tournament][populate][venue][fields][0]", "name");
       params.set("populate[tournament][populate][venue][fields][1]", "city");
       params.set("populate[tournament][populate][venue][fields][2]", "country");
@@ -473,6 +487,7 @@ const fetchTournamentEventSummaryById = async (
 
   const event = source as Record<string, unknown>;
   const tournamentSource = unwrapEntitySource(event.tournament);
+  if (isDraftTournament(tournamentSource)) return null;
   const tournamentClubSource = unwrapEntitySource(tournamentSource.club);
   const venueSource = unwrapEntitySource(tournamentSource.venue);
   const federationSource = unwrapEntitySource(tournamentClubSource.federation);

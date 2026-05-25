@@ -214,6 +214,7 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
 const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
   const entity = unwrapEntity(value);
   if (!entity) return null;
+  if (isDraftTournament(entity)) return null;
 
   const title = readString(entity.title);
   const documentId = readString(entity.documentId);
@@ -250,6 +251,18 @@ const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
   };
 };
 
+const isDraftTournament = (entity: Record<string, unknown>): boolean => {
+  const formatDefinition =
+    entity.format_definition && typeof entity.format_definition === "object"
+      ? (entity.format_definition as Record<string, unknown>)
+      : {};
+  const publication =
+    formatDefinition.publication && typeof formatDefinition.publication === "object"
+      ? (formatDefinition.publication as Record<string, unknown>)
+      : {};
+  return String(publication.state ?? "").toLowerCase() === "draft";
+};
+
 const mapClubCard = (value: unknown): PublicClubCard | null => {
   const entity = unwrapEntity(value);
   if (!entity) return null;
@@ -266,7 +279,9 @@ const mapClubCard = (value: unknown): PublicClubCard | null => {
   );
 
   const players = toRelationArray(entity.players);
-  const tournaments = toRelationArray(entity.tournaments);
+  const tournaments = toRelationArray(entity.tournaments).filter(
+    (tournament) => !isDraftTournament(tournament as Record<string, unknown>),
+  );
 
   return {
     id: toNumber(entity.id),
@@ -386,6 +401,7 @@ export const listClubs = async (limit = 12): Promise<PublicClubCard[]> => {
   params.set("populate[federation][fields][1]", "slug");
   params.set("populate[players][fields][0]", "documentId");
   params.set("populate[tournaments][fields][0]", "documentId");
+  params.set("populate[tournaments][fields][1]", "format_definition");
 
   const json = await fetchStrapiJson(`/api/clubs?${params.toString()}`, 60).catch(() => null);
   const rows = Array.isArray(json?.data) ? json.data : [];
@@ -422,6 +438,7 @@ export const getClubBySlug = async (slug: string): Promise<PublicClubDetail | nu
   params.set("populate[tournaments][fields][4]", "tournament_status");
   params.set("populate[tournaments][fields][5]", "game_type");
   params.set("populate[tournaments][fields][6]", "documentId");
+  params.set("populate[tournaments][fields][7]", "format_definition");
   params.set("populate[tournaments][populate][bt_event][fields][0]", "documentId");
 
   const json = await fetchStrapiJson(`/api/clubs?${params.toString()}`, 60).catch(() => null);

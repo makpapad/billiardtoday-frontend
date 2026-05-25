@@ -90,6 +90,19 @@ function normalizeClubTournamentItem(item: any) {
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function isDraftTournament(item: any): boolean {
+  const tournament = asRecord(item?.tournament) ?? asRecord(item);
+  const formatDefinition = asRecord(tournament?.format_definition);
+  const publication = asRecord(formatDefinition?.publication);
+  return String(publication?.state ?? "").toLowerCase() === "draft";
+}
+
 function sortTournamentItems(left: any, right: any) {
   const leftDate = left?.start_date ? new Date(left.start_date).getTime() : 0;
   const rightDate = right?.start_date
@@ -124,6 +137,7 @@ export async function GET(req: NextRequest) {
       eventParams.set("fields[4]", "documentId");
       eventParams.set("fields[5]", "game_type");
       eventParams.set("populate[tournament][fields][0]", "slug");
+      eventParams.set("populate[tournament][fields][1]", "format_definition");
       eventParams.set("filters[tournament][club][slug][$eq]", clubSlug);
 
       let eventAndIndex = 0;
@@ -161,6 +175,7 @@ export async function GET(req: NextRequest) {
       tournamentParams.set("fields[3]", "startDate");
       tournamentParams.set("fields[4]", "endDate");
       tournamentParams.set("fields[5]", "game_type");
+      tournamentParams.set("fields[6]", "format_definition");
       tournamentParams.set("filters[club][slug][$eq]", clubSlug);
       tournamentParams.set("populate[bt_event][fields][0]", "documentId");
 
@@ -206,10 +221,14 @@ export async function GET(req: NextRequest) {
         fetchCollection(`tournaments?${tournamentParams.toString()}`),
       ]);
       const localRows = tournamentRows
+        .filter((item: any) => !isDraftTournament(item))
         .filter((item: any) => !item?.bt_event?.documentId)
         .map(normalizeClubTournamentItem)
         .filter((item: any) => !season || String(item.season ?? "") === season);
-      const merged = [...eventRows.map(normalizeEventItem), ...localRows].sort(
+      const merged = [
+        ...eventRows.filter((item: any) => !isDraftTournament(item)).map(normalizeEventItem),
+        ...localRows,
+      ].sort(
         sortTournamentItems,
       );
       const total = merged.length;
@@ -241,6 +260,7 @@ export async function GET(req: NextRequest) {
     queryParams.set("fields[4]", "documentId");
     queryParams.set("fields[5]", "game_type");
     queryParams.set("populate[tournament][fields][0]", "slug");
+    queryParams.set("populate[tournament][fields][1]", "format_definition");
 
     if (season) {
       queryParams.set("filters[season][$eq]", season);
@@ -327,11 +347,32 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
     }
 
-    const text = await res.text();
-    return new NextResponse(text, {
+    const json = await res.json().catch(() => null);
+    if (!json || !Array.isArray(json.data)) {
+      return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
+    }
+
+    const data = json.data.filter((item: any) => !isDraftTournament(item));
+    return NextResponse.json(
+      {
+        ...json,
+        data,
+        meta: {
+          ...json.meta,
+          pagination: {
+            ...(json.meta?.pagination ?? {}),
+            page,
+            pageSize,
+            total: data.length,
+            pageCount: Math.max(1, Math.ceil(data.length / pageSize)),
+          },
+        },
+      },
+      {
       status: 200,
       headers: { "Content-Type": "application/json" },
-    });
+      },
+    );
   } catch (error) {
     console.error("[tournaments][GET]", error);
     const page = toPositiveInt(req.nextUrl.searchParams.get("page"), 1);
