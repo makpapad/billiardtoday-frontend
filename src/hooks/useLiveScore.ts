@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { normalizeKeyboardMode, type KeyboardMode } from '@/lib/keyboardModes'
 
 export interface ScoreUpdate {
   type: 'score:update'
   screenId: string
   activePlayer?: 1 | 2
-  keyboardMode?: '1' | '2' | '3' | '4'
+  keyboardMode?: KeyboardMode
   tableName?: string | null
   tableNumber?: string | null
   ts?: number
@@ -129,13 +130,7 @@ export function useLiveScore({
                 (typeof data.ts === 'number'
                   ? new Date(data.ts).toISOString()
                   : new Date().toISOString()),
-              keyboardMode:
-                data.keyboardMode === '1' ||
-                data.keyboardMode === '2' ||
-                data.keyboardMode === '3' ||
-                data.keyboardMode === '4'
-                  ? data.keyboardMode
-                  : prev.keyboardMode,
+              keyboardMode: normalizeKeyboardMode(data.keyboardMode) ?? prev.keyboardMode,
               tableName:
                 typeof data.tableName === 'string' && data.tableName.trim().length > 0
                   ? data.tableName.trim()

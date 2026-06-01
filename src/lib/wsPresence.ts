@@ -1,9 +1,10 @@
 import { SERVER_API_URL } from "@/lib/api";
+import { normalizeKeyboardMode, type KeyboardMode } from "@/lib/keyboardModes";
 
 export interface PresenceEntry {
   screenId: string;
   screenName: string | null;
-  keyboardMode: "1" | "2" | "3" | "4" | null;
+  keyboardMode: KeyboardMode | null;
   lastSeen: number | null;
   version: string | null;
   ip: string | null;
@@ -71,13 +72,7 @@ export function normalizePresenceEntry(raw: unknown): PresenceEntry | null {
   return {
     screenId,
     screenName: asString(row.screenName),
-    keyboardMode:
-      row.keyboardMode === "1" ||
-      row.keyboardMode === "2" ||
-      row.keyboardMode === "3" ||
-      row.keyboardMode === "4"
-        ? row.keyboardMode
-        : null,
+    keyboardMode: normalizeKeyboardMode(row.keyboardMode),
     lastSeen: asNumber(row.lastSeen),
     version: asString(row.version),
     ip: asString(row.ip),
