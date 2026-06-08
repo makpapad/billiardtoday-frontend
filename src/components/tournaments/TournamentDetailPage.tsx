@@ -1499,6 +1499,20 @@ const formatDateTimeWithOffset = (
   };
 };
 
+const formatTimetableDateLabel = (
+  value: string | null | undefined,
+  locale?: string,
+) => {
+  const dateOnly = normalizeDateOnly(value);
+  return dateOnly ? formatDate(dateOnly, locale) : "";
+};
+
+const formatTimetableTimeLabel = (value: string | null | undefined) => {
+  const normalized = String(value || "").trim();
+  const match = normalized.match(/^(\d{1,2}):(\d{2})/);
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : normalized;
+};
+
 const highlightText = (value: string, query: string) => {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) return value;
@@ -6756,8 +6770,14 @@ export function TournamentDetailPage({
                           slot.dateTime,
                           selectedTimezoneOffsetMinutes,
                         );
-                        const dateLabel = shiftedDateTime?.date || slot.date || "-";
-                        const timeLabel = shiftedDateTime?.time || slot.time || "-";
+                        const dateLabel =
+                          formatTimetableDateLabel(slot.date, browserLocale ?? undefined) ||
+                          shiftedDateTime?.date ||
+                          "-";
+                        const timeLabel =
+                          formatTimetableTimeLabel(slot.time) ||
+                          shiftedDateTime?.time ||
+                          "-";
                         const placeholderLabel =
                           typeof slot.metadata?.placeholderLabel === "string"
                             ? slot.metadata.placeholderLabel
