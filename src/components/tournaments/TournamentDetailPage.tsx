@@ -1846,6 +1846,11 @@ export function TournamentDetailPage({
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     () => initialEventData ?? buildEventShellFromSummary(summary),
   );
+  const [hasLoadedFullEventData, setHasLoadedFullEventData] = useState(
+    () => Boolean(initialEventData?.data),
+  );
+  const [isEventDataLoading, setIsEventDataLoading] = useState(false);
+  const [eventDataLoadFailed, setEventDataLoadFailed] = useState(false);
   const [participantSortMode, setParticipantSortMode] = useState<
     "registration" | "age" | "ranking"
   >("registration");
@@ -2172,6 +2177,10 @@ export function TournamentDetailPage({
   }, [fetchFinalResultsPayload, replaceFinalResults]);
 
   const refreshEventData = useCallback(async () => {
+    if (!hasLoadedFullEventData) {
+      setIsEventDataLoading(true);
+      setEventDataLoadFailed(false);
+    }
     try {
       let payload = await fetchEventPayload();
       if (
@@ -2196,13 +2205,21 @@ export function TournamentDetailPage({
         const nextSerialized = JSON.stringify(payload);
         return currentSerialized === nextSerialized ? current : payload;
       });
+      setHasLoadedFullEventData(true);
+      setEventDataLoadFailed(false);
     } catch {
       // Keep current UI state and data on transient refresh failures.
+      if (!hasLoadedFullEventData) {
+        setEventDataLoadFailed(true);
+      }
+    } finally {
+      setIsEventDataLoading(false);
     }
   }, [
     activeView,
     fetchEventPayload,
     fetchStageStandingsPayload,
+    hasLoadedFullEventData,
     koRankingRound,
     overviewMode,
     selectedStageDocumentId,
@@ -6697,7 +6714,18 @@ export function TournamentDetailPage({
                 ))}
               </select>
             </div>
-            {visibleTimetableSlots.length === 0 ? (
+            {!hasLoadedFullEventData && (isEventDataLoading || !eventDataLoadFailed) ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                <div className="flex items-center gap-3">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+                  <span>Loading tournament schedule...</span>
+                </div>
+              </div>
+            ) : eventDataLoadFailed && !hasLoadedFullEventData ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-6 text-sm text-amber-800">
+                The tournament schedule could not be loaded. Please try again.
+              </div>
+            ) : visibleTimetableSlots.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
                 {timetableViewMode === "training"
                   ? "No training slots have been published yet."
