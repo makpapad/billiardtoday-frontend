@@ -136,6 +136,37 @@ type TournamentGallerySection = {
   videos: TournamentGallerySectionVideo[];
 };
 
+const buildEventShellFromSummary = (
+  summary: TournamentEventSummary,
+): EventApiResponse => ({
+  data: {
+    documentId: summary.documentId,
+    title: summary.title,
+    season: summary.season,
+    start_date: summary.startDate,
+    end_date: summary.endDate,
+    game_type: summary.gameType,
+    event_stages: summary.stages.map((stage, index) => ({
+      id: stage.documentId,
+      documentId: stage.documentId,
+      title: stage.title,
+      start_date: stage.startDate,
+      end_date: stage.endDate,
+      order: stage.order ?? index + 1,
+      is_final: stage.isFinal,
+      groups: [],
+      results: [],
+    })),
+    results_final: [],
+    timetable_slots: [],
+    gallery_images: [],
+    gallery_video_files: [],
+    gallery_videos: [],
+    gallery_sections: [],
+    players: [],
+  },
+});
+
 const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
@@ -1812,7 +1843,9 @@ export function TournamentDetailPage({
   const [expandedLiveSessionIds, setExpandedLiveSessionIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [eventData, setEventData] = useState<EventApiResponse | null>(initialEventData);
+  const [eventData, setEventData] = useState<EventApiResponse | null>(
+    () => initialEventData ?? buildEventShellFromSummary(summary),
+  );
   const [participantSortMode, setParticipantSortMode] = useState<
     "registration" | "age" | "ranking"
   >("registration");
@@ -2265,26 +2298,11 @@ export function TournamentDetailPage({
   }, [activeView, summary.documentId]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchEventData = async () => {
-      try {
-        const payload = await fetchEventPayload();
-        if (!cancelled) {
-          setEventData(payload);
-        }
-      } catch {
-        if (!cancelled && !initialEventData?.data) {
-          setEventData(null);
-        }
-      }
-    };
-
-    void fetchEventData();
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchEventPayload, initialEventData]);
+    if (activeView !== "tournament" || tournamentPanelMode === "stages") {
+      return;
+    }
+    void refreshEventData();
+  }, [activeView, refreshEventData, tournamentPanelMode]);
 
   useEffect(() => {
     if (activeView !== "tournament") return;
@@ -4153,6 +4171,26 @@ export function TournamentDetailPage({
       );
     }
   };
+
+  useEffect(() => {
+    if (
+      activeView !== "tournament" ||
+      tournamentPanelMode !== "stages" ||
+      overviewMode !== "results" ||
+      !selectedStage?.documentId ||
+      selectedStage.groups.length > 0
+    ) {
+      return;
+    }
+    void refreshStageMatches(selectedStage.documentId);
+  }, [
+    activeView,
+    overviewMode,
+    refreshStageMatches,
+    selectedStage?.documentId,
+    selectedStage?.groups.length,
+    tournamentPanelMode,
+  ]);
 
   useEffect(() => {
     if (
