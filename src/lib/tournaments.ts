@@ -59,10 +59,12 @@ const buildHeaders = (): HeadersInit => {
 
 const fetchWithOptionalAuth = async (
   path: string,
-  options?: { retryWithoutAuth?: boolean },
+  options?: { retryWithoutAuth?: boolean; noStore?: boolean },
 ) => {
   const runtimeOptions =
-    IS_DEVELOPMENT ? { cache: "no-store" as const } : { next: { revalidate: 60 } };
+    IS_DEVELOPMENT || options?.noStore
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: 60 } };
 
   for (const baseUrl of STRAPI_URLS) {
     const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -510,13 +512,13 @@ const fetchTournamentEventSummaryById = async (
 
   let response = await fetchWithOptionalAuth(
     `/api/bt-events/${cleanId}?${buildParams("full").toString()}`,
-    { retryWithoutAuth: true },
+    { retryWithoutAuth: true, noStore: true },
   );
 
   if (!response?.ok) {
     response = await fetchWithOptionalAuth(
       `/api/bt-events/${cleanId}?${buildParams("safe").toString()}`,
-      { retryWithoutAuth: true },
+      { retryWithoutAuth: true, noStore: true },
     );
   }
 
