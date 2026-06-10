@@ -1639,10 +1639,9 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
-  const externalLiveTablesHref = buildExternalLiveTablesHref(
-    summary.documentId,
-    { table: 1 },
-  );
+  const externalLiveTablesHref =
+    summary.externalLiveTablesHref ??
+    buildExternalLiveTablesHref(summary.documentId, { table: 1 });
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;

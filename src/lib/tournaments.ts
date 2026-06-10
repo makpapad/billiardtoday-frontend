@@ -33,6 +33,7 @@ export type TournamentEventSummary = {
   rankingSeriesDocumentId: string | null;
   rankingSeriesSlug: string | null;
   rankingSeriesTitle: string | null;
+  externalLiveTablesHref: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -100,6 +101,42 @@ const toNumber = (value: unknown): number | null => {
 const readString = (value: unknown): string | null => {
   const cleaned = String(value || "").trim();
   return cleaned || null;
+};
+
+const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => {
+  const config =
+    timetableConfig && typeof timetableConfig === "object" && !Array.isArray(timetableConfig)
+      ? (timetableConfig as Record<string, unknown>)
+      : {};
+  const externalResultSync =
+    config.externalResultSync &&
+    typeof config.externalResultSync === "object" &&
+    !Array.isArray(config.externalResultSync)
+      ? (config.externalResultSync as Record<string, unknown>)
+      : {};
+  const liveButton =
+    externalResultSync.liveButton &&
+    typeof externalResultSync.liveButton === "object" &&
+    !Array.isArray(externalResultSync.liveButton)
+      ? (externalResultSync.liveButton as Record<string, unknown>)
+      : {};
+
+  if (liveButton.enabled !== true) return null;
+  const href = readString(liveButton.href);
+  if (!href) return null;
+
+  if (href.startsWith("/tournaments/live/soop?")) return href;
+
+  try {
+    const parsed = new URL(href);
+    if (parsed.hostname === "billiardtoday.com" && parsed.pathname === "/tournaments/live/soop") {
+      return `${parsed.pathname}${parsed.search}`;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 };
 
 const readDateYear = (value: unknown): number | null => {
@@ -279,6 +316,7 @@ const normalizeClubTournamentSummary = (
     rankingSeriesDocumentId: null,
     rankingSeriesSlug: null,
     rankingSeriesTitle: null,
+    externalLiveTablesHref: null,
     stages: readClubRuntimeStages(tournament).map((stage, index) =>
       normalizeStage(stage, index),
     ),
@@ -422,6 +460,7 @@ const fetchTournamentEventSummaryById = async (
     params.set("fields[5]", "documentId");
     params.set("fields[6]", "ruleset_key");
     params.set("fields[7]", "ruleset_config");
+    params.set("fields[8]", "timetable_config");
     params.set("populate[event_stages][sort][0]", "order:asc");
     params.set("populate[event_stages][fields][0]", "title");
     params.set("populate[event_stages][fields][1]", "order");
@@ -492,6 +531,7 @@ const fetchTournamentEventSummaryById = async (
   if (!source || typeof source !== "object") return null;
 
   const event = source as Record<string, unknown>;
+  const externalLiveTablesHref = readExternalLiveTablesHref(event.timetable_config);
   const tournamentSource = unwrapEntitySource(event.tournament);
   if (isDraftTournament(tournamentSource)) return null;
   const tournamentClubSource = unwrapEntitySource(tournamentSource.club);
@@ -568,6 +608,7 @@ const fetchTournamentEventSummaryById = async (
     rankingSeriesDocumentId: readString((rankingSeriesSource as Record<string, unknown>).documentId),
     rankingSeriesSlug: readString((rankingSeriesSource as Record<string, unknown>).slug),
     rankingSeriesTitle: readString((rankingSeriesSource as Record<string, unknown>).title),
+    externalLiveTablesHref,
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };
