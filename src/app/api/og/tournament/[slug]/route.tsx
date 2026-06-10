@@ -5,7 +5,6 @@ import {
   buildTournamentTitle,
 } from "@/lib/tournamentSeo";
 import { resolveTournamentEventSummary } from "@/lib/tournaments";
-import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 export const runtime = "edge";
 
@@ -34,7 +33,6 @@ export async function GET(
   const title = buildTournamentTitle(summary);
   const dateLabel = buildTournamentDateRangeLabel(summary.startDate, summary.endDate);
   const locationLabel = buildTournamentLocationLabel(summary);
-  const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const stageLabel =
     summary.stages.length > 0
       ? `${summary.stages.length} stage${summary.stages.length === 1 ? "" : "s"}`
@@ -181,29 +179,6 @@ export async function GET(
                   ))}
                 </div>
               </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              {organizerLogoUrl ? (
-                <img
-                  src={organizerLogoUrl}
-                  alt=""
-                  width={82}
-                  height={82}
-                  style={{
-                    width: 82,
-                    height: 82,
-                    objectFit: "contain",
-                    borderRadius: 18,
-                    background: "rgba(255, 255, 255, 0.92)",
-                    padding: 10,
-                  }}
-                />
-              ) : null}
             </div>
           </div>
         </div>
