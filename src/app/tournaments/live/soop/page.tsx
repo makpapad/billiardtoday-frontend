@@ -127,6 +127,13 @@ function SoopLiveTableContent() {
     requestedSrc && isAllowedEmbedUrl(requestedSrc)
       ? requestedSrc
       : soopEmbedUrlForTable(table);
+  const handleBackFallback = () => {
+    router.back();
+  };
+  const backButtonClassName =
+    "inline-flex h-9 items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300";
+  const fullscreenBackButtonClassName =
+    "absolute left-4 top-12 z-30 hidden rounded border border-white/15 bg-black/80 px-3 py-2 text-sm font-semibold text-white shadow-2xl transition hover:bg-neutral-900 fullscreen:inline-flex";
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -156,11 +163,19 @@ function SoopLiveTableContent() {
             {returnHref ? (
               <Link
                 href={returnHref}
-                className="inline-flex h-9 items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300"
+                className={backButtonClassName}
               >
                 Back to event
               </Link>
-            ) : null}
+            ) : (
+              <button
+                type="button"
+                onClick={handleBackFallback}
+                className={backButtonClassName}
+              >
+                Back
+              </button>
+            )}
             <h1 className="text-base font-semibold sm:text-lg">Live video</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -263,11 +278,19 @@ function SoopLiveTableContent() {
               {returnHref ? (
                 <Link
                   href={returnHref}
-                  className="absolute left-4 top-12 z-30 hidden rounded border border-white/15 bg-black/80 px-3 py-2 text-sm font-semibold text-white shadow-2xl transition hover:bg-neutral-900 fullscreen:inline-flex"
+                  className={fullscreenBackButtonClassName}
                 >
                   Back to event
                 </Link>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleBackFallback}
+                  className={fullscreenBackButtonClassName}
+                >
+                  Back
+                </button>
+              )}
               <div className="grid w-full gap-3 fullscreen:h-full fullscreen:gap-3 lg:grid-cols-2">
                 {selectedTables.map((tableOption) => (
                   <div
