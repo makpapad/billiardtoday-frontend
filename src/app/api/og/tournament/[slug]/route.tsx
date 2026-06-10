@@ -15,6 +15,7 @@ const SIZE = {
 };
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 const BACKGROUND_IMAGE_URL = `${SITE_URL}/img/og/tournament-default.png`;
+const BRAND_LOGO_URL = `${SITE_URL}/logo-billiardtoday.png`;
 
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? `${value.slice(0, maxLength - 1).trim()}...` : value;
@@ -106,17 +107,36 @@ export async function GET(
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 18,
-                  color: "rgba(255, 255, 255, 0.76)",
-                  fontSize: 26,
-                  fontWeight: 700,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  alignSelf: "flex-start",
+                  gap: 14,
+                  padding: "12px 16px",
+                  borderRadius: 22,
+                  background: "rgba(7, 17, 31, 0.72)",
+                  border: "1px solid rgba(255, 255, 255, 0.18)",
                 }}
               >
-                <span>Billiard Today</span>
-                <span style={{ color: "rgba(255, 255, 255, 0.38)" }}>/</span>
-                <span>Tournament</span>
+                <span
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: "rgba(255, 255, 255, 0.64)",
+                    textTransform: "uppercase",
+                    letterSpacing: 1.6,
+                  }}
+                >
+                  Powered by
+                </span>
+                <img
+                  src={BRAND_LOGO_URL}
+                  alt=""
+                  width={188}
+                  height={64}
+                  style={{
+                    width: 188,
+                    height: 64,
+                    objectFit: "contain",
+                  }}
+                />
               </div>
               <div
                 style={{

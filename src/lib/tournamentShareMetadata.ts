@@ -9,7 +9,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"
 const LONGONI_U21_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 const LONGONI_U21_OG_IMAGE =
   "/img/og/longoni-next-gen-grand-prix-3-cushion-u21-2026.jpg";
-const TOURNAMENT_OG_IMAGE_VERSION = "clean-organizer-20260610";
+const TOURNAMENT_OG_IMAGE_VERSION = "powered-by-bt-20260610";
 
 const absoluteUrl = (path: string) =>
   /^https?:\/\//i.test(path)
