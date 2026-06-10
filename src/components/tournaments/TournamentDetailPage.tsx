@@ -466,6 +466,18 @@ function HeroMenuButton({
   );
 }
 
+const appendReturnToLiveHref = (href: string | null, returnPath: string | null) => {
+  if (!href || !returnPath) return href;
+  try {
+    const url = new URL(href, "https://billiardtoday.com");
+    if (url.pathname !== "/tournaments/live/soop") return href;
+    url.searchParams.set("returnTo", returnPath);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return href;
+  }
+};
+
 const formatParticipantStatus = (value: unknown) => {
   const normalized = String(value || "").trim();
   if (!normalized) return "Registered";
@@ -1639,9 +1651,13 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
-  const externalLiveTablesHref =
+  const externalLiveTablesHrefRaw =
     summary.externalLiveTablesHref ??
     buildExternalLiveTablesHref(summary.documentId, { table: 1 });
+  const externalLiveTablesHref = appendReturnToLiveHref(
+    externalLiveTablesHrefRaw,
+    tournamentContextSlug ? `/tournaments/${tournamentContextSlug}` : null,
+  );
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
   const stageCount = summary.stages.length;

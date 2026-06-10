@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DEFAULT_TABLES = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -41,6 +42,14 @@ const parseSelectedTables = (value: string | null | undefined) => {
 const formatSelectedTablesLabel = (tables: string[]) =>
   `${tables.length === 1 ? "Table" : "Tables"} ${tables.join(", ")}`;
 
+const normalizeReturnHref = (value: string | null | undefined) => {
+  const href = String(value || "").trim();
+  if (!href.startsWith("/")) return null;
+  if (href.startsWith("//")) return null;
+  if (!/^\/(?:embed\/)?tournaments\/[a-z0-9-]+(?:[?#].*)?$/i.test(href)) return null;
+  return href;
+};
+
 function SoopLiveTableContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,6 +57,7 @@ function SoopLiveTableContent() {
   const multiviewRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const requestedSrc = searchParams.get("src")?.trim() || "";
+  const returnHref = normalizeReturnHref(searchParams.get("returnTo"));
   const table = normalizeTable(searchParams.get("table") || DEFAULT_TABLE);
   const requestedView = searchParams.get("view")?.toLowerCase() || "";
   const isMultiview =
@@ -77,6 +87,7 @@ function SoopLiveTableContent() {
   const handleTableChange = (nextTable: string) => {
     const params = new URLSearchParams();
     params.set("table", nextTable);
+    if (returnHref) params.set("returnTo", returnHref);
     if (requestedSrc && isAllowedEmbedUrl(requestedSrc)) {
       params.set("src", requestedSrc);
     }
@@ -86,6 +97,7 @@ function SoopLiveTableContent() {
   const handleViewChange = (nextMultiview: boolean) => {
     const params = new URLSearchParams();
     params.set("table", table || DEFAULT_TABLE);
+    if (returnHref) params.set("returnTo", returnHref);
     if (nextMultiview) {
       params.set("view", "multiview");
       params.set("tables", selectedTables.join(","));
@@ -107,6 +119,7 @@ function SoopLiveTableContent() {
     params.set("table", table || DEFAULT_TABLE);
     params.set("view", "multiview");
     params.set("tables", nextSelected.join(","));
+    if (returnHref) params.set("returnTo", returnHref);
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -139,7 +152,17 @@ function SoopLiveTableContent() {
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-3 px-3 py-3 sm:px-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-base font-semibold sm:text-lg">Live video</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            {returnHref ? (
+              <Link
+                href={returnHref}
+                className="inline-flex h-9 items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300"
+              >
+                Back to event
+              </Link>
+            ) : null}
+            <h1 className="text-base font-semibold sm:text-lg">Live video</h1>
+          </div>
           <div className="flex items-center gap-2">
             <div className="inline-flex h-9 overflow-hidden rounded border border-white/10 bg-neutral-900 text-sm font-semibold">
               <button
@@ -237,6 +260,14 @@ function SoopLiveTableContent() {
               ref={multiviewRef}
               className="relative w-full bg-black p-0 fullscreen:flex fullscreen:h-screen fullscreen:items-start fullscreen:p-3"
             >
+              {returnHref ? (
+                <Link
+                  href={returnHref}
+                  className="absolute left-4 top-12 z-30 hidden rounded border border-white/15 bg-black/80 px-3 py-2 text-sm font-semibold text-white shadow-2xl transition hover:bg-neutral-900 fullscreen:inline-flex"
+                >
+                  Back to event
+                </Link>
+              ) : null}
               <div className="grid w-full gap-3 fullscreen:h-full fullscreen:gap-3 lg:grid-cols-2">
                 {selectedTables.map((tableOption) => (
                   <div
