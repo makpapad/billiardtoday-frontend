@@ -30,7 +30,11 @@ export function buildTournamentShareMetadata(
   const description = buildTournamentDescription(summary);
   const path = `${options?.embedded ? "/embed" : ""}/tournaments/${slug}`;
   const canonicalPath = `/tournaments/${slug}`;
-  const ogImage = slug === LONGONI_U21_SLUG ? absoluteUrl(LONGONI_U21_OG_IMAGE) : null;
+  const ogImage = absoluteUrl(
+    slug === LONGONI_U21_SLUG
+      ? LONGONI_U21_OG_IMAGE
+      : `/api/og/tournament/${encodeURIComponent(slug)}`,
+  );
 
   return {
     title: options?.embedded ? `${summary.title} Embed` : title,
@@ -57,10 +61,10 @@ export function buildTournamentShareMetadata(
         : undefined,
     },
     twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: [ogImage],
     },
     robots: options?.embedded
       ? {
