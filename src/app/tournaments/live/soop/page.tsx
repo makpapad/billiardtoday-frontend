@@ -31,6 +31,38 @@ const soopEmbedUrlForTable = (table: string) =>
     table || DEFAULT_TABLE,
   )}/embed`;
 
+const soopWatchUrlForTable = (table: string) =>
+  `https://play.sooplive.com/afbilliards${encodeURIComponent(
+    table || DEFAULT_TABLE,
+  )}`;
+
+const soopWatchUrlFromEmbed = (
+  value: string,
+  fallbackTable: string,
+): string => {
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      !(
+        url.hostname.endsWith("sooplive.com") ||
+        url.hostname.endsWith("sooplive.co.kr")
+      )
+    ) {
+      return soopWatchUrlForTable(fallbackTable);
+    }
+    const parts = url.pathname.split("/").filter(Boolean);
+    const channel = parts[0];
+    if (!channel) return soopWatchUrlForTable(fallbackTable);
+    const broadNo = parts.find((part) => /^\d+$/.test(part));
+    return `https://play.sooplive.com/${encodeURIComponent(channel)}${
+      broadNo ? `/${encodeURIComponent(broadNo)}` : ""
+    }`;
+  } catch {
+    return soopWatchUrlForTable(fallbackTable);
+  }
+};
+
 const parseSelectedTables = (value: string | null | undefined) => {
   const selected = String(value || "")
     .split(",")
@@ -127,6 +159,10 @@ function SoopLiveTableContent() {
     requestedSrc && isAllowedEmbedUrl(requestedSrc)
       ? requestedSrc
       : soopEmbedUrlForTable(table);
+  const soopWatchUrl =
+    requestedSrc && isAllowedEmbedUrl(requestedSrc)
+      ? soopWatchUrlFromEmbed(requestedSrc, table)
+      : soopWatchUrlForTable(table);
   const handleBackFallback = () => {
     router.back();
   };
@@ -256,6 +292,16 @@ function SoopLiveTableContent() {
                 </details>
               </div>
             )}
+            {!isMultiview ? (
+              <a
+                href={soopWatchUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="h-9 rounded border border-white/10 bg-neutral-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300"
+              >
+                Open in SOOP
+              </a>
+            ) : null}
             {isMultiview ? (
               <button
                 type="button"
