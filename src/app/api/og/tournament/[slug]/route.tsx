@@ -15,7 +15,6 @@ const SIZE = {
 };
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 const BACKGROUND_IMAGE_URL = `${SITE_URL}/img/og/tournament-default.png`;
-const BRAND_LOGO_URL = `${SITE_URL}/logo-billiardtoday.png`;
 
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? `${value.slice(0, maxLength - 1).trim()}...` : value;
@@ -167,9 +166,6 @@ export async function GET(
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
-                fontSize: 28,
-                fontWeight: 700,
               }}
             >
               {organizerLogoUrl ? (
@@ -188,52 +184,8 @@ export async function GET(
                   }}
                 />
               ) : null}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ color: "rgba(255, 255, 255, 0.58)", fontSize: 22 }}>
-                  Follow schedule, matches and standings
-                </span>
-                <span>billiardtoday.com</span>
-              </div>
             </div>
           </div>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            right: 58,
-            bottom: 44,
-            zIndex: 3,
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            padding: "12px 16px",
-            borderRadius: 22,
-            background: "rgba(7, 17, 31, 0.72)",
-            border: "1px solid rgba(255, 255, 255, 0.18)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              color: "rgba(255, 255, 255, 0.64)",
-              textTransform: "uppercase",
-              letterSpacing: 1.6,
-            }}
-          >
-            Powered by
-          </span>
-          <img
-            src={BRAND_LOGO_URL}
-            alt=""
-            width={188}
-            height={64}
-            style={{
-              width: 188,
-              height: 64,
-              objectFit: "contain",
-            }}
-          />
         </div>
       </div>
     ),

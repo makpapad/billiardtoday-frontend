@@ -9,6 +9,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"
 const LONGONI_U21_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 const LONGONI_U21_OG_IMAGE =
   "/img/og/longoni-next-gen-grand-prix-3-cushion-u21-2026.jpg";
+const TOURNAMENT_OG_IMAGE_VERSION = "clean-organizer-20260610";
 
 const absoluteUrl = (path: string) =>
   /^https?:\/\//i.test(path)
@@ -33,7 +34,7 @@ export function buildTournamentShareMetadata(
   const ogImage = absoluteUrl(
     slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
-      : `/api/og/tournament/${encodeURIComponent(slug)}`,
+      : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`,
   );
 
   return {
