@@ -5432,10 +5432,15 @@ export function TournamentEventsContent({
                           stage.startDate,
                           stage.endDate,
                         );
-                        const stageUsesBracketView =
-                          stage.documentId === activeStage?.documentId
-                            ? activeStageUsesBracketView
-                            : isBracketStageType(stage.stageType);
+                        const stageUsesBracketView = isBracketStageType(
+                          stage.stageType,
+                        );
+                        const stageBracketMatchesState =
+                          brMatchesByStage[stage.documentId];
+                        const stageBracketLoading =
+                          stageUsesBracketView &&
+                          (brLoadingByStage[stage.documentId] ||
+                            typeof stageBracketMatchesState === "undefined");
                         const isLegacyBracketFallback =
                           isBracketStageType(stage.stageType) &&
                           !stageUsesBracketView;
@@ -5607,7 +5612,7 @@ export function TournamentEventsContent({
                                   </div>
                                   <div className="flex flex-col gap-3">
                                     {stageUsesBracketView ? (
-                                      brLoadingByStage[stage.documentId] ? (
+                                      stageBracketLoading ? (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
                                           Loading bracket...
                                         </div>
