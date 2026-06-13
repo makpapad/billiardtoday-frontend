@@ -94,6 +94,26 @@ function formatGroupDisplayLabel(
   return `Group ${suffix}`;
 }
 
+function formatStageMatchLabel(
+  stage: NormalizedEventStage,
+  group: StageMatchGroup,
+  match?: StageMatchGroup["matches"][number] | null,
+): string {
+  const sourceMatch = match ?? group.matches[0] ?? null;
+  if (isBracketStageType(stage.stageType)) {
+    const round = sourceMatch?.round || stage.title || "KO";
+    const matchNumber =
+      sourceMatch?.matchNumber ??
+      (group.number !== null && Number.isFinite(group.number) ? group.number : null);
+    return matchNumber !== null ? `${round} Match ${matchNumber}` : round;
+  }
+
+  return formatGroupDisplayLabel(
+    group.number,
+    resolveGroupLabelMode(stage.timetableConfig),
+  );
+}
+
 function canRenderBracketPyramid(
   stageType: string | null | undefined,
   matches: unknown[],
@@ -6448,14 +6468,7 @@ export function TournamentEventsContent({
                                                       />
                                                     </svg>
                                                     <div className="font-semibold text-gray-700 dark:text-gray-200">
-                                                      {isLegacyBracketFallback
-                                                        ? `Match ${group.number ?? groupIndex + 1}`
-                                                        : formatGroupDisplayLabel(
-                                                            group.number,
-                                                            resolveGroupLabelMode(
-                                                              stage.timetableConfig,
-                                                            ),
-                                                          )}
+                                                      {formatStageMatchLabel(stage, group)}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
@@ -7088,12 +7101,8 @@ export function TournamentEventsContent({
                                                             }`;
                                                             const matchSheetSubtitle = [
                                                               stage.title,
-                                                              formatGroupDisplayLabel(
-                                                                group.number,
-                                                                resolveGroupLabelMode(
-                                                                  stage.timetableConfig,
-                                                                ),
-                                                              ),
+                                                              formatStageMatchLabel(stage, group, row.sourceMatch),
+                                                              !isBracketStageType(stage.stageType) &&
                                                               row.sourceMatch?.matchNumber !== null &&
                                                               row.sourceMatch?.matchNumber !== undefined
                                                                 ? `Match ${row.sourceMatch.matchNumber}`

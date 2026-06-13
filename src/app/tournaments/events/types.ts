@@ -44,6 +44,12 @@ export type StrapiGroup = {
   match_number?: number | string | null;
   player1?: unknown;
   player2?: unknown;
+  player1_local_key?: string | null;
+  player1_local_name?: string | null;
+  player1_local_country?: string | null;
+  player2_local_key?: string | null;
+  player2_local_name?: string | null;
+  player2_local_country?: string | null;
   player1_points?: number | string | null;
   player1_match_points?: number | string | null;
   player1_match_points_override?: number | string | null;
