@@ -1052,6 +1052,18 @@ const formatGroupDisplayLabel = (
   return `Group ${suffix}`;
 };
 
+const hasAnyStageMatchPlayer = (stage: NormalizedEventStage | null | undefined) =>
+  Boolean(
+    stage?.groups.some((match) =>
+      [
+        match.player1?.name,
+        match.player1?.nativeName,
+        match.player2?.name,
+        match.player2?.nativeName,
+      ].some((value) => typeof value === "string" && value.trim().length > 0),
+    ),
+  );
+
 const createGroupPopoverData = (
   stage: NormalizedEventStage,
   group: StageMatchGroup,
@@ -4210,7 +4222,7 @@ export function TournamentDetailPage({
       tournamentPanelMode !== "stages" ||
       overviewMode !== "results" ||
       !selectedStage?.documentId ||
-      selectedStage.groups.length > 0
+      (selectedStage.groups.length > 0 && hasAnyStageMatchPlayer(selectedStage))
     ) {
       return;
     }
