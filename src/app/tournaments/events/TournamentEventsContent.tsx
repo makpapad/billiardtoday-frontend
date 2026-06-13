@@ -65,6 +65,17 @@ function isBracketStageType(stageType: string | null | undefined): boolean {
   );
 }
 
+function isBracketStage(stage: NormalizedEventStage | null | undefined): boolean {
+  if (!stage) return false;
+  if (isBracketStageType(stage.stageType)) return true;
+  const title = stage.title.trim().toLowerCase();
+  if (stage.isFinal && title.includes("final tournament")) return true;
+  return stage.groups.some((match) => {
+    const round = match.round?.trim().toUpperCase();
+    return round === "R32" || round === "R16" || round === "QF" || round === "SF" || round === "F";
+  });
+}
+
 function toGroupLetter(value: number | null | undefined): string | null {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 1) return null;
   let current = Math.floor(value);
@@ -100,7 +111,7 @@ function formatStageMatchLabel(
   match?: StageMatchGroup["matches"][number] | null,
 ): string {
   const sourceMatch = match ?? group.matches[0] ?? null;
-  if (isBracketStageType(stage.stageType)) {
+  if (isBracketStage(stage)) {
     const round = sourceMatch?.round || stage.title || "KO";
     const matchNumber =
       sourceMatch?.matchNumber ??
@@ -1899,7 +1910,7 @@ function StageRankingTable({
   );
   const bracketRankingStatsByPlayerKey = useMemo(() => {
     const statsByPlayer = new Map<string, BracketRankingStats>();
-    if (!isBracketStageType(stage.stageType)) return statsByPlayer;
+    if (!isBracketStage(stage)) return statsByPlayer;
 
     stageMatchGroups.forEach((group) => {
       group.matches.forEach((match) => {
@@ -1940,7 +1951,7 @@ function StageRankingTable({
   }, [stage.stageType, stageMatchGroups]);
   const visibleResults = useMemo<NormalizedStageResult[]>(() => {
     if (
-      !isBracketStageType(stage.stageType) &&
+      !isBracketStage(stage) &&
       stageMatchGroups.length === 1 &&
       stage.results.filter(hasMeaningfulStageResult).length === 0
     ) {
@@ -1982,10 +1993,10 @@ function StageRankingTable({
     const qualificationStageForOpeningFinalRanking =
       stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID &&
       isOpeningRoundFinalRanking &&
-      isBracketStageType(stage.stageType)
+      isBracketStage(stage)
         ? allStages
             .filter((candidate) => candidate.documentId !== stage.documentId)
-            .filter((candidate) => !isBracketStageType(candidate.stageType))
+            .filter((candidate) => !isBracketStage(candidate))
             .filter((candidate) => candidate.results.length > 0)
             .sort((a, b) => {
               if (a.order !== null && b.order !== null) return b.order - a.order;
@@ -2027,7 +2038,7 @@ function StageRankingTable({
     if (hasStoredStageStandings) {
       return displayResults;
     }
-    if (!isBracketStageType(stage.stageType) || bracketRankingStatsByPlayerKey.size === 0) {
+    if (!isBracketStage(stage) || bracketRankingStatsByPlayerKey.size === 0) {
       return displayResults;
     }
 
@@ -2118,7 +2129,7 @@ function StageRankingTable({
     koRankingRound,
     eventRulesetKey,
   ]);
-  const showStageGroupColumns = !isBracketStageType(stage.stageType);
+  const showStageGroupColumns = !isBracketStage(stage);
   const showGroupColumn =
     showStageGroupColumns &&
     visibleResults.some((result) => result.groupNumber !== null);
@@ -2302,7 +2313,7 @@ function StageRankingTable({
   const displayRankByResultId = new Map<string, number>();
   visibleResults.forEach((result) => {
     if (
-      isBracketStageType(stage.stageType) ||
+      isBracketStage(stage) ||
       result.groupPosition === null ||
       groupCountForRankSlots <= 0
     ) {
@@ -2425,7 +2436,7 @@ function StageRankingTable({
                 : "-";
             const metricTooltip = stageMetricTooltipByResultId.get(result.id);
             const slottedDisplayRank = displayRankByResultId.get(result.id);
-            const displayRank = isBracketStageType(stage.stageType)
+            const displayRank = isBracketStage(stage)
               ? result.finalPosition
               : eventRankIsProvisional
                 ? slottedDisplayRank ?? index + 1
@@ -3282,7 +3293,7 @@ export function TournamentEventsContent({
     const statsByPlayer = new Map<string, BracketRankingStats>();
 
     eventStages.forEach((stage) => {
-      if (!isBracketStageType(stage.stageType)) return;
+      if (!isBracketStage(stage)) return;
 
       (stageMatchGroups[stage.id] ?? []).forEach((group) => {
         group.matches.forEach((match) => {
@@ -3367,7 +3378,7 @@ export function TournamentEventsContent({
       shouldBuildLongoniFinalStandings
         ? eventStages
             .filter((stage) => stage.documentId !== LONGONI_U21_2026_FINAL_ROUND_STAGE_ID)
-            .filter((stage) => !isBracketStageType(stage.stageType))
+            .filter((stage) => !isBracketStage(stage))
             .filter((stage) => stage.results.length > 0)
             .sort((a, b) => {
               if (a.order !== null && b.order !== null) return b.order - a.order;
@@ -3856,7 +3867,7 @@ export function TournamentEventsContent({
     [eventStages, activeStageId],
   );
   const activeBracketStageChain = useMemo<NormalizedEventStage[]>(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
+    if (!activeStage || !isBracketStage(activeStage)) return [];
 
     const activeIndex = eventStages.findIndex(
       (stage) => stage.id === activeStage.id,
@@ -3866,7 +3877,7 @@ export function TournamentEventsContent({
     const chain: NormalizedEventStage[] = [];
     for (let index = activeIndex; index < eventStages.length; index += 1) {
       const stage = eventStages[index];
-      if (!isBracketStageType(stage.stageType)) break;
+      if (!isBracketStage(stage)) break;
       chain.push(stage);
     }
 
@@ -4163,7 +4174,7 @@ export function TournamentEventsContent({
   }, []);
 
   useEffect(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) return;
+    if (!activeStage || !isBracketStage(activeStage)) return;
     activeBracketStageChain.forEach((stage) => {
       if (brMatchesByStage[stage.documentId] || brLoadingByStage[stage.documentId]) {
         return;
@@ -4179,7 +4190,7 @@ export function TournamentEventsContent({
   ]);
 
   useEffect(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) return;
+    if (!activeStage || !isBracketStage(activeStage)) return;
     const chain =
       activeBracketStageChain.length > 0 ? activeBracketStageChain : [activeStage];
     if (chain.length === 0) return;
@@ -4205,7 +4216,7 @@ export function TournamentEventsContent({
   ]);
 
   const activeBracketMatchSource = useMemo(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) return [];
+    if (!activeStage || !isBracketStage(activeStage)) return [];
     const chain =
       activeBracketStageChain.length > 0 ? activeBracketStageChain : [activeStage];
     return chain.flatMap((stage) => {
@@ -4215,7 +4226,7 @@ export function TournamentEventsContent({
   }, [activeBracketStageChain, activeStage, brMatchesByStage]);
 
   const activeStageUsesBracketView = useMemo(() => {
-    if (!activeStage || !isBracketStageType(activeStage.stageType)) {
+    if (!activeStage || !isBracketStage(activeStage)) {
       return false;
     }
     const chain =
@@ -4230,7 +4241,7 @@ export function TournamentEventsContent({
       return true;
     }
 
-    return canRenderBracketPyramid(activeStage.stageType, activeBracketMatchSource);
+    return canRenderBracketPyramid(activeStage.stageType, activeBracketMatchSource) || isBracketStage(activeStage);
   }, [
     activeBracketMatchSource,
     activeBracketStageChain,
@@ -4283,7 +4294,7 @@ export function TournamentEventsContent({
   const activeBracketRounds = useMemo<BracketRoundView[]>(() => {
     if (
       !activeStage ||
-      !isBracketStageType(activeStage.stageType) ||
+      !isBracketStage(activeStage) ||
       !activeStageUsesBracketView
     ) {
       return [];
@@ -5432,9 +5443,7 @@ export function TournamentEventsContent({
                           stage.startDate,
                           stage.endDate,
                         );
-                        const stageUsesBracketView = isBracketStageType(
-                          stage.stageType,
-                        );
+                        const stageUsesBracketView = isBracketStage(stage);
                         const stageBracketMatchesState =
                           brMatchesByStage[stage.documentId];
                         const stageBracketLoading =
@@ -5442,7 +5451,7 @@ export function TournamentEventsContent({
                           (brLoadingByStage[stage.documentId] ||
                             typeof stageBracketMatchesState === "undefined");
                         const isLegacyBracketFallback =
-                          isBracketStageType(stage.stageType) &&
+                          isBracketStage(stage) &&
                           !stageUsesBracketView;
                         const showStageSearch =
                           ((!stageUsesBracketView &&
@@ -5458,7 +5467,7 @@ export function TournamentEventsContent({
                         const showKoRoundRankingSelect =
                           stageViewMode === "ranks" &&
                           stage.isFinal &&
-                          isBracketStageType(stage.stageType) &&
+                          isBracketStage(stage) &&
                           typeof onKoRankingRoundChange === "function";
                         const openingRoundSize = getOpeningKnockoutRoundSize(stage);
                         const openingRoundFinalLabel = `Round ${openingRoundSize} Final Standing`;
@@ -7107,7 +7116,7 @@ export function TournamentEventsContent({
                                                             const matchSheetSubtitle = [
                                                               stage.title,
                                                               formatStageMatchLabel(stage, group, row.sourceMatch),
-                                                              !isBracketStageType(stage.stageType) &&
+                                                              !isBracketStage(stage) &&
                                                               row.sourceMatch?.matchNumber !== null &&
                                                               row.sourceMatch?.matchNumber !== undefined
                                                                 ? `Match ${row.sourceMatch.matchNumber}`
