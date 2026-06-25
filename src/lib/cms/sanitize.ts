@@ -41,7 +41,15 @@ const unwrapNestedHomeSection = (html: string) => {
   return match ? match[1] : html;
 };
 
-export const sanitizeCmsHtml = (value: string) => {
+const rewriteUploadSources = (html: string, resolveUrl?: (value: string) => string | null) => {
+  if (!resolveUrl) return html;
+  return html.replace(/\b(src|href)=(["'])(\/uploads\/[^"']+)\2/gi, (_match, attr: string, quote: string, url: string) => {
+    const resolved = resolveUrl(url);
+    return `${attr}=${quote}${resolved || url}${quote}`;
+  });
+};
+
+export const sanitizeCmsHtml = (value: string, resolveUrl?: (value: string) => string | null) => {
   let html = String(value || "").trim();
   if (!html) return "";
 
@@ -57,6 +65,7 @@ export const sanitizeCmsHtml = (value: string) => {
   html = stripThemeWrappers(html);
   html = unwrapNestedHomeSection(html);
   html = stripBuilderNoise(html);
+  html = rewriteUploadSources(html, resolveUrl);
 
   return html.trim();
 };

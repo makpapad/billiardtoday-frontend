@@ -439,14 +439,14 @@ const mapPostListItems = (value: unknown, strapiBaseUrl: string): CmsPostListIte
         .filter((item) => item.title)
     : [];
 
-const mapFaqItems = (value: unknown): CmsFaqItem[] =>
+const mapFaqItems = (value: unknown, strapiBaseUrl: string): CmsFaqItem[] =>
   Array.isArray(value)
     ? value
         .map((item) => {
           const source = asRecord(item);
           return {
             question: readString(source.question),
-            answer: sanitizeCmsHtml(readString(source.answer)),
+            answer: sanitizeCmsHtml(readString(source.answer), (value) => resolveMediaUrl(value, strapiBaseUrl)),
           };
         })
         .filter((item) => item.question && item.answer)
@@ -616,7 +616,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
     const section: CmsRichTextSection = {
       __component: "cms.rich-text-section",
       title: readNullableString(source.title),
-      content: sanitizeCmsHtml(readString(source.content)),
+      content: sanitizeCmsHtml(readString(source.content), (value) => resolveMediaUrl(value, strapiBaseUrl)),
       ...mapMarketingLayout(source),
       ...sectionAppearance,
     };
@@ -675,7 +675,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       __component: "cms.image-text-split-section",
       eyebrow: readNullableString(source.eyebrow),
       title: readString(source.title),
-      content: sanitizeCmsHtml(readString(source.content)),
+      content: sanitizeCmsHtml(readString(source.content), (value) => resolveMediaUrl(value, strapiBaseUrl)),
       image: mapMedia(source.image, strapiBaseUrl),
       alt: readNullableString(source.alt),
       buttonLabel: readNullableString(source.buttonLabel),
@@ -808,7 +808,7 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
       __component: "cms.faq-section",
       title: readNullableString(source.title),
       visibility: readSectionVisibility(source.visibility),
-      items: mapFaqItems(source.items),
+      items: mapFaqItems(source.items, strapiBaseUrl),
     };
     return section.items.length > 0 || section.title ? section : null;
   }
