@@ -1,19 +1,19 @@
 const DEFAULT_STRAPI_URL = "https://app.billiardtoday.com";
+const DEFAULT_MEDIA_URL = "https://cdn.billiardtoday.com";
 
 const trimTrailingSlash = (value: string) => value.trim().replace(/\/+$/, "");
 
 const getMediaBaseUrl = () =>
   trimTrailingSlash(
     process.env.NEXT_PUBLIC_MEDIA_URL ||
-      process.env.NEXT_PUBLIC_STRAPI_URL ||
-      DEFAULT_STRAPI_URL,
+      DEFAULT_MEDIA_URL,
   );
 
 const getStrapiBaseUrl = () =>
   trimTrailingSlash(process.env.NEXT_PUBLIC_STRAPI_URL || DEFAULT_STRAPI_URL);
 
 const isStrapiUploadHost = (hostname: string) => {
-  const hosts = new Set(["app.billiardtoday.com"]);
+  const hosts = new Set(["app.billiardtoday.com", "cdn.billiardtoday.com"]);
   try {
     hosts.add(new URL(getStrapiBaseUrl()).hostname.toLowerCase());
   } catch {
