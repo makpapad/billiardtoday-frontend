@@ -290,7 +290,10 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${textContainer.className} ${resolveResponsiveTextAlignClass(section.contentAlign, section.mobileContentAlign)}`} style={textContainer.style}>
           {section.title ? <h2 className={`mb-6 font-semibold tracking-tight ${resolveResponsiveSectionTitleClass(section.titleSize, section.mobileTitleSize)}`} style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
-          <div className={`cms-richtext prose prose-slate max-w-none prose-headings:font-semibold prose-a:no-underline ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`} dangerouslySetInnerHTML={{ __html: section.content }} />
+          <div
+            className={`cms-richtext max-w-none text-slate-800 [&_a]:font-semibold [&_a]:text-red-700 [&_a]:underline [&_a]:underline-offset-4 [&_figcaption]:mt-3 [&_figcaption]:text-sm [&_figcaption]:leading-6 [&_figcaption]:text-slate-500 [&_figure]:my-10 [&_h2]:mb-4 [&_h2]:mt-12 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:tracking-tight [&_h2]:text-slate-950 [&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:leading-tight [&_h3]:text-slate-950 [&_img]:w-full [&_img]:border [&_img]:border-slate-200 [&_img]:object-cover [&_li]:my-2 [&_ol]:my-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-6 [&_strong]:font-semibold [&_strong]:text-slate-950 [&_ul]:my-6 [&_ul]:list-disc [&_ul]:pl-6 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`}
+            dangerouslySetInnerHTML={{ __html: section.content }}
+          />
         </div>
       </section>
     );
