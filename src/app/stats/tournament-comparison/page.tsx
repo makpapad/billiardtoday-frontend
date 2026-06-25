@@ -77,6 +77,7 @@ function chartDomain(metric: string, stages: StageRow[]) {
 export default function TournamentComparisonPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchKey = searchParams.toString();
   const [metric, setMetric] = React.useState(() => readMetricParam(searchParams.get("metric")));
   const [tournament, setTournament] = React.useState(() => readTournamentParam(searchParams.get("tournament")));
   const [tournaments, setTournaments] = React.useState<string[]>([]);
@@ -110,7 +111,7 @@ export default function TournamentComparisonPage() {
     const nextTournament = readTournamentParam(searchParams.get("tournament"));
     setMetric((current) => (current === nextMetric ? current : nextMetric));
     setTournament((current) => (current === nextTournament ? current : nextTournament));
-  }, [searchParams]);
+  }, [searchKey, searchParams]);
 
   React.useEffect(() => {
     const controller = new AbortController();
