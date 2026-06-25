@@ -690,6 +690,12 @@ export default function PlayerProfilePage() {
     const playerId = extractPlayerIdentifier(rawId)
     const isNumericPlayerId = /^\d+$/.test(playerId)
     const tournamentContextSlug = (searchParams?.get('tournament') || '').trim()
+    const initialGameType = (() => {
+        const value = normalizeGameTypeOrFallback(searchParams?.get('gameType'))
+        return value ? (value as GameType) : 'all'
+    })()
+    const initialTournamentType =
+        (searchParams?.get('tournamentType') || '').trim() || 'all'
     const isEmbedMode = pathname?.startsWith('/embed/players/') ?? false
 
     const [player, setPlayer] = useState<Player | null>(null)
@@ -699,10 +705,11 @@ export default function PlayerProfilePage() {
     const [error, setError] = useState<string | null>(null)
     const [selectedYear, setSelectedYear] = useState<string>('all')
     const [availableYears, setAvailableYears] = useState<number[]>([])
-    const [selectedGameType, setSelectedGameType] = useState<GameType | 'all'>('all')
+    const [selectedGameType, setSelectedGameType] =
+        useState<GameType | 'all'>(initialGameType)
     const [availableGameTypes, setAvailableGameTypes] = useState<GameType[]>([])
     const [selectedTournamentType, setSelectedTournamentType] =
-        useState<string>('all')
+        useState<string>(initialTournamentType)
     const [availableTournamentTypes, setAvailableTournamentTypes] = useState<
         string[]
     >([])
@@ -738,9 +745,18 @@ export default function PlayerProfilePage() {
     const buildApiUrl = (path: string) => `${basePath}${path}`
     const buildPlayerUrl = (id: string, name: string) => {
         const baseUrl = `${isEmbedMode ? '/embed' : ''}/players/${buildPlayerSlug(id, name)}`
-        return tournamentContextSlug
-            ? `${baseUrl}?tournament=${encodeURIComponent(tournamentContextSlug)}`
-            : baseUrl
+        const params = new URLSearchParams()
+        if (tournamentContextSlug) {
+            params.set('tournament', tournamentContextSlug)
+        }
+        if (selectedGameType !== 'all') {
+            params.set('gameType', selectedGameType)
+        }
+        if (selectedTournamentType !== 'all') {
+            params.set('tournamentType', selectedTournamentType)
+        }
+        const query = params.toString()
+        return query ? `${baseUrl}?${query}` : baseUrl
     }
 
     useEffect(() => {
