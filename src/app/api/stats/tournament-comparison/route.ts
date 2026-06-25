@@ -39,6 +39,30 @@ const normalizeStage = (title: unknown, index: number) => {
 const eventTitle = (event: any) => String(event?.tournament?.title || event?.title || "Unknown tournament").trim();
 const stageOrder: Record<string, number> = { PPPQ: 1, PPQ: 2, PQ: 3, Q: 4, MAIN: 5, "FINAL 16": 6 };
 
+const statsComparisonFrom = (event: any) => {
+  const tournament = unwrapEntity(event?.tournament);
+  let formatDefinition =
+    tournament?.format_definition && typeof tournament.format_definition === "object"
+      ? tournament.format_definition
+      : null;
+  if (!formatDefinition && typeof tournament?.format_definition === "string") {
+    try {
+      const parsed = JSON.parse(tournament.format_definition);
+      formatDefinition = parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      formatDefinition = null;
+    }
+  }
+  const statsComparison =
+    formatDefinition?.statsComparison && typeof formatDefinition.statsComparison === "object"
+      ? formatDefinition.statsComparison
+      : null;
+  const seriesTitle = String(statsComparison?.seriesTitle || "").trim();
+  const seriesKey = String(statsComparison?.seriesKey || "").trim();
+  if (!seriesTitle || !seriesKey) return null;
+  return { seriesTitle, seriesKey };
+};
+
 const cleanTournamentTitle = (title: string) =>
   title
     .replace(/\b(?:19|20)\d{2}(?:[-/]\d{2,4})?\b/g, "")
@@ -48,6 +72,9 @@ const cleanTournamentTitle = (title: string) =>
     .trim();
 
 const tournamentSeriesName = (event: any) => {
+  const explicit = statsComparisonFrom(event);
+  if (explicit) return explicit.seriesTitle;
+
   const title = eventTitle(event);
   const clean = cleanTournamentTitle(title);
   const lower = clean.toLowerCase();
@@ -127,6 +154,7 @@ export async function GET(req: Request) {
     metaParams.set("fields[2]", "game_type");
     metaParams.set("populate[tournament][fields][0]", "title");
     metaParams.set("populate[tournament][fields][1]", "tournament_type");
+    metaParams.set("populate[tournament][fields][2]", "format_definition");
 
     const metaEvents = await fetchEvents(metaParams, headers);
     const tournamentNames = Array.from(new Set<string>(metaEvents.map(tournamentSeriesName)))

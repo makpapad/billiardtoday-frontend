@@ -326,6 +326,44 @@ cd /var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs
 node scripts/restore-cms-home.js
 ```
 
+## Stats Comparison / UMB World Cup Deploy Σημείωση
+
+Για αλλαγές που αφορούν `format_definition.statsComparison`, UMB World Cup import ή `/stats/tournament-comparison`, συνήθως αγγίζονται 3 repos:
+
+- `1-billiards-strapi`
+- `2-billiardtoday-admin`
+- `4-billiardtoday-frontend`
+
+Δεν χρειάζεται Strapi schema migration όταν το metadata γράφεται μέσα στο υπάρχον JSON `tournament.format_definition`.
+
+Σωστή σειρά:
+
+1. `commit` / `push` και στα 3 repos
+2. `bt-sync app`
+3. `bt-sync admin`
+4. `bt-sync frontend`
+
+Για UMB World Cup import, το Strapi script πρέπει να είναι live πριν χρησιμοποιηθεί το admin import:
+
+```bash
+bt-sync app
+bt-sync admin
+```
+
+Μετά το frontend deploy, έλεγξε ότι το stats endpoint ομαδοποιεί με `statsComparison` όπου υπάρχει και κάνει fallback στον παλιό title-based τρόπο όπου δεν υπάρχει:
+
+```bash
+bt-sync frontend
+curl -s "http://127.0.0.1:3022/api/stats/tournament-comparison?metric=stageAverage&tournament=PORTO%20World-Cup" | head -c 500
+```
+
+Checks μετά το deploy:
+
+- νέο UMB import για `PORTO / Portugal 2026` να γράφει `world-cup:porto`
+- στο admin edit, το Format tab να δείχνει/σώζει `Comparison series`
+- το `/stats/tournament-comparison` να κρατά την υπάρχουσα σειρά `PORTO World-Cup`
+- παλιά tournaments χωρίς `statsComparison` να συνεχίζουν να εμφανίζονται με fallback από τίτλο
+
 ## Organizer / Venue Migration Runbook
 
 Για το redesign των `federations / organizers / venues`, το απλό `bt-sync` δεν αρκεί μόνο του, γιατί υπάρχει και production data migration.
