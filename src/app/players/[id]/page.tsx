@@ -843,6 +843,7 @@ export default function PlayerProfilePage() {
             setError(null)
 
             try {
+                let resolvedHistoryPlayerId = playerId
                 const params = new URLSearchParams()
                 if (isNumericPlayerId) {
                     params.set('filters[id][$eq]', playerId)
@@ -866,6 +867,9 @@ export default function PlayerProfilePage() {
                     if (data.data && data.data.length > 0) {
                         const playerData = data.data[0]
                         setPlayer(playerData)
+                        if (playerData?.id) {
+                            resolvedHistoryPlayerId = String(playerData.id)
+                        }
 
                         const gameTypesFromCareerStats =
                             getCareerStatsGameTypes(playerData.career_stats)
@@ -923,13 +927,52 @@ export default function PlayerProfilePage() {
                 if (!shouldFetchHistory) {
                     setParticipations([])
                     setAllParticipations([])
-                    if (selectedGameType === 'all') {
-                        setAvailableYears([])
-                    }
                     setAvailableTournamentTypes([])
                     setHistoryTotalCount(null)
                     setHasMoreYears(false)
                     setHasMoreTournaments(false)
+
+                    if (selectedGameType === 'all') {
+                        const metadataParams = new URLSearchParams()
+                        metadataParams.set('limit', '5000')
+                        metadataParams.set('includeMatches', 'false')
+                        if (tournamentContextSlug) {
+                            metadataParams.set('tournament', tournamentContextSlug)
+                        }
+
+                        const metadataResponse = await fetch(
+                            buildApiUrl(
+                                `/api/players/${resolvedHistoryPlayerId}/history?${metadataParams.toString()}`,
+                            ),
+                            {
+                                signal: abortController.signal,
+                            },
+                        )
+
+                        if (!isActive) return
+                        if (metadataResponse.ok) {
+                            const metadataData = await metadataResponse.json()
+                            if (metadataData.availableGameTypes) {
+                                setAvailableGameTypes(metadataData.availableGameTypes)
+                            }
+                            if (metadataData.availableTournamentTypes) {
+                                setAvailableTournamentTypes(
+                                    metadataData.availableTournamentTypes,
+                                )
+                            }
+                            if (metadataData.availableYears) {
+                                setAvailableYears(metadataData.availableYears)
+                            } else {
+                                setAvailableYears([])
+                            }
+                            if (metadataData.data) {
+                                setAllParticipations(metadataData.data)
+                            }
+                        } else {
+                            setAvailableYears([])
+                        }
+                    }
+
                     setIsLoadingHistory(false)
                     return
                 }
@@ -937,7 +980,7 @@ export default function PlayerProfilePage() {
                 setIsLoadingHistory(true)
 
                 // Build history URL with filters & pagination
-                let historyUrl = `/api/players/${playerId}/history`
+                let historyUrl = `/api/players/${resolvedHistoryPlayerId}/history`
                 const historyParams = new URLSearchParams()
 
                 if (selectedGameType !== 'all') {
@@ -986,7 +1029,7 @@ export default function PlayerProfilePage() {
                 fetchPromises.push(
                     fetch(
                         buildApiUrl(
-                            `/api/players/${playerId}/history?${metadataParams.toString()}`,
+                            `/api/players/${resolvedHistoryPlayerId}/history?${metadataParams.toString()}`,
                         ),
                         {
                             signal: abortController.signal,
