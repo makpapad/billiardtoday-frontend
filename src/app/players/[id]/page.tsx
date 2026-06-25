@@ -269,6 +269,21 @@ const getParticipationSortTimestamp = (
     return new Date(participation.year, 11, 31).getTime()
 }
 
+const getMatchOrderValue = (match: Match): number => {
+    const timestamp = getMatchTimestamp(match.date)
+    if (Number.isFinite(timestamp)) return timestamp
+
+    const num = Number(match.num)
+    if (Number.isFinite(num)) return num
+
+    const idMatch = String(match.id ?? '').match(/\d+/)
+    const idNumber = idMatch ? Number(idMatch[0]) : Number.NaN
+    return Number.isFinite(idNumber) ? idNumber : 0
+}
+
+const getSortedMatchesNewestFirst = (matches: Match[]): Match[] =>
+    [...matches].sort((a, b) => getMatchOrderValue(b) - getMatchOrderValue(a))
+
 // Helper function to get gradient colors based on position
 const getPositionGradient = (position: string): string => {
     const pos = position.toLowerCase().trim()
@@ -741,6 +756,7 @@ export default function PlayerProfilePage() {
     const [opponentHighlight, setOpponentHighlight] = useState<number>(0)
     const appliedTournamentContextSlugRef = useRef<string>('')
     const opponentComboboxRef = useRef<HTMLDivElement | null>(null)
+    const fullHistoryCacheKeyRef = useRef<string>('')
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
     const buildApiUrl = (path: string) => `${basePath}${path}`
     const buildPlayerUrl = (id: string, name: string) => {
@@ -1023,44 +1039,66 @@ export default function PlayerProfilePage() {
                     historyUrl += `?${historyParams.toString()}`
                 }
 
-                // Fetch selected game history after the user has chosen a game type.
-                const fetchPromises: Promise<Response>[] = [
-                    fetch(buildApiUrl(historyUrl), {
-                        signal: abortController.signal,
-                    }),
-                ]
+                const fullHistoryCacheKey = [
+                    resolvedHistoryPlayerId,
+                    selectedGameType,
+                    selectedTournamentType,
+                    tournamentContextSlug,
+                ].join('|')
+                const shouldFetchFullHistoryMetadata =
+                    selectedYear !== 'all' &&
+                    (allParticipations.length === 0 ||
+                        fullHistoryCacheKeyRef.current !== fullHistoryCacheKey)
 
-                const metadataParams = new URLSearchParams()
-                if (selectedGameType !== 'all') {
-                    metadataParams.set('gameType', selectedGameType)
-                }
-                if (selectedTournamentType !== 'all') {
-                    metadataParams.set('tournamentType', selectedTournamentType)
-                }
-                if (tournamentContextSlug) {
-                    metadataParams.set('tournament', tournamentContextSlug)
-                }
-                metadataParams.set('limit', '5000')
+                const historyRequest = fetch(buildApiUrl(historyUrl), {
+                    signal: abortController.signal,
+                })
+                const metadataRequest = shouldFetchFullHistoryMetadata
+                    ? (() => {
+                          const metadataParams = new URLSearchParams()
+                          if (selectedGameType !== 'all') {
+                              metadataParams.set('gameType', selectedGameType)
+                          }
+                          if (selectedTournamentType !== 'all') {
+                              metadataParams.set(
+                                  'tournamentType',
+                                  selectedTournamentType,
+                              )
+                          }
+                          if (tournamentContextSlug) {
+                              metadataParams.set(
+                                  'tournament',
+                                  tournamentContextSlug,
+                              )
+                          }
+                          metadataParams.set('limit', '5000')
 
-                fetchPromises.push(
-                    fetch(
-                        buildApiUrl(
-                            `/api/players/${resolvedHistoryPlayerId}/history?${metadataParams.toString()}`,
-                        ),
-                        {
-                            signal: abortController.signal,
-                        },
-                    ),
-                )
+                          return fetch(
+                              buildApiUrl(
+                                  `/api/players/${resolvedHistoryPlayerId}/history?${metadataParams.toString()}`,
+                              ),
+                              {
+                                  signal: abortController.signal,
+                              },
+                          )
+                      })()
+                    : Promise.resolve(null)
 
-                const responses = await Promise.all(fetchPromises)
+                const responses = await Promise.all([
+                    historyRequest,
+                    metadataRequest,
+                ])
                 if (!isActive) return
                 const [historyResponse, metadataResponse] = responses
 
                 // Process filtered history data (new format: { data, availableYears, availableGameTypes })
                 if (historyResponse.ok) {
                     const historyPayload = await historyResponse.json()
-                    const historyData = historyPayload.data || historyPayload
+                    const historyData = Array.isArray(historyPayload.data)
+                        ? historyPayload.data
+                        : Array.isArray(historyPayload)
+                          ? historyPayload
+                          : []
                     setParticipations(historyData)
                     setHistoryTotalCount(
                         Number.isFinite(historyPayload?.totalCount)
@@ -1116,6 +1154,8 @@ export default function PlayerProfilePage() {
                     }
 
                     if (selectedYear === 'all') {
+                        setAllParticipations(historyData)
+                        fullHistoryCacheKeyRef.current = fullHistoryCacheKey
                         // Check if there are more years to load
                         const yearSet = new Set<number>(
                             historyData.map((p: { year: number }) => p.year),
@@ -1158,6 +1198,7 @@ export default function PlayerProfilePage() {
                     }
                     if (metadataData.data) {
                         setAllParticipations(metadataData.data)
+                        fullHistoryCacheKeyRef.current = fullHistoryCacheKey
                     }
                 }
 
@@ -3202,7 +3243,7 @@ export default function PlayerProfilePage() {
                                         </h4>
                                         {participation.matches.length > 0 ? (
                                         <div className="space-y-3">
-                                            {participation.matches.map((match) => {
+                                            {getSortedMatchesNewestFirst(participation.matches).map((match) => {
                                                 const parsedMatchDate =
                                                     parseMatchDate(match.date)
                                                 const matchDateLabel =

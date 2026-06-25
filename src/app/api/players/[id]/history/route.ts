@@ -9,6 +9,15 @@ const STRAPI_FALLBACK_URL = process.env.STRAPI_FALLBACK_URL || 'https://app.bill
 
 type RouteContext = { params: Promise<{ id?: string }> }
 
+type NormalizedHistoryMatch = Record<string, unknown> & {
+    scoreFor: number
+    scoreAgainst: number
+    innings: number
+    playerPossiblePoints: number
+    opponentPossiblePoints: number
+    highRun: number
+}
+
 const toFiniteNumber = (value: unknown): number => {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : 0
@@ -35,6 +44,77 @@ const isPlayedMatch = (match: Record<string, unknown>): boolean => {
 const readString = (value: unknown): string | null => {
     const clean = typeof value === 'string' ? value.trim() : ''
     return clean || null
+}
+
+const parseMatchDate = (value: unknown): Date | null => {
+    if (typeof value !== 'string') return null
+
+    const trimmed = value.trim()
+    if (!trimmed) return null
+
+    const directDate = new Date(trimmed)
+    if (!Number.isNaN(directDate.getTime())) {
+        return directDate
+    }
+
+    const localDateMatch = trimmed.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/,
+    )
+    if (!localDateMatch) return null
+
+    const [, dayRaw, monthRaw, yearRaw, hourRaw = '0', minuteRaw = '0'] =
+        localDateMatch
+    const parsed = new Date(
+        Number(yearRaw),
+        Number(monthRaw) - 1,
+        Number(dayRaw),
+        Number(hourRaw),
+        Number(minuteRaw),
+    )
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const getMatchTimestamp = (match: { date?: unknown }): number =>
+    parseMatchDate(match.date)?.getTime() ?? Number.NaN
+
+const getMatchOrderValue = (match: {
+    date?: unknown
+    num?: unknown
+    id?: unknown
+}): number => {
+    const timestamp = getMatchTimestamp(match)
+    if (Number.isFinite(timestamp)) return timestamp
+
+    const num = Number(match.num)
+    if (Number.isFinite(num)) return num
+
+    const idMatch = String(match.id ?? '').match(/\d+/)
+    const idNumber = idMatch ? Number(idMatch[0]) : Number.NaN
+    return Number.isFinite(idNumber) ? idNumber : 0
+}
+
+const sortMatchesNewestFirst = <T extends Record<string, unknown>>(
+    matches: T[],
+): T[] =>
+    [...matches].sort((a, b) => getMatchOrderValue(b) - getMatchOrderValue(a))
+
+const getParticipationSortTimestamp = (item: {
+    matches?: Array<{ date?: unknown; num?: unknown; id?: unknown }>
+    year?: unknown
+}): number => {
+    const matchTimestamps = Array.isArray(item.matches)
+        ? item.matches
+              .map((match) => getMatchTimestamp(match))
+              .filter((value) => Number.isFinite(value))
+        : []
+
+    if (matchTimestamps.length > 0) {
+        return Math.max(...matchTimestamps)
+    }
+
+    const year = Number(item.year)
+    return Number.isFinite(year) ? new Date(year, 11, 31).getTime() : 0
 }
 
 const fetchOpponentEnglishNames = async (
@@ -216,22 +296,24 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 isPlayedMatch(match),
             )
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const matches = includeMatches
-                ? playedRawMatches.map((m: any) => ({
-                      ...m,
-                      opponent:
-                          opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
-                          m?.opponent,
-                      opponentFullNameEn:
-                          opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
-                          null,
-                      scoreFor: Number(m?.scoreFor) || 0,
-                      scoreAgainst: Number(m?.scoreAgainst) || 0,
-                      innings: Number(m?.innings) || 0,
-                      playerPossiblePoints: Number(m?.playerPossiblePoints) || 0,
-                      opponentPossiblePoints: Number(m?.opponentPossiblePoints) || 0,
-                      highRun: Number(m?.highRun) || 0,
-                  }))
+            const matches: NormalizedHistoryMatch[] = includeMatches
+                ? sortMatchesNewestFirst(
+                      playedRawMatches.map((m: any): NormalizedHistoryMatch => ({
+                          ...m,
+                          opponent:
+                              opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
+                              m?.opponent,
+                          opponentFullNameEn:
+                              opponentEnglishNames.get(String(m?.opponentId || '').trim()) ||
+                              null,
+                          scoreFor: Number(m?.scoreFor) || 0,
+                          scoreAgainst: Number(m?.scoreAgainst) || 0,
+                          innings: Number(m?.innings) || 0,
+                          playerPossiblePoints: Number(m?.playerPossiblePoints) || 0,
+                          opponentPossiblePoints: Number(m?.opponentPossiblePoints) || 0,
+                          highRun: Number(m?.highRun) || 0,
+                      })),
+                  )
                 : []
             const totalMatches = matches.length
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -356,8 +438,15 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 return true
             },
         )
-        const totalCount = filteredItems.length
-        const limitedItems = limit ? filteredItems.slice(0, limit) : filteredItems
+        const sortedItems = [...filteredItems].sort((a, b) => {
+            const timestampDiff =
+                getParticipationSortTimestamp(b) -
+                getParticipationSortTimestamp(a)
+            if (timestampDiff !== 0) return timestampDiff
+            return Number(b.year) - Number(a.year)
+        })
+        const totalCount = sortedItems.length
+        const limitedItems = limit ? sortedItems.slice(0, limit) : sortedItems
         const normalized = {
             data: limitedItems,
             totalCount,
