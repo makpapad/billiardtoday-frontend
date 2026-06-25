@@ -29,7 +29,9 @@ export const buildCmsMetadata = ({
     settings?.siteTagline ||
     "Billiard tournaments, results, rankings, clubs, players, and CMS-managed content.";
   const canonicalUrl = toAbsoluteUrl(seo?.canonicalUrl || path || "/");
-  const ogImage = seo?.ogImage?.url || page?.coverImage?.url;
+  const image = seo?.ogImage || page?.coverImage || null;
+  const ogImage = toAbsoluteUrl(image?.url);
+  const ogImageType = ogImage?.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
 
   return {
     title,
@@ -42,7 +44,18 @@ export const buildCmsMetadata = ({
       title,
       description,
       url: canonicalUrl,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: ogImage
+        ? [
+            {
+              url: ogImage,
+              secureUrl: ogImage,
+              width: image?.width || undefined,
+              height: image?.height || undefined,
+              alt: image?.alternativeText || title,
+              type: ogImageType,
+            },
+          ]
+        : undefined,
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
