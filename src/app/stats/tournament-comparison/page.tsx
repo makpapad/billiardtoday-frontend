@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { Activity, CalendarDays, Gauge, LineChart as LineChartIcon, Target, Trophy } from "lucide-react";
 import { Line, LineChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -39,6 +40,15 @@ const metricOptions = [
   { value: "highestRun", label: "Highest Run" },
   { value: "totalMatches", label: "Total Matches" },
 ];
+const metricValues = new Set(metricOptions.map((item) => item.value));
+
+function readMetricParam(value: string | null) {
+  return value && metricValues.has(value) ? value : "stageAverage";
+}
+
+function readTournamentParam(value: string | null) {
+  return String(value || "").trim();
+}
 
 function cellTone(stage: StageRow, year: number) {
   const rowValues = Object.values(stage.values).filter((value): value is number => typeof value === "number");
@@ -65,8 +75,10 @@ function chartDomain(metric: string, stages: StageRow[]) {
 }
 
 export default function TournamentComparisonPage() {
-  const [metric, setMetric] = React.useState("stageAverage");
-  const [tournament, setTournament] = React.useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [metric, setMetric] = React.useState(() => readMetricParam(searchParams.get("metric")));
+  const [tournament, setTournament] = React.useState(() => readTournamentParam(searchParams.get("tournament")));
   const [tournaments, setTournaments] = React.useState<string[]>([]);
   const [years, setYears] = React.useState<number[]>([]);
   const [stages, setStages] = React.useState<StageRow[]>([]);
@@ -81,6 +93,24 @@ export default function TournamentComparisonPage() {
     ...Object.fromEntries(stages.map((stage) => [stage.name, stage.values[year]])),
   }));
   const domain = chartDomain(metric, stages);
+
+  const updateUrl = React.useCallback(
+    (nextTournament: string, nextMetric: string) => {
+      const params = new URLSearchParams();
+      if (nextTournament) params.set("tournament", nextTournament);
+      if (nextMetric && nextMetric !== "stageAverage") params.set("metric", nextMetric);
+      const query = params.toString();
+      router.replace(query ? `/stats/tournament-comparison?${query}` : "/stats/tournament-comparison", { scroll: false });
+    },
+    [router],
+  );
+
+  React.useEffect(() => {
+    const nextMetric = readMetricParam(searchParams.get("metric"));
+    const nextTournament = readTournamentParam(searchParams.get("tournament"));
+    setMetric((current) => (current === nextMetric ? current : nextMetric));
+    setTournament((current) => (current === nextTournament ? current : nextTournament));
+  }, [searchParams]);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -163,14 +193,30 @@ export default function TournamentComparisonPage() {
         <div className="grid gap-3 border border-zinc-400/70 bg-white/30 p-4 shadow-[0_16px_50px_rgba(39,39,42,0.08)] md:grid-cols-[1.5fr_1fr_1fr_auto]">
           <label>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">Tournament</span>
-            <select value={tournament} onChange={(event) => setTournament(event.target.value)} className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-3 py-3 text-sm font-semibold outline-none">
+            <select
+              value={tournament}
+              onChange={(event) => {
+                const nextTournament = event.target.value;
+                setTournament(nextTournament);
+                updateUrl(nextTournament, metric);
+              }}
+              className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-3 py-3 text-sm font-semibold outline-none"
+            >
               {tournaments.length === 0 ? <option value="">Loading tournaments</option> : null}
               {tournaments.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">Metric</span>
-            <select value={metric} onChange={(event) => setMetric(event.target.value)} className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-3 py-3 text-sm font-semibold outline-none">
+            <select
+              value={metric}
+              onChange={(event) => {
+                const nextMetric = event.target.value;
+                setMetric(nextMetric);
+                updateUrl(tournament, nextMetric);
+              }}
+              className="mt-2 w-full border border-zinc-400 bg-[#f4f0e6] px-3 py-3 text-sm font-semibold outline-none"
+            >
               {metricOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
@@ -182,7 +228,7 @@ export default function TournamentComparisonPage() {
             </select>
           </label>
           <div className="flex items-end">
-            <button className="bg-zinc-950 px-5 py-3 text-sm font-semibold text-white">Apply</button>
+            <button onClick={() => updateUrl(tournament, metric)} className="bg-zinc-950 px-5 py-3 text-sm font-semibold text-white">Apply</button>
           </div>
         </div>
       </section>
