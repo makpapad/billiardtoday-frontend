@@ -3,14 +3,16 @@ import type { CSSProperties } from "react";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { getCmsAppearance } from "@/lib/cms/strapi";
+import { buildDefaultOpenGraphImage, SITE_URL } from "@/lib/socialMetadata";
 
 export const dynamic = "force-dynamic";
 
 const googleAnalyticsId =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-BHBG58ND1R";
+const defaultSocialImage = buildDefaultOpenGraphImage("Billiard Today");
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"),
+  metadataBase: new URL(SITE_URL),
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
@@ -38,17 +40,19 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "el_GR",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com",
+    url: SITE_URL,
     siteName: "Billiard Today",
     title: "Billiard Today",
     description:
       "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+    images: [defaultSocialImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "Billiard Today",
     description:
       "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+    images: [String(defaultSocialImage.url)],
   },
 };
 

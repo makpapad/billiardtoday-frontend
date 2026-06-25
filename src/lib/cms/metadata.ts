@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import type { CmsPage, CmsSeo, CmsSiteSettings } from "@/lib/cms/types";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
-
-const toAbsoluteUrl = (value: string | null | undefined) => {
-  if (!value) return undefined;
-  if (/^https?:\/\//i.test(value)) return value;
-  return `${SITE_URL}${value.startsWith("/") ? value : `/${value}`}`;
-};
+import { buildDefaultOpenGraphImage, buildOpenGraphImage, toAbsoluteUrl } from "@/lib/socialMetadata";
 
 const pickSeo = (pageSeo?: CmsSeo | null, fallbackSeo?: CmsSeo | null) =>
   pageSeo || fallbackSeo || null;
@@ -30,8 +23,13 @@ export const buildCmsMetadata = ({
     "Billiard tournaments, results, rankings, clubs, players, and CMS-managed content.";
   const canonicalUrl = toAbsoluteUrl(seo?.canonicalUrl || path || "/");
   const image = seo?.ogImage || page?.coverImage || null;
-  const ogImage = toAbsoluteUrl(image?.url);
-  const ogImageType = ogImage?.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+  const socialImage =
+    buildOpenGraphImage({
+      url: image?.url,
+      width: image?.width,
+      height: image?.height,
+      alt: image?.alternativeText || title,
+    }) || buildDefaultOpenGraphImage(title);
 
   return {
     title,
@@ -44,24 +42,13 @@ export const buildCmsMetadata = ({
       title,
       description,
       url: canonicalUrl,
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              secureUrl: ogImage,
-              width: image?.width || undefined,
-              height: image?.height || undefined,
-              alt: image?.alternativeText || title,
-              type: ogImageType,
-            },
-          ]
-        : undefined,
+      images: [socialImage],
     },
     twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: [String(socialImage.url)],
     },
     robots: seo?.noIndex
       ? {
