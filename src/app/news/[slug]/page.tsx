@@ -17,14 +17,27 @@ const LONGONI_NEW_IMAGE_URL = "https://cdn.billiardtoday.com/uploads/IMG_3868_a0
 const applyArticleContentOverrides = (page: CmsPage): CmsPage => {
   if (page.slug !== LONGONI_RECAP_SLUG) return page;
 
-  return {
-    ...page,
-    coverImage: page.coverImage
+  const replacementImage = page.coverImage
+    ? {
+        ...page.coverImage,
+        url: LONGONI_NEW_IMAGE_URL,
+      }
+    : page.seo?.ogImage
       ? {
-          ...page.coverImage,
+          ...page.seo.ogImage,
           url: LONGONI_NEW_IMAGE_URL,
         }
-      : page.coverImage,
+      : null;
+
+  return {
+    ...page,
+    coverImage: replacementImage || page.coverImage,
+    seo: page.seo
+      ? {
+          ...page.seo,
+          ogImage: replacementImage || page.seo.ogImage,
+        }
+      : page.seo,
     sections: page.sections.map((section) => {
       if (
         section.__component === "cms.rich-text-section" &&
