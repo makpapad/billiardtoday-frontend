@@ -7,8 +7,10 @@ import { Footer } from "@/components/landing/Footer";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { LatestNews } from "@/components/landing/LatestNews";
 import { Screenshots } from "@/components/landing/Screenshots";
 import { TrustedClubs } from "@/components/landing/TrustedClubs";
+import { listNewsArticles } from "@/lib/cms/news";
 import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsPageBySlug, getCmsSiteSettings } from "@/lib/cms/strapi";
 
@@ -26,9 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [settings, page] = await Promise.all([
+  const [settings, page, latestNews] = await Promise.all([
     getCmsSiteSettings(),
     getCmsPageBySlug("home"),
+    listNewsArticles(3).catch(() => []),
   ]);
 
   const content = buildLandingPageContent(settings, page);
@@ -42,6 +45,7 @@ export default async function HomePage() {
         <Features content={content.features} />
         <HowItWorks content={content.howItWorks} />
         <Screenshots content={content.screenshots} />
+        <LatestNews articles={latestNews} />
         <Benefits content={content.benefits} />
         <CTA content={content.cta} />
       </main>

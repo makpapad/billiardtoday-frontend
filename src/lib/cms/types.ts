@@ -373,7 +373,7 @@ export type CmsPage = {
   slug: string;
   summary?: string | null;
   coverImage?: CmsMedia | null;
-  pageType: "landing" | "standard" | "legal";
+  pageType: "landing" | "standard" | "legal" | "article";
   layoutTree: CmsLayoutNode[];
   sections: CmsSection[];
   seo?: CmsSeo | null;

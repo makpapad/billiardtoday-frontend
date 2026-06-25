@@ -835,6 +835,8 @@ export const mapCmsPage = (value: unknown, strapiBaseUrl: string): CmsPage | nul
         ? "landing"
         : readString(source.pageType) === "legal"
           ? "legal"
+          : readString(source.pageType) === "article"
+            ? "article"
           : "standard",
     layoutTree: mapLayoutNodes(source.layoutTree),
     sections: Array.isArray(source.sections)

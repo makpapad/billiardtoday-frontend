@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getClubs, getFederations } from "@/lib/directory";
+import { listNewsArticles } from "@/lib/cms/news";
 import { listPlayers, listTournamentEvents } from "@/lib/publicSiteData";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
 
@@ -14,6 +15,7 @@ const staticRoutes = [
   "/clubs",
   "/federations",
   "/rankings",
+  "/news",
   "/live",
   "/manual",
   "/privacy-policy",
@@ -34,13 +36,14 @@ const sitemapEntry = (
 });
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [clubs, federations, players, tournamentEvents, rankingSeries] =
+  const [clubs, federations, players, tournamentEvents, rankingSeries, newsArticles] =
     await Promise.all([
       getClubs().catch(() => []),
       getFederations().catch(() => []),
       listPlayers(5000).catch(() => []),
       listTournamentEvents(1000).catch(() => []),
       fetchRankingSeriesIndex().catch(() => []),
+      listNewsArticles(500).catch(() => []),
     ]);
 
   const entries = [
@@ -79,6 +82,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...rankingSeries.map((series) =>
       sitemapEntry(`/rankings/${series.slug}`, {
         changeFrequency: "weekly",
+        priority: 0.7,
+      }),
+    ),
+    ...newsArticles.map((article) =>
+      sitemapEntry(`/news/${article.slug}`, {
+        changeFrequency: "monthly",
         priority: 0.7,
       }),
     ),
