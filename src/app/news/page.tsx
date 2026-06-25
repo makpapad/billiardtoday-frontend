@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/news" },
 };
 
+export const revalidate = 5;
+
 const formatDate = (value?: string | null) => {
   if (!value) return "";
   const date = new Date(value);
