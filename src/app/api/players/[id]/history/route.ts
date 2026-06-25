@@ -101,6 +101,8 @@ const sortMatchesNewestFirst = <T extends Record<string, unknown>>(
 
 const getParticipationSortTimestamp = (item: {
     matches?: Array<{ date?: unknown; num?: unknown; id?: unknown }>
+    eventStartDate?: unknown
+    eventEndDate?: unknown
     year?: unknown
 }): number => {
     const matchTimestamps = Array.isArray(item.matches)
@@ -112,6 +114,14 @@ const getParticipationSortTimestamp = (item: {
     if (matchTimestamps.length > 0) {
         return Math.max(...matchTimestamps)
     }
+
+    const eventEndTimestamp =
+        parseMatchDate(item.eventEndDate)?.getTime() ?? Number.NaN
+    if (Number.isFinite(eventEndTimestamp)) return eventEndTimestamp
+
+    const eventStartTimestamp =
+        parseMatchDate(item.eventStartDate)?.getTime() ?? Number.NaN
+    if (Number.isFinite(eventStartTimestamp)) return eventStartTimestamp
 
     const year = Number(item.year)
     return Number.isFinite(year) ? new Date(year, 11, 31).getTime() : 0
@@ -363,6 +373,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
                 tournamentType:
                     typeof it?.tournamentType === 'string'
                         ? it.tournamentType
+                        : null,
+                eventStartDate:
+                    typeof it?.eventStartDate === 'string'
+                        ? it.eventStartDate
+                        : null,
+                eventEndDate:
+                    typeof it?.eventEndDate === 'string'
+                        ? it.eventEndDate
                         : null,
                 position: it?.position ?? 'Participant',
                 finals: Array.isArray(it?.finals) ? it.finals : [],

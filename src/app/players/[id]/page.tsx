@@ -160,6 +160,8 @@ type TournamentParticipation = {
     id: string
     tournament: string
     year: number
+    eventStartDate?: string | null
+    eventEndDate?: string | null
     position: string
     gameType?: GameType
     tournamentType: string | null
@@ -265,6 +267,12 @@ const getParticipationSortTimestamp = (
     if (matchTimestamps.length > 0) {
         return Math.max(...matchTimestamps)
     }
+
+    const eventEndTimestamp = getMatchTimestamp(participation.eventEndDate)
+    if (Number.isFinite(eventEndTimestamp)) return eventEndTimestamp
+
+    const eventStartTimestamp = getMatchTimestamp(participation.eventStartDate)
+    if (Number.isFinite(eventStartTimestamp)) return eventStartTimestamp
 
     return new Date(participation.year, 11, 31).getTime()
 }
