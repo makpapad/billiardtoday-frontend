@@ -13,6 +13,24 @@ type Params = {
 const LONGONI_RECAP_SLUG = "longoni-next-gen-grand-prix-u21-2026-athens-recap";
 const LONGONI_OLD_IMAGE_URL = "https://cdn.billiardtoday.com/uploads/IMG_3872_1a5c8c4818.jpeg";
 const LONGONI_NEW_IMAGE_URL = "https://cdn.billiardtoday.com/uploads/IMG_3868_a0015c6d95.jpeg";
+const LONGONI_EXTRA_GALLERY_ITEMS = [
+  {
+    image: {
+      url: "https://app.billiardtoday.com/uploads/IMG_3741_16999ab2b4.jpeg",
+      alternativeText: "LONGONI NEXT GEN Grand Prix U21 2026 in Athens",
+    },
+    alt: "LONGONI NEXT GEN Grand Prix U21 2026 in Athens",
+    caption: "LONGONI NEXT GEN Grand Prix U21 2026, Athens.",
+  },
+  {
+    image: {
+      url: "https://app.billiardtoday.com/uploads/IMG_3756_9f9d968605.jpeg",
+      alternativeText: "LONGONI NEXT GEN Grand Prix U21 2026 at Koralli B.C.",
+    },
+    alt: "LONGONI NEXT GEN Grand Prix U21 2026 at Koralli B.C.",
+    caption: "A moment from the U21 event at Koralli B.C.",
+  },
+];
 
 const applyArticleContentOverrides = (page: CmsPage): CmsPage => {
   if (page.slug !== LONGONI_RECAP_SLUG) return page;
@@ -47,6 +65,22 @@ const applyArticleContentOverrides = (page: CmsPage): CmsPage => {
           ...section,
           content: section.content.split(LONGONI_OLD_IMAGE_URL).join(LONGONI_NEW_IMAGE_URL),
         };
+      }
+
+      if (section.__component === "cms.gallery-section") {
+        const existingUrls = new Set(
+          section.items.map((item) => item.image?.url).filter(Boolean),
+        );
+        const extraItems = LONGONI_EXTRA_GALLERY_ITEMS.filter(
+          (item) => !existingUrls.has(item.image.url),
+        );
+
+        if (extraItems.length > 0) {
+          return {
+            ...section,
+            items: [...section.items, ...extraItems],
+          };
+        }
       }
 
       return section;
