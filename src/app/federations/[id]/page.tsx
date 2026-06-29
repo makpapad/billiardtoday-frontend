@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
@@ -5,10 +6,61 @@ import { getFederations, requireFederationByIdentifier } from "@/lib/directory";
 import { CebFederationExperience } from "@/components/public/CebFederationExperience";
 import { CEB_MEMBER_SLUGS } from "@/components/public/cebFederationMapData";
 import { FederationDetailContent } from "@/components/public/FederationDetailContent";
+import { buildDefaultOpenGraphImage, buildOpenGraphImage, SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+const buildFederationDescription = (
+  federation: Awaited<ReturnType<typeof requireFederationByIdentifier>>,
+) => {
+  const location = [federation.city, federation.country].filter(Boolean).join(", ");
+  const relationship = federation.parent?.name
+    ? ` connected to ${federation.parent.name}`
+    : "";
+  const area = location ? ` in ${location}` : "";
+
+  return `${federation.name} profile${area}${relationship}, with official billiard tournaments, clubs, and federation information on Billiard Today.`;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const federation = await requireFederationByIdentifier(id);
+  const canonicalPath = `/federations/${federation.slug}`;
+  const description = buildFederationDescription(federation);
+  const title = federation.acronym
+    ? `${federation.name} (${federation.acronym})`
+    : federation.name;
+  const image =
+    buildOpenGraphImage({
+      url: federation.logo?.url,
+      alt: `${federation.name} logo`,
+    }) || buildDefaultOpenGraphImage(title);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    openGraph: {
+      type: "website",
+      locale: "el_GR",
+      url: `${SITE_URL}${canonicalPath}`,
+      siteName: "Billiard Today",
+      title,
+      description,
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [String(image.url)],
+    },
+  };
+}
 
 export default async function FederationPage({ params }: Props) {
   const { id } = await params;
