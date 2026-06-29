@@ -20,26 +20,13 @@ const formatPercent = (value: number | null | undefined) =>
     ? `${value.toFixed(1)}%`
     : "-";
 
-const formatYears = (years: number[]) => {
-  if (years.length === 0) return "-";
-  const first = years[0];
-  const last = years[years.length - 1];
-  return first === last ? String(first) : `${first}-${last}`;
-};
-
 export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
   const primaryStats = summary.primaryGameStats;
   const countryLabel = getCountryLabel(summary.country);
   const flagPath = getCountryFlagPath(summary.country);
-  const archiveRange =
-    summary.archiveStartYear && summary.archiveEndYear
-      ? summary.archiveStartYear === summary.archiveEndYear
-        ? String(summary.archiveStartYear)
-        : `${summary.archiveStartYear}-${summary.archiveEndYear}`
-      : null;
   const profileLine = `${countryLabel ? `${countryLabel} billiard player` : "Billiard player"} with ${
     primaryStats ? `${primaryStats.label} records` : "tournament archive"
-  }${archiveRange ? ` from ${archiveRange}` : ""}.`;
+  }.`;
   const statCards = primaryStats
     ? [
         { label: "Discipline", value: primaryStats.label },
@@ -49,7 +36,6 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
         { label: "Average", value: formatDecimal(primaryStats.avgPerInning) },
         { label: "Best avg", value: formatDecimal(primaryStats.bestAverageFromWins) },
         { label: "High run", value: formatInteger(primaryStats.highestRun) },
-        { label: "Data range", value: formatYears(primaryStats.yearsActive) },
       ]
     : [];
 
@@ -106,7 +92,7 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
           </div>
 
           {statCards.length > 0 ? (
-            <div className="mt-6 grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <div className="mt-6 grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
               {statCards.map((card) => (
                 <div
                   key={card.label}

@@ -29,14 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const statFragment = primaryStats
     ? `, including ${primaryStats.label} tournament records, averages, high runs, and match statistics`
     : ", with tournament history, match records, averages, high runs, and performance statistics";
-  const archiveFragment =
-    player.archiveStartYear && player.archiveEndYear
-      ? ` from ${player.archiveStartYear}${player.archiveStartYear === player.archiveEndYear ? "" : ` to ${player.archiveEndYear}`}`
-      : "";
-
   return buildPageMetadata({
     title: `${displayName} Billiard Player Profile`,
-    description: `${displayName} billiard player profile${area}${statFragment}${archiveFragment} on Billiard Today.`,
+    description: `${displayName} billiard player profile${area}${statFragment} on Billiard Today.`,
     path: player.href as `/${string}`,
     keywords: [
       displayName,
