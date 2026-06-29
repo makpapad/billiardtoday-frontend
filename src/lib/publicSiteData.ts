@@ -1,4 +1,5 @@
 import { getCountryCode } from "@/lib/countryFlags";
+import { getGameTypeLabel, normalizeGameTypeOrFallback } from "@/lib/gameTypes";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import { buildTournamentHref } from "@/lib/tournaments";
 
@@ -19,6 +20,30 @@ export type PublicPlayerCard = {
   clubName: string | null;
   photoUrl: string | null;
   href: string;
+};
+
+export type PublicPlayerGameStats = {
+  gameType: string;
+  label: string;
+  totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  totalDraws: number;
+  winPercentage: number | null;
+  avgPerInning: number | null;
+  bestAverageFromWins: number | null;
+  highestRun: number | null;
+  yearsActive: number[];
+  eventCount: number | null;
+};
+
+export type PublicPlayerProfileSummary = PublicPlayerCard & {
+  seoName: string;
+  careerStatsByGameType: PublicPlayerGameStats[];
+  primaryGameStats: PublicPlayerGameStats | null;
+  otherGameLabels: string[];
+  archiveStartYear: number | null;
+  archiveEndYear: number | null;
 };
 
 export type PublicTournamentCard = {
@@ -129,10 +154,21 @@ const isUsablePlayerName = (value: string | null) => {
 const toNumber = (value: unknown): number | null => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
-    const parsed = Number(value);
+    const parsed = Number(value.replace(",", "."));
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+};
+
+const toYearArray = (value: unknown): number[] => {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((year) => Number(year))
+        .filter((year) => Number.isFinite(year) && year > 1900 && year < 2200),
+    ),
+  ).sort((a, b) => a - b);
 };
 
 const unwrapEntity = (value: unknown): Record<string, unknown> | null => {
@@ -179,6 +215,26 @@ const buildPlayerHref = (id: number | string | null, name: string) => {
   return `/players/${cleanName ? `${cleanId}-${cleanName}` : cleanId}`;
 };
 
+const titleCaseToken = (value: string) =>
+  value
+    .toLocaleLowerCase("en")
+    .replace(/(^|[-'])\p{L}/gu, (match) => match.toLocaleUpperCase("en"));
+
+const formatPlayerNameForSeo = (value: string) => {
+  const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return value;
+
+  const [first, ...rest] = parts;
+  const looksLikeFamilyName =
+    first.length > 1 && first === first.toLocaleUpperCase("en");
+  const restLooksLikeGivenName = rest.some((part) =>
+    /[a-z\u00E0-\u024F]/.test(part),
+  );
+
+  if (!looksLikeFamilyName || !restLooksLikeGivenName) return value;
+  return [...rest, titleCaseToken(first)].join(" ");
+};
+
 const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
   const entity = unwrapEntity(value);
   if (!entity) return null;
@@ -209,6 +265,151 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
     photoUrl: resolveMediaUrl(entity.photo_main) || resolveMediaUrl(entity.photo_alt),
     href: buildPlayerHref(id, displayName),
   };
+};
+
+type CareerStatsAggregate = {
+  totalMatches?: unknown;
+  totalWins?: unknown;
+  totalLosses?: unknown;
+  totalDraws?: unknown;
+  winPercentage?: unknown;
+  avgPerInning?: unknown;
+  bestAverageFromWins?: unknown;
+  bestAverage?: unknown;
+  highestRun?: unknown;
+  yearsActive?: unknown;
+};
+
+const getEventCountsByGameType = (
+  stats: Record<string, unknown> | null,
+): Record<string, number> => {
+  const rawCounts =
+    stats?.events &&
+    typeof stats.events === "object" &&
+    (stats.events as Record<string, unknown>).byGameType &&
+    typeof (stats.events as Record<string, unknown>).byGameType === "object"
+      ? ((stats.events as Record<string, unknown>).byGameType as Record<string, unknown>)
+      : {};
+
+  return Object.entries(rawCounts).reduce<Record<string, number>>(
+    (acc, [rawType, rawCount]) => {
+      const gameType = normalizeGameTypeOrFallback(rawType);
+      const count = toNumber(rawCount);
+      if (!gameType || count === null || count <= 0) return acc;
+      acc[gameType] = (acc[gameType] || 0) + count;
+      return acc;
+    },
+    {},
+  );
+};
+
+const normalizeGameStatsMap = (
+  stats: Record<string, unknown> | null,
+): PublicPlayerGameStats[] => {
+  const byGameType =
+    stats?.byGameType && typeof stats.byGameType === "object"
+      ? (stats.byGameType as Record<string, CareerStatsAggregate>)
+      : {};
+  const eventCounts = getEventCountsByGameType(stats);
+  const buckets = new Map<
+    string,
+    {
+      totalMatches: number;
+      totalWins: number;
+      totalLosses: number;
+      totalDraws: number;
+      highestRun: number;
+      bestAverageFromWins: number;
+      weightedAverageTotal: number;
+      weightedAverageMatches: number;
+      yearsActive: Set<number>;
+      eventCount: number;
+    }
+  >();
+
+  Object.entries(byGameType).forEach(([rawGameType, rawStats]) => {
+    const gameType = normalizeGameTypeOrFallback(rawGameType);
+    if (!gameType || !rawStats || typeof rawStats !== "object") return;
+
+    const totalMatches = toNumber(rawStats.totalMatches) || 0;
+    const totalWins = toNumber(rawStats.totalWins) || 0;
+    const totalLosses = toNumber(rawStats.totalLosses) || 0;
+    const totalDraws =
+      toNumber(rawStats.totalDraws) ||
+      Math.max(0, totalMatches - totalWins - totalLosses);
+    const highestRun = toNumber(rawStats.highestRun) || 0;
+    const bestAverageFromWins =
+      toNumber(rawStats.bestAverageFromWins) ||
+      toNumber(rawStats.bestAverage) ||
+      0;
+    const avgPerInning = toNumber(rawStats.avgPerInning) || 0;
+    const bucket =
+      buckets.get(gameType) ||
+      {
+        totalMatches: 0,
+        totalWins: 0,
+        totalLosses: 0,
+        totalDraws: 0,
+        highestRun: 0,
+        bestAverageFromWins: 0,
+        weightedAverageTotal: 0,
+        weightedAverageMatches: 0,
+        yearsActive: new Set<number>(),
+        eventCount: eventCounts[gameType] || 0,
+      };
+
+    bucket.totalMatches += totalMatches;
+    bucket.totalWins += totalWins;
+    bucket.totalLosses += totalLosses;
+    bucket.totalDraws += totalDraws;
+    bucket.highestRun = Math.max(bucket.highestRun, highestRun);
+    bucket.bestAverageFromWins = Math.max(
+      bucket.bestAverageFromWins,
+      bestAverageFromWins,
+    );
+    if (avgPerInning > 0 && totalMatches > 0) {
+      bucket.weightedAverageTotal += avgPerInning * totalMatches;
+      bucket.weightedAverageMatches += totalMatches;
+    }
+    toYearArray(rawStats.yearsActive).forEach((year) =>
+      bucket.yearsActive.add(year),
+    );
+    buckets.set(gameType, bucket);
+  });
+
+  return Array.from(buckets.entries())
+    .map(([gameType, bucket]) => {
+      const winPercentage =
+        bucket.totalMatches > 0
+          ? (bucket.totalWins / bucket.totalMatches) * 100
+          : null;
+      const avgPerInning =
+        bucket.weightedAverageMatches > 0
+          ? bucket.weightedAverageTotal / bucket.weightedAverageMatches
+          : null;
+
+      return {
+        gameType,
+        label: getGameTypeLabel(gameType as never, "en"),
+        totalMatches: bucket.totalMatches,
+        totalWins: bucket.totalWins,
+        totalLosses: bucket.totalLosses,
+        totalDraws: bucket.totalDraws,
+        winPercentage,
+        avgPerInning,
+        bestAverageFromWins:
+          bucket.bestAverageFromWins > 0 ? bucket.bestAverageFromWins : null,
+        highestRun: bucket.highestRun > 0 ? bucket.highestRun : null,
+        yearsActive: Array.from(bucket.yearsActive).sort((a, b) => a - b),
+        eventCount: bucket.eventCount > 0 ? bucket.eventCount : null,
+      };
+    })
+    .filter((row) => row.totalMatches > 0 || row.eventCount !== null)
+    .sort((a, b) => {
+      const eventDelta = (b.eventCount || 0) - (a.eventCount || 0);
+      if (eventDelta !== 0) return eventDelta;
+      return b.totalMatches - a.totalMatches;
+    });
 };
 
 const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
@@ -596,6 +797,57 @@ export const getPublicPlayerByIdentifier = async (
   const rows = Array.isArray(json?.data) ? json.data : [];
 
   return mapPlayerCard(rows[0]) || null;
+};
+
+export const getPublicPlayerProfileSummary = async (
+  identifier: string,
+): Promise<PublicPlayerProfileSummary | null> => {
+  const cleanIdentifier = String(identifier || "").trim();
+  if (!cleanIdentifier) return null;
+
+  const playerId = decodeURIComponent(cleanIdentifier).split("-")[0]?.trim() || cleanIdentifier;
+  const params = new URLSearchParams();
+  params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "full_name");
+  params.set("fields[1]", "full_name_en");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "city");
+  params.set("fields[4]", "documentId");
+  params.set("fields[5]", "career_stats");
+  params.set("populate[photo_main][fields][0]", "url");
+  params.set("populate[photo_alt][fields][0]", "url");
+
+  if (/^\d+$/.test(playerId)) {
+    params.set("filters[id][$eq]", playerId);
+  } else {
+    params.set("filters[documentId][$eq]", playerId);
+  }
+
+  const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
+  const row = Array.isArray(json?.data) ? json.data[0] : null;
+  const base = mapPlayerCard(row);
+  const entity = unwrapEntity(row);
+  if (!base || !entity) return null;
+
+  const rawCareerStats =
+    entity.career_stats && typeof entity.career_stats === "object"
+      ? (entity.career_stats as Record<string, unknown>)
+      : null;
+  const careerStatsByGameType = normalizeGameStatsMap(rawCareerStats);
+  const primaryGameStats = careerStatsByGameType[0] || null;
+  const allYears = careerStatsByGameType.flatMap((stats) => stats.yearsActive);
+  const archiveStartYear = allYears.length > 0 ? Math.min(...allYears) : null;
+  const archiveEndYear = allYears.length > 0 ? Math.max(...allYears) : null;
+
+  return {
+    ...base,
+    seoName: formatPlayerNameForSeo(base.fullNameEn || base.fullName),
+    careerStatsByGameType,
+    primaryGameStats,
+    otherGameLabels: careerStatsByGameType.slice(1, 5).map((stats) => stats.label),
+    archiveStartYear,
+    archiveEndYear,
+  };
 };
 
 export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> => {

@@ -1,5 +1,5 @@
-import PlayerProfilePage from '@/app/players/[id]/page'
+import PlayerProfileClient from '@/app/players/[id]/PlayerProfileClient'
 
 export default function EmbedPlayerProfilePage() {
-    return <PlayerProfilePage />
+    return <PlayerProfileClient />
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { buildPageMetadata } from "@/lib/pageMetadata";
-import { getPublicPlayerByIdentifier } from "@/lib/publicSiteData";
+import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
 type Props = {
   children: ReactNode;
@@ -10,7 +10,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const player = await getPublicPlayerByIdentifier(id);
+  const player = await getPublicPlayerProfileSummary(id);
 
   if (!player) {
     return buildPageMetadata({
@@ -20,15 +20,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
 
-  const displayName = player.fullNameEn || player.fullName;
+  const displayName = player.seoName || player.fullNameEn || player.fullName;
   const location = [player.city, player.country].filter(Boolean).join(", ");
-  const club = player.clubName ? `, connected to ${player.clubName}` : "";
   const area = location ? ` from ${location}` : "";
+  const primaryStats = player.primaryGameStats;
+  const statFragment = primaryStats
+    ? `, including ${primaryStats.label} tournament records, averages, high runs, and match statistics`
+    : ", with tournament history, match records, averages, high runs, and performance statistics";
+  const archiveFragment =
+    player.archiveStartYear && player.archiveEndYear
+      ? ` from ${player.archiveStartYear}${player.archiveStartYear === player.archiveEndYear ? "" : ` to ${player.archiveEndYear}`}`
+      : "";
 
   return buildPageMetadata({
-    title: displayName,
-    description: `${displayName} billiard player profile${area}${club}, with tournament history, match records, and performance statistics on Billiard Today.`,
+    title: `${displayName} Billiard Player Profile`,
+    description: `${displayName} billiard player profile${area}${statFragment}${archiveFragment} on Billiard Today.`,
     path: player.href as `/${string}`,
+    keywords: [
+      displayName,
+      `${displayName} billiard player`,
+      `${displayName} billiard stats`,
+      `${displayName} tournament history`,
+      "billiard player profile",
+      "carom billiards statistics",
+      primaryStats?.label,
+    ].filter((value): value is string => Boolean(value)),
   });
 }
 
