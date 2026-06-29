@@ -1,3 +1,4 @@
+import { PlayerBackButton } from "./PlayerBackButton";
 import PlayerProfileClient from "./PlayerProfileClient";
 import { PlayerInstantSummary } from "./PlayerInstantSummary";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
@@ -74,6 +75,13 @@ export default async function PlayerProfilePage({ params }: Props) {
             __html: JSON.stringify(structuredData),
           }}
         />
+      ) : null}
+      {summary ? (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pt-8 dark:from-gray-900 dark:to-gray-800">
+          <div className="mx-auto max-w-6xl">
+            <PlayerBackButton />
+          </div>
+        </div>
       ) : null}
       {summary ? <PlayerInstantSummary summary={summary} /> : null}
       <PlayerProfileClient hasServerSummary={Boolean(summary)} />

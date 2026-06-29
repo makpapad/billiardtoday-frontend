@@ -2103,6 +2103,7 @@ export default function PlayerProfileClient({
     return (
         <div className={`${hasServerSummary ? '' : 'min-h-screen'} bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4`}>
             <div className="max-w-6xl mx-auto">
+                {!hasServerSummary && (
                 <div className="mb-6 flex flex-wrap items-center gap-4">
                     <button
                         onClick={handleBack}
@@ -2114,6 +2115,7 @@ export default function PlayerProfileClient({
                         {t('players.profile.back')}
                     </button>
                 </div>
+                )}
 
                 {!hasServerSummary && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8">
