@@ -217,7 +217,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
             </div>
             {search.trim().length < MIN_QUERY_LENGTH && availablePlayers > displayPlayers.length ? (
               <p className="mt-6 max-w-3xl text-sm leading-7 text-slate-600">
-                Showing a stable sample of {displayPlayers.length.toLocaleString("en-US")} public player profiles.
+                Showing a daily rotating sample of {displayPlayers.length.toLocaleString("en-US")} public player profiles.
                 Use search to access the full index of {availablePlayers.toLocaleString("en-US")} players.
               </p>
             ) : null}
