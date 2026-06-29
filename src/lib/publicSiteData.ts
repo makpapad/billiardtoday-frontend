@@ -272,6 +272,8 @@ type CareerStatsAggregate = {
   totalWins?: unknown;
   totalLosses?: unknown;
   totalDraws?: unknown;
+  totalPoints?: unknown;
+  totalInnings?: unknown;
   winPercentage?: unknown;
   avgPerInning?: unknown;
   bestAverageFromWins?: unknown;
@@ -318,10 +320,12 @@ const normalizeGameStatsMap = (
       totalWins: number;
       totalLosses: number;
       totalDraws: number;
+      totalPoints: number;
+      totalInnings: number;
       highestRun: number;
       bestAverageFromWins: number;
-      weightedAverageTotal: number;
-      weightedAverageMatches: number;
+      averageFallbackTotal: number;
+      averageFallbackMatches: number;
       yearsActive: Set<number>;
       eventCount: number;
     }
@@ -337,6 +341,8 @@ const normalizeGameStatsMap = (
     const totalDraws =
       toNumber(rawStats.totalDraws) ||
       Math.max(0, totalMatches - totalWins - totalLosses);
+    const totalPoints = toNumber(rawStats.totalPoints) || 0;
+    const totalInnings = toNumber(rawStats.totalInnings) || 0;
     const highestRun = toNumber(rawStats.highestRun) || 0;
     const bestAverageFromWins =
       toNumber(rawStats.bestAverageFromWins) ||
@@ -350,10 +356,12 @@ const normalizeGameStatsMap = (
         totalWins: 0,
         totalLosses: 0,
         totalDraws: 0,
+        totalPoints: 0,
+        totalInnings: 0,
         highestRun: 0,
         bestAverageFromWins: 0,
-        weightedAverageTotal: 0,
-        weightedAverageMatches: 0,
+        averageFallbackTotal: 0,
+        averageFallbackMatches: 0,
         yearsActive: new Set<number>(),
         eventCount: eventCounts[gameType] || 0,
       };
@@ -362,14 +370,16 @@ const normalizeGameStatsMap = (
     bucket.totalWins += totalWins;
     bucket.totalLosses += totalLosses;
     bucket.totalDraws += totalDraws;
+    bucket.totalPoints += totalPoints;
+    bucket.totalInnings += totalInnings;
     bucket.highestRun = Math.max(bucket.highestRun, highestRun);
     bucket.bestAverageFromWins = Math.max(
       bucket.bestAverageFromWins,
       bestAverageFromWins,
     );
     if (avgPerInning > 0 && totalMatches > 0) {
-      bucket.weightedAverageTotal += avgPerInning * totalMatches;
-      bucket.weightedAverageMatches += totalMatches;
+      bucket.averageFallbackTotal += avgPerInning * totalMatches;
+      bucket.averageFallbackMatches += totalMatches;
     }
     toYearArray(rawStats.yearsActive).forEach((year) =>
       bucket.yearsActive.add(year),
@@ -384,8 +394,10 @@ const normalizeGameStatsMap = (
           ? (bucket.totalWins / bucket.totalMatches) * 100
           : null;
       const avgPerInning =
-        bucket.weightedAverageMatches > 0
-          ? bucket.weightedAverageTotal / bucket.weightedAverageMatches
+        bucket.totalInnings > 0
+          ? bucket.totalPoints / bucket.totalInnings
+          : bucket.averageFallbackMatches > 0
+            ? bucket.averageFallbackTotal / bucket.averageFallbackMatches
           : null;
 
       return {

@@ -15,6 +15,11 @@ const formatDecimal = (value: number | null | undefined, digits = 3) =>
     ? value.toFixed(digits)
     : "-";
 
+const formatPercent = (value: number | null | undefined) =>
+  typeof value === "number" && Number.isFinite(value)
+    ? `${value.toFixed(1)}%`
+    : "-";
+
 const formatYears = (years: number[]) => {
   if (years.length === 0) return "-";
   const first = years[0];
@@ -40,10 +45,10 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
         { label: "Discipline", value: primaryStats.label },
         { label: "Matches", value: formatInteger(primaryStats.totalMatches) },
         { label: "Wins", value: formatInteger(primaryStats.totalWins) },
+        { label: "Win %", value: formatPercent(primaryStats.winPercentage) },
         { label: "Average", value: formatDecimal(primaryStats.avgPerInning) },
         { label: "Best avg", value: formatDecimal(primaryStats.bestAverageFromWins) },
         { label: "High run", value: formatInteger(primaryStats.highestRun) },
-        { label: "Events", value: formatInteger(primaryStats.eventCount) },
         { label: "Data range", value: formatYears(primaryStats.yearsActive) },
       ]
     : [];
