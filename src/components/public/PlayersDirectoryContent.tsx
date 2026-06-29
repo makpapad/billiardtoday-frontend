@@ -104,9 +104,6 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
   const representedCountries = new Set(
     players.map((player) => player.country).filter(Boolean),
   ).size;
-  const representedClubs = new Set(
-    players.map((player) => player.clubName).filter(Boolean),
-  ).size;
 
   return (
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
@@ -123,9 +120,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
           representedCountries > 0
             ? `${representedCountries} countries represented in the public index`
             : "International billiard player profiles",
-          representedClubs > 0
-            ? `${representedClubs} clubs connected to player profiles`
-            : "Search by name, country, city, or club",
+          "Tournament history, averages, high runs, and head-to-head stats",
           search.trim().length >= MIN_QUERY_LENGTH
             ? remoteBusy
               ? "Searching..."
