@@ -5,10 +5,12 @@ export const buildPageMetadata = ({
   title,
   description,
   path,
+  keywords,
 }: {
   title: string;
   description: string;
   path: `/${string}`;
+  keywords?: string[];
 }): Metadata => {
   const image = buildDefaultOpenGraphImage(title);
   const url = `${SITE_URL}${path}`;
@@ -16,6 +18,7 @@ export const buildPageMetadata = ({
   return {
     title,
     description,
+    keywords,
     alternates: {
       canonical: path,
     },

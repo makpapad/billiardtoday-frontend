@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await Promise.all([
       getClubs().catch(() => []),
       getFederations().catch(() => []),
-      listPlayers(5000).catch(() => []),
+      listPlayers(50000).catch(() => []),
       listTournamentEvents(1000).catch(() => []),
       fetchRankingSeriesIndex().catch(() => []),
       listNewsArticles(500).catch(() => []),
