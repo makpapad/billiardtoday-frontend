@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getCountryLabel } from "@/lib/countryFlags";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
@@ -21,7 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const displayName = player.seoName || player.fullNameEn || player.fullName;
-  const location = [player.city, player.country].filter(Boolean).join(", ");
+  const countryLabel = getCountryLabel(player.country);
+  const location = [player.city, countryLabel || player.country].filter(Boolean).join(", ");
   const area = location ? ` from ${location}` : "";
   const primaryStats = player.primaryGameStats;
   const statFragment = primaryStats
