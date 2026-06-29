@@ -38,13 +38,13 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
   const statCards = primaryStats
     ? [
         { label: "Discipline", value: primaryStats.label },
-        { label: "Recorded matches", value: formatInteger(primaryStats.totalMatches) },
+        { label: "Matches", value: formatInteger(primaryStats.totalMatches) },
         { label: "Wins", value: formatInteger(primaryStats.totalWins) },
         { label: "Average", value: formatDecimal(primaryStats.avgPerInning) },
-        { label: "Best average", value: formatDecimal(primaryStats.bestAverageFromWins) },
+        { label: "Best avg", value: formatDecimal(primaryStats.bestAverageFromWins) },
         { label: "High run", value: formatInteger(primaryStats.highestRun) },
         { label: "Events", value: formatInteger(primaryStats.eventCount) },
-        { label: "Stats years", value: formatYears(primaryStats.yearsActive) },
+        { label: "Data range", value: formatYears(primaryStats.yearsActive) },
       ]
     : [];
 
@@ -101,16 +101,16 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
           </div>
 
           {statCards.length > 0 ? (
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <div className="mt-6 grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
               {statCards.map((card) => (
                 <div
                   key={card.label}
-                  className="min-h-[82px] rounded-xl bg-gray-50 px-3 py-3 text-center dark:bg-gray-700/60"
+                  className="flex min-h-[96px] flex-col items-center justify-center rounded-xl bg-gray-50 px-3 py-3 text-center dark:bg-gray-700/60"
                 >
-                  <div className="text-[11px] font-medium uppercase text-gray-500 dark:text-gray-400">
+                  <div className="flex min-h-[30px] items-center justify-center text-[11px] font-medium uppercase leading-tight text-gray-500 dark:text-gray-400">
                     {card.label}
                   </div>
-                  <div className="mt-2 break-words text-lg font-extrabold text-gray-950 dark:text-white">
+                  <div className="mt-2 flex min-h-[34px] items-center justify-center whitespace-nowrap text-xl font-extrabold leading-none text-gray-950 dark:text-white lg:text-lg xl:text-xl">
                     {card.value}
                   </div>
                 </div>
