@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getFederations } from "@/lib/directory";
 import { CountryFlag } from "@/components/public/PresentationBlocks";
+import { buildPageMetadata } from "@/lib/pageMetadata";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Federations",
+  description: "Browse billiard federations and organizers with public profiles, clubs, and official tournament pages.",
+  path: "/federations",
+});
 
 export default async function FederationsPage() {
   const federations = (await getFederations()).filter(

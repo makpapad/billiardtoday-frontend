@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { AppSiteShell } from "@/components/site/AppSiteShell";
 import { DocumentPage } from "@/components/site/DocumentPage";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Terms of Service",
   description: "Core terms for using Billiard Today public pages, accounts, admin tools and scoreboards.",
-};
+  path: "/terms-of-service",
+});
 
 export default async function TermsOfServicePage() {
   return (

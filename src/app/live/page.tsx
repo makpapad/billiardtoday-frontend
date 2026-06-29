@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getClubs } from "@/lib/directory";
+import { buildPageMetadata } from "@/lib/pageMetadata";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Live",
+  description: "Open live billiard scoreboard hubs and follow active or pending club sessions in real time.",
+  path: "/live",
+});
 
 export default async function LivePage() {
   const [settings, appearance, clubs] = await Promise.all([

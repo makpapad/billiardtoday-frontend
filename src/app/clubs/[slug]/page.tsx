@@ -1,13 +1,36 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CountryFlag, PresentationHero } from "@/components/public/PresentationBlocks";
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+const buildClubDescription = (
+  club: Awaited<ReturnType<typeof requireClubByIdentifier>>,
+) => {
+  const location = [club.city, club.country].filter(Boolean).join(", ");
+  const federation = club.federation?.name ? ` connected to ${club.federation.name}` : "";
+  const area = location ? ` in ${location}` : "";
+
+  return `${club.name} billiard club profile${area}${federation}, with published tournaments, live scoreboard access, and venue information on Billiard Today.`;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const club = await requireClubByIdentifier(slug);
+
+  return buildPageMetadata({
+    title: club.name,
+    description: buildClubDescription(club),
+    path: `/clubs/${club.slug}`,
+  });
+}
 
 export default async function ClubPage({ params }: Props) {
   const { slug } = await params;

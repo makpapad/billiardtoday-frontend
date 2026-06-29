@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getRankingSeriesData } from "@/lib/rankings";
 
 type Props = {
@@ -39,13 +40,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  return {
+  return buildPageMetadata({
     title: data.title,
     description: data.description,
-    alternates: {
-      canonical: `/rankings/${data.slug}`,
-    },
-  };
+    path: `/rankings/${data.slug}`,
+  });
 }
 
 type RankingSeriesContentProps = {

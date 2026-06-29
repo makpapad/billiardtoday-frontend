@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { AppSiteShell } from "@/components/site/AppSiteShell";
 import { DocumentPage } from "@/components/site/DocumentPage";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Cookie Policy",
   description: "How Billiard Today uses cookies and similar browser storage.",
-};
+  path: "/cookie-policy",
+});
 
 export default async function CookiePolicyPage() {
   return (

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { AppSiteShell } from "@/components/site/AppSiteShell";
 import { DocumentPage } from "@/components/site/DocumentPage";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Privacy Policy",
   description: "How Billiard Today handles account, tournament and platform data.",
-};
+  path: "/privacy-policy",
+});
 
 export default async function PrivacyPolicyPage() {
   return (

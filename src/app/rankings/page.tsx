@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
+import { buildPageMetadata } from "@/lib/pageMetadata";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Rankings",
+  description: "Official billiard ranking lists and circuit standings built from published tournament results.",
+  path: "/rankings",
+});
 
 export default async function RankingsPage() {
   const seriesList = await fetchRankingSeriesIndex();

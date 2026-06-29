@@ -568,6 +568,36 @@ export const getPlayersTotalCount = async (): Promise<number> => {
   return rows.length;
 };
 
+export const getPublicPlayerByIdentifier = async (
+  identifier: string,
+): Promise<PublicPlayerCard | null> => {
+  const cleanIdentifier = String(identifier || "").trim();
+  if (!cleanIdentifier) return null;
+
+  const playerId = decodeURIComponent(cleanIdentifier).split("-")[0]?.trim() || cleanIdentifier;
+  const params = new URLSearchParams();
+  params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "full_name");
+  params.set("fields[1]", "full_name_en");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "city");
+  params.set("fields[4]", "documentId");
+  params.set("populate[club][fields][0]", "name");
+  params.set("populate[photo_main][fields][0]", "url");
+  params.set("populate[photo_alt][fields][0]", "url");
+
+  if (/^\d+$/.test(playerId)) {
+    params.set("filters[id][$eq]", playerId);
+  } else {
+    params.set("filters[documentId][$eq]", playerId);
+  }
+
+  const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
+  const rows = Array.isArray(json?.data) ? json.data : [];
+
+  return mapPlayerCard(rows[0]) || null;
+};
+
 export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> => {
   const pageSize = 1000;
   const maxTotal = Math.max(0, Number.isFinite(limit) ? Number(limit) : 0);

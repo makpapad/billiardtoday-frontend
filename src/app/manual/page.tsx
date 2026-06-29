@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { AppSiteShell } from "@/components/site/AppSiteShell";
 import { DocumentPage } from "@/components/site/DocumentPage";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Platform Manual",
   description: "Starting point for the Billiard Today admin and scoreboard manuals.",
-};
+  path: "/manual",
+});
 
 export default async function ManualPage() {
   return (
