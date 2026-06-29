@@ -44,7 +44,7 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
         { label: "Best average", value: formatDecimal(primaryStats.bestAverageFromWins) },
         { label: "High run", value: formatInteger(primaryStats.highestRun) },
         { label: "Events", value: formatInteger(primaryStats.eventCount) },
-        { label: "Active years", value: formatYears(primaryStats.yearsActive) },
+        { label: "Stats years", value: formatYears(primaryStats.yearsActive) },
       ]
     : [];
 
