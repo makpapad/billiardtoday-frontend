@@ -130,7 +130,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
             ? remoteBusy
               ? "Searching..."
               : `Showing ${displayPlayers.length} ${displayPlayers.length === 1 ? "result" : "results"}`
-            : `Showing ${Math.min(DISPLAY_COUNT, players.length)} crawlable player links`,
+            : `Showing ${Math.min(DISPLAY_COUNT, players.length)} featured player profiles today`,
         ]}
       />
 
