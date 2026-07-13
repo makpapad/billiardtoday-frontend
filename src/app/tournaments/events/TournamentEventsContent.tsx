@@ -91,7 +91,7 @@ function toGroupLetter(value: number | null | undefined): string | null {
 function resolveGroupLabelMode(
   timetableConfig: Record<string, unknown> | null | undefined,
 ): GroupLabelMode {
-  return timetableConfig?.groupLabelMode === "letters" ? "letters" : "numbers";
+  return timetableConfig?.groupLabelMode === "numbers" ? "numbers" : "letters";
 }
 
 function formatGroupDisplayLabel(
