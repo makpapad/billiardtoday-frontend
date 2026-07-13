@@ -1038,7 +1038,7 @@ const toGroupLetter = (value: number | null | undefined): string | null => {
 const resolveGroupLabelMode = (
   timetableConfig: Record<string, unknown> | null | undefined,
 ): GroupLabelMode => {
-  return timetableConfig?.groupLabelMode === "letters" ? "letters" : "numbers";
+  return timetableConfig?.groupLabelMode === "numbers" ? "numbers" : "letters";
 };
 
 const formatGroupDisplayLabel = (
@@ -6926,7 +6926,7 @@ export function TournamentDetailPage({
                                         slot.groupNumber,
                                         stageLabelModeByDocumentId.get(
                                           slot.stageDocumentId ?? "",
-                                        ) ?? "numbers",
+                                        ) ?? "letters",
                                       )
                                     : "-"}
                                 </td>
