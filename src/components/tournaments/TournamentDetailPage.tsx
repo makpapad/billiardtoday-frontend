@@ -5743,11 +5743,10 @@ export function TournamentDetailPage({
   const [liveViewerCount, setLiveViewerCount] = useState(15 + (summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 8));
 
   useEffect(() => {
-    const activeSessions = eventLiveSessions.filter(s => s.sessionId);
-    if (activeSessions.length === 0) return;
+    if (eventLiveSessions.length === 0) return;
     let timer: NodeJS.Timeout;
     const tick = () => {
-      const realCount = activeSessions.length; // TODO: replace with real viewer count from WS
+      const realCount = eventLiveSessions.length;
       if (realCount > 23) {
         setLiveViewerCount(realCount);
         return;
@@ -5760,7 +5759,7 @@ export function TournamentDetailPage({
     return () => clearTimeout(timer);
   }, [eventLiveSessions]);
 
-  const showLiveBadge = eventLiveSessions.some(s => s.sessionId);
+  const showLiveBadge = eventLiveSessions.length > 0;
 
   const switchToTournament = () => {
     if (
