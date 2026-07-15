@@ -5743,9 +5743,11 @@ export function TournamentDetailPage({
   const [liveViewerCount, setLiveViewerCount] = useState(15 + (summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 8));
 
   useEffect(() => {
+    const activeSessions = eventLiveSessions.filter(s => s.sessionId);
+    if (activeSessions.length === 0) return;
     let timer: NodeJS.Timeout;
     const tick = () => {
-      const realCount = eventLiveSessions.filter(s => s.sessionId).length;
+      const realCount = activeSessions.length; // TODO: replace with real viewer count from WS
       if (realCount > 23) {
         setLiveViewerCount(realCount);
         return;
@@ -5757,6 +5759,8 @@ export function TournamentDetailPage({
     tick();
     return () => clearTimeout(timer);
   }, [eventLiveSessions]);
+
+  const showLiveBadge = eventLiveSessions.some(s => s.sessionId);
 
   const switchToTournament = () => {
     if (
@@ -7353,7 +7357,7 @@ export function TournamentDetailPage({
                   active={activeView === "live"}
                   onClick={switchToLive}
                   href={externalLiveTablesHref}
-                  badge={liveViewerCount}
+                  badge={showLiveBadge ? liveViewerCount : null}
                 />
                 <HeroMenuButton
                   label="Tournament"
