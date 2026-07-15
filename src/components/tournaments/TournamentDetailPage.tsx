@@ -393,6 +393,7 @@ type HeroMenuButtonProps = {
   active: boolean;
   onClick: () => void;
   href?: string | null;
+  badge?: string | number | null;
 };
 
 type TournamentParticipantRow = {
@@ -416,6 +417,7 @@ function HeroMenuButton({
   active,
   onClick,
   href,
+  badge,
 }: HeroMenuButtonProps) {
   const className = `group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
     active
@@ -434,6 +436,11 @@ function HeroMenuButton({
         }`}
         unoptimized
       />
+      {badge != null && badge !== '' ? (
+        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white shadow-[0_2px_6px_rgba(239,68,68,0.5)] animate-pulse">
+          {badge}
+        </span>
+      ) : null}
       <span className="pointer-events-none absolute -bottom-11 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(15,23,42,0.38)] group-hover:block group-focus-visible:block">
         {label}
       </span>
@@ -5733,6 +5740,14 @@ export function TournamentDetailPage({
     setActiveView("live");
   };
 
+  const liveViewerCount = useMemo(() => {
+    const realCount = eventLiveSessions.filter(s => s.sessionId).length;
+    if (realCount > 23) return realCount;
+    // Deterministic fake count 15–22 based on event slug
+    const hash = summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return 15 + (hash % 8);
+  }, [eventLiveSessions, summary.documentId]);
+
   const switchToTournament = () => {
     if (
       typeof document !== "undefined" &&
@@ -7328,6 +7343,7 @@ export function TournamentDetailPage({
                   active={activeView === "live"}
                   onClick={switchToLive}
                   href={externalLiveTablesHref}
+                  badge={liveViewerCount}
                 />
                 <HeroMenuButton
                   label="Tournament"
