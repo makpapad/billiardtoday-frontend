@@ -5740,13 +5740,23 @@ export function TournamentDetailPage({
     setActiveView("live");
   };
 
-  const liveViewerCount = useMemo(() => {
-    const realCount = eventLiveSessions.filter(s => s.sessionId).length;
-    if (realCount > 23) return realCount;
-    // Deterministic fake count 15–22 based on event slug
-    const hash = summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    return 15 + (hash % 8);
-  }, [eventLiveSessions, summary.documentId]);
+  const [liveViewerCount, setLiveViewerCount] = useState(15 + (summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 8));
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    const tick = () => {
+      const realCount = eventLiveSessions.filter(s => s.sessionId).length;
+      if (realCount > 23) {
+        setLiveViewerCount(realCount);
+        return;
+      }
+      setLiveViewerCount(15 + Math.floor(Math.random() * 8));
+      const delay = 40000 + Math.floor(Math.random() * 80000);
+      timer = setTimeout(tick, delay);
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, [eventLiveSessions]);
 
   const switchToTournament = () => {
     if (
