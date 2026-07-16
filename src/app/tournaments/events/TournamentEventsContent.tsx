@@ -1147,7 +1147,7 @@ function getGroupPreviewPlayers(
 ) {
   return Array.from(
     new Map(
-      group.matches
+      group.matches.filter(m => (m.matchNumber ?? 99) <= 2)
         .flatMap((match) => [match.top.player, match.bottom.player])
         .filter(
           (player) =>
