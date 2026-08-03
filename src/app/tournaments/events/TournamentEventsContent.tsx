@@ -44,6 +44,7 @@ import {
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
+import FivePinsEventContent, { isFivePinsEvent } from "./FivePinsEventContent";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
@@ -4925,6 +4926,34 @@ export function TournamentEventsContent({
     title: eventInfo?.title,
     startDate: eventInfo?.startDate,
   });
+
+  // Route 5-pins events to the dedicated 5-pins UI (sets-based scoring).
+  if (isFivePinsEvent(eventData) && eventData?.data) {
+    return (
+      <FivePinsEventContent
+        eventIdOverride={eventId}
+        initialEventData={eventData}
+        eventDataOverride={eventDataOverride}
+        disableAutoRefresh={isEventDataControlled}
+        preferredStageDocumentId={preferredStageDocumentId}
+        preferredGroupParam={preferredGroupParam}
+        preferredMatchParam={preferredMatchParam}
+        timezoneOffsetMinutes={timezoneOffsetMinutes}
+        timezoneOptions={timezoneOptions}
+        onTimezoneChange={onTimezoneChange}
+        onStageSelect={onStageSelect}
+        showPublishedFinalResults={showPublishedFinalResults}
+        showTimetable={showTimetable}
+        stageViewMode={stageViewMode}
+        embeddedOverride={embeddedOverride}
+        showStandaloneTitle={showStandaloneTitle}
+        showEventHeader={showEventHeader}
+        emptyStateMessage={emptyStateMessage}
+        liveSessionsOverride={liveSessionsOverride}
+        onLiveMatchOpen={onLiveMatchOpen}
+      />
+    );
+  }
 
   return (
     <div
