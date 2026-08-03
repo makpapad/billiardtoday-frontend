@@ -380,7 +380,19 @@ export function buildFivePinsStandings(
 /* UI components                                                       */
 /* ------------------------------------------------------------------ */
 
-function FivePinsGroupMatchesTable({ group }: { group: StageMatchGroup }) {
+function FivePinsGroupMatchesTable({
+  group,
+  highlightPlayerIds,
+}: {
+  group: StageMatchGroup;
+  highlightPlayerIds?: Set<string>;
+}) {
+  const isHighlighted = (player: NormalizedGroupPlayer) =>
+    Boolean(
+      highlightPlayerIds?.has(
+        player.documentId || `${player.name}-${player.country || "xx"}`,
+      ),
+    );
   const setColumnCount = useMemo(() => {
     let max = 0;
     for (const match of group.matches) {
@@ -432,6 +444,7 @@ function FivePinsGroupMatchesTable({ group }: { group: StageMatchGroup }) {
               outcome: "W" | "L" | "D" | null,
             ) => {
               const flagSrc = getCountryFlagCdnUrl(player.country ?? null, 40);
+              const highlighted = isHighlighted(player);
               return (
                 <td className={clsx("px-3 py-2 font-medium", getMatchRowClass(outcome))}>
                   <div className="flex items-center gap-2">
@@ -444,7 +457,14 @@ function FivePinsGroupMatchesTable({ group }: { group: StageMatchGroup }) {
                         referrerPolicy="no-referrer"
                       />
                     ) : null}
-                    <span className="truncate">{player.name || "-"}</span>
+                    <span
+                      className={clsx(
+                        "truncate",
+                        highlighted && "font-semibold text-yellow-600 dark:text-yellow-300",
+                      )}
+                    >
+                      {player.name || "-"}
+                    </span>
                   </div>
                 </td>
               );
@@ -1013,7 +1033,10 @@ export function FivePinsEventContent({
                             </button>
                             {isExpanded && (
                               <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                                <FivePinsGroupMatchesTable group={group} />
+                                <FivePinsGroupMatchesTable
+                                  group={group}
+                                  highlightPlayerIds={matchingPlayerIds}
+                                />
                                 <FivePinsStandingsTable standings={standings} />
                               </div>
                             )}
