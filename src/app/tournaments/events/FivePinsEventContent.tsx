@@ -150,6 +150,48 @@ const getPreviewPlayerLabel = (player: {
   nativeName?: string | null;
 }) => player.name || player.nativeName || "Unknown";
 
+const normalizeDateKey = (value: string | null | undefined) => {
+  if (!value) return null;
+  const dateOnly = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  if (dateOnly) return dateOnly;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, "0"),
+    String(parsed.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+const getTodayDateKey = () => {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+const isDateKeyWithinRange = (
+  dateKey: string,
+  start: string | null | undefined,
+  end: string | null | undefined,
+) => {
+  const startKey = normalizeDateKey(start);
+  const endKey = normalizeDateKey(end);
+  if (startKey && dateKey < startKey) return false;
+  if (endKey && dateKey > endKey) return false;
+  return Boolean(startKey || endKey);
+};
+
+/** Pick the stage played today (by start/end date); fall back to first non-final. */
+const findStageForToday = (stages: NormalizedEventStage[]) => {
+  const todayKey = getTodayDateKey();
+  return stages.find((stage) =>
+    isDateKeyWithinRange(todayKey, stage.startDate, stage.endDate),
+  );
+};
+
 export function readSetScoreSummary(
   matchSheetJson: unknown,
   fallback?: { player1_points?: unknown; player2_points?: unknown } | null,
@@ -666,7 +708,8 @@ export function FivePinsEventContent({
   const activeStage =
     preferredStageDocumentId
       ? eventStages.find((stage) => stage.documentId === preferredStageDocumentId)
-      : eventStages.find((stage) => !stage.isFinal) ??
+      : findStageForToday(eventStages) ??
+        eventStages.find((stage) => !stage.isFinal) ??
         eventStages[0] ??
         null;
 
