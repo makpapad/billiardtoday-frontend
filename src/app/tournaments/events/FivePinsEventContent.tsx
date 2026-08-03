@@ -219,7 +219,8 @@ type FivePinsStanding = {
   pointsFor: number; // P+
   pointsAgainst: number; // P-
   pointsRatio: number | null; // P+/P-
-  setPoints: number; // Set Points (sets won in played matches)
+  setsWon: number; // total sets won (display "Sets")
+  setPoints: number; // CEB umb_5pins_sets: winner bestOf-opponentSetsWon, loser gets own setsWon
   matchPoints: number; // Match Points
   place: number;
 };
@@ -233,7 +234,11 @@ const computeRatio = (p: number, a: number): number | null => {
   return Number.isFinite(ratio) ? Math.trunc(ratio * 1000) / 1000 : null;
 };
 
-export function buildFivePinsStandings(group: StageMatchGroup): FivePinsStanding[] {
+export function buildFivePinsStandings(
+  group: StageMatchGroup,
+  options?: { bestOf?: number },
+): FivePinsStanding[] {
+  const bestOf = options?.bestOf ?? 3; // CEB U21 groups: best-of-3
   const byPlayerKey = new Map<string, FivePinsStanding>();
   const seed = (player: NormalizedGroupPlayer, groupNumber: number | null): FivePinsStanding => {
     const key = player.documentId || `${player.name}-${player.country || "xx"}`;
@@ -250,6 +255,7 @@ export function buildFivePinsStandings(group: StageMatchGroup): FivePinsStanding
       pointsFor: 0,
       pointsAgainst: 0,
       pointsRatio: null,
+      setsWon: 0,
       setPoints: 0,
       matchPoints: 0,
       place: 1,
@@ -257,6 +263,12 @@ export function buildFivePinsStandings(group: StageMatchGroup): FivePinsStanding
     byPlayerKey.set(key, standing);
     return standing;
   };
+
+  // Seed ALL players in the group first (so standings render even with no played matches)
+  for (const match of group.matches) {
+    seed(match.top.player, group.number);
+    seed(match.bottom.player, group.number);
+  }
 
   for (const match of group.matches) {
     if (!hasPlayedStageMatch(match)) continue;
@@ -276,21 +288,27 @@ export function buildFivePinsStandings(group: StageMatchGroup): FivePinsStanding
     p1.pointsAgainst += p2pts;
     p2.pointsFor += p2pts;
     p2.pointsAgainst += p1pts;
-    p1.setPoints += s1;
-    p2.setPoints += s2;
+    p1.setsWon += s1;
+    p2.setsWon += s2;
 
     const outcome1 = getMatchOutcome(match.top.player, match.bottom.player);
     if (outcome1 === "W") {
       p1.record.wins += 1;
       p1.matchPoints += 1;
+      p1.setPoints += Math.max(0, bestOf - s2); // winner: bestOf - opponentSetsWon
       p2.record.losses += 1;
+      p2.setPoints += s2; // loser: own sets won
     } else if (outcome1 === "L") {
       p1.record.losses += 1;
+      p1.setPoints += s1; // loser: own sets won
       p2.record.wins += 1;
       p2.matchPoints += 1;
+      p2.setPoints += Math.max(0, bestOf - s1); // winner: bestOf - opponentSetsWon
     } else if (outcome1 === "D") {
       p1.record.draws += 1;
       p2.record.draws += 1;
+      p1.setPoints += s1;
+      p2.setPoints += s2;
     }
   }
 
@@ -455,6 +473,7 @@ function FivePinsStandingsTable({ standings }: { standings: FivePinsStanding[] }
             <th className="px-2 py-2 text-center font-medium w-14">P-</th>
             <th className="px-2 py-2 text-center font-medium w-16">P+/P-</th>
             <th className="px-2 py-2 text-center font-medium w-14">Sets</th>
+            <th className="px-2 py-2 text-center font-medium w-16">Set Points</th>
             <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
           </tr>
         </thead>
