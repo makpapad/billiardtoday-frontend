@@ -283,6 +283,18 @@ export function FivePinsGroupMatchesTable({
 
   const maxColumns = Math.min(setColumnCount, 7);
 
+  // CEB umb_5pins_sets per match: winner gets bestOf - opponentSetsWon, loser gets own setsWon
+  const matchSetPoints = (
+    setsWon1: number | null,
+    setsWon2: number | null,
+  ): { sp1: number; sp2: number } => {
+    const s1 = setsWon1 ?? 0;
+    const s2 = setsWon2 ?? 0;
+    if (s1 > s2) return { sp1: Math.max(0, 3 - s2), sp2: s2 };
+    if (s2 > s1) return { sp1: s1, sp2: Math.max(0, 3 - s1) };
+    return { sp1: s1, sp2: s2 };
+  };
+
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
       <table className="min-w-full text-xs">
@@ -297,6 +309,7 @@ export function FivePinsGroupMatchesTable({
             ))}
             <th className="px-2 py-2 text-center font-medium w-20">P+/P-</th>
             <th className="px-2 py-2 text-center font-medium w-14">Sets Won</th>
+            <th className="px-2 py-2 text-center font-medium w-16">Set Points</th>
             <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
           </tr>
         </thead>
@@ -368,6 +381,9 @@ export function FivePinsGroupMatchesTable({
                     {played ? formatNumberValue(summary.setsWon1) : "-"}
                   </td>
                   <td className="px-2 py-2 text-center">
+                    {played ? formatNumberValue(matchSetPoints(summary.setsWon1, summary.setsWon2).sp1) : "-"}
+                  </td>
+                  <td className="px-2 py-2 text-center">
                     {formatNumberValue(match.top.player.matchPoints)}
                   </td>
                 </tr>
@@ -386,6 +402,9 @@ export function FivePinsGroupMatchesTable({
                   </td>
                   <td className="px-2 py-2 text-center font-semibold">
                     {played ? formatNumberValue(summary.setsWon2) : "-"}
+                  </td>
+                  <td className="px-2 py-2 text-center">
+                    {played ? formatNumberValue(matchSetPoints(summary.setsWon1, summary.setsWon2).sp2) : "-"}
                   </td>
                   <td className="px-2 py-2 text-center">
                     {formatNumberValue(match.bottom.player.matchPoints)}
