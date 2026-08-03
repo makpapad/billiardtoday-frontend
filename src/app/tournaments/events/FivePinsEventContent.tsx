@@ -104,6 +104,52 @@ const toRecord = (value: unknown): Record<string, unknown> | null => {
   return value as Record<string, unknown>;
 };
 
+/** Unique preview players of a group (deduped, seed-ordered when possible). */
+function getGroupPreviewPlayers(
+  group: StageMatchGroup,
+  playerSeedByDocumentId?: Map<string, number>,
+) {
+  return Array.from(
+    new Map(
+      group.matches
+        .flatMap((match) => [match.top.player, match.bottom.player])
+        .filter(
+          (player) =>
+            Boolean(player.name || player.nativeName) &&
+            !/^(winner|loser|qualifier|unknown|club player)/i.test(
+              (player.name || player.nativeName || "").trim(),
+            ),
+        )
+        .map((player) => [
+          player.documentId || `${player.name}-${player.country || "xx"}`,
+          player,
+        ]),
+    ).values(),
+  ).sort((left, right) => {
+    const leftSeed =
+      left.documentId && playerSeedByDocumentId
+        ? playerSeedByDocumentId.get(left.documentId) ?? null
+        : null;
+    const rightSeed =
+      right.documentId && playerSeedByDocumentId
+        ? playerSeedByDocumentId.get(right.documentId) ?? null
+        : null;
+    if (leftSeed !== null && rightSeed !== null && leftSeed !== rightSeed) {
+      return leftSeed - rightSeed;
+    }
+    if (leftSeed !== null) return -1;
+    if (rightSeed !== null) return 1;
+    return String(left.name || left.nativeName || "").localeCompare(
+      String(right.name || right.nativeName || ""),
+    );
+  });
+}
+
+const getPreviewPlayerLabel = (player: {
+  name?: string | null;
+  nativeName?: string | null;
+}) => player.name || player.nativeName || "Unknown";
+
 export function readSetScoreSummary(
   matchSheetJson: unknown,
   fallback?: { player1_points?: unknown; player2_points?: unknown } | null,
@@ -634,6 +680,18 @@ export function FivePinsEventContent({
     });
   };
 
+  const playerSeedByDocumentId = useMemo(() => {
+    const next = new Map<string, number>();
+    toRelationArray(eventData?.data?.players).forEach((player) => {
+      const normalized = normalizeEntity<{ seed?: unknown }>(player, "event-player");
+      if (!normalized.documentId) return;
+      const seed = toNumber(normalized.seed);
+      if (seed === null) return;
+      next.set(normalized.documentId, seed);
+    });
+    return next;
+  }, [eventData]);
+
   const groups =
     activeStage && stageMatchGroups.get(activeStage.id)
       ? stageMatchGroups.get(activeStage.id)!
@@ -716,6 +774,10 @@ export function FivePinsEventContent({
                         const groupKey = group.key;
                         const isExpanded = expandedGroups.has(groupKey);
                         const standings = buildFivePinsStandings(group);
+                        const previewPlayers = getGroupPreviewPlayers(
+                          group,
+                          playerSeedByDocumentId,
+                        );
                         const groupLetter =
                           typeof group.number === "number"
                             ? String.fromCharCode(64 + group.number)
@@ -723,19 +785,53 @@ export function FivePinsEventContent({
                         return (
                           <div
                             key={groupKey}
-                            className="rounded-lg border border-gray-200 dark:border-gray-700"
+                            className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
                           >
                             <button
                               onClick={() => toggleGroup(groupKey)}
-                              className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                             >
-                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                              <span className="shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-200">
                                 Group {groupLetter}
                               </span>
-                              <span className="text-xs text-gray-400">{isExpanded ? "▲" : "▼"}</span>
+                              {!isExpanded && previewPlayers.length > 0 && (
+                                <span className="grid min-w-0 flex-1 grid-cols-2 items-center gap-x-4 gap-y-1 text-[11px] font-normal text-gray-500 sm:grid-cols-4 dark:text-gray-300">
+                                  {previewPlayers.map((player) => {
+                                    const flagSrc = getCountryFlagCdnUrl(
+                                      player.country ?? null,
+                                      40,
+                                    );
+                                    return (
+                                      <span
+                                        key={
+                                          player.documentId ||
+                                          `${player.name}-${player.country || "xx"}`
+                                        }
+                                        className="flex min-w-0 items-center gap-1.5"
+                                      >
+                                        {flagSrc ? (
+                                          <img
+                                            src={flagSrc}
+                                            alt={player.country || "flag"}
+                                            className="h-3 w-4 shrink-0 rounded-[2px] object-cover"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                        ) : null}
+                                        <span className="truncate font-semibold">
+                                          {getPreviewPlayerLabel(player)}
+                                        </span>
+                                      </span>
+                                    );
+                                  })}
+                                </span>
+                              )}
+                              <span className="ml-auto shrink-0 text-xs text-gray-400">
+                                {isExpanded ? "▲" : "▼"}
+                              </span>
                             </button>
                             {isExpanded && (
-                              <div className="flex flex-col gap-3 p-3">
+                              <div className="flex flex-col gap-3 border-t border-gray-100 p-3 dark:border-gray-800">
                                 <FivePinsGroupMatchesTable group={group} />
                                 <FivePinsStandingsTable standings={standings} />
                               </div>
