@@ -430,7 +430,7 @@ function FivePinsGroupMatchesTable({ group }: { group: StageMatchGroup }) {
                     {formatNumberValue(match.top.player.matchPoints)}
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100 bg-gray-50 text-gray-600 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300">
+                <tr className="border-b-[5px] border-white bg-gray-50 text-gray-600 dark:border-white dark:bg-gray-950 dark:text-gray-300">
                   {renderPlayerCell(match.bottom.player, outcomeBottom)}
                   <td className="px-2 py-2 text-center" />
                   {Array.from({ length: maxColumns }, (_, i) => (
@@ -529,6 +529,8 @@ export function FivePinsEventContent({
   preferredStageDocumentId = null,
   preferredGroupParam = null,
   timezoneOffsetMinutes = null,
+  timezoneOptions = [],
+  onTimezoneChange,
   showPublishedFinalResults = false,
   showTimetable = true,
   stageViewMode = "results",
@@ -539,6 +541,7 @@ export function FivePinsEventContent({
 }: FivePinsEventContentProps = {}) {
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
   );
@@ -715,13 +718,26 @@ export function FivePinsEventContent({
     activeStage && stageMatchGroups.get(activeStage.id)
       ? stageMatchGroups.get(activeStage.id)!
       : [];
-  const filteredGroups = groups.filter((group) => {
-    if (!preferredGroupParam) return true;
+  const normalizedPlayerSearchQuery = playerSearchQuery.trim().toLowerCase();
+  const matchesSearch = (group: StageMatchGroup) => {
+    if (!normalizedPlayerSearchQuery) return true;
     const letter = typeof group.number === "number" ? String.fromCharCode(64 + group.number) : "";
-    return (
-      String(group.number) === preferredGroupParam ||
-      letter.toLowerCase() === preferredGroupParam.toLowerCase()
+    if (letter.toLowerCase().includes(normalizedPlayerSearchQuery)) return true;
+    return group.matches.some((match) =>
+      [match.top.player, match.bottom.player].some((player) => {
+        const name = `${player.name || ""} ${player.nativeName || ""} ${player.country || ""}`.toLowerCase();
+        return name.includes(normalizedPlayerSearchQuery);
+      }),
     );
+  };
+
+  const filteredGroups = groups.filter((group) => {
+    if (!preferredGroupParam) return matchesSearch(group);
+    const letter = typeof group.number === "number" ? String.fromCharCode(64 + group.number) : "";
+    const matchesPreferred =
+      String(group.number) === preferredGroupParam ||
+      letter.toLowerCase() === preferredGroupParam.toLowerCase();
+    return matchesPreferred && matchesSearch(group);
   });
 
   const renderStageTabs = () => (
@@ -781,8 +797,45 @@ export function FivePinsEventContent({
 
               {activeStage ? (
                 <div className="flex flex-col gap-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                    {stageViewMode === "ranks" ? `Ranking - ${activeStage.title}` : `Matches - ${activeStage.title}`}
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                      {stageViewMode === "ranks" ? `Ranking - ${activeStage.title}` : `Matches - ${activeStage.title}`}
+                    </div>
+                    <div className="grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_8rem] lg:min-w-[28rem]">
+                      <div className="relative">
+                        <input
+                          type="search"
+                          value={playerSearchQuery}
+                          onChange={(event) => setPlayerSearchQuery(event.target.value)}
+                          placeholder="Search player or group (e.g. g1)..."
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                        />
+                        {playerSearchQuery ? (
+                          <button
+                            type="button"
+                            onClick={() => setPlayerSearchQuery("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                            aria-label="Clear search"
+                            title="Clear search"
+                          >
+                            X
+                          </button>
+                        ) : null}
+                      </div>
+                      {onTimezoneChange && timezoneOptions.length > 0 ? (
+                        <select
+                          value={timezoneOffsetMinutes ?? 180}
+                          onChange={(event) => onTimezoneChange(Number(event.target.value))}
+                          className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 md:w-auto"
+                        >
+                          {timezoneOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+                    </div>
                   </div>
 
                   {filteredGroups.length === 0 ? (
