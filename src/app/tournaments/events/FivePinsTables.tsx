@@ -125,6 +125,14 @@ const formatSetPoints = (value: number | null): string => {
   return String(value);
 };
 
+/** CEB P+/P- ratio, e.g. 173/125 → "1.384" */
+const formatPointsRatio = (pointsFor: number | null, pointsAgainst: number | null): string => {
+  const p = pointsFor ?? 0;
+  const a = pointsAgainst ?? 0;
+  if (a === 0) return p > 0 ? p.toFixed(3) : "0.000";
+  return (Math.trunc((p / a) * 1000) / 1000).toFixed(3);
+};
+
 /* ------------------------------------------------------------------ */
 /* CEB qualification-ranking builder (P+, P-, P+/P-, set points)      */
 /* ------------------------------------------------------------------ */
@@ -374,7 +382,7 @@ export function FivePinsGroupMatchesTable({
                   ))}
                   <td className="px-2 py-2 text-center font-semibold">
                     {played
-                      ? `${formatNumberValue(summary.totalPoints1)} / ${formatNumberValue(summary.totalPoints2)}`
+                      ? formatPointsRatio(summary.totalPoints1, summary.totalPoints2)
                       : "-"}
                   </td>
                   <td className="px-2 py-2 text-center font-semibold">
@@ -397,7 +405,7 @@ export function FivePinsGroupMatchesTable({
                   ))}
                   <td className="px-2 py-2 text-center font-semibold">
                     {played
-                      ? `${formatNumberValue(summary.totalPoints2)} / ${formatNumberValue(summary.totalPoints1)}`
+                      ? formatPointsRatio(summary.totalPoints2, summary.totalPoints1)
                       : "-"}
                   </td>
                   <td className="px-2 py-2 text-center font-semibold">
