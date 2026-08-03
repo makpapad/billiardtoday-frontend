@@ -539,7 +539,6 @@ export function FivePinsEventContent({
   showEventHeader = true,
   emptyStateMessage = "Select a tournament event from the list to view its stages.",
 }: FivePinsEventContentProps = {}) {
-  const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [eventData, setEventData] = useState<EventApiResponse | null>(
@@ -667,7 +666,6 @@ export function FivePinsEventContent({
   }, [eventData]);
 
   const activeStage =
-    eventStages.find((stage) => stage.documentId === activeStageId) ??
     preferredStageDocumentId
       ? eventStages.find((stage) => stage.documentId === preferredStageDocumentId)
       : eventStages.find((stage) => !stage.isFinal) ??
@@ -719,45 +717,84 @@ export function FivePinsEventContent({
       ? stageMatchGroups.get(activeStage.id)!
       : [];
   const normalizedPlayerSearchQuery = playerSearchQuery.trim().toLowerCase();
-  const matchesSearch = (group: StageMatchGroup) => {
-    if (!normalizedPlayerSearchQuery) return true;
-    const letter = typeof group.number === "number" ? String.fromCharCode(64 + group.number) : "";
-    if (letter.toLowerCase().includes(normalizedPlayerSearchQuery)) return true;
-    return group.matches.some((match) =>
-      [match.top.player, match.bottom.player].some((player) => {
-        const name = `${player.name || ""} ${player.nativeName || ""} ${player.country || ""}`.toLowerCase();
-        return name.includes(normalizedPlayerSearchQuery);
-      }),
-    );
-  };
+  const playerSearchTerms = useMemo(
+    () =>
+      normalizedPlayerSearchQuery
+        .split(" ")
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0),
+    [normalizedPlayerSearchQuery],
+  );
+  const playerMatchesSearch = useCallback(
+    (
+      player: { name?: string | null; nativeName?: string | null; country?: string | null },
+      searchTerms: string[],
+    ) => {
+      if (searchTerms.length === 0) return false;
+      const haystack = [player.name, player.nativeName, player.country]
+        .map((value) => (value || "").trim().toLowerCase())
+        .filter((value) => value.length > 0)
+        .join(" ");
+      return searchTerms.every((term) => haystack.includes(term));
+    },
+    [],
+  );
+  const groupMatchesSearch = useCallback(
+    (group: StageMatchGroup, searchTerms: string[]) => {
+      if (searchTerms.length === 0) return false;
+      const groupNumber =
+        typeof group.number === "number" && Number.isFinite(group.number)
+          ? String(group.number)
+          : "";
+      const haystack = [
+        group.key,
+        groupNumber,
+        groupNumber ? `group ${groupNumber}` : "",
+        groupNumber ? `g${groupNumber}` : "",
+      ]
+        .map((value) => (value || "").trim().toLowerCase())
+        .filter((value) => value.length > 0)
+        .join(" ");
+      return searchTerms.every((term) => haystack.includes(term));
+    },
+    [],
+  );
+  const matchingPlayerIdsByGroup = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    if (playerSearchTerms.length === 0) return map;
+    for (const group of groups) {
+      const ids = new Set<string>();
+      for (const match of group.matches) {
+        for (const player of [match.top.player, match.bottom.player]) {
+          if (playerMatchesSearch(player, playerSearchTerms)) {
+            ids.add(player.documentId || `${player.name}-${player.country || "xx"}`);
+          }
+        }
+      }
+      if (ids.size > 0) map.set(group.key, ids);
+    }
+    return map;
+  }, [groups, playerMatchesSearch, playerSearchTerms]);
 
   const filteredGroups = groups.filter((group) => {
-    if (!preferredGroupParam) return matchesSearch(group);
+    if (!preferredGroupParam) {
+      if (playerSearchTerms.length === 0) return true;
+      return (
+        groupMatchesSearch(group, playerSearchTerms) ||
+        (matchingPlayerIdsByGroup.get(group.key)?.size ?? 0) > 0
+      );
+    }
     const letter = typeof group.number === "number" ? String.fromCharCode(64 + group.number) : "";
     const matchesPreferred =
       String(group.number) === preferredGroupParam ||
       letter.toLowerCase() === preferredGroupParam.toLowerCase();
-    return matchesPreferred && matchesSearch(group);
+    if (!matchesPreferred) return false;
+    if (playerSearchTerms.length === 0) return true;
+    return (
+      groupMatchesSearch(group, playerSearchTerms) ||
+      (matchingPlayerIdsByGroup.get(group.key)?.size ?? 0) > 0
+    );
   });
-
-  const renderStageTabs = () => (
-    <div className="flex flex-wrap items-center gap-2">
-      {eventStages.map((stage) => (
-        <button
-          key={stage.documentId}
-          onClick={() => setActiveStageId(stage.documentId)}
-          className={clsx(
-            "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
-            activeStage?.documentId === stage.documentId
-              ? "bg-emerald-700 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700",
-          )}
-        >
-          {stage.title || "Stage"}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
@@ -792,8 +829,6 @@ export function FivePinsEventContent({
                   </div>
                 </div>
               )}
-
-              {renderStageTabs()}
 
               {activeStage ? (
                 <div className="flex flex-col gap-4">
@@ -842,9 +877,15 @@ export function FivePinsEventContent({
                     <div className="text-sm text-gray-500 dark:text-gray-400">No groups found.</div>
                   ) : (
                     <div className="flex flex-col gap-3">
-                      {filteredGroups.map((group) => {
+                      {filteredGroups.map((group, groupIndex) => {
                         const groupKey = group.key;
-                        const isExpanded = expandedGroups.has(groupKey);
+                        const matchingPlayerIds =
+                          matchingPlayerIdsByGroup.get(groupKey) ?? new Set<string>();
+                        const hasSearchMatch = matchingPlayerIds.size > 0;
+                        const isExpanded =
+                          normalizedPlayerSearchQuery.length > 0 && hasSearchMatch
+                            ? true
+                            : expandedGroups.has(groupKey);
                         const standings = buildFivePinsStandings(group);
                         const previewPlayers = getGroupPreviewPlayers(
                           group,
@@ -857,17 +898,39 @@ export function FivePinsEventContent({
                         return (
                           <div
                             key={groupKey}
-                            className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                            className="flex flex-col gap-1.5"
                           >
                             <button
                               onClick={() => toggleGroup(groupKey)}
-                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                              className={clsx(
+                                "flex w-full items-center rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-800",
+                                !isExpanded &&
+                                  (groupIndex % 2 === 0
+                                    ? "bg-gray-100/90 dark:bg-gray-800/60"
+                                    : "bg-gray-200/85 dark:bg-gray-700/60"),
+                              )}
                             >
-                              <span className="shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                              <svg
+                                className={clsx(
+                                  "h-4 w-4 shrink-0 transition-transform",
+                                  isExpanded && "rotate-90",
+                                )}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                              <div className="ml-1 shrink-0 text-sm font-semibold text-gray-700 dark:text-gray-200">
                                 Group {groupLetter}
-                              </span>
+                              </div>
                               {!isExpanded && previewPlayers.length > 0 && (
-                                <span className="grid min-w-0 flex-1 grid-cols-2 items-center gap-x-4 gap-y-1 text-[11px] font-normal text-gray-500 sm:grid-cols-4 dark:text-gray-300">
+                                <div className="ml-5 grid min-w-0 flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 sm:grid-cols-4 dark:text-gray-300">
                                   {previewPlayers.map((player) => {
                                     const flagSrc = getCountryFlagCdnUrl(
                                       player.country ?? null,
@@ -879,13 +942,21 @@ export function FivePinsEventContent({
                                           player.documentId ||
                                           `${player.name}-${player.country || "xx"}`
                                         }
-                                        className="flex min-w-0 items-center gap-1.5"
+                                        className={clsx(
+                                          "flex min-w-0 items-center gap-1.5",
+                                          hasSearchMatch &&
+                                            matchingPlayerIds.has(
+                                              player.documentId ||
+                                                `${player.name}-${player.country || "xx"}`,
+                                            ) &&
+                                            "text-yellow-600 dark:text-yellow-300",
+                                        )}
                                       >
                                         {flagSrc ? (
                                           <img
                                             src={flagSrc}
                                             alt={player.country || "flag"}
-                                            className="h-3 w-4 shrink-0 rounded-[2px] object-cover"
+                                            className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover"
                                             loading="lazy"
                                             referrerPolicy="no-referrer"
                                           />
@@ -896,14 +967,11 @@ export function FivePinsEventContent({
                                       </span>
                                     );
                                   })}
-                                </span>
+                                </div>
                               )}
-                              <span className="ml-auto shrink-0 text-xs text-gray-400">
-                                {isExpanded ? "▲" : "▼"}
-                              </span>
                             </button>
                             {isExpanded && (
-                              <div className="flex flex-col gap-3 border-t border-gray-100 p-3 dark:border-gray-800">
+                              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                                 <FivePinsGroupMatchesTable group={group} />
                                 <FivePinsStandingsTable standings={standings} />
                               </div>
