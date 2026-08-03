@@ -44,7 +44,12 @@ import {
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
-import FivePinsEventContent, { isFivePinsEvent } from "./FivePinsEventContent";
+import {
+  isFivePinsEvent,
+  buildFivePinsStandings,
+  FivePinsGroupMatchesTable,
+  FivePinsStandingsTable,
+} from "./FivePinsTables";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
@@ -4928,33 +4933,6 @@ export function TournamentEventsContent({
   });
 
   // Route 5-pins events to the dedicated 5-pins UI (sets-based scoring).
-  if (isFivePinsEvent(eventData) && eventData?.data) {
-    return (
-      <FivePinsEventContent
-        eventIdOverride={eventId}
-        initialEventData={eventData}
-        eventDataOverride={eventDataOverride}
-        disableAutoRefresh={isEventDataControlled}
-        preferredStageDocumentId={preferredStageDocumentId}
-        preferredGroupParam={preferredGroupParam}
-        preferredMatchParam={preferredMatchParam}
-        timezoneOffsetMinutes={timezoneOffsetMinutes}
-        timezoneOptions={timezoneOptions}
-        onTimezoneChange={onTimezoneChange}
-        onStageSelect={onStageSelect}
-        showPublishedFinalResults={showPublishedFinalResults}
-        showTimetable={showTimetable}
-        stageViewMode={stageViewMode}
-        embeddedOverride={embeddedOverride}
-        showStandaloneTitle={showStandaloneTitle}
-        showEventHeader={showEventHeader}
-        emptyStateMessage={emptyStateMessage}
-        liveSessionsOverride={liveSessionsOverride}
-        onLiveMatchOpen={onLiveMatchOpen}
-      />
-    );
-  }
-
   return (
     <div
       className="mx-auto w-full px-4 py-8"
@@ -6576,6 +6554,17 @@ export function TournamentEventsContent({
                                                 </button>
                                               </div>
                                               {isExpanded ? (
+                                              isFivePinsEvent(eventData) ? (
+                                              <>
+                                              <FivePinsGroupMatchesTable
+                                                group={group}
+                                                highlightPlayerIds={matchingPlayerIds}
+                                              />
+                                              <FivePinsStandingsTable
+                                                standings={buildFivePinsStandings(group)}
+                                              />
+                                              </>
+                                              ) : (
                                               <>
                                               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                                                 <table className="min-w-full text-xs">
@@ -7573,6 +7562,7 @@ export function TournamentEventsContent({
                                                 />
                                               ) : null}
                                               </>
+                                              )
                                               ) : null}
                                             </div>
                                             );
