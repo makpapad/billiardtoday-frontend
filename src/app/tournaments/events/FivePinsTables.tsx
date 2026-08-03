@@ -246,15 +246,14 @@ export function buildFivePinsStandings(
     standing.pointsRatio = computeRatio(standing.pointsFor, standing.pointsAgainst);
   }
 
-  // CEB 5-pins qualification order: Match Points → P+ → P- → P+/P- → set points
+  // CEB 5-pins qualification order: Match Points → Set Points → P+/P- → P+ → name
   standings.sort((a, b) => {
     if (a.matchPoints !== b.matchPoints) return b.matchPoints - a.matchPoints;
-    if (a.pointsFor !== b.pointsFor) return b.pointsFor - a.pointsFor;
-    if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst;
+    if (a.setPoints !== b.setPoints) return b.setPoints - a.setPoints;
     if (a.pointsRatio !== null && b.pointsRatio !== null && a.pointsRatio !== b.pointsRatio) {
       return b.pointsRatio - a.pointsRatio;
     }
-    if (a.setPoints !== b.setPoints) return b.setPoints - a.setPoints;
+    if (a.pointsFor !== b.pointsFor) return b.pointsFor - a.pointsFor;
     return a.playerName.localeCompare(b.playerName);
   });
   standings.forEach((standing, index) => {
