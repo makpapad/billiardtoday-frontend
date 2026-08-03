@@ -63,7 +63,7 @@ const isFivePinsGameType = (value: unknown): boolean =>
   typeof value === "string" && /five[- ]?pins|5[- ]?pins/i.test(value.trim());
 
 const isFivePinsRuleset = (value: unknown): boolean =>
-  typeof value === "string" && /(^|[_\-])5pins([_\-]|$)|five[_\- ]?pins/i.test(value.trim());
+  typeof value === "string" && /(^|[-_])5pins([-_]|$)|five[-_ ]?pins/i.test(value.trim());
 
 /** Detect 5-pins from event payload (game_type or ruleset_key on event/tournament). */
 export function isFivePinsEvent(payload: EventApiResponse | null | undefined): boolean {
@@ -531,8 +531,6 @@ export function FivePinsEventContent({
   timezoneOffsetMinutes = null,
   timezoneOptions = [],
   onTimezoneChange,
-  showPublishedFinalResults = false,
-  showTimetable = true,
   stageViewMode = "results",
   embeddedOverride,
   showStandaloneTitle = true,
@@ -550,8 +548,8 @@ export function FivePinsEventContent({
   const searchParams = useSearchParams();
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
   const isEventDataControlled = disableAutoRefresh;
-  const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
-  const groupLabelMode = "letters" as const;
+  void embeddedOverride;
+  void pathname;
 
   const fetchEventPayload = useCallback(async () => {
     if (!eventId) return null;
