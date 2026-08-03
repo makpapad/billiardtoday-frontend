@@ -710,6 +710,23 @@ function readStoredBracketMatchPoints(
   );
 }
 
+/** Read sets won from matchSheetJson.setScore (5-pins/KO sets display). */
+function readBracketSetsWon(
+  match: Record<string, unknown>,
+  side: 1 | 2,
+): number | null {
+  const sheet =
+    match.matchSheetJson && typeof match.matchSheetJson === "object"
+      ? (match.matchSheetJson as Record<string, unknown>)
+      : null;
+  const setScore =
+    sheet?.setScore && typeof sheet.setScore === "object"
+      ? (sheet.setScore as Record<string, unknown>)
+      : null;
+  if (!setScore) return null;
+  return toNumber(setScore[side === 1 ? "player1" : "player2"]);
+}
+
 function formatTruncatedAverage(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "-";
   const truncated = Math.trunc(value * 1000) / 1000;
@@ -4515,24 +4532,43 @@ export function TournamentEventsContent({
           const p2 = normalizeBracketPlayer(
             (m as { player2?: unknown }).player2,
           );
-          const score1 =
-            toNumber(
-              (
-                m as {
-                  player1_points?: unknown;
-                }
-              ).player1_points,
-            ) ??
-            readStoredBracketMatchPoints(m as Record<string, unknown>, 1);
-          const score2 =
-            toNumber(
-              (
-                m as {
-                  player2_points?: unknown;
-                }
-              ).player2_points,
-            ) ??
-            readStoredBracketMatchPoints(m as Record<string, unknown>, 2);
+          const isFivePinsBracket = isFivePinsEvent(eventData);
+          const score1 = isFivePinsBracket
+            ? (readBracketSetsWon(m as Record<string, unknown>, 1) ??
+              toNumber(
+                (
+                  m as {
+                    player1_points?: unknown;
+                  }
+                ).player1_points,
+              ) ??
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 1))
+            : (toNumber(
+                (
+                  m as {
+                    player1_points?: unknown;
+                  }
+                ).player1_points,
+              ) ??
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 1));
+          const score2 = isFivePinsBracket
+            ? (readBracketSetsWon(m as Record<string, unknown>, 2) ??
+              toNumber(
+                (
+                  m as {
+                    player2_points?: unknown;
+                  }
+                ).player2_points,
+              ) ??
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 2))
+            : (toNumber(
+                (
+                  m as {
+                    player2_points?: unknown;
+                  }
+                ).player2_points,
+              ) ??
+              readStoredBracketMatchPoints(m as Record<string, unknown>, 2));
           const tieBreak1 = toNumber(
             (m as { player1_tie_break?: unknown }).player1_tie_break,
           );
@@ -4808,12 +4844,19 @@ export function TournamentEventsContent({
             const p2FlagSrc = p2.country
               ? getCountryFlagCdnUrl(p2.country, 40)
               : null;
-            const score1 =
-              toNumber((m as { player1_points?: unknown }).player1_points) ??
-              readStoredBracketMatchPoints(m as Record<string, unknown>, 1);
-            const score2 =
-              toNumber((m as { player2_points?: unknown }).player2_points) ??
-              readStoredBracketMatchPoints(m as Record<string, unknown>, 2);
+            const isFivePinsBracket = isFivePinsEvent(eventData);
+            const score1 = isFivePinsBracket
+              ? (readBracketSetsWon(m as Record<string, unknown>, 1) ??
+                toNumber((m as { player1_points?: unknown }).player1_points) ??
+                readStoredBracketMatchPoints(m as Record<string, unknown>, 1))
+              : (toNumber((m as { player1_points?: unknown }).player1_points) ??
+                readStoredBracketMatchPoints(m as Record<string, unknown>, 1));
+            const score2 = isFivePinsBracket
+              ? (readBracketSetsWon(m as Record<string, unknown>, 2) ??
+                toNumber((m as { player2_points?: unknown }).player2_points) ??
+                readStoredBracketMatchPoints(m as Record<string, unknown>, 2))
+              : (toNumber((m as { player2_points?: unknown }).player2_points) ??
+                readStoredBracketMatchPoints(m as Record<string, unknown>, 2));
             const tieBreak1 = toNumber(
               (m as { player1_tie_break?: unknown }).player1_tie_break,
             );
