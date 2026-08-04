@@ -187,8 +187,47 @@ const unwrapRelationArray = (value: unknown): Record<string, unknown>[] => {
   return Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
 };
 
+const GREEK_TO_LATIN: Record<string, string> = {
+  α: "a",
+  β: "v",
+  γ: "g",
+  δ: "d",
+  ε: "e",
+  ζ: "z",
+  η: "i",
+  θ: "th",
+  ι: "i",
+  κ: "k",
+  λ: "l",
+  μ: "m",
+  ν: "n",
+  ξ: "x",
+  ο: "o",
+  π: "p",
+  ρ: "r",
+  σ: "s",
+  ς: "s",
+  τ: "t",
+  υ: "y",
+  φ: "f",
+  χ: "ch",
+  ψ: "ps",
+  ω: "o",
+};
+
+const transliterateGreek = (value: string): string =>
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split("")
+    .map((char) => {
+      const lower = char.toLowerCase();
+      return GREEK_TO_LATIN[lower] ?? char;
+    })
+    .join("");
+
 const slugify = (value: string): string =>
-  String(value || "")
+  transliterateGreek(value)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
