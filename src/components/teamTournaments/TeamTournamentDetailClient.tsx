@@ -53,6 +53,34 @@ const isCompleted = (match: NormalizedTeamMatch): boolean =>
   (match.computed.boardCount > 0 &&
     (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
 
+/** Show declared teams (zeros) before any match completes, like a squad list. */
+const resolveStandingRows = (
+  group: TeamGroup,
+  computed: ComputedStandingRow[],
+): ComputedStandingRow[] => {
+  if (computed.length > 0) return computed;
+  return group.teams
+    .map((team) => ({
+      key: team.documentId || String(team.id ?? "") || team.name,
+      teamId: team.id,
+      teamName: team.name,
+      matchesPlayed: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      leaguePoints: 0,
+      framesFor: 0,
+      framesAgainst: 0,
+      frameDiff: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      inningsFor: 0,
+      avg: 0,
+      highestRun: 0,
+    }))
+    .sort((a, b) => a.teamName.localeCompare(b.teamName, "el"));
+};
+
 function StandingsTable({
   group,
   rows,
@@ -418,7 +446,10 @@ export function TeamTournamentDetailClient({
                 <StandingsTable
                   key={group.documentId || group.groupKey}
                   group={group}
-                  rows={standingsByGroup[group.groupKey] ?? []}
+                  rows={resolveStandingRows(
+                    group,
+                    standingsByGroup[group.groupKey] ?? [],
+                  )}
                 />
               ))
             )}
