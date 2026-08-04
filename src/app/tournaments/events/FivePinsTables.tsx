@@ -435,7 +435,7 @@ export function FivePinsStandingsTable({ standings }: { standings: FivePinsStand
           <tr>
             <th className="px-3 py-2 text-left font-medium w-10">Pos</th>
             <th className="px-3 py-2 text-left font-medium w-44">Player</th>
-            <th className="px-2 py-2 text-center font-medium w-20">Record</th>
+            <th className="px-2 py-2 text-center font-medium w-20">W-L</th>
             <th className="px-2 py-2 text-center font-medium w-14">P+</th>
             <th className="px-2 py-2 text-center font-medium w-14">P-</th>
             <th className="px-2 py-2 text-center font-medium w-16">P+/P-</th>
