@@ -327,7 +327,10 @@ export const fetchTeamTournamentByDocumentId = async (
 ): Promise<TeamTournamentSummary | null> => {
   if (!documentId) return null;
   const json = await fetchPublic(`/api/team-tournaments/${documentId}`);
-  return json ? normalizeTeamTournamentSummary(json) : null;
+  if (!json) return null;
+  // Single-entity responses are wrapped in { data: {...} } — unwrap before normalize.
+  const data = (json as { data?: unknown }).data ?? json;
+  return normalizeTeamTournamentSummary(data);
 };
 
 // ---------------------------------------------------------------------------
