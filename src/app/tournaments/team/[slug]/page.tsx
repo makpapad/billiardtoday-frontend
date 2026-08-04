@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { TeamTournamentDetailClient } from "@/components/teamTournaments/TeamTournamentDetailClient";
-import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import {
   buildTeamTournamentSlug,
   fetchTeamTournamentDetail,
@@ -35,11 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TeamTournamentPage({ params }: Props) {
   const { slug } = await params;
-  const [summary, settings, appearance] = await Promise.all([
-    resolveTeamTournamentBySlug(slug),
-    getCmsSiteSettings(),
-    getCmsAppearance(),
-  ]);
+  const summary = await resolveTeamTournamentBySlug(slug);
 
   if (!summary) {
     notFound();
@@ -50,13 +44,11 @@ export default async function TeamTournamentPage({ params }: Props) {
   const isCanonical = slug === canonicalSlug;
 
   return (
-    <CmsPageShell settings={settings} appearance={appearance}>
-      <TeamTournamentDetailClient
-        detail={detail}
-        title={summary.title}
-        canonicalSlug={canonicalSlug}
-        slugIsCanonical={isCanonical}
-      />
-    </CmsPageShell>
+    <TeamTournamentDetailClient
+      detail={detail}
+      title={summary.title}
+      canonicalSlug={canonicalSlug}
+      slugIsCanonical={isCanonical}
+    />
   );
 }
