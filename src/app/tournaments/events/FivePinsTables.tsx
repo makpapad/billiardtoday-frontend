@@ -468,7 +468,11 @@ export function FivePinsStandingsTable({ standings }: { standings: FivePinsStand
                   <span className="truncate">{standing.playerName || "-"}</span>
                 </div>
               </td>
-              <td className="px-2 py-2 text-center">{formatRecord(standing.record)}</td>
+              <td className="px-2 py-2 text-center">
+                {standing.record.draws > 0
+                  ? formatRecord(standing.record)
+                  : `${standing.record.wins}-${standing.record.losses}`}
+              </td>
               <td className="px-2 py-2 text-center">{formatNumberValue(standing.pointsFor)}</td>
               <td className="px-2 py-2 text-center">{formatNumberValue(standing.pointsAgainst)}</td>
               <td className="px-2 py-2 text-center font-semibold">
