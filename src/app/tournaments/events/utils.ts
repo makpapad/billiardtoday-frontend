@@ -730,12 +730,12 @@ export const buildGroupStandings = (
         const avgA = a.average ?? -1;
         const avgB = b.average ?? -1;
         if (avgA !== avgB) return avgB - avgA;
-        const highRunA = a.highRun ?? -1;
-        const highRunB = b.highRun ?? -1;
-        if (highRunA !== highRunB) return highRunB - highRunA;
         const bestAvgA = a.bestAverage ?? -1;
         const bestAvgB = b.bestAverage ?? -1;
         if (bestAvgA !== bestAvgB) return bestAvgB - bestAvgA;
+        const highRunA = a.highRun ?? -1;
+        const highRunB = b.highRun ?? -1;
+        if (highRunA !== highRunB) return highRunB - highRunA;
         const highRun2A = a.highRun2 ?? -1;
         const highRun2B = b.highRun2 ?? -1;
         if (highRun2A !== highRun2B) return highRun2B - highRun2A;
