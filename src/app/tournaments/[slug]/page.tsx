@@ -5,6 +5,10 @@ import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
+import {
+  buildTeamTournamentSlug,
+  fetchTeamTournamentByDocumentId,
+} from "@/lib/teamTournaments";
 import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
 import { buildTournamentStructuredData } from "@/lib/tournamentStructuredData";
 
@@ -35,6 +39,18 @@ export default async function TournamentPage({ params, searchParams }: Props) {
 
   if (!summary) {
     notFound();
+  }
+
+  // Team tournaments (e.g. CEB National Teams) render on their own detail
+  // page with groups/standings/matches — redirect the generic event route
+  // there so federation/club lists point to the right page.
+  if (summary.teamTournamentDocumentId) {
+    const teamSummary = await fetchTeamTournamentByDocumentId(
+      summary.teamTournamentDocumentId,
+    );
+    if (teamSummary) {
+      permanentRedirect(`/tournaments/team/${buildTeamTournamentSlug(teamSummary)}`);
+    }
   }
 
   const canonicalSlug = buildTournamentSlug(

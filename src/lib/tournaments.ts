@@ -33,6 +33,7 @@ export type TournamentEventSummary = {
   rankingSeriesDocumentId: string | null;
   rankingSeriesSlug: string | null;
   rankingSeriesTitle: string | null;
+  teamTournamentDocumentId: string | null;
   externalLiveTablesHref: string | null;
   stages: TournamentEventStageSummary[];
 };
@@ -318,6 +319,7 @@ const normalizeClubTournamentSummary = (
     rankingSeriesDocumentId: null,
     rankingSeriesSlug: null,
     rankingSeriesTitle: null,
+    teamTournamentDocumentId: null,
     externalLiveTablesHref: null,
     stages: readClubRuntimeStages(tournament).map((stage, index) =>
       normalizeStage(stage, index),
@@ -505,6 +507,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][populate][series_entries][populate][series][fields][0]", "documentId");
       params.set("populate[tournament][populate][series_entries][populate][series][fields][1]", "slug");
       params.set("populate[tournament][populate][series_entries][populate][series][fields][2]", "title");
+      params.set("populate[tournament][populate][team_tournament][fields][0]", "documentId");
     }
 
     return params;
@@ -553,6 +556,9 @@ const fetchTournamentEventSummaryById = async (
       : [];
   const firstSeriesEntry = unwrapEntitySource(seriesEntries[0]);
   const rankingSeriesSource = unwrapEntitySource(firstSeriesEntry.series);
+  const teamTournamentSource = unwrapEntitySource(
+    (tournamentSource as Record<string, unknown>).team_tournament,
+  );
   const organizerType = readString((tournamentSource as Record<string, unknown>).organizer_type);
   const tournamentStartDate =
     readString((tournamentSource as Record<string, unknown>).startDate) ??
@@ -610,6 +616,9 @@ const fetchTournamentEventSummaryById = async (
     rankingSeriesDocumentId: readString((rankingSeriesSource as Record<string, unknown>).documentId),
     rankingSeriesSlug: readString((rankingSeriesSource as Record<string, unknown>).slug),
     rankingSeriesTitle: readString((rankingSeriesSource as Record<string, unknown>).title),
+    teamTournamentDocumentId: readString(
+      (teamTournamentSource as Record<string, unknown>).documentId,
+    ),
     externalLiveTablesHref,
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
