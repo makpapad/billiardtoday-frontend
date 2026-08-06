@@ -47,6 +47,9 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     url.searchParams.set('fields[10]', 'qualified')
     url.searchParams.set('fields[11]', 'qualification_type')
     url.searchParams.set('fields[12]', 'source')
+    url.searchParams.set('fields[13]', 'local_player_key')
+    url.searchParams.set('fields[14]', 'local_player_name')
+    url.searchParams.set('fields[15]', 'local_player_country')
     url.searchParams.set('pagination[pageSize]', '1000')
     url.searchParams.set('sort[0]', 'final_position:asc')
     url.searchParams.set('sort[1]', 'group_number:asc')
@@ -197,11 +200,29 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
         return rows.get(key)!
     }
 
+    const resolveMatchSidePlayer = (
+        match: Record<string, unknown>,
+        role: 'player1' | 'player2',
+    ): Record<string, unknown> => {
+        const player = asObject(match[role])
+        if (player && toText(player.documentId)) return player
+        const localKey = toText(match[`${role}_local_key`])
+        if (!localKey) return player ?? {}
+        const localName = toText(match[`${role}_local_name`]) ?? 'Club player'
+        return {
+            id: null,
+            documentId: localKey,
+            full_name: localName,
+            full_name_en: localName,
+            country: toText(match[`${role}_local_country`]) ?? null,
+        }
+    }
+
     matches.forEach((match, index) => {
         if (!hasMatchResult(match)) return
         const groupNumber = Math.max(toFiniteNumber(match.number, 1), 1)
-        const player1 = asObject(match.player1) ?? {}
-        const player2 = asObject(match.player2) ?? {}
+        const player1 = resolveMatchSidePlayer(match, 'player1')
+        const player2 = resolveMatchSidePlayer(match, 'player2')
         const p1 = ensureRow(player1, groupNumber, `match-${index}-p1`)
         const p2 = ensureRow(player2, groupNumber, `match-${index}-p2`)
         const p1Points = toFiniteNumber(match.player1_points)
