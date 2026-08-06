@@ -378,12 +378,30 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
         return rows.get(key)!
     }
 
+    const resolveMatchSidePlayer = (
+        match: Record<string, unknown>,
+        role: 'player1' | 'player2',
+    ): Record<string, unknown> => {
+        const player = asObject(match[role])
+        if (player && readString(player.documentId)) return player
+        const localKey = readString(match[`${role}_local_key`])
+        if (!localKey) return player ?? {}
+        const localName = readString(match[`${role}_local_name`]) ?? 'Club player'
+        return {
+            id: null,
+            documentId: localKey,
+            full_name: localName,
+            full_name_en: localName,
+            country: readString(match[`${role}_local_country`]) ?? null,
+        }
+    }
+
     matches.forEach((match) => {
         if (!hasClubRuntimeMatchResult(match)) return
 
         const groupNumber = toNumber(match.number) ?? 1
-        const player1 = asObject(match.player1) ?? {}
-        const player2 = asObject(match.player2) ?? {}
+        const player1 = resolveMatchSidePlayer(match, 'player1')
+        const player2 = resolveMatchSidePlayer(match, 'player2')
         const p1 = ensureRow(player1, groupNumber, `p1:${readString(match.id) ?? rows.size}`)
         const p2 = ensureRow(player2, groupNumber, `p2:${readString(match.id) ?? rows.size}`)
 
