@@ -66,11 +66,12 @@ export type MatchComputed = {
   awayHighRun: number;
   homeBoardPoints: number;
   awayBoardPoints: number;
+  homeCaromPoints: number;
+  awayCaromPoints: number;
   homeTeamPoints: number;
   awayTeamPoints: number;
   boardCount: number;
 };
-
 export type NormalizedTeamMatch = {
   id: number | null;
   documentId: string | null;
@@ -103,6 +104,8 @@ export type ComputedStandingRow = {
   pointsFor: number;
   pointsAgainst: number;
   inningsFor: number;
+  caromPointsFor: number;
+  caromPointsAgainst: number;
   avg: number;
   highestRun: number;
 };
@@ -425,6 +428,7 @@ export const formatAvg = (points: number, innings: number, caromBoard = false): 
 
 const computeMatchTotals = (
   sets: TeamMatchSet[],
+  opts?: { biathlon?: boolean },
 ): MatchComputed => {
   let homeTotalPoints = 0;
   let awayTotalPoints = 0;
@@ -434,6 +438,8 @@ const computeMatchTotals = (
   let awayHighRun = 0;
   let homeBoardPoints = 0;
   let awayBoardPoints = 0;
+  let homeCaromPoints = 0;
+  let awayCaromPoints = 0;
 
   sets.forEach((s) => {
     const hp = s.homePoints ?? 0;
@@ -444,6 +450,12 @@ const computeMatchTotals = (
     awayTotalInnings += s.awayInnings ?? 0;
     homeHighRun = Math.max(homeHighRun, s.homeHighRun ?? 0);
     awayHighRun = Math.max(awayHighRun, s.awayHighRun ?? 0);
+
+    // Biathlon: board 2 is the 3-Cushion board (caroms stored x4).
+    if (opts?.biathlon && s.boardIndex === 2) {
+      homeCaromPoints += hp;
+      awayCaromPoints += ap;
+    }
 
     if (hp === 0 && ap === 0) return;
     if (hp > ap) {
@@ -458,6 +470,26 @@ const computeMatchTotals = (
     awayBoardPoints += 1;
   });
 
+  // Biathlon (C/27): winner = higher TOT (5P + 3C points, first to 200 wins),
+  // NOT board points. Match points 2/1/0 by total points.
+  let homeTeamPoints: number;
+  let awayTeamPoints: number;
+  if (opts?.biathlon) {
+    if (homeTotalPoints === awayTotalPoints) {
+      homeTeamPoints = 1;
+      awayTeamPoints = 1;
+    } else if (homeTotalPoints > awayTotalPoints) {
+      homeTeamPoints = 2;
+      awayTeamPoints = 0;
+    } else {
+      homeTeamPoints = 0;
+      awayTeamPoints = 2;
+    }
+  } else {
+    homeTeamPoints = computeTeamPointsFromBoardPoints(homeBoardPoints);
+    awayTeamPoints = computeTeamPointsFromBoardPoints(awayBoardPoints);
+  }
+
   return {
     homeTotalPoints,
     awayTotalPoints,
@@ -467,13 +499,15 @@ const computeMatchTotals = (
     awayHighRun,
     homeBoardPoints,
     awayBoardPoints,
-    homeTeamPoints: computeTeamPointsFromBoardPoints(homeBoardPoints),
-    awayTeamPoints: computeTeamPointsFromBoardPoints(awayBoardPoints),
+    homeCaromPoints,
+    awayCaromPoints,
+    homeTeamPoints,
+    awayTeamPoints,
     boardCount: sets.length,
   };
 };
 
-const normalizeTeamMatch = (raw: unknown): NormalizedTeamMatch | null => {
+const normalizeTeamMatch = (raw: unknown, opts?: { biathlon?: boolean }): NormalizedTeamMatch | null => {
   const entity = flatten(raw);
   const homeTeam = flatten(entity.home_team);
   const awayTeam = flatten(entity.away_team);
@@ -484,7 +518,7 @@ const normalizeTeamMatch = (raw: unknown): NormalizedTeamMatch | null => {
     .filter((s): s is TeamMatchSet => Boolean(s))
     .sort((a, b) => (a.boardIndex ?? 0) - (b.boardIndex ?? 0));
 
-  const computed = computeMatchTotals(sets);
+  const computed = computeMatchTotals(sets, opts);
 
   return {
     id: toNumber(entity.id),
@@ -506,6 +540,7 @@ const normalizeTeamMatch = (raw: unknown): NormalizedTeamMatch | null => {
 
 export const fetchTeamMatches = async (
   tournamentDocumentId: string,
+  opts?: { biathlon?: boolean },
 ): Promise<NormalizedTeamMatch[]> => {
   if (!tournamentDocumentId) return [];
   const params = new URLSearchParams();
@@ -535,7 +570,7 @@ export const fetchTeamMatches = async (
   params.set("sort[3]", "id:asc");
   const json = await fetchPublic(`/api/team-matches?${params.toString()}`);
   return readList(json)
-    .map(normalizeTeamMatch)
+    .map((raw) => normalizeTeamMatch(raw, opts))
     .filter((m): m is NormalizedTeamMatch => Boolean(m));
 };
 
@@ -545,6 +580,7 @@ export const fetchTeamMatches = async (
 
 export const computeStandingsByGroup = (
   matches: NormalizedTeamMatch[],
+  opts?: { biathlon?: boolean },
 ): Record<string, ComputedStandingRow[]> => {
   const byGroup = new Map<string, Map<string, ComputedStandingRow>>();
 
@@ -573,6 +609,8 @@ export const computeStandingsByGroup = (
         pointsFor: 0,
         pointsAgainst: 0,
         inningsFor: 0,
+        caromPointsFor: 0,
+        caromPointsAgainst: 0,
         avg: 0,
         highestRun: 0,
       };
@@ -591,6 +629,10 @@ export const computeStandingsByGroup = (
 
     const homeFrames = m.computed.homeBoardPoints;
     const awayFrames = m.computed.awayBoardPoints;
+    // Biathlon: board points are irrelevant for W/D/L — winner is TOT-based
+    // (computed.homeTeamPoints already encodes 2/1/0 from total points).
+    const homePts = m.computed.homeTeamPoints;
+    const awayPts = m.computed.awayTeamPoints;
 
     home.matchesPlayed += 1;
     away.matchesPlayed += 1;
@@ -605,19 +647,24 @@ export const computeStandingsByGroup = (
     away.pointsFor += m.computed.awayTotalPoints;
     away.pointsAgainst += m.computed.homeTotalPoints;
 
+    home.caromPointsFor += m.computed.homeCaromPoints;
+    home.caromPointsAgainst += m.computed.awayCaromPoints;
+    away.caromPointsFor += m.computed.awayCaromPoints;
+    away.caromPointsAgainst += m.computed.homeCaromPoints;
+
     home.inningsFor += m.computed.homeTotalInnings;
     away.inningsFor += m.computed.awayTotalInnings;
 
     home.highestRun = Math.max(home.highestRun, m.computed.homeHighRun);
     away.highestRun = Math.max(away.highestRun, m.computed.awayHighRun);
 
-    // League points (2/1/0) based on board points (frames)
-    if (homeFrames === awayFrames) {
+    // League points (2/1/0) — biathlon uses TOT-based match points.
+    if (homePts === awayPts) {
       home.draws += 1;
       away.draws += 1;
       home.leaguePoints += 1;
       away.leaguePoints += 1;
-    } else if (homeFrames > awayFrames) {
+    } else if (homePts > awayPts) {
       home.wins += 1;
       away.losses += 1;
       home.leaguePoints += 2;
@@ -633,11 +680,31 @@ export const computeStandingsByGroup = (
     const list = Array.from(map.values());
     list.forEach((r) => {
       r.frameDiff = r.framesFor - r.framesAgainst;
-      r.avg = r.inningsFor > 0 ? r.pointsFor / r.inningsFor : 0;
+      // Biathlon: avg = 3C caroms / 3C innings (3C points stored x4).
+      // The 5-Pins board contributes no innings (and no avg).
+      r.avg =
+        opts?.biathlon
+          ? r.inningsFor > 0
+            ? r.caromPointsFor / 4 / r.inningsFor
+            : 0
+          : r.inningsFor > 0
+            ? r.pointsFor / r.inningsFor
+            : 0;
     });
-    // Tie-break: points, frame diff, average, high run (same as Strapi)
+    // Tie-break:
+    // - standard league: points, frame diff, average, high run (same as Strapi)
+    // - biathlon (C/27): MP → direct → P+/P- (points avg) → points diff
     list.sort((a, b) => {
       if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
+      if (opts?.biathlon) {
+        const pa = a.pointsAgainst > 0 ? a.pointsFor / a.pointsAgainst : a.pointsFor;
+        const pb = b.pointsAgainst > 0 ? b.pointsFor / b.pointsAgainst : b.pointsFor;
+        if (pb !== pa) return pb - pa;
+        const da = a.pointsFor - a.pointsAgainst;
+        const db = b.pointsFor - b.pointsAgainst;
+        if (db !== da) return db - da;
+        return b.highestRun - a.highestRun;
+      }
       if (b.frameDiff !== a.frameDiff) return b.frameDiff - a.frameDiff;
       if (b.avg !== a.avg) return b.avg - a.avg;
       return b.highestRun - a.highestRun;
@@ -655,16 +722,17 @@ export const fetchTeamTournamentDetail = async (
   documentId: string,
 ): Promise<TeamTournamentDetail | null> => {
   if (!documentId) return null;
-  const [summary, groups, matches] = await Promise.all([
-    fetchTeamTournamentByDocumentId(documentId),
-    fetchTeamGroups(documentId),
-    fetchTeamMatches(documentId),
-  ]);
+  const summary = await fetchTeamTournamentByDocumentId(documentId);
   if (!summary) return null;
+  const biathlon = summary.config?.mode === "biathlon";
+  const [groups, matches] = await Promise.all([
+    fetchTeamGroups(documentId),
+    fetchTeamMatches(documentId, { biathlon }),
+  ]);
   return {
     summary,
     groups,
     matches,
-    standingsByGroup: computeStandingsByGroup(matches),
+    standingsByGroup: computeStandingsByGroup(matches, { biathlon }),
   };
 };

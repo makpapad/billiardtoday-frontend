@@ -75,6 +75,8 @@ const resolveStandingRows = (
       pointsFor: 0,
       pointsAgainst: 0,
       inningsFor: 0,
+      caromPointsFor: 0,
+      caromPointsAgainst: 0,
       avg: 0,
       highestRun: 0,
     }))
@@ -84,9 +86,11 @@ const resolveStandingRows = (
 function StandingsTable({
   group,
   rows,
+  biathlon = false,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
+  biathlon?: boolean;
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -102,7 +106,11 @@ function StandingsTable({
             <th className="px-2 py-2 text-center font-medium">W</th>
             <th className="px-2 py-2 text-center font-medium">D</th>
             <th className="px-2 py-2 text-center font-medium">L</th>
-            <th className="px-2 py-2 text-center font-medium">Frames +/−</th>
+            {biathlon ? (
+              <th className="px-2 py-2 text-center font-medium">P+ / P−</th>
+            ) : (
+              <th className="px-2 py-2 text-center font-medium">Frames +/−</th>
+            )}
             <th className="px-2 py-2 text-center font-medium">Diff</th>
             <th className="px-2 py-2 text-center font-medium">Avg</th>
             <th className="px-2 py-2 text-center font-medium">HR</th>
@@ -137,10 +145,19 @@ function StandingsTable({
                 {row.losses}
               </td>
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
-                {row.framesFor}–{row.framesAgainst}
+                {biathlon
+                  ? `${row.pointsFor} / ${row.pointsAgainst}`
+                  : `${row.framesFor}–${row.framesAgainst}`}
               </td>
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
-                {row.frameDiff > 0 ? `+${row.frameDiff}` : row.frameDiff}
+                {biathlon
+                  ? (() => {
+                      const d = row.pointsFor - row.pointsAgainst;
+                      return d > 0 ? `+${d}` : d;
+                    })()
+                  : row.frameDiff > 0
+                    ? `+${row.frameDiff}`
+                    : row.frameDiff}
               </td>
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
                 {row.avg > 0 ? row.avg.toFixed(3) : "-"}
@@ -214,12 +231,17 @@ function MatchCard({
 }) {
   const completed = isCompleted(match);
   const [expanded, setExpanded] = useState(false);
-  const homeWon =
-    completed && match.computed.homeBoardPoints > match.computed.awayBoardPoints;
-  const awayWon =
-    completed && match.computed.awayBoardPoints > match.computed.homeBoardPoints;
-  const draw =
-    completed && match.computed.homeBoardPoints === match.computed.awayBoardPoints;
+  const biathlon = summary?.config?.mode === "biathlon";
+  // Biathlon (C/27): winner decided by TOT (5P + 3C total points), not boards.
+  const homeScore = biathlon
+    ? match.computed.homeTotalPoints
+    : match.computed.homeBoardPoints;
+  const awayScore = biathlon
+    ? match.computed.awayTotalPoints
+    : match.computed.awayBoardPoints;
+  const homeWon = completed && homeScore > awayScore;
+  const awayWon = completed && awayScore > homeScore;
+  const draw = completed && homeScore === awayScore;
   const dateLabel = formatDate(match.matchDate);
 
   return (
@@ -252,13 +274,21 @@ function MatchCard({
         </div>
         <div className="shrink-0 rounded-lg bg-gray-100 px-3 py-1 text-center dark:bg-gray-900/70">
           <div className="text-sm font-black text-gray-900 dark:text-gray-100">
-            {completed
-              ? `${match.computed.homeBoardPoints}–${match.computed.awayBoardPoints}`
-              : "–"}
+            {completed ? `${homeScore}–${awayScore}` : "–"}
           </div>
           {completed ? (
             <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-              {draw ? "1–1" : homeWon ? "2–0" : "0–2"}
+              {biathlon
+                ? homeWon
+                  ? "2–0"
+                  : awayWon
+                    ? "0–2"
+                    : "1–1"
+                : draw
+                  ? "1–1"
+                  : homeWon
+                    ? "2–0"
+                    : "0–2"}
             </div>
           ) : null}
         </div>
@@ -446,6 +476,7 @@ export function TeamTournamentDetailClient({
                 <StandingsTable
                   key={group.documentId || group.groupKey}
                   group={group}
+                  biathlon={summary?.config?.mode === "biathlon"}
                   rows={resolveStandingRows(
                     group,
                     standingsByGroup[group.groupKey] ?? [],
