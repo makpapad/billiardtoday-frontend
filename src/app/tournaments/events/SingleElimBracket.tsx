@@ -80,6 +80,8 @@ const resolveRoundLabel = (label: string): string => {
 
 const abbreviateName = (name: string): string => {
     if (!name) return ''
+    // Keep short names (teams like "TUR1 (TUR)", flags etc.) fully visible
+    if (name.length <= 22) return name
     const parts = name.split(' ').filter(Boolean)
     if (parts.length === 0) return name
     if (parts.length === 1) {
