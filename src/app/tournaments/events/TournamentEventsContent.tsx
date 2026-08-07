@@ -4126,8 +4126,17 @@ export function TournamentEventsContent({
   }, [effectiveLiveSessions, normalizeLiveName]);
 
   const normalizeBracketPlayer = useCallback(
-    (player: unknown): { name: string; country: string | null } => {
+    (
+      player: unknown,
+      match?: Record<string, unknown> | null,
+      side?: "player1" | "player2",
+    ): { name: string; country: string | null } => {
       try {
+        const localName =
+          match && side
+            ? (match[`${side}_local_name`] as unknown)
+            : null;
+        if (!player && !localName) return { name: "", country: null };
         const src =
           player &&
           typeof player === "object" &&
@@ -4142,18 +4151,38 @@ export function TournamentEventsContent({
               src)
             : src;
 
-        if (!attr || typeof attr !== "object") return { name: "", country: null };
+        if (!attr || typeof attr !== "object") {
+          const fallbackName =
+            typeof localName === "string" ? localName.trim() : "";
+          const fallbackCountry =
+            match && side
+              ? (match[`${side}_local_country`] as unknown)
+              : null;
+          return {
+            name: fallbackName,
+            country:
+              typeof fallbackCountry === "string" ? fallbackCountry : null,
+          };
+        }
         const fullNameEn = (attr as Record<string, unknown>).full_name_en;
         const fullName = (attr as Record<string, unknown>).full_name;
         const country = (attr as Record<string, unknown>).country;
+        const relationName =
+          typeof fullNameEn === "string" && fullNameEn.trim()
+            ? fullNameEn.trim()
+            : typeof fullName === "string"
+              ? fullName
+              : "";
         return {
           name:
-            typeof fullNameEn === "string" && fullNameEn.trim()
-              ? fullNameEn.trim()
-              : typeof fullName === "string"
-                ? fullName
-                : "",
-          country: typeof country === "string" ? country : null,
+            relationName ||
+            (typeof localName === "string" ? localName.trim() : ""),
+          country:
+            typeof country === "string"
+              ? country
+              : match && side
+                ? ((match[`${side}_local_country`] as string) ?? null)
+                : null,
         };
       } catch {
         return { name: "", country: null };
@@ -4421,8 +4450,16 @@ export function TournamentEventsContent({
         match && typeof match === "object"
           ? (match as Record<string, unknown>)
           : {};
-      const p1 = normalizeBracketPlayer(matchRecord.player1);
-      const p2 = normalizeBracketPlayer(matchRecord.player2);
+      const p1 = normalizeBracketPlayer(
+        matchRecord.player1,
+        matchRecord,
+        "player1",
+      );
+      const p2 = normalizeBracketPlayer(
+        matchRecord.player2,
+        matchRecord,
+        "player2",
+      );
       const s1 =
         toNumber(matchRecord.player1_points) ??
         readStoredBracketMatchPoints(matchRecord, 1);
@@ -4528,9 +4565,13 @@ export function TournamentEventsContent({
           const sourceTag = (m as { source?: unknown }).source;
           const p1 = normalizeBracketPlayer(
             (m as { player1?: unknown }).player1,
+            m as Record<string, unknown>,
+            "player1",
           );
           const p2 = normalizeBracketPlayer(
             (m as { player2?: unknown }).player2,
+            m as Record<string, unknown>,
+            "player2",
           );
           const isFivePinsBracket = isFivePinsEvent(eventData);
           const score1 = isFivePinsBracket
@@ -4836,8 +4877,16 @@ export function TournamentEventsContent({
           )
           .map((m) => {
             deDisplayCounter += 1;
-            const p1 = normalizeBracketPlayer((m as { player1?: unknown }).player1);
-            const p2 = normalizeBracketPlayer((m as { player2?: unknown }).player2);
+            const p1 = normalizeBracketPlayer(
+              (m as { player1?: unknown }).player1,
+              m as Record<string, unknown>,
+              "player1",
+            );
+            const p2 = normalizeBracketPlayer(
+              (m as { player2?: unknown }).player2,
+              m as Record<string, unknown>,
+              "player2",
+            );
             const p1FlagSrc = p1.country
               ? getCountryFlagCdnUrl(p1.country, 40)
               : null;
