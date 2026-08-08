@@ -1901,6 +1901,7 @@ function StageRankingTable({
   koRankingRound = "opening-final",
   eventRulesetKey = null,
   showNativePlayerNames = true,
+  fivePins: fivePinsProp = false,
 }: {
   stage: NormalizedEventStage;
   allStages?: NormalizedEventStage[];
@@ -1912,6 +1913,7 @@ function StageRankingTable({
   koRankingRound?: KoRankingRound;
   eventRulesetKey?: string | null;
   showNativePlayerNames?: boolean;
+  fivePins?: boolean;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
@@ -2155,7 +2157,7 @@ function StageRankingTable({
     eventRulesetKey,
   ]);
   const showStageGroupColumns = !isBracketStage(stage);
-  const fivePins = isFivePinsRuleset(eventRulesetKey);
+  const fivePins = isFivePinsRuleset(eventRulesetKey) || fivePinsProp;
   const showGroupColumn =
     showStageGroupColumns &&
     visibleResults.some((result) => result.groupNumber !== null);
@@ -5676,6 +5678,7 @@ export function TournamentEventsContent({
                                   koRankingRound={koRankingRound}
                                   eventRulesetKey={eventRulesetKey}
                                   showNativePlayerNames={showNativePlayerNames}
+                                  fivePins={isFivePinsEvent(eventData)}
                                 />
                               </div>
                             ) : (
