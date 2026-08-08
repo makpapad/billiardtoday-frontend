@@ -244,6 +244,7 @@ export const normalizeResult = (
     bestAverage: toNumber((normalized as typeof normalized & { best_average?: unknown }).best_average),
     highRun: toNumber(normalized.high_run),
     highRun2: toNumber(normalized.high_run_2),
+    setPoints: toNumber((normalized as typeof normalized & { set_points?: unknown }).set_points),
     groupNumber: toNumber(normalized.group_number),
     groupPosition: toNumber(normalized.group_position),
     finalPosition: toNumber(normalized.final_position),

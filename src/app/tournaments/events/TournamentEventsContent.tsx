@@ -46,6 +46,7 @@ import GroupStandingsTable from "./GroupStandingsTable";
 import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
 import {
   isFivePinsEvent,
+  isFivePinsRuleset,
   buildFivePinsStandings,
   FivePinsGroupMatchesTable,
   FivePinsStandingsTable,
@@ -2153,6 +2154,7 @@ function StageRankingTable({
     eventRulesetKey,
   ]);
   const showStageGroupColumns = !isBracketStage(stage);
+  const fivePins = isFivePinsRuleset(eventRulesetKey);
   const showGroupColumn =
     showStageGroupColumns &&
     visibleResults.some((result) => result.groupNumber !== null);
@@ -2197,9 +2199,11 @@ function StageRankingTable({
       (progress) => progress.total > 0 && progress.played < progress.total,
     );
   const showBestAverageColumn =
+    !fivePins &&
     visibleResults.some((result) => result.bestAverage !== null);
   const showStageHighRun2Column =
     !artistic &&
+    !fivePins &&
     visibleResults.some(
       (result) =>
         typeof result.highRun2 === "number" &&
@@ -2365,13 +2369,17 @@ function StageRankingTable({
               {showGroupPositionColumn && <th className="px-4 py-2" />}
               <th className="px-4 py-2" />
               <th className="px-4 py-2 text-center">
-                <span className="block text-blue-100">Total</span>
+                <span className="block text-blue-100">
+                  {fivePins ? "Total P+" : "Total"}
+                </span>
                 <span className="text-sm font-semibold text-white">
                   {formatNumberValue(stageTotals.points)}
                 </span>
               </th>
               <th className="px-4 py-2 text-center">
-                <span className="block text-blue-100">Total</span>
+                <span className="block text-blue-100">
+                  {fivePins ? "Total P-" : "Total"}
+                </span>
                 <span className="text-sm font-semibold text-white">
                   {formatNumberValue(stageTotals.innings)}
                 </span>
@@ -2406,16 +2414,24 @@ function StageRankingTable({
                 </th>
               )}
               <th className="px-4 py-3 text-center font-semibold">MP</th>
-              <th className="px-4 py-3 text-center font-semibold">Points</th>
               <th className="px-4 py-3 text-center font-semibold">
-                {artistic ? "Possible points" : "Innings"}
+                {fivePins ? "P+" : "Points"}
               </th>
               <th className="px-4 py-3 text-center font-semibold">
-                {artistic ? "%" : "AVG"}
+                {fivePins ? "P-" : artistic ? "Possible points" : "Innings"}
               </th>
               <th className="px-4 py-3 text-center font-semibold">
-                {artistic ? "Best run" : "H.R."}
+                {fivePins ? "P+/P-" : artistic ? "%" : "AVG"}
               </th>
+              {fivePins ? (
+                <th className="px-4 py-3 text-center font-semibold">
+                  Set Points
+                </th>
+              ) : (
+                <th className="px-4 py-3 text-center font-semibold">
+                  {artistic ? "Best run" : "H.R."}
+                </th>
+              )}
               {showStageHighRun2Column && (
                 <th className="px-4 py-3 text-center font-semibold">
                   H.R.2
@@ -2580,13 +2596,17 @@ function StageRankingTable({
                 <td
                   className="px-4 py-3 text-center"
                 >
-                    {renderRankingMetricBadge(
+                  {fivePins ? (
+                    formatNumberValue(result.setPoints)
+                  ) : (
+                    renderRankingMetricBadge(
                       highRunDisplay,
                       highlightHighRun,
                       metricTooltip?.highRun ?? null,
                       "center",
                       groupLabelMode,
-                    )}
+                    )
+                  )}
                 </td>
                 {showStageHighRun2Column && (
                   <td className="px-4 py-3 text-center">

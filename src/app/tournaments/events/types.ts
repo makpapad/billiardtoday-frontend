@@ -221,6 +221,7 @@ export type NormalizedStageResult = {
   bestAverage: number | null;
   highRun: number | null;
   highRun2: number | null;
+  setPoints: number | null;
   groupNumber: number | null;
   groupPosition: number | null;
   finalPosition: number | null;

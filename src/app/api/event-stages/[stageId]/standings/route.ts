@@ -50,6 +50,7 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     url.searchParams.set('fields[13]', 'local_player_key')
     url.searchParams.set('fields[14]', 'local_player_name')
     url.searchParams.set('fields[15]', 'local_player_country')
+    url.searchParams.set('fields[16]', 'set_points')
     url.searchParams.set('pagination[pageSize]', '1000')
     url.searchParams.set('sort[0]', 'final_position:asc')
     url.searchParams.set('sort[1]', 'group_number:asc')
