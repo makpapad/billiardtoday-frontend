@@ -1997,6 +1997,7 @@ function StageRankingTable({
           bestAverage: standing.bestAverage,
           highRun: standing.highRun,
           highRun2: standing.highRun2,
+          setPoints: null,
           groupNumber: group.number,
           groupPosition: standing.place,
           finalPosition: null,
