@@ -3998,6 +3998,25 @@ export function TournamentEventsContent({
     playerSearchTerms,
     stageMatchGroups,
   ]);
+
+  // Expected group size for the active stage = largest group in the stage.
+  // CEB 5-pins: groups with fewer players than this award a walkover win to everyone.
+  const expectedFivePinsGroupSize = useMemo(() => {
+    const groups = activeStage ? (stageMatchGroups[activeStage.id] ?? []) : [];
+    let maxSize = 0;
+    for (const group of groups) {
+      const players = new Set<string>();
+      group.matches.forEach((match) => {
+        const addPlayer = (player: NormalizedGroupPlayer) => {
+          players.add(player.documentId || `${player.name}-${player.country || "xx"}`);
+        };
+        addPlayer(match.top.player);
+        addPlayer(match.bottom.player);
+      });
+      if (players.size > maxSize) maxSize = players.size;
+    }
+    return maxSize;
+  }, [activeStage, stageMatchGroups]);
   const timetableSlotMatchesSearch = useCallback(
     (slot: NormalizedTimetableSlot, searchTerms: string[]) => {
       if (searchTerms.length === 0) return true;
@@ -6653,7 +6672,9 @@ export function TournamentEventsContent({
                                                 highlightPlayerIds={matchingPlayerIds}
                                               />
                                               <FivePinsStandingsTable
-                                                standings={buildFivePinsStandings(group)}
+                                                standings={buildFivePinsStandings(group, {
+                                                  expectedGroupSize: expectedFivePinsGroupSize,
+                                                })}
                                               />
                                               </>
                                               ) : (

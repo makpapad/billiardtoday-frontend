@@ -165,9 +165,10 @@ const computeRatio = (p: number, a: number): number | null => {
 
 export function buildFivePinsStandings(
   group: StageMatchGroup,
-  options?: { bestOf?: number },
+  options?: { bestOf?: number; expectedGroupSize?: number },
 ): FivePinsStanding[] {
   const bestOf = options?.bestOf ?? 3; // CEB U21 groups: best-of-3
+  const expectedGroupSize = options?.expectedGroupSize ?? 0;
   const byPlayerKey = new Map<string, FivePinsStanding>();
   const seed = (player: NormalizedGroupPlayer, groupNumber: number | null): FivePinsStanding => {
     const key = player.documentId || `${player.name}-${player.country || "xx"}`;
@@ -244,6 +245,18 @@ export function buildFivePinsStandings(
   const standings = Array.from(byPlayerKey.values());
   for (const standing of standings) {
     standing.pointsRatio = computeRatio(standing.pointsFor, standing.pointsAgainst);
+  }
+
+  // CEB 5-pins: groups with fewer players than expected award a walkover win
+  // (1 match point + bestOf set points) to every present player, mirroring the server.
+  const missingPlayers =
+    expectedGroupSize > 0 ? Math.max(0, expectedGroupSize - standings.length) : 0;
+  if (missingPlayers > 0) {
+    for (const standing of standings) {
+      standing.matchPoints += missingPlayers;
+      standing.setPoints += missingPlayers * bestOf;
+      standing.record.wins += missingPlayers;
+    }
   }
 
   // CEB 5-pins qualification order: Match Points → Set Points → P+/P- → P+ → name
