@@ -24,7 +24,8 @@ type Props = {
   slugIsCanonical: boolean;
 };
 
-type View = "standings" | "matches";
+type StageKey = "qualifications" | "final";
+type ViewKey = "matches" | "ranking";
 
 const formatSeason = (season: number | null): string | null => {
   if (season === null || !Number.isFinite(season)) return null;
@@ -86,7 +87,27 @@ const resolveStandingRows = (
     .sort((a, b) => a.teamName.localeCompare(b.teamName, "el"));
 };
 
-function StandingsTable({
+const fivePinsPoints = (row: ComputedStandingRow): number =>
+  Math.max(0, row.pointsFor - row.caromPointsFor);
+
+const threeCushionPoints = (row: ComputedStandingRow): number => row.caromPointsFor;
+
+const pointsRatio = (row: ComputedStandingRow): number =>
+  row.pointsAgainst > 0 ? row.pointsFor / row.pointsAgainst : row.pointsFor;
+
+/** CEB qualification ranking (biathlon C/27): MP → P+/P− ratio → points diff. */
+const compareQualificationRows = (
+  a: ComputedStandingRow,
+  b: ComputedStandingRow,
+): number => {
+  if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
+  const rb = pointsRatio(b);
+  const ra = pointsRatio(a);
+  if (rb !== ra) return rb - ra;
+  return b.pointsFor - b.pointsAgainst - (a.pointsFor - a.pointsAgainst);
+};
+
+function GroupStandingsTable({
   group,
   rows,
   biathlon = false,
@@ -110,7 +131,11 @@ function StandingsTable({
             <th className="px-2 py-2 text-center font-medium">D</th>
             <th className="px-2 py-2 text-center font-medium">L</th>
             {biathlon ? (
-              <th className="px-2 py-2 text-center font-medium">P+ / P−</th>
+              <>
+                <th className="px-2 py-2 text-center font-medium">P+</th>
+                <th className="px-2 py-2 text-center font-medium">P−</th>
+                <th className="px-2 py-2 text-center font-medium">P+/P−</th>
+              </>
             ) : (
               <th className="px-2 py-2 text-center font-medium">Frames +/−</th>
             )}
@@ -147,11 +172,23 @@ function StandingsTable({
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
                 {row.losses}
               </td>
-              <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
-                {biathlon
-                  ? `${row.pointsFor} / ${row.pointsAgainst}`
-                  : `${row.framesFor}–${row.framesAgainst}`}
-              </td>
+              {biathlon ? (
+                <>
+                  <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                    {row.pointsFor}
+                  </td>
+                  <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                    {row.pointsAgainst}
+                  </td>
+                  <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                    {pointsRatio(row).toFixed(3)}
+                  </td>
+                </>
+              ) : (
+                <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                  {row.framesFor}–{row.framesAgainst}
+                </td>
+              )}
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
                 {biathlon
                   ? (() => {
@@ -175,6 +212,137 @@ function StandingsTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** Unified qualification ranking (all groups, CEB order) — like the CEB PDF. */
+function QualificationRankingTable({
+  rows,
+  groups,
+  biathlon = false,
+}: {
+  rows: ComputedStandingRow[];
+  groups: TeamGroup[];
+  biathlon?: boolean;
+}) {
+  const groupKeyByTeamId = useMemo(() => {
+    const map = new Map<number, string>();
+    groups.forEach((group) => {
+      group.teams.forEach((team) => {
+        if (team.id !== null) map.set(team.id, group.groupKey);
+      });
+    });
+    return map;
+  }, [groups]);
+
+  const sorted = useMemo(
+    () => [...rows].sort((a, b) => compareQualificationRows(a, b)),
+    [rows],
+  );
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <div className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
+        Qualification Ranking
+      </div>
+      <table className="w-full min-w-[720px] text-sm">
+        <thead>
+          <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <th className="px-4 py-2 text-left font-medium">#</th>
+            <th className="px-2 py-2 text-left font-medium">Team</th>
+            <th className="px-2 py-2 text-center font-medium">Group</th>
+            <th className="px-2 py-2 text-center font-medium">MP</th>
+            {biathlon ? (
+              <>
+                <th className="px-2 py-2 text-center font-medium">5P</th>
+                <th className="px-2 py-2 text-center font-medium">3C</th>
+                <th className="px-2 py-2 text-center font-medium">P+</th>
+                <th className="px-2 py-2 text-center font-medium">P−</th>
+                <th className="px-2 py-2 text-center font-medium">P+/P−</th>
+              </>
+            ) : (
+              <th className="px-2 py-2 text-center font-medium">Frames +/−</th>
+            )}
+            <th className="px-2 py-2 text-center font-medium">Diff</th>
+            <th className="px-2 py-2 text-center font-medium">Avg</th>
+            <th className="px-4 py-2 text-center font-medium">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((row, index) => {
+            const groupKey =
+              row.teamId !== null
+                ? (groupKeyByTeamId.get(row.teamId) ?? "-")
+                : "-";
+            const qualified = index < 8;
+            return (
+              <tr
+                key={row.key}
+                className={clsx(
+                  "border-b border-gray-100 last:border-0 dark:border-gray-700/60",
+                  qualified && "bg-emerald-50/50 dark:bg-emerald-400/5",
+                )}
+              >
+                <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
+                  {index + 1}
+                </td>
+                <td className="px-2 py-2.5 font-semibold text-gray-900 dark:text-gray-100">
+                  {row.teamName}
+                </td>
+                <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                  {groupKey}
+                </td>
+                <td className="px-2 py-2.5 text-center font-bold text-gray-900 dark:text-gray-100">
+                  {row.leaguePoints}
+                </td>
+                {biathlon ? (
+                  <>
+                    <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                      {fivePinsPoints(row)}
+                    </td>
+                    <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                      {threeCushionPoints(row)}
+                    </td>
+                    <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                      {row.pointsFor}
+                    </td>
+                    <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                      {row.pointsAgainst}
+                    </td>
+                    <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                      {pointsRatio(row).toFixed(3)}
+                    </td>
+                  </>
+                ) : (
+                  <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                    {row.framesFor}–{row.framesAgainst}
+                  </td>
+                )}
+                <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                  {biathlon
+                    ? (() => {
+                        const d = row.pointsFor - row.pointsAgainst;
+                        return d > 0 ? `+${d}` : d;
+                      })()
+                    : row.frameDiff > 0
+                      ? `+${row.frameDiff}`
+                      : row.frameDiff}
+                </td>
+                <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
+                  {row.avg > 0 ? row.avg.toFixed(3) : "-"}
+                </td>
+                <td className="px-4 py-2.5 text-center font-bold text-gray-900 dark:text-gray-100">
+                  {row.leaguePoints}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="border-t border-gray-200 px-4 py-2 text-[11px] text-gray-400 dark:border-gray-700 dark:text-gray-500">
+        Top 8 advance to the Final Round.
+      </div>
     </div>
   );
 }
@@ -367,49 +535,238 @@ function MatchesByGroup({
   );
 }
 
-const KO_ROUNDS: { key: string; label: string }[] = [
-  { key: "QF", label: "Quarter-finals" },
-  { key: "SF", label: "Semi-finals" },
-  { key: "F", label: "Final" },
-];
+/** Single KO match card — teams + TOT score, winner highlighted. */
+function KoMatchCard({
+  label,
+  match,
+  summary,
+  highlight = false,
+}: {
+  label: string;
+  match: NormalizedTeamMatch;
+  summary: TeamTournamentSummary | null;
+  highlight?: boolean;
+}) {
+  const completed = isCompleted(match);
+  const biathlon = summary?.config?.mode === "biathlon";
+  const homeScore = biathlon
+    ? match.computed.homeTotalPoints
+    : match.computed.homeBoardPoints;
+  const awayScore = biathlon
+    ? match.computed.awayTotalPoints
+    : match.computed.awayBoardPoints;
+  const homeWon = completed && homeScore > awayScore;
+  const awayWon = completed && awayScore > homeScore;
 
-function KnockoutSection({
+  return (
+    <div
+      className={clsx(
+        "flex flex-col gap-2 rounded-xl border bg-white p-3 dark:bg-gray-800",
+        highlight
+          ? "border-amber-400/70 bg-gradient-to-br from-amber-50 to-white dark:border-amber-500/50 dark:from-amber-500/10 dark:to-gray-800"
+          : "border-gray-200 dark:border-gray-700",
+      )}
+    >
+      <div
+        className={clsx(
+          "text-[10px] font-bold uppercase tracking-[0.14em]",
+          highlight
+            ? "text-amber-600 dark:text-amber-400"
+            : "text-gray-400 dark:text-gray-500",
+        )}
+      >
+        {label}
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className={clsx(
+            "min-w-0 flex-1 truncate text-xs font-semibold",
+            homeWon
+              ? "text-gray-900 dark:text-gray-50"
+              : "text-gray-500 dark:text-gray-400",
+          )}
+        >
+          {match.homeTeamName}
+        </div>
+        <div className="shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-black text-gray-900 dark:bg-gray-900/70 dark:text-gray-100">
+          {completed ? `${homeScore}–${awayScore}` : "–"}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className={clsx(
+            "min-w-0 flex-1 truncate text-xs font-semibold",
+            awayWon
+              ? "text-gray-900 dark:text-gray-50"
+              : "text-gray-500 dark:text-gray-400",
+          )}
+        >
+          {match.awayTeamName}
+        </div>
+        <div className="w-[46px] shrink-0" />
+      </div>
+    </div>
+  );
+}
+
+/** KO bracket: QF → SF → Final columns (like the tournament pages). */
+function KnockoutBracket({
   matches,
   summary,
 }: {
   matches: NormalizedTeamMatch[];
   summary: TeamTournamentSummary | null;
 }) {
-  const byRound = (key: string) =>
-    matches
-      .filter((m) => m.groupKey === key)
-      .sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
+  const rounds: { key: string; label: string; matchLabel: (i: number) => string }[] = [
+    { key: "QF", label: "Quarter-finals", matchLabel: (i) => `QF${i + 1}` },
+    { key: "SF", label: "Semi-finals", matchLabel: (i) => `SF${i + 1}` },
+    { key: "F", label: "Final", matchLabel: () => "FINAL" },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-        Final Round
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        {KO_ROUNDS.map(({ key, label }) => {
-          const roundMatches = byRound(key);
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
+        {rounds.map((round) => {
+          const roundMatches = matches
+            .filter((m) => m.groupKey === round.key)
+            .sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
           if (roundMatches.length === 0) return null;
+          const isFinal = round.key === "F";
           return (
-            <div key={key} className="flex flex-col gap-3">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-                {label}
+            <div key={round.key} className="flex flex-1 flex-col gap-3">
+              <div
+                className={clsx(
+                  "text-center text-xs font-bold uppercase tracking-[0.18em]",
+                  isFinal
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-gray-500 dark:text-gray-400",
+                )}
+              >
+                {round.label}
               </div>
-              {roundMatches.map((match) => (
-                <MatchCard
-                  key={match.documentId || `${match.id}-${match.homeTeamId}-${match.awayTeamId}`}
-                  match={match}
-                  summary={summary}
-                />
-              ))}
+              <div className="flex flex-col gap-2">
+                {roundMatches.map((match, index) => (
+                  <KoMatchCard
+                    key={match.documentId || `${match.id}-${index}`}
+                    label={round.matchLabel(index)}
+                    match={match}
+                    summary={summary}
+                    highlight={isFinal}
+                  />
+                ))}
+              </div>
             </div>
           );
         })}
       </div>
+      {summary?.config?.mode === "biathlon" ? (
+        <div className="text-center text-[11px] text-gray-400 dark:text-gray-500">
+          Scores are TOT (5-Pins + 3-Cushion). Winner decided by total points.
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Final standings 1..N derived from the KO bracket + qualification ranking. */
+function FinalStandingsTable({
+  koMatches,
+  qualifiedRows,
+}: {
+  koMatches: NormalizedTeamMatch[];
+  qualifiedRows: ComputedStandingRow[];
+}) {
+  const standings = useMemo(() => {
+    type Entry = { position: number; teamName: string; stage: string };
+    const entries: Entry[] = [];
+    const addLoser = (match: NormalizedTeamMatch, stageLabel: string) => {
+      const loser =
+        match.winnerTeamName === match.homeTeamName
+          ? match.awayTeamName
+          : match.homeTeamName;
+      if (loser && loser !== "-") entries.push({ position: 0, teamName: loser, stage: stageLabel });
+    };
+
+    const byRound = (key: string) =>
+      koMatches
+        .filter((m) => m.groupKey === key)
+        .sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
+
+    const qf = byRound("QF");
+    const sf = byRound("SF");
+    const fin = byRound("F");
+
+    qf.forEach((m) => addLoser(m, "Quarter-finals"));
+    sf.forEach((m) => addLoser(m, "Semi-finals"));
+    const final = fin[0];
+    if (final) {
+      addLoser(final, "Final");
+      const champion =
+        final.winnerTeamName === final.homeTeamName
+          ? final.homeTeamName
+          : final.awayTeamName;
+      if (champion && champion !== "-")
+        entries.unshift({ position: 1, teamName: champion, stage: "Champion" });
+    }
+    entries.sort(
+      (a, b) =>
+        (a.stage === "Champion" ? 0 : a.stage === "Final" ? 1 : a.stage === "Semi-finals" ? 2 : 3) -
+        (b.stage === "Champion" ? 0 : b.stage === "Final" ? 1 : b.stage === "Semi-finals" ? 2 : 3),
+    );
+    // Fill positions 3/4 (SF losers) as shared, QF losers shared 5-8.
+    let pos = 1;
+    entries.forEach((e, i) => {
+      const prev = entries[i - 1];
+      if (prev && prev.stage === e.stage) {
+        e.position = prev.position;
+      } else {
+        e.position = pos;
+      }
+      pos += 1;
+    });
+    // Non-qualified teams (below 8) from qualification ranking.
+    const nonQualified = qualifiedRows
+      .slice(8)
+      .map((row, idx) => ({ position: 9 + idx, teamName: row.teamName, stage: "Qualifications" }));
+    return [...entries, ...nonQualified];
+  }, [koMatches, qualifiedRows]);
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <div className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
+        Final Standings
+      </div>
+      <table className="w-full min-w-[480px] text-sm">
+        <thead>
+          <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <th className="px-4 py-2 text-left font-medium">Pos</th>
+            <th className="px-2 py-2 text-left font-medium">Team</th>
+            <th className="px-4 py-2 text-right font-medium">Stage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {standings.map((row, index) => (
+            <tr
+              key={`${row.teamName}-${index}`}
+              className={clsx(
+                "border-b border-gray-100 last:border-0 dark:border-gray-700/60",
+                row.position === 1 &&
+                  "bg-amber-50/70 dark:bg-amber-400/10",
+              )}
+            >
+              <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-gray-100">
+                {row.position}
+              </td>
+              <td className="px-2 py-2.5 font-semibold text-gray-900 dark:text-gray-100">
+                {row.teamName}
+              </td>
+              <td className="px-4 py-2.5 text-right text-xs text-gray-500 dark:text-gray-400">
+                {row.stage}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -421,12 +778,14 @@ export function TeamTournamentDetailClient({
   canonicalSlug,
   slugIsCanonical,
 }: Props) {
-  const [view, setView] = useState<View>("standings");
+  const [stage, setStage] = useState<StageKey>("qualifications");
+  const [view, setView] = useState<ViewKey>("matches");
 
   const summary = detail?.summary ?? null;
   const groups = detail?.groups ?? [];
   const matches = detail?.matches ?? [];
   const standingsByGroup = detail?.standingsByGroup ?? {};
+  const biathlon = summary?.config?.mode === "biathlon";
 
   const seasonLabel = formatSeason(summary?.season ?? null);
   const venueMetaParts = useMemo(() => {
@@ -487,12 +846,27 @@ export function TeamTournamentDetailClient({
         .filter((m) => m.stage === "ko" || ["QF", "SF", "F"].includes(m.groupKey))
         .sort(
           (a, b) =>
-            KO_ROUNDS.findIndex((r) => r.key === a.groupKey) -
-              KO_ROUNDS.findIndex((r) => r.key === b.groupKey) ||
+            ["QF", "SF", "F"].findIndex((r) => r === a.groupKey) -
+              ["QF", "SF", "F"].findIndex((r) => r === b.groupKey) ||
             (a.round ?? 0) - (b.round ?? 0),
         ),
     [matches],
   );
+
+  // Unified qualification ranking (all groups merged, CEB sort).
+  const allStandingRows = useMemo(() => {
+    const rows: ComputedStandingRow[] = [];
+    Object.values(standingsByGroup).forEach((list) => rows.push(...list));
+    // De-duplicate by team id/name.
+    const seen = new Set<string>();
+    const unique = rows.filter((r) => {
+      const key = r.teamId !== null ? `id:${r.teamId}` : `name:${r.teamName}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return unique;
+  }, [standingsByGroup]);
 
   return (
     <div
@@ -602,12 +976,12 @@ export function TeamTournamentDetailClient({
                 </div>
                 {eventSummary && eventSummary.stages.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {eventSummary.stages.map((stage, index) => (
+                    {eventSummary.stages.map((stageItem, index) => (
                       <span
-                        key={stage.documentId || `${stage.title}-${index}`}
+                        key={stageItem.documentId || `${stageItem.title}-${index}`}
                         className="inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72"
                       >
-                        {stage.title?.trim() || `Stage ${index + 1}`}
+                        {stageItem.title?.trim() || `Stage ${index + 1}`}
                       </span>
                     ))}
                   </div>
@@ -630,27 +1004,57 @@ export function TeamTournamentDetailClient({
           </Link>
         ) : null}
 
-        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
-          {(
-            [
-              { key: "standings", label: "Standings" },
-              { key: "matches", label: "Matches" },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setView(tab.key)}
-              className={clsx(
-                "flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-                view === tab.key
-                  ? "bg-cyan-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Stage chips + view tabs, like the tournament pages */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+            {(
+              [
+                { key: "qualifications", label: "Qualifications" },
+                { key: "final", label: "Final Round" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStage(tab.key)}
+                className={clsx(
+                  "flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+                  stage === tab.key
+                    ? "bg-cyan-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+            {(
+              [
+                { key: "matches", label: "Matches" },
+                { key: "ranking", label: "Ranking" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setView(tab.key)}
+                className={clsx(
+                  "flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+                  view === tab.key
+                    ? "bg-cyan-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+          {view === "matches" ? "Matches" : "Ranking"} ·{" "}
+          {stage === "qualifications" ? "Qualifications" : "Final Round"}
         </div>
 
         {detail === null ? (
@@ -659,31 +1063,8 @@ export function TeamTournamentDetailClient({
           </div>
         ) : null}
 
-        {detail !== null && view === "standings" ? (
+        {detail !== null && stage === "qualifications" && view === "matches" ? (
           <div className="flex flex-col gap-6">
-            {sortedGroups.length === 0 ? (
-              <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                No groups have been created for this tournament yet.
-              </div>
-            ) : (
-              sortedGroups.map((group) => (
-                <StandingsTable
-                  key={group.documentId || group.groupKey}
-                  group={group}
-                  biathlon={summary?.config?.mode === "biathlon"}
-                  rows={resolveStandingRows(
-                    group,
-                    standingsByGroup[group.groupKey] ?? [],
-                  )}
-                />
-              ))
-            )}
-          </div>
-        ) : null}
-
-        {detail !== null && view === "matches" ? (
-          <div className="flex flex-col gap-6">
-            {koMatches.length > 0 ? <KnockoutSection matches={koMatches} summary={summary} /> : null}
             {sortedGroups.length === 0 ? (
               <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                 No matches yet.
@@ -697,6 +1078,54 @@ export function TeamTournamentDetailClient({
                   summary={summary}
                 />
               ))
+            )}
+          </div>
+        ) : null}
+
+        {detail !== null && stage === "qualifications" && view === "ranking" ? (
+          <div className="flex flex-col gap-6">
+            <QualificationRankingTable
+              rows={allStandingRows}
+              groups={groups}
+              biathlon={biathlon}
+            />
+            {sortedGroups.map((group) => (
+              <GroupStandingsTable
+                key={group.documentId || group.groupKey}
+                group={group}
+                biathlon={biathlon}
+                rows={resolveStandingRows(
+                  group,
+                  standingsByGroup[group.groupKey] ?? [],
+                )}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {detail !== null && stage === "final" && view === "matches" ? (
+          <div className="flex flex-col gap-6">
+            {koMatches.length > 0 ? (
+              <KnockoutBracket matches={koMatches} summary={summary} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                Final Round matches will appear here once the qualifications are complete.
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {detail !== null && stage === "final" && view === "ranking" ? (
+          <div className="flex flex-col gap-6">
+            {koMatches.length > 0 ? (
+              <FinalStandingsTable
+                koMatches={koMatches}
+                qualifiedRows={allStandingRows}
+              />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                Final standings will appear here once the Final Round is complete.
+              </div>
             )}
           </div>
         ) : null}
