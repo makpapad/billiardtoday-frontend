@@ -525,7 +525,24 @@ export function buildBiathlonFinalStandings(
   const semiRounds = koRounds.filter((r) => r.round === "SF");
   const quarterRounds = koRounds.filter((r) => r.round === "QF");
 
-  // Apply KO matches (totals) and capture elimination order.
+  // Apply ALL KO matches to totals (CEB final-rank sums groups + KO).
+  koRounds.forEach((round) => {
+    round.matches.forEach((match) => {
+      applyMatch(
+        match.top.player.name,
+        match.top.player.country,
+        match.bottom.player.name,
+        match.bottom.player.country,
+        match.top.player.matchPoints ?? 0,
+        match.bottom.player.matchPoints ?? 0,
+        match.top.player.points ?? 0,
+        match.bottom.player.points ?? 0,
+        match.matchSheetJson,
+      );
+    });
+  });
+
+  // Capture elimination order (F → SF → QF), then everyone else.
   const ordered: BiathlonStanding[] = [];
   const finalMatch = finalRound?.matches[0];
   if (finalMatch) {
