@@ -24,6 +24,8 @@ export type BracketMatchView = {
     /** Per-set points (5-pins KO) — read from matchSheetJson.sets_result. */
     sets1?: (number | null)[]
     sets2?: (number | null)[]
+    /** Raw match sheet payload (biathlon boards: boardResults). */
+    matchSheetJson?: unknown
     date?: string | null
     nextMatchId?: string
     byeTop?: boolean

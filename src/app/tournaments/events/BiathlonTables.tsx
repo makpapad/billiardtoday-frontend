@@ -465,6 +465,105 @@ export function BiathlonUnifiedRankingTable({
 }
 
 /* ------------------------------------------------------------------ */
+/* Biathlon KO bracket match modal (CEB labels)                        */
+/* ------------------------------------------------------------------ */
+
+export function BiathlonBracketModal({
+  match,
+  roundLabel,
+}: {
+  match: { player1: string; player2: string; winner1?: boolean; winner2?: boolean; matchPoints1?: number | null; matchPoints2?: number | null; score1?: number | null; score2?: number | null; matchSheetJson?: unknown };
+  roundLabel: string;
+}) {
+  const { board5p, board3c } = readBiathlonBoards(match.matchSheetJson);
+  const sideRows = [
+    {
+      name: match.player1 || "BYE",
+      winner: match.winner1,
+      mp: match.matchPoints1 ?? null,
+      fiveP: board5p?.player1Points ?? null,
+      threeC: board3c?.player1Points ?? null,
+      inn: board3c?.player1Innings ?? null,
+      hr: board3c?.player1HighRun ?? null,
+      tot: match.score1 ?? null,
+    },
+    {
+      name: match.player2 || "BYE",
+      winner: match.winner2,
+      mp: match.matchPoints2 ?? null,
+      fiveP: board5p?.player2Points ?? null,
+      threeC: board3c?.player2Points ?? null,
+      inn: board3c?.player2Innings ?? null,
+      hr: board3c?.player2HighRun ?? null,
+      tot: match.score2 ?? null,
+    },
+  ];
+  const avgOf = (row: (typeof sideRows)[number]): number | null => {
+    const points = row.threeC;
+    const innings = row.inn;
+    if (points === null || innings === null || innings === 0) return null;
+    return Math.trunc((points / 4 / innings) * 1000) / 1000;
+  };
+  const diffOf = (row: (typeof sideRows)[number]): number | null => {
+    const tot = row.tot;
+    const opponentTot =
+      row === sideRows[0] ? sideRows[1].tot : sideRows[0].tot;
+    if (tot === null || opponentTot === null) return null;
+    return tot - opponentTot;
+  };
+  const headers = ["Team", "Winner", "MP", "5P", "3C x4", "3C INN", "3C AVG", "3C HR", "TOT", "Diff."];
+  const gridCols = `minmax(160px,1.4fr) repeat(${headers.length - 1},minmax(52px,0.7fr))`;
+  const gridClass = "grid items-center gap-3 text-xs";
+  return (
+    <div>
+      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+        {roundLabel}
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+        <div
+          className={`${gridClass} border-b border-gray-200 bg-gray-50 px-3 py-2 font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-800/50 dark:text-gray-400`}
+          style={{ gridTemplateColumns: gridCols }}
+        >
+          {headers.map((header) => (
+            <div key={header} className="text-center first:text-left">
+              {header}
+            </div>
+          ))}
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          {sideRows.map((row) => {
+            const avg = avgOf(row);
+            const diff = diffOf(row);
+            return (
+              <div
+                key={row.name}
+                className={`${gridClass} px-3 py-3 text-gray-700 dark:text-gray-200`}
+                style={{ gridTemplateColumns: gridCols }}
+              >
+                <div className="min-w-0 truncate font-semibold text-gray-900 dark:text-gray-100">
+                  {row.name}
+                </div>
+                <div className="text-center">{row.winner ? "Yes" : "-"}</div>
+                <div className="text-center">{row.mp ?? "-"}</div>
+                <div className="text-center">{row.fiveP ?? "-"}</div>
+                <div className="text-center">{row.threeC ?? "-"}</div>
+                <div className="text-center">{row.inn ?? "-"}</div>
+                <div className="text-center">
+                  {avg === null ? "-" : formatTruncatedNumber(avg, 3)}
+                </div>
+                <div className="text-center">{row.hr ?? "-"}</div>
+                <div className="text-center font-semibold">{row.tot ?? "-"}</div>
+                <div className="text-center">{diff ?? "-"}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Biathlon standings table (CEB qualification ranking)                */
 /* ------------------------------------------------------------------ */
 

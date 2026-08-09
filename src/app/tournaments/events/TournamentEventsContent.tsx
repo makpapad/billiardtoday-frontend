@@ -60,6 +60,7 @@ import {
   BiathlonGroupMatchesTable,
   BiathlonStandingsTable,
   BiathlonUnifiedRankingTable,
+  BiathlonBracketModal,
 } from "./BiathlonTables";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
@@ -4873,6 +4874,7 @@ export function TournamentEventsContent({
             tieBreak2,
             sets1: readBracketSetsResult(m as Record<string, unknown>, 1),
             sets2: readBracketSetsResult(m as Record<string, unknown>, 2),
+            matchSheetJson: (m as { matchSheetJson?: unknown }).matchSheetJson,
             date:
               typeof (m as { date_time?: unknown }).date_time === "string"
                 ? (m as { date_time: string }).date_time
@@ -7917,7 +7919,12 @@ export function TournamentEventsContent({
               </button>
             </div>
             <div className="overflow-x-auto p-5">
-              {isFivePinsEvent(eventData) ? (
+              {isBiathlonEvent(eventData) ? (
+                <BiathlonBracketModal
+                  match={selectedBracketMatch.match}
+                  roundLabel={selectedBracketMatch.roundLabel}
+                />
+              ) : isFivePinsEvent(eventData) ? (
                 <FivePinsBracketModal
                   match={selectedBracketMatch.match}
                   roundLabel={selectedBracketMatch.roundLabel}
