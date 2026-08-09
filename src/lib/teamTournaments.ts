@@ -729,8 +729,14 @@ export const fetchTeamTournamentDetail = async (
     fetchTeamGroups(documentId),
     fetchTeamMatches(documentId, { biathlon }),
   ]);
+  const teamIds = new Set<number>();
+  for (const group of groups) {
+    for (const team of group.teams) {
+      if (team.id !== null) teamIds.add(team.id);
+    }
+  }
   return {
-    summary,
+    summary: { ...summary, teamCount: teamIds.size },
     groups,
     matches,
     standingsByGroup: computeStandingsByGroup(matches, { biathlon }),
