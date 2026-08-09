@@ -146,6 +146,7 @@ const buildEventShellFromSummary = (
     start_date: summary.startDate,
     end_date: summary.endDate,
     game_type: summary.gameType,
+    ruleset_key: summary.rulesetKey ?? null,
     event_stages: summary.stages.map((stage, index) => ({
       id: stage.documentId,
       documentId: stage.documentId,

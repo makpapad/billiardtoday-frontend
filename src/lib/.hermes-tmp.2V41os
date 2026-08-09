@@ -303,7 +303,6 @@ const normalizeClubTournamentSummary = (
     startDate,
     endDate,
     gameType: readString(tournament.game_type),
-    rulesetKey: readString(tournament.ruleset_key),
     tournamentTitle: title,
     clubDocumentId: readString(clubSource.documentId),
     clubName:
