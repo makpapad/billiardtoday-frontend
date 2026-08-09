@@ -60,6 +60,7 @@ import {
   BiathlonGroupMatchesTable,
   BiathlonStandingsTable,
   BiathlonUnifiedRankingTable,
+  BiathlonFinalRankingTable,
   BiathlonBracketModal,
 } from "./BiathlonTables";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
@@ -5814,10 +5815,18 @@ export function TournamentEventsContent({
                                   ) : null}
                                 </div>
                                 {isBiathlonEvent(eventData) ? (
+                                  isBracketStage(stage) ? (
+                                    <BiathlonFinalRankingTable
+                                      stages={eventStages.map((s) => ({
+                                        groups: buildStageMatchGroups(s.groups),
+                                      }))}
+                                    />
+                                  ) : (
                                   <BiathlonUnifiedRankingTable
                                     groups={buildStageMatchGroups(stage.groups)}
                                     showGroupColumn={stage.stageType !== "single_elimination" && stage.stageType !== "double_elimination"}
                                   />
+                                  )
                                 ) : (
                                 <StageRankingTable
                                   stage={stage}

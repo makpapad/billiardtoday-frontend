@@ -404,6 +404,239 @@ export function buildBiathlonUnifiedStandings(groups: StageMatchGroup[]): Biathl
   return all.sort(compareBiathlonStandings);
 }
 
+/* ------------------------------------------------------------------ */
+/* Biathlon final ranking (groups + KO totals, CEB final-rank order)   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * CEB final ranking: every team's totals (MP/5P/3C/INN/TOT/PT) are the
+ * sum of ALL matches played (qualification + KO). Positions:
+ * 1 = Final winner, 2 = Final loser, 3-4 = SF losers (by their SF TOT),
+ * 5-8 = QF losers (by their QF TOT), then non-qualified by qualification
+ * ranking (MP → group position → DIFF).
+ */
+export function buildBiathlonFinalStandings(
+  allStages: { groups: StageMatchGroup[] }[],
+): BiathlonStanding[] {
+  const byPlayerKey = new Map<string, BiathlonStanding>();
+  const seed = (name: string, country: string | null): BiathlonStanding => {
+    const key = `${name}-${country || "xx"}`;
+    const existing = byPlayerKey.get(key);
+    if (existing) return existing;
+    const standing: BiathlonStanding = {
+      key,
+      playerId: null,
+      playerName: name,
+      playerNativeName: null,
+      playerCountry: country,
+      groupNumber: null,
+      groupPosition: null,
+      record: { wins: 0, draws: 0, losses: 0 },
+      matchPoints: 0,
+      points5p: 0,
+      points3c: 0,
+      innings3c: 0,
+      average3c: null,
+      highRun3c: null,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      teamAverage: null,
+      diff: 0,
+      place: 0,
+    };
+    byPlayerKey.set(key, standing);
+    return standing;
+  };
+
+  const applyMatch = (
+    name1: string,
+    country1: string | null,
+    name2: string,
+    country2: string | null,
+    mp1: number,
+    mp2: number,
+    points1: number,
+    points2: number,
+    sheet: unknown,
+  ) => {
+    const s1 = seed(name1, country1);
+    const s2 = seed(name2, country2);
+    s1.matchPoints += mp1;
+    s2.matchPoints += mp2;
+    s1.pointsFor += points1;
+    s1.pointsAgainst += points2;
+    s2.pointsFor += points2;
+    s2.pointsAgainst += points1;
+    if (mp1 > mp2) s1.record.wins += 1;
+    else if (mp2 > mp1) s2.record.wins += 1;
+    else {
+      s1.record.draws += 1;
+      s2.record.draws += 1;
+    }
+    const { board5p, board3c } = readBiathlonBoards(sheet);
+    if (board5p) {
+      s1.points5p += board5p.player1Points ?? 0;
+      s2.points5p += board5p.player2Points ?? 0;
+    }
+    if (board3c) {
+      s1.points3c += board3c.player1Points ?? 0;
+      s1.innings3c += board3c.player1Innings ?? 0;
+      s1.highRun3c = Math.max(s1.highRun3c ?? 0, board3c.player1HighRun ?? 0);
+      s2.points3c += board3c.player2Points ?? 0;
+      s2.innings3c += board3c.player2Innings ?? 0;
+      s2.highRun3c = Math.max(s2.highRun3c ?? 0, board3c.player2HighRun ?? 0);
+    }
+  };
+
+  const koRounds: { round: string; matches: StageMatchGroup["matches"] }[] = [];
+  const qualificationGroups: StageMatchGroup[] = [];
+
+  allStages.forEach((stage) => {
+    stage.groups.forEach((group) => {
+      const firstMatch = group.matches[0];
+      const round = firstMatch?.round ?? null;
+      const isKo = round === "QF" || round === "SF" || round === "F";
+      if (isKo) {
+        koRounds.push({ round: round as string, matches: group.matches });
+      } else {
+        qualificationGroups.push(group);
+      }
+    });
+  });
+
+  // Qualification matches first (for non-qualified ordering), then KO.
+  qualificationGroups.forEach((group) => {
+    group.matches.forEach((match) => {
+      applyMatch(
+        match.top.player.name,
+        match.top.player.country,
+        match.bottom.player.name,
+        match.bottom.player.country,
+        match.top.player.matchPoints ?? 0,
+        match.bottom.player.matchPoints ?? 0,
+        match.top.player.points ?? 0,
+        match.bottom.player.points ?? 0,
+        match.matchSheetJson,
+      );
+    });
+  });
+
+  const finalRound = koRounds.find((r) => r.round === "F");
+  const semiRounds = koRounds.filter((r) => r.round === "SF");
+  const quarterRounds = koRounds.filter((r) => r.round === "QF");
+
+  // Apply KO matches (totals) and capture elimination order.
+  const ordered: BiathlonStanding[] = [];
+  const finalMatch = finalRound?.matches[0];
+  if (finalMatch) {
+    const fTop = finalMatch.top.player;
+    const fBottom = finalMatch.bottom.player;
+    const fWinner = fTop.matchPoints! > fBottom.matchPoints! ? fTop : fBottom;
+    const fLoser = fWinner === fTop ? fBottom : fTop;
+    ordered.push(seed(fWinner.name, fWinner.country));
+    ordered.push(seed(fLoser.name, fLoser.country));
+  }
+  const sfLosers: { standing: BiathlonStanding; tot: number }[] = [];
+  semiRounds.forEach((round) => {
+    round.matches.forEach((match) => {
+      const top = match.top.player;
+      const bottom = match.bottom.player;
+      const loser = top.matchPoints! > bottom.matchPoints! ? bottom : top;
+      const loserTot = loser.points ?? 0;
+      sfLosers.push({ standing: seed(loser.name, loser.country), tot: loserTot });
+    });
+  });
+  sfLosers.sort((a, b) => b.tot - a.tot);
+  sfLosers.forEach((entry) => ordered.push(entry.standing));
+
+  const qfLosers: { standing: BiathlonStanding; tot: number }[] = [];
+  quarterRounds.forEach((round) => {
+    round.matches.forEach((match) => {
+      const top = match.top.player;
+      const bottom = match.bottom.player;
+      const loser = top.matchPoints! > bottom.matchPoints! ? bottom : top;
+      const loserTot = loser.points ?? 0;
+      qfLosers.push({ standing: seed(loser.name, loser.country), tot: loserTot });
+    });
+  });
+  qfLosers.sort((a, b) => b.tot - a.tot);
+  qfLosers.forEach((entry) => ordered.push(entry.standing));
+
+  // Everyone else: qualification ranking (MP → group position → DIFF).
+  const qualifiedKeys = new Set(ordered.map((s) => s.key));
+  const nonQualified = Array.from(byPlayerKey.values())
+    .filter((s) => !qualifiedKeys.has(s.key))
+    .sort(compareBiathlonStandings);
+  nonQualified.forEach((s) => ordered.push(s));
+
+  const ranked = ordered.map((standing, index) => {
+    standing.place = index + 1;
+    standing.average3c =
+      standing.innings3c > 0 && standing.points3c > 0
+        ? Math.trunc((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
+        : null;
+    standing.teamAverage =
+      standing.pointsAgainst > 0
+        ? Math.trunc((standing.pointsFor / standing.pointsAgainst) * 1000) / 1000
+        : null;
+    standing.diff = standing.pointsFor - standing.pointsAgainst;
+    return standing;
+  });
+  return ranked;
+}
+
+export function BiathlonFinalRankingTable({
+  stages,
+}: {
+  stages: { groups: StageMatchGroup[] }[];
+}) {
+  const standings = buildBiathlonFinalStandings(stages);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full text-sm">
+          <thead className="bg-blue-600 text-white">
+            <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
+              <th className="px-4 py-2" />
+              <th className="px-4 py-2" />
+              <th className="px-4 py-2 text-center">MP</th>
+              <th className="px-4 py-2 text-center">5P</th>
+              <th className="px-4 py-2 text-center">3C x4</th>
+              <th className="px-4 py-2 text-center">3C INN</th>
+              <th className="px-4 py-2 text-center">3C AVG</th>
+              <th className="px-4 py-2 text-center">TOT</th>
+              <th className="px-4 py-2 text-center">PT</th>
+              <th className="px-4 py-2 text-center">AVG</th>
+              <th className="px-4 py-2 text-center">DIFF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {standings.map((standing, index) => (
+              <tr key={standing.key} className="border-t border-gray-200 dark:border-gray-700">
+                <td className="px-4 py-2">{standing.place}</td>
+                <td className="px-4 py-2 font-medium">{standing.playerName}</td>
+                <td className="px-4 py-2 text-center font-semibold">{standing.matchPoints}</td>
+                <td className="px-4 py-2 text-center">{standing.points5p}</td>
+                <td className="px-4 py-2 text-center">{standing.points3c}</td>
+                <td className="px-4 py-2 text-center">{standing.innings3c}</td>
+                <td className="px-4 py-2 text-center">
+                  {standing.average3c === null ? "-" : formatTruncatedNumber(standing.average3c, 3)}
+                </td>
+                <td className="px-4 py-2 text-center font-semibold">{standing.pointsFor}</td>
+                <td className="px-4 py-2 text-center">{standing.pointsAgainst}</td>
+                <td className="px-4 py-2 text-center">
+                  {standing.teamAverage === null ? "-" : formatTruncatedNumber(standing.teamAverage, 3)}
+                </td>
+                <td className="px-4 py-2 text-center">{standing.diff}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function BiathlonUnifiedRankingTable({
   groups,
   showGroupColumn = true,
