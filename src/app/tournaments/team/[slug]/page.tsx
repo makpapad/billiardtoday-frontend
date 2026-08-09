@@ -6,6 +6,7 @@ import {
   fetchTeamTournamentDetail,
   resolveTeamTournamentBySlug,
 } from "@/lib/teamTournaments";
+import { resolveTournamentEventSummary } from "@/lib/tournaments";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 type Props = {
@@ -40,6 +41,7 @@ export default async function TeamTournamentPage({ params }: Props) {
   }
 
   const detail = await fetchTeamTournamentDetail(summary.documentId);
+  const eventSummary = await resolveTournamentEventSummary(slug);
   const canonicalSlug = buildTeamTournamentSlug(summary);
   const isCanonical = slug === canonicalSlug;
 
@@ -47,6 +49,7 @@ export default async function TeamTournamentPage({ params }: Props) {
     <TeamTournamentDetailClient
       detail={detail}
       title={summary.title}
+      eventSummary={eventSummary}
       canonicalSlug={canonicalSlug}
       slugIsCanonical={isCanonical}
     />

@@ -13,10 +13,12 @@ import {
   type TeamTournamentDetail,
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
+import type { TournamentEventSummary } from "@/lib/tournaments";
 
 type Props = {
   detail: TeamTournamentDetail | null;
   title: string;
+  eventSummary?: TournamentEventSummary | null;
   canonicalSlug: string;
   slugIsCanonical: boolean;
 };
@@ -367,6 +369,7 @@ function MatchesByGroup({
 export function TeamTournamentDetailClient({
   detail,
   title,
+  eventSummary = null,
   canonicalSlug,
   slugIsCanonical,
 }: Props) {
@@ -378,6 +381,35 @@ export function TeamTournamentDetailClient({
   const standingsByGroup = detail?.standingsByGroup ?? {};
 
   const seasonLabel = formatSeason(summary?.season ?? null);
+  const venueMetaParts = useMemo(() => {
+    const parts: string[] = [];
+    const pushUnique = (value: string | null | undefined) => {
+      const normalized = String(value ?? "").trim();
+      if (normalized && !parts.some((p) => p === normalized)) parts.push(normalized);
+    };
+    pushUnique(eventSummary?.venueCountry ?? eventSummary?.clubCountry);
+    pushUnique(eventSummary?.venueCity ?? eventSummary?.clubCity);
+    pushUnique(eventSummary?.venueName ?? eventSummary?.clubName);
+    if (parts.length === 0 && summary?.config?.country) {
+      pushUnique(String(summary.config.country));
+    }
+    return parts;
+  }, [eventSummary, summary]);
+
+  const scheduleLabel = useMemo(() => {
+    const start = eventSummary?.startDate;
+    const end = eventSummary?.endDate;
+    if (!start && !end) return null;
+    const format = (value: string) =>
+      new Date(value).toLocaleDateString("el-GR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    if (start && end) return `${format(start)} - ${format(end)}`;
+    return format(start ?? end ?? "");
+  }, [eventSummary]);
+
   const sortedGroups = useMemo(
     () =>
       [...groups].sort((a, b) =>
@@ -427,6 +459,19 @@ export function TeamTournamentDetailClient({
                   <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
                     {title}
                   </h1>
+                  {venueMetaParts.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                      {venueMetaParts.map((part, index) => (
+                        <span
+                          key={`${part}-${index}`}
+                          className="inline-flex items-center gap-2"
+                        >
+                          {index > 0 ? <span className="text-white/55">/</span> : null}
+                          <span>{part}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
                     {summary?.divisionName ? <span>{summary.divisionName}</span> : null}
                     {summary?.formatType ? (
@@ -437,9 +482,14 @@ export function TeamTournamentDetailClient({
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3.5 w-3.5" /> {summary?.teamCount ?? 0} teams
                     </span>
-                    {summary?.config?.country ? (
-                      <span>{String(summary.config.country).toUpperCase()}</span>
-                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <div className="w-full overflow-hidden pb-1">
+                <div className="flex max-w-full flex-nowrap items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/85">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {scheduleLabel ?? "Schedule"}
                   </div>
                 </div>
               </div>
