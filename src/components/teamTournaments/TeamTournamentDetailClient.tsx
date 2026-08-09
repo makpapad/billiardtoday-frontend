@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
 import { ArrowLeft, Calendar, ChevronDown, Trophy, Users } from "lucide-react";
@@ -492,6 +493,68 @@ export function TeamTournamentDetailClient({
                     {scheduleLabel ?? "Schedule"}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                    Schedule
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-white">
+                    {scheduleLabel || "To be announced"}
+                  </div>
+                </div>
+                <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
+                  {eventSummary?.organizerLogoUrl ? (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Image
+                        src={eventSummary.organizerLogoUrl}
+                        alt={
+                          eventSummary.organizerLogoName ||
+                          eventSummary.tournamentTitle ||
+                          "Organizer logo"
+                        }
+                        width={320}
+                        height={320}
+                        className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                        Organizer
+                      </div>
+                      <div className="mt-2 text-sm font-semibold text-white/80">
+                        {eventSummary?.organizerLogoName || "Logo coming soon"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                  Stage overview
+                </div>
+                {eventSummary && eventSummary.stages.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {eventSummary.stages.map((stage, index) => (
+                      <span
+                        key={stage.documentId || `${stage.title}-${index}`}
+                        className="inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72"
+                      >
+                        {stage.title?.trim() || `Stage ${index + 1}`}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-white/70">
+                    No stages published yet.
+                  </div>
+                )}
               </div>
             </div>
           </div>
