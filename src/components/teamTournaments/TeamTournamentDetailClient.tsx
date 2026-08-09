@@ -95,12 +95,15 @@ const threeCushionPoints = (row: ComputedStandingRow): number => row.caromPoints
 const pointsRatio = (row: ComputedStandingRow): number =>
   row.pointsAgainst > 0 ? row.pointsFor / row.pointsAgainst : row.pointsFor;
 
-/** CEB qualification ranking (biathlon C/27): MP → P+/P− ratio → points diff. */
+/** CEB qualification ranking (biathlon C/27): MP → pos in group → P+/P− ratio → points diff. */
 const compareQualificationRows = (
-  a: ComputedStandingRow,
-  b: ComputedStandingRow,
+  a: ComputedStandingRow & { groupPos?: number },
+  b: ComputedStandingRow & { groupPos?: number },
 ): number => {
   if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
+  const pa = a.groupPos ?? 0;
+  const pb = b.groupPos ?? 0;
+  if (pa !== pb) return pa - pb;
   const rb = pointsRatio(b);
   const ra = pointsRatio(a);
   if (rb !== ra) return rb - ra;
@@ -855,8 +858,13 @@ export function TeamTournamentDetailClient({
 
   // Unified qualification ranking (all groups merged, CEB sort).
   const allStandingRows = useMemo(() => {
-    const rows: ComputedStandingRow[] = [];
-    Object.values(standingsByGroup).forEach((list) => rows.push(...list));
+    const rows: (ComputedStandingRow & { groupPos?: number; groupKey?: string })[] = [];
+    Object.entries(standingsByGroup).forEach(([groupKey, list]) => {
+      // Standings are already sorted per group (CEB order) — groupPos = rank in group.
+      list.forEach((r, idx) => {
+        rows.push({ ...r, groupPos: idx + 1, groupKey });
+      });
+    });
     // De-duplicate by team id/name.
     const seen = new Set<string>();
     const unique = rows.filter((r) => {
