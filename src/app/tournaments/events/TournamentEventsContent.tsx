@@ -43,7 +43,10 @@ import {
   isDynamicPlaceholderPlayer,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
-import SingleElimBracket, { type BracketRoundView } from "./SingleElimBracket";
+import SingleElimBracket, {
+  type BracketMatchView,
+  type BracketRoundView,
+} from "./SingleElimBracket";
 import {
   isFivePinsEvent,
   isFivePinsRuleset,
@@ -728,10 +731,134 @@ function readBracketSetsWon(
   return toNumber(setScore[side === 1 ? "player1" : "player2"]);
 }
 
+/** Read per-set points from matchSheetJson.sets_result (5-pins KO modal). */
+function readBracketSetsResult(
+  match: Record<string, unknown>,
+  side: 1 | 2,
+): (number | null)[] | undefined {
+  const sheet =
+    match.matchSheetJson && typeof match.matchSheetJson === "object"
+      ? (match.matchSheetJson as Record<string, unknown>)
+      : null;
+  const setsResult = Array.isArray(sheet?.sets_result)
+    ? (sheet.sets_result as Record<string, unknown>[])
+    : null;
+  if (!setsResult) return undefined;
+  const key = side === 1 ? "player1_points" : "player2_points";
+  return setsResult.map((set) => toNumber(set[key]));
+}
+
 function formatTruncatedAverage(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "-";
   const truncated = Math.trunc(value * 1000) / 1000;
   return truncated.toFixed(3);
+}
+
+/** 5-Pins KO match modal — shows per-set scores, P+/P-, set/match points. */
+function FivePinsBracketModal({
+  match,
+  roundLabel,
+}: {
+  match: BracketMatchView;
+  roundLabel: string;
+}) {
+  const sideRows = [
+    {
+      name: match.player1 || "BYE",
+      country: match.player1Country ?? null,
+      sets: match.sets1 ?? [],
+      winner: match.winner1,
+      mp: match.matchPoints1,
+    },
+    {
+      name: match.player2 || "BYE",
+      country: match.player2Country ?? null,
+      sets: match.sets2 ?? [],
+      winner: match.winner2,
+      mp: match.matchPoints2,
+    },
+  ];
+  const setCount = Math.max(
+    ...sideRows.map((row) => row.sets.length),
+    1,
+  );
+  const gridCols = `minmax(160px,1.4fr) repeat(${3 + setCount + 3},minmax(48px,0.7fr))`;
+  const gridClass = `grid items-center gap-3 text-xs`;
+  const headers = [
+    "Player",
+    "Winner",
+    "MP",
+    ...Array.from({ length: setCount }, (_, i) => `Set ${i + 1}`),
+    "P+",
+    "P-",
+    "P+/P-",
+  ];
+  return (
+    <div>
+      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+        {roundLabel}
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+        <div
+          className={`${gridClass} border-b border-gray-200 bg-gray-50 px-3 py-2 font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-800/50 dark:text-gray-400`}
+          style={{ gridTemplateColumns: gridCols }}
+        >
+          {headers.map((header) => (
+            <div key={header} className="text-center first:text-left">
+              {header}
+            </div>
+          ))}
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          {sideRows.map((row, rowIndex) => {
+            const pointsFor = row.sets.reduce<number>(
+              (acc, set) => acc + (typeof set === "number" ? set : 0),
+              0,
+            );
+            const pointsAgainst = sideRows[1 - rowIndex].sets.reduce<number>(
+              (acc, set) => acc + (typeof set === "number" ? set : 0),
+              0,
+            );
+            const ratio =
+              pointsAgainst > 0 ? (pointsFor / pointsAgainst).toFixed(3) : "-";
+            const flagSrc = getCountryFlagCdnUrl(row.country, 40);
+            return (
+              <div
+                key={row.name}
+                className={`${gridClass} px-3 py-3 text-gray-700 dark:text-gray-200`}
+                style={{ gridTemplateColumns: gridCols }}
+              >
+                <div className="flex min-w-0 items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
+                  {flagSrc ? (
+                    <img
+                      src={flagSrc}
+                      alt={row.country || "flag"}
+                      className="h-3.5 w-5 rounded-[2px] object-cover"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : null}
+                  <span className="truncate">{row.name}</span>
+                </div>
+                <div className="text-center">
+                  {row.winner ? "Yes" : "-"}
+                </div>
+                <div className="text-center">{row.mp ?? "-"}</div>
+                {Array.from({ length: setCount }, (_, i) => (
+                  <div key={i} className="text-center">
+                    {typeof row.sets[i] === "number" ? row.sets[i] : "-"}
+                  </div>
+                ))}
+                <div className="text-center">{pointsFor || "-"}</div>
+                <div className="text-center">{pointsAgainst || "-"}</div>
+                <div className="text-center">{ratio}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type RankingMetricTooltipMetric = "highRun" | "bestAverage";
@@ -4737,6 +4864,8 @@ export function TournamentEventsContent({
             matchPoints2,
             tieBreak1,
             tieBreak2,
+            sets1: readBracketSetsResult(m as Record<string, unknown>, 1),
+            sets2: readBracketSetsResult(m as Record<string, unknown>, 2),
             date:
               typeof (m as { date_time?: unknown }).date_time === "string"
                 ? (m as { date_time: string }).date_time
@@ -7764,6 +7893,13 @@ export function TournamentEventsContent({
               </button>
             </div>
             <div className="overflow-x-auto p-5">
+              {isFivePinsEvent(eventData) ? (
+                <FivePinsBracketModal
+                  match={selectedBracketMatch.match}
+                  roundLabel={selectedBracketMatch.roundLabel}
+                />
+              ) : (
+              <div>
               <div className={`${selectedBracketDetailsGridClass} text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}>
                 <div>Player</div>
                 <div className="text-center">Winner</div>
@@ -7896,6 +8032,8 @@ export function TournamentEventsContent({
                   );
                 })}
               </div>
+              </div>
+              )}
               <div className="mt-4 border-t border-gray-100 pt-3 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
                 {selectedBracketMatch.match.date
                   ? (() => {

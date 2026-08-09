@@ -21,6 +21,9 @@ export type BracketMatchView = {
     matchPoints2?: number | null
     tieBreak1?: number | null
     tieBreak2?: number | null
+    /** Per-set points (5-pins KO) — read from matchSheetJson.sets_result. */
+    sets1?: (number | null)[]
+    sets2?: (number | null)[]
     date?: string | null
     nextMatchId?: string
     byeTop?: boolean
