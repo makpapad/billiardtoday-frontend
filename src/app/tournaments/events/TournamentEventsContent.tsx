@@ -54,6 +54,13 @@ import {
   FivePinsGroupMatchesTable,
   FivePinsStandingsTable,
 } from "./FivePinsTables";
+import {
+  isBiathlonEvent,
+  buildBiathlonStandings,
+  BiathlonGroupMatchesTable,
+  BiathlonStandingsTable,
+  BiathlonUnifiedRankingTable,
+} from "./BiathlonTables";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
@@ -5804,6 +5811,12 @@ export function TournamentEventsContent({
                                     </div>
                                   ) : null}
                                 </div>
+                                {isBiathlonEvent(eventData) ? (
+                                  <BiathlonUnifiedRankingTable
+                                    groups={buildStageMatchGroups(stage.groups)}
+                                    showGroupColumn={stage.stageType !== "single_elimination" && stage.stageType !== "double_elimination"}
+                                  />
+                                ) : (
                                 <StageRankingTable
                                   stage={stage}
                                   allStages={eventStages}
@@ -5817,6 +5830,7 @@ export function TournamentEventsContent({
                                   showNativePlayerNames={showNativePlayerNames}
                                   fivePins={isFivePinsEvent(eventData)}
                                 />
+                                )}
                               </div>
                             ) : (
                               <div className="flex flex-col gap-4">
@@ -6826,7 +6840,17 @@ export function TournamentEventsContent({
                                                 </button>
                                               </div>
                                               {isExpanded ? (
-                                              isFivePinsEvent(eventData) ? (
+                                              isBiathlonEvent(eventData) ? (
+                                              <>
+                                              <BiathlonGroupMatchesTable
+                                                group={group}
+                                                highlightPlayerIds={matchingPlayerIds}
+                                              />
+                                              <BiathlonStandingsTable
+                                                standings={buildBiathlonStandings(group)}
+                                              />
+                                              </>
+                                              ) : isFivePinsEvent(eventData) ? (
                                               <>
                                               <FivePinsGroupMatchesTable
                                                 group={group}
