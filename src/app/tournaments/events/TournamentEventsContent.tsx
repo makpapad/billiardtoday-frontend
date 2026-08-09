@@ -4711,12 +4711,16 @@ export function TournamentEventsContent({
             player2Country: p2.country,
             score1,
             score2,
-            innings1: toNumber(
-              (m as { player1_innings?: unknown }).player1_innings,
-            ),
-            innings2: toNumber(
-              (m as { player2_innings?: unknown }).player2_innings,
-            ),
+            innings1: isFivePinsBracket
+              ? null
+              : toNumber(
+                  (m as { player1_innings?: unknown }).player1_innings,
+                ),
+            innings2: isFivePinsBracket
+              ? null
+              : toNumber(
+                  (m as { player2_innings?: unknown }).player2_innings,
+                ),
             highRun1: toNumber(
               (m as { player1_high_run?: unknown }).player1_high_run,
             ),
@@ -4992,12 +4996,16 @@ export function TournamentEventsContent({
               player2FlagSrc: p2FlagSrc,
               score1,
               score2,
-              innings1: toNumber(
-                (m as { player1_innings?: unknown }).player1_innings,
-              ),
-              innings2: toNumber(
-                (m as { player2_innings?: unknown }).player2_innings,
-              ),
+              innings1: isFivePinsBracket
+                ? null
+                : toNumber(
+                    (m as { player1_innings?: unknown }).player1_innings,
+                  ),
+              innings2: isFivePinsBracket
+                ? null
+                : toNumber(
+                    (m as { player2_innings?: unknown }).player2_innings,
+                  ),
               highRun1: toNumber(
                 (m as { player1_high_run?: unknown }).player1_high_run,
               ),
