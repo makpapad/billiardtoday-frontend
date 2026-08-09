@@ -367,6 +367,53 @@ function MatchesByGroup({
   );
 }
 
+const KO_ROUNDS: { key: string; label: string }[] = [
+  { key: "QF", label: "Quarter-finals" },
+  { key: "SF", label: "Semi-finals" },
+  { key: "F", label: "Final" },
+];
+
+function KnockoutSection({
+  matches,
+  summary,
+}: {
+  matches: NormalizedTeamMatch[];
+  summary: TeamTournamentSummary | null;
+}) {
+  const byRound = (key: string) =>
+    matches
+      .filter((m) => m.groupKey === key)
+      .sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+        Final Round
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {KO_ROUNDS.map(({ key, label }) => {
+          const roundMatches = byRound(key);
+          if (roundMatches.length === 0) return null;
+          return (
+            <div key={key} className="flex flex-col gap-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                {label}
+              </div>
+              {roundMatches.map((match) => (
+                <MatchCard
+                  key={match.documentId || `${match.id}-${match.homeTeamId}-${match.awayTeamId}`}
+                  match={match}
+                  summary={summary}
+                />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function TeamTournamentDetailClient({
   detail,
   title,
@@ -432,6 +479,20 @@ export function TeamTournamentDetailClient({
     map.forEach((list) => list.sort((a, b) => (a.round ?? 0) - (b.round ?? 0)));
     return map;
   }, [matches]);
+
+  // Knockout matches: stage "ko" (team module) or QF/SF/F group keys.
+  const koMatches = useMemo(
+    () =>
+      matches
+        .filter((m) => m.stage === "ko" || ["QF", "SF", "F"].includes(m.groupKey))
+        .sort(
+          (a, b) =>
+            KO_ROUNDS.findIndex((r) => r.key === a.groupKey) -
+              KO_ROUNDS.findIndex((r) => r.key === b.groupKey) ||
+            (a.round ?? 0) - (b.round ?? 0),
+        ),
+    [matches],
+  );
 
   return (
     <div
@@ -622,6 +683,7 @@ export function TeamTournamentDetailClient({
 
         {detail !== null && view === "matches" ? (
           <div className="flex flex-col gap-6">
+            {koMatches.length > 0 ? <KnockoutSection matches={koMatches} summary={summary} /> : null}
             {sortedGroups.length === 0 ? (
               <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                 No matches yet.
