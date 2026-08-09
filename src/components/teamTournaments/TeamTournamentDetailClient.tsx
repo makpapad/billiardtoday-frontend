@@ -727,8 +727,9 @@ function FinalStandingsTable({
       }
       pos += 1;
     });
-    // Non-qualified teams (below 8) from qualification ranking.
-    const nonQualified = qualifiedRows
+    // Non-qualified teams (below 8) from qualification ranking (CEB order).
+    const nonQualified = [...qualifiedRows]
+      .sort((a, b) => compareQualificationRows(a, b))
       .slice(8)
       .map((row, idx) => ({ position: 9 + idx, teamName: row.teamName, stage: "Qualifications" }));
     return [...entries, ...nonQualified];
