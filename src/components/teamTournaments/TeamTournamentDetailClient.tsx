@@ -405,36 +405,56 @@ export function TeamTournamentDetailClient({
       className="mx-auto w-full px-4 py-8"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Link
-            href="/tournaments/team"
-            className="inline-flex w-fit items-center gap-1 text-xs font-medium text-gray-500 transition-colors hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-300"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> All team tournaments
-          </Link>
-          {!slugIsCanonical && canonicalSlug ? (
-            <Link
-              href={`/tournaments/team/${canonicalSlug}`}
-              className="text-xs font-medium text-amber-600 hover:underline dark:text-amber-400"
-            >
-              View canonical URL
-            </Link>
-          ) : null}
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
-            {summary?.divisionName ? <span>{summary.divisionName}</span> : null}
-            {seasonLabel ? <span>{seasonLabel}</span> : null}
-            {summary?.formatType ? (
-              <span className="capitalize">{summary.formatType}</span>
-            ) : null}
-            <span className="inline-flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" /> {summary?.teamCount ?? 0} teams
-            </span>
+      <div className="flex flex-col gap-6">
+        <Link
+          href="/tournaments/team"
+          className="inline-flex w-fit items-center gap-1 text-xs font-medium text-gray-500 transition-colors hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-300"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> All team tournaments
+        </Link>
+
+        <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
+          <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
+            <div className="min-w-0 flex flex-col justify-between gap-8">
+              <div className="space-y-5">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                  {seasonLabel ? <span>Season {seasonLabel}</span> : null}
+                  {summary?.config?.game_type ? (
+                    <span>{String(summary.config.game_type)}</span>
+                  ) : null}
+                </div>
+                <div className="space-y-3">
+                  <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                    {title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                    {summary?.divisionName ? <span>{summary.divisionName}</span> : null}
+                    {summary?.formatType ? (
+                      <span className="capitalize">
+                        {String(summary.formatType).replace(/_/g, " ")}
+                      </span>
+                    ) : null}
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" /> {summary?.teamCount ?? 0} teams
+                    </span>
+                    {summary?.config?.country ? (
+                      <span>{String(summary.config.country).toUpperCase()}</span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {!slugIsCanonical && canonicalSlug ? (
+          <Link
+            href={`/tournaments/team/${canonicalSlug}`}
+            className="text-xs font-medium text-amber-600 hover:underline dark:text-amber-400"
+          >
+            View canonical URL
+          </Link>
+        ) : null}
 
         <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
           {(
