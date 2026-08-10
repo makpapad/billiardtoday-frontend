@@ -587,7 +587,10 @@ export function buildBiathlonFinalStandings(
   nonQualified.forEach((s) => ordered.push(s));
 
   const ranked = ordered.map((standing, index) => {
-    standing.place = index + 1;
+    // CEB final-rank: SF losers share 3rd place (both shown as "3").
+    const sharedThird =
+      semiRounds.length > 0 && (index === 2 || index === 3);
+    standing.place = sharedThird ? 3 : index + 1;
     standing.average3c =
       standing.innings3c > 0 && standing.points3c > 0
         ? Math.trunc((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
