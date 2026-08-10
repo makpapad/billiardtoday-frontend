@@ -103,7 +103,7 @@ const computeBiathlon3cAverage = (board: BiathlonBoard | null): number | null =>
   const innings = board?.player1Innings ?? null;
   if (points === null || innings === null || innings === 0) return null;
   const caroms = points / 4;
-  return Math.trunc((caroms / innings) * 1000) / 1000;
+  return Math.round((caroms / innings) * 1000) / 1000;
 };
 
 /* ------------------------------------------------------------------ */
@@ -241,11 +241,11 @@ export function buildBiathlonStandings(group: StageMatchGroup): BiathlonStanding
   standings.forEach((standing) => {
     standing.average3c =
       standing.innings3c > 0 && standing.points3c > 0
-        ? Math.trunc((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
+        ? Math.round((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
         : null;
     standing.teamAverage =
       standing.pointsAgainst > 0
-        ? Math.trunc((standing.pointsFor / standing.pointsAgainst) * 1000) / 1000
+        ? Math.round((standing.pointsFor / standing.pointsAgainst) * 1000) / 1000
         : null;
     standing.diff = standing.pointsFor - standing.pointsAgainst;
   });
@@ -325,7 +325,7 @@ export function BiathlonGroupMatchesTable({
                   const points = bottom3c?.player2Points ?? null;
                   const innings = bottom3c?.player2Innings ?? null;
                   if (points === null || innings === null || innings === 0) return null;
-                  return Math.trunc((points / 4 / innings) * 1000) / 1000;
+                  return Math.round((points / 4 / innings) * 1000) / 1000;
                 })(),
                 hr: bottom3c?.player2HighRun ?? null,
                 tot: bottom.player.points,
@@ -593,11 +593,11 @@ export function buildBiathlonFinalStandings(
     standing.place = sharedThird ? 3 : index + 1;
     standing.average3c =
       standing.innings3c > 0 && standing.points3c > 0
-        ? Math.trunc((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
+        ? Math.round((standing.points3c / 4 / standing.innings3c) * 1000) / 1000
         : null;
     standing.teamAverage =
       standing.pointsAgainst > 0
-        ? Math.trunc((standing.pointsFor / standing.pointsAgainst) * 1000) / 1000
+        ? Math.round((standing.pointsFor / standing.pointsAgainst) * 1000) / 1000
         : null;
     standing.diff = standing.pointsFor - standing.pointsAgainst;
     return standing;
