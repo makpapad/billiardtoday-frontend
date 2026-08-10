@@ -141,7 +141,11 @@ const compareBiathlonStandings = (
   const posA = a.groupPosition ?? 9999;
   const posB = b.groupPosition ?? 9999;
   if (posA !== posB) return posA - posB;
-  if (b.diff !== a.diff) return b.diff - a.diff;
+  // diff may not be computed yet (final-ranking builder sets it after sort) —
+  // derive it from the raw totals so the order is stable.
+  const diffA = (a.pointsFor ?? 0) - (a.pointsAgainst ?? 0);
+  const diffB = (b.pointsFor ?? 0) - (b.pointsAgainst ?? 0);
+  if (diffB !== diffA) return diffB - diffA;
   return a.playerName.localeCompare(b.playerName);
 };
 
