@@ -365,7 +365,14 @@ export const buildStageMatchGroups = (
   const grouped: Record<string, StageMatchGroup> = {};
 
   groups.forEach((match, index) => {
-    const key = match.number !== null ? `${match.number}` : match.id;
+    // KO rounds reuse the same match numbers across rounds (QF 1-4, SF 1-2,
+    // F 1) — key by round+number so they never merge into one group.
+    const key =
+      match.round && match.number !== null
+        ? `${match.round}-${match.number}`
+        : match.number !== null
+          ? `${match.number}`
+          : match.id;
     if (!grouped[key]) {
       grouped[key] = {
         key,
