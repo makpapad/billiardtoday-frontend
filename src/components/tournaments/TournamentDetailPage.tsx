@@ -155,6 +155,7 @@ const buildEventShellFromSummary = (
       end_date: stage.endDate,
       order: stage.order ?? index + 1,
       is_final: stage.isFinal,
+      stage_type: stage.stageType ?? null,
       groups: [],
       results: [],
     })),
@@ -2350,11 +2351,11 @@ export function TournamentDetailPage({
   }, [activeView, summary.documentId]);
 
   useEffect(() => {
-    if (activeView !== "tournament" || tournamentPanelMode === "stages") {
+    if (activeView !== "tournament") {
       return;
     }
     void refreshEventData();
-  }, [activeView, refreshEventData, tournamentPanelMode]);
+  }, [activeView, refreshEventData]);
 
   useEffect(() => {
     if (activeView !== "tournament") return;
