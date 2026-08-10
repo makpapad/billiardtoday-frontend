@@ -44,7 +44,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   // Team tournaments (e.g. CEB National Teams) render on their own detail
   // page with groups/standings/matches — redirect the generic event route
   // there so federation/club lists point to the right page.
-  if (summary.teamTournamentDocumentId) {
+  // Biathlon is exempt: it lives in the classic event module (bt-groups +
+  // BiathlonTables in TournamentEventsContent) so it must keep the standard
+  // tournament look like every other CEB event.
+  const biathlonDetected =
+    /biathlon/i.test(summary.gameType ?? "") ||
+    /biathlon/i.test(summary.rulesetKey ?? "");
+  if (summary.teamTournamentDocumentId && !biathlonDetected) {
     const teamSummary = await fetchTeamTournamentByDocumentId(
       summary.teamTournamentDocumentId,
     );
