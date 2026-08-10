@@ -680,7 +680,7 @@ function FinalStandingsTable({
   qualifiedRows: ComputedStandingRow[];
 }) {
   const standings = useMemo(() => {
-    type Entry = { position: number; teamName: string; stage: string };
+    type Entry = { position: number; teamName: string; stage: string; tot?: number };
     const entries: Entry[] = [];
     const addLoser = (match: NormalizedTeamMatch, stageLabel: string) => {
       const loser =
@@ -699,7 +699,21 @@ function FinalStandingsTable({
     const sf = byRound("SF");
     const fin = byRound("F");
 
-    qf.forEach((m) => addLoser(m, "Quarter-finals"));
+    // QF losers: sorted by TOT scored in their QF match (CEB rule — the
+    // round in which they were eliminated decides 5th-8th, highest TOT first).
+    const qfLosers: Entry[] = qf
+      .map((m) => {
+        const homeWon = m.winnerTeamName === m.homeTeamName;
+        const loserName = homeWon ? m.awayTeamName : m.homeTeamName;
+        const loserTot = homeWon
+          ? m.computed.awayTotalPoints
+          : m.computed.homeTotalPoints;
+        return { position: 0, teamName: loserName, stage: "Quarter-finals", tot: loserTot };
+      })
+      .filter((e) => e.teamName && e.teamName !== "-")
+      .sort((a, b) => (b.tot ?? 0) - (a.tot ?? 0));
+
+    qfLosers.forEach((e) => entries.push(e));
     sf.forEach((m) => addLoser(m, "Semi-finals"));
     const final = fin[0];
     if (final) {
@@ -716,15 +730,19 @@ function FinalStandingsTable({
         (a.stage === "Champion" ? 0 : a.stage === "Final" ? 1 : a.stage === "Semi-finals" ? 2 : 3) -
         (b.stage === "Champion" ? 0 : b.stage === "Final" ? 1 : b.stage === "Semi-finals" ? 2 : 3),
     );
-    // Fill positions 3/4 (SF losers) as shared, QF losers shared 5-8.
+    // Fill positions: SF losers share 3rd, QF losers get 5th-8th in their
+    // TOT order (already sorted above).
     let pos = 1;
-    entries.forEach((e, i) => {
-      const prev = entries[i - 1];
-      if (prev && prev.stage === e.stage) {
-        e.position = prev.position;
+    let lastStage = "";
+    let lastPos = 0;
+    entries.forEach((e) => {
+      if (e.stage === "Semi-finals" && lastStage === "Semi-finals") {
+        e.position = lastPos;
       } else {
         e.position = pos;
       }
+      lastStage = e.stage;
+      lastPos = e.position;
       pos += 1;
     });
     // Non-qualified teams (below 8) from qualification ranking (CEB order).
