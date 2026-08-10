@@ -3769,10 +3769,12 @@ export function TournamentEventsContent({
     );
   const showVisiblePublishedFinalResults =
     showPublishedFinalResults &&
-    eventData?.data?.final_standings_published === true &&
-    publishedFinalResults.length > 0 &&
-    !eventHasIncompleteMatches &&
-    !hideLongoniFinalStandingsUntilFinal;
+    (isBiathlonEvent(eventData)
+      ? eventStages.length > 0
+      : eventData?.data?.final_standings_published === true &&
+        publishedFinalResults.length > 0 &&
+        !eventHasIncompleteMatches &&
+        !hideLongoniFinalStandingsUntilFinal);
   const eventGameType = useMemo(
     () => normalizeEventGameType(eventData?.data?.game_type ?? null),
     [eventData],
@@ -5278,6 +5280,18 @@ export function TournamentEventsContent({
                     </div>
                   ) : null}
                   {showVisiblePublishedFinalResults && (
+                    isBiathlonEvent(eventData) ? (
+                      <div className="mb-6 flex flex-col gap-3">
+                        <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                          Final standings
+                        </div>
+                        <BiathlonFinalRankingTable
+                          stages={eventStages.map((s) => ({
+                            groups: buildStageMatchGroups(s.groups),
+                          }))}
+                        />
+                      </div>
+                    ) : (
                       <div className="mb-6 flex flex-col gap-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -5512,7 +5526,8 @@ export function TournamentEventsContent({
                           </table>
                         </div>
                       </div>
-                    )}
+                    )
+                  )}
                   {showTimetable && timetableSlots.length > 0 && (
                     <div className="mb-6 flex flex-col gap-3">
                       <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
