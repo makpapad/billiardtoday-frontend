@@ -15,6 +15,7 @@ import {
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 import type { TournamentEventSummary } from "@/lib/tournaments";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 type Props = {
   detail: TeamTournamentDetail | null;
@@ -808,6 +809,9 @@ export function TeamTournamentDetailClient({
   const matches = detail?.matches ?? [];
   const standingsByGroup = detail?.standingsByGroup ?? {};
   const biathlon = summary?.config?.mode === "biathlon";
+  const organizerLogoUrl = eventSummary
+    ? resolveMediaUrl(eventSummary.organizerLogoUrl)
+    : null;
 
   const seasonLabel = formatSeason(summary?.season ?? null);
   const venueMetaParts = useMemo(() => {
@@ -969,13 +973,13 @@ export function TeamTournamentDetailClient({
                   </div>
                 </div>
                 <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
-                  {eventSummary?.organizerLogoUrl ? (
+                  {organizerLogoUrl ? (
                     <div className="flex h-full w-full items-center justify-center">
                       <Image
-                        src={eventSummary.organizerLogoUrl}
+                        src={organizerLogoUrl}
                         alt={
-                          eventSummary.organizerLogoName ||
-                          eventSummary.tournamentTitle ||
+                          eventSummary?.organizerLogoName ||
+                          eventSummary?.tournamentTitle ||
                           "Organizer logo"
                         }
                         width={320}
