@@ -3780,6 +3780,7 @@ export function TournamentEventsContent({
     [eventData],
   );
   const isArtisticEvent = eventGameType === "artistic";
+  const isFivePinsFinalEvent = isFivePinsEvent(eventData);
 
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
@@ -5324,13 +5325,13 @@ export function TournamentEventsContent({
                                   Match Pts
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  {isArtisticEvent ? "Points" : "Caroms"}
+                                  {isFivePinsFinalEvent ? "P+" : isArtisticEvent ? "Points" : "Caroms"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  {isArtisticEvent ? "Possible points" : "Innings"}
+                                  {isFivePinsFinalEvent ? "P-" : isArtisticEvent ? "Possible points" : "Innings"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
-                                  {isArtisticEvent ? "%" : "AVG"}
+                                  {isFivePinsFinalEvent ? "P+/P-" : isArtisticEvent ? "%" : "AVG"}
                                 </th>
                                 <th className="px-4 py-3 text-center font-semibold">
                                   {isArtisticEvent ? "Best run" : "1st H.R."}
