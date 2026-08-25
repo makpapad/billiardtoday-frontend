@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useSearchParams } from "next/navigation";
+import { MonitorSmartphone } from "lucide-react";
 import {
   clearTrustedDeviceToken,
   getTrustedDevicePlayer,
@@ -269,6 +270,23 @@ export default function MePage() {
                   className="rounded-2xl border border-cyan-700 px-5 py-3 text-sm font-semibold text-cyan-800 disabled:opacity-50"
                 >
                   Stop video
+                </button>
+                <button
+                  type="button"
+                  disabled={!screenId}
+                  onClick={() => {
+                    const base = (
+                      process.env.NEXT_PUBLIC_SCOREBOARD_URL || "https://scoreboard.billiardtoday.com/"
+                    ).replace(/\/+$/, "");
+                    const url = `${base}/scoreboard/mobile-control?screenId=${encodeURIComponent(
+                      screenId,
+                    )}&slot=${encodeURIComponent(slot)}`;
+                    window.open(url, "_blank", "noopener");
+                  }}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:opacity-50"
+                >
+                  <MonitorSmartphone className="h-4 w-4" />
+                  Scoreboard control
                 </button>
               </div>
             </div>
