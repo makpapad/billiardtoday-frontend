@@ -5164,7 +5164,11 @@ export function TournamentDetailPage({
         ? (eventData.data.timetable_config as { timezoneOffsetMinutes?: unknown })
             .timezoneOffsetMinutes
         : null;
-    return typeof raw === "number" && Number.isFinite(raw) ? raw : 180;
+    // null while event data has not loaded yet (or no timezone configured). The
+    // display fallback (180) must NEVER be treated as the event timezone: it used
+    // to get persisted to localStorage before the real value arrived, so every
+    // later visit showed Greece time for events in other zones.
+    return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
   }, [eventData]);
 
   const timetableMatchNodeLabelByNumber = useMemo(() => {
@@ -5180,16 +5184,28 @@ export function TournamentDetailPage({
   useEffect(() => {
     const storageKey = publicTimezoneStorageKey(summary.documentId);
     if (typeof window === "undefined") {
-      setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
       return;
     }
     const stored = window.localStorage.getItem(storageKey);
     const parsed = stored !== null ? Number(stored) : Number.NaN;
     if (Number.isFinite(parsed)) {
-      setSelectedTimezoneOffsetMinutes(parsed);
-      return;
+      // A stored GMT+03 that contradicts the event's real timezone is a stale
+      // entry written by the old pre-load fallback bug — drop it and re-derive
+      // from the event timezone. Other explicit user choices are respected.
+      if (
+        parsed === 180 &&
+        eventTimezoneOffsetMinutes !== null &&
+        eventTimezoneOffsetMinutes !== 180
+      ) {
+        window.localStorage.removeItem(storageKey);
+      } else {
+        setSelectedTimezoneOffsetMinutes(parsed);
+        return;
+      }
     }
-    setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
+    if (eventTimezoneOffsetMinutes !== null) {
+      setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
+    }
   }, [eventTimezoneOffsetMinutes, summary.documentId]);
 
   useEffect(() => {
@@ -6758,7 +6774,11 @@ export function TournamentDetailPage({
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
               />
               <select
-                value={selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes}
+                value={
+                  selectedTimezoneOffsetMinutes ??
+                  eventTimezoneOffsetMinutes ??
+                  180
+                }
                 onChange={(e) =>
                   setSelectedTimezoneOffsetMinutes(Number(e.target.value))
                 }
@@ -6811,7 +6831,9 @@ export function TournamentDetailPage({
                       {visibleTimetableSlots.map((slot) => {
                         const shiftedDateTime = formatDateTimeWithOffset(
                           slot.dateTime,
-                          selectedTimezoneOffsetMinutes,
+                          selectedTimezoneOffsetMinutes ??
+                            eventTimezoneOffsetMinutes ??
+                            180,
                         );
                         const dateLabel = shiftedDateTime?.date || slot.date || "-";
                         const timeLabel = shiftedDateTime?.time || slot.time || "-";
@@ -6987,7 +7009,9 @@ export function TournamentDetailPage({
             preferredGroupParam={preferredGroupParam}
             preferredMatchParam={preferredMatchParam}
             timezoneOffsetMinutes={
-              selectedTimezoneOffsetMinutes ?? eventTimezoneOffsetMinutes
+              selectedTimezoneOffsetMinutes ??
+              eventTimezoneOffsetMinutes ??
+              180
             }
             timezoneOptions={timezoneOptions}
             onTimezoneChange={setSelectedTimezoneOffsetMinutes}
