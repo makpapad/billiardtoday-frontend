@@ -108,10 +108,25 @@ const normalizeLookupText = (value: string | null | undefined) =>
 const formatDateTime = (
     iso?: string | null,
     offsetMinutes?: number | null,
+    timeZoneName?: string | null,
 ): string => {
     if (!iso) return ''
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ''
+    if (timeZoneName) {
+        // DST-aware rendering: Intl resolves the zone offset per date.
+        const parts = new Intl.DateTimeFormat('el-GR', {
+            timeZone: timeZoneName,
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
+        }).formatToParts(d)
+        const part = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+        return `${part('day')}/${part('month')}/${part('year')} ${part('hour')}:${part('minute')}`
+    }
     const shifted =
         typeof offsetMinutes === 'number' && Number.isFinite(offsetMinutes)
             ? new Date(d.getTime() + offsetMinutes * 60 * 1000)
@@ -142,11 +157,13 @@ export default function SingleElimBracket({
     rounds,
     onMatchClick,
     timezoneOffsetMinutes = null,
+    timezoneName = null,
     searchQuery = '',
 }: {
     rounds: BracketRoundView[]
     onMatchClick?: (matchId: string) => void
     timezoneOffsetMinutes?: number | null
+    timezoneName?: string | null
     searchQuery?: string
 }) {
     const baseScale = rounds.length >= 4 ? 0.75 : 1
@@ -507,7 +524,7 @@ export default function SingleElimBracket({
 
                                         {m.date ? (
                                             <div style={{ textAlign: 'center', color: '#6B7280', fontSize: 11, marginBottom: 4 }}>
-                                                {formatDateTime(m.date, timezoneOffsetMinutes)}
+                                                {formatDateTime(m.date, timezoneOffsetMinutes, timezoneName)}
                                             </div>
                                         ) : (
                                             <div style={{ height: 15 }} />

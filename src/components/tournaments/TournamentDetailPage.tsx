@@ -1516,10 +1516,31 @@ const publicTimezoneStorageKey = (eventId: string | number | null | undefined) =
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
+  timeZoneName?: string | null,
 ) => {
-  if (!dateTime || offsetMinutes === null) return null;
+  if (!dateTime) return null;
   const parsed = new Date(dateTime);
   if (Number.isNaN(parsed.getTime())) return null;
+  if (timeZoneName) {
+    // DST-aware rendering: Intl resolves the zone offset per date, so matches
+    // around a summer/winter clock change are displayed correctly on both sides.
+    const parts = new Intl.DateTimeFormat("el-GR", {
+      timeZone: timeZoneName,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(parsed);
+    const part = (type: string) =>
+      parts.find((p) => p.type === type)?.value ?? "";
+    return {
+      date: `${part("day")}/${part("month")}/${part("year")}`,
+      time: `${part("hour")}:${part("minute")}`,
+    };
+  }
+  if (offsetMinutes === null) return null;
   const shifted = new Date(parsed.getTime() + offsetMinutes * 60 * 1000);
   const year = shifted.getUTCFullYear();
   const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
@@ -5157,6 +5178,16 @@ export function TournamentDetailPage({
     return rows;
   }, [participantAgeDirection, participantRankingDirection, participantSortMode, participantsWithSeriesData]);
 
+  const eventTimezoneName = useMemo(() => {
+    const raw =
+      eventData?.data?.timetable_config &&
+      typeof eventData.data.timetable_config === "object"
+        ? (eventData.data.timetable_config as { timezoneName?: unknown })
+            .timezoneName
+        : null;
+    return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  }, [eventData]);
+
   const eventTimezoneOffsetMinutes = useMemo(() => {
     const raw =
       eventData?.data?.timetable_config &&
@@ -6834,6 +6865,7 @@ export function TournamentDetailPage({
                           selectedTimezoneOffsetMinutes ??
                             eventTimezoneOffsetMinutes ??
                             180,
+                          eventTimezoneName,
                         );
                         const dateLabel = shiftedDateTime?.date || slot.date || "-";
                         const timeLabel = shiftedDateTime?.time || slot.time || "-";
@@ -7013,6 +7045,7 @@ export function TournamentDetailPage({
               eventTimezoneOffsetMinutes ??
               180
             }
+            timezoneName={eventTimezoneName}
             timezoneOptions={timezoneOptions}
             onTimezoneChange={setSelectedTimezoneOffsetMinutes}
             onStageSelect={(stageDocumentId) => {

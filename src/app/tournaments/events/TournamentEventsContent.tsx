@@ -227,6 +227,7 @@ type TournamentEventsContentProps = {
   preferredGroupParam?: string | null;
   preferredMatchParam?: string | null;
   timezoneOffsetMinutes?: number | null;
+  timezoneName?: string | null;
   timezoneOptions?: Array<{ value: number; label: string }>;
   onTimezoneChange?: (offsetMinutes: number) => void;
   onStageSelect?: (stageDocumentId: string) => void;
@@ -1624,9 +1625,10 @@ function buildGroupSlotPlaceholderLabel(
 function formatDateTimeForMatchCell(
   value: string | null,
   offsetMinutes?: number | null,
+  timeZoneName?: string | null,
 ): string {
   if (!value) return "-";
-  const shifted = formatDateTimeWithOffset(value, offsetMinutes);
+  const shifted = formatDateTimeWithOffset(value, offsetMinutes, timeZoneName);
   if (shifted) return `${shifted.date}\n${shifted.time}`;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -1646,11 +1648,30 @@ function formatDateTimeForMatchCell(
 function formatDateTimeWithOffset(
   value: string | null,
   offsetMinutes: number | null | undefined,
+  timeZoneName?: string | null,
 ): { date: string; time: string } | null {
-  if (!value || offsetMinutes === null || offsetMinutes === undefined)
-    return null;
+  if (!value) return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
+  if (timeZoneName) {
+    // DST-aware rendering: Intl resolves the zone offset per date, so matches
+    // around a summer/winter clock change are displayed correctly on both sides.
+    const parts = new Intl.DateTimeFormat("el-GR", {
+      timeZone: timeZoneName,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(parsed);
+    const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    return {
+      date: `${part("day")}/${part("month")}/${part("year")}`,
+      time: `${part("hour")}:${part("minute")}`,
+    };
+  }
+  if (offsetMinutes === null || offsetMinutes === undefined) return null;
   const shifted = new Date(parsed.getTime() + offsetMinutes * 60 * 1000);
   return {
     date: shifted.toLocaleDateString("el-GR", {
@@ -2969,6 +2990,7 @@ export function TournamentEventsContent({
   preferredGroupParam: preferredGroupParamOverride = null,
   preferredMatchParam: preferredMatchParamOverride = null,
   timezoneOffsetMinutes = null,
+  timezoneName = null,
   timezoneOptions = [],
   onTimezoneChange,
   onStageSelect,
@@ -5575,6 +5597,7 @@ export function TournamentEventsContent({
                                 const shiftedSlotDateTime = formatDateTimeWithOffset(
                                   slot.dateTime,
                                   timezoneOffsetMinutes,
+                                  timezoneName,
                                 );
                                 const dateLabel =
                                   shiftedSlotDateTime
@@ -6124,6 +6147,7 @@ export function TournamentEventsContent({
                                                                     ? formatDateTimeForMatchCell(
                                                                         match.dateTime,
                                                                         timezoneOffsetMinutes,
+                                                                        timezoneName,
                                                                       )
                                                                     : "Date"}
                                                                 </div>
@@ -6272,6 +6296,7 @@ export function TournamentEventsContent({
                                           timezoneOffsetMinutes={
                                             timezoneOffsetMinutes
                                           }
+                                          timezoneName={timezoneName}
                                           searchQuery={playerSearchQuery}
                                         />
                                       ) : (
@@ -7616,6 +7641,7 @@ export function TournamentEventsContent({
                                                                           {formatDateTimeForMatchCell(
                                                                             match.dateTime,
                                                                             timezoneOffsetMinutes,
+                                                                            timezoneName,
                                                                           )}
                                                                         </span>
                                                                       </div>
@@ -8096,6 +8122,7 @@ export function TournamentEventsContent({
                       const shifted = formatDateTimeWithOffset(
                         selectedBracketMatch.match.date,
                         timezoneOffsetMinutes,
+                        timezoneName,
                       );
                       return `Date: ${shifted ? `${shifted.date}, ${shifted.time}` : new Date(selectedBracketMatch.match.date).toLocaleString("el-GR", {
                         year: "numeric",
