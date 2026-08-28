@@ -228,8 +228,11 @@ type TournamentEventsContentProps = {
   preferredMatchParam?: string | null;
   timezoneOffsetMinutes?: number | null;
   timezoneName?: string | null;
-  timezoneOptions?: Array<{ value: number; label: string }>;
-  onTimezoneChange?: (offsetMinutes: number) => void;
+  timezoneOptions?: Array<{
+    label: string;
+    options: Array<{ value: string; label: string }>;
+  }>;
+  onTimezoneChange?: (value: string) => void;
   onStageSelect?: (stageDocumentId: string) => void;
   showPublishedFinalResults?: boolean;
   showTimetable?: boolean;
@@ -5941,21 +5944,37 @@ export function TournamentEventsContent({
                                         {onTimezoneChange &&
                                         timezoneOptions.length > 0 ? (
                                           <select
-                                            value={timezoneOffsetMinutes ?? 180}
+                                            value={
+                                              timezoneName
+                                                ? `zone:${timezoneName}`
+                                                : String(
+                                                    timezoneOffsetMinutes ??
+                                                      180,
+                                                  )
+                                            }
                                             onChange={(event) =>
                                               onTimezoneChange(
-                                                Number(event.target.value),
+                                                event.target.value,
                                               )
                                             }
                                             className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40 md:w-auto"
                                           >
-                                            {timezoneOptions.map((option) => (
-                                              <option
-                                                key={option.value}
-                                                value={option.value}
+                                            {timezoneOptions.map((group) => (
+                                              <optgroup
+                                                key={group.label}
+                                                label={group.label}
                                               >
-                                                {option.label}
-                                              </option>
+                                                {group.options.map(
+                                                  (option) => (
+                                                    <option
+                                                      key={option.value}
+                                                      value={option.value}
+                                                    >
+                                                      {option.label}
+                                                    </option>
+                                                  ),
+                                                )}
+                                              </optgroup>
                                             ))}
                                           </select>
                                         ) : null}

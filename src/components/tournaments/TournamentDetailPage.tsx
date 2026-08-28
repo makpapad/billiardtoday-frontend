@@ -1511,6 +1511,10 @@ const getTimetablePhaseKey = (slot: NormalizedTimetableSlot) => {
 const getTimetablePhaseLabel = (slot: NormalizedTimetableSlot) =>
   slot.stageTitle || slot.customStageLabel || "Other";
 
+type TimezoneSelection =
+  | { kind: "offset"; offsetMinutes: number }
+  | { kind: "zone"; zoneName: string };
+
 const publicTimezoneStorageKey = (eventId: string | number | null | undefined) =>
   `bt-public-timezone-offset-minutes.${eventId ?? "global"}`;
 const formatDateTimeWithOffset = (
@@ -1849,8 +1853,9 @@ export function TournamentDetailPage({
   const [expandedGalleryVideoIds, setExpandedGalleryVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [selectedTimezoneOffsetMinutes, setSelectedTimezoneOffsetMinutes] =
-    useState<number | null>(null);
+  const [selectedTimezone, setSelectedTimezone] = useState<
+    TimezoneSelection | null
+  >(null);
   const [showBackToTopButton, setShowBackToTopButton] = useState(false);
   const searchParams = useSearchParams();
   const preferredStageFromQuery =
@@ -5218,48 +5223,129 @@ export function TournamentDetailPage({
       return;
     }
     const stored = window.localStorage.getItem(storageKey);
-    const parsed = stored !== null ? Number(stored) : Number.NaN;
-    if (Number.isFinite(parsed)) {
-      // A stored GMT+03 that contradicts the event's real timezone is a stale
-      // entry written by the old pre-load fallback bug — drop it and re-derive
-      // from the event timezone. Other explicit user choices are respected.
-      if (
-        parsed === 180 &&
-        eventTimezoneOffsetMinutes !== null &&
-        eventTimezoneOffsetMinutes !== 180
-      ) {
-        window.localStorage.removeItem(storageKey);
+    if (stored !== null) {
+      if (stored.startsWith("zone:")) {
+        const zoneName = stored.slice(5);
+        if (zoneName) {
+          setSelectedTimezone({ kind: "zone", zoneName });
+          return;
+        }
       } else {
-        setSelectedTimezoneOffsetMinutes(parsed);
-        return;
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed)) {
+          // A stored GMT+03 that contradicts the event's real timezone is a stale
+          // entry written by the old pre-load fallback bug — drop it and re-derive
+          // from the event timezone. Other explicit user choices are respected.
+          if (
+            parsed === 180 &&
+            eventTimezoneOffsetMinutes !== null &&
+            eventTimezoneOffsetMinutes !== 180
+          ) {
+            window.localStorage.removeItem(storageKey);
+          } else {
+            setSelectedTimezone({ kind: "offset", offsetMinutes: parsed });
+            return;
+          }
+        }
       }
     }
-    if (eventTimezoneOffsetMinutes !== null) {
-      setSelectedTimezoneOffsetMinutes(eventTimezoneOffsetMinutes);
+    // No stored choice: default to the event's IANA zone when available (DST-aware),
+    // otherwise its fixed offset.
+    if (eventTimezoneName) {
+      setSelectedTimezone({ kind: "zone", zoneName: eventTimezoneName });
+    } else if (eventTimezoneOffsetMinutes !== null) {
+      setSelectedTimezone({
+        kind: "offset",
+        offsetMinutes: eventTimezoneOffsetMinutes,
+      });
     }
-  }, [eventTimezoneOffsetMinutes, summary.documentId]);
+  }, [eventTimezoneName, eventTimezoneOffsetMinutes, summary.documentId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (selectedTimezoneOffsetMinutes === null) return;
+    if (selectedTimezone === null) return;
     const storageKey = publicTimezoneStorageKey(summary.documentId);
-    window.localStorage.setItem(
-      storageKey,
-      String(selectedTimezoneOffsetMinutes),
-    );
-  }, [selectedTimezoneOffsetMinutes, summary.documentId]);
+    const raw =
+      selectedTimezone.kind === "zone"
+        ? `zone:${selectedTimezone.zoneName}`
+        : String(selectedTimezone.offsetMinutes);
+    window.localStorage.setItem(storageKey, raw);
+  }, [selectedTimezone, summary.documentId]);
 
   const timezoneOptions = useMemo(
-    () =>
-      Array.from({ length: 27 }, (_, index) => {
-        const hours = index - 12;
-        return {
-          value: hours * 60,
-          label: formatGmtOffsetLabel(hours * 60),
-        };
-      }),
+    () => [
+      {
+        label: "GMT (UTC)",
+        options: Array.from({ length: 27 }, (_, index) => {
+          const hours = index - 12;
+          return {
+            value: String(hours * 60),
+            label: formatGmtOffsetLabel(hours * 60),
+          };
+        }),
+      },
+      {
+        label: "Πόλεις / Cities",
+        options: [
+          "Europe/Athens",
+          "Europe/Brussels",
+          "Europe/London",
+          "Europe/Paris",
+          "Europe/Berlin",
+          "Europe/Madrid",
+          "Europe/Lisbon",
+          "Europe/Rome",
+          "Europe/Vienna",
+          "Europe/Amsterdam",
+          "Europe/Stockholm",
+          "Europe/Copenhagen",
+          "Europe/Prague",
+          "Europe/Warsaw",
+          "Europe/Zurich",
+          "Europe/Istanbul",
+          "Asia/Seoul",
+          "Asia/Tokyo",
+          "Asia/Ho_Chi_Minh",
+          "Asia/Bangkok",
+          "America/New_York",
+          "America/Chicago",
+          "America/Los_Angeles",
+          "America/Bogota",
+          "America/Sao_Paulo",
+          "America/Mexico_City",
+          "Africa/Cairo",
+          "Asia/Dubai",
+          "Australia/Sydney",
+        ].map((zoneName) => ({
+          value: `zone:${zoneName}`,
+          label: zoneName,
+        })),
+      },
+    ],
     [],
   );
+
+  const selectedZoneName =
+    selectedTimezone?.kind === "zone" ? selectedTimezone.zoneName : null;
+  const selectedOffsetMinutes =
+    selectedTimezone?.kind === "offset" ? selectedTimezone.offsetMinutes : null;
+  // User choice wins; with no choice the event's own zone/offset is used.
+  const effectiveTimezoneName =
+    selectedTimezone === null ? eventTimezoneName : selectedZoneName;
+  const effectiveTimezoneOffset =
+    selectedTimezone === null ? eventTimezoneOffsetMinutes : selectedOffsetMinutes;
+  const timezoneSelectValue =
+    effectiveTimezoneName !== null
+      ? `zone:${effectiveTimezoneName}`
+      : String(effectiveTimezoneOffset ?? 180);
+  const handleTimezoneChange = (raw: string) => {
+    if (raw.startsWith("zone:")) {
+      const zoneName = raw.slice(5);
+      if (zoneName) setSelectedTimezone({ kind: "zone", zoneName });
+    } else {
+      setSelectedTimezone({ kind: "offset", offsetMinutes: Number(raw) });
+    }
+  };
 
   const playerProfileHref = (playerId: string, playerName: string) =>
     buildTournamentPlayerProfileHref(
@@ -6805,20 +6891,18 @@ export function TournamentDetailPage({
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
               />
               <select
-                value={
-                  selectedTimezoneOffsetMinutes ??
-                  eventTimezoneOffsetMinutes ??
-                  180
-                }
-                onChange={(e) =>
-                  setSelectedTimezoneOffsetMinutes(Number(e.target.value))
-                }
+                value={timezoneSelectValue}
+                onChange={(e) => handleTimezoneChange(e.target.value)}
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
               >
-                {timezoneOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                {timezoneOptions.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
@@ -6862,10 +6946,8 @@ export function TournamentDetailPage({
                       {visibleTimetableSlots.map((slot) => {
                         const shiftedDateTime = formatDateTimeWithOffset(
                           slot.dateTime,
-                          selectedTimezoneOffsetMinutes ??
-                            eventTimezoneOffsetMinutes ??
-                            180,
-                          eventTimezoneName,
+                          effectiveTimezoneOffset ?? 180,
+                          effectiveTimezoneName,
                         );
                         const dateLabel = shiftedDateTime?.date || slot.date || "-";
                         const timeLabel = shiftedDateTime?.time || slot.time || "-";
@@ -7040,14 +7122,10 @@ export function TournamentDetailPage({
             preferredStageDocumentId={selectedStageDocumentId}
             preferredGroupParam={preferredGroupParam}
             preferredMatchParam={preferredMatchParam}
-            timezoneOffsetMinutes={
-              selectedTimezoneOffsetMinutes ??
-              eventTimezoneOffsetMinutes ??
-              180
-            }
-            timezoneName={eventTimezoneName}
+            timezoneOffsetMinutes={effectiveTimezoneOffset ?? 180}
+            timezoneName={effectiveTimezoneName}
             timezoneOptions={timezoneOptions}
-            onTimezoneChange={setSelectedTimezoneOffsetMinutes}
+            onTimezoneChange={handleTimezoneChange}
             onStageSelect={(stageDocumentId) => {
               setTournamentPanelMode("stages");
               setSelectedStageDocumentId(stageDocumentId);
