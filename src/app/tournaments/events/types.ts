@@ -37,6 +37,7 @@ export type StrapiGroup = {
   id?: number | string | null;
   documentId?: string | null;
   number?: number | string | null;
+  group_label?: string | null;
   date_time?: string | null;
   source?: string | null;
   round?: string | null;
@@ -197,6 +198,7 @@ export type NormalizedGroupMatch = {
   id: string;
   documentId: string;
   number: number | null;
+  label: string | null;
   matchNumber: number | null;
   round: string | null;
   dateTime: string | null;
@@ -287,6 +289,7 @@ export type NormalizedTimetableSlot = {
 export type StageMatchGroup = {
   key: string;
   number: number | null;
+  label: string | null;
   matches: {
     key: string;
     matchDocumentId: string | null;

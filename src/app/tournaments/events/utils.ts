@@ -164,6 +164,10 @@ export const normalizeGroup = (
     id: normalized.id,
     documentId: normalized.documentId,
     number: toNumber(normalized.number),
+    label:
+      typeof (normalized as Record<string, unknown>).group_label === "string"
+        ? ((normalized as Record<string, unknown>).group_label as string).trim() || null
+        : null,
     matchNumber: toNumber(normalized.match_number),
     round: typeof normalized.round === "string" ? normalized.round : null,
     dateTime:
@@ -377,6 +381,7 @@ export const buildStageMatchGroups = (
       grouped[key] = {
         key,
         number: match.number ?? null,
+        label: match.label ?? null,
         matches: [],
       };
     }

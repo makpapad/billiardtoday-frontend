@@ -138,6 +138,17 @@ function formatStageMatchLabel(
     return matchNumber !== null ? `${round} Match ${matchNumber}` : round;
   }
 
+  // Prefer the source group label ("A", "B", "Group 1", ...) when present:
+  // group.number can be an internal sequence id (e.g. 1306) on imported
+  // events, which would render nonsense letters like "Group AXF".
+  const rawLabel =
+    typeof group.label === "string" && group.label.trim()
+      ? group.label.trim()
+      : null;
+  if (rawLabel) {
+    return /^group\s/i.test(rawLabel) ? rawLabel : `Group ${rawLabel}`;
+  }
+
   return formatGroupDisplayLabel(
     group.number,
     resolveGroupLabelMode(stage.timetableConfig),
