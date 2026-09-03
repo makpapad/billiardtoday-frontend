@@ -6370,7 +6370,7 @@ export function TournamentEventsContent({
                                                   />
                                                 </svg>
                                                 <span className="w-[92px] shrink-0 truncate font-semibold">
-                                                  Group
+                                                  Groups
                                                 </span>
                                                 <div
                                                   className="ml-5 grid min-w-0 flex-1 items-center gap-x-7"
