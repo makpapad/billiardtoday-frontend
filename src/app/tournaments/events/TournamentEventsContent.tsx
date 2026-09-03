@@ -45,6 +45,7 @@ import {
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import StageCountryStats from "./StageCountryStats";
+import ShareMenuButton from "./ShareMenuButton";
 import SingleElimBracket, {
   type BracketMatchView,
   type BracketRoundView,
@@ -7035,6 +7036,38 @@ export function TournamentEventsContent({
                                                       </div>
                                                     ) : null}
                                                   </div>
+                                                  {isExpanded ? (
+                                                    <span
+                                                      onClick={(event) =>
+                                                        event.stopPropagation()
+                                                      }
+                                                      className="ml-2 flex shrink-0 items-center"
+                                                    >
+                                                      <ShareMenuButton
+                                                        shareHref={
+                                                          eventData?.data
+                                                            ?.documentId &&
+                                                          stage.documentId &&
+                                                          (group.label ||
+                                                            group.number !==
+                                                              null)
+                                                            ? `/api/og/tournament/${encodeURIComponent(
+                                                                eventData.data
+                                                                  .documentId,
+                                                              )}?stage=${encodeURIComponent(
+                                                                stage.documentId,
+                                                              )}&group=${encodeURIComponent(
+                                                                group.label ||
+                                                                  String(
+                                                                    group.number,
+                                                                  ),
+                                                              )}`
+                                                            : null
+                                                        }
+                                                        downloadName="billiardtoday-group-results.png"
+                                                      />
+                                                    </span>
+                                                  ) : null}
                                                 </button>
                                               </div>
                                               {isExpanded ? (

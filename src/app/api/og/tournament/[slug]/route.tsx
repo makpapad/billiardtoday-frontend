@@ -6,15 +6,23 @@ import {
 } from "@/lib/tournamentSeo";
 import { resolveTournamentEventSummary } from "@/lib/tournaments";
 import {
+  buildGroupStandings,
+  buildStageMatchGroups,
   computeStageCountryStats,
   formatDateRange,
+  formatRecord,
   normalizeEntity,
   normalizeGroup,
   toNumber,
   toRelationArray,
   type StageCountryStatRow,
 } from "@/app/tournaments/events/utils";
-import type { NormalizedEventStage } from "@/app/tournaments/events/types";
+import type {
+  GroupStanding,
+  NormalizedEventStage,
+  NormalizedGroupMatch,
+} from "@/app/tournaments/events/types";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
 export const runtime = "edge";
 
@@ -413,6 +421,406 @@ const StatsContent = ({
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* Group-results layout (a single round-robin group's standings)       */
+/* ------------------------------------------------------------------ */
+
+const GROUP_COLUMNS = [
+  { key: "rec", label: "REC", width: 96 },
+  { key: "mp", label: "MP", width: 72 },
+  { key: "pts", label: "PTS", width: 84 },
+  { key: "inns", label: "INNS", width: 84 },
+  { key: "avg", label: "AVG", width: 96 },
+  { key: "hr", label: "HR", width: 80 },
+  { key: "best", label: "BEST AVG", width: 116 },
+];
+
+const GroupResultsContent = ({
+  title,
+  stageLabel,
+  stageDateLabel,
+  groupLabel,
+  standings,
+}: {
+  title: string;
+  stageLabel: string;
+  stageDateLabel: string;
+  groupLabel: string;
+  standings: GroupStanding[];
+}) => {
+  return (
+    <div
+      style={{
+        position: "relative",
+        zIndex: 2,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "28px 56px 24px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <img
+          src={BRAND_LOGO_URL}
+          alt=""
+          width={150}
+          height={52}
+          style={{ width: 150, height: 52, objectFit: "contain" }}
+        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "8px 16px",
+            borderRadius: 999,
+            background: "rgba(7, 17, 31, 0.72)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#ffffff",
+              letterSpacing: 1,
+            }}
+          >
+            {truncate(stageLabel, 36)}
+          </span>
+          {stageDateLabel ? (
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: "rgba(255, 255, 255, 0.66)",
+              }}
+            >
+              {`· ${truncate(stageDateLabel, 28)}`}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>
+        <span
+          style={{
+            fontSize: title.length > 62 ? 30 : 36,
+            lineHeight: 1.08,
+            fontWeight: 800,
+            letterSpacing: -0.5,
+            color: "#ffffff",
+            textShadow: "0 14px 34px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          {truncate(title, 110)}
+        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            marginTop: 10,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "7px 18px",
+              borderRadius: 999,
+              background:
+                "linear-gradient(90deg, rgba(45, 212, 191, 0.28), rgba(59, 130, 246, 0.28))",
+              border: "1px solid rgba(255, 255, 255, 0.24)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: "#ffffff",
+                letterSpacing: 1,
+              }}
+            >
+              {truncate(groupLabel, 40)}
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: 16,
+              fontWeight: 600,
+              color: "rgba(255, 255, 255, 0.72)",
+            }}
+          >
+            {`${standings.length} players · final standings`}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            borderRadius: 16,
+            background: "rgba(4, 12, 24, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.16)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "10px 20px",
+              background: "rgba(255, 255, 255, 0.08)",
+            }}
+          >
+            <div style={{ display: "flex", width: 52, alignItems: "center" }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: 1.6,
+                  color: "rgba(255, 255, 255, 0.6)",
+                }}
+              >
+                #
+              </span>
+            </div>
+            <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: 2,
+                  color: "rgba(255, 255, 255, 0.6)",
+                }}
+              >
+                PLAYER
+              </span>
+            </div>
+            {GROUP_COLUMNS.map((column) => (
+              <div
+                key={column.key}
+                style={{
+                  display: "flex",
+                  width: column.width,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: 1.2,
+                    color: "rgba(255, 255, 255, 0.6)",
+                  }}
+                >
+                  {column.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {standings.map((standing, index) => {
+            const flagUrl = getCountryFlagCdnUrl(standing.playerCountry, 40);
+            return (
+              <div
+                key={standing.key}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "8px 20px",
+                  borderBottom:
+                    index < standings.length - 1
+                      ? "1px solid rgba(255, 255, 255, 0.07)"
+                      : "none",
+                }}
+              >
+                <div style={{ display: "flex", width: 52, alignItems: "center" }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background:
+                        standing.place === 1
+                          ? "rgba(245, 197, 66, 0.28)"
+                          : standing.place === 2
+                            ? "rgba(203, 213, 225, 0.22)"
+                            : standing.place === 3
+                              ? "rgba(214, 138, 78, 0.22)"
+                              : "rgba(255, 255, 255, 0.1)",
+                      fontSize: 15,
+                      fontWeight: 800,
+                      color: "#ffffff",
+                    }}
+                  >
+                    {standing.place}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    alignItems: "center",
+                    gap: 12,
+                    minWidth: 0,
+                  }}
+                >
+                  {flagUrl ? (
+                    <img
+                      src={flagUrl}
+                      alt=""
+                      width={36}
+                      height={24}
+                      style={{
+                        width: 36,
+                        height: 24,
+                        borderRadius: 3,
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        width: 36,
+                        height: 24,
+                        borderRadius: 3,
+                        background: "rgba(255, 255, 255, 0.18)",
+                      }}
+                    />
+                  )}
+                  <span
+                    style={{
+                      fontSize: 19,
+                      fontWeight: 700,
+                      color: "#ffffff",
+                    }}
+                  >
+                    {truncate(standing.playerName, 26)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[0].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 600,
+                      color: "rgba(255, 255, 255, 0.85)",
+                    }}
+                  >
+                    {formatRecord(standing.record)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[1].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
+                    {standing.totalMatchPoints}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[2].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
+                    {standing.totalPoints}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[3].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
+                    {standing.totalInnings}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[4].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#5eead4" }}>
+                    {standing.average !== null &&
+                    Number.isFinite(standing.average)
+                      ? standing.average.toFixed(2)
+                      : "–"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[5].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
+                    {standing.highRun ?? "–"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: GROUP_COLUMNS[6].width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "#bae6fd" }}>
+                    {standing.bestAverage !== null &&
+                    Number.isFinite(standing.bestAverage)
+                      ? standing.bestAverage.toFixed(2)
+                      : "–"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> },
@@ -427,9 +835,13 @@ export async function GET(
   const title = buildTournamentTitle(summary);
   const requestUrl = new URL(request.url);
   const preferredStageDocumentId = requestUrl.searchParams.get("stage");
+  const groupParam = requestUrl.searchParams.get("group");
 
   let statsRows: StageCountryStatRow[] = [];
   let statsStage: NormalizedEventStage | null = null;
+  let groupStandings: GroupStanding[] = [];
+  let groupStage: NormalizedEventStage | null = null;
+  let groupDisplayLabel = groupParam ? `Group ${groupParam}` : "";
 
   const eventPayload = await fetchEventPayload(summary.documentId);
   const rawStages =
@@ -453,6 +865,38 @@ export async function GET(
         if (rows.length > 0) {
           statsRows = rows;
           statsStage = stages[index];
+          break;
+        }
+      }
+    }
+
+    // A single round-robin group: filter the stage's raw group matches by
+    // group label (preferred) or group number, then compute its standings.
+    if (groupParam) {
+      const targetStages = preferredStageDocumentId
+        ? stages.filter((stage) => stage.documentId === preferredStageDocumentId)
+        : stages;
+      const numericGroup = Number(groupParam);
+      for (const stage of targetStages) {
+        const groupMatches: NormalizedGroupMatch[] = stage.groups.filter(
+          (match) =>
+            (match.label !== null && match.label === groupParam) ||
+            (!Number.isNaN(numericGroup) && match.number === numericGroup),
+        );
+        if (groupMatches.length === 0) continue;
+        const builtGroups = buildStageMatchGroups(groupMatches);
+        const allMatches = builtGroups.flatMap((group) => group.matches);
+        if (allMatches.length === 0) continue;
+        const standings = buildGroupStandings(allMatches, {
+          artistic: false,
+          suppressBestAverage: false,
+        });
+        if (standings.length > 0) {
+          groupStandings = standings;
+          groupStage = stage;
+          if (groupMatches[0]?.label) {
+            groupDisplayLabel = `Group ${groupMatches[0].label}`;
+          }
           break;
         }
       }
@@ -583,7 +1027,42 @@ export async function GET(
   );
 
   return new ImageResponse(
-    statsRows.length > 0 && statsStage ? (
+    groupStandings.length > 0 && groupStage ? (
+      <div style={rootStyle}>
+        <img
+          src={BACKGROUND_IMAGE_URL}
+          alt=""
+          width={1200}
+          height={630}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.62,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            background:
+              "linear-gradient(90deg, rgba(7, 17, 31, 0.96) 0%, rgba(7, 17, 31, 0.82) 48%, rgba(7, 17, 31, 0.22) 100%), radial-gradient(circle at 82% 22%, rgba(45, 212, 191, 0.24), transparent 28%)",
+          }}
+        />
+        <GroupResultsContent
+          title={title}
+          stageLabel={groupStage.title || `Stage ${groupStage.order ?? ""}`.trim()}
+          stageDateLabel={
+            formatDateRange(groupStage.startDate, groupStage.endDate) || ""
+          }
+          groupLabel={groupDisplayLabel}
+          standings={groupStandings}
+        />
+      </div>
+    ) : statsRows.length > 0 && statsStage ? (
       <div style={rootStyle}>
         <img
           src={BACKGROUND_IMAGE_URL}
