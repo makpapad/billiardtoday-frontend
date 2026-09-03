@@ -4268,10 +4268,11 @@ export function TournamentEventsContent({
     }
 
     // Small groups (2-4 players): spread the player columns across the full
-    // available width so names stay readable and rows align. min-content keeps
-    // names whole; 1fr distributes the leftover space evenly.
+    // available width. Equal tracks (fixed lower bound, not content-based) keep
+    // every row and the header perfectly aligned; 1fr distributes leftover
+    // space evenly. Long names truncate only when a track gets very narrow.
     if (maxPlayers <= 0) return "";
-    return `repeat(${maxPlayers}, minmax(min-content, 1fr))`;
+    return `repeat(${maxPlayers}, minmax(min(100%, 13ch), 1fr))`;
   }, [filteredActiveStageGroups, previewColumnCount]);
   const previewHeaderCount = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return 0;
