@@ -6369,13 +6369,8 @@ export function TournamentEventsContent({
                                                     d="M9 5l7 7-7 7"
                                                   />
                                                 </svg>
-                                                <span className="whitespace-nowrap font-semibold">
-                                                  {filteredActiveStageGroups.length > 0
-                                                    ? formatStageMatchLabel(
-                                                        stage,
-                                                        filteredActiveStageGroups[0],
-                                                      )
-                                                    : "Group"}
+                                                <span className="w-[92px] shrink-0 truncate font-semibold">
+                                                  Group
                                                 </span>
                                                 <div
                                                   className="ml-5 grid min-w-0 flex-1 items-center gap-x-7"
@@ -6881,7 +6876,7 @@ export function TournamentEventsContent({
                                                         d="M9 5l7 7-7 7"
                                                       />
                                                     </svg>
-                                                    <div className="font-semibold text-gray-700 dark:text-gray-200">
+                                                    <div className="w-[92px] shrink-0 truncate font-semibold text-gray-700 dark:text-gray-200">
                                                       {formatStageMatchLabel(stage, group)}
                                                     </div>
                                                     {!isExpanded ? (
