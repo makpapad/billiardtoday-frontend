@@ -463,13 +463,14 @@ const GroupResultsContent = ({
     side: "player1" | "player2",
   ) => getCountryFlagCdnUrl(match[side]?.country ?? null, 40);
 
-  const twoColumns = matches.length > 4;
-  const leftMatches = twoColumns
-    ? matches.filter((_, index) => index % 2 === 0)
-    : matches;
-  const rightMatches = twoColumns
-    ? matches.filter((_, index) => index % 2 === 1)
-    : [];
+  const columnCount =
+    matches.length > 8 ? 3 : matches.length > 4 ? 2 : 1;
+  const matchColumns: NormalizedGroupMatch[][] = [];
+  for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
+    matchColumns.push(
+      matches.filter((_, index) => index % columnCount === columnIndex),
+    );
+  }
 
   const renderMatch = (match: NormalizedGroupMatch) => {
     const topFlag = flagOf(match, "player1");
@@ -751,21 +752,21 @@ const GroupResultsContent = ({
               overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", flex: 1, padding: "4px 16px" }}>
-              {leftMatches.map(renderMatch)}
-            </div>
-            {twoColumns ? (
+            {matchColumns.map((columnMatches, columnIndex) => (
               <div
+                key={columnIndex}
                 style={{
                   display: "flex",
                   flex: 1,
-                  padding: "4px 16px",
-                  borderLeft: "1px solid rgba(255,255,255,0.1)",
+                  flexDirection: "column",
+                  padding: "4px 14px",
+                  borderLeft:
+                    columnIndex > 0 ? "1px solid rgba(255,255,255,0.1)" : "none",
                 }}
               >
-                {rightMatches.map(renderMatch)}
+                {columnMatches.map(renderMatch)}
               </div>
-            ) : null}
+            ))}
           </div>
         </div>
 
