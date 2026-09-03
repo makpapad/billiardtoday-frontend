@@ -141,6 +141,26 @@ const enrichWithCountries = async (
       entry.item.state = { ...entry.item.state, playerBCountry: country };
     }
   }
+
+  // Strip provider photos: we must not hotlink the external source's player
+  // images from visitor browsers. The avatar falls back to stable initials,
+  // which also avoids flicker while remote images load/fail every poll.
+  for (const item of items) {
+    if (
+      item.state.playerAPhotoUrl ||
+      item.state.playerBPhotoUrl ||
+      item.state.playerAPhotoMainUrl ||
+      item.state.playerBPhotoMainUrl
+    ) {
+      item.state = {
+        ...item.state,
+        playerAPhotoUrl: null,
+        playerBPhotoUrl: null,
+        playerAPhotoMainUrl: null,
+        playerBPhotoMainUrl: null,
+      };
+    }
+  }
   return items;
 };
 
