@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { NormalizedEventStage } from "./types";
 import { computeStageCountryStats } from "./utils";
 
@@ -112,6 +113,22 @@ export default function StageCountryStats({
       : null;
 
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [shareMenuPosition, setShareMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const shareButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const openShareMenu = () => {
+    const button = shareButtonRef.current;
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      const menuWidth = 224;
+      const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+      setShareMenuPosition({ top: rect.bottom + 6, left });
+    }
+    setShareMenuOpen(true);
+  };
 
   const handlePrimaryShareClick = async () => {
     if (!shareHref) return;
@@ -316,8 +333,9 @@ export default function StageCountryStats({
         <div className="flex justify-end">
           {shareHref ? (
             <button
+              ref={shareButtonRef}
               type="button"
-              onClick={() => setShareMenuOpen(true)}
+              onClick={openShareMenu}
               title="Share this stage (image + link)"
               aria-label="Share this stage"
               aria-haspopup="true"
@@ -331,16 +349,23 @@ export default function StageCountryStats({
         </div>
       </div>
 
-      {/* Share menu (fallback when the native share sheet is unavailable) */}
-      {shareMenuOpen && shareHref ? (
-        <>
-          <button
-            type="button"
-            aria-label="Close share menu"
-            className="fixed inset-0 z-20 cursor-default"
-            onClick={() => setShareMenuOpen(false)}
-          />
-          <div className="absolute right-3 top-10 z-30 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+      {/* Share menu — portal-rendered so the card's overflow-hidden cannot clip it */}
+      {shareMenuOpen && shareHref && shareMenuPosition && typeof document !== "undefined"
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                aria-label="Close share menu"
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setShareMenuOpen(false)}
+              />
+              <div
+                className="fixed z-50 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+                style={{
+                  top: shareMenuPosition.top,
+                  left: shareMenuPosition.left,
+                }}
+              >
             <p className="px-3.5 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
               Share
             </p>
@@ -383,10 +408,12 @@ export default function StageCountryStats({
               className="flex items-center px-3.5 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
             >
               Download image
-            </a>
-          </div>
-        </>
-      ) : null}
+              </a>
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
 
       {/* Rotating country rows (slide-up carousel) */}
       <div className="overflow-hidden" style={{ height: ROW_HEIGHT_PX }}>
