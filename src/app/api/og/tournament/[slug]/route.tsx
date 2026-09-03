@@ -16,7 +16,10 @@ import {
 } from "@/app/tournaments/events/utils";
 import type { NormalizedEventStage } from "@/app/tournaments/events/types";
 
-export const runtime = "edge";
+// Node runtime: the @vercel/og edge bundle throws layout errors in this
+// environment ("Expected <div> to have explicit display:flex...") — the
+// Node implementation renders the same ImageResponse reliably.
+export const runtime = "nodejs";
 
 const SIZE = {
   width: 1200,
@@ -657,7 +660,19 @@ export async function GET(
 
   return new ImageResponse(
     (
-      <div style={sharedStyle}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          position: "relative",
+          overflow: "hidden",
+          background:
+            "linear-gradient(135deg, #07111f 0%, #10263c 44%, #0f766e 100%)",
+          color: "white",
+          fontFamily: "Arial, Helvetica, sans-serif",
+        }}
+      >
         <img
           src={BACKGROUND_IMAGE_URL}
           alt=""
@@ -683,7 +698,12 @@ export async function GET(
         />
         <LegacyContent
           title={title}
-          details={{ gameType: summary.gameType, dateLabel, locationLabel, stageLabel }}
+          details={{
+            gameType: summary.gameType,
+            dateLabel,
+            locationLabel,
+            stageLabel,
+          }}
         />
       </div>
     ),
