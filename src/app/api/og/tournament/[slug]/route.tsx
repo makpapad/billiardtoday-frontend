@@ -117,7 +117,7 @@ const COLUMN_LABELS: Array<{ key: keyof typeof COLUMN_WIDTHS; label: string }> =
   { key: "qualPct", label: "QUAL %" },
   { key: "avg", label: "G.AVG" },
 ];
-const MAX_TABLE_ROWS = 9;
+const MAX_TABLE_ROWS = 8;
 
 /* Every div below carries an explicit display so satori never trips on a
    multi-child block element. */
@@ -322,7 +322,7 @@ const StatsContent = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        padding: "32px 56px 30px",
+        padding: "28px 56px 22px",
       }}
     >
       <div
@@ -336,9 +336,9 @@ const StatsContent = ({
         <img
           src={BRAND_LOGO_URL}
           alt=""
-          width={164}
-          height={56}
-          style={{ width: 164, height: 56, objectFit: "contain" }}
+          width={150}
+          height={52}
+          style={{ width: 150, height: 52, objectFit: "contain" }}
         />
         <div
           style={{
@@ -378,7 +378,7 @@ const StatsContent = ({
       <div
         style={{
           display: "flex",
-          marginTop: 18,
+          marginTop: 14,
           flexDirection: "column",
         }}
       >
@@ -406,7 +406,7 @@ const StatsContent = ({
         </span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 12 }}>
         <StatTable rows={rows} />
       </div>
     </div>
