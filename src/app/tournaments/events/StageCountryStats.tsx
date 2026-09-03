@@ -388,7 +388,7 @@ export default function StageCountryStats({
       onMouseLeave={() => setPaused(false)}
     >
       {/* Header row: label + flag chips on the left, column titles above the numbers */}
-      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_auto] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_auto] sm:gap-x-6 sm:px-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem] sm:gap-x-6 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
             By country
@@ -445,23 +445,6 @@ export default function StageCountryStats({
         </div>
         <div className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
           Qual %
-        </div>
-        <div className="flex justify-end">
-          {shareHref ? (
-            <button
-              ref={shareButtonRef}
-              type="button"
-              onClick={openShareMenu}
-              title="Share this stage (image + link)"
-              aria-label="Share this stage"
-              aria-haspopup="true"
-              aria-expanded={shareMenuOpen}
-              className="flex h-7 items-center gap-1.5 rounded-full bg-white/15 px-2.5 text-[11px] font-bold text-white ring-1 ring-white/40 transition hover:bg-white/25 hover:text-white sm:px-3 sm:text-xs"
-            >
-              <ShareIcon />
-              <span className="hidden sm:inline">Share</span>
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -604,7 +587,7 @@ export default function StageCountryStats({
           {stats.map((stat) => (
             <div
               key={stat.id}
-              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_auto] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_auto] sm:gap-x-6 sm:px-6"
+              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem] sm:gap-x-6 sm:px-6"
               style={{ height: ROW_HEIGHT_PX }}
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -632,11 +615,33 @@ export default function StageCountryStats({
               <div className="text-center text-xl font-extrabold tabular-nums text-white sm:text-2xl">
                 {formatQualificationPercent(stat.qualified, stat.entered)}
               </div>
-              <div />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Bottom row: share this stage (kept out of the column grid so it
+          cannot affect number alignment) */}
+      {shareHref ? (
+        <div className="flex items-center justify-end gap-3 border-t border-white/15 px-3 py-1.5 sm:px-6">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60 sm:text-[11px]">
+            Share this stage
+          </span>
+          <button
+            ref={shareButtonRef}
+            type="button"
+            onClick={openShareMenu}
+            title="Share this stage (image + link)"
+            aria-label="Share this stage"
+            aria-haspopup="true"
+            aria-expanded={shareMenuOpen}
+            className="flex h-7 items-center gap-1.5 rounded-full bg-white/15 px-2.5 text-[11px] font-bold text-white ring-1 ring-white/40 transition hover:bg-white/25 hover:text-white sm:px-3 sm:text-xs"
+          >
+            <ShareIcon />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
