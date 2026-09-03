@@ -17,8 +17,10 @@ import { computeStageCountryStats } from "./utils";
  * filtered through onSelectCountry), clicking the active flag again clears
  * the filter.
  *
- * The share icon downloads the social/OG image (same PNG the link preview
- * uses) for the current stage via eventDocumentId.
+ * The share button prefers the native share sheet (Windows / mobile) with the
+ * social/OG image attached (same PNG the link preview uses for the current
+ * stage via eventDocumentId) and falls back to an in-page menu with the
+ * social destinations, copy-link and download.
  */
 
 const ROW_HEIGHT_PX = 64;
@@ -107,6 +109,95 @@ export default function StageCountryStats({
         )}`
       : null;
 
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+
+  const handlePrimaryShareClick = async () => {
+    if (!shareHref) return;
+    // Prefer the native share sheet (Windows / mobile) with the PNG attached.
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function"
+    ) {
+      try {
+        const response = await fetch(shareHref);
+        const blob = await response.blob();
+        const file = new File([blob], "billiardtoday-country-stats.png", {
+          type: "image/png",
+        });
+        if (
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] })
+        ) {
+          await navigator.share({
+            files: [file],
+            title:
+              typeof document !== "undefined"
+                ? document.title
+                : "Billiard Today",
+          });
+          return;
+        }
+      } catch (error) {
+        // AbortError = the user closed the sheet — do nothing.
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        // Anything else (unsupported, network failure) → fall through to the
+        // in-page share menu.
+      }
+    }
+    setShareMenuOpen(true);
+  };
+
+  const handleCopyLink = async () => {
+    const pageUrl =
+      typeof window !== "undefined" ? window.location.href : "";
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(pageUrl);
+      }
+    } catch {
+      // Clipboard can fail on insecure contexts — the menu item still shows.
+    }
+    setShareMenuOpen(false);
+  };
+
+  const sharePageUrl =
+    typeof window !== "undefined" ? window.location.href : "";
+  const sharePageText =
+    typeof document !== "undefined"
+      ? document.title || "Billiard Today"
+      : "Billiard Today";
+  const encodedShareUrl = encodeURIComponent(sharePageUrl);
+  const encodedShareText = encodeURIComponent(sharePageText);
+  const shareTargets = [
+    {
+      key: "facebook",
+      label: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}`,
+    },
+    {
+      key: "x",
+      label: "X (Twitter)",
+      href: `https://twitter.com/intent/tweet?url=${encodedShareUrl}&text=${encodedShareText}`,
+    },
+    {
+      key: "whatsapp",
+      label: "WhatsApp",
+      href: `https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}`,
+    },
+    {
+      key: "telegram",
+      label: "Telegram",
+      href: `https://t.me/share/url?url=${encodedShareUrl}&text=${encodedShareText}`,
+    },
+    {
+      key: "linkedin",
+      label: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedShareUrl}`,
+    },
+  ];
+
   return (
     <div
       className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-500 shadow-lg ring-1 ring-white/20 transition-shadow hover:shadow-xl dark:ring-white/10"
@@ -114,7 +205,7 @@ export default function StageCountryStats({
       onMouseLeave={() => setPaused(false)}
     >
       {/* Header row: label + flag chips on the left, column titles above the numbers */}
-      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_2.25rem] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_2.5rem] sm:gap-x-6 sm:px-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_auto] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_auto] sm:gap-x-6 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
             By country
@@ -174,18 +265,66 @@ export default function StageCountryStats({
         </div>
         <div className="flex justify-end">
           {shareHref ? (
-            <a
-              href={shareHref}
-              download="billiardtoday-country-stats.png"
-              title="Download share image (also used when this page is shared on social)"
-              aria-label="Download share image"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition hover:bg-white/20 hover:text-white"
+            <button
+              type="button"
+              onClick={handlePrimaryShareClick}
+              title="Share this stage (image + link)"
+              aria-label="Share this stage"
+              aria-haspopup="true"
+              aria-expanded={shareMenuOpen}
+              className="flex h-7 items-center gap-1.5 rounded-full bg-white/15 px-2.5 text-[11px] font-bold text-white ring-1 ring-white/40 transition hover:bg-white/25 hover:text-white sm:px-3 sm:text-xs"
             >
               <ShareIcon />
-            </a>
+              <span className="hidden sm:inline">Share</span>
+            </button>
           ) : null}
         </div>
       </div>
+
+      {/* Share menu (fallback when the native share sheet is unavailable) */}
+      {shareMenuOpen && shareHref ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close share menu"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setShareMenuOpen(false)}
+          />
+          <div className="absolute right-3 top-10 z-30 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+            <p className="px-3.5 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+              Share
+            </p>
+            {shareTargets.map((target) => (
+              <a
+                key={target.key}
+                href={target.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShareMenuOpen(false)}
+                className="flex items-center px-3.5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                {target.label}
+              </a>
+            ))}
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="flex w-full items-center px-3.5 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Copy link
+            </button>
+            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            <a
+              href={shareHref}
+              download="billiardtoday-country-stats.png"
+              onClick={() => setShareMenuOpen(false)}
+              className="flex items-center px-3.5 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
+            >
+              Download image
+            </a>
+          </div>
+        </>
+      ) : null}
 
       {/* Rotating country rows (slide-up carousel) */}
       <div className="overflow-hidden" style={{ height: ROW_HEIGHT_PX }}>
@@ -196,7 +335,7 @@ export default function StageCountryStats({
           {stats.map((stat) => (
             <div
               key={stat.id}
-              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_2.25rem] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_2.5rem] sm:gap-x-6 sm:px-6"
+              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_auto] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_auto] sm:gap-x-6 sm:px-6"
               style={{ height: ROW_HEIGHT_PX }}
             >
               <div className="flex min-w-0 items-center gap-3">
