@@ -370,12 +370,20 @@ export const buildStageMatchGroups = (
 
   groups.forEach((match, index) => {
     // KO rounds reuse the same match numbers across rounds (QF 1-4, SF 1-2,
-    // F 1) — key by round+number so they never merge into one group.
+    // F 1) — a named round separates them so they never merge into one group.
+    // Numeric "rounds" (e.g. imported group matches carrying a global match id
+    // like 4, 13, 22) must NOT split a round-robin group into per-match rows.
+    const namedRound =
+      match.round && !/^\d+$/.test(match.round.trim())
+        ? match.round.trim()
+        : null;
     const key =
-      match.round && match.number !== null
-        ? `${match.round}-${match.number}`
-        : match.number !== null
-          ? `${match.number}`
+      match.number !== null
+        ? namedRound
+          ? `${namedRound}-${match.number}`
+          : `${match.number}`
+        : namedRound
+          ? `${namedRound}-${match.id}`
           : match.id;
     if (!grouped[key]) {
       grouped[key] = {
