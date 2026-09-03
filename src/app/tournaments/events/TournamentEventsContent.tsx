@@ -41,6 +41,7 @@ import {
   buildGroupStandings,
   hasPlayedStageMatch,
   isDynamicPlaceholderPlayer,
+  resolveCountryBucketId,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
 import StageCountryStats from "./StageCountryStats";
@@ -64,7 +65,7 @@ import {
   BiathlonFinalRankingTable,
   BiathlonBracketModal,
 } from "./BiathlonTables";
-import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
 const BRACKET_STAGE_TYPES = new Set([
@@ -2074,6 +2075,8 @@ function StageRankingTable({
   eventRulesetKey = null,
   showNativePlayerNames = true,
   fivePins: fivePinsProp = false,
+  countryFilterId = null,
+  onClearCountryFilter,
 }: {
   stage: NormalizedEventStage;
   allStages?: NormalizedEventStage[];
@@ -2086,6 +2089,8 @@ function StageRankingTable({
   eventRulesetKey?: string | null;
   showNativePlayerNames?: boolean;
   fivePins?: boolean;
+  countryFilterId?: string | null;
+  onClearCountryFilter?: () => void;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
@@ -2387,8 +2392,13 @@ function StageRankingTable({
     );
   const trailingTotalsColSpan =
     2 + (showStageHighRun2Column ? 1 : 0) + (showBestAverageColumn || artistic ? 1 : 0);
+  const countryFilteredResults = countryFilterId
+    ? visibleResults.filter((result) =>
+        resolveCountryBucketId(result.playerCountry) === countryFilterId,
+      )
+    : visibleResults;
   const stageGeneralAverage = useMemo(() => {
-    const totals = visibleResults.reduce(
+    const totals = countryFilteredResults.reduce(
       (acc, result) => {
         const points = result.points;
         const innings = result.innings;
@@ -2412,17 +2422,17 @@ function StageRankingTable({
 
     if (totals.innings <= 0) return null;
     return totals.points / totals.innings;
-  }, [visibleResults]);
+  }, [visibleResults, countryFilterId]);
   const stageTotals = useMemo(
     () =>
-      visibleResults.reduce(
+      countryFilteredResults.reduce(
         (acc, result) => ({
           points: acc.points + (result.points ?? 0),
           innings: acc.innings + (result.innings ?? 0),
         }),
         { points: 0, innings: 0 },
       ),
-    [visibleResults],
+    [visibleResults, countryFilterId],
   );
   const completedStageGroups = useMemo(() => {
     const completed = new Set<number>();
@@ -2531,8 +2541,34 @@ function StageRankingTable({
     );
   });
 
+  const filteredCountryLabel = countryFilterId
+    ? getCountryLabel(countryFilteredResults[0]?.playerCountry ?? null)
+    : null;
+
   return (
     <div className="flex flex-col gap-2">
+      {countryFilterId && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
+          <span className="flex min-w-0 items-center gap-2 font-medium">
+            <span className="truncate">
+              Showing only {filteredCountryLabel ?? countryFilterId}
+            </span>
+            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/60 dark:text-blue-200">
+              {countryFilteredResults.length}{" "}
+              {countryFilteredResults.length === 1 ? "player" : "players"}
+            </span>
+          </span>
+          {onClearCountryFilter ? (
+            <button
+              type="button"
+              onClick={onClearCountryFilter}
+              className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold text-blue-700 transition hover:bg-blue-200 dark:text-blue-200 dark:hover:bg-blue-900/60"
+            >
+              Clear ✕
+            </button>
+          ) : null}
+        </div>
+      )}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
           <thead className="bg-blue-600 text-white">
@@ -2625,7 +2661,7 @@ function StageRankingTable({
             </tr>
           </thead>
           <tbody>
-            {visibleResults.map((result, index) => {
+            {countryFilteredResults.map((result, index) => {
             const stageAverageValue = getStageResultAverageValue(result);
             const highlightAverage =
               !artistic &&
@@ -2809,6 +2845,16 @@ function StageRankingTable({
               </tr>
             );
             })}
+            {countryFilterId && countryFilteredResults.length === 0 && (
+              <tr className="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+                <td
+                  colSpan={12}
+                  className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No players from this country in the stage.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -3025,6 +3071,15 @@ export function TournamentEventsContent({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [previewColumnCount, setPreviewColumnCount] = useState(7);
+  const [countryFilter, setCountryFilter] = useState<{
+    stageDocumentId: string | null;
+    countryId: string | null;
+  }>({ stageDocumentId: null, countryId: null });
+  // Country filter (flag chips on the by-country strip) is per stage — reset
+  // whenever the active stage tab changes.
+  useEffect(() => {
+    setCountryFilter({ stageDocumentId: null, countryId: null });
+  }, [activeStageId]);
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
   );
@@ -5830,15 +5885,14 @@ export function TournamentEventsContent({
                           <div key={stage.id} className="flex flex-col gap-4">
                             {stageViewMode === "ranks" ? (
                               <div className="flex flex-col gap-3">
-                                {stageDateRange && (
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {stageDateRange}
+                                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+                                  <div className="min-w-0 truncate text-sm text-gray-500 dark:text-gray-400">
+                                    {stageDateRange ?? ""}
                                   </div>
-                                )}
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                  <div className="min-w-0 max-w-full truncate px-2 text-center text-xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-2xl">
                                     Ranking - {stage.title || stage.order || ""}
                                   </div>
+                                  <div className="flex min-w-0 items-center justify-end">
                                   {showKoRoundRankingSelect ? (
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
                                       <button
@@ -5873,6 +5927,7 @@ export function TournamentEventsContent({
                                       ) : null}
                                     </div>
                                   ) : null}
+                                  </div>
                                 </div>
                                 {isBiathlonEvent(eventData) ? (
                                   isBracketStage(stage) ? (
@@ -5896,6 +5951,20 @@ export function TournamentEventsContent({
                                         ? eventStages[stageIndex + 1]
                                         : null
                                     }
+                                    selectedCountryId={
+                                      countryFilter.stageDocumentId ===
+                                      stage.documentId
+                                        ? countryFilter.countryId
+                                        : null
+                                    }
+                                    onSelectCountry={(countryId) =>
+                                      setCountryFilter({
+                                        stageDocumentId: countryId
+                                          ? stage.documentId
+                                          : null,
+                                        countryId,
+                                      })
+                                    }
                                   />
                                   <StageRankingTable
                                   stage={stage}
@@ -5909,6 +5978,18 @@ export function TournamentEventsContent({
                                   eventRulesetKey={eventRulesetKey}
                                   showNativePlayerNames={showNativePlayerNames}
                                   fivePins={isFivePinsEvent(eventData)}
+                                  countryFilterId={
+                                    countryFilter.stageDocumentId ===
+                                    stage.documentId
+                                      ? countryFilter.countryId
+                                      : null
+                                  }
+                                  onClearCountryFilter={() =>
+                                    setCountryFilter({
+                                      stageDocumentId: null,
+                                      countryId: null,
+                                    })
+                                  }
                                   />
                                 </>
                                 )}

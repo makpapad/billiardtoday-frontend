@@ -12,6 +12,7 @@ import type {
   PlayerRecord,
   GroupStanding,
 } from "./types";
+import { getCountryCode } from "@/lib/countryFlags";
 
 export const toNumber = (value: unknown): number | null => {
   if (typeof value === "number" && !Number.isNaN(value)) return value;
@@ -771,3 +772,20 @@ export const buildGroupStandings = (
 
 export const formatRecord = (record: PlayerRecord): string =>
   `${record.wins}-${record.draws}-${record.losses}`;
+
+/**
+ * Bucket id for grouping/filtering players by country across mixed formats
+ * ("BE", "belgium", "Greece", "Ελλάδα", …). Prefers the ISO code when the
+ * raw value resolves to one, otherwise falls back to the normalized raw text.
+ */
+export const resolveCountryBucketId = (
+  countryRaw: string | null | undefined,
+): string | null => {
+  if (!countryRaw) return null;
+  const trimmed = countryRaw.trim();
+  if (!trimmed) return null;
+  const code = getCountryCode(trimmed);
+  if (code) return `code:${code}`;
+  const normalized = trimmed.toLowerCase();
+  return normalized ? `raw:${normalized}` : null;
+};
