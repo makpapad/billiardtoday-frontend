@@ -117,7 +117,7 @@ const COLUMN_LABELS: Array<{ key: keyof typeof COLUMN_WIDTHS; label: string }> =
   { key: "qualPct", label: "QUAL %" },
   { key: "avg", label: "G.AVG" },
 ];
-const MAX_TABLE_ROWS = 10;
+const MAX_TABLE_ROWS = 9;
 
 /* Every div below carries an explicit display so satori never trips on a
    multi-child block element. */
@@ -187,7 +187,7 @@ const StatTable = ({ rows }: { rows: StageCountryStatRow[] }) => {
           style={{
             display: "flex",
             alignItems: "center",
-            padding: "7px 20px",
+            padding: "6px 20px",
             borderBottom:
               index < visibleRows.length - 1
                 ? "1px solid rgba(255, 255, 255, 0.07)"
