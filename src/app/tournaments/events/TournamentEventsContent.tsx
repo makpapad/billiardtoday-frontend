@@ -43,6 +43,7 @@ import {
   isDynamicPlaceholderPlayer,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
+import StageCountryStats from "./StageCountryStats";
 import SingleElimBracket, {
   type BracketMatchView,
   type BracketRoundView,
@@ -5782,7 +5783,8 @@ export function TournamentEventsContent({
                   {/* Tab Content */}
                   {!showPublishedFinalResults && eventStages.length > 0 && (
                     <div className="mt-4">
-                      {eventStages.map((stage: NormalizedEventStage) => {
+                      {eventStages.map(
+                        (stage: NormalizedEventStage, stageIndex: number) => {
                         if (activeStageId !== stage.id) return null;
 
                         const stageDateRange = formatDateRange(
@@ -5886,7 +5888,16 @@ export function TournamentEventsContent({
                                   />
                                   )
                                 ) : (
-                                <StageRankingTable
+                                <>
+                                  <StageCountryStats
+                                    stage={stage}
+                                    nextStage={
+                                      stageIndex + 1 < eventStages.length
+                                        ? eventStages[stageIndex + 1]
+                                        : null
+                                    }
+                                  />
+                                  <StageRankingTable
                                   stage={stage}
                                   allStages={eventStages}
                                   embedded={embedded}
@@ -5898,7 +5909,8 @@ export function TournamentEventsContent({
                                   eventRulesetKey={eventRulesetKey}
                                   showNativePlayerNames={showNativePlayerNames}
                                   fivePins={isFivePinsEvent(eventData)}
-                                />
+                                  />
+                                </>
                                 )}
                               </div>
                             ) : (
