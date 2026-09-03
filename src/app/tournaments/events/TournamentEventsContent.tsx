@@ -4292,11 +4292,16 @@ export function TournamentEventsContent({
   }, [filteredActiveStageGroups, previewColumnCount]);
   const previewHeaderCount = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return 0;
-    const minPlayers = filteredActiveStageGroups.reduce((min, group) => {
-      return Math.min(min, getGroupPreviewPlayers(group).length);
-    }, Number.POSITIVE_INFINITY);
-    if (!Number.isFinite(minPlayers) || minPlayers <= 0) return 0;
-    return Math.min(minPlayers, previewColumnCount);
+    // Header must cover the LARGEST group (same count the grid template uses),
+    // otherwise a 6-player group next to 5-player groups loses its "Player 6"
+    // header label. Smaller groups simply leave the trailing track empty.
+    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
+      return Math.max(max, getGroupPreviewPlayers(group).length);
+    }, 0);
+    if (maxPlayers <= 0) return 0;
+    return maxPlayers >= 5
+      ? Math.min(maxPlayers, previewColumnCount)
+      : maxPlayers;
   }, [filteredActiveStageGroups, previewColumnCount]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
