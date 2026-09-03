@@ -4264,7 +4264,12 @@ export function TournamentEventsContent({
     }, 0);
 
     if (maxPlayers >= 5) {
-      return `repeat(${previewColumnCount}, minmax(0, 1fr))`;
+      // Large groups: use up to previewColumnCount tracks (wraps to extra rows
+      // when the group is bigger than the screen allows), but never more
+      // columns than there are players, so wide screens don't leave empty
+      // tracks at the end of the row.
+      const columnCount = Math.max(1, Math.min(maxPlayers, previewColumnCount));
+      return `repeat(${columnCount}, minmax(0, 1fr))`;
     }
 
     // Small groups (2-4 players): spread the player columns across the full
