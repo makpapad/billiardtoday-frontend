@@ -1,127 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  getCountryFlagCdnUrl,
-  getCountryLabel,
-} from "@/lib/countryFlags";
-import type {
-  NormalizedEventStage,
-  NormalizedGroupPlayer,
-  StageMatchGroup,
-} from "./types";
-import {
-  buildStageMatchGroups,
-  hasPlayedStageMatch,
-  isDynamicPlaceholderPlayer,
-  resolveCountryBucketId,
-} from "./utils";
+import type { NormalizedEventStage } from "./types";
+import { computeStageCountryStats } from "./utils";
 
 /**
  * StageCountryStats — compact "who advanced, by country" strip shown above
  * the stage ranking table once a round-robin (group) stage has fully
  * finished and a next stage exists.
  *
- * - Entered:   unique players of this stage grouped by country.
- * - Qualified: of those, how many also appear in the NEXT stage (objective —
- *              no per-event rules to maintain; once this stage is complete
- *              the next stage already holds the real qualifiers).
- * - Qual %:    qualified / entered per country (the general average is shown
- *              in the ranking table below, so it is not repeated here).
+ * Columns: Entered | Qualified | Qual % (qualified / entered per country).
+ * The general average per country is not repeated here — the ranking table
+ * below shows the stage General AVG (filtered to the selected country).
  *
- * Countries rotate vertically (slide-up carousel, one every 3s, paused on
+ * Countries rotate vertically (slide-up carousel, 3s per country, paused on
  * hover). Each country has a small flag chip on the left; clicking a flag
  * selects that country (carousel jumps to it and the ranking table below is
  * filtered through onSelectCountry), clicking the active flag again clears
- * the filter. Hidden for bracket stages and the final stage (no next one).
+ * the filter.
+ *
+ * The share icon downloads the social/OG image (same PNG the link preview
+ * uses) for the current stage via eventDocumentId.
  */
 
 const ROW_HEIGHT_PX = 64;
 const ROTATE_MS = 3000;
-
-const BRACKET_STAGE_TYPES = new Set([
-  "double_elimination",
-  "single_elimination",
-  "brackets",
-  "bracket",
-  "knockout",
-]);
-
-type CountryStat = {
-  id: string;
-  label: string;
-  flagUrl: string | null;
-  entered: number;
-  qualified: number;
-  average: number | null;
-};
-
-type PlayerStageTotals = {
-  country: string | null;
-  points: number;
-  innings: number;
-};
-
-const isBracketStageType = (
-  stage: NormalizedEventStage | null | undefined,
-): boolean => {
-  if (!stage) return false;
-  if (BRACKET_STAGE_TYPES.has(stage.stageType?.trim().toLowerCase() ?? ""))
-    return true;
-  const title = stage.title.trim().toLowerCase();
-  if (stage.isFinal && title.includes("final tournament")) return true;
-  return false;
-};
-
-const stagePlayerKey = (player: NormalizedGroupPlayer): string | null => {
-  if (!player?.name || isDynamicPlaceholderPlayer(player)) return null;
-  if (player.documentId) return `doc:${player.documentId}`;
-  if (player.id !== null) return `id:${player.id}`;
-  const nameKey = player.name.trim().toLowerCase();
-  return nameKey ? `name:${nameKey}` : null;
-};
-
-const finiteNumber = (value: number | null | undefined): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : 0;
-
-const stageIsComplete = (stage: NormalizedEventStage): boolean => {
-  const groups = buildStageMatchGroups(stage.groups);
-  if (groups.length === 0) return false;
-  return groups.every(
-    (group: StageMatchGroup) =>
-      group.matches.length > 0 &&
-      group.matches.every((match) => hasPlayedStageMatch(match)),
-  );
-};
-
-const collectStagePlayerTotals = (
-  stage: NormalizedEventStage,
-): Map<string, PlayerStageTotals> => {
-  const byKey = new Map<string, PlayerStageTotals>();
-  buildStageMatchGroups(stage.groups).forEach((group) => {
-    group.matches.forEach((match) => {
-      [match.top, match.bottom].forEach((entry) => {
-        const key = stagePlayerKey(entry.player);
-        if (!key) return;
-        const existing = byKey.get(key);
-        const points = finiteNumber(entry.player.points);
-        const innings = finiteNumber(entry.player.innings);
-        if (existing) {
-          existing.points += points;
-          existing.innings += innings;
-          if (!existing.country && entry.player.country) {
-            existing.country = entry.player.country;
-          }
-          return;
-        }
-        byKey.set(key, {
-          country: entry.player.country ?? null,
-          points,
-          innings,
-        });
-      });
-    });
-  });
-  return byKey;
-};
 
 const formatQualificationPercent = (
   qualified: number,
@@ -131,92 +32,40 @@ const formatQualificationPercent = (
   return `${Math.round((qualified / entered) * 100)}%`;
 };
 
+const ShareIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className="h-4 w-4"
+  >
+    <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+    <path d="M16 6l-4-4-4 4" />
+    <path d="M12 2v13" />
+  </svg>
+);
+
 export default function StageCountryStats({
   stage,
   nextStage,
   selectedCountryId = null,
   onSelectCountry,
+  eventDocumentId = null,
 }: {
   stage: NormalizedEventStage;
   nextStage: NormalizedEventStage | null | undefined;
   selectedCountryId?: string | null;
   onSelectCountry?: (countryId: string | null) => void;
+  eventDocumentId?: string | null;
 }) {
-  const stats = useMemo<CountryStat[]>(() => {
-    if (!nextStage || isBracketStageType(stage) || stage.isFinal) return [];
-    if (!stageIsComplete(stage)) return [];
-
-    const stagePlayers = collectStagePlayerTotals(stage);
-    if (stagePlayers.size === 0) return [];
-
-    const nextStageKeys = new Set(
-      collectStagePlayerTotals(nextStage).keys(),
-    );
-
-    const byCountry = new Map<
-      string,
-      {
-        label: string;
-        flagUrl: string | null;
-        entered: number;
-        qualified: number;
-        points: number;
-        innings: number;
-      }
-    >();
-    stagePlayers.forEach((totals) => {
-      const bucketId = resolveCountryBucketId(totals.country);
-      if (!bucketId) return;
-      const existing = byCountry.get(bucketId);
-      if (existing) {
-        existing.entered += 1;
-        existing.points += totals.points;
-        existing.innings += totals.innings;
-        return;
-      }
-      byCountry.set(bucketId, {
-        label:
-          getCountryLabel(totals.country) ??
-          totals.country ??
-          bucketId,
-        flagUrl: getCountryFlagCdnUrl(totals.country, 40),
-        entered: 1,
-        qualified: 0,
-        points: totals.points,
-        innings: totals.innings,
-      });
-    });
-
-    let qualifiedTotal = 0;
-    stagePlayers.forEach((_totals, playerKey) => {
-      if (!nextStageKeys.has(playerKey)) return;
-      const totals = stagePlayers.get(playerKey) ?? null;
-      const bucketId = resolveCountryBucketId(totals?.country ?? null);
-      if (!bucketId) return;
-      const entry = byCountry.get(bucketId);
-      if (entry) entry.qualified += 1;
-      qualifiedTotal += 1;
-    });
-
-    const rows = Array.from(byCountry.entries())
-      .map(([id, value]) => ({
-        id,
-        ...value,
-        average:
-          value.innings > 0 ? value.points / value.innings : null,
-      }))
-      .filter((row) => row.entered > 0)
-      .sort(
-        (a, b) =>
-          b.entered - a.entered ||
-          b.qualified - a.qualified ||
-          (b.average ?? -1) - (a.average ?? -1) ||
-          a.label.localeCompare(b.label),
-      );
-
-    if (rows.length === 0 || qualifiedTotal === 0) return [];
-    return rows;
-  }, [stage, nextStage]);
+  const stats = useMemo(
+    () => computeStageCountryStats(stage, nextStage),
+    [stage, nextStage],
+  );
 
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -251,6 +100,13 @@ export default function StageCountryStats({
     onSelectCountry(countryId);
   };
 
+  const shareHref =
+    eventDocumentId && stage.documentId
+      ? `/api/og/tournament/${encodeURIComponent(eventDocumentId)}?stage=${encodeURIComponent(
+          stage.documentId,
+        )}`
+      : null;
+
   return (
     <div
       className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-500 shadow-lg ring-1 ring-white/20 transition-shadow hover:shadow-xl dark:ring-white/10"
@@ -258,7 +114,7 @@ export default function StageCountryStats({
       onMouseLeave={() => setPaused(false)}
     >
       {/* Header row: label + flag chips on the left, column titles above the numbers */}
-      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem] sm:gap-x-6 sm:px-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_2.25rem] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_2.5rem] sm:gap-x-6 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
             By country
@@ -274,7 +130,11 @@ export default function StageCountryStats({
                     type="button"
                     aria-label={`Show only ${stat.label}`}
                     aria-pressed={isSelected}
-                    title={isSelected ? `${stat.label} — click to clear filter` : `Filter by ${stat.label}`}
+                    title={
+                      isSelected
+                        ? `${stat.label} — click to clear filter`
+                        : `Filter by ${stat.label}`
+                    }
                     onClick={() => handleFlagClick(stat.id, index)}
                     className={[
                       "flex h-5 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[3px] transition-all",
@@ -312,6 +172,19 @@ export default function StageCountryStats({
         <div className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
           Qual %
         </div>
+        <div className="flex justify-end">
+          {shareHref ? (
+            <a
+              href={shareHref}
+              download="billiardtoday-country-stats.png"
+              title="Download share image (also used when this page is shared on social)"
+              aria-label="Download share image"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition hover:bg-white/20 hover:text-white"
+            >
+              <ShareIcon />
+            </a>
+          ) : null}
+        </div>
       </div>
 
       {/* Rotating country rows (slide-up carousel) */}
@@ -323,7 +196,7 @@ export default function StageCountryStats({
           {stats.map((stat) => (
             <div
               key={stat.id}
-              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem] sm:gap-x-6 sm:px-6"
+              className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem_2.25rem] items-center gap-x-2 px-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem_2.5rem] sm:gap-x-6 sm:px-6"
               style={{ height: ROW_HEIGHT_PX }}
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -351,6 +224,7 @@ export default function StageCountryStats({
               <div className="text-center text-xl font-extrabold tabular-nums text-white sm:text-2xl">
                 {formatQualificationPercent(stat.qualified, stat.entered)}
               </div>
+              <div />
             </div>
           ))}
         </div>

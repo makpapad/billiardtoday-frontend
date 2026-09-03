@@ -5965,6 +5965,9 @@ export function TournamentEventsContent({
                                         countryId,
                                       })
                                     }
+                                    eventDocumentId={
+                                      eventData?.data?.documentId ?? null
+                                    }
                                   />
                                   <StageRankingTable
                                   stage={stage}

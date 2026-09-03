@@ -12,7 +12,7 @@ import type {
   PlayerRecord,
   GroupStanding,
 } from "./types";
-import { getCountryCode } from "@/lib/countryFlags";
+import { getCountryCode, getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 
 export const toNumber = (value: unknown): number | null => {
   if (typeof value === "number" && !Number.isNaN(value)) return value;
@@ -788,4 +788,180 @@ export const resolveCountryBucketId = (
   if (code) return `code:${code}`;
   const normalized = trimmed.toLowerCase();
   return normalized ? `raw:${normalized}` : null;
+};
+
+/* ------------------------------------------------------------------ */
+/* Stage by-country qualifier stats (shared by the events UI card and  */
+/* the social/OG image renderer — keep the two in sync)                */
+/* ------------------------------------------------------------------ */
+
+export type StageCountryStatRow = {
+  id: string;
+  label: string;
+  flagUrl: string | null;
+  entered: number;
+  qualified: number;
+  average: number | null;
+};
+
+const BRACKET_STAGE_TYPES_SET = new Set([
+  "double_elimination",
+  "single_elimination",
+  "brackets",
+  "bracket",
+  "knockout",
+]);
+
+export const stageIsBracketType = (
+  stage: NormalizedEventStage | null | undefined,
+): boolean => {
+  if (!stage) return false;
+  if (BRACKET_STAGE_TYPES_SET.has(stage.stageType?.trim().toLowerCase() ?? ""))
+    return true;
+  const title = stage.title.trim().toLowerCase();
+  if (stage.isFinal && title.includes("final tournament")) return true;
+  return false;
+};
+
+const stagePlayerKeyOf = (player: NormalizedGroupPlayer): string | null => {
+  if (!player?.name || isDynamicPlaceholderPlayer(player)) return null;
+  if (player.documentId) return `doc:${player.documentId}`;
+  if (player.id !== null) return `id:${player.id}`;
+  const nameKey = player.name.trim().toLowerCase();
+  return nameKey ? `name:${nameKey}` : null;
+};
+
+const finiteStageNumber = (value: number | null | undefined): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+const stageFullyPlayed = (stage: NormalizedEventStage): boolean => {
+  const groups = buildStageMatchGroups(stage.groups);
+  if (groups.length === 0) return false;
+  return groups.every(
+    (group: StageMatchGroup) =>
+      group.matches.length > 0 &&
+      group.matches.every((match) => hasPlayedStageMatch(match)),
+  );
+};
+
+type StagePlayerTotals = {
+  country: string | null;
+  points: number;
+  innings: number;
+};
+
+const collectStagePlayerTotals = (
+  stage: NormalizedEventStage,
+): Map<string, StagePlayerTotals> => {
+  const byKey = new Map<string, StagePlayerTotals>();
+  buildStageMatchGroups(stage.groups).forEach((group) => {
+    group.matches.forEach((match) => {
+      [match.top, match.bottom].forEach((entry) => {
+        const key = stagePlayerKeyOf(entry.player);
+        if (!key) return;
+        const existing = byKey.get(key);
+        const points = finiteStageNumber(entry.player.points);
+        const innings = finiteStageNumber(entry.player.innings);
+        if (existing) {
+          existing.points += points;
+          existing.innings += innings;
+          if (!existing.country && entry.player.country) {
+            existing.country = entry.player.country;
+          }
+          return;
+        }
+        byKey.set(key, {
+          country: entry.player.country ?? null,
+          points,
+          innings,
+        });
+      });
+    });
+  });
+  return byKey;
+};
+
+/**
+ * Entered / Qualified / Qual-% / G.AVG per country for a fully played
+ * round-robin stage that feeds a next stage.
+ * - Entered:   unique players of the stage (from its group matches).
+ * - Qualified: of those, how many also appear in the NEXT stage.
+ * - Average:   country points / innings (general average, classic team GA).
+ * Returns [] when the stage is bracket/final/incomplete or has no data.
+ */
+export const computeStageCountryStats = (
+  stage: NormalizedEventStage | null | undefined,
+  nextStage: NormalizedEventStage | null | undefined,
+): StageCountryStatRow[] => {
+  if (!stage || !nextStage) return [];
+  if (stageIsBracketType(stage) || stage.isFinal) return [];
+  if (!stageFullyPlayed(stage)) return [];
+
+  const stagePlayers = collectStagePlayerTotals(stage);
+  if (stagePlayers.size === 0) return [];
+
+  const nextStageKeys = new Set(
+    collectStagePlayerTotals(nextStage).keys(),
+  );
+
+  const byCountry = new Map<
+    string,
+    {
+      label: string;
+      flagUrl: string | null;
+      entered: number;
+      qualified: number;
+      points: number;
+      innings: number;
+    }
+  >();
+  stagePlayers.forEach((totals) => {
+    const bucketId = resolveCountryBucketId(totals.country);
+    if (!bucketId) return;
+    const existing = byCountry.get(bucketId);
+    if (existing) {
+      existing.entered += 1;
+      existing.points += totals.points;
+      existing.innings += totals.innings;
+      return;
+    }
+    byCountry.set(bucketId, {
+      label:
+        getCountryLabel(totals.country) ?? totals.country ?? bucketId,
+      flagUrl: getCountryFlagCdnUrl(totals.country, 40),
+      entered: 1,
+      qualified: 0,
+      points: totals.points,
+      innings: totals.innings,
+    });
+  });
+
+  let qualifiedTotal = 0;
+  stagePlayers.forEach((_totals, playerKey) => {
+    if (!nextStageKeys.has(playerKey)) return;
+    const totals = stagePlayers.get(playerKey) ?? null;
+    const bucketId = resolveCountryBucketId(totals?.country ?? null);
+    if (!bucketId) return;
+    const entry = byCountry.get(bucketId);
+    if (entry) entry.qualified += 1;
+    qualifiedTotal += 1;
+  });
+
+  const rows = Array.from(byCountry.entries())
+    .map(([id, value]) => ({
+      id,
+      ...value,
+      average: value.innings > 0 ? value.points / value.innings : null,
+    }))
+    .filter((row) => row.entered > 0)
+    .sort(
+      (a, b) =>
+        b.entered - a.entered ||
+        b.qualified - a.qualified ||
+        (b.average ?? -1) - (a.average ?? -1) ||
+        a.label.localeCompare(b.label),
+    );
+
+  if (rows.length === 0 || qualifiedTotal === 0) return [];
+  return rows;
 };
