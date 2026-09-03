@@ -6823,7 +6823,7 @@ export function TournamentEventsContent({
                                                         : "bg-gray-200/85 dark:bg-gray-700/60"),
                                                   )}
                                                 >
-                                                  <div className="flex items-center gap-1.5">
+                                                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
                                                     <svg
                                                       className={clsx(
                                                         "h-4 w-4 transition-transform",
@@ -6845,7 +6845,7 @@ export function TournamentEventsContent({
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
-                                                        className="ml-5 grid flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
+                                                        className="ml-5 grid min-w-0 flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
                                                         style={{
                                                           gridTemplateColumns:
                                                             previewGridTemplateColumns ||
