@@ -20,12 +20,11 @@ const BRAND_LOGO_URL = `${SITE_URL}/logo-billiardtoday.png`;
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? `${value.slice(0, maxLength - 1).trim()}...` : value;
 
-export const __ogDebug = computeStageCountryStats;
-
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
+  void computeStageCountryStats;
   const { slug } = await params;
   const summary = await resolveTournamentEventSummary(slug);
 
