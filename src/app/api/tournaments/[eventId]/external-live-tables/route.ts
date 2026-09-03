@@ -20,8 +20,6 @@ type CacheEntry = {
 
 const CACHE_TTL_MS = 8000;
 const cache = new Map<string, CacheEntry>();
-const EXTERNAL_LIVE_TABLES_ENABLED =
-  process.env.ENABLE_EXTERNAL_LIVE_TABLES === "true";
 
 const decodeHtml = (value: string) =>
   value
@@ -161,13 +159,6 @@ const parseFiveSixLiveTables = (
 };
 
 export async function GET(req: NextRequest, context: RouteContext) {
-  if (!EXTERNAL_LIVE_TABLES_ENABLED) {
-    return NextResponse.json(
-      { data: [], configured: false, disabled: true },
-      { status: 200 },
-    );
-  }
-
   const { eventId } = await context.params;
   const searchParams = req.nextUrl.searchParams;
   const competitionIdx =

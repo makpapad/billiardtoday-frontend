@@ -60,9 +60,6 @@ import {
   formatTournamentDate,
 } from "@/lib/tournamentSeo";
 
-const EXTERNAL_LIVE_TABLES_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_EXTERNAL_LIVE_TABLES === "true";
-
 type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
@@ -2333,7 +2330,7 @@ export function TournamentDetailPage({
   }, [summary.documentId]);
 
   useEffect(() => {
-    if (!EXTERNAL_LIVE_TABLES_ENABLED) {
+    if (!summary.externalLiveScoresEnabled) {
       setExternalLiveTableSessions([]);
       setExternalLiveTablesUpdatedAt(null);
       return;
@@ -2348,7 +2345,7 @@ export function TournamentDetailPage({
     const refreshExternalLiveTables = async () => {
       try {
         const response = await fetch(
-          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables`,
+          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables?competitionIdx=${encodeURIComponent(summary.externalLiveCompetitionIdx ?? "")}`,
           { cache: "no-store" },
         );
         const payload = (await response.json().catch(() => ({ data: [] }))) as {
@@ -2374,7 +2371,12 @@ export function TournamentDetailPage({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeView, summary.documentId]);
+  }, [
+    activeView,
+    summary.documentId,
+    summary.externalLiveScoresEnabled,
+    summary.externalLiveCompetitionIdx,
+  ]);
 
   useEffect(() => {
     if (activeView !== "tournament") {
