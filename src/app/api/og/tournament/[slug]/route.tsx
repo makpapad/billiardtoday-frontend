@@ -20,11 +20,27 @@ const BRAND_LOGO_URL = `${SITE_URL}/logo-billiardtoday.png`;
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? `${value.slice(0, maxLength - 1).trim()}...` : value;
 
+
+function LegacyProbe({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        color: "rgba(255, 255, 255, 0.8)",
+        fontSize: 20,
+        fontWeight: 600,
+        padding: "8px 0",
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  void computeStageCountryStats;
   const { slug } = await params;
   const summary = await resolveTournamentEventSummary(slug);
 
@@ -181,6 +197,7 @@ export async function GET(
                   ))}
                 </div>
               </div>
+              <LegacyProbe label={title} />
             </div>
           </div>
         </div>
