@@ -17,10 +17,11 @@ import { computeStageCountryStats } from "./utils";
  * filtered through onSelectCountry), clicking the active flag again clears
  * the filter.
  *
- * The share button prefers the native share sheet (Windows / mobile) with the
- * social/OG image attached (same PNG the link preview uses for the current
- * stage via eventDocumentId) and falls back to an in-page menu with the
- * social destinations, copy-link and download.
+ * The share button opens an in-page menu first: "Share image…" (native
+ * Windows/mobile share sheet with the PNG attached), the social destinations
+ * (Facebook / X / WhatsApp / Telegram / LinkedIn — page link, whose preview
+ * shows the same stats card), Copy link, Copy image (paste straight into a
+ * Facebook/WhatsApp composer) and Download image.
  */
 
 const ROW_HEIGHT_PX = 64;
@@ -118,6 +119,7 @@ export default function StageCountryStats({
       typeof navigator !== "undefined" &&
       typeof navigator.share === "function"
     ) {
+      setShareMenuOpen(false);
       try {
         const response = await fetch(shareHref);
         const blob = await response.blob();
@@ -147,6 +149,26 @@ export default function StageCountryStats({
       }
     }
     setShareMenuOpen(true);
+  };
+
+  const handleCopyImage = async () => {
+    if (!shareHref) return;
+    setShareMenuOpen(false);
+    try {
+      const response = await fetch(shareHref);
+      const blob = await response.blob();
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        typeof ClipboardItem !== "undefined"
+      ) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+      }
+    } catch {
+      // Clipboard image write can fail — leave the menu item as a best-effort.
+    }
   };
 
   const handleCopyLink = async () => {
@@ -267,7 +289,7 @@ export default function StageCountryStats({
           {shareHref ? (
             <button
               type="button"
-              onClick={handlePrimaryShareClick}
+              onClick={() => setShareMenuOpen(true)}
               title="Share this stage (image + link)"
               aria-label="Share this stage"
               aria-haspopup="true"
@@ -294,6 +316,13 @@ export default function StageCountryStats({
             <p className="px-3.5 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
               Share
             </p>
+            <button
+              type="button"
+              onClick={handlePrimaryShareClick}
+              className="flex w-full items-center px-3.5 py-2 text-left text-sm font-semibold text-gray-800 transition hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
+            >
+              Share image…
+            </button>
             {shareTargets.map((target) => (
               <a
                 key={target.key}
@@ -314,6 +343,13 @@ export default function StageCountryStats({
               Copy link
             </button>
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            <button
+              type="button"
+              onClick={handleCopyImage}
+              className="flex w-full items-center px-3.5 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Copy image
+            </button>
             <a
               href={shareHref}
               download="billiardtoday-country-stats.png"
