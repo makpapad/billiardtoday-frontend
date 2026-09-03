@@ -5,6 +5,7 @@ import {
   buildTournamentTitle,
 } from "@/lib/tournamentSeo";
 import { resolveTournamentEventSummary } from "@/lib/tournaments";
+import { computeStageCountryStats } from "@/app/tournaments/events/utils";
 
 export const runtime = "edge";
 
@@ -18,6 +19,8 @@ const BRAND_LOGO_URL = `${SITE_URL}/logo-billiardtoday.png`;
 
 const truncate = (value: string, maxLength: number) =>
   value.length > maxLength ? `${value.slice(0, maxLength - 1).trim()}...` : value;
+
+export const __ogDebug = computeStageCountryStats;
 
 export async function GET(
   _request: Request,
