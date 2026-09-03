@@ -6353,30 +6353,50 @@ export function TournamentEventsContent({
                                           </div>
                                         ) : (
                                           <>
-                                            <div className="hidden md:flex items-center gap-1.5 px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
-                                              <div className="flex min-w-[92px] items-center gap-1.5 pl-6">
-                                                <span>Group</span>
+                                            <div className="hidden md:flex items-center gap-1.5 px-2.5 pb-1 text-gray-400 dark:text-gray-500">
+                                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                <svg
+                                                  className="h-4 w-4 shrink-0 opacity-0"
+                                                  fill="none"
+                                                  stroke="currentColor"
+                                                  viewBox="0 0 24 24"
+                                                  aria-hidden="true"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 5l7 7-7 7"
+                                                  />
+                                                </svg>
+                                                <span className="whitespace-nowrap font-semibold">
+                                                  {filteredActiveStageGroups.length > 0
+                                                    ? formatStageMatchLabel(
+                                                        stage,
+                                                        filteredActiveStageGroups[0],
+                                                      )
+                                                    : "Group"}
+                                                </span>
+                                                <div
+                                                  className="ml-5 grid min-w-0 flex-1 items-center gap-x-7"
+                                                  style={{
+                                                    gridTemplateColumns:
+                                                      previewGridTemplateColumns ||
+                                                      `repeat(${Math.max(previewHeaderCount, 1)}, minmax(0, 1fr))`,
+                                                  }}
+                                                >
+                                                  {Array.from({
+                                                    length: previewHeaderCount,
+                                                  }).map((_, index) => (
+                                                    <div
+                                                      key={`preview-header-${index + 1}`}
+                                                      className="truncate text-[11px] font-semibold uppercase tracking-[0.14em]"
+                                                    >
+                                                      Player {index + 1}
+                                                    </div>
+                                                  ))}
+                                                </div>
                                               </div>
-                                              <div
-                                                className="ml-5 grid flex-1 items-center gap-x-7"
-                                                style={{
-                                                  gridTemplateColumns:
-                                                    previewGridTemplateColumns ||
-                                                    `repeat(${Math.max(previewHeaderCount, 1)}, minmax(0, 1fr))`,
-                                                }}
-                                              >
-                                                {Array.from({
-                                                  length: previewHeaderCount,
-                                                }).map((_, index) => (
-                                                  <div
-                                                    key={`preview-header-${index + 1}`}
-                                                    className="truncate"
-                                                  >
-                                                    Player {index + 1}
-                                                  </div>
-                                                ))}
-                                              </div>
-                                              <div className="w-[86px]" />
                                             </div>
                                             {filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
