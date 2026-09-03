@@ -19,9 +19,10 @@ import { computeStageCountryStats } from "./utils";
  *
  * The share button opens an in-page menu first: "Share image…" (native
  * Windows/mobile share sheet with the PNG attached), the social destinations
- * (Facebook / X / WhatsApp / Telegram / LinkedIn — page link, whose preview
- * shows the same stats card), Copy link, Copy image (paste straight into a
- * Facebook/WhatsApp composer) and Download image.
+ * (Facebook / X / WhatsApp / Telegram / LinkedIn — page link opened in a
+ * centered popup, whose preview shows the same stats card), Copy link,
+ * Copy image (paste straight into a Facebook/WhatsApp composer) and
+ * Download image.
  */
 
 const ROW_HEIGHT_PX = 64;
@@ -197,28 +198,55 @@ export default function StageCountryStats({
       key: "facebook",
       label: "Facebook",
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}`,
+      width: 640,
+      height: 640,
     },
     {
       key: "x",
       label: "X (Twitter)",
       href: `https://twitter.com/intent/tweet?url=${encodedShareUrl}&text=${encodedShareText}`,
+      width: 600,
+      height: 500,
     },
     {
       key: "whatsapp",
       label: "WhatsApp",
       href: `https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}`,
+      width: 640,
+      height: 640,
     },
     {
       key: "telegram",
       label: "Telegram",
       href: `https://t.me/share/url?url=${encodedShareUrl}&text=${encodedShareText}`,
+      width: 640,
+      height: 640,
     },
     {
       key: "linkedin",
       label: "LinkedIn",
       href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedShareUrl}`,
+      width: 640,
+      height: 600,
     },
   ];
+
+  const openSharePopup = (href: string, width: number, height: number) => {
+    setShareMenuOpen(false);
+    const left = Math.max(
+      0,
+      Math.round((window.screen.width - width) / 2),
+    );
+    const top = Math.max(
+      0,
+      Math.round((window.screen.height - height) / 2),
+    );
+    window.open(
+      href,
+      "bt-social-share",
+      `popup=yes,width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`,
+    );
+  };
 
   return (
     <div
@@ -324,16 +352,14 @@ export default function StageCountryStats({
               Share image…
             </button>
             {shareTargets.map((target) => (
-              <a
+              <button
                 key={target.key}
-                href={target.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setShareMenuOpen(false)}
-                className="flex items-center px-3.5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                type="button"
+                onClick={() => openSharePopup(target.href, target.width, target.height)}
+                className="flex w-full items-center px-3.5 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 {target.label}
-              </a>
+              </button>
             ))}
             <button
               type="button"
