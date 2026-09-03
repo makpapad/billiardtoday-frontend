@@ -460,12 +460,13 @@ export async function GET(
   }
 
   const rootStyle = {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    position: "relative",
-    overflow: "hidden",
-    background: "linear-gradient(135deg, #07111f 0%, #10263c 44%, #0f766e 100%)",
+    width: "100%" as const,
+    height: "100%" as const,
+    display: "flex" as const,
+    position: "relative" as const,
+    overflow: "hidden" as const,
+    background:
+      "linear-gradient(135deg, #07111f 0%, #10263c 44%, #0f766e 100%)",
     color: "white",
     fontFamily: "Arial, Helvetica, sans-serif",
   };
