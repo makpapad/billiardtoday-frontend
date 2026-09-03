@@ -4259,25 +4259,19 @@ export function TournamentEventsContent({
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
 
-    if (previewColumnCount >= 5) {
+    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
+      return Math.max(max, getGroupPreviewPlayers(group).length);
+    }, 0);
+
+    if (maxPlayers >= 5) {
       return `repeat(${previewColumnCount}, minmax(0, 1fr))`;
     }
 
-    const maxLengths: number[] = [];
-    filteredActiveStageGroups.forEach((group) => {
-      getGroupPreviewPlayers(group).forEach((player, index) => {
-        const columnIndex = index % previewColumnCount;
-        const length = getPreviewPlayerLabel(player).trim().length;
-        maxLengths[columnIndex] = Math.max(
-          maxLengths[columnIndex] ?? 0,
-          length,
-        );
-      });
-    });
-
-    return maxLengths
-      .map((length) => `${Math.min(Math.max(length + 4, 16), 30)}ch`)
-      .join(" ");
+    // Small groups (2-4 players): spread the player columns across the full
+    // available width so names stay readable and rows align. min-content keeps
+    // names whole; 1fr distributes the leftover space evenly.
+    if (maxPlayers <= 0) return "";
+    return `repeat(${maxPlayers}, minmax(min-content, 1fr))`;
   }, [filteredActiveStageGroups, previewColumnCount]);
   const previewHeaderCount = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return 0;
