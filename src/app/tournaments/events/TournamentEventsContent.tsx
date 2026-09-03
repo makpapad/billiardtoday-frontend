@@ -7065,6 +7065,7 @@ export function TournamentEventsContent({
                                                             : null
                                                         }
                                                         downloadName="billiardtoday-group-results.png"
+                                                        variant="light"
                                                       />
                                                     </span>
                                                   ) : null}

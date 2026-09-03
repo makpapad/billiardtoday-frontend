@@ -122,11 +122,13 @@ export default function ShareMenuButton({
   downloadName = "billiardtoday-share.png",
   label = "Share",
   className = "",
+  variant = "dark",
 }: {
   shareHref: string | null;
   downloadName?: string;
   label?: string;
   className?: string;
+  variant?: "dark" | "light";
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{
@@ -317,7 +319,11 @@ export default function ShareMenuButton({
         aria-label={label}
         aria-haspopup="true"
         aria-expanded={menuOpen}
-        className={`flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 text-[11px] font-bold text-white ring-1 ring-white/40 transition hover:bg-white/25 hover:text-white sm:px-3 sm:text-xs ${className}`}
+        className={`flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-bold ring-1 transition sm:px-3 sm:text-xs ${
+          variant === "light"
+            ? "bg-gray-100 text-gray-700 ring-gray-300 hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-600 dark:hover:bg-gray-700"
+            : "bg-white/15 text-white ring-white/40 hover:bg-white/25 hover:text-white"
+        } ${className}`}
       >
         <ShareIcon />
         <span className="hidden sm:inline">{label}</span>

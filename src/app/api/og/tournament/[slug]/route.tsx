@@ -426,13 +426,13 @@ const StatsContent = ({
 /* ------------------------------------------------------------------ */
 
 const GROUP_COLUMNS = [
-  { key: "rec", label: "REC", width: 96 },
-  { key: "mp", label: "MP", width: 72 },
-  { key: "pts", label: "PTS", width: 84 },
-  { key: "inns", label: "INNS", width: 84 },
-  { key: "avg", label: "AVG", width: 96 },
-  { key: "hr", label: "HR", width: 80 },
-  { key: "best", label: "BEST AVG", width: 116 },
+  { key: "rec", label: "REC", width: 76 },
+  { key: "mp", label: "MP", width: 56 },
+  { key: "pts", label: "PTS", width: 66 },
+  { key: "inns", label: "INNS", width: 66 },
+  { key: "avg", label: "AVG", width: 80 },
+  { key: "hr", label: "HR", width: 62 },
+  { key: "best", label: "BEST AVG", width: 96 },
 ];
 
 const GroupResultsContent = ({
@@ -441,13 +441,179 @@ const GroupResultsContent = ({
   stageDateLabel,
   groupLabel,
   standings,
+  matches,
 }: {
   title: string;
   stageLabel: string;
   stageDateLabel: string;
   groupLabel: string;
   standings: GroupStanding[];
+  matches: NormalizedGroupMatch[];
 }) => {
+  const scoreOf = (
+    match: NormalizedGroupMatch,
+    side: "player1" | "player2",
+  ): number | null => match[side]?.points ?? null;
+  const nameOf = (
+    match: NormalizedGroupMatch,
+    side: "player1" | "player2",
+  ): string => match[side]?.name?.trim() || "–";
+  const flagOf = (
+    match: NormalizedGroupMatch,
+    side: "player1" | "player2",
+  ) => getCountryFlagCdnUrl(match[side]?.country ?? null, 40);
+
+  const twoColumns = matches.length > 4;
+  const leftMatches = twoColumns
+    ? matches.filter((_, index) => index % 2 === 0)
+    : matches;
+  const rightMatches = twoColumns
+    ? matches.filter((_, index) => index % 2 === 1)
+    : [];
+
+  const renderMatch = (match: NormalizedGroupMatch) => {
+    const topFlag = flagOf(match, "player1");
+    const bottomFlag = flagOf(match, "player2");
+    return (
+      <div
+        key={match.id}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          padding: "5px 0",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            {topFlag ? (
+              <img
+                src={topFlag}
+                alt=""
+                width={22}
+                height={15}
+                style={{ width: 22, height: 15, borderRadius: 2 }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  width: 22,
+                  height: 15,
+                  borderRadius: 2,
+                  background: "rgba(255,255,255,0.14)",
+                }}
+              />
+            )}
+            <span
+              style={{
+                fontSize: 13.5,
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.92)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {truncate(nameOf(match, "player1"), 22)}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginLeft: 8,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color:
+                  scoreOf(match, "player1") !== null
+                    ? "#ffffff"
+                    : "rgba(255, 255, 255, 0.4)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {scoreOf(match, "player1") ?? "–"}
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.45)",
+              }}
+            >
+              :
+            </span>
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color:
+                  scoreOf(match, "player2") !== null
+                    ? "#ffffff"
+                    : "rgba(255, 255, 255, 0.4)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {scoreOf(match, "player2") ?? "–"}
+            </span>
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flex: 1,
+            minWidth: 0,
+            marginTop: 2,
+          }}
+        >
+          {bottomFlag ? (
+            <img
+              src={bottomFlag}
+              alt=""
+              width={22}
+              height={15}
+              style={{ width: 22, height: 15, borderRadius: 2 }}
+            />
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: 22,
+                height: 15,
+                borderRadius: 2,
+                background: "rgba(255,255,255,0.14)",
+              }}
+            />
+          )}
+          <span
+            style={{
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.74)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {truncate(nameOf(match, "player2"), 22)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       style={{
@@ -457,7 +623,7 @@ const GroupResultsContent = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        padding: "28px 56px 24px",
+        padding: "20px 48px 18px",
       }}
     >
       <div
@@ -471,350 +637,408 @@ const GroupResultsContent = ({
         <img
           src={BRAND_LOGO_URL}
           alt=""
-          width={150}
-          height={52}
-          style={{ width: 150, height: 52, objectFit: "contain" }}
+          width={120}
+          height={42}
+          style={{ width: 120, height: 42, objectFit: "contain" }}
         />
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            padding: "8px 16px",
+            gap: 8,
+            padding: "6px 13px",
             borderRadius: 999,
             background: "rgba(7, 17, 31, 0.72)",
             border: "1px solid rgba(255, 255, 255, 0.2)",
           }}
         >
-          <span
-            style={{
-              fontSize: 18,
-              fontWeight: 800,
-              color: "#ffffff",
-              letterSpacing: 1,
-            }}
-          >
-            {truncate(stageLabel, 36)}
+          <span style={{ fontSize: 15, fontWeight: 800, color: "#ffffff" }}>
+            {truncate(stageLabel, 32)}
           </span>
           {stageDateLabel ? (
             <span
               style={{
-                fontSize: 16,
+                fontSize: 13.5,
                 fontWeight: 600,
-                color: "rgba(255, 255, 255, 0.66)",
+                color: "rgba(255, 255, 255, 0.64)",
               }}
             >
-              {`· ${truncate(stageDateLabel, 28)}`}
+              {`· ${truncate(stageDateLabel, 24)}`}
             </span>
           ) : null}
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>
+      <div style={{ display: "flex", marginTop: 10 }}>
         <span
           style={{
-            fontSize: title.length > 62 ? 30 : 36,
-            lineHeight: 1.08,
+            fontSize: 27,
+            lineHeight: 1.1,
             fontWeight: 800,
-            letterSpacing: -0.5,
+            letterSpacing: -0.4,
             color: "#ffffff",
             textShadow: "0 14px 34px rgba(0, 0, 0, 0.3)",
           }}
         >
-          {truncate(title, 110)}
+          {truncate(title, 104)}
         </span>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginTop: 8,
+        }}
+      >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 14,
-            marginTop: 10,
+            padding: "5px 15px",
+            borderRadius: 999,
+            background:
+              "linear-gradient(90deg, rgba(45, 212, 191, 0.3), rgba(59, 130, 246, 0.3))",
+            border: "1px solid rgba(255, 255, 255, 0.26)",
           }}
         >
+          <span
+            style={{
+              fontSize: 19,
+              fontWeight: 800,
+              color: "#ffffff",
+              letterSpacing: 0.8,
+            }}
+          >
+            {truncate(groupLabel, 36)}
+          </span>
+        </div>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.7)",
+          }}
+        >
+          {`${matches.length} match${matches.length === 1 ? "" : "es"} · ${
+            standings.length
+          } players`}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 2.2,
+              color: "rgba(255,255,255,0.55)",
+              textTransform: "uppercase",
+              marginBottom: 2,
+            }}
+          >
+            All matches
+          </span>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              padding: "7px 18px",
-              borderRadius: 999,
-              background:
-                "linear-gradient(90deg, rgba(45, 212, 191, 0.28), rgba(59, 130, 246, 0.28))",
-              border: "1px solid rgba(255, 255, 255, 0.24)",
+              width: "100%",
+              borderRadius: 12,
+              background: "rgba(4, 12, 24, 0.6)",
+              border: "1px solid rgba(255, 255, 255, 0.14)",
+              overflow: "hidden",
             }}
           >
-            <span
-              style={{
-                fontSize: 24,
-                fontWeight: 800,
-                color: "#ffffff",
-                letterSpacing: 1,
-              }}
-            >
-              {truncate(groupLabel, 40)}
-            </span>
+            <div style={{ display: "flex", flex: 1, padding: "4px 16px" }}>
+              {leftMatches.map(renderMatch)}
+            </div>
+            {twoColumns ? (
+              <div
+                style={{
+                  display: "flex",
+                  flex: 1,
+                  padding: "4px 16px",
+                  borderLeft: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                {rightMatches.map(renderMatch)}
+              </div>
+            ) : null}
           </div>
-          <span
-            style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: "rgba(255, 255, 255, 0.72)",
-            }}
-          >
-            {`${standings.length} players · final standings`}
-          </span>
         </div>
-      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            borderRadius: 16,
-            background: "rgba(4, 12, 24, 0.6)",
-            border: "1px solid rgba(255, 255, 255, 0.16)",
-            overflow: "hidden",
+            marginTop: 8,
           }}
         >
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 2.2,
+              color: "rgba(255,255,255,0.55)",
+              textTransform: "uppercase",
+              marginBottom: 2,
+            }}
+          >
+            Final standings
+          </span>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              padding: "10px 20px",
-              background: "rgba(255, 255, 255, 0.08)",
+              flexDirection: "column",
+              width: "100%",
+              borderRadius: 12,
+              background: "rgba(4, 12, 24, 0.6)",
+              border: "1px solid rgba(255, 255, 255, 0.14)",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", width: 52, alignItems: "center" }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  letterSpacing: 1.6,
-                  color: "rgba(255, 255, 255, 0.6)",
-                }}
-              >
-                #
-              </span>
-            </div>
-            <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  letterSpacing: 2,
-                  color: "rgba(255, 255, 255, 0.6)",
-                }}
-              >
-                PLAYER
-              </span>
-            </div>
-            {GROUP_COLUMNS.map((column) => (
-              <div
-                key={column.key}
-                style={{
-                  display: "flex",
-                  width: column.width,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "6px 16px",
+                background: "rgba(255, 255, 255, 0.07)",
+              }}
+            >
+              <div style={{ display: "flex", width: 36, alignItems: "center" }}>
                 <span
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 800,
-                    letterSpacing: 1.2,
-                    color: "rgba(255, 255, 255, 0.6)",
+                    letterSpacing: 1.4,
+                    color: "rgba(255, 255, 255, 0.55)",
                   }}
                 >
-                  {column.label}
+                  #
                 </span>
               </div>
-            ))}
-          </div>
-
-          {standings.map((standing, index) => {
-            const flagUrl = getCountryFlagCdnUrl(standing.playerCountry, 40);
-            return (
-              <div
-                key={standing.key}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "8px 20px",
-                  borderBottom:
-                    index < standings.length - 1
-                      ? "1px solid rgba(255, 255, 255, 0.07)"
-                      : "none",
-                }}
-              >
-                <div style={{ display: "flex", width: 52, alignItems: "center" }}>
-                  <span
-                    style={{
-                      display: "flex",
-                      width: 30,
-                      height: 30,
-                      borderRadius: 15,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background:
-                        standing.place === 1
-                          ? "rgba(245, 197, 66, 0.28)"
-                          : standing.place === 2
-                            ? "rgba(203, 213, 225, 0.22)"
-                            : standing.place === 3
-                              ? "rgba(214, 138, 78, 0.22)"
-                              : "rgba(255, 255, 255, 0.1)",
-                      fontSize: 15,
-                      fontWeight: 800,
-                      color: "#ffffff",
-                    }}
-                  >
-                    {standing.place}
-                  </span>
-                </div>
-                <div
+              <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
+                <span
                   style={{
-                    display: "flex",
-                    flex: 1,
-                    alignItems: "center",
-                    gap: 12,
-                    minWidth: 0,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: 1.8,
+                    color: "rgba(255, 255, 255, 0.55)",
                   }}
                 >
-                  {flagUrl ? (
-                    <img
-                      src={flagUrl}
-                      alt=""
-                      width={36}
-                      height={24}
-                      style={{
-                        width: 36,
-                        height: 24,
-                        borderRadius: 3,
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div
+                  PLAYER
+                </span>
+              </div>
+              {GROUP_COLUMNS.map((column) => (
+                <div
+                  key={column.key}
+                  style={{
+                    display: "flex",
+                    width: column.width,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 800,
+                      letterSpacing: 1,
+                      color: "rgba(255, 255, 255, 0.55)",
+                    }}
+                  >
+                    {column.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {standings.map((standing, index) => {
+              const flagUrl = getCountryFlagCdnUrl(standing.playerCountry, 40);
+              return (
+                <div
+                  key={standing.key}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 16px",
+                    borderBottom:
+                      index < standings.length - 1
+                        ? "1px solid rgba(255, 255, 255, 0.07)"
+                        : "none",
+                  }}
+                >
+                  <div style={{ display: "flex", width: 36, alignItems: "center" }}>
+                    <span
                       style={{
                         display: "flex",
-                        width: 36,
+                        width: 24,
                         height: 24,
-                        borderRadius: 3,
-                        background: "rgba(255, 255, 255, 0.18)",
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background:
+                          standing.place === 1
+                            ? "rgba(245, 197, 66, 0.3)"
+                            : standing.place === 2
+                              ? "rgba(203, 213, 225, 0.24)"
+                              : standing.place === 3
+                                ? "rgba(214, 138, 78, 0.24)"
+                                : "rgba(255, 255, 255, 0.1)",
+                        fontSize: 12.5,
+                        fontWeight: 800,
+                        color: "#ffffff",
                       }}
-                    />
-                  )}
-                  <span
+                    >
+                      {standing.place}
+                    </span>
+                  </div>
+                  <div
                     style={{
-                      fontSize: 19,
-                      fontWeight: 700,
-                      color: "#ffffff",
+                      display: "flex",
+                      flex: 1,
+                      alignItems: "center",
+                      gap: 9,
+                      minWidth: 0,
                     }}
                   >
-                    {truncate(standing.playerName, 26)}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[0].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span
+                    {flagUrl ? (
+                      <img
+                        src={flagUrl}
+                        alt=""
+                        width={28}
+                        height={19}
+                        style={{
+                          width: 28,
+                          height: 19,
+                          borderRadius: 2,
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          width: 28,
+                          height: 19,
+                          borderRadius: 2,
+                          background: "rgba(255, 255, 255, 0.18)",
+                        }}
+                      />
+                    )}
+                    <span
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                      }}
+                    >
+                      {truncate(standing.playerName, 26)}
+                    </span>
+                  </div>
+                  <div
                     style={{
-                      fontSize: 17,
-                      fontWeight: 600,
-                      color: "rgba(255, 255, 255, 0.85)",
+                      display: "flex",
+                      width: GROUP_COLUMNS[0].width,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {formatRecord(standing.record)}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: 14.5,
+                        fontWeight: 600,
+                        color: "rgba(255, 255, 255, 0.85)",
+                      }}
+                    >
+                      {formatRecord(standing.record)}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[1].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
+                      {standing.totalMatchPoints}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[2].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
+                      {standing.totalPoints}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[3].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
+                      {standing.totalInnings}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[4].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#5eead4" }}>
+                      {standing.average !== null &&
+                      Number.isFinite(standing.average)
+                        ? standing.average.toFixed(2)
+                        : "–"}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[5].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
+                      {standing.highRun ?? "–"}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: GROUP_COLUMNS[6].width,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#bae6fd" }}>
+                      {standing.bestAverage !== null &&
+                      Number.isFinite(standing.bestAverage)
+                        ? standing.bestAverage.toFixed(2)
+                        : "–"}
+                    </span>
+                  </div>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[1].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
-                    {standing.totalMatchPoints}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[2].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
-                    {standing.totalPoints}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[3].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
-                    {standing.totalInnings}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[4].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#5eead4" }}>
-                    {standing.average !== null &&
-                    Number.isFinite(standing.average)
-                      ? standing.average.toFixed(2)
-                      : "–"}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[5].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#ffffff" }}>
-                    {standing.highRun ?? "–"}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    width: GROUP_COLUMNS[6].width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontSize: 17, fontWeight: 700, color: "#bae6fd" }}>
-                    {standing.bestAverage !== null &&
-                    Number.isFinite(standing.bestAverage)
-                      ? standing.bestAverage.toFixed(2)
-                      : "–"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -841,6 +1065,7 @@ export async function GET(
   let statsStage: NormalizedEventStage | null = null;
   let groupStandings: GroupStanding[] = [];
   let groupStage: NormalizedEventStage | null = null;
+  let groupMatchesList: NormalizedGroupMatch[] = [];
   let groupDisplayLabel = groupParam ? `Group ${groupParam}` : "";
 
   const eventPayload = await fetchEventPayload(summary.documentId);
@@ -894,6 +1119,12 @@ export async function GET(
         if (standings.length > 0) {
           groupStandings = standings;
           groupStage = stage;
+          groupMatchesList = [...groupMatches].sort(
+            (a, b) =>
+              (a.dateTime ?? "").localeCompare(b.dateTime ?? "") ||
+              (a.matchNumber ?? Number.MAX_SAFE_INTEGER) -
+                (b.matchNumber ?? Number.MAX_SAFE_INTEGER),
+          );
           if (groupMatches[0]?.label) {
             groupDisplayLabel = `Group ${groupMatches[0].label}`;
           }
@@ -1060,6 +1291,7 @@ export async function GET(
           }
           groupLabel={groupDisplayLabel}
           standings={groupStandings}
+          matches={groupMatchesList}
         />
       </div>
     ) : statsRows.length > 0 && statsStage ? (
