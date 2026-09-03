@@ -606,39 +606,33 @@ export async function GET(
     fontFamily: "Arial, Helvetica, sans-serif",
   };
 
-  const backgroundLayers = (
-    <>
-      <img
-        src={BACKGROUND_IMAGE_URL}
-        alt=""
-        width={1200}
-        height={630}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          opacity: 0.62,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          background:
-            "linear-gradient(90deg, rgba(7, 17, 31, 0.96) 0%, rgba(7, 17, 31, 0.82) 48%, rgba(7, 17, 31, 0.22) 100%), radial-gradient(circle at 82% 22%, rgba(45, 212, 191, 0.24), transparent 28%)",
-        }}
-      />
-    </>
-  );
-
   if (statsRows.length > 0 && statsStage) {
     return new ImageResponse(
       (
         <div style={sharedStyle}>
-          {backgroundLayers}
+          <img
+            src={BACKGROUND_IMAGE_URL}
+            alt=""
+            width={1200}
+            height={630}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.62,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              background:
+                "linear-gradient(90deg, rgba(7, 17, 31, 0.96) 0%, rgba(7, 17, 31, 0.82) 48%, rgba(7, 17, 31, 0.22) 100%), radial-gradient(circle at 82% 22%, rgba(45, 212, 191, 0.24), transparent 28%)",
+            }}
+          />
           <StatsContent
             title={title}
             stageLabel={statsStage.title || `Stage ${statsStage.order ?? ""}`.trim()}
@@ -664,7 +658,29 @@ export async function GET(
   return new ImageResponse(
     (
       <div style={sharedStyle}>
-        {backgroundLayers}
+        <img
+          src={BACKGROUND_IMAGE_URL}
+          alt=""
+          width={1200}
+          height={630}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.62,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            background:
+              "linear-gradient(90deg, rgba(7, 17, 31, 0.96) 0%, rgba(7, 17, 31, 0.82) 48%, rgba(7, 17, 31, 0.22) 100%), radial-gradient(circle at 82% 22%, rgba(45, 212, 191, 0.24), transparent 28%)",
+          }}
+        />
         <LegacyContent
           title={title}
           details={{ gameType: summary.gameType, dateLabel, locationLabel, stageLabel }}
