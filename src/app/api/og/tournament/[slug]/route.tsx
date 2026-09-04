@@ -955,32 +955,52 @@ const GroupResultsContent = ({
           >
             <span
               style={{
-                fontSize: 11.5,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: 1.6,
+                color: "rgba(255, 255, 255, 0.62)",
+              }}
+            >
+              STAGE
+            </span>
+            <span
+              style={{
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 2.2,
                 textTransform: "uppercase",
                 color: "#6ee7d8",
               }}
             >
-              {truncate(stageLabel, 30)}
+              {truncate(stageLabel.replace(/\s+TOURNAMENT$/i, "").trim(), 26)}
             </span>
-            <span style={{ display: "flex", fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+            <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
               ·
             </span>
             <span
               style={{
-                fontSize: 11.5,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: 1.6,
+                color: "rgba(255, 255, 255, 0.62)",
+              }}
+            >
+              GROUP
+            </span>
+            <span
+              style={{
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 2.2,
                 textTransform: "uppercase",
                 color: "#6ee7d8",
               }}
             >
-              {truncate(groupLabel, 30)}
+              {truncate(groupLabel.replace(/^Group\s+/i, "").trim(), 12)}
             </span>
             {sharedDay ? (
               <>
-                <span style={{ display: "flex", fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+                <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
                   ·
                 </span>
                 <span

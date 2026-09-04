@@ -4104,6 +4104,11 @@ export function TournamentEventsContent({
     if (!activeStage) return;
 
     const targetGroup = (stageMatchGroups[activeStage.id] ?? []).find((group) => {
+      // Round-robin groups are labelled A/B/C… (group.label), numbered (1..n)
+      // or keyed internally — match whichever the share URL carried.
+      if (group.label !== null && group.label === preferredGroupParam) {
+        return true;
+      }
       if (group.number !== null && String(group.number) === preferredGroupParam) {
         return true;
       }
