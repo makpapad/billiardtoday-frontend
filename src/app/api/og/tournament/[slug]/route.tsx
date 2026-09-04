@@ -453,22 +453,11 @@ const StatsContent = ({
 
 
 /* ------------------------------------------------------------------ */
-/* Group share card — dark v6 (approved sample): logo + centered big   */
-/* title on top, per-match blocks with a shared date, roomy columns,   */
-/* standings table below. Every wrapper is an explicit flex so satori  */
-/* never trips on a multi-child block element.                         */
+/* Group share card — v9 (approved): full-width scorelines, big scores */
+/* with per-player MP/PTS/INNS/AVG/HR underneath, 1/2/3 columns by     */
+/* group size, full standings. Every wrapper is an explicit flex so    */
+/* satori never trips on a multi-child block element.                  */
 /* ------------------------------------------------------------------ */
-
-const PLAYER_COL_WIDTH = 240;
-const WL_COL_WIDTH = 24;
-const STAT_COL_WIDTH = 80;
-const AVG_COL_WIDTH = 96;
-const ROW_GAP = 20;
-const S_POS_WIDTH = 20;
-const S_STAT_WIDTH = 62;
-const S_AVG_WIDTH = 72;
-const S_WIDE_WIDTH = 74;
-const S_GAP = 10;
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
@@ -523,12 +512,9 @@ const GroupResultsContent = ({
   matches: NormalizedGroupMatch[];
 }) => {
   const columnCount =
-    matches.length > 8 ? 3 : matches.length > 4 ? 2 : 1;
+    matches.length > 6 ? 3 : matches.length > 3 ? 2 : 1;
   const multi = columnCount > 1;
-  const playerWidth = multi ? 178 : PLAYER_COL_WIDTH;
-  const rowGap = multi ? 12 : ROW_GAP;
-  const statWidth = multi ? 56 : STAT_COL_WIDTH;
-  const avgWidth = multi ? 70 : AVG_COL_WIDTH;
+  const three = columnCount > 2;
 
   const matchColumns: NormalizedGroupMatch[][] = [];
   for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
@@ -548,20 +534,30 @@ const GroupResultsContent = ({
   );
   const sharedDay = dayLabels.length === 1 ? dayLabels[0] : null;
 
-  const renderFlag = (
-    flagUrl: string | null,
-    width: number,
-    height: number,
-  ) =>
+  // Type/colour scales per column layout
+  const F = {
+    name: three ? 13.5 : multi ? 15.5 : 19,
+    score: three ? 24 : multi ? 30 : 40,
+    sep: three ? 16 : multi ? 20 : 26,
+    stats: three ? 9.5 : multi ? 11 : 12.5,
+    flag: three ? 18 : multi ? 20 : 24,
+    flagH: three ? 12 : multi ? 14 : 16,
+    head: three ? 9.5 : multi ? 10.5 : 12,
+    pad: three ? "2px 12px" : multi ? "3px 14px" : "4px 20px",
+    headPad: three ? "2px 12px" : multi ? "2.5px 14px" : "3px 20px",
+    gap: three ? 8 : multi ? 10 : 12,
+  };
+
+  const renderFlag = (flagUrl: string | null, height: number) =>
     flagUrl ? (
       <img
         src={flagUrl}
         alt=""
-        width={width}
-        height={height}
+        width={F.flag}
+        height={F.flagH}
         style={{
-          width,
-          height,
+          width: F.flag,
+          height: F.flagH,
           borderRadius: 2,
           objectFit: "cover",
           flexShrink: 0,
@@ -571,8 +567,8 @@ const GroupResultsContent = ({
       <div
         style={{
           display: "flex",
-          width,
-          height,
+          width: F.flag,
+          height: F.flagH,
           borderRadius: 2,
           background: "rgba(255, 255, 255, 0.16)",
           flexShrink: 0,
@@ -580,164 +576,159 @@ const GroupResultsContent = ({
       />
     );
 
-  const renderMatchRow = (
-    match: NormalizedGroupMatch,
-    side: "player1" | "player2",
-  ) => {
-    const player = match[side];
-    const opponent = match[side === "player1" ? "player2" : "player1"];
-    const outcome = getMatchOutcome(player, opponent);
-    const played = outcome !== null;
-    const isWin = outcome === "W";
-    const isLoss = outcome === "L";
-    const flagUrl = getCountryFlagCdnUrl(player.country ?? null, 40);
-
-    return (
-      <div
-        key={`${match.id}-${side}`}
+  const statChip = (
+    label: string,
+    value: string,
+    accent: boolean,
+  ) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+      }}
+    >
+      <span
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: rowGap,
-          padding: "3.5px 16px",
-          background: played
-            ? isWin
-              ? "rgba(21, 128, 61, 0.45)"
-              : isLoss
-                ? "rgba(190, 18, 60, 0.35)"
-                : "rgba(255, 255, 255, 0.03)"
-            : "rgba(255, 255, 255, 0.03)",
+          fontSize: F.stats,
+          fontWeight: 700,
+          color: "rgba(255, 255, 255, 0.55)",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9,
-            width: playerWidth,
-            flexShrink: 0,
-            minWidth: 0,
-          }}
-        >
-          {renderFlag(flagUrl, 20, 14)}
-          <span
-            style={{
-              fontSize: multi ? 12.5 : 13.5,
-              fontWeight: 700,
-              color: "#ffffff",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {truncate(player.name?.trim() || "–", multi ? 20 : 26)}
-          </span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            width: WL_COL_WIDTH,
-            flexShrink: 0,
-            justifyContent: "center",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 14,
-              fontWeight: 900,
-              color: played
-                ? isWin
-                  ? "#86efac"
-                  : isLoss
-                    ? "#fda4af"
-                    : "rgba(255,255,255,0.35)"
-                : "rgba(255,255,255,0.35)",
-            }}
-          >
-            {played ? (isWin ? "W" : isLoss ? "L" : "–") : "–"}
-          </span>
-        </div>
-        {[player.matchPoints, player.points, player.innings].map(
-          (value, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                width: statWidth,
-                flexShrink: 0,
-                justifyContent: "flex-end",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: multi ? 12.5 : 13.5,
-                  fontWeight: 700,
-                  color:
-                    value === null || value === 0
-                      ? "rgba(255, 255, 255, 0.4)"
-                      : "#ffffff",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {value ?? "–"}
-              </span>
-            </div>
-          ),
-        )}
-        <div
-          style={{
-            display: "flex",
-            width: avgWidth,
-            flexShrink: 0,
-            justifyContent: "flex-end",
-          }}
-        >
-          <span
-            style={{
-              fontSize: multi ? 12.5 : 13.5,
-              fontWeight: 700,
-              color: "#fcd34d",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {playerAverage(player.points, player.innings)}
-          </span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            width: statWidth,
-            flexShrink: 0,
-            justifyContent: "flex-end",
-          }}
-        >
-          <span
-            style={{
-              fontSize: multi ? 12.5 : 13.5,
-              fontWeight: 700,
-              color:
-                player.highRun === null || player.highRun === 0
-                  ? "rgba(255, 255, 255, 0.4)"
-                  : "#ffffff",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {player.highRun ?? "–"}
-          </span>
-        </div>
-      </div>
-    );
-  };
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: F.stats,
+          fontWeight: 800,
+          color: accent ? "#fcd34d" : "rgba(255, 255, 255, 0.92)",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
 
-  const renderMatchBlock = (match: NormalizedGroupMatch) => {
-    const matchNumber = match.matchNumber !== null ? `M${match.matchNumber}` : null;
+  const renderScoreline = (match: NormalizedGroupMatch) => {
+    const p1 = match.player1;
+    const p2 = match.player2;
+    const outcome1 = getMatchOutcome(p1, p2); // W/L/D/null for player1
+    const outcome2 =
+      outcome1 === null ? null : outcome1 === "W" ? "L" : outcome1 === "L" ? "W" : "D";
+    const played = outcome1 !== null;
+    const draw = outcome1 === "D";
+
+    const matchNumber =
+      match.matchNumber !== null ? `M${match.matchNumber}` : null;
     const day = greekDayLabel(match.dateTime);
     const time = greekTimeLabel(match.dateTime);
     const when =
-      sharedDay && time
-        ? time
-        : [day, time].filter(Boolean).join(" · ");
+      sharedDay && time ? time : [day, time].filter(Boolean).join(" · ");
     const heading = [matchNumber, when].filter(Boolean).join("  ·  ");
+
+    const sidePanelStyle = (
+      outcome: "W" | "L" | "D" | null,
+      rightSide: boolean,
+    ) =>
+      outcome === null
+        ? {}
+        : draw
+          ? {
+              background: "rgba(100, 116, 139, 0.3)",
+              borderRadius: 7,
+            }
+          : outcome === "W"
+            ? {
+                background: "rgba(21, 128, 61, 0.45)",
+                borderRadius: 7,
+              }
+            : {};
+
+    const renderSide = (
+      side: "player1" | "player2",
+      outcome: "W" | "L" | "D" | null,
+      rightSide: boolean,
+    ) => {
+      const player = match[side];
+      const flagUrl = getCountryFlagCdnUrl(player.country ?? null, 40);
+      const isRight = rightSide;
+      const rowDir = isRight ? "row-reverse" : "row";
+      const textAlign = isRight ? "right" : "left";
+      const lost = outcome === "L";
+
+      return (
+        <div
+          style={{
+            display: "flex",
+            flex: 1,
+            flexDirection: "column",
+            minWidth: 0,
+            padding: "4px 12px",
+            ...sidePanelStyle(outcome, isRight),
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: rowDir,
+              alignItems: "center",
+              gap: F.gap,
+              minWidth: 0,
+            }}
+          >
+            {renderFlag(flagUrl, F.flagH)}
+            <span
+              style={{
+                fontSize: F.name,
+                fontWeight: lost ? 700 : 800,
+                color: lost
+                  ? "rgba(255, 255, 255, 0.55)"
+                  : "#ffffff",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {truncate(player.name?.trim() || "–", three ? 16 : multi ? 20 : 28)}
+            </span>
+            {played ? (
+              <span
+                style={{
+                  fontSize: F.name * 0.78,
+                  fontWeight: 900,
+                  color:
+                    outcome === "W"
+                      ? "#4ade80"
+                      : outcome === "L"
+                        ? "#f87171"
+                        : "#94a3b8",
+                }}
+              >
+                {outcome}
+              </span>
+            ) : null}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: rowDir,
+              alignItems: "center",
+              gap: three ? 6 : 10,
+              marginTop: 1,
+              minWidth: 0,
+              flexWrap: "wrap",
+            }}
+          >
+            {statChip("MP", player.matchPoints !== null ? `${player.matchPoints}` : "–", false)}
+            {statChip("PTS", player.points !== null ? `${player.points}` : "–", false)}
+            {statChip("INNS", player.innings !== null ? `${player.innings}` : "–", false)}
+            {statChip("AVG", playerAverage(player.points, player.innings), true)}
+            {!three ? statChip("HR", player.highRun !== null ? `${player.highRun}` : "–", false) : null}
+          </div>
+        </div>
+      );
+    };
 
     return (
       <div
@@ -746,106 +737,99 @@ const GroupResultsContent = ({
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          borderRadius: 9,
+          borderRadius: 12,
           overflow: "hidden",
-          border: "1px solid rgba(255, 255, 255, 0.18)",
-          background: "rgba(10, 22, 40, 0.85)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          background: "rgba(10, 22, 40, 0.88)",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: rowGap,
-            padding: "3px 16px",
-            background: "rgba(255, 255, 255, 0.12)",
+            gap: 10,
+            padding: F.headPad,
+            background: "rgba(255, 255, 255, 0.1)",
           }}
         >
+          <span
+            style={{
+              fontSize: F.head,
+              fontWeight: 800,
+              letterSpacing: 0.6,
+              color: "#6ee7d8",
+            }}
+          >
+            {heading || "Group match"}
+          </span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: F.pad,
+          }}
+        >
+          {renderSide("player1", outcome1, false)}
           <div
             style={{
               display: "flex",
-              width: playerWidth,
-              flexShrink: 0,
+              flex: "none",
+              flexDirection: "column",
               alignItems: "center",
+              padding: "0 10px",
             }}
           >
-            <span
-              style={{
-                fontSize: multi ? 9.5 : 10.5,
-                fontWeight: 800,
-                letterSpacing: 0.6,
-                color: "#6ee7d8",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {heading || "Group match"}
-            </span>
-          </div>
-          <span
-            style={{
-              display: "flex",
-              width: WL_COL_WIDTH,
-              flexShrink: 0,
-              justifyContent: "center",
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: 0.4,
-              color: "rgba(255, 255, 255, 0.75)",
-            }}
-          >
-            W/L
-          </span>
-          {["MP", "PTS", "INNS"].map((label) => (
-            <span
-              key={label}
+            <div
               style={{
                 display: "flex",
-                width: statWidth,
-                flexShrink: 0,
-                justifyContent: "flex-end",
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: 0.4,
-                color: "rgba(255, 255, 255, 0.9)",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              {label}
-            </span>
-          ))}
-          <span
-            style={{
-              display: "flex",
-              width: avgWidth,
-              flexShrink: 0,
-              justifyContent: "flex-end",
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: 0.4,
-              color: "#fcd34d",
-            }}
-          >
-            AVG
-          </span>
-          <span
-            style={{
-              display: "flex",
-              width: statWidth,
-              flexShrink: 0,
-              justifyContent: "flex-end",
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: 0.4,
-              color: "rgba(255, 255, 255, 0.9)",
-            }}
-          >
-            HR
-          </span>
+              <span
+                style={{
+                  fontSize: F.score,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  color: played
+                    ? outcome1 === "L"
+                      ? "rgba(255,255,255,0.55)"
+                      : "#ffffff"
+                    : "rgba(255,255,255,0.3)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {p1.points !== null ? p1.points : "–"}
+              </span>
+              <span
+                style={{
+                  fontSize: F.sep,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.35)",
+                }}
+              >
+                –
+              </span>
+              <span
+                style={{
+                  fontSize: F.score,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  color: played
+                    ? outcome2 === "L"
+                      ? "rgba(255,255,255,0.55)"
+                      : "#ffffff"
+                    : "rgba(255,255,255,0.3)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {p2.points !== null ? p2.points : "–"}
+              </span>
+            </div>
+          </div>
+          {renderSide("player2", outcome2, true)}
         </div>
-        {renderMatchRow(match, "player1")}
-        <div style={{ display: "flex", width: "100%", height: 1, background: "rgba(255,255,255,0.08)" }} />
-        {renderMatchRow(match, "player2")}
       </div>
     );
   };
@@ -856,9 +840,9 @@ const GroupResultsContent = ({
         display: "flex",
         fontSize: 9.5,
         fontWeight: 800,
-        letterSpacing: 1.8,
+        letterSpacing: 2,
         textTransform: "uppercase",
-        color: "rgba(255, 255, 255, 0.85)",
+        color: "rgba(255, 255, 255, 0.8)",
         marginBottom: 6,
       }}
     >
@@ -873,9 +857,9 @@ const GroupResultsContent = ({
         width,
         flexShrink: 0,
         justifyContent: "flex-end",
-        fontSize: 9,
+        fontSize: 9.5,
         fontWeight: 800,
-        letterSpacing: 0.6,
+        letterSpacing: 1,
         color,
       }}
     >
@@ -892,7 +876,7 @@ const GroupResultsContent = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        padding: "14px 48px 12px",
+        padding: "12px 32px 10px",
       }}
     >
       <div
@@ -900,8 +884,6 @@ const GroupResultsContent = ({
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          maxWidth: 860,
-          alignSelf: "center",
           minHeight: 0,
         }}
       >
@@ -918,80 +900,80 @@ const GroupResultsContent = ({
             src={BRAND_LOGO_URL}
             alt=""
             width={120}
-            height={32}
-            style={{ width: 120, height: 32, objectFit: "contain" }}
+            height={30}
+            style={{ width: 120, height: 30, objectFit: "contain" }}
           />
           <div
             style={{
               display: "flex",
               width: "100%",
-              marginTop: 3,
+              marginTop: 2,
               justifyContent: "center",
             }}
           >
             <span
               style={{
-                fontSize: title.length > 46 ? 21 : 25,
-                lineHeight: 1.15,
+                fontSize: title.length > 46 ? 19 : 22,
+                lineHeight: 1.2,
                 fontWeight: 900,
                 letterSpacing: 0.3,
                 color: "#ffffff",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: 860,
+                maxWidth: "100%",
               }}
             >
-              {truncate(title, 74)}
+              {truncate(title, 80)}
             </span>
           </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              marginTop: 4,
+              gap: 7,
+              marginTop: 2,
             }}
           >
             <span
               style={{
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: 800,
                 letterSpacing: 1.6,
-                color: "rgba(255, 255, 255, 0.62)",
+                color: "rgba(255, 255, 255, 0.6)",
               }}
             >
               STAGE
             </span>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: 800,
-                letterSpacing: 2.2,
+                letterSpacing: 2,
                 textTransform: "uppercase",
                 color: "#6ee7d8",
               }}
             >
               {truncate(stageLabel.replace(/\s+TOURNAMENT$/i, "").trim(), 26)}
             </span>
-            <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+            <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.85)" }}>
               ·
             </span>
             <span
               style={{
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: 800,
                 letterSpacing: 1.6,
-                color: "rgba(255, 255, 255, 0.62)",
+                color: "rgba(255, 255, 255, 0.6)",
               }}
             >
               GROUP
             </span>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: 800,
-                letterSpacing: 2.2,
+                letterSpacing: 2,
                 textTransform: "uppercase",
                 color: "#6ee7d8",
               }}
@@ -1000,7 +982,7 @@ const GroupResultsContent = ({
             </span>
             {sharedDay ? (
               <>
-                <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+                <span style={{ display: "flex", fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.85)" }}>
                   ·
                 </span>
                 <span
@@ -1018,58 +1000,39 @@ const GroupResultsContent = ({
           </div>
         </div>
 
-        {/* Matches — one rounded block per pairing */}
+        {/* Matches — full-width scorelines, 1-3 columns by group size */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            marginTop: 12,
+            marginTop: 9,
           }}
         >
           {sectionLabel(
             matches.length === 1 ? "Group match" : "Group matches",
           )}
-          {columnCount === 1 ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 9,
-              }}
-            >
-              {matches.map(renderMatchBlock)}
-            </div>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                borderRadius: 9,
-                overflow: "hidden",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                background: "rgba(10, 22, 40, 0.85)",
-              }}
-            >
-              {matchColumns.map((columnMatches, columnIndex) => (
-                <div
-                  key={columnIndex}
-                  style={{
-                    display: "flex",
-                    flex: 1,
-                    flexDirection: "column",
-                    gap: 9,
-                    padding: "9px 10px",
-                    borderLeft:
-                      columnIndex > 0
-                        ? "1px solid rgba(255, 255, 255, 0.1)"
-                        : "none",
-                  }}
-                >
-                  {columnMatches.map(renderMatchBlock)}
-                </div>
-              ))}
-            </div>
-          )}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              width: "100%",
+            }}
+          >
+            {matchColumns.map((columnMatches, columnIndex) => (
+              <div
+                key={columnIndex}
+                style={{
+                  display: "flex",
+                  flex: 1,
+                  flexDirection: "column",
+                  gap: 8,
+                  minWidth: 0,
+                }}
+              >
+                {columnMatches.map(renderScoreline)}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Final standings */}
@@ -1078,7 +1041,7 @@ const GroupResultsContent = ({
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            marginTop: 13,
+            marginTop: 11,
           }}
         >
           {sectionLabel("Final standings")}
@@ -1087,61 +1050,45 @@ const GroupResultsContent = ({
               display: "flex",
               flexDirection: "column",
               width: "100%",
-              borderRadius: 9,
+              borderRadius: 12,
               overflow: "hidden",
-              border: "1px solid rgba(255, 255, 255, 0.18)",
-              background: "rgba(10, 22, 40, 0.85)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: "rgba(10, 22, 40, 0.88)",
             }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: S_GAP,
-                padding: "4px 16px",
+                gap: 10,
+                padding: "3px 20px",
                 background: "rgba(20, 83, 45, 0.95)",
               }}
             >
               <div
                 style={{
                   display: "flex",
-                  width: playerWidth,
+                  width: 30,
                   flexShrink: 0,
-                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    letterSpacing: 0.6,
-                    color: "#ffffff",
-                  }}
-                >
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: "#ffffff" }}>
+                  #
+                </span>
+              </div>
+              <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.6, color: "#ffffff" }}>
                   PLAYER
                 </span>
               </div>
-              <span
-                style={{
-                  display: "flex",
-                  width: S_POS_WIDTH,
-                  flexShrink: 0,
-                  justifyContent: "center",
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: 0.6,
-                  color: "#ffffff",
-                }}
-              >
-                #
-              </span>
-              {standingsColumnLabel("RECORD", S_WIDE_WIDTH, "#ffffff")}
-              {standingsColumnLabel("MP", S_STAT_WIDTH, "#ffffff")}
-              {standingsColumnLabel("PTS", S_STAT_WIDTH, "#ffffff")}
-              {standingsColumnLabel("INNS", S_STAT_WIDTH, "#ffffff")}
-              {standingsColumnLabel("AVG", S_AVG_WIDTH, "#fcd34d")}
-              {standingsColumnLabel("HR", S_STAT_WIDTH, "#ffffff")}
-              {standingsColumnLabel("BEST", S_WIDE_WIDTH, "#ffffff")}
+              {standingsColumnLabel("REC", 84, "#ffffff")}
+              {standingsColumnLabel("MP", 62, "#ffffff")}
+              {standingsColumnLabel("PTS", 96, "#ffffff")}
+              {standingsColumnLabel("INNS", 76, "#ffffff")}
+              {standingsColumnLabel("AVG", 108, "#fcd34d")}
+              {standingsColumnLabel("HR", 62, "#ffffff")}
+              {standingsColumnLabel("BEST", 108, "#ffffff")}
             </div>
 
             {standings.map((standing, index) => {
@@ -1152,8 +1099,8 @@ const GroupResultsContent = ({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: S_GAP,
-                    padding: "3px 16px",
+                    gap: 10,
+                    padding: "3.5px 20px",
                     borderBottom:
                       index < standings.length - 1
                         ? "1px solid rgba(255, 255, 255, 0.08)"
@@ -1163,38 +1110,14 @@ const GroupResultsContent = ({
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      gap: 9,
-                      width: playerWidth,
-                      flexShrink: 0,
-                      minWidth: 0,
-                    }}
-                  >
-                    {renderFlag(flagUrl, 20, 14)}
-                    <span
-                      style={{
-                        fontSize: multi ? 12 : 13,
-                        fontWeight: 700,
-                        color: "#ffffff",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {truncate(standing.playerName, multi ? 20 : 26)}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: S_POS_WIDTH,
+                      width: 30,
                       flexShrink: 0,
                       justifyContent: "center",
                     }}
                   >
                     <span
                       style={{
-                        fontSize: 13,
+                        fontSize: 18,
                         fontWeight: 900,
                         color: "#6ee7d8",
                       }}
@@ -1205,109 +1128,128 @@ const GroupResultsContent = ({
                   <div
                     style={{
                       display: "flex",
-                      width: S_WIDE_WIDTH,
-                      flexShrink: 0,
-                      justifyContent: "flex-end",
+                      flex: 1,
+                      alignItems: "center",
+                      gap: 9,
+                      minWidth: 0,
                     }}
                   >
+                    {renderFlag(flagUrl, 16)}
                     <span
                       style={{
-                        fontSize: multi ? 11.5 : 12.5,
-                        fontWeight: 700,
-                        color: "rgba(255, 255, 255, 0.95)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {formatRecord(standing.record)}
-                    </span>
-                  </div>
-                  {[standing.totalMatchPoints, standing.totalPoints, standing.totalInnings].map(
-                    (value, statIndex) => (
-                      <div
-                        key={statIndex}
-                        style={{
-                          display: "flex",
-                          width: S_STAT_WIDTH,
-                          flexShrink: 0,
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: multi ? 11.5 : 12.5,
-                            fontWeight: 700,
-                            color: "#ffffff",
-                            fontVariantNumeric: "tabular-nums",
-                          }}
-                        >
-                          {value}
-                        </span>
-                      </div>
-                    ),
-                  )}
-                  <div
-                    style={{
-                      display: "flex",
-                      width: S_AVG_WIDTH,
-                      flexShrink: 0,
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: multi ? 11.5 : 12.5,
-                        fontWeight: 700,
-                        color: "#fcd34d",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {standing.average !== null &&
-                      Number.isFinite(standing.average)
-                        ? standing.average.toFixed(3)
-                        : "–"}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: S_STAT_WIDTH,
-                      flexShrink: 0,
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: multi ? 11.5 : 12.5,
+                        fontSize: multi ? 14.5 : 16,
                         fontWeight: 700,
                         color: "#ffffff",
-                        fontVariantNumeric: "tabular-nums",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      {standing.highRun ?? "–"}
+                      {truncate(standing.playerName, multi ? 22 : 30)}
                     </span>
                   </div>
-                  <div
+                  <span
                     style={{
                       display: "flex",
-                      width: S_WIDE_WIDTH,
+                      width: 84,
                       flexShrink: 0,
                       justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 700,
+                      color: "rgba(255, 255, 255, 0.92)",
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: multi ? 11.5 : 12.5,
-                        fontWeight: 700,
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {standing.bestAverage !== null &&
-                      Number.isFinite(standing.bestAverage)
-                        ? standing.bestAverage.toFixed(3)
-                        : "–"}
-                    </span>
-                  </div>
+                    {formatRecord(standing.record)}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 62,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 700,
+                      color: "rgba(255, 255, 255, 0.92)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.totalMatchPoints}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 96,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 800,
+                      color: "#ffffff",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.totalPoints}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 76,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 700,
+                      color: "#ffffff",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.totalInnings}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 108,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 800,
+                      color: "#fcd34d",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.average !== null && Number.isFinite(standing.average)
+                      ? standing.average.toFixed(3)
+                      : "–"}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 62,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 700,
+                      color: "#ffffff",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.highRun ?? "–"}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 108,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
+                      fontSize: multi ? 13.5 : 15,
+                      fontWeight: 700,
+                      color: "#bae6fd",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {standing.bestAverage !== null && Number.isFinite(standing.bestAverage)
+                      ? standing.bestAverage.toFixed(3)
+                      : "–"}
+                  </span>
                 </div>
               );
             })}
