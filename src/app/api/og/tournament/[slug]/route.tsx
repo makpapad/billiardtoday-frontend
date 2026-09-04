@@ -123,6 +123,15 @@ const fetchEventPayloadCached = unstable_cache(
   { revalidate: 300 },
 );
 
+// Summary resolution paginates the Strapi bt-events list (500/page) before
+// fetching the event by id — several seconds per call. Cache the whole
+// resolution; the OG route then only pays for the satori render (~1-2s).
+const resolveSummaryCached = unstable_cache(
+  async (slugOrLegacy: string) => resolveTournamentEventSummary(slugOrLegacy),
+  ["og-event-summary"],
+  { revalidate: 300 },
+);
+
 const formatQualPct = (row: StageCountryStatRow): string =>
   row.entered > 0 ? `${Math.round((row.qualified / row.entered) * 100)}%` : "–";
 
@@ -1291,7 +1300,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const summary = await resolveTournamentEventSummary(slug);
+  const summary = await resolveSummaryCached(slug);
 
   if (!summary) {
     return new Response("Tournament not found", { status: 404 });
