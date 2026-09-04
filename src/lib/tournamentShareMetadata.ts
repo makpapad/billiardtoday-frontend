@@ -60,7 +60,10 @@ export function buildTournamentShareMetadata(
     width: 1200,
     height: 630,
     alt: hasGroupContext ? `${summary.title} · Group ${contextGroup}` : summary.title,
-    type: slug === LONGONI_U21_SLUG ? "image/jpeg" : "image/png",
+    type:
+      slug === LONGONI_U21_SLUG
+        ? "image/jpeg"
+        : "image/webp",
   });
 
   const ogTitle = hasGroupContext

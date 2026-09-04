@@ -147,6 +147,34 @@ const resolveSummaryCached = unstable_cache(
   { revalidate: 300 },
 );
 
+// The 2x satori render itself is the expensive step (~8s on this host), so
+// cache the final PNG per request URL. First hit after expiry pays the render;
+// every later hit (including Facebook's scrape) is served instantly.
+const pngCache = new Map<
+  string,
+  { expiresAt: number; type: string; data: Uint8Array }
+>();
+
+const readPngCache = (
+  key: string,
+): { type: string; data: Uint8Array } | null => {
+  const entry = pngCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt < Date.now()) {
+    pngCache.delete(key);
+    return null;
+  }
+  return { type: entry.type, data: entry.data };
+};
+
+const writePngCache = (key: string, type: string, data: Uint8Array) => {
+  pngCache.set(key, { expiresAt: Date.now() + 900_000, type, data });
+  if (pngCache.size > 300) {
+    const oldestKey = pngCache.keys().next().value as string | undefined;
+    if (oldestKey) pngCache.delete(oldestKey);
+  }
+};
+
 const formatQualPct = (row: StageCountryStatRow): string =>
   row.entered > 0 ? `${Math.round((row.qualified / row.entered) * 100)}%` : "–";
 
@@ -1290,6 +1318,19 @@ export async function GET(
   const preferredStageDocumentId = requestUrl.searchParams.get("stage");
   const groupParam = requestUrl.searchParams.get("group");
 
+  // Serve a cached render (if any) before doing any data fetching — the 2x
+  // satori render is the expensive step.
+  const pngCacheKey = `${requestUrl.pathname}?${requestUrl.searchParams.toString()}`;
+  const cachedRender = readPngCache(pngCacheKey);
+  if (cachedRender) {
+    return new Response(cachedRender.data, {
+      headers: {
+        "Content-Type": cachedRender.type,
+        "Cache-Control": "public, max-age=900, s-maxage=900",
+      },
+    });
+  }
+
   let statsRows: StageCountryStatRow[] = [];
   let statsStage: NormalizedEventStage | null = null;
   let groupStandings: GroupStanding[] = [];
@@ -1594,9 +1635,27 @@ export async function GET(
   );
   // Soften the default (immutable, 1y) ImageResponse cache header so social
   // crawlers re-fetch sooner; cache-bust via the &v= query param on changes.
-  imageResponse.headers.set(
-    "Cache-Control",
-    "public, max-age=900, s-maxage=900",
-  );
-  return imageResponse;
+  const pngBuffer = new Uint8Array(await imageResponse.arrayBuffer());
+  // WebP (q92) — roughly 5-8x smaller than the raw PNG at the same visual
+  // sharpness, so Facebook's crawler downloads it faster.
+  let outBuffer: Uint8Array = pngBuffer;
+  try {
+    const sharpModule = (await import("sharp")).default;
+    outBuffer = new Uint8Array(
+      await sharpModule(Buffer.from(pngBuffer))
+        .webp({ quality: 92 })
+        .toBuffer(),
+    );
+  } catch {
+    // sharp unavailable → serve the PNG as-is (type mismatch is handled by
+    // sniffing below).
+  }
+  const isWebp = outBuffer !== pngBuffer;
+  writePngCache(pngCacheKey, isWebp ? "image/webp" : "image/png", outBuffer);
+  return new Response(outBuffer, {
+    headers: {
+      "Content-Type": isWebp ? "image/webp" : "image/png",
+      "Cache-Control": "public, max-age=900, s-maxage=900",
+    },
+  });
 }
