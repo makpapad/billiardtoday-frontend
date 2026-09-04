@@ -214,10 +214,12 @@ export default function ShareMenuButton({
   };
 
   const handleCopyLink = async () => {
-    const pageUrl = typeof window !== "undefined" ? window.location.href : "";
+    // Prefer the enriched URL (stage/group) so the copied link shares the
+    // exact group context; falls back to the bare page URL.
+    const copyUrl = socialShareUrl || pageUrl;
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(pageUrl);
+        await navigator.clipboard.writeText(copyUrl);
       }
     } catch {
       // Clipboard can fail on insecure contexts.
