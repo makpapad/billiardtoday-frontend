@@ -32,9 +32,20 @@ import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 // past Facebook's image-fetch timeout. Node keeps repeat renders ~1-2s.
 
 
+// Render at 2x resolution: Facebook downscales link-preview images to
+// ~550px, and downscaling a 2400px canvas keeps text far sharper than a
+// 1200px one. Every branch is wrapped in scaleWrapStyle + scaled 2x.
+const SCALE = 2;
 const SIZE = {
-  width: 1200,
-  height: 630,
+  width: 1200 * SCALE,
+  height: 630 * SCALE,
+};
+const scaleWrapStyle = {
+  width: SIZE.width,
+  height: SIZE.height,
+  display: "flex" as const,
+  position: "relative" as const,
+  overflow: "hidden" as const,
 };
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 const BACKGROUND_IMAGE_URL = `${SITE_URL}/img/og/tournament-default.png`;
@@ -123,7 +134,7 @@ const fetchEventPayloadCached = async (documentId: string): Promise<unknown> => 
   );
   if (!response.ok) return null;
   const data = await response.json().catch(() => null);
-  eventPayloadCache.set(documentId, { expiresAt: now + 300_000, data });
+  eventPayloadCache.set(documentId, { expiresAt: now + 900_000, data });
   return data;
 };
 
@@ -1355,11 +1366,13 @@ export async function GET(
   }
 
   const rootStyle = {
-    width: "100%" as const,
-    height: "100%" as const,
+    width: 1200,
+    height: 630,
     display: "flex" as const,
     position: "relative" as const,
     overflow: "hidden" as const,
+    transform: `scale(${SCALE})`,
+    transformOrigin: "top left",
     background:
       "linear-gradient(135deg, #0a1c3d 0%, #0d3a55 30%, #0d6b66 62%, #17947f 100%)",
     color: "white",
@@ -1479,6 +1492,7 @@ export async function GET(
 
   const imageResponse = new ImageResponse(
     groupStandings.length > 0 && groupStage ? (
+      <div style={scaleWrapStyle}>
       <div style={rootStyle}>
         <img
           src={BACKGROUND_IMAGE_URL}
@@ -1511,7 +1525,9 @@ export async function GET(
           matches={groupMatchesList}
         />
       </div>
+      </div>
     ) : statsRows.length > 0 && statsStage ? (
+      <div style={scaleWrapStyle}>
       <div style={rootStyle}>
         <img
           src={BACKGROUND_IMAGE_URL}
@@ -1543,7 +1559,9 @@ export async function GET(
           rows={statsRows}
         />
       </div>
+      </div>
     ) : (
+      <div style={scaleWrapStyle}>
       <div style={rootStyle}>
         <img
           src={BACKGROUND_IMAGE_URL}
@@ -1570,6 +1588,7 @@ export async function GET(
         />
         {legacyContent}
       </div>
+      </div>
     ),
     SIZE,
   );
@@ -1577,7 +1596,7 @@ export async function GET(
   // crawlers re-fetch sooner; cache-bust via the &v= query param on changes.
   imageResponse.headers.set(
     "Cache-Control",
-    "public, max-age=300, s-maxage=300",
+    "public, max-age=900, s-maxage=900",
   );
   return imageResponse;
 }
