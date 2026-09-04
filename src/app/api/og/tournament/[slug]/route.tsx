@@ -1300,7 +1300,9 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const summaryStart = Date.now();
   const summary = await resolveSummaryCached(slug);
+  console.log("[og] summary resolve:", Date.now() - summaryStart, "ms");
 
   if (!summary) {
     return new Response("Tournament not found", { status: 404 });
@@ -1318,7 +1320,9 @@ export async function GET(
   let groupMatchesList: NormalizedGroupMatch[] = [];
   let groupDisplayLabel = groupParam ? `Group ${groupParam}` : "";
 
+  const payloadStart = Date.now();
   const eventPayload = await fetchEventPayloadCached(summary.documentId);
+  console.log("[og] event payload:", Date.now() - payloadStart, "ms");
   const rawStages =
     (eventPayload as { data?: { event_stages?: unknown } } | null)?.data
       ?.event_stages ?? null;
