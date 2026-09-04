@@ -12,7 +12,7 @@ const LONGONI_U21_OG_IMAGE =
 const TOURNAMENT_OG_IMAGE_VERSION = "powered-by-bt-no-organizer-logo-20260610";
 // Bump when the group share card design/data layout changes: Facebook caches
 // the og:image by URL, so a changed URL (new v) forces a fresh download.
-const TOURNAMENT_GROUP_OG_VERSION = "dark-v6-20260904";
+const TOURNAMENT_GROUP_OG_VERSION = "v9-scoreline-20260904";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
