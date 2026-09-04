@@ -1879,6 +1879,21 @@ export function TournamentDetailPage({
       null,
   );
   const userSelectedStageRef = useRef(false);
+  // Share/deep-link params (?group= / ?match=) apply only to the stage the
+  // link opened. TournamentEventsContent is remounted (via key) whenever the
+  // selected stage changes, so forwarding the raw URL params would re-open the
+  // linked group/match and scroll to it on every stage switch. Null them out
+  // as soon as the user navigates stages on their own.
+  const [effectiveGroupParam, setEffectiveGroupParam] = useState<string | null>(
+    preferredGroupParam,
+  );
+  const [effectiveMatchParam, setEffectiveMatchParam] = useState<string | null>(
+    preferredMatchParam,
+  );
+  const clearDeepLinkStageParams = () => {
+    setEffectiveGroupParam(null);
+    setEffectiveMatchParam(null);
+  };
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -5913,6 +5928,7 @@ export function TournamentDetailPage({
   };
 
   const openFinalStandings = () => {
+    clearDeepLinkStageParams();
     if (finalStageDocumentId) {
       setSelectedStageDocumentId(finalStageDocumentId);
     }
@@ -7122,8 +7138,8 @@ export function TournamentDetailPage({
             eventDataOverride={eventData}
             disableAutoRefresh
             preferredStageDocumentId={selectedStageDocumentId}
-            preferredGroupParam={preferredGroupParam}
-            preferredMatchParam={preferredMatchParam}
+            preferredGroupParam={effectiveGroupParam}
+            preferredMatchParam={effectiveMatchParam}
             timezoneOffsetMinutes={effectiveTimezoneOffset ?? 180}
             timezoneName={effectiveTimezoneName}
             timezoneOptions={timezoneOptions}
@@ -7657,6 +7673,7 @@ export function TournamentDetailPage({
                         type="button"
                         onClick={() => {
                           userSelectedStageRef.current = true;
+                          clearDeepLinkStageParams();
                           setSelectedStageDocumentId(stage.documentId);
                           setTournamentPanelMode("stages");
                           setActiveView("tournament");

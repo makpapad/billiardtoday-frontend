@@ -3049,8 +3049,8 @@ export function TournamentEventsContent({
   eventDataOverride = null,
   disableAutoRefresh = false,
   preferredStageDocumentId = null,
-  preferredGroupParam: preferredGroupParamOverride = null,
-  preferredMatchParam: preferredMatchParamOverride = null,
+  preferredGroupParam: preferredGroupParamOverride = undefined,
+  preferredMatchParam: preferredMatchParamOverride = undefined,
   timezoneOffsetMinutes = null,
   timezoneName = null,
   timezoneOptions = [],
@@ -3116,16 +3116,21 @@ export function TournamentEventsContent({
     player: string | null;
   }>({ group: null, match: null, player: null });
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
+  // Deep-link params (?group= / ?match=) come from the parent as an explicit
+  // override ONLY while the stage the link opened is active: the tournament
+  // detail page forwards the URL value for the initial mount and null once the
+  // user starts navigating stages on their own (the content is remounted per
+  // stage via a key, so a raw URL read here would re-open the linked group /
+  // match on every stage switch). With no override (standalone events page)
+  // fall back to the URL params as before.
   const preferredGroupParam =
-    preferredGroupParamOverride ??
-    locationSearchParams.group ??
-    searchParams?.get("group") ??
-    null;
+    preferredGroupParamOverride !== undefined
+      ? preferredGroupParamOverride
+      : locationSearchParams.group ?? searchParams?.get("group") ?? null;
   const preferredMatchParam =
-    preferredMatchParamOverride ??
-    locationSearchParams.match ??
-    searchParams?.get("match") ??
-    null;
+    preferredMatchParamOverride !== undefined
+      ? preferredMatchParamOverride
+      : locationSearchParams.match ?? searchParams?.get("match") ?? null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
