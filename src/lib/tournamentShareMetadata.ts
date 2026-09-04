@@ -10,6 +10,9 @@ const LONGONI_U21_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 const LONGONI_U21_OG_IMAGE =
   "/img/og/longoni-next-gen-grand-prix-3-cushion-u21-2026.jpg";
 const TOURNAMENT_OG_IMAGE_VERSION = "powered-by-bt-no-organizer-logo-20260610";
+// Bump when the group share card design/data layout changes: Facebook caches
+// the og:image by URL, so a changed URL (new v) forces a fresh download.
+const TOURNAMENT_GROUP_OG_VERSION = "dark-v6-20260904";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
@@ -43,7 +46,7 @@ export function buildTournamentShareMetadata(
             contextStage
               ? `stage=${encodeURIComponent(contextStage)}&`
               : ""
-          }group=${encodeURIComponent(contextGroup ?? "")}`
+          }group=${encodeURIComponent(contextGroup ?? "")}&v=${TOURNAMENT_GROUP_OG_VERSION}`
         : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
   const socialImage = buildOpenGraphImage({
     url: ogImagePath,

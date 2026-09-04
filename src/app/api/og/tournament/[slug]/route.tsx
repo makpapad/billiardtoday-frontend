@@ -1515,7 +1515,7 @@ export async function GET(
     </div>
   );
 
-  return new ImageResponse(
+  const imageResponse = new ImageResponse(
     groupStandings.length > 0 && groupStage ? (
       <div style={rootStyle}>
         <img
@@ -1611,4 +1611,11 @@ export async function GET(
     ),
     SIZE,
   );
+  // Soften the default (immutable, 1y) ImageResponse cache header so social
+  // crawlers re-fetch sooner; cache-bust via the &v= query param on changes.
+  imageResponse.headers.set(
+    "Cache-Control",
+    "public, max-age=300, s-maxage=300",
+  );
+  return imageResponse;
 }
