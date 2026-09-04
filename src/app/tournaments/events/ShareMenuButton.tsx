@@ -249,18 +249,19 @@ export default function ShareMenuButton({
 
   const pageUrl = typeof window !== "undefined" ? window.location.href : "";
 
-  // When the button was given a group share image href
-  // (/api/og/tournament/<event>?stage=..&group=..), social posts must point at
-  // the PAGE url enriched with the same stage/group so link previews render
-  // the group share card (and the click opens the group on the site).
+  // When the button was given a share image href
+  // (/api/og/tournament/<event>?stage=..[&group=..]), social posts must point
+  // at the PAGE url enriched with the same params so link previews render the
+  // matching card (group card when group is set, by-country stats when only
+  // stage is set) and the click opens the right view on the site.
   const socialShareUrl = (() => {
     if (typeof window === "undefined" || !shareHref) return pageUrl;
     try {
       const target = new URL(pageUrl, window.location.origin);
       const imageUrl = new URL(shareHref, window.location.origin);
       const group = imageUrl.searchParams.get("group");
-      if (!group) return pageUrl;
       const stage = imageUrl.searchParams.get("stage");
+      if (!group && !stage) return pageUrl;
       const eventRef =
         imageUrl.pathname.split("/").filter(Boolean).pop() ?? null;
       const isEventsModulePage =
@@ -271,7 +272,7 @@ export default function ShareMenuButton({
         target.searchParams.set("eventId", eventRef);
       }
       if (stage) target.searchParams.set("stage", stage);
-      target.searchParams.set("group", group);
+      if (group) target.searchParams.set("group", group);
       return target.toString();
     } catch {
       return pageUrl;

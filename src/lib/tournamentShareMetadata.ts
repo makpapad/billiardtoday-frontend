@@ -36,29 +36,30 @@ export function buildTournamentShareMetadata(
   const path = `${options?.embedded ? "/embed" : ""}/tournaments/${slug}`;
   const canonicalPath = `/tournaments/${slug}`;
   const hasGroupContext = Boolean(options?.group);
+  const hasStageContext = Boolean(options?.stage) && !hasGroupContext;
   const contextGroup = options?.group ?? null;
   const contextStage = options?.stage ?? null;
-  // When sharing a specific group, og:url must keep the query params —
-  // Facebook follows og:url, and a param-less url makes it scrape the
-  // canonical page (default card) instead of the group card.
-  const shareUrl = hasGroupContext
-    ? `${path}?${contextStage ? `stage=${encodeURIComponent(contextStage)}&` : ""}group=${encodeURIComponent(contextGroup ?? "")}`
-    : path;
+  // Facebook follows og:url — when sharing a specific group or a stage
+  // (by-country stats), og:url keeps the query params so the scrape stays on
+  // the deep-linked page instead of falling back to the canonical default.
+  const contextQuery =
+    hasGroupContext
+      ? `?${contextStage ? `stage=${encodeURIComponent(contextStage)}&` : ""}group=${encodeURIComponent(contextGroup ?? "")}`
+      : hasStageContext
+        ? `?stage=${encodeURIComponent(contextStage ?? "")}`
+        : "";
+  const shareUrl = `${path}${contextQuery}`;
   const ogImagePath =
     slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
-      : hasGroupContext
-        ? `/api/og/tournament/${encodeURIComponent(slug)}?${
-            contextStage
-              ? `stage=${encodeURIComponent(contextStage)}&`
-              : ""
-          }group=${encodeURIComponent(contextGroup ?? "")}&v=${TOURNAMENT_GROUP_OG_VERSION}`
+      : contextQuery
+        ? `/api/og/tournament/${encodeURIComponent(slug)}${contextQuery}&v=${TOURNAMENT_GROUP_OG_VERSION}`
         : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
   const socialImage = buildOpenGraphImage({
     url: ogImagePath,
     width: 1200,
     height: 630,
-    alt: hasGroupContext ? `${summary.title} · Group ${options?.group}` : summary.title,
+    alt: hasGroupContext ? `${summary.title} · Group ${contextGroup}` : summary.title,
     type: slug === LONGONI_U21_SLUG ? "image/jpeg" : "image/png",
   });
 
