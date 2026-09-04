@@ -38,6 +38,12 @@ export function buildTournamentShareMetadata(
   const hasGroupContext = Boolean(options?.group);
   const contextGroup = options?.group ?? null;
   const contextStage = options?.stage ?? null;
+  // When sharing a specific group, og:url must keep the query params —
+  // Facebook follows og:url, and a param-less url makes it scrape the
+  // canonical page (default card) instead of the group card.
+  const shareUrl = hasGroupContext
+    ? `${path}?${contextStage ? `stage=${encodeURIComponent(contextStage)}&` : ""}group=${encodeURIComponent(contextGroup ?? "")}`
+    : path;
   const ogImagePath =
     slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
@@ -75,7 +81,7 @@ export function buildTournamentShareMetadata(
       siteName: "Billiard Today",
       title: ogTitle,
       description: ogDescription,
-      url: toAbsoluteUrl(path),
+      url: toAbsoluteUrl(shareUrl),
       images: socialImage ? [socialImage] : undefined,
     },
     twitter: {
