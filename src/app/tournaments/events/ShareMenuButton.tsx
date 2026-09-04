@@ -246,11 +246,41 @@ export default function ShareMenuButton({
   };
 
   const pageUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  // When the button was given a group share image href
+  // (/api/og/tournament/<event>?stage=..&group=..), social posts must point at
+  // the PAGE url enriched with the same stage/group so link previews render
+  // the group share card (and the click opens the group on the site).
+  const socialShareUrl = (() => {
+    if (typeof window === "undefined" || !shareHref) return pageUrl;
+    try {
+      const target = new URL(pageUrl, window.location.origin);
+      const imageUrl = new URL(shareHref, window.location.origin);
+      const group = imageUrl.searchParams.get("group");
+      if (!group) return pageUrl;
+      const stage = imageUrl.searchParams.get("stage");
+      const eventRef =
+        imageUrl.pathname.split("/").filter(Boolean).pop() ?? null;
+      const isEventsModulePage =
+        target.pathname === "/tournaments/events" ||
+        target.pathname.endsWith("/events");
+      if (isEventsModulePage && eventRef) {
+        // /tournaments/events resolves the event from eventId, not the path.
+        target.searchParams.set("eventId", eventRef);
+      }
+      if (stage) target.searchParams.set("stage", stage);
+      target.searchParams.set("group", group);
+      return target.toString();
+    } catch {
+      return pageUrl;
+    }
+  })();
+
   const pageText =
     typeof document !== "undefined"
       ? document.title || "Billiard Today"
       : "Billiard Today";
-  const encodedUrl = encodeURIComponent(pageUrl);
+  const encodedUrl = encodeURIComponent(socialShareUrl);
   const encodedText = encodeURIComponent(pageText);
 
   const openSharePopup = (href: string, width: number, height: number) => {

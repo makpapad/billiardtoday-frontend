@@ -875,7 +875,7 @@ const GroupResultsContent = ({
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          maxWidth: 880,
+          maxWidth: 780,
           alignSelf: "center",
           minHeight: 0,
         }}
@@ -914,7 +914,7 @@ const GroupResultsContent = ({
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: 880,
+                maxWidth: 780,
               }}
             >
               {truncate(title, 74)}
