@@ -4123,6 +4123,13 @@ export function TournamentEventsContent({
       next.add(targetKey);
       return next;
     });
+    // Bring the opened group into view (deep-linked share) once it renders.
+    const scrollToGroup = () => {
+      const el = document.getElementById(`grp-${targetKey}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.setTimeout(scrollToGroup, 200);
+    window.setTimeout(scrollToGroup, 700);
   }, [preferredGroupParam, activeStageId, eventStages, stageMatchGroups]);
 
   useEffect(() => {
@@ -6937,7 +6944,8 @@ export function TournamentEventsContent({
                                             return (
                                             <div
                                               key={group.key}
-                                              className="flex flex-col gap-1.5"
+                                              id={`grp-${groupKey}`}
+                                              className="flex scroll-mt-36 flex-col gap-1.5"
                                             >
                                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                                 <button
