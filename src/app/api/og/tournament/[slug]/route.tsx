@@ -105,23 +105,27 @@ const normalizeEventStages = (
 };
 
 // The event-data payload is ~6MB and takes ~5-6s to build on the Strapi side.
-// Next 16 dropped implicit fetch caching, so memoize it explicitly — an OG
+// unstable_cache dropped entries of this size on this stack, so keep a simple
+// in-memory TTL cache instead (frontend runs as a single PM2 instance) — an OG
 // render must stay well under Facebook's image-fetch timeout.
-const fetchEventPayloadCached = unstable_cache(
-  async (documentId: string) => {
-    const response = await fetch(
-      `${SITE_URL}/event-data/${encodeURIComponent(documentId)}`,
-      {
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) return null;
-    return response.json().catch(() => null);
-  },
-  ["og-event-data-payload"],
-  { revalidate: 300 },
-);
+const eventPayloadCache = new Map<
+  string,
+  { expiresAt: number; data: unknown }
+>();
+
+const fetchEventPayloadCached = async (documentId: string): Promise<unknown> => {
+  const now = Date.now();
+  const cached = eventPayloadCache.get(documentId);
+  if (cached && cached.expiresAt > now) return cached.data;
+  const response = await fetch(
+    `${SITE_URL}/event-data/${encodeURIComponent(documentId)}`,
+    { headers: { Accept: "application/json" } },
+  );
+  if (!response.ok) return null;
+  const data = await response.json().catch(() => null);
+  eventPayloadCache.set(documentId, { expiresAt: now + 300_000, data });
+  return data;
+};
 
 // Summary resolution paginates the Strapi bt-events list (500/page) before
 // fetching the event by id — several seconds per call. Cache the whole
