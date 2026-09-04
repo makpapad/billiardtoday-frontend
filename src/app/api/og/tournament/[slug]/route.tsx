@@ -25,7 +25,11 @@ import type {
 } from "@/app/tournaments/events/types";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
-export const runtime = "edge";
+// Node.js runtime (not edge): the OG render fetches the (large) event-data
+// payload with `next: { revalidate: 300 }`; the fetch data cache only works
+// on the Node runtime. On edge every request re-fetches ~6s of JSON, blowing
+// past Facebook's image-fetch timeout. Node keeps repeat renders ~1-2s.
+
 
 const SIZE = {
   width: 1200,
