@@ -39,9 +39,9 @@ export function buildTournamentShareMetadata(
     slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
       : hasGroupContext
-        ? `/api/og/tournament/${encodeURIComponent(slug)}?stage=${
+        ? `/api/og/tournament/${encodeURIComponent(slug)}?${
             contextStage
-              ? `${encodeURIComponent(contextStage)}&`
+              ? `stage=${encodeURIComponent(contextStage)}&`
               : ""
           }group=${encodeURIComponent(contextGroup ?? "")}`
         : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
