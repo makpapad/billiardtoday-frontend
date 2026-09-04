@@ -11,6 +11,7 @@ import {
   computeStageCountryStats,
   formatDateRange,
   formatRecord,
+  getMatchOutcome,
   normalizeEntity,
   normalizeGroup,
   toNumber,
@@ -425,46 +426,85 @@ const StatsContent = ({
 /* Group-results layout (a single round-robin group's standings)       */
 /* ------------------------------------------------------------------ */
 
-const GROUP_COLUMNS = [
-  { key: "rec", label: "REC", width: 76 },
-  { key: "mp", label: "MP", width: 56 },
-  { key: "pts", label: "PTS", width: 66 },
-  { key: "inns", label: "INNS", width: 66 },
-  { key: "avg", label: "AVG", width: 80 },
-  { key: "hr", label: "HR", width: 62 },
-  { key: "best", label: "BEST AVG", width: 96 },
-];
+
+/* ------------------------------------------------------------------ */
+/* Group share card — dark v6 (approved sample): logo + centered big   */
+/* title on top, per-match blocks with a shared date, roomy columns,   */
+/* standings table below. Every wrapper is an explicit flex so satori  */
+/* never trips on a multi-child block element.                         */
+/* ------------------------------------------------------------------ */
+
+const PLAYER_COL_WIDTH = 240;
+const WL_COL_WIDTH = 24;
+const STAT_COL_WIDTH = 64;
+const AVG_COL_WIDTH = 82;
+const ROW_GAP = 20;
+const S_POS_WIDTH = 20;
+const S_STAT_WIDTH = 54;
+const S_AVG_WIDTH = 64;
+const S_WIDE_WIDTH = 74;
+const S_GAP = 10;
+
+const pad2 = (value: number) => String(value).padStart(2, "0");
+
+const greekDayLabel = (iso: string | null): string | null => {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Athens",
+    day: "2-digit",
+    month: "2-digit",
+  }).formatToParts(date);
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  return day && month ? `${day}/${month}` : null;
+};
+
+const greekTimeLabel = (iso: string | null): string | null => {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Athens",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "";
+  return hour || minute ? `${hour}:${minute}` : null;
+};
+
+const playerAverage = (
+  points: number | null,
+  innings: number | null,
+): string => {
+  if (points === null || innings === null || innings <= 0) return "–";
+  return (points / innings).toFixed(3);
+};
 
 const GroupResultsContent = ({
   title,
   stageLabel,
-  stageDateLabel,
   groupLabel,
   standings,
   matches,
 }: {
   title: string;
   stageLabel: string;
-  stageDateLabel: string;
   groupLabel: string;
   standings: GroupStanding[];
   matches: NormalizedGroupMatch[];
 }) => {
-  const scoreOf = (
-    match: NormalizedGroupMatch,
-    side: "player1" | "player2",
-  ): number | null => match[side]?.points ?? null;
-  const nameOf = (
-    match: NormalizedGroupMatch,
-    side: "player1" | "player2",
-  ): string => match[side]?.name?.trim() || "–";
-  const flagOf = (
-    match: NormalizedGroupMatch,
-    side: "player1" | "player2",
-  ) => getCountryFlagCdnUrl(match[side]?.country ?? null, 40);
-
   const columnCount =
     matches.length > 8 ? 3 : matches.length > 4 ? 2 : 1;
+  const multi = columnCount > 1;
+  const playerWidth = multi ? 178 : PLAYER_COL_WIDTH;
+  const rowGap = multi ? 12 : ROW_GAP;
+  const statWidth = multi ? 56 : STAT_COL_WIDTH;
+  const avgWidth = multi ? 70 : AVG_COL_WIDTH;
+
   const matchColumns: NormalizedGroupMatch[][] = [];
   for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
     matchColumns.push(
@@ -472,9 +512,208 @@ const GroupResultsContent = ({
     );
   }
 
-  const renderMatch = (match: NormalizedGroupMatch) => {
-    const topFlag = flagOf(match, "player1");
-    const bottomFlag = flagOf(match, "player2");
+  // One shared date for the whole card when every match falls on the same
+  // day; otherwise each match header carries its own day.
+  const dayLabels = Array.from(
+    new Set(
+      matches
+        .map((match) => greekDayLabel(match.dateTime))
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
+  const sharedDay = dayLabels.length === 1 ? dayLabels[0] : null;
+
+  const renderFlag = (
+    flagUrl: string | null,
+    width: number,
+    height: number,
+  ) =>
+    flagUrl ? (
+      <img
+        src={flagUrl}
+        alt=""
+        width={width}
+        height={height}
+        style={{
+          width,
+          height,
+          borderRadius: 2,
+          objectFit: "cover",
+          flexShrink: 0,
+        }}
+      />
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          width,
+          height,
+          borderRadius: 2,
+          background: "rgba(255, 255, 255, 0.16)",
+          flexShrink: 0,
+        }}
+      />
+    );
+
+  const renderMatchRow = (
+    match: NormalizedGroupMatch,
+    side: "player1" | "player2",
+  ) => {
+    const player = match[side];
+    const opponent = match[side === "player1" ? "player2" : "player1"];
+    const outcome = getMatchOutcome(player, opponent);
+    const played = outcome !== null;
+    const isWin = outcome === "W";
+    const isLoss = outcome === "L";
+    const flagUrl = getCountryFlagCdnUrl(player.country ?? null, 40);
+
+    return (
+      <div
+        key={`${match.id}-${side}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: rowGap,
+          padding: "3.5px 16px",
+          background: played
+            ? isWin
+              ? "rgba(21, 128, 61, 0.45)"
+              : isLoss
+                ? "rgba(190, 18, 60, 0.35)"
+                : "rgba(255, 255, 255, 0.03)"
+            : "rgba(255, 255, 255, 0.03)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            width: playerWidth,
+            flexShrink: 0,
+            minWidth: 0,
+          }}
+        >
+          {renderFlag(flagUrl, 20, 14)}
+          <span
+            style={{
+              fontSize: multi ? 12.5 : 13.5,
+              fontWeight: 700,
+              color: "#ffffff",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {truncate(player.name?.trim() || "–", multi ? 20 : 26)}
+          </span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            width: WL_COL_WIDTH,
+            flexShrink: 0,
+            justifyContent: "center",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 900,
+              color: played
+                ? isWin
+                  ? "#86efac"
+                  : isLoss
+                    ? "#fda4af"
+                    : "rgba(255,255,255,0.35)"
+                : "rgba(255,255,255,0.35)",
+            }}
+          >
+            {played ? (isWin ? "W" : isLoss ? "L" : "–") : "–"}
+          </span>
+        </div>
+        {[player.matchPoints, player.points, player.innings].map(
+          (value, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                width: statWidth,
+                flexShrink: 0,
+                justifyContent: "flex-end",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: multi ? 12.5 : 13.5,
+                  fontWeight: 700,
+                  color:
+                    value === null || value === 0
+                      ? "rgba(255, 255, 255, 0.4)"
+                      : "#ffffff",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {value ?? "–"}
+              </span>
+            </div>
+          ),
+        )}
+        <div
+          style={{
+            display: "flex",
+            width: avgWidth,
+            flexShrink: 0,
+            justifyContent: "flex-end",
+          }}
+        >
+          <span
+            style={{
+              fontSize: multi ? 12.5 : 13.5,
+              fontWeight: 700,
+              color: "#fcd34d",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {playerAverage(player.points, player.innings)}
+          </span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            width: statWidth,
+            flexShrink: 0,
+            justifyContent: "flex-end",
+          }}
+        >
+          <span
+            style={{
+              fontSize: multi ? 12.5 : 13.5,
+              fontWeight: 700,
+              color:
+                player.highRun === null || player.highRun === 0
+                  ? "rgba(255, 255, 255, 0.4)"
+                  : "#ffffff",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {player.highRun ?? "–"}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMatchBlock = (match: NormalizedGroupMatch) => {
+    const matchNumber = match.matchNumber !== null ? `M${match.matchNumber}` : null;
+    const day = greekDayLabel(match.dateTime);
+    const time = greekTimeLabel(match.dateTime);
+    const when =
+      sharedDay && time
+        ? time
+        : [day, time].filter(Boolean).join(" · ");
+    const heading = [matchNumber, when].filter(Boolean).join("  ·  ");
+
     return (
       <div
         key={match.id}
@@ -482,138 +721,142 @@ const GroupResultsContent = ({
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          padding: "5px 0",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRadius: 9,
+          overflow: "hidden",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+          background: "rgba(10, 22, 40, 0.85)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {topFlag ? (
-              <img
-                src={topFlag}
-                alt=""
-                width={22}
-                height={15}
-                style={{ width: 22, height: 15, borderRadius: 2 }}
-              />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  width: 22,
-                  height: 15,
-                  borderRadius: 2,
-                  background: "rgba(255,255,255,0.14)",
-                }}
-              />
-            )}
-            <span
-              style={{
-                fontSize: 13.5,
-                fontWeight: 700,
-                color: "rgba(255,255,255,0.92)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {truncate(nameOf(match, "player1"), 22)}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginLeft: 8,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 800,
-                color:
-                  scoreOf(match, "player1") !== null
-                    ? "#ffffff"
-                    : "rgba(255, 255, 255, 0.4)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {scoreOf(match, "player1") ?? "–"}
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              :
-            </span>
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 800,
-                color:
-                  scoreOf(match, "player2") !== null
-                    ? "#ffffff"
-                    : "rgba(255, 255, 255, 0.4)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {scoreOf(match, "player2") ?? "–"}
-            </span>
-          </div>
-        </div>
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 6,
-            flex: 1,
-            minWidth: 0,
-            marginTop: 2,
+            gap: rowGap,
+            padding: "3px 16px",
+            background: "rgba(255, 255, 255, 0.12)",
           }}
         >
-          {bottomFlag ? (
-            <img
-              src={bottomFlag}
-              alt=""
-              width={22}
-              height={15}
-              style={{ width: 22, height: 15, borderRadius: 2 }}
-            />
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                width: 22,
-                height: 15,
-                borderRadius: 2,
-                background: "rgba(255,255,255,0.14)",
-              }}
-            />
-          )}
-          <span
+          <div
             style={{
-              fontSize: 13.5,
-              fontWeight: 600,
-              color: "rgba(255,255,255,0.74)",
-              whiteSpace: "nowrap",
+              display: "flex",
+              width: playerWidth,
+              flexShrink: 0,
+              alignItems: "center",
             }}
           >
-            {truncate(nameOf(match, "player2"), 22)}
+            <span
+              style={{
+                fontSize: multi ? 9.5 : 10.5,
+                fontWeight: 800,
+                letterSpacing: 0.6,
+                color: "#6ee7d8",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {heading || "Group match"}
+            </span>
+          </div>
+          <span
+            style={{
+              display: "flex",
+              width: WL_COL_WIDTH,
+              flexShrink: 0,
+              justifyContent: "center",
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              color: "rgba(255, 255, 255, 0.75)",
+            }}
+          >
+            W/L
+          </span>
+          {["MP", "PTS", "INNS"].map((label) => (
+            <span
+              key={label}
+              style={{
+                display: "flex",
+                width: statWidth,
+                flexShrink: 0,
+                justifyContent: "flex-end",
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: 0.4,
+                color: "rgba(255, 255, 255, 0.9)",
+              }}
+            >
+              {label}
+            </span>
+          ))}
+          <span
+            style={{
+              display: "flex",
+              width: avgWidth,
+              flexShrink: 0,
+              justifyContent: "flex-end",
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              color: "#fcd34d",
+            }}
+          >
+            AVG
+          </span>
+          <span
+            style={{
+              display: "flex",
+              width: statWidth,
+              flexShrink: 0,
+              justifyContent: "flex-end",
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              color: "rgba(255, 255, 255, 0.9)",
+            }}
+          >
+            HR
           </span>
         </div>
+        {renderMatchRow(match, "player1")}
+        <div style={{ display: "flex", width: "100%", height: 1, background: "rgba(255,255,255,0.08)" }} />
+        {renderMatchRow(match, "player2")}
       </div>
     );
   };
+
+  const sectionLabel = (text: string) => (
+    <span
+      style={{
+        display: "flex",
+        fontSize: 9.5,
+        fontWeight: 800,
+        letterSpacing: 1.8,
+        textTransform: "uppercase",
+        color: "rgba(255, 255, 255, 0.85)",
+        marginBottom: 6,
+      }}
+    >
+      {text}
+    </span>
+  );
+
+  const standingsColumnLabel = (text: string, width: number, color: string) => (
+    <span
+      style={{
+        display: "flex",
+        width,
+        flexShrink: 0,
+        justifyContent: "flex-end",
+        fontSize: 9,
+        fontWeight: 800,
+        letterSpacing: 0.6,
+        color,
+      }}
+    >
+      {text}
+    </span>
+  );
 
   return (
     <div
@@ -624,237 +867,236 @@ const GroupResultsContent = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        padding: "20px 48px 18px",
+        padding: "14px 48px 12px",
       }}
     >
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          flexDirection: "column",
           width: "100%",
+          maxWidth: 880,
+          alignSelf: "center",
+          minHeight: 0,
         }}
       >
-        <img
-          src={BRAND_LOGO_URL}
-          alt=""
-          width={120}
-          height={42}
-          style={{ width: 120, height: 42, objectFit: "contain" }}
-        />
+        {/* Top: brand logo + centered tournament title + stage/group meta */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 8,
-            padding: "6px 13px",
-            borderRadius: 999,
-            background: "rgba(7, 17, 31, 0.72)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            textAlign: "center",
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#ffffff" }}>
-            {truncate(stageLabel, 32)}
-          </span>
-          {stageDateLabel ? (
-            <span
-              style={{
-                fontSize: 13.5,
-                fontWeight: 600,
-                color: "rgba(255, 255, 255, 0.64)",
-              }}
-            >
-              {`· ${truncate(stageDateLabel, 24)}`}
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div style={{ display: "flex", marginTop: 10 }}>
-        <span
-          style={{
-            fontSize: 27,
-            lineHeight: 1.1,
-            fontWeight: 800,
-            letterSpacing: -0.4,
-            color: "#ffffff",
-            textShadow: "0 14px 34px rgba(0, 0, 0, 0.3)",
-          }}
-        >
-          {truncate(title, 104)}
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginTop: 8,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: "5px 15px",
-            borderRadius: 999,
-            background:
-              "linear-gradient(90deg, rgba(45, 212, 191, 0.3), rgba(59, 130, 246, 0.3))",
-            border: "1px solid rgba(255, 255, 255, 0.26)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 19,
-              fontWeight: 800,
-              color: "#ffffff",
-              letterSpacing: 0.8,
-            }}
-          >
-            {truncate(groupLabel, 36)}
-          </span>
-        </div>
-        <span
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.7)",
-          }}
-        >
-          {`${matches.length} match${matches.length === 1 ? "" : "es"} · ${
-            standings.length
-          } players`}
-        </span>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
-        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: 2.2,
-              color: "rgba(255,255,255,0.55)",
-              textTransform: "uppercase",
-              marginBottom: 2,
-            }}
-          >
-            All matches
-          </span>
+          <img
+            src={BRAND_LOGO_URL}
+            alt=""
+            width={120}
+            height={32}
+            style={{ width: 120, height: 32, objectFit: "contain" }}
+          />
           <div
             style={{
               display: "flex",
               width: "100%",
-              borderRadius: 12,
-              background: "rgba(4, 12, 24, 0.6)",
-              border: "1px solid rgba(255, 255, 255, 0.14)",
-              overflow: "hidden",
+              marginTop: 3,
+              justifyContent: "center",
             }}
           >
-            {matchColumns.map((columnMatches, columnIndex) => (
-              <div
-                key={columnIndex}
-                style={{
-                  display: "flex",
-                  flex: 1,
-                  flexDirection: "column",
-                  padding: "4px 14px",
-                  borderLeft:
-                    columnIndex > 0 ? "1px solid rgba(255,255,255,0.1)" : "none",
-                }}
-              >
-                {columnMatches.map(renderMatch)}
-              </div>
-            ))}
+            <span
+              style={{
+                fontSize: title.length > 46 ? 21 : 25,
+                lineHeight: 1.15,
+                fontWeight: 900,
+                letterSpacing: 0.3,
+                color: "#ffffff",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: 880,
+              }}
+            >
+              {truncate(title, 74)}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 4,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 800,
+                letterSpacing: 2.2,
+                textTransform: "uppercase",
+                color: "#6ee7d8",
+              }}
+            >
+              {truncate(stageLabel, 30)}
+            </span>
+            <span style={{ display: "flex", fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+              ·
+            </span>
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 800,
+                letterSpacing: 2.2,
+                textTransform: "uppercase",
+                color: "#6ee7d8",
+              }}
+            >
+              {truncate(groupLabel, 30)}
+            </span>
+            {sharedDay ? (
+              <>
+                <span style={{ display: "flex", fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.9)" }}>
+                  ·
+                </span>
+                <span
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    letterSpacing: 0.4,
+                    color: "rgba(255, 255, 255, 0.85)",
+                  }}
+                >
+                  {sharedDay}
+                </span>
+              </>
+            ) : null}
           </div>
         </div>
 
+        {/* Matches — one rounded block per pairing */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            marginTop: 12,
+          }}
+        >
+          {sectionLabel(
+            matches.length === 1 ? "Group match" : "Group matches",
+          )}
+          {columnCount === 1 ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 9,
+              }}
+            >
+              {matches.map(renderMatchBlock)}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                borderRadius: 9,
+                overflow: "hidden",
+                border: "1px solid rgba(255, 255, 255, 0.18)",
+                background: "rgba(10, 22, 40, 0.85)",
+              }}
+            >
+              {matchColumns.map((columnMatches, columnIndex) => (
+                <div
+                  key={columnIndex}
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    flexDirection: "column",
+                    gap: 9,
+                    padding: "9px 10px",
+                    borderLeft:
+                      columnIndex > 0
+                        ? "1px solid rgba(255, 255, 255, 0.1)"
+                        : "none",
+                  }}
+                >
+                  {columnMatches.map(renderMatchBlock)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Final standings */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            marginTop: 8,
+            marginTop: 13,
           }}
         >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: 2.2,
-              color: "rgba(255,255,255,0.55)",
-              textTransform: "uppercase",
-              marginBottom: 2,
-            }}
-          >
-            Final standings
-          </span>
+          {sectionLabel("Final standings")}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               width: "100%",
-              borderRadius: 12,
-              background: "rgba(4, 12, 24, 0.6)",
-              border: "1px solid rgba(255, 255, 255, 0.14)",
+              borderRadius: 9,
               overflow: "hidden",
+              border: "1px solid rgba(255, 255, 255, 0.18)",
+              background: "rgba(10, 22, 40, 0.85)",
             }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "6px 16px",
-                background: "rgba(255, 255, 255, 0.07)",
+                gap: S_GAP,
+                padding: "4px 16px",
+                background: "rgba(20, 83, 45, 0.95)",
               }}
             >
-              <div style={{ display: "flex", width: 36, alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  width: playerWidth,
+                  flexShrink: 0,
+                  alignItems: "center",
+                }}
+              >
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 9,
                     fontWeight: 800,
-                    letterSpacing: 1.4,
-                    color: "rgba(255, 255, 255, 0.55)",
-                  }}
-                >
-                  #
-                </span>
-              </div>
-              <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: 1.8,
-                    color: "rgba(255, 255, 255, 0.55)",
+                    letterSpacing: 0.6,
+                    color: "#ffffff",
                   }}
                 >
                   PLAYER
                 </span>
               </div>
-              {GROUP_COLUMNS.map((column) => (
-                <div
-                  key={column.key}
-                  style={{
-                    display: "flex",
-                    width: column.width,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 10.5,
-                      fontWeight: 800,
-                      letterSpacing: 1,
-                      color: "rgba(255, 255, 255, 0.55)",
-                    }}
-                  >
-                    {column.label}
-                  </span>
-                </div>
-              ))}
+              <span
+                style={{
+                  display: "flex",
+                  width: S_POS_WIDTH,
+                  flexShrink: 0,
+                  justifyContent: "center",
+                  fontSize: 9,
+                  fontWeight: 800,
+                  letterSpacing: 0.6,
+                  color: "#ffffff",
+                }}
+              >
+                #
+              </span>
+              {standingsColumnLabel("RECORD", S_WIDE_WIDTH, "#ffffff")}
+              {standingsColumnLabel("MP", S_STAT_WIDTH, "#ffffff")}
+              {standingsColumnLabel("PTS", S_STAT_WIDTH, "#ffffff")}
+              {standingsColumnLabel("INNS", S_STAT_WIDTH, "#ffffff")}
+              {standingsColumnLabel("AVG", S_AVG_WIDTH, "#fcd34d")}
+              {standingsColumnLabel("HR", S_STAT_WIDTH, "#ffffff")}
+              {standingsColumnLabel("BEST", S_WIDE_WIDTH, "#ffffff")}
             </div>
 
             {standings.map((standing, index) => {
@@ -865,33 +1107,51 @@ const GroupResultsContent = ({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    padding: "5px 16px",
+                    gap: S_GAP,
+                    padding: "3px 16px",
                     borderBottom:
                       index < standings.length - 1
-                        ? "1px solid rgba(255, 255, 255, 0.07)"
+                        ? "1px solid rgba(255, 255, 255, 0.08)"
                         : "none",
                   }}
                 >
-                  <div style={{ display: "flex", width: 36, alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      width: playerWidth,
+                      flexShrink: 0,
+                      minWidth: 0,
+                    }}
+                  >
+                    {renderFlag(flagUrl, 20, 14)}
                     <span
                       style={{
-                        display: "flex",
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background:
-                          standing.place === 1
-                            ? "rgba(245, 197, 66, 0.3)"
-                            : standing.place === 2
-                              ? "rgba(203, 213, 225, 0.24)"
-                              : standing.place === 3
-                                ? "rgba(214, 138, 78, 0.24)"
-                                : "rgba(255, 255, 255, 0.1)",
-                        fontSize: 12.5,
-                        fontWeight: 800,
+                        fontSize: multi ? 12 : 13,
+                        fontWeight: 700,
                         color: "#ffffff",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {truncate(standing.playerName, multi ? 20 : 26)}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: S_POS_WIDTH,
+                      flexShrink: 0,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        color: "#6ee7d8",
                       }}
                     >
                       {standing.place}
@@ -900,139 +1160,106 @@ const GroupResultsContent = ({
                   <div
                     style={{
                       display: "flex",
-                      flex: 1,
-                      alignItems: "center",
-                      gap: 9,
-                      minWidth: 0,
+                      width: S_WIDE_WIDTH,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
                     }}
                   >
-                    {flagUrl ? (
-                      <img
-                        src={flagUrl}
-                        alt=""
-                        width={28}
-                        height={19}
-                        style={{
-                          width: 28,
-                          height: 19,
-                          borderRadius: 2,
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          width: 28,
-                          height: 19,
-                          borderRadius: 2,
-                          background: "rgba(255, 255, 255, 0.18)",
-                        }}
-                      />
-                    )}
                     <span
                       style={{
-                        fontSize: 16,
+                        fontSize: multi ? 11.5 : 12.5,
                         fontWeight: 700,
-                        color: "#ffffff",
-                      }}
-                    >
-                      {truncate(standing.playerName, 26)}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: GROUP_COLUMNS[0].width,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 14.5,
-                        fontWeight: 600,
-                        color: "rgba(255, 255, 255, 0.85)",
+                        color: "rgba(255, 255, 255, 0.95)",
+                        fontVariantNumeric: "tabular-nums",
                       }}
                     >
                       {formatRecord(standing.record)}
                     </span>
                   </div>
+                  {[standing.totalMatchPoints, standing.totalPoints, standing.totalInnings].map(
+                    (value, statIndex) => (
+                      <div
+                        key={statIndex}
+                        style={{
+                          display: "flex",
+                          width: S_STAT_WIDTH,
+                          flexShrink: 0,
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: multi ? 11.5 : 12.5,
+                            fontWeight: 700,
+                            color: "#ffffff",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {value}
+                        </span>
+                      </div>
+                    ),
+                  )}
                   <div
                     style={{
                       display: "flex",
-                      width: GROUP_COLUMNS[1].width,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: S_AVG_WIDTH,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
                     }}
                   >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
-                      {standing.totalMatchPoints}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: GROUP_COLUMNS[2].width,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
-                      {standing.totalPoints}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: GROUP_COLUMNS[3].width,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
-                      {standing.totalInnings}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: GROUP_COLUMNS[4].width,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#5eead4" }}>
+                    <span
+                      style={{
+                        fontSize: multi ? 11.5 : 12.5,
+                        fontWeight: 700,
+                        color: "#fcd34d",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       {standing.average !== null &&
                       Number.isFinite(standing.average)
-                        ? standing.average.toFixed(2)
+                        ? standing.average.toFixed(3)
                         : "–"}
                     </span>
                   </div>
                   <div
                     style={{
                       display: "flex",
-                      width: GROUP_COLUMNS[5].width,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: S_STAT_WIDTH,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
                     }}
                   >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
+                    <span
+                      style={{
+                        fontSize: multi ? 11.5 : 12.5,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       {standing.highRun ?? "–"}
                     </span>
                   </div>
                   <div
                     style={{
                       display: "flex",
-                      width: GROUP_COLUMNS[6].width,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: S_WIDE_WIDTH,
+                      flexShrink: 0,
+                      justifyContent: "flex-end",
                     }}
                   >
-                    <span style={{ fontSize: 14.5, fontWeight: 700, color: "#bae6fd" }}>
+                    <span
+                      style={{
+                        fontSize: multi ? 11.5 : 12.5,
+                        fontWeight: 700,
+                        color: "rgba(255, 255, 255, 0.9)",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       {standing.bestAverage !== null &&
                       Number.isFinite(standing.bestAverage)
-                        ? standing.bestAverage.toFixed(2)
+                        ? standing.bestAverage.toFixed(3)
                         : "–"}
                     </span>
                   </div>
@@ -1045,6 +1272,7 @@ const GroupResultsContent = ({
     </div>
   );
 };
+
 
 export async function GET(
   request: Request,
@@ -1142,7 +1370,7 @@ export async function GET(
     position: "relative" as const,
     overflow: "hidden" as const,
     background:
-      "linear-gradient(135deg, #07111f 0%, #10263c 44%, #0f766e 100%)",
+      "linear-gradient(135deg, #0a1c3d 0%, #0d3a55 30%, #0d6b66 62%, #17947f 100%)",
     color: "white",
     fontFamily: "Arial, Helvetica, sans-serif",
   };
@@ -1272,7 +1500,7 @@ export async function GET(
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 0.62,
+            opacity: 0.12,
           }}
         />
         <div
@@ -1281,15 +1509,12 @@ export async function GET(
             inset: 0,
             display: "flex",
             background:
-              "linear-gradient(90deg, rgba(7, 17, 31, 0.96) 0%, rgba(7, 17, 31, 0.82) 48%, rgba(7, 17, 31, 0.22) 100%), radial-gradient(circle at 82% 22%, rgba(45, 212, 191, 0.24), transparent 28%)",
+              "linear-gradient(180deg, rgba(3, 8, 20, 0.66) 0%, rgba(3, 8, 20, 0.18) 40%, rgba(3, 8, 20, 0.26) 60%, rgba(3, 8, 20, 0.6) 100%)",
           }}
         />
         <GroupResultsContent
           title={title}
           stageLabel={groupStage.title || `Stage ${groupStage.order ?? ""}`.trim()}
-          stageDateLabel={
-            formatDateRange(groupStage.startDate, groupStage.endDate) || ""
-          }
           groupLabel={groupDisplayLabel}
           standings={groupStandings}
           matches={groupMatchesList}
