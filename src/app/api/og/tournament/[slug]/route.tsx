@@ -436,12 +436,12 @@ const StatsContent = ({
 
 const PLAYER_COL_WIDTH = 240;
 const WL_COL_WIDTH = 24;
-const STAT_COL_WIDTH = 64;
-const AVG_COL_WIDTH = 82;
+const STAT_COL_WIDTH = 80;
+const AVG_COL_WIDTH = 96;
 const ROW_GAP = 20;
 const S_POS_WIDTH = 20;
-const S_STAT_WIDTH = 54;
-const S_AVG_WIDTH = 64;
+const S_STAT_WIDTH = 62;
+const S_AVG_WIDTH = 72;
 const S_WIDE_WIDTH = 74;
 const S_GAP = 10;
 
@@ -875,7 +875,7 @@ const GroupResultsContent = ({
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          maxWidth: 780,
+          maxWidth: 860,
           alignSelf: "center",
           minHeight: 0,
         }}
@@ -914,7 +914,7 @@ const GroupResultsContent = ({
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: 780,
+                maxWidth: 860,
               }}
             >
               {truncate(title, 74)}
