@@ -3549,11 +3549,56 @@ export function TournamentEventsContent({
       eventData?.data?.final_standings_published === true &&
       resultsArray.length > 0;
 
-    const normalizedResults = resultsArray
+    const filteredResults = resultsArray
       .map((result, index) =>
         normalizeFinalResult(result, `final-result-${index}`),
       )
       .filter(hasMeaningfulFinalResult);
+    // Published finals are the backend's single source of truth. Guard against
+    // duplicate rows for the same player (repeated/interleaved publishes can
+    // surface as double names in the standings, e.g. Lier 2026 WC): keep one
+    // row per player — the richest one, ties prefer the lower (better) position.
+    const seenFinalPlayers = new Map<string, NormalizedFinalResult>();
+    const normalizedResults: NormalizedFinalResult[] = [];
+    const finalResultRichness = (r: NormalizedFinalResult): number =>
+      [r.matchPoints, r.caroms ?? r.points, r.innings, r.highRun, r.bestAverage, r.rankingPoints]
+        .filter((v) => v !== null && v !== undefined).length;
+    for (const result of filteredResults) {
+      const playerDocId =
+        result.playerDocumentId !== null && result.playerDocumentId !== undefined
+          ? String(result.playerDocumentId)
+          : null;
+      const playerNumericId =
+        result.playerId !== null && result.playerId !== undefined
+          ? String(result.playerId)
+          : null;
+      const key =
+        (playerDocId ? `doc:${playerDocId}` : null) ??
+        (playerNumericId ? `player:${playerNumericId}` : null) ??
+        (result.playerName
+          ? `name:${normalizeRankingPlayerName(result.playerName)}`
+          : null);
+      if (!key) {
+        normalizedResults.push(result);
+        continue;
+      }
+      const existing = seenFinalPlayers.get(key);
+      if (!existing) {
+        seenFinalPlayers.set(key, result);
+        normalizedResults.push(result);
+        continue;
+      }
+      const replace =
+        finalResultRichness(result) > finalResultRichness(existing) ||
+        (finalResultRichness(result) === finalResultRichness(existing) &&
+          (result.position ?? Number.MAX_SAFE_INTEGER) <
+            (existing.position ?? Number.MAX_SAFE_INTEGER));
+      if (replace) {
+        const index = normalizedResults.indexOf(existing);
+        if (index !== -1) normalizedResults[index] = result;
+        seenFinalPlayers.set(key, result);
+      }
+    }
     const longoniFinalStage = eventStages.find(
       (stage) => stage.documentId === LONGONI_U21_2026_FINAL_ROUND_STAGE_ID,
     );
