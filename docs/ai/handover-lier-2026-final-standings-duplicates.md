@@ -1,87 +1,55 @@
-# HANDOVER — Lier 2026 World Cup 3-Cushion: final standings show duplicate names (after polling)
+# Lier 2026 World Cup 3-Cushion — duplicate names in the final standings: RESOLVED 2026-09-06
 
-> Prepared 2026-09-06 ~21:15 EEST (laptop battery died mid-session — continue here).
-> Context: user report — "κοιτα την κατάταξη στο frontend για το World Cup 3-Cushion, Lier 2026.
-> Όταν κάνει polling τη χαλάει και βγάζει διπλά ονόματα." + user rule: "η τελική δεν πρέπει να
-> δημιουργείται στο frontend" (final standing must come from the BACKEND published finals,
-> never be built client-side).
+## Symptom
+Frontend "Final standings" (γενική κατάταξη) of https://billiardtoday.com/tournaments/world-cup-3-cushion-lier-2026
+showed the same player multiple times; it appeared/aggravated whenever the page polled
+(event payload poll every 10 s).
 
-## Live facts (verified)
+## Root cause (verified)
+**An automatic publish loop in the backend kept deleting+recreating `bt_results_final` rows
+for the event every ~60 s** (observed live: count oscillated 0 → 260 → 628 → 13 in loops;
+rows created with `source='umb-world-3c-final-ranking'`, `created_by NULL`).
 
-- Page: https://billiardtoday.com/tournaments/world-cushion-3-cushion-lier-2026 → canonical
-  `https://billiardtoday.com/tournaments/world-cup-3-cushion-lier-2026` (HTTP 200).
-- Event (DB, server 138.201.29.162, db `billiard_pg`):
-  `bt_events.document_id = e8e9634d-7f81-429c-8e08-ada646adc353`, `final_standings_published = t`.
-- UMB event id 365 (Lier/Belgium). Final played 2026-09-06 19:00 (CHO Myung Woo 50-18 JASPERS Dick).
-- Frontend polls the full event payload every 10 s
-  (`TournamentEventsContent.tsx` ~L3180: `window.setInterval(refreshEventData, 10000)`) and
-  bracket matches every 5 s (~L4464).
+Chain:
+1. Event Lier (id 514, documentId `e8e9634d-7f81-429c-8e08-ada646adc353`) finished its KO stage.
+2. `bt-group` `afterUpdate` lifecycle → `checkAndCalculateGroupStandings` + `autoAdvanceBracketWinner` + `resolveTimetablePlaceholdersForMatch`.
+3. `timetablePlaceholderResolver` → `publishFinalRankingWhenComplete` (groupOfFourAdvancer) → `publishFinalResults` (delete all + recreate).
+4. Inside `publishFinalResults` → `refreshPersistedGroupStandings` writes bt_groups rows → fires `afterUpdate` again → loop forever.
+5. Frontend poll lands on mid-publish states → duplicate rows in `/api/events/{docId}` → double names.
 
-## Database anomaly (likely root cause)
+**Critical trap:** the Strapi app (`npm run start` = `strapi start`) runs the **compiled `dist/`**
+build (built 2026-09-06 21:00), NOT `src/`. Source-only patches have NO effect until rebuilt.
+Verify before debugging server behavior: `grep -c 'guard string' httpdocs/dist/src/services/...js`.
 
-```
-SELECT COUNT(*) FROM bt_results_final rf
-JOIN bt_results_final_event_lnk el ON el.bt_result_final_id = rf.id
-JOIN bt_events e ON e.id = el.bt_event_id
-WHERE e.document_id = 'e8e9634d-7f81-429c-8e08-ada646adc353';
--- => 425  (link rows)
+Why only Lier / only the final ranking: only an event whose KO stage is complete triggers the
+auto-publish chain; per-stage rankings come from bt_results and are untouched. Older finished
+tournaments settle after one publish because nothing writes their groups again — Lier's own
+republish was self-sustaining.
 
-SELECT COUNT(DISTINCT rf.id) FROM ...same joins...;
--- => 70   (distinct final-result rows)
-```
+## Fixes applied (ALL live 2026-09-06 ~23:20)
 
-→ the junction table `bt_results_final_event_lnk` contains ~6 link rows per result id
-(425 vs 70). If Strapi returns the `results_final` relation by joining the junction, each
-result (player) comes back ~6× → the frontend "Final standings" table (`publishedFinalResults`
-in `TournamentEventsContent.tsx`, rendered ~L5397) shows every name duplicated → matches the
-user report, and it appears/gets worse right after a poll picks up a fresh publish.
-(Old publishes from earlier today are the likely origin: publish-final-results INSERTs without
-dedup/cleanup of prior link rows.)
+1. **Frontend (deployed, commit on billiardtoday-frontend):** dedupe of `publishedFinalResults`
+   by player (doc id → numeric id → normalized name), keep the richest row, ties prefer lower
+   position — `TournamentEventsContent.tsx` `publishedFinalResults` useMemo (~L3552).
+2. **Backend `dist/` hotfix + `src/` (committed on billiards-strapi, `main`):**
+   - `finalResultsPublisher.ts` `publishFinalResults`: auto-republish (no manual rows) is
+     skipped when `final_standings_published_at` is < 60 s old (cooldown). Manual admin
+     publishes always bypass.
+   - `groupOfFourAdvancer.ts` `publishFinalRankingWhenComplete`: skips when finals were
+     published AFTER the latest KO-stage bt_groups update (raw SQL on
+     `bt_groups_event_stage_lnk` by koStageId) — only a real KO result change republishes.
+3. DB cleaned: single set of 107 stored rows for the event; `/api/events/{docId}` now returns
+   107 rows, 0 duplicate names, correct order (1 CHO … shared 3rd BAO/KARAKURT).
 
-## Where the frontend renders the final standing (5-billiardtoday-frontend)
+## Verification
+- 28 consecutive 6 s samples (~2.8 min) with a fixed count (107/107) after the dist patch + restart.
+- API: `results_final` 107 rows / 107 distinct / 0 dup names.
+- The publish endpoint POST `/api/bt-events/{docId}/publish-final-results` (`smallFinal:false`)
+  works and now reports `cooldownSkipped:true` on repeated quick calls.
 
-- `src/app/tournaments/events/TournamentEventsContent.tsx` (398 KB, CRLF):
-  - `fetchEvent` ~L2977 → `GET /api/events/{documentId}` (event doc id, not slug).
-  - polling ~L3180 (10 s, only when `document.visibilityState !== 'hidden'`), replaces
-    `eventData` state when JSON differs.
-  - `publishedFinalResults` useMemo ~L3544-3787: maps `data.results_final` →
-    `normalizeFinalResult` → filter `hasMeaningfulFinalResult`; **no dedupe by id/player**.
-    If `final_standings_published === true` (early return ~L3637) rows are sorted by
-    `position` — otherwise Longoni-U21 client-side builders / `finalStandingsBracketStatsByPlayerKey`
-    phaseScore overrides kick in (user rule: remove/avoid these frontend builders — finals
-    come from the backend).
-  - "Final standings" table ~L5308-5700, headers `# | Player | Match Pts | Caroms | Innings |
-    AVG | 1st H.R. | 2nd H.R. | Best AVG | Rank Pts`; maps `publishedFinalResults`
-    (React key = `result.id` — duplicate ids would also break React reconciliation).
-- `src/app/api/events/[id]/route.ts` — check what it returns for `results_final` (fields /
-  sort) and whether it re-queries Strapi (`app.billiardtoday.com/api/bt-events/{id}`) with a
-  populate that surfaces junction dupes.
-
-## Suggested fix order
-
-1. DB cleanup (server): dedupe the junction —
-   ```sql
-   DELETE FROM bt_results_final_event_lnk a USING bt_results_final_event_lnk b
-   WHERE a.bt_result_final_id = b.bt_result_final_id
-     AND a.bt_event_id = b.bt_event_id
-     AND a.id > b.id;
-   ```
-   (verify against `bt_results_final_event_lnk` PK/columns first — Strapi v5 link tables may
-   have `id`; confirm schema). Then re-check 425 → 70.
-2. Backend (1-BilliardTodayAdmin): find `publish-final-results` path (controllers/services,
-   `finalResultsPublisher.ts` mentioned in skills; POST `/api/bt-events/{docId}/publish-final-results`)
-   — make it replace/upsert links instead of blindly INSERTing new junction rows on every publish.
-3. Frontend guard (cheap, do regardless): dedupe `publishedFinalResults` by
-   `documentId/id/playerDocumentId` in the useMemo before render, and drop the
-   client-side final builders (Longoni/phaseScore) for events where
-   `final_standings_published === true` (user rule).
-4. Deploy: `bt-sync frontend` (+ `bt-sync app` if backend touched). Verify page after
-   ~2 poll cycles (11-20 s) — names must appear exactly once.
-
-## DB access
-
-`ssh root@138.201.29.162` (key `D:\.ssh\billiard_admin_openssh.key`),
-`PGPASSWORD='M@k154550' psql -h 127.0.0.1 -U postgres -d billiard_pg -t -A -c "SQL"`.
-Strapi app dir: `/var/www/vhosts/billiardtoday.com/app.billiardtoday.com/httpdocs`.
-Repos: `/srv/git/billiardtoday/{frontend,admin,strapi}`. bt-sync deploys as user
-`billiardtoday_srv`. Frontend build gate: `npx tsc --noEmit` (no local next build).
+## Reminders
+- Re-publishing finals for Lier later (real data change) still works via the admin Publish button.
+- If a future `bt-sync app`/`strapi build` runs, the src guards (committed) rebuild into dist —
+  do NOT revert; if dist is rebuilt manually, ensure both guards exist in dist afterwards.
+- External cuesco sync for Lier is disabled in the admin (`externalResultSync.enabled=false`) —
+  re-enable only when the tournament data is final if needed.
