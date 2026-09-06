@@ -41,11 +41,8 @@ import {
   buildGroupStandings,
   hasPlayedStageMatch,
   isDynamicPlaceholderPlayer,
-  resolveCountryBucketId,
 } from "./utils";
 import GroupStandingsTable from "./GroupStandingsTable";
-import StageCountryStats from "./StageCountryStats";
-import ShareMenuButton from "./ShareMenuButton";
 import SingleElimBracket, {
   type BracketMatchView,
   type BracketRoundView,
@@ -66,7 +63,7 @@ import {
   BiathlonFinalRankingTable,
   BiathlonBracketModal,
 } from "./BiathlonTables";
-import { getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
+import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
 const BRACKET_STAGE_TYPES = new Set([
@@ -139,17 +136,6 @@ function formatStageMatchLabel(
       sourceMatch?.matchNumber ??
       (group.number !== null && Number.isFinite(group.number) ? group.number : null);
     return matchNumber !== null ? `${round} Match ${matchNumber}` : round;
-  }
-
-  // Prefer the source group label ("A", "B", "Group 1", ...) when present:
-  // group.number can be an internal sequence id (e.g. 1306) on imported
-  // events, which would render nonsense letters like "Group AXF".
-  const rawLabel =
-    typeof group.label === "string" && group.label.trim()
-      ? group.label.trim()
-      : null;
-  if (rawLabel) {
-    return /^group\s/i.test(rawLabel) ? rawLabel : `Group ${rawLabel}`;
   }
 
   return formatGroupDisplayLabel(
@@ -2076,8 +2062,6 @@ function StageRankingTable({
   eventRulesetKey = null,
   showNativePlayerNames = true,
   fivePins: fivePinsProp = false,
-  countryFilterId = null,
-  onClearCountryFilter,
 }: {
   stage: NormalizedEventStage;
   allStages?: NormalizedEventStage[];
@@ -2090,8 +2074,6 @@ function StageRankingTable({
   eventRulesetKey?: string | null;
   showNativePlayerNames?: boolean;
   fivePins?: boolean;
-  countryFilterId?: string | null;
-  onClearCountryFilter?: () => void;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
   const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
@@ -2393,13 +2375,8 @@ function StageRankingTable({
     );
   const trailingTotalsColSpan =
     2 + (showStageHighRun2Column ? 1 : 0) + (showBestAverageColumn || artistic ? 1 : 0);
-  const countryFilteredResults = countryFilterId
-    ? visibleResults.filter((result) =>
-        resolveCountryBucketId(result.playerCountry) === countryFilterId,
-      )
-    : visibleResults;
   const stageGeneralAverage = useMemo(() => {
-    const totals = countryFilteredResults.reduce(
+    const totals = visibleResults.reduce(
       (acc, result) => {
         const points = result.points;
         const innings = result.innings;
@@ -2423,17 +2400,17 @@ function StageRankingTable({
 
     if (totals.innings <= 0) return null;
     return totals.points / totals.innings;
-  }, [visibleResults, countryFilterId]);
+  }, [visibleResults]);
   const stageTotals = useMemo(
     () =>
-      countryFilteredResults.reduce(
+      visibleResults.reduce(
         (acc, result) => ({
           points: acc.points + (result.points ?? 0),
           innings: acc.innings + (result.innings ?? 0),
         }),
         { points: 0, innings: 0 },
       ),
-    [visibleResults, countryFilterId],
+    [visibleResults],
   );
   const completedStageGroups = useMemo(() => {
     const completed = new Set<number>();
@@ -2542,34 +2519,8 @@ function StageRankingTable({
     );
   });
 
-  const filteredCountryLabel = countryFilterId
-    ? getCountryLabel(countryFilteredResults[0]?.playerCountry ?? null)
-    : null;
-
   return (
     <div className="flex flex-col gap-2">
-      {countryFilterId && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
-          <span className="flex min-w-0 items-center gap-2 font-medium">
-            <span className="truncate">
-              Showing only {filteredCountryLabel ?? countryFilterId}
-            </span>
-            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/60 dark:text-blue-200">
-              {countryFilteredResults.length}{" "}
-              {countryFilteredResults.length === 1 ? "player" : "players"}
-            </span>
-          </span>
-          {onClearCountryFilter ? (
-            <button
-              type="button"
-              onClick={onClearCountryFilter}
-              className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold text-blue-700 transition hover:bg-blue-200 dark:text-blue-200 dark:hover:bg-blue-900/60"
-            >
-              Clear ✕
-            </button>
-          ) : null}
-        </div>
-      )}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
           <thead className="bg-blue-600 text-white">
@@ -2662,7 +2613,7 @@ function StageRankingTable({
             </tr>
           </thead>
           <tbody>
-            {countryFilteredResults.map((result, index) => {
+            {visibleResults.map((result, index) => {
             const stageAverageValue = getStageResultAverageValue(result);
             const highlightAverage =
               !artistic &&
@@ -2846,16 +2797,6 @@ function StageRankingTable({
               </tr>
             );
             })}
-            {countryFilterId && countryFilteredResults.length === 0 && (
-              <tr className="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                <td
-                  colSpan={12}
-                  className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No players from this country in the stage.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
@@ -3049,8 +2990,8 @@ export function TournamentEventsContent({
   eventDataOverride = null,
   disableAutoRefresh = false,
   preferredStageDocumentId = null,
-  preferredGroupParam: preferredGroupParamOverride = undefined,
-  preferredMatchParam: preferredMatchParamOverride = undefined,
+  preferredGroupParam: preferredGroupParamOverride = null,
+  preferredMatchParam: preferredMatchParamOverride = null,
   timezoneOffsetMinutes = null,
   timezoneName = null,
   timezoneOptions = [],
@@ -3072,15 +3013,6 @@ export function TournamentEventsContent({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [previewColumnCount, setPreviewColumnCount] = useState(7);
-  const [countryFilter, setCountryFilter] = useState<{
-    stageDocumentId: string | null;
-    countryId: string | null;
-  }>({ stageDocumentId: null, countryId: null });
-  // Country filter (flag chips on the by-country strip) is per stage — reset
-  // whenever the active stage tab changes.
-  useEffect(() => {
-    setCountryFilter({ stageDocumentId: null, countryId: null });
-  }, [activeStageId]);
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
   );
@@ -3116,21 +3048,16 @@ export function TournamentEventsContent({
     player: string | null;
   }>({ group: null, match: null, player: null });
   const eventId = eventIdOverride ?? searchParams?.get("eventId") ?? null;
-  // Deep-link params (?group= / ?match=) come from the parent as an explicit
-  // override ONLY while the stage the link opened is active: the tournament
-  // detail page forwards the URL value for the initial mount and null once the
-  // user starts navigating stages on their own (the content is remounted per
-  // stage via a key, so a raw URL read here would re-open the linked group /
-  // match on every stage switch). With no override (standalone events page)
-  // fall back to the URL params as before.
   const preferredGroupParam =
-    preferredGroupParamOverride !== undefined
-      ? preferredGroupParamOverride
-      : locationSearchParams.group ?? searchParams?.get("group") ?? null;
+    preferredGroupParamOverride ??
+    locationSearchParams.group ??
+    searchParams?.get("group") ??
+    null;
   const preferredMatchParam =
-    preferredMatchParamOverride !== undefined
-      ? preferredMatchParamOverride
-      : locationSearchParams.match ?? searchParams?.get("match") ?? null;
+    preferredMatchParamOverride ??
+    locationSearchParams.match ??
+    searchParams?.get("match") ??
+    null;
   const isEventDataControlled = disableAutoRefresh;
   const isLiveSessionsControlled = disableAutoRefresh || liveSessionsOverride !== null;
   const embedded = embeddedOverride ?? pathname?.startsWith("/embed/") ?? false;
@@ -4109,11 +4036,6 @@ export function TournamentEventsContent({
     if (!activeStage) return;
 
     const targetGroup = (stageMatchGroups[activeStage.id] ?? []).find((group) => {
-      // Round-robin groups are labelled A/B/C… (group.label), numbered (1..n)
-      // or keyed internally — match whichever the share URL carried.
-      if (group.label !== null && group.label === preferredGroupParam) {
-        return true;
-      }
       if (group.number !== null && String(group.number) === preferredGroupParam) {
         return true;
       }
@@ -4128,13 +4050,6 @@ export function TournamentEventsContent({
       next.add(targetKey);
       return next;
     });
-    // Bring the opened group into view (deep-linked share) once it renders.
-    const scrollToGroup = () => {
-      const el = document.getElementById(`grp-${targetKey}`);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    window.setTimeout(scrollToGroup, 200);
-    window.setTimeout(scrollToGroup, 700);
   }, [preferredGroupParam, activeStageId, eventStages, stageMatchGroups]);
 
   useEffect(() => {
@@ -4344,38 +4259,33 @@ export function TournamentEventsContent({
   const previewGridTemplateColumns = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return "";
 
-    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
-      return Math.max(max, getGroupPreviewPlayers(group).length);
-    }, 0);
-
-    if (maxPlayers >= 5) {
-      // Large groups: use up to previewColumnCount tracks (wraps to extra rows
-      // when the group is bigger than the screen allows), but never more
-      // columns than there are players, so wide screens don't leave empty
-      // tracks at the end of the row.
-      const columnCount = Math.max(1, Math.min(maxPlayers, previewColumnCount));
-      return `repeat(${columnCount}, minmax(0, 1fr))`;
+    if (previewColumnCount >= 5) {
+      return `repeat(${previewColumnCount}, minmax(0, 1fr))`;
     }
 
-    // Small groups (2-4 players): spread the player columns across the full
-    // available width. Equal tracks (fixed lower bound, not content-based) keep
-    // every row and the header perfectly aligned; 1fr distributes leftover
-    // space evenly. Long names truncate only when a track gets very narrow.
-    if (maxPlayers <= 0) return "";
-    return `repeat(${maxPlayers}, minmax(min(100%, 13ch), 1fr))`;
+    const maxLengths: number[] = [];
+    filteredActiveStageGroups.forEach((group) => {
+      getGroupPreviewPlayers(group).forEach((player, index) => {
+        const columnIndex = index % previewColumnCount;
+        const length = getPreviewPlayerLabel(player).trim().length;
+        maxLengths[columnIndex] = Math.max(
+          maxLengths[columnIndex] ?? 0,
+          length,
+        );
+      });
+    });
+
+    return maxLengths
+      .map((length) => `${Math.min(Math.max(length + 4, 16), 30)}ch`)
+      .join(" ");
   }, [filteredActiveStageGroups, previewColumnCount]);
   const previewHeaderCount = useMemo(() => {
     if (filteredActiveStageGroups.length === 0) return 0;
-    // Header must cover the LARGEST group (same count the grid template uses),
-    // otherwise a 6-player group next to 5-player groups loses its "Player 6"
-    // header label. Smaller groups simply leave the trailing track empty.
-    const maxPlayers = filteredActiveStageGroups.reduce((max, group) => {
-      return Math.max(max, getGroupPreviewPlayers(group).length);
-    }, 0);
-    if (maxPlayers <= 0) return 0;
-    return maxPlayers >= 5
-      ? Math.min(maxPlayers, previewColumnCount)
-      : maxPlayers;
+    const minPlayers = filteredActiveStageGroups.reduce((min, group) => {
+      return Math.min(min, getGroupPreviewPlayers(group).length);
+    }, Number.POSITIVE_INFINITY);
+    if (!Number.isFinite(minPlayers) || minPlayers <= 0) return 0;
+    return Math.min(minPlayers, previewColumnCount);
   }, [filteredActiveStageGroups, previewColumnCount]);
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
@@ -5856,8 +5766,7 @@ export function TournamentEventsContent({
                   {/* Tab Content */}
                   {!showPublishedFinalResults && eventStages.length > 0 && (
                     <div className="mt-4">
-                      {eventStages.map(
-                        (stage: NormalizedEventStage, stageIndex: number) => {
+                      {eventStages.map((stage: NormalizedEventStage) => {
                         if (activeStageId !== stage.id) return null;
 
                         const stageDateRange = formatDateRange(
@@ -5903,14 +5812,15 @@ export function TournamentEventsContent({
                           <div key={stage.id} className="flex flex-col gap-4">
                             {stageViewMode === "ranks" ? (
                               <div className="flex flex-col gap-3">
-                                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
-                                  <div className="min-w-0 truncate text-sm text-gray-500 dark:text-gray-400">
-                                    {stageDateRange ?? ""}
+                                {stageDateRange && (
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {stageDateRange}
                                   </div>
-                                  <div className="min-w-0 max-w-full truncate px-2 text-center text-xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-2xl">
+                                )}
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     Ranking - {stage.title || stage.order || ""}
                                   </div>
-                                  <div className="flex min-w-0 items-center justify-end">
                                   {showKoRoundRankingSelect ? (
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
                                       <button
@@ -5945,7 +5855,6 @@ export function TournamentEventsContent({
                                       ) : null}
                                     </div>
                                   ) : null}
-                                  </div>
                                 </div>
                                 {isBiathlonEvent(eventData) ? (
                                   isBracketStage(stage) ? (
@@ -5961,33 +5870,7 @@ export function TournamentEventsContent({
                                   />
                                   )
                                 ) : (
-                                <>
-                                  <StageCountryStats
-                                    stage={stage}
-                                    nextStage={
-                                      stageIndex + 1 < eventStages.length
-                                        ? eventStages[stageIndex + 1]
-                                        : null
-                                    }
-                                    selectedCountryId={
-                                      countryFilter.stageDocumentId ===
-                                      stage.documentId
-                                        ? countryFilter.countryId
-                                        : null
-                                    }
-                                    onSelectCountry={(countryId) =>
-                                      setCountryFilter({
-                                        stageDocumentId: countryId
-                                          ? stage.documentId
-                                          : null,
-                                        countryId,
-                                      })
-                                    }
-                                    eventDocumentId={
-                                      eventData?.data?.documentId ?? null
-                                    }
-                                  />
-                                  <StageRankingTable
+                                <StageRankingTable
                                   stage={stage}
                                   allStages={eventStages}
                                   embedded={embedded}
@@ -5999,20 +5882,7 @@ export function TournamentEventsContent({
                                   eventRulesetKey={eventRulesetKey}
                                   showNativePlayerNames={showNativePlayerNames}
                                   fivePins={isFivePinsEvent(eventData)}
-                                  countryFilterId={
-                                    countryFilter.stageDocumentId ===
-                                    stage.documentId
-                                      ? countryFilter.countryId
-                                      : null
-                                  }
-                                  onClearCountryFilter={() =>
-                                    setCountryFilter({
-                                      stageDocumentId: null,
-                                      countryId: null,
-                                    })
-                                  }
-                                  />
-                                </>
+                                />
                                 )}
                               </div>
                             ) : (
@@ -6467,45 +6337,30 @@ export function TournamentEventsContent({
                                           </div>
                                         ) : (
                                           <>
-                                            <div className="hidden md:flex items-center gap-1.5 px-2.5 pb-1 text-gray-400 dark:text-gray-500">
-                                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                                                <svg
-                                                  className="h-4 w-4 shrink-0 opacity-0"
-                                                  fill="none"
-                                                  stroke="currentColor"
-                                                  viewBox="0 0 24 24"
-                                                  aria-hidden="true"
-                                                >
-                                                  <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M9 5l7 7-7 7"
-                                                  />
-                                                </svg>
-                                                <span className="w-[92px] shrink-0 truncate font-semibold">
-                                                  Groups
-                                                </span>
-                                                <div
-                                                  className="ml-5 grid min-w-0 flex-1 items-center gap-x-7"
-                                                  style={{
-                                                    gridTemplateColumns:
-                                                      previewGridTemplateColumns ||
-                                                      `repeat(${Math.max(previewHeaderCount, 1)}, minmax(0, 1fr))`,
-                                                  }}
-                                                >
-                                                  {Array.from({
-                                                    length: previewHeaderCount,
-                                                  }).map((_, index) => (
-                                                    <div
-                                                      key={`preview-header-${index + 1}`}
-                                                      className="truncate text-[11px] font-semibold uppercase tracking-[0.14em]"
-                                                    >
-                                                      Player {index + 1}
-                                                    </div>
-                                                  ))}
-                                                </div>
+                                            <div className="hidden md:flex items-center gap-1.5 px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                                              <div className="flex min-w-[92px] items-center gap-1.5 pl-6">
+                                                <span>Group</span>
                                               </div>
+                                              <div
+                                                className="ml-5 grid flex-1 items-center gap-x-7"
+                                                style={{
+                                                  gridTemplateColumns:
+                                                    previewGridTemplateColumns ||
+                                                    `repeat(${Math.max(previewHeaderCount, 1)}, minmax(0, 1fr))`,
+                                                }}
+                                              >
+                                                {Array.from({
+                                                  length: previewHeaderCount,
+                                                }).map((_, index) => (
+                                                  <div
+                                                    key={`preview-header-${index + 1}`}
+                                                    className="truncate"
+                                                  >
+                                                    Player {index + 1}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                              <div className="w-[86px]" />
                                             </div>
                                             {filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
@@ -6949,8 +6804,7 @@ export function TournamentEventsContent({
                                             return (
                                             <div
                                               key={group.key}
-                                              id={`grp-${groupKey}`}
-                                              className="flex scroll-mt-36 flex-col gap-1.5"
+                                              className="flex flex-col gap-1.5"
                                             >
                                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                                 <button
@@ -6974,7 +6828,7 @@ export function TournamentEventsContent({
                                                         : "bg-gray-200/85 dark:bg-gray-700/60"),
                                                   )}
                                                 >
-                                                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                  <div className="flex items-center gap-1.5">
                                                     <svg
                                                       className={clsx(
                                                         "h-4 w-4 transition-transform",
@@ -6991,12 +6845,12 @@ export function TournamentEventsContent({
                                                         d="M9 5l7 7-7 7"
                                                       />
                                                     </svg>
-                                                    <div className="w-[92px] shrink-0 truncate font-semibold text-gray-700 dark:text-gray-200">
+                                                    <div className="font-semibold text-gray-700 dark:text-gray-200">
                                                       {formatStageMatchLabel(stage, group)}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
-                                                        className="ml-5 grid min-w-0 flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
+                                                        className="ml-5 grid flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
                                                         style={{
                                                           gridTemplateColumns:
                                                             previewGridTemplateColumns ||
@@ -7054,39 +6908,6 @@ export function TournamentEventsContent({
                                                       </div>
                                                     ) : null}
                                                   </div>
-                                                  {isExpanded ? (
-                                                    <span
-                                                      onClick={(event) =>
-                                                        event.stopPropagation()
-                                                      }
-                                                      className="ml-2 flex shrink-0 items-center"
-                                                    >
-                                                      <ShareMenuButton
-                                                        shareHref={
-                                                          eventData?.data
-                                                            ?.documentId &&
-                                                          stage.documentId &&
-                                                          (group.label ||
-                                                            group.number !==
-                                                              null)
-                                                            ? `/api/og/tournament/${encodeURIComponent(
-                                                                eventData.data
-                                                                  .documentId,
-                                                              )}?stage=${encodeURIComponent(
-                                                                stage.documentId,
-                                                              )}&group=${encodeURIComponent(
-                                                                group.label ||
-                                                                  String(
-                                                                    group.number,
-                                                                  ),
-                                                              )}`
-                                                            : null
-                                                        }
-                                                        downloadName="billiardtoday-group-results.png"
-                                                        variant="light"
-                                                      />
-                                                    </span>
-                                                  ) : null}
                                                 </button>
                                               </div>
                                               {isExpanded ? (

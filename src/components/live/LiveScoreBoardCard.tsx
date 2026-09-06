@@ -1,7 +1,6 @@
 "use client";
 
 import type { LiveSessionItem } from "@/components/live/types";
-import { getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 
 const numberFormat = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 0,
@@ -78,35 +77,6 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
   const innings =
     state.inningsCount ??
     Math.max(state.inningsA || 0, state.inningsB || 0, 0);
-  const countryLabelA = state.playerACountry
-    ? (getCountryLabel(state.playerACountry) ?? state.playerACountry)
-    : null;
-  const countryLabelB = state.playerBCountry
-    ? (getCountryLabel(state.playerBCountry) ?? state.playerBCountry)
-    : null;
-  const countryFlagA = getCountryFlagCdnUrl(state.playerACountry ?? null, 40);
-  const countryFlagB = getCountryFlagCdnUrl(state.playerBCountry ?? null, 40);
-
-  const renderCountry = (
-    label: string | null,
-    flagSrc: string | null,
-  ) =>
-    label ? (
-      <span className="inline-flex min-w-0 items-center gap-1.5">
-        {flagSrc ? (
-          <img
-            src={flagSrc}
-            alt={label}
-            className="h-3 w-[18px] shrink-0 rounded-[2px] object-cover"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        ) : null}
-        <span className="truncate">{label}</span>
-      </span>
-    ) : (
-      "Unknown country"
-    );
 
   return (
     <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_60px_rgba(15,23,42,0.08)] sm:p-6">
@@ -141,7 +111,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
             <PlayerAvatar name={state.playerAName} photoUrl={state.playerAPhotoUrl} />
             <div className="min-w-0">
               <div className="truncate text-lg font-semibold text-slate-950">{state.playerAName || "Player A"}</div>
-              <div className="truncate text-sm text-slate-500">{renderCountry(countryLabelA, countryFlagA)}</div>
+              <div className="truncate text-sm text-slate-500">{state.playerACountry || "Unknown country"}</div>
             </div>
           </div>
           <div className="mt-5 flex items-end justify-between gap-4">
@@ -168,7 +138,7 @@ export function LiveScoreBoardCard({ item }: { item: LiveSessionItem }) {
             <PlayerAvatar name={state.playerBName} photoUrl={state.playerBPhotoUrl} />
             <div className="min-w-0">
               <div className="truncate text-lg font-semibold text-slate-950">{state.playerBName || "Player B"}</div>
-              <div className="truncate text-sm text-slate-500">{renderCountry(countryLabelB, countryFlagB)}</div>
+              <div className="truncate text-sm text-slate-500">{state.playerBCountry || "Unknown country"}</div>
             </div>
           </div>
           <div className="mt-5 flex items-end justify-between gap-4">

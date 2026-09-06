@@ -17,7 +17,7 @@ type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const summary = await resolveTournamentEventSummary(slug);
 
@@ -25,20 +25,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     return buildTournamentShareMetadata(null);
   }
 
-  const resolvedSearchParams = searchParams ? await searchParams : {};
-  const stageParam =
-    typeof resolvedSearchParams.stage === "string"
-      ? resolvedSearchParams.stage
-      : null;
-  const groupParam =
-    typeof resolvedSearchParams.group === "string"
-      ? resolvedSearchParams.group
-      : null;
-
-  return buildTournamentShareMetadata(summary, {
-    stage: stageParam,
-    group: groupParam,
-  });
+  return buildTournamentShareMetadata(summary);
 }
 
 export default async function TournamentPage({ params, searchParams }: Props) {

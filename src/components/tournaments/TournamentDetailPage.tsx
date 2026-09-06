@@ -60,6 +60,9 @@ import {
   formatTournamentDate,
 } from "@/lib/tournamentSeo";
 
+const EXTERNAL_LIVE_TABLES_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_EXTERNAL_LIVE_TABLES === "true";
+
 type Props = {
   summary: TournamentEventSummary;
   embedded?: boolean;
@@ -1879,21 +1882,6 @@ export function TournamentDetailPage({
       null,
   );
   const userSelectedStageRef = useRef(false);
-  // Share/deep-link params (?group= / ?match=) apply only to the stage the
-  // link opened. TournamentEventsContent is remounted (via key) whenever the
-  // selected stage changes, so forwarding the raw URL params would re-open the
-  // linked group/match and scroll to it on every stage switch. Null them out
-  // as soon as the user navigates stages on their own.
-  const [effectiveGroupParam, setEffectiveGroupParam] = useState<string | null>(
-    preferredGroupParam,
-  );
-  const [effectiveMatchParam, setEffectiveMatchParam] = useState<string | null>(
-    preferredMatchParam,
-  );
-  const clearDeepLinkStageParams = () => {
-    setEffectiveGroupParam(null);
-    setEffectiveMatchParam(null);
-  };
   const [liveScreensData, setLiveScreensData] = useState<
     TournamentLiveScreensResponse["data"]
   >([]);
@@ -2345,7 +2333,7 @@ export function TournamentDetailPage({
   }, [summary.documentId]);
 
   useEffect(() => {
-    if (!summary.externalLiveScoresEnabled) {
+    if (!EXTERNAL_LIVE_TABLES_ENABLED) {
       setExternalLiveTableSessions([]);
       setExternalLiveTablesUpdatedAt(null);
       return;
@@ -2360,7 +2348,7 @@ export function TournamentDetailPage({
     const refreshExternalLiveTables = async () => {
       try {
         const response = await fetch(
-          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables?competitionIdx=${encodeURIComponent(summary.externalLiveCompetitionIdx ?? "")}`,
+          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables`,
           { cache: "no-store" },
         );
         const payload = (await response.json().catch(() => ({ data: [] }))) as {
@@ -2386,12 +2374,7 @@ export function TournamentDetailPage({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [
-    activeView,
-    summary.documentId,
-    summary.externalLiveScoresEnabled,
-    summary.externalLiveCompetitionIdx,
-  ]);
+  }, [activeView, summary.documentId]);
 
   useEffect(() => {
     if (activeView !== "tournament") {
@@ -5928,7 +5911,6 @@ export function TournamentDetailPage({
   };
 
   const openFinalStandings = () => {
-    clearDeepLinkStageParams();
     if (finalStageDocumentId) {
       setSelectedStageDocumentId(finalStageDocumentId);
     }
@@ -7138,8 +7120,8 @@ export function TournamentDetailPage({
             eventDataOverride={eventData}
             disableAutoRefresh
             preferredStageDocumentId={selectedStageDocumentId}
-            preferredGroupParam={effectiveGroupParam}
-            preferredMatchParam={effectiveMatchParam}
+            preferredGroupParam={preferredGroupParam}
+            preferredMatchParam={preferredMatchParam}
             timezoneOffsetMinutes={effectiveTimezoneOffset ?? 180}
             timezoneName={effectiveTimezoneName}
             timezoneOptions={timezoneOptions}
@@ -7673,7 +7655,6 @@ export function TournamentDetailPage({
                         type="button"
                         onClick={() => {
                           userSelectedStageRef.current = true;
-                          clearDeepLinkStageParams();
                           setSelectedStageDocumentId(stage.documentId);
                           setTournamentPanelMode("stages");
                           setActiveView("tournament");

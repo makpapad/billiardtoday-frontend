@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { LiveSessionItem } from "@/components/live/types";
-import { SERVER_API_URL } from "@/lib/api";
 import { getExternalLiveTablesCompetitionIdx } from "@/lib/externalLiveTables";
 
 export const runtime = "nodejs";
@@ -21,148 +20,8 @@ type CacheEntry = {
 
 const CACHE_TTL_MS = 8000;
 const cache = new Map<string, CacheEntry>();
-
-// --- Country enrichment -------------------------------------------------
-// Cuesco player photos are served from /players/<cuescoId>/<hash>.png. We map
-// cuescoId -> local player (via the event's externalResultSync.playerMap) and
-// fetch the player's country from Strapi, so the live cards show flags like
-// our own scoreboard sessions do.
-
-const CUESCO_PLAYER_ID_RE = /\/players\/(\d+)\//i;
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
-const CONFIG_CACHE_TTL_MS = 60_000;
-
-type StrapiPlayerMap = Record<string, string>;
-
-const extractCuescoPlayerId = (
-  photoUrl: string | null | undefined,
-): string | null => {
-  const match = String(photoUrl || "").match(CUESCO_PLAYER_ID_RE);
-  return match?.[1] ?? null;
-};
-
-const strapiFetch = async (path: string): Promise<unknown | null> => {
-  try {
-    const response = await fetch(`${SERVER_API_URL}${path}`, {
-      cache: "no-store",
-      headers: STRAPI_TOKEN
-        ? { Authorization: `Bearer ${STRAPI_TOKEN}` }
-        : {},
-    });
-    if (!response.ok) return null;
-    return await response.json().catch(() => null);
-  } catch {
-    return null;
-  }
-};
-
-let playerMapCache: { expiresAt: number; map: StrapiPlayerMap } | null = null;
-
-const fetchPlayerMap = async (eventId: string): Promise<StrapiPlayerMap> => {
-  if (playerMapCache && playerMapCache.expiresAt > Date.now()) {
-    return playerMapCache.map;
-  }
-  const json = await strapiFetch(`/api/bt-events/${encodeURIComponent(eventId)}`);
-  const data = (json as { data?: Record<string, unknown> } | null)?.data;
-  const timetableConfig = data?.timetable_config as
-    | Record<string, unknown>
-    | undefined;
-  const externalResultSync = timetableConfig?.externalResultSync as
-    | Record<string, unknown>
-    | undefined;
-  const playerMap =
-    externalResultSync?.playerMap && typeof externalResultSync.playerMap === "object"
-      ? (externalResultSync.playerMap as StrapiPlayerMap)
-      : {};
-  playerMapCache = { expiresAt: Date.now() + CONFIG_CACHE_TTL_MS, map: playerMap };
-  return playerMap;
-};
-
-const countryByDocId = new Map<string, string | null>();
-
-const fetchPlayerCountries = async (docIds: string[]): Promise<void> => {
-  const missing = docIds.filter((id) => !countryByDocId.has(id));
-  if (missing.length === 0) return;
-
-  const params = new URLSearchParams();
-  missing.forEach((id, index) => {
-    params.set(`filters[documentId][$in][${index}]`, id);
-  });
-  params.set("fields[0]", "country");
-  params.set("fields[1]", "documentId");
-  params.set("pagination[pageSize]", "100");
-
-  const json = await strapiFetch(`/api/bt-players?${params.toString()}`);
-  const items = Array.isArray((json as { data?: unknown[] } | null)?.data)
-    ? ((json as { data: unknown[] }).data)
-    : [];
-  const found = new Set<string>();
-  for (const raw of items) {
-    const entry = raw as {
-      documentId?: string;
-      country?: string | null;
-    };
-    if (entry.documentId) {
-      found.add(entry.documentId);
-      countryByDocId.set(entry.documentId, entry.country ?? null);
-    }
-  }
-  for (const id of missing) {
-    if (!found.has(id)) countryByDocId.set(id, null);
-  }
-};
-
-const enrichWithCountries = async (
-  items: LiveSessionItem[],
-  eventId: string,
-): Promise<LiveSessionItem[]> => {
-  const playerMap = await fetchPlayerMap(eventId);
-  if (Object.keys(playerMap).length === 0) return items;
-
-  const wantsCountry: Array<{ docId: string; item: LiveSessionItem; side: "A" | "B" }> = [];
-  for (const item of items) {
-    const cuescoA = extractCuescoPlayerId(item.state.playerAPhotoUrl);
-    const cuescoB = extractCuescoPlayerId(item.state.playerBPhotoUrl);
-    const docA = cuescoA ? (playerMap[cuescoA] ?? null) : null;
-    const docB = cuescoB ? (playerMap[cuescoB] ?? null) : null;
-    if (docA) wantsCountry.push({ docId: docA, item, side: "A" });
-    if (docB) wantsCountry.push({ docId: docB, item, side: "B" });
-  }
-
-  const docIds = Array.from(new Set(wantsCountry.map((entry) => entry.docId)));
-  await fetchPlayerCountries(docIds);
-
-  for (const entry of wantsCountry) {
-    const country = countryByDocId.get(entry.docId) ?? null;
-    if (!country) continue;
-    if (entry.side === "A") {
-      entry.item.state = { ...entry.item.state, playerACountry: country };
-    } else {
-      entry.item.state = { ...entry.item.state, playerBCountry: country };
-    }
-  }
-
-  // Strip provider photos: we must not hotlink the external source's player
-  // images from visitor browsers. The avatar falls back to stable initials,
-  // which also avoids flicker while remote images load/fail every poll.
-  for (const item of items) {
-    if (
-      item.state.playerAPhotoUrl ||
-      item.state.playerBPhotoUrl ||
-      item.state.playerAPhotoMainUrl ||
-      item.state.playerBPhotoMainUrl
-    ) {
-      item.state = {
-        ...item.state,
-        playerAPhotoUrl: null,
-        playerBPhotoUrl: null,
-        playerAPhotoMainUrl: null,
-        playerBPhotoMainUrl: null,
-      };
-    }
-  }
-  return items;
-};
+const EXTERNAL_LIVE_TABLES_ENABLED =
+  process.env.ENABLE_EXTERNAL_LIVE_TABLES === "true";
 
 const decodeHtml = (value: string) =>
   value
@@ -302,6 +161,13 @@ const parseFiveSixLiveTables = (
 };
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  if (!EXTERNAL_LIVE_TABLES_ENABLED) {
+    return NextResponse.json(
+      { data: [], configured: false, disabled: true },
+      { status: 200 },
+    );
+  }
+
   const { eventId } = await context.params;
   const searchParams = req.nextUrl.searchParams;
   const competitionIdx =
@@ -335,10 +201,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     const html = await response.text();
-    const parsed = parseFiveSixLiveTables(html, eventId, competitionIdx);
-    const data = await enrichWithCountries(parsed, eventId);
     const payload = {
-      data,
+      data: parseFiveSixLiveTables(html, eventId, competitionIdx),
       sourceUrl,
       updatedAt: new Date().toISOString(),
     };
