@@ -37,6 +37,8 @@ export type TournamentEventSummary = {
   rankingSeriesTitle: string | null;
   teamTournamentDocumentId: string | null;
   externalLiveTablesHref: string | null;
+  externalLiveScoresEnabled: boolean;
+  externalLiveCompetitionIdx: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -142,6 +144,32 @@ const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => 
   }
 
   return null;
+};
+
+const readExternalLiveScoresConfig = (
+  timetableConfig: unknown,
+): { enabled: boolean; competitionIdx: string | null } => {
+  const config =
+    timetableConfig && typeof timetableConfig === "object" && !Array.isArray(timetableConfig)
+      ? (timetableConfig as Record<string, unknown>)
+      : {};
+  const externalResultSync =
+    config.externalResultSync &&
+    typeof config.externalResultSync === "object" &&
+    !Array.isArray(config.externalResultSync)
+      ? (config.externalResultSync as Record<string, unknown>)
+      : {};
+  const liveScores =
+    externalResultSync.liveScores &&
+    typeof externalResultSync.liveScores === "object" &&
+    !Array.isArray(externalResultSync.liveScores)
+      ? (externalResultSync.liveScores as Record<string, unknown>)
+      : {};
+
+  return {
+    enabled: liveScores.enabled === true,
+    competitionIdx: readString(externalResultSync.competitionIdx),
+  };
 };
 
 const readDateYear = (value: unknown): number | null => {
@@ -325,6 +353,8 @@ const normalizeClubTournamentSummary = (
     rankingSeriesTitle: null,
     teamTournamentDocumentId: null,
     externalLiveTablesHref: null,
+    externalLiveScoresEnabled: false,
+    externalLiveCompetitionIdx: null,
     stages: readClubRuntimeStages(tournament).map((stage, index) =>
       normalizeStage(stage, index),
     ),
@@ -542,6 +572,7 @@ const fetchTournamentEventSummaryById = async (
 
   const event = source as Record<string, unknown>;
   const externalLiveTablesHref = readExternalLiveTablesHref(event.timetable_config);
+  const externalLiveScores = readExternalLiveScoresConfig(event.timetable_config);
   const tournamentSource = unwrapEntitySource(event.tournament);
   if (isDraftTournament(tournamentSource)) return null;
   const tournamentClubSource = unwrapEntitySource(tournamentSource.club);
@@ -626,6 +657,8 @@ const fetchTournamentEventSummaryById = async (
       (teamTournamentSource as Record<string, unknown>).documentId,
     ),
     externalLiveTablesHref,
+    externalLiveScoresEnabled: externalLiveScores.enabled,
+    externalLiveCompetitionIdx: externalLiveScores.competitionIdx,
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };
