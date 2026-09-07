@@ -25,6 +25,16 @@ import type {
   NormalizedGroupMatch,
 } from "@/app/tournaments/events/types";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import path from "node:path";
 
 // Node.js runtime (not edge): the OG render fetches the (large) event-data
 // payload with `next: { revalidate: 300 }`; the fetch data cache only works
@@ -150,29 +160,133 @@ const resolveSummaryCached = unstable_cache(
 // The 2x satori render itself is the expensive step (~8s on this host), so
 // cache the final PNG per request URL. First hit after expiry pays the render;
 // every later hit (including Facebook's scrape) is served instantly.
+//
+// Two layers:
+//  1. in-memory Map — fast, but wiped on every PM2 restart/deploy
+//  2. disk files under <cwd>/.og-render-cache — survive restarts, so the FIRST
+//     Facebook scrape after a deploy finds the render already done instead of
+//     timing out on the ~8s cold render. Files carry the same 15-min TTL; a
+//     stale file is simply re-rendered (and re-written) on next hit.
+// The disk dir sits OUTSIDE .next (which a clean deploy wipes) on purpose.
+const PNG_CACHE_TTL_MS = 900_000; // 15 min — matches eventPayloadCache
 const pngCache = new Map<
   string,
   { expiresAt: number; type: string; data: Uint8Array }
 >();
 
+const ogCacheDir = () => path.join(process.cwd(), ".og-render-cache");
+
+const ogCacheFiles = (key: string) => {
+  const hash = createHash("sha1").update(key).digest("hex");
+  return {
+    meta: path.join(ogCacheDir(), `${hash}.json`),
+    data: path.join(ogCacheDir(), `${hash}.bin`),
+  };
+};
+
+const readDiskCache = (
+  key: string,
+): { type: string; data: Uint8Array } | null => {
+  try {
+    const { meta, data } = ogCacheFiles(key);
+    if (!existsSync(meta) || !existsSync(data)) return null;
+    const parsed = JSON.parse(readFileSync(meta, "utf8")) as {
+      type?: string;
+      expiresAt?: number;
+    };
+    if (
+      typeof parsed.expiresAt !== "number" ||
+      parsed.expiresAt < Date.now()
+    ) {
+      // Expired — drop both files; next hit re-renders.
+      rmSync(meta, { force: true });
+      rmSync(data, { force: true });
+      return null;
+    }
+    return {
+      type: typeof parsed.type === "string" ? parsed.type : "image/png",
+      data: new Uint8Array(readFileSync(data)),
+    };
+  } catch {
+    return null; // corrupt/missing — treat as cache miss
+  }
+};
+
+const writeDiskCache = (key: string, type: string, data: Uint8Array) => {
+  try {
+    const { meta, data: dataPath } = ogCacheFiles(key);
+    mkdirSync(ogCacheDir(), { recursive: true });
+    writeFileSync(dataPath, new Uint8Array(data));
+    writeFileSync(
+      meta,
+      JSON.stringify({ type, expiresAt: Date.now() + PNG_CACHE_TTL_MS }),
+    );
+  } catch {
+    // Disk cache is best-effort; a failure must never break the response.
+  }
+};
+
+// Keep the disk dir bounded: after every write, if it holds more than ~400
+// rendered entries, sweep files whose TTL has expired.
+let lastDiskSweep = 0;
+const sweepDiskCache = () => {
+  const now = Date.now();
+  if (now - lastDiskSweep < 60_000) return; // at most once a minute
+  lastDiskSweep = now;
+  try {
+    const dir = ogCacheDir();
+    if (!existsSync(dir)) return;
+    const files = readdirSync(dir);
+    const metaFiles = files.filter((f) => f.endsWith(".json"));
+    if (metaFiles.length <= 400) return;
+    for (const metaFile of metaFiles) {
+      try {
+        const metaPath = path.join(dir, metaFile);
+        const parsed = JSON.parse(readFileSync(metaPath, "utf8")) as {
+          expiresAt?: number;
+        };
+        if (typeof parsed.expiresAt === "number" && parsed.expiresAt < now) {
+          rmSync(metaPath, { force: true });
+          rmSync(path.join(dir, metaFile.replace(/\.json$/, ".bin")), {
+            force: true,
+          });
+        }
+      } catch {
+        // ignore unreadable entries
+      }
+    }
+  } catch {
+    // sweep is best-effort
+  }
+};
+
 const readPngCache = (
   key: string,
 ): { type: string; data: Uint8Array } | null => {
+  const now = Date.now();
   const entry = pngCache.get(key);
-  if (!entry) return null;
-  if (entry.expiresAt < Date.now()) {
+  if (entry) {
+    if (entry.expiresAt >= now) return { type: entry.type, data: entry.data };
     pngCache.delete(key);
-    return null;
   }
-  return { type: entry.type, data: entry.data };
+  // Memory miss (or expired) → try disk. A disk hit is re-promoted to memory
+  // so subsequent requests stay fast and the disk file is only read once.
+  const disk = readDiskCache(key);
+  if (disk) {
+    pngCache.set(key, { expiresAt: now + PNG_CACHE_TTL_MS, ...disk });
+    return disk;
+  }
+  return null;
 };
 
 const writePngCache = (key: string, type: string, data: Uint8Array) => {
-  pngCache.set(key, { expiresAt: Date.now() + 900_000, type, data });
+  pngCache.set(key, { expiresAt: Date.now() + PNG_CACHE_TTL_MS, type, data });
   if (pngCache.size > 300) {
     const oldestKey = pngCache.keys().next().value as string | undefined;
     if (oldestKey) pngCache.delete(oldestKey);
   }
+  writeDiskCache(key, type, data);
+  sweepDiskCache();
 };
 
 const formatQualPct = (row: StageCountryStatRow): string =>

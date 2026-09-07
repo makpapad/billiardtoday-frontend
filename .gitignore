@@ -10,6 +10,9 @@
 
 # next.js
 /.next/
+
+# OG render disk cache (runtime-generated, survives restarts)
+/.og-render-cache/
 /out/
 
 # production
