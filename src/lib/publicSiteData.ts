@@ -917,6 +917,53 @@ export const listBtrRankingCountries = async (): Promise<string[]> => {
   return Array.from(countries).sort();
 };
 
+/** Lightweight count of ranked players matching extra filters (one request, reads only meta.total). */
+const countBtPlayers = async (extraFilters: Record<string, string> = {}): Promise<number> => {
+  const params = new URLSearchParams();
+  params.set("pagination[page]", "1");
+  params.set("pagination[pageSize]", "1");
+  params.set("fields[0]", "documentId");
+  applyBtrBaseFilters(params);
+  Object.entries(extraFilters).forEach(([key, value]) => params.set(key, value));
+
+  const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 3600).catch(
+    () => null,
+  );
+  return (
+    toNumber((json as { meta?: { pagination?: Record<string, unknown> } } | null)?.meta?.pagination?.total) ?? 0
+  );
+};
+
+export type PublicBtrCoverage = {
+  /** Players with at least one recorded three-cushion match. */
+  ranked: number;
+  /** How many countries those players represent. */
+  countries: number;
+  /** Ratings that rest on enough recent matches to be read at face value. */
+  solid: number;
+  /** Ratings still marked with an asterisk because the sample is small or stale. */
+  provisional: number;
+};
+
+/**
+ * Headline coverage figures for the methodology page, pulled live so the explanation can never
+ * contradict the leaderboard it is explaining.
+ */
+export const getBtrCoverageStats = async (): Promise<PublicBtrCoverage> => {
+  const [ranked, solid, countries] = await Promise.all([
+    countBtPlayers(),
+    countBtPlayers({ "filters[btr_deviation][$lte]": "90" }),
+    listBtrRankingCountries(),
+  ]);
+
+  return {
+    ranked,
+    countries: countries.length,
+    solid,
+    provisional: Math.max(0, ranked - solid),
+  };
+};
+
 const mapBtrRankingRows = (raw: unknown): PublicBtrRankingRow[] =>
   (Array.isArray(raw) ? raw : [])
     .map((value: unknown): PublicBtrRankingRow | null => {

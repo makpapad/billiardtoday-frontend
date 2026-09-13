@@ -377,6 +377,12 @@ export function BtrRankingContent({
               further than beating a weaker one, and your average per inning counts too — winning
               with a high average is worth more than grinding out a win.
             </p>
+            <Link
+              href="/rankings/btr/methodology"
+              className="mt-3 inline-flex rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+            >
+              Read the full method &amp; data coverage
+            </Link>
           </div>
           <div>
             <h3 className="text-base font-semibold text-slate-900">Inactivity and provisional marks</h3>
