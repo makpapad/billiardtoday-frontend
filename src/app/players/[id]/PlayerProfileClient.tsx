@@ -28,18 +28,20 @@ type Player = {
     date_of_birth: string | null
     email: string | null
     phone_main: string | null
-    photo_main?:
-        | {
-              url: string
-          }
-        | {
-              data: {
-                  attributes: {
-                      url: string
+        photo_main?:
+            | {
+                  url: string
+              }
+            | {
+                  data: {
+                      attributes: {
+                          url: string
+                      }
                   }
               }
-          }
-        | null
+            | null
+        btr_overall?: number | null
+        btr_last_calculated_at?: string | null
     photo_alt?:
         | {
               url: string
@@ -2205,7 +2207,17 @@ export default function PlayerProfileClient({
                                 </div>
                             )}
                             {selectedGameType !== 'all' && gameTypeCareerBoxes && (
-                            <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px] lg:grid-cols-3">
+                            <div className="mt-3 md:mt-0 grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[320px] lg:grid-cols-4">
+                                <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
+                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                                        BTR Rating
+                                    </div>
+                                    <div className="text-2xl md:text-3xl font-extrabold text-indigo-700 dark:text-indigo-300 leading-none">
+                                        {player?.btr_overall != null
+                                            ? Number(player.btr_overall).toFixed(1)
+                                            : '\u2014'}
+                                    </div>
+                                </div>
                                 <div className="rounded-xl bg-gray-100/90 dark:bg-gray-700/60 px-5 py-4 text-center min-h-[108px] flex flex-col items-center justify-center">
                                     <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
                                         {isSelectedArtisticGameType
@@ -2361,14 +2373,12 @@ export default function PlayerProfileClient({
                                 {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                                            {shouldShowStatsSkeleton ? (
-                                                                <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
-                                                            ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
-                                                                                                filteredStatMatches.filter((m) => isDrawMatch(m)).length
-                                                                                            ) : (
-                                                                                                overallDraws
-                                                                                            )}
-                                                        </div>
+                                                                                        {shouldShowStatsSkeleton ? (
+                                                                                            <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                                                                        ) : (
+                                                                                            overallDraws
+                                                                                        )}
+                                                                                    </div>
                         </button>
                         <button
                             type="button"
