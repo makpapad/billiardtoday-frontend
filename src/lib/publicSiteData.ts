@@ -145,8 +145,10 @@ const readString = (value: unknown): string | null => {
 const isUsablePlayerName = (value: string | null) => {
   const clean = readString(value);
   if (!clean) return false;
-  if (/^[\W_]+$/.test(clean)) return false;
   if (/^\d/.test(clean)) return false;
+  // Require at least one real letter. Do NOT gate on /^[\W_]+$/ — without the /u flag \W treats
+  // every Greek character as a non-word character, which silently dropped Greek-only names
+  // (ΑΝΤΩΝΑΤΟΣ, ΚΟΥΚΗΣ, …) from the player directory and the BTR leaderboard.
   if (!/[A-Za-z\u00C0-\u024F\u0370-\u03FF]/.test(clean)) return false;
   return true;
 };
