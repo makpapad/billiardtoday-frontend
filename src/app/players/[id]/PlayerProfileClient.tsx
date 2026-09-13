@@ -983,7 +983,7 @@ export default function PlayerProfileClient({
                     if (selectedGameType === 'all') {
                         const metadataParams = new URLSearchParams()
                         metadataParams.set('limit', '5000')
-                        metadataParams.set('includeMatches', 'false')
+                        metadataParams.set('includeMatches', 'true')
                         if (tournamentContextSlug) {
                             metadataParams.set('tournament', tournamentContextSlug)
                         }
@@ -1456,11 +1456,20 @@ export default function PlayerProfileClient({
     ).sort((a, b) => b - a)
 
     // Calculate stats based on filters (overall + per game type/year) – mirrors admin logic
-    const completeParticipationsSource = tournamentContextSlug
-        ? tournamentScopedParticipations
-        : allParticipations.length > 0
-          ? allParticipations
-          : participations
+        const completeParticipationsSource = tournamentContextSlug
+            ? tournamentScopedParticipations
+            : allParticipations.length > 0
+              ? allParticipations
+              : participations
+
+        const actualDraws = (() => {
+            let count = 0
+            completeParticipationsSource.forEach((p) => {
+                if (!Array.isArray(p.matches)) return
+                count += p.matches.filter((m) => isDrawMatch(m)).length
+            })
+            return count
+        })()
 
     const aggregateParticipations = (sourceParticipations: TournamentParticipation[]) => {
         const totalMatches = sourceParticipations.reduce(
@@ -1685,12 +1694,12 @@ export default function PlayerProfileClient({
         overallMatches - overallWins - overallLosses,
     )
     const shouldShowStatsSkeleton =
-        isLoadingHistory && !shouldUseCareerStatsForCards
-    const shouldShowEventsSkeleton =
-        isLoadingHistory &&
-        selectedGameType !== 'all' &&
-        overallEvents === 0
-    const gameTypeCareerBoxes = (() => {
+            isLoadingHistory && !shouldUseCareerStatsForCards
+        const shouldShowEventsSkeleton =
+            isLoadingHistory &&
+            selectedGameType !== 'all' &&
+            overallEvents === 0
+        const gameTypeCareerBoxes = (() => {
         if (selectedGameType === 'all') return null
         const source = tournamentContextSlug
             ? tournamentScopedParticipations
@@ -2375,8 +2384,10 @@ export default function PlayerProfileClient({
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                                                                                         {shouldShowStatsSkeleton ? (
                                                                                             <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                                                                        ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
+                                                                                            filteredStatMatches.filter((m) => isDrawMatch(m)).length
                                                                                         ) : (
-                                                                                            overallDraws
+                                                                                            actualDraws
                                                                                         )}
                                                                                     </div>
                         </button>
