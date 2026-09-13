@@ -170,6 +170,12 @@ export default async function BtrMethodologyPage() {
                 </tbody>
               </table>
             </div>
+            <P>
+              Age-restricted events are then scaled down on top of this, because their entry rules
+              exclude the strongest players: junior and under-19 events count at half the value
+              above, under-21 events at three quarters. Women&apos;s events are not scaled — see the
+              reasoning below.
+            </P>
           </div>
         </div>
       </section>
@@ -179,7 +185,8 @@ export default async function BtrMethodologyPage() {
         <div className="mt-5 grid gap-5">
           <P>
             The rating is only as good as the results behind it, and that is where our coverage is
-            uneven. Being upfront about this matters more than the formula.
+            uneven. Being upfront about this matters more than the formula. The split below is a
+            snapshot and shifts as events are added.
           </P>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[620px] border-collapse text-left text-sm">
@@ -195,33 +202,33 @@ export default async function BtrMethodologyPage() {
                 <tr className="border-b border-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">World Cup</td>
                   <td className="px-4 py-3 text-right tabular-nums">78</td>
-                  <td className="px-4 py-3 text-right tabular-nums">17,387</td>
+                  <td className="px-4 py-3 text-right tabular-nums">17,366</td>
                   <td className="px-4 py-3">Worldwide</td>
                 </tr>
                 <tr className="border-b border-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">National championship</td>
-                  <td className="px-4 py-3 text-right tabular-nums">88</td>
-                  <td className="px-4 py-3 text-right tabular-nums">10,637</td>
+                  <td className="px-4 py-3 text-right tabular-nums">86</td>
+                  <td className="px-4 py-3 text-right tabular-nums">10,521</td>
                   <td className="px-4 py-3">
                     <span className="font-semibold text-amber-700">Greece only</span>
                   </td>
                 </tr>
                 <tr className="border-b border-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">European Championship</td>
-                  <td className="px-4 py-3 text-right tabular-nums">36</td>
-                  <td className="px-4 py-3 text-right tabular-nums">1,650</td>
+                  <td className="px-4 py-3 text-right tabular-nums">34</td>
+                  <td className="px-4 py-3 text-right tabular-nums">1,617</td>
                   <td className="px-4 py-3">Worldwide</td>
                 </tr>
                 <tr className="border-b border-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">World Championship</td>
-                  <td className="px-4 py-3 text-right tabular-nums">27</td>
+                  <td className="px-4 py-3 text-right tabular-nums">26</td>
                   <td className="px-4 py-3 text-right tabular-nums">1,413</td>
                   <td className="px-4 py-3">Worldwide</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-medium text-slate-900">Other rated events</td>
-                  <td className="px-4 py-3 text-right tabular-nums">17</td>
-                  <td className="px-4 py-3 text-right tabular-nums">1,261</td>
+                  <td className="px-4 py-3 text-right tabular-nums">22</td>
+                  <td className="px-4 py-3 text-right tabular-nums">1,257</td>
                   <td className="px-4 py-3">Mostly Greece and Europe</td>
                 </tr>
               </tbody>
@@ -320,12 +327,32 @@ export default async function BtrMethodologyPage() {
             </P>
           </div>
           <div>
-            <H3>Age categories</H3>
+            <H3>Age-restricted events</H3>
             <P>
-              Junior and youth events are currently weighted the same as senior events, because the
-              source records do not separate them cleanly. A young player with a strong junior
-              record may therefore appear higher than their open-category results alone would
-              suggest. We would rather flag this than quietly adjust it.
+              A tournament that only admits players below a given age cannot have the same field as
+              an open tournament of the same level, because the strongest players in the world are
+              excluded by its entry rules. Those events therefore carry a lower weight: under-19 and
+              junior events count at half weight, under-21 events at three-quarter weight. Under-25
+              events are unchanged, since those players are adults.
+            </P>
+            <P>
+              This is a statement about the <strong className="text-slate-900">event&apos;s entry
+              rules, never about the player</strong>. A 17-year-old who reaches the main draw of an
+              open World Cup is rated exactly like an adult — same opponents, same field, same
+              weight. Only results from age-restricted brackets are scaled down, and only for the
+              players whose entire record sits inside them; most juniors in this database also
+              compete in open events and are unaffected.
+            </P>
+          </div>
+          <div>
+            <H3>Women&apos;s events are not down-weighted</H3>
+            <P>
+              Women&apos;s competitions are open-age elite events: the players are adults competing
+              at the top of their discipline, and several also compete in open fields. The pool is
+              thinner, but that is a different thing from a weaker field per player, and the rating
+              already gives little credit for beating low-rated opponents. Reducing the weight would
+              amount to asserting that women&apos;s competition is worth less, which the data does
+              not support — so we disclose the thinner pool instead of adjusting it away.
             </P>
           </div>
           <div>
