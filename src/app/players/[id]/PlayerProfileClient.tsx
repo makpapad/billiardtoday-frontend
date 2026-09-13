@@ -1831,11 +1831,7 @@ export default function PlayerProfileClient({
             case 'wins':
                 return filteredStatMatches.filter((m) => m.result === 'win')
             case 'draws':
-                            return filteredStatMatches.filter(
-                                (m) =>
-                                    m.result !== 'win' &&
-                                    m.result !== 'loss',
-                            )
+                            return filteredStatMatches.filter((m) => isDrawMatch(m))
             case 'losses':
                 return filteredStatMatches.filter(
                     (m) => m.result === 'loss',
@@ -2367,9 +2363,11 @@ export default function PlayerProfileClient({
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                                 {shouldShowStatsSkeleton ? (
                                     <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
-                                ) : (
-                                    overallDraws
-                                )}
+                                ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
+                                                                    filteredStatMatches.filter((m) => isDrawMatch(m)).length
+                                                                ) : (
+                                                                    overallDraws
+                                                                )}
                             </div>
                         </button>
                         <button
