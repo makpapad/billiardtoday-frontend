@@ -2361,14 +2361,14 @@ export default function PlayerProfileClient({
                                 {t('players.profile.stats.draws')}
                             </div>
                             <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                {shouldShowStatsSkeleton ? (
-                                    <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
-                                ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
-                                                                    filteredStatMatches.filter((m) => isDrawMatch(m)).length
-                                                                ) : (
-                                                                    overallDraws
-                                                                )}
-                            </div>
+                                                            {shouldShowStatsSkeleton ? (
+                                                                <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                                                            ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
+                                                                filteredStatMatches.filter((m) => isDrawMatch(m)).length
+                                                            ) : (
+                                                                0
+                                                            )}
+                                                        </div>
                         </button>
                         <button
                             type="button"
