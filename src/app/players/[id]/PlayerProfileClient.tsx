@@ -1831,7 +1831,11 @@ export default function PlayerProfileClient({
             case 'wins':
                 return filteredStatMatches.filter((m) => m.result === 'win')
             case 'draws':
-                return filteredStatMatches.filter((m) => isDrawMatch(m))
+                            return filteredStatMatches.filter(
+                                (m) =>
+                                    m.result !== 'win' &&
+                                    m.result !== 'loss',
+                            )
             case 'losses':
                 return filteredStatMatches.filter(
                     (m) => m.result === 'loss',
