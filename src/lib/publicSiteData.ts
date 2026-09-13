@@ -801,20 +801,50 @@ export type PublicBtrRankingRow = {
   clubName: string | null;
   btr: number;
   rd: number | null;
+  matches: number | null;
   href: string;
 };
 
-export type PublicBtrRanking = {
+export type PublicBtrRankingPage = {
   rows: PublicBtrRankingRow[];
   total: number;
-  countries: string[];
+  page: number;
+  pageSize: number;
+  pageCount: number;
 };
 
-export const listBtrRanking = async (limit = 600): Promise<PublicBtrRanking> => {
+export type PublicBtrRankingQuery = {
+  page?: number;
+  pageSize?: number;
+  country?: string | null;
+  search?: string | null;
+};
+
+export const BTR_RANKING_PAGE_SIZE = 50;
+
+/**
+ * Applies the filters that define who is eligible to be ranked at all. Two rules, both enforced
+ * server-side so they cannot drift between the page and the API route:
+ *   - only players who have actually played a three-cushion match are ranked (449 profiles in the
+ *     database come from federation imports and never competed);
+ *   - test accounts from scoreboard/import trials are never listed.
+ */
+const applyBtrBaseFilters = (params: URLSearchParams) => {
+  params.set("filters[btr_matches][$gt]", "0");
+  params.set("filters[is_test_player][$ne]", "true");
+};
+
+export const fetchBtrRankingPage = async (
+  query: PublicBtrRankingQuery = {},
+): Promise<PublicBtrRankingPage> => {
+  const pageSize = Math.min(Math.max(Math.trunc(query.pageSize ?? BTR_RANKING_PAGE_SIZE), 1), 100);
+  const page = Math.max(Math.trunc(query.page ?? 1), 1);
+
   const params = new URLSearchParams();
-  params.set("pagination[page]", "1");
-  params.set("pagination[pageSize]", String(limit));
+  params.set("pagination[page]", String(page));
+  params.set("pagination[pageSize]", String(pageSize));
   params.set("sort[0]", "btr_overall:desc");
+  params.set("sort[1]", "full_name:asc");
   params.set("fields[0]", "full_name");
   params.set("fields[1]", "full_name_en");
   params.set("fields[2]", "country");
@@ -822,15 +852,71 @@ export const listBtrRanking = async (limit = 600): Promise<PublicBtrRanking> => 
   params.set("fields[4]", "documentId");
   params.set("fields[5]", "btr_overall");
   params.set("fields[6]", "btr_deviation");
+  params.set("fields[7]", "btr_matches");
   params.set("populate[club][fields][0]", "name");
-  // Test profiles from scoreboard/import trials must never appear in a public ranking.
-  params.set("filters[is_test_player][$ne]", "true");
+  applyBtrBaseFilters(params);
+
+  const country = (query.country || "").trim().toUpperCase();
+  if (country) params.set("filters[country][$eq]", country);
+
+  const search = (query.search || "").trim();
+  if (search) {
+    params.set("filters[$or][0][full_name][$containsi]", search);
+    params.set("filters[$or][1][full_name_en][$containsi]", search);
+    params.set("filters[$or][2][city][$containsi]", search);
+    params.set("filters[$or][3][club][name][$containsi]", search);
+  }
 
   const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 300).catch(
     () => null,
   );
 
-  const rows: PublicBtrRankingRow[] = (Array.isArray(json?.data) ? json.data : [])
+  const rows = mapBtrRankingRows(json?.data);
+  const pagination = (json as { meta?: { pagination?: Record<string, unknown> } } | null)?.meta
+    ?.pagination;
+  const total = toNumber(pagination?.total) ?? rows.length;
+  const pageCount = toNumber(pagination?.pageCount) ?? (rows.length > 0 ? 1 : 0);
+
+  return { rows, total, page, pageSize, pageCount };
+};
+
+/**
+ * Country list for the filter dropdown. Fetched once and cached for an hour, because it needs the
+ * whole ranked population (the player endpoint caps pageSize at 1000).
+ */
+export const listBtrRankingCountries = async (): Promise<string[]> => {
+  const countries = new Set<string>();
+  const pageSize = 1000;
+
+  for (let page = 1; page <= 4; page += 1) {
+    const params = new URLSearchParams();
+    params.set("pagination[page]", String(page));
+    params.set("pagination[pageSize]", String(pageSize));
+    params.set("fields[0]", "country");
+    applyBtrBaseFilters(params);
+
+    const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 3600).catch(
+      () => null,
+    );
+    const batch = Array.isArray(json?.data) ? json.data : [];
+    batch.forEach((value: unknown) => {
+      const code = readString(unwrapEntity(value)?.country);
+      if (code) countries.add(code);
+    });
+
+    const pageCount = toNumber(
+      (json as { meta?: { pagination?: Record<string, unknown> } } | null)?.meta?.pagination
+        ?.pageCount,
+    );
+    if (batch.length < pageSize) break;
+    if (pageCount !== null && page >= pageCount) break;
+  }
+
+  return Array.from(countries).sort();
+};
+
+const mapBtrRankingRows = (raw: unknown): PublicBtrRankingRow[] =>
+  (Array.isArray(raw) ? raw : [])
     .map((value: unknown): PublicBtrRankingRow | null => {
       const entity = unwrapEntity(value);
       const documentId = readString(entity?.documentId);
@@ -864,24 +950,11 @@ export const listBtrRanking = async (limit = 600): Promise<PublicBtrRanking> => 
         clubName: readString(clubEntity?.name),
         btr,
         rd: toNumber(entity?.btr_deviation),
+        matches: toNumber(entity?.btr_matches),
         href: buildPlayerHref(id, name),
       };
     })
     .filter((row: PublicBtrRankingRow | null): row is PublicBtrRankingRow => Boolean(row));
-
-  const countries = Array.from(
-    new Set(
-      rows
-        .map((row): string | null => row.country)
-        .filter((value): value is string => Boolean(value)),
-    ),
-  ).sort();
-
-  const total =
-    toNumber(json?.meta?.pagination?.total) ?? rows.length;
-
-  return { rows, total, countries };
-};
 
 export const getPublicPlayerByIdentifier = async (
   identifier: string,
