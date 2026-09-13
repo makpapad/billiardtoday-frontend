@@ -82,14 +82,13 @@ export function BtrRankingContent({
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), SEARCH_DEBOUNCE_MS);
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      // A new search is a new result set, so the offset must go back to the start.
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [search]);
-
-  // Any filter change starts from page 1, otherwise the offset would point past the end.
-  useEffect(() => {
-    setPage(1);
-  }, [country, debouncedSearch]);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -205,7 +204,12 @@ export function BtrRankingContent({
 
           <select
             value={country}
-            onChange={(event) => setCountry(event.target.value)}
+            onChange={(event) => {
+              setCountry(event.target.value);
+              // Switching country loads a different standings list, so restart at page 1. Setting
+              // both in one handler keeps it to a single request instead of a stale-page flash.
+              setPage(1);
+            }}
             aria-label="Filter by country"
             className="w-full rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm text-slate-900 shadow-[0_14px_45px_rgba(15,23,42,0.05)] outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
           >
