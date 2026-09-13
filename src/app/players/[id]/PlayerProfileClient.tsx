@@ -2364,10 +2364,10 @@ export default function PlayerProfileClient({
                                                             {shouldShowStatsSkeleton ? (
                                                                 <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                                                             ) : selectedGameType !== 'all' && filteredStatMatches.length > 0 ? (
-                                                                filteredStatMatches.filter((m) => isDrawMatch(m)).length
-                                                            ) : (
-                                                                0
-                                                            )}
+                                                                                                filteredStatMatches.filter((m) => isDrawMatch(m)).length
+                                                                                            ) : (
+                                                                                                overallDraws
+                                                                                            )}
                                                         </div>
                         </button>
                         <button
