@@ -207,6 +207,13 @@ const resolveMediaUrl = (value: unknown): string | null => {
   return resolveConfiguredMediaUrl(mediaUrl, STRAPI_URL);
 };
 
+/**
+ * Test/placeholder profiles created during scoreboard and import trials ("Player 01", "Player 12",
+ * "Player 18", ...). They must stay in the database but never surface in public listings.
+ */
+export const isTestPlayerName = (name: string | null | undefined): boolean =>
+  /^player\s*\d+$/i.test(String(name || "").trim());
+
 const buildPlayerHref = (id: number | string | null, name: string) => {
   const cleanId = String(id || "").trim();
   const cleanName = String(name || "")
@@ -768,6 +775,8 @@ export const getPlayersTotalCount = async (): Promise<number> => {
   params.set("pagination[page]", "1");
   params.set("pagination[pageSize]", "1");
   params.set("fields[0]", "documentId");
+  // Keep the public "profiles indexed" figure in step with the directory, which hides test accounts.
+  params.set("filters[is_test_player][$ne]", "true");
 
   const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
   const total =
@@ -779,6 +788,99 @@ export const getPlayersTotalCount = async (): Promise<number> => {
 
   const rows = Array.isArray(json?.data) ? json.data : [];
   return rows.length;
+};
+
+/* ── BTR (BilliardToday Rating) leaderboard ─────────────────────────────── */
+
+export type PublicBtrRankingRow = {
+  documentId: string;
+  name: string;
+  nameEn: string | null;
+  country: string | null;
+  city: string | null;
+  clubName: string | null;
+  btr: number;
+  rd: number | null;
+  href: string;
+};
+
+export type PublicBtrRanking = {
+  rows: PublicBtrRankingRow[];
+  total: number;
+  countries: string[];
+};
+
+export const listBtrRanking = async (limit = 600): Promise<PublicBtrRanking> => {
+  const params = new URLSearchParams();
+  params.set("pagination[page]", "1");
+  params.set("pagination[pageSize]", String(limit));
+  params.set("sort[0]", "btr_overall:desc");
+  params.set("fields[0]", "full_name");
+  params.set("fields[1]", "full_name_en");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "city");
+  params.set("fields[4]", "documentId");
+  params.set("fields[5]", "btr_overall");
+  params.set("fields[6]", "btr_deviation");
+  params.set("populate[club][fields][0]", "name");
+  // Test profiles from scoreboard/import trials must never appear in a public ranking.
+  params.set("filters[is_test_player][$ne]", "true");
+
+  const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 300).catch(
+    () => null,
+  );
+
+  const rows: PublicBtrRankingRow[] = (Array.isArray(json?.data) ? json.data : [])
+    .map((value: unknown): PublicBtrRankingRow | null => {
+      const entity = unwrapEntity(value);
+      const documentId = readString(entity?.documentId);
+      const id = toNumber(entity?.id);
+      if (!documentId || id === null) return null;
+
+      const nativeName = readString(entity?.full_name);
+      const englishName = readString(entity?.full_name_en);
+      const name =
+        (isUsablePlayerName(englishName) ? englishName : null) ||
+        (isUsablePlayerName(nativeName) ? nativeName : null);
+      if (!name) return null;
+      // Test accounts from scoreboard/import trials must never appear in a public ranking.
+      if (isTestPlayerName(nativeName) || isTestPlayerName(englishName)) return null;
+
+      const btr = toNumber(entity?.btr_overall);
+      if (btr === null) return null;
+
+      const clubEntity = unwrapEntity(
+        entity?.club && typeof entity.club === "object" && "data" in (entity.club as Record<string, unknown>)
+          ? (entity.club as { data?: unknown }).data
+          : entity?.club,
+      );
+
+      return {
+        documentId,
+        name,
+        nameEn: englishName,
+        country: readString(entity?.country),
+        city: readString(entity?.city),
+        clubName: readString(clubEntity?.name),
+        btr,
+        rd: toNumber(entity?.btr_deviation),
+        href: buildPlayerHref(id, name),
+      };
+    })
+    .filter((row: PublicBtrRankingRow | null): row is PublicBtrRankingRow => Boolean(row));
+
+  const countries = Array.from(
+    new Set(
+      rows
+        .map((row): string | null => row.country)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ).sort();
+
+  const total =
+    toNumber(json?.meta?.pagination?.total) ?? rows.length;
+
+  return { rows, total, countries };
 };
 
 export const getPublicPlayerByIdentifier = async (
@@ -877,6 +979,8 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
   baseParams.set("populate[club][fields][0]", "name");
   baseParams.set("populate[photo_main][fields][0]", "url");
   baseParams.set("populate[photo_alt][fields][0]", "url");
+  // Test profiles from scoreboard/import trials must never appear in the public directory.
+  baseParams.set("filters[is_test_player][$ne]", "true");
 
   const allRows: unknown[] = [];
   let page = 1;
@@ -912,6 +1016,10 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
   return sliced
     .map(mapPlayerCard)
     .filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row))
+    .filter(
+      (row: PublicPlayerCard) =>
+        !isTestPlayerName(row.fullName) && !isTestPlayerName(row.fullNameEn),
+    )
     .sort((a: PublicPlayerCard, b: PublicPlayerCard) => {
       const labelA = (a.fullNameEn || a.fullName).toLocaleLowerCase("en");
       const labelB = (b.fullNameEn || b.fullName).toLocaleLowerCase("en");
