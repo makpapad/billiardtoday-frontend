@@ -192,6 +192,8 @@ export type NormalizedGroupPlayer = {
   innings: number | null;
   highRun: number | null;
   highRun2: number | null;
+  // forfeit flag per player (null=no forfeit, 1=forfeit, 2=double-forfeit)
+  ffType: number | null;
 };
 
 export type NormalizedGroupMatch = {

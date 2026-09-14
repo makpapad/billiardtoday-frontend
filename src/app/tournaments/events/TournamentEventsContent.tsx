@@ -6696,6 +6696,7 @@ export function TournamentEventsContent({
                                                 highRun: null,
                                                 highRun2: null,
                                                 matchPoints: null,
+                                                ffType: null,
                                               });
 
                                               const buildSlotDisplayPlayers = (
@@ -6960,6 +6961,7 @@ export function TournamentEventsContent({
                                                         .top.label,
                                                       nativeName: null,
                                                       country: null,
+                                                      ffType: null,
                                                     },
                                                     row.displayPlayers.bottom
                                                       .player ?? {
@@ -6967,6 +6969,7 @@ export function TournamentEventsContent({
                                                         .bottom.label,
                                                       nativeName: null,
                                                       country: null,
+                                                      ffType: null,
                                                     },
                                                   ].some((player) =>
                                                     playerMatchesSearch(

@@ -186,6 +186,7 @@ export const normalizeGroup = (
       innings: toNumber(normalized.player1_innings),
       highRun: toNumber(normalized.player1_high_run),
       highRun2: toNumber(normalized.player1_high_run_2),
+      ffType: toNumber((normalized as Record<string, unknown>).ff_type_player1),
     },
     player2: {
       id: player2.id,
@@ -200,6 +201,7 @@ export const normalizeGroup = (
       innings: toNumber(normalized.player2_innings),
       highRun: toNumber(normalized.player2_high_run),
       highRun2: toNumber(normalized.player2_high_run_2),
+      ffType: toNumber((normalized as Record<string, unknown>).ff_type_player2),
     },
     inningsDetail: normalized.inningsDetail,
     matchSheetJson: normalized.matchSheetJson,
@@ -498,7 +500,8 @@ export const hasPlayedStageMatch = (
   [match.top, match.bottom].some(
     (entry) =>
       !isDynamicPlaceholderPlayer(entry.player) &&
-      (entry.outcome !== null ||
+      (entry.player.ffType !== null ||
+        entry.outcome !== null ||
         (entry.player.points ?? 0) > 0 ||
         (entry.player.innings ?? 0) > 0 ||
         (entry.player.highRun ?? 0) > 0 ||
