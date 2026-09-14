@@ -16,7 +16,7 @@ const buildFallbackTournamentsPage = () => ({
       title: "Tournaments",
       subtitle: "Browse seasons, dates, and current tournament activity.",
       layout: "table" as const,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
       showSeasonFilter: true,
       showDate: true,
       showStatus: true,

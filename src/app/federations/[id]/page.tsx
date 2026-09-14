@@ -94,7 +94,7 @@ export default async function FederationPage({ params }: Props) {
           title: "Official tournaments",
           subtitle: `Direct tournament calendar organized by ${federation.name}.`,
           layout: "table",
-          itemsPerPage: 10,
+          itemsPerPage: 20,
           showSeasonFilter: true,
           showDate: true,
           showStatus: true,

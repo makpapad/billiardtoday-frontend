@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CmsAppearance, CmsTournamentListSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
@@ -57,7 +57,7 @@ type Props = {
 
 const EMPTY_PAGINATION = {
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   pageCount: 1,
   total: 0,
 };
@@ -124,7 +124,7 @@ export function TournamentListSection({
   const itemsPerPage =
     section.itemsPerPage && section.itemsPerPage > 0
       ? section.itemsPerPage
-      : 10;
+      : 20;
   const initialPage = toPositiveInt(searchParams?.get("page") ?? null, 1);
   const initialSeason = searchParams?.get("season") || "";
   const initialQuery = searchParams?.get("q") || "";
@@ -239,7 +239,50 @@ export function TournamentListSection({
     );
   };
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const didMountRef = useRef(false);
+
+  // Keep ?page= in the URL (shareable / survives refresh) without triggering a
+  // router navigation, which would re-run the CMS server fetch on every click.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (currentPage > 1) {
+      url.searchParams.set("page", String(currentPage));
+    } else {
+      url.searchParams.delete("page");
+    }
+    window.history.replaceState(window.history.state, "", url.toString());
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentPage]);
+
+  const pageNumbers = useMemo<(number | "ellipsis")[]>(() => {
+    const pageCount = pagination.pageCount;
+    const current = pagination.page;
+    if (pageCount <= 7) {
+      return Array.from({ length: pageCount }, (_, index) => index + 1);
+    }
+
+    const pages: (number | "ellipsis")[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(pageCount - 1, current + 1);
+    if (start > 2) pages.push("ellipsis");
+    for (let value = start; value <= end; value += 1) pages.push(value);
+    if (end < pageCount - 1) pages.push("ellipsis");
+    pages.push(pageCount);
+    return pages;
+  }, [pagination.page, pagination.pageCount]);
+
   const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > pagination.pageCount) return;
+    if (nextPage === currentPage) return;
     setCurrentPage(nextPage);
   };
 
@@ -263,6 +306,7 @@ export function TournamentListSection({
 
   return (
     <section
+      ref={sectionRef}
       className={wrapperClass}
       style={getCmsSectionSurfaceStyle(section, appearance)}
     >
@@ -560,7 +604,10 @@ export function TournamentListSection({
               {" · "}
               {pagination.total} tournaments
             </div>
-            <div className="flex gap-2">
+            <nav
+              className="flex flex-wrap items-center gap-2"
+              aria-label="Tournament list pagination"
+            >
               <button
                 type="button"
                 onClick={() => handlePageChange(pagination.page - 1)}
@@ -569,6 +616,31 @@ export function TournamentListSection({
               >
                 Previous
               </button>
+              {pageNumbers.map((entry, index) =>
+                entry === "ellipsis" ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="px-1 font-semibold text-slate-400"
+                    aria-hidden="true"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={entry}
+                    type="button"
+                    onClick={() => handlePageChange(entry)}
+                    aria-current={entry === pagination.page ? "page" : undefined}
+                    className={
+                      entry === pagination.page
+                        ? "rounded-full bg-slate-900 px-3.5 py-2 font-semibold text-white"
+                        : "rounded-full border border-slate-200 px-3.5 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+                    }
+                  >
+                    {entry}
+                  </button>
+                ),
+              )}
               <button
                 type="button"
                 onClick={() => handlePageChange(pagination.page + 1)}
@@ -577,7 +649,7 @@ export function TournamentListSection({
               >
                 Next
               </button>
-            </div>
+            </nav>
           </div>
         ) : null}
       </div>

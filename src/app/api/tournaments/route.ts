@@ -6,6 +6,13 @@ const STRAPI_URL =
   process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 
+// Strapi paginates BEFORE the draft/club-runtime filter below, so its page/total
+// numbers can never be handed to the public list. We scan the (bounded) event set,
+// drop drafts locally and paginate the published rows ourselves.
+const EVENTS_SCAN_PAGE_SIZE = 500;
+const EVENTS_SCAN_MAX_ROWS = 5000;
+const MAX_PUBLIC_PAGE_SIZE = 100;
+
 function toPositiveInt(value: string | null, fallback: number): number {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -122,7 +129,10 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const page = toPositiveInt(searchParams.get("page"), 1);
-    const pageSize = toPositiveInt(searchParams.get("pageSize"), 10);
+    const pageSize = Math.min(
+      MAX_PUBLIC_PAGE_SIZE,
+      toPositiveInt(searchParams.get("pageSize"), 20),
+    );
     const season = searchParams.get("season");
     const search = searchParams.get("q")?.trim() ?? null;
     const clubSlug = searchParams.get("clubSlug");
@@ -256,8 +266,6 @@ export async function GET(req: NextRequest) {
     }
 
     const queryParams = new URLSearchParams();
-    queryParams.set("pagination[page]", page.toString());
-    queryParams.set("pagination[pageSize]", pageSize.toString());
     queryParams.set("sort[0]", "start_date:desc");
     queryParams.set("fields[0]", "title");
     queryParams.set("fields[1]", "season");
@@ -304,79 +312,112 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const url = `${STRAPI_URL}/api/bt-events?${queryParams.toString()}`;
+    const fetchEventsPage = async (
+      upstreamPage: number,
+    ): Promise<{ rows: any[]; pageCount: number } | null> => {
+      const params = new URLSearchParams(queryParams);
+      params.set("pagination[page]", String(upstreamPage));
+      params.set("pagination[pageSize]", String(EVENTS_SCAN_PAGE_SIZE));
+      const query = params.toString();
 
-    const fetchFromStrapi = async (useAuth: boolean) => {
-      const headers: HeadersInit = {};
-      if (useAuth && STRAPI_API_TOKEN) {
-        headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`;
+      const fetchFromStrapi = async (useAuth: boolean) => {
+        const headers: HeadersInit = {};
+        if (useAuth && STRAPI_API_TOKEN) {
+          headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`;
+        }
+        return fetch(`${STRAPI_URL}/api/bt-events?${query}`, {
+          cache: "no-store",
+          headers,
+        });
+      };
+
+      let res: Response;
+      try {
+        res = await fetchFromStrapi(Boolean(STRAPI_API_TOKEN));
+      } catch (error) {
+        console.error("[tournaments][GET] upstream unavailable:", error);
+        return null;
       }
-      return fetch(url, {
-        cache: "no-store",
-        headers,
-      });
+
+      if (!res.ok && STRAPI_API_TOKEN) {
+        try {
+          const retry = await fetchFromStrapi(false);
+          if (retry.ok) {
+            res = retry;
+          } else {
+            const retryText = await retry.text().catch(() => "");
+            console.error(
+              "[tournaments][GET] retry failed:",
+              retry.status,
+              retryText,
+            );
+            return null;
+          }
+        } catch (error) {
+          console.error("[tournaments][GET] retry upstream unavailable:", error);
+          return null;
+        }
+      }
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error("[tournaments][GET] Error response:", res.status, text);
+        return null;
+      }
+
+      const json = await res.json().catch(() => null);
+      if (!json || !Array.isArray(json.data)) return null;
+
+      const upstreamPageCount = Number(json?.meta?.pagination?.pageCount);
+      return {
+        rows: json.data,
+        pageCount:
+          Number.isFinite(upstreamPageCount) && upstreamPageCount > 0
+            ? upstreamPageCount
+            : 1,
+      };
     };
 
-    let res: Response;
-    try {
-      res = await fetchFromStrapi(Boolean(STRAPI_API_TOKEN));
-    } catch (error) {
-      console.error("[tournaments][GET] upstream unavailable:", error);
-      return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
-    }
+    const publishedEvents: any[] = [];
+    let upstreamPage = 1;
+    let upstreamPageCount = 1;
 
-    if (!res.ok && STRAPI_API_TOKEN) {
-      try {
-        const retry = await fetchFromStrapi(false);
-        if (retry.ok) {
-          res = retry;
-        } else {
-          const retryText = await retry.text().catch(() => "");
-          console.error(
-            "[tournaments][GET] retry failed:",
-            retry.status,
-            retryText,
-          );
-          return NextResponse.json(emptyPayload(page, pageSize), {
-            status: 200,
-          });
-        }
-      } catch (error) {
-        console.error("[tournaments][GET] retry upstream unavailable:", error);
+    while (
+      upstreamPage <= upstreamPageCount &&
+      publishedEvents.length < EVENTS_SCAN_MAX_ROWS
+    ) {
+      const result = await fetchEventsPage(upstreamPage);
+      if (!result) {
         return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
       }
+
+      publishedEvents.push(
+        ...result.rows.filter((item: any) => !isDraftTournament(item)),
+      );
+      upstreamPageCount = result.pageCount;
+      if (result.rows.length === 0) break;
+      upstreamPage += 1;
     }
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error("[tournaments][GET] Error response:", res.status, text);
-      return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
-    }
+    const total = publishedEvents.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const start = (page - 1) * pageSize;
 
-    const json = await res.json().catch(() => null);
-    if (!json || !Array.isArray(json.data)) {
-      return NextResponse.json(emptyPayload(page, pageSize), { status: 200 });
-    }
-
-    const data = json.data.filter((item: any) => !isDraftTournament(item));
     return NextResponse.json(
       {
-        ...json,
-        data,
+        data: publishedEvents.slice(start, start + pageSize),
         meta: {
-          ...json.meta,
           pagination: {
-            ...(json.meta?.pagination ?? {}),
             page,
             pageSize,
-            total: data.length,
-            pageCount: Math.max(1, Math.ceil(data.length / pageSize)),
+            pageCount,
+            total,
           },
         },
       },
       {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+        status: 200,
+        headers: { "Content-Type": "application/json" },
       },
     );
   } catch (error) {

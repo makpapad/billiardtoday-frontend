@@ -52,7 +52,7 @@ export default async function EmbedClubPage({ params }: Props) {
           title: "Club tournaments",
           subtitle: `Published tournaments and results for ${club.name}.`,
           layout: "table",
-          itemsPerPage: 10,
+          itemsPerPage: 20,
           showSeasonFilter: true,
           showDate: true,
           showStatus: true,
