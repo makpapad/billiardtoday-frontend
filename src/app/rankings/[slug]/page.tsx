@@ -59,6 +59,8 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
 
   const linkedTournaments = data.tournaments.filter((tournament) => tournament.href);
   const useInlineTournamentCards = linkedTournaments.length > 2;
+  // Αποφάσεις #6/#9: σειρά ολοκληρωμένη (standings_display=positions) -> ΜΟΝΟ θέσεις, χωρίς στήλη πόντων
+  const isPositionsMode = data.standingsDisplay === "positions";
   const leaderboardSectionClassName = useInlineTournamentCards
     ? "space-y-4"
     : "grid gap-4 lg:grid-cols-[2fr_1fr]";
@@ -112,12 +114,16 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          tournament.hasRankingPoints
+                          tournament.counted ?? tournament.hasRankingPoints
                             ? "bg-emerald-50 text-emerald-700"
                             : "bg-amber-50 text-amber-700"
                         }`}
                       >
-                        {tournament.hasRankingPoints ? "Counted" : "Pending"}
+                        {tournament.counted ?? tournament.hasRankingPoints
+                          ? "Counted"
+                          : tournament.role === "final_ko"
+                            ? "Final stage"
+                            : "Pending"}
                       </span>
                     </div>
                     <div className="mt-3 text-sm text-slate-600">
@@ -134,7 +140,11 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                 Sorting
               </div>
               <div className="mt-4 space-y-3 text-sm leading-7 text-white/75">
-                <p>The list is ordered by total ranking points across the counted events.</p>
+                <p>
+                  {isPositionsMode
+                    ? "Positions are decided by the final knockout bracket; the remaining places follow total ranking points."
+                    : "The list is ordered by total ranking points across the counted events."}
+                </p>
                 <p>When players are tied on points, the cumulative circuit general average is used.</p>
               </div>
             </section>
@@ -164,11 +174,11 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                     </th>
                     {data.tournaments.map((tournament) => (
                       <th key={tournament.key} className="min-w-[132px] px-4 py-4 text-center font-semibold">
-                        {renderStackedHeader("", "Ranking Points", tournament.label)}
+                        {renderStackedHeader("", isPositionsMode ? "Position" : "Ranking Points", tournament.label)}
                       </th>
                     ))}
                     <th className="min-w-[132px] px-4 py-4 text-center font-semibold">
-                      {renderStackedHeader("", "Total", "Points")}
+                      {isPositionsMode ? null : renderStackedHeader("", "Total", "Points")}
                     </th>
                     <th className="min-w-[112px] px-4 py-4 text-center font-semibold">
                       {renderStackedHeader("Circuit", "General", "AVG")}
@@ -198,12 +208,16 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                       </td>
                       {data.tournaments.map((tournament) => (
                         <td key={tournament.key} className="px-4 py-3 text-center font-semibold">
-                          {row.pointsByTournament[tournament.key] ?? 0}
+                          {isPositionsMode
+                            ? row.positionsByTournament[tournament.key] ?? "–"
+                            : row.pointsByTournament[tournament.key] ?? 0}
                         </td>
                       ))}
-                      <td className="px-4 py-3 text-center font-semibold text-slate-950">
-                        {row.totalPoints}
-                      </td>
+                      {isPositionsMode ? null : (
+                        <td className="px-4 py-3 text-center font-semibold text-slate-950">
+                          {row.totalPoints}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-center">{formatAverage(row.genAvg)}</td>
                     </tr>
                   ))}
@@ -240,12 +254,16 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          tournament.hasRankingPoints
+                          tournament.counted ?? tournament.hasRankingPoints
                             ? "bg-emerald-50 text-emerald-700"
                             : "bg-amber-50 text-amber-700"
                         }`}
                       >
-                        {tournament.hasRankingPoints ? "Counted" : "Pending"}
+                        {tournament.counted ?? tournament.hasRankingPoints
+                          ? "Counted"
+                          : tournament.role === "final_ko"
+                            ? "Final stage"
+                            : "Pending"}
                       </span>
                     </div>
                     <div className="mt-3 text-sm text-slate-600">
@@ -262,7 +280,11 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                 Sorting
               </div>
               <div className="mt-4 space-y-3 text-sm leading-7 text-white/75">
-                <p>The list is ordered by total ranking points across the counted events.</p>
+                <p>
+                  {isPositionsMode
+                    ? "Positions are decided by the final knockout bracket; the remaining places follow total ranking points."
+                    : "The list is ordered by total ranking points across the counted events."}
+                </p>
                 <p>When players are tied on points, the cumulative circuit general average is used.</p>
               </div>
             </section>

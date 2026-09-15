@@ -49,6 +49,9 @@ export type RankingSeriesTournamentMeta = {
   federationName: string | null;
   hasFinalResults: boolean;
   hasRankingPoints: boolean;
+  role?: string;
+  counted?: boolean;
+  weight?: number;
   href: string | null;
   title: string;
 };
@@ -64,6 +67,8 @@ export type RankingSeriesLeaderboardRow = {
   caroms: number;
   innings: number;
   genAvg: number;
+  finalPosition?: number | null;
+  penalty?: number;
 };
 
 export type RankingSeriesData = {
@@ -73,6 +78,10 @@ export type RankingSeriesData = {
   slug: string;
   season: string;
   description: string;
+  scope?: string;
+  status?: string;
+  category?: string | null;
+  standingsDisplay?: "points" | "positions";
   federationSlug: string | null;
   federationName: string | null;
   tournaments: RankingSeriesTournamentMeta[];
