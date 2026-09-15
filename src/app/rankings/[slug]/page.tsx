@@ -160,15 +160,15 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                       {renderStackedHeader("Rank", "Series", "#", "left")}
                     </th>
                     <th className="min-w-[280px] px-4 py-4 text-left font-semibold">
-                      {renderStackedHeader("Longoni Next Gen", "Player", "Name", "left")}
+                      {renderStackedHeader("", "Player", "Name", "left")}
                     </th>
                     {data.tournaments.map((tournament) => (
                       <th key={tournament.key} className="min-w-[132px] px-4 py-4 text-center font-semibold">
-                        {renderStackedHeader("Next Gen", "Ranking Points", tournament.label)}
+                        {renderStackedHeader("", "Ranking Points", tournament.label)}
                       </th>
                     ))}
                     <th className="min-w-[132px] px-4 py-4 text-center font-semibold">
-                      {renderStackedHeader("Next Gen", "Total", "Points")}
+                      {renderStackedHeader("", "Total", "Points")}
                     </th>
                     <th className="min-w-[112px] px-4 py-4 text-center font-semibold">
                       {renderStackedHeader("Circuit", "General", "AVG")}
