@@ -4019,11 +4019,16 @@ export function TournamentEventsContent({
     () => publishedFinalResults.some((result) => result.penalty !== null),
     [publishedFinalResults],
   );
+  // Final Pts = Rank Pts + Penalty. When no row's final actually differs from its
+  // rank points the column just duplicates Rank Pts (a zero penalty counts as no
+  // penalty), so show it only when it carries information of its own — either a
+  // real penalty, or legacy final points with no rank points to fall back on.
   const showFinalPointsColumn = useMemo(
     () =>
-      publishedFinalResults.some(
-        (result) => getEffectiveFinalPoints(result) !== null,
-      ),
+      publishedFinalResults.some((result) => {
+        const effective = getEffectiveFinalPoints(result);
+        return effective !== null && effective !== result.rankingPoints;
+      }),
     [getEffectiveFinalPoints, publishedFinalResults],
   );
   const showFinalHighRun2Column = useMemo(
