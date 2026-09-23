@@ -3076,10 +3076,15 @@ export function TournamentEventsContent({
     stageDocumentId: string | null;
     countryId: string | null;
   }>({ stageDocumentId: null, countryId: null });
-  // Country filter (flag chips on the by-country strip) is per stage — reset
-  // whenever the active stage tab changes.
+  // Country flag strip above the group list (group stages): picking a flag
+  // opens every group that has a player from that country and marks those
+  // players yellow — same marking the player search uses.
+  const [countryFlagFilter, setCountryFlagFilter] = useState<string | null>(null);
+  // Country filter (flag chips on the by-country strip) and the group-stage
+  // flag strip are per stage — reset whenever the active stage tab changes.
   useEffect(() => {
     setCountryFilter({ stageDocumentId: null, countryId: null });
+    setCountryFlagFilter(null);
   }, [activeStageId]);
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
@@ -4320,6 +4325,107 @@ export function TournamentEventsContent({
     playerSearchTerms,
     stageMatchGroups,
   ]);
+
+  // Country flag strip above the group list: one flag per country that has at
+  // least one player in the ACTIVE stage's groups (a two-letter code plus the
+  // number of players, sorted by that number). Only group stages render it —
+  // KO brackets have no groups to open.
+  const activeStageCountryFlags = useMemo(() => {
+    if (!activeStage) return [];
+    const groups = stageMatchGroups[activeStage.id] ?? [];
+    const playerIdsByCountry = new Map<string, Set<string>>();
+    groups.forEach((group) => {
+      getGroupPreviewPlayers(group, playerSeedByDocumentId).forEach((player) => {
+        const code = String(player.country ?? "").trim().toUpperCase();
+        if (!code || !getCountryFlagCdnUrl(code, 40)) return;
+        const playerKey =
+          player.documentId || `${player.name}-${player.country || "xx"}`;
+        const ids = playerIdsByCountry.get(code) ?? new Set<string>();
+        ids.add(playerKey);
+        playerIdsByCountry.set(code, ids);
+      });
+    });
+    return Array.from(playerIdsByCountry.entries())
+      .map(([code, ids]) => ({
+        code,
+        playerCount: ids.size,
+        label: getCountryLabel(code) ?? code,
+        flagUrl: getCountryFlagCdnUrl(code, 40) as string,
+      }))
+      .sort(
+        (left, right) =>
+          right.playerCount - left.playerCount ||
+          left.label.localeCompare(right.label),
+      );
+  }, [activeStage, playerSeedByDocumentId, stageMatchGroups]);
+  const playerMatchesFlagCountry = useCallback(
+    (player: { country?: string | null } | null | undefined) => {
+      if (!countryFlagFilter) return false;
+      return String(player?.country ?? "").trim().toUpperCase() === countryFlagFilter;
+    },
+    [countryFlagFilter],
+  );
+  /** Yellow marking shared by search and the country flag strip. */
+  const playerIsHighlighted = useCallback(
+    (player: {
+      name?: string | null;
+      nativeName?: string | null;
+      country?: string | null;
+    } | null | undefined) => {
+      if (!countryFlagFilter) {
+        return playerMatchesSearch(player ?? {}, playerSearchTerms);
+      }
+      if (!playerMatchesFlagCountry(player)) return false;
+      // With a search on top of the flag, narrow the country down further.
+      return (
+        playerSearchTerms.length === 0 ||
+        playerMatchesSearch(player ?? {}, playerSearchTerms)
+      );
+    },
+    [
+      countryFlagFilter,
+      playerMatchesFlagCountry,
+      playerMatchesSearch,
+      playerSearchTerms,
+    ],
+  );
+  // Picking a flag opens every group that has a player from that country (all
+  // groups stay on the page — nothing is hidden) and scrolls to the first one.
+  // Picking the active flag again clears the marking.
+  const toggleCountryFlagFilter = useCallback(
+    (code: string) => {
+      const next = countryFlagFilter === code ? null : code;
+      setCountryFlagFilter(next);
+      if (!next || !activeStage) return;
+      const groups = stageMatchGroups[activeStage.id] ?? [];
+      const matchingGroupKeys = groups
+        .filter((group) =>
+          getGroupPreviewPlayers(group, playerSeedByDocumentId).some(
+            (player) => String(player.country ?? "").trim().toUpperCase() === next,
+          ),
+        )
+        .map((group) => getGroupKey(activeStage, group));
+      if (matchingGroupKeys.length === 0) return;
+      setExpandedGroups((prev) => {
+        const nextExpanded = new Set(prev);
+        matchingGroupKeys.forEach((key) => nextExpanded.add(key));
+        return nextExpanded;
+      });
+      const scrollToFirstGroup = () => {
+        document
+          .getElementById(`grp-${matchingGroupKeys[0]}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      window.setTimeout(scrollToFirstGroup, 200);
+      window.setTimeout(scrollToFirstGroup, 700);
+    },
+    [
+      activeStage,
+      countryFlagFilter,
+      playerSeedByDocumentId,
+      stageMatchGroups,
+    ],
+  );
 
   // Expected group size for the active stage = largest group in the stage.
   // CEB 5-pins: groups with fewer players than this award a walkover win to everyone.
@@ -6510,6 +6616,72 @@ export function TournamentEventsContent({
                                       </div>
                                     ) : (
                                       <div className="flex flex-col gap-3">
+                                        {activeStageCountryFlags.length > 1 ? (
+                                          <div className="flex flex-wrap items-start gap-x-2 gap-y-1.5 px-2.5">
+                                            <span className="pt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                                              Country
+                                            </span>
+                                            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 pt-0.5">
+                                              {activeStageCountryFlags.map(
+                                                (countryFlag) => {
+                                                  const isActive =
+                                                    countryFlagFilter ===
+                                                    countryFlag.code;
+                                                  return (
+                                                    <button
+                                                      key={countryFlag.code}
+                                                      type="button"
+                                                      aria-pressed={isActive}
+                                                      title={`${countryFlag.label} — ${countryFlag.playerCount} ${
+                                                        countryFlag.playerCount ===
+                                                        1
+                                                          ? "player"
+                                                          : "players"
+                                                      }`}
+                                                      onClick={() =>
+                                                        toggleCountryFlagFilter(
+                                                          countryFlag.code,
+                                                        )
+                                                      }
+                                                      className={clsx(
+                                                        "relative flex h-6 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border transition",
+                                                        isActive
+                                                          ? "border-yellow-500 shadow-sm ring-2 ring-yellow-400/60"
+                                                          : "border-gray-200 opacity-85 hover:opacity-100 hover:ring-2 hover:ring-blue-300/60 dark:border-gray-700",
+                                                      )}
+                                                    >
+                                                      <img
+                                                        src={countryFlag.flagUrl}
+                                                        alt={countryFlag.label}
+                                                        className="h-full w-full object-cover"
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer"
+                                                      />
+                                                      {isActive ? (
+                                                        <span className="absolute -bottom-px -right-px rounded-tl-md bg-yellow-500 px-1 text-[9px] font-bold leading-tight text-white">
+                                                          {countryFlag.playerCount}
+                                                        </span>
+                                                      ) : null}
+                                                        </button>
+                                                      );
+                                                    },
+                                                  )}
+                                                  {countryFlagFilter ? (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        setCountryFlagFilter(null)
+                                                      }
+                                                      className="h-6 shrink-0 rounded-full border border-gray-200 px-2.5 text-[11px] font-semibold text-gray-500 transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                                                      aria-label="Clear country selection"
+                                                      title="Clear country selection"
+                                                    >
+                                                      All ✕
+                                                    </button>
+                                                  ) : null}
+                                                </div>
+                                              </div>
+                                            ) : null}
                                         {filteredActiveStageGroups.length ===
                                         0 ? (
                                           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -6590,6 +6762,25 @@ export function TournamentEventsContent({
                                                 : new Set<string>();
                                             const hasSearchMatch =
                                               matchingPlayerIds.size > 0;
+                                            // Yellow marking actually rendered in
+                                            // this group: search matches plus (when
+                                            // a country flag is picked) every player
+                                            // from that country. The flag never hides
+                                            // matches/standings — only marks names.
+                                            const highlightPlayerIds =
+                                              countryFlagFilter
+                                                ? new Set(
+                                                    previewPlayers
+                                                      .filter((player) =>
+                                                        playerIsHighlighted(player),
+                                                      )
+                                                      .map(
+                                                        (player) =>
+                                                          player.documentId ||
+                                                          `${player.name}-${player.country || "xx"}`,
+                                                      ),
+                                                  )
+                                                : matchingPlayerIds;
                                             const isExpanded =
                                               normalizedPlayerSearchQuery.length >
                                                 0 && hasSearchMatch
@@ -7063,7 +7254,7 @@ export function TournamentEventsContent({
                                                                 player,
                                                               );
                                                             const isSearchMatch =
-                                                              matchingPlayerIds.has(
+                                                              highlightPlayerIds.has(
                                                                 player.documentId ||
                                                                   `${player.name}-${player.country || "xx"}`,
                                                               );
@@ -7147,7 +7338,7 @@ export function TournamentEventsContent({
                                               <>
                                               <BiathlonGroupMatchesTable
                                                 group={group}
-                                                highlightPlayerIds={matchingPlayerIds}
+                                                highlightPlayerIds={highlightPlayerIds}
                                               />
                                               <BiathlonStandingsTable
                                                 standings={buildBiathlonStandings(group)}
@@ -7157,7 +7348,7 @@ export function TournamentEventsContent({
                                               <>
                                               <FivePinsGroupMatchesTable
                                                 group={group}
-                                                highlightPlayerIds={matchingPlayerIds}
+                                                highlightPlayerIds={highlightPlayerIds}
                                               />
                                               <FivePinsStandingsTable
                                                 standings={buildFivePinsStandings(group, {
@@ -7802,7 +7993,7 @@ export function TournamentEventsContent({
                                                                                   .player
                                                                                   ?.country
                                                                           }
-                                                                          highlight={playerMatchesSearch(
+                                                                          highlight={playerIsHighlighted(
                                                                             displayPlayers
                                                                               .top
                                                                               .player ?? {
@@ -7815,7 +8006,6 @@ export function TournamentEventsContent({
                                                                                 country:
                                                                                   null,
                                                                               },
-                                                                            playerSearchTerms,
                                                                           )}
                                                                         />
                                                                       </Link>
@@ -7847,7 +8037,7 @@ export function TournamentEventsContent({
                                                                                 .player
                                                                                 ?.country
                                                                         }
-                                                                        highlight={playerMatchesSearch(
+                                                                        highlight={playerIsHighlighted(
                                                                           displayPlayers
                                                                             .top
                                                                             .player ?? {
@@ -7860,7 +8050,6 @@ export function TournamentEventsContent({
                                                                               country:
                                                                                 null,
                                                                             },
-                                                                          playerSearchTerms,
                                                                         )}
                                                                       />
                                                                     )}
@@ -8030,7 +8219,7 @@ export function TournamentEventsContent({
                                                                                   .player
                                                                                   ?.country
                                                                           }
-                                                                          highlight={playerMatchesSearch(
+                                                                          highlight={playerIsHighlighted(
                                                                             displayPlayers
                                                                               .bottom
                                                                               .player ?? {
@@ -8043,7 +8232,6 @@ export function TournamentEventsContent({
                                                                                 country:
                                                                                   null,
                                                                               },
-                                                                            playerSearchTerms,
                                                                           )}
                                                                         />
                                                                       </Link>
@@ -8075,7 +8263,7 @@ export function TournamentEventsContent({
                                                                                 .player
                                                                                 ?.country
                                                                         }
-                                                                        highlight={playerMatchesSearch(
+                                                                        highlight={playerIsHighlighted(
                                                                           displayPlayers
                                                                             .bottom
                                                                             .player ?? {
@@ -8088,7 +8276,6 @@ export function TournamentEventsContent({
                                                                               country:
                                                                                 null,
                                                                             },
-                                                                          playerSearchTerms,
                                                                         )}
                                                                       />
                                                                     )}
