@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import clsx from "clsx";
 import type { StageMatchGroup } from "./types";
 import {
+  formatStageGroupCellLabel,
   formatTruncatedNumber,
   getMatchOutcome,
   hasPlayedStageMatch,
@@ -117,6 +118,8 @@ export type BiathlonStanding = {
   playerNativeName: string | null;
   playerCountry: string | null;
   groupNumber: number | null;
+  /** Display label of the group ("A", "1", …) — falls back to groupNumber. */
+  groupLabel?: string | null;
   groupPosition: number | null;
   record: { wins: number; draws: number; losses: number };
   matchPoints: number; // MP
@@ -402,6 +405,7 @@ export function buildBiathlonUnifiedStandings(groups: StageMatchGroup[]): Biathl
     const groupStandings = buildBiathlonStandings(group);
     groupStandings.forEach((standing) => {
       standing.groupNumber = group.number;
+      standing.groupLabel = formatStageGroupCellLabel(group.label);
     });
     all.push(...groupStandings);
   });
@@ -696,7 +700,7 @@ export function BiathlonUnifiedRankingTable({
                 <td className="px-4 py-2 font-medium">{standing.playerName}</td>
                 {showGroupColumn && (
                   <td className="px-4 py-2 text-center text-gray-500 dark:text-gray-400">
-                    {standing.groupNumber ?? "-"}
+                    {standing.groupLabel ?? standing.groupNumber ?? "-"}
                   </td>
                 )}
                 <td className="px-4 py-2 text-center font-semibold">{standing.matchPoints}</td>

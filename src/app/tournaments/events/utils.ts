@@ -440,6 +440,16 @@ export const buildStageMatchGroups = (
     });
 };
 
+export const formatStageGroupCellLabel = (
+  label: string | null | undefined,
+): string | null => {
+  if (typeof label !== "string") return null;
+  const trimmed = label.trim();
+  if (!trimmed) return null;
+  const suffix = trimmed.replace(/^group\s+/i, "").trim();
+  return suffix || null;
+};
+
 export const formatAverage = (
   points: number | null,
   innings: number | null,

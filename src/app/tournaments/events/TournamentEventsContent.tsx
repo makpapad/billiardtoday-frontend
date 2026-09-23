@@ -36,6 +36,7 @@ import {
   formatNumberValue,
   formatAverage,
   formatOutcomeLabel,
+  formatStageGroupCellLabel,
   getMatchRowClass,
   getDateCellClass,
   buildStageMatchGroups,
@@ -2095,6 +2096,19 @@ function StageRankingTable({
   onClearCountryFilter?: () => void;
 }) {
   const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  // Group column of the ranking must read like the group cards ("A", "B", … or
+  // "1", "2", … when the source labels are numeric) — never a raw internal
+  // group number.
+  const groupCellLabelByNumber = useMemo(() => {
+    const map = new Map<number, string>();
+    if (isBracketStage(stage)) return map;
+    stageMatchGroups.forEach((group) => {
+      if (group.number === null || !Number.isFinite(group.number)) return;
+      const label = formatStageGroupCellLabel(group.label);
+      if (label) map.set(group.number, label);
+    });
+    return map;
+  }, [stage, stageMatchGroups]);
   const eventRankIsProvisional = eventStagesHaveIncompleteMatches(
     allStages.length > 0 ? allStages : [stage],
   );
@@ -2784,7 +2798,13 @@ function StageRankingTable({
                 )}
                 {showGroupColumn && (
                   <td className="px-4 py-3 text-center">
-                    {formatNumberValue(result.groupNumber)}
+                    {(() => {
+                      const groupLabel =
+                        result.groupNumber !== null
+                          ? groupCellLabelByNumber.get(result.groupNumber)
+                          : undefined;
+                      return groupLabel ?? formatNumberValue(result.groupNumber);
+                    })()}
                   </td>
                 )}
                 {showGroupPositionColumn && (
