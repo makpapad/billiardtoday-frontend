@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -3080,11 +3081,15 @@ export function TournamentEventsContent({
   // opens every group that has a player from that country and marks those
   // players yellow — same marking the player search uses.
   const [countryFlagFilter, setCountryFlagFilter] = useState<string | null>(null);
+  // Group keys the flag strip opened itself (so clearing the selection can
+  // close them again without touching groups the user opened by hand).
+  const flagOpenedGroupKeysRef = useRef<string[]>([]);
   // Country filter (flag chips on the by-country strip) and the group-stage
   // flag strip are per stage — reset whenever the active stage tab changes.
   useEffect(() => {
     setCountryFilter({ stageDocumentId: null, countryId: null });
     setCountryFlagFilter(null);
+    flagOpenedGroupKeysRef.current = [];
   }, [activeStageId]);
   const [eventData, setEventData] = useState<EventApiResponse | null>(
     eventDataOverride ?? initialEventData,
@@ -4391,37 +4396,56 @@ export function TournamentEventsContent({
   );
   // Picking a flag opens every group that has a player from that country (all
   // groups stay on the page — nothing is hidden) and scrolls to the first one.
-  // Picking the active flag again clears the marking.
+  // Picking the active flag again, or the `All ✕` chip, closes the groups the
+  // strip opened and clears the marking.
   const toggleCountryFlagFilter = useCallback(
-    (code: string) => {
-      const next = countryFlagFilter === code ? null : code;
-      setCountryFlagFilter(next);
-      if (!next || !activeStage) return;
-      const groups = stageMatchGroups[activeStage.id] ?? [];
-      const matchingGroupKeys = groups
-        .filter((group) =>
-          getGroupPreviewPlayers(group, playerSeedByDocumentId).some(
-            (player) => String(player.country ?? "").trim().toUpperCase() === next,
-          ),
-        )
-        .map((group) => getGroupKey(activeStage, group));
-      if (matchingGroupKeys.length === 0) return;
+    (code: string | null) => {
+      // Groups the strip opened by itself are remembered so clearing the
+      // selection (the `All ✕` chip or a second click on the active flag)
+      // closes exactly those and leaves hand-opened groups alone.
+      const previouslyOpened = flagOpenedGroupKeysRef.current;
+      flagOpenedGroupKeysRef.current = [];
+      setCountryFlagFilter(code);
+
+      const matchingGroupKeys =
+        code && activeStage
+          ? (stageMatchGroups[activeStage.id] ?? [])
+              .filter((group) =>
+                getGroupPreviewPlayers(group, playerSeedByDocumentId).some(
+                  (player) =>
+                    String(player.country ?? "").trim().toUpperCase() === code,
+                ),
+              )
+              .map((group) => getGroupKey(activeStage, group))
+          : [];
+      // A key counts as "opened by the strip" when it was closed until now, or
+      // when the previous selection had opened it (switching flags must not
+      // leave the old flag's groups open).
+      const openedByStrip = matchingGroupKeys.filter(
+        (key) => !expandedGroups.has(key) || previouslyOpened.includes(key),
+      );
+      flagOpenedGroupKeysRef.current = openedByStrip;
+
       setExpandedGroups((prev) => {
         const nextExpanded = new Set(prev);
-        matchingGroupKeys.forEach((key) => nextExpanded.add(key));
+        previouslyOpened.forEach((key) => nextExpanded.delete(key));
+        openedByStrip.forEach((key) => nextExpanded.add(key));
         return nextExpanded;
       });
-      const scrollToFirstGroup = () => {
-        document
-          .getElementById(`grp-${matchingGroupKeys[0]}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
-      window.setTimeout(scrollToFirstGroup, 200);
-      window.setTimeout(scrollToFirstGroup, 700);
+
+      if (code && matchingGroupKeys.length > 0) {
+        const scrollToFirstGroup = () => {
+          document
+            .getElementById(`grp-${matchingGroupKeys[0]}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        window.setTimeout(scrollToFirstGroup, 200);
+        window.setTimeout(scrollToFirstGroup, 700);
+      }
     },
     [
       activeStage,
-      countryFlagFilter,
+      expandedGroups,
       playerSeedByDocumentId,
       stageMatchGroups,
     ],
@@ -6640,7 +6664,10 @@ export function TournamentEventsContent({
                                                       }`}
                                                       onClick={() =>
                                                         toggleCountryFlagFilter(
-                                                          countryFlag.code,
+                                                          countryFlagFilter ===
+                                                            countryFlag.code
+                                                            ? null
+                                                            : countryFlag.code,
                                                         )
                                                       }
                                                       className={clsx(
@@ -6670,7 +6697,7 @@ export function TournamentEventsContent({
                                                     <button
                                                       type="button"
                                                       onClick={() =>
-                                                        setCountryFlagFilter(null)
+                                                        toggleCountryFlagFilter(null)
                                                       }
                                                       className="h-6 shrink-0 rounded-full border border-gray-200 px-2.5 text-[11px] font-semibold text-gray-500 transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
                                                       aria-label="Clear country selection"
