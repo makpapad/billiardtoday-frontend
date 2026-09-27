@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { GroupStanding } from './types'
 import { formatNumberValue, formatAverage, formatRecord, formatTruncatedNumber } from './utils'
 import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
-import { EntryStageBadge, EntryTierBadge } from './EntryBadges'
+import { EntryStageBadge, EntryTierBadge, shouldShowEntryStage } from './EntryBadges'
 
 type GroupStandingsTableProps = {
     standings: GroupStanding[]
@@ -12,6 +12,8 @@ type GroupStandingsTableProps = {
     tournamentContextSlug?: string | null
     /** When true, renders entry stage and tier badges in the player name cell */
     showEntryBadges?: boolean
+    /** Order of the stage these groups belong to; hides the start-stage badge when it would just repeat this stage */
+    currentStageOrder?: number | null
 }
 
 export default function GroupStandingsTable({
@@ -21,6 +23,7 @@ export default function GroupStandingsTable({
     showNativeNames = true,
     tournamentContextSlug = null,
     showEntryBadges = false,
+    currentStageOrder = null,
 }: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
@@ -75,14 +78,25 @@ export default function GroupStandingsTable({
                                         </span>
                                     ) : null}
                                 </div>
-                                {showEntryBadges && (player.entryStage || player.entryTier) ? (
-                                    <div className="flex shrink-0 items-center gap-1">
-                                        {player.entryStage && player.entryStage.label ? (
-                                            <EntryStageBadge stage={player.entryStage} />
-                                        ) : null}
-                                        {player.entryTier ? <EntryTierBadge tier={player.entryTier} /> : null}
-                                    </div>
-                                ) : null}
+                                {(() => {
+                                    if (!showEntryBadges) return null
+                                    const showStage = shouldShowEntryStage(
+                                        player.entryStage ?? null,
+                                        currentStageOrder,
+                                    )
+                                    const showTier = Boolean(player.entryTier)
+                                    if (!showStage && !showTier) return null
+                                    return (
+                                        <div className="flex shrink-0 items-center gap-1">
+                                            {showStage && player.entryStage ? (
+                                                <EntryStageBadge stage={player.entryStage} />
+                                            ) : null}
+                                            {showTier && player.entryTier ? (
+                                                <EntryTierBadge tier={player.entryTier} />
+                                            ) : null}
+                                        </div>
+                                    )
+                                })()}
                             </div>
                         )
 

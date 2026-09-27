@@ -8434,6 +8434,7 @@ export function TournamentEventsContent({
                                                                                                 artistic={isArtisticEvent}
                                                                                                 showNativeNames={showNativePlayerNames}
                                                                                                 showEntryBadges
+                                                                                                currentStageOrder={stage.order}
                                                                                                 tournamentContextSlug={tournamentContextSlug}
                                                                                               />
                                                                                             ) : null}

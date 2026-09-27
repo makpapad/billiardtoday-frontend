@@ -68,10 +68,34 @@ function HoverBadge({
   );
 }
 
-/** Badge for the stage the player actually entered the event from (Q, PQ, 1/16, …). */
-export function EntryStageBadge({ stage }: { stage: EntryStageInfo }) {
-  const label =
-    stage.order != null ? `${stage.order}${stage.label ?? ""}` : stage.label;
+/**
+ * The start-stage badge is only informative when the player entered an earlier
+ * stage than the one being listed; otherwise every row of a stage would just
+ * repeat that stage's own title.
+ */
+export function shouldShowEntryStage(
+  stage: EntryStageInfo | null,
+  currentStageOrder: number | null,
+): boolean {
+  if (!stage || !stage.label) return false;
+  if (stage.order === null || currentStageOrder === null) return true;
+  return stage.order < currentStageOrder;
+}
+
+/**
+ * Badge for the stage the player actually entered the event from
+ * (PQ, Q, PPQ, PPPQ, 1/16, MAIN). Hidden when it would repeat the stage
+ * the viewer is already looking at.
+ */
+export function EntryStageBadge({
+  stage,
+  currentStageOrder = null,
+}: {
+  stage: EntryStageInfo;
+  currentStageOrder?: number | null;
+}) {
+  if (!shouldShowEntryStage(stage, currentStageOrder)) return null;
+  const label = stage.label;
   if (!label) return null;
   const stageName = stage.title?.trim() || label;
   return (
@@ -119,12 +143,7 @@ export function PlayerEntryBadges({
   entryTier: EntryTier | null;
   currentStageOrder: number | null;
 }) {
-  const showStage =
-    entryStage !== null &&
-    entryStage.label !== null &&
-    (entryStage.order === null ||
-      currentStageOrder === null ||
-      entryStage.order < currentStageOrder);
+  const showStage = shouldShowEntryStage(entryStage, currentStageOrder);
 
   if (!showStage && entryTier === null) return null;
 
