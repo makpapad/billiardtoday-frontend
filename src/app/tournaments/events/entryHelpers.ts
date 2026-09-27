@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import type { NormalizedEventStage, NormalizedGroupPlayer } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -12,7 +11,7 @@ import type { NormalizedEventStage, NormalizedGroupPlayer } from "./types";
 
 export type EntryStageInfo = {
   order: number | null;
-  title: string;
+  title: string | null;
   label: string | null;
 };
 
@@ -173,56 +172,5 @@ export function lookupEntryStage(
       : undefined) ??
     map.get(`name:${normalizeEntryPlayerName(result.playerName)}`) ??
     null
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PlayerEntryBadges — React component for stage + tier badges
-// ---------------------------------------------------------------------------
-
-export function PlayerEntryBadges({
-  entryStage,
-  entryTier,
-  currentStageOrder,
-}: {
-  entryStage: EntryStageInfo | null;
-  entryTier: EntryTier | null;
-  currentStageOrder: number | null;
-}) {
-  // The start-stage badge is only informative when the player entered an
-  // earlier stage than the one being listed; otherwise every row of a stage
-  // ranking would just repeat that stage's own title.
-  const showStage =
-    entryStage !== null &&
-    entryStage.label !== null &&
-    (entryStage.order === null ||
-      currentStageOrder === null ||
-      entryStage.order < currentStageOrder);
-
-  if (!showStage && entryTier === null) return null;
-
-  return (
-    <span className="ml-2 inline-flex items-center gap-1 align-middle">
-      {showStage && entryStage ? (
-        <span
-          title={`Started in ${entryStage.title}`}
-          className="rounded border border-gray-300 bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-        >
-          {entryStage.label}
-        </span>
-      ) : null}
-      {entryTier !== null ? (
-        <span
-          className={clsx(
-            "rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
-            entryTier === "seeded"
-              ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-              : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-          )}
-        >
-          {entryTier === "seeded" ? "S" : "WC"}
-        </span>
-      ) : null}
-    </span>
   );
 }

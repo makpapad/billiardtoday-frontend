@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { GroupStanding } from './types'
 import { formatNumberValue, formatAverage, formatRecord, formatTruncatedNumber } from './utils'
 import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
+import { EntryStageBadge, EntryTierBadge } from './EntryBadges'
 
 type GroupStandingsTableProps = {
     standings: GroupStanding[]
@@ -33,7 +34,7 @@ export default function GroupStandingsTable({
             <table className="min-w-full text-xs">
                 <thead className="bg-emerald-700 text-white">
                     <tr>
-                        <th className="px-3 py-2 text-left font-medium w-44">Player</th>
+                        <th className="px-3 py-2 text-left font-medium w-56">Player</th>
                         <th className="px-2 py-2 text-center font-medium w-14">Position</th>
                         <th className="px-2 py-2 text-center font-medium w-20">Record</th>
                         <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
@@ -48,125 +49,86 @@ export default function GroupStandingsTable({
                     </tr>
                 </thead>
                 <tbody>
-                    {standings.map((player) => (
-                        (() => {
-                            const flagSrc = getCountryFlagCdnUrl(player.playerCountry ?? null, 40)
-                            return (
-                        <tr
-                            key={player.key}
-                            className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                        >
-                            <td className="px-3 py-2 font-medium truncate">
-                                {player.playerId ? (
-                                    <Link
-                                        href={`${embedded ? '/embed' : ''}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, '-')}${
-                                            tournamentContextSlug
-                                                ? `?tournament=${encodeURIComponent(tournamentContextSlug)}`
-                                                : ''
-                                        }`}
-                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
-                                    >
-                                        <div className="flex items-start gap-2 leading-tight">
-                                            {flagSrc ? (
-                                                <img src={flagSrc} alt={player.playerCountry || 'flag'} className="mt-0.5 h-3.5 w-5 rounded-[2px] object-cover" loading="lazy" referrerPolicy="no-referrer" />
-                                            ) : null}
-                                            <div className="flex flex-col leading-tight">
-                                            <span>{player.playerName || '-'}</span>
-                                            {showNativeNames &&
-                                                player.playerNativeName &&
-                                                player.playerNativeName.trim() !== player.playerName.trim() && (
-                                                    <span className="text-[10px] text-gray-200/80">
-                                                        {player.playerNativeName}
-                                                    </span>
-                                                )}
-                                            {showEntryBadges && (
-                                                <div className="mt-0.5 inline-flex items-center gap-1">
-                                                    {player.entryStage && player.entryStage.label ? (
-                                                        <span
-                                                            title={player.entryStage.title ? `Started in ${player.entryStage.title}` : undefined}
-                                                            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                                                        >
-                                                            {player.entryStage.order != null
-                                                                ? `${player.entryStage.order}${player.entryStage.label}`
-                                                                : player.entryStage.label}
-                                                        </span>
-                                                    ) : null}
-                                                    {player.entryTier ? (
-                                                        <span className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 text-[10px] font-bold ${
-                                                            player.entryTier === "seeded"
-                                                                ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-                                                                : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
-                                                        }`}>
-                                                            {player.entryTier === "seeded" ? "S" : "WC"}
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                            )}
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ) : (
-                                    <div className="flex items-start gap-2 leading-tight">
-                                        {flagSrc ? (
-                                            <img src={flagSrc} alt={player.playerCountry || 'flag'} className="mt-0.5 h-3.5 w-5 rounded-[2px] object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                    {standings.map((player) => {
+                        const flagSrc = getCountryFlagCdnUrl(player.playerCountry ?? null, 40)
+                        const showNativeName =
+                            showNativeNames &&
+                            player.playerNativeName &&
+                            player.playerNativeName.trim() !== player.playerName.trim()
+
+                        const playerCell = (
+                            <div className="flex items-center gap-2 leading-tight">
+                                {flagSrc ? (
+                                    <img
+                                        src={flagSrc}
+                                        alt={player.playerCountry || 'flag'}
+                                        className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover"
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer"
+                                    />
+                                ) : null}
+                                <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                                    <span className="truncate">{player.playerName || '-'}</span>
+                                    {showNativeName ? (
+                                        <span className="truncate text-[10px] text-gray-500 dark:text-gray-400">
+                                            {player.playerNativeName}
+                                        </span>
+                                    ) : null}
+                                </div>
+                                {showEntryBadges && (player.entryStage || player.entryTier) ? (
+                                    <div className="flex shrink-0 items-center gap-1">
+                                        {player.entryStage && player.entryStage.label ? (
+                                            <EntryStageBadge stage={player.entryStage} />
                                         ) : null}
-                                        <div className="flex flex-col leading-tight">
-                                            <span>{player.playerName || '-'}</span>
-                                            {showNativeNames &&
-                                                player.playerNativeName &&
-                                                player.playerNativeName.trim() !== player.playerName.trim() && (
-                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                        {player.playerNativeName}
-                                                    </span>
-                                                )}
-                                            {showEntryBadges && (
-                                                <div className="mt-0.5 inline-flex items-center gap-1">
-                                                    {player.entryStage && player.entryStage.label ? (
-                                                        <span
-                                                            title={player.entryStage.title ? `Started in ${player.entryStage.title}` : undefined}
-                                                            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                                                        >
-                                                            {player.entryStage.order != null
-                                                                ? `${player.entryStage.order}${player.entryStage.label}`
-                                                                : player.entryStage.label}
-                                                        </span>
-                                                    ) : null}
-                                                    {player.entryTier ? (
-                                                        <span className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 text-[10px] font-bold ${
-                                                            player.entryTier === "seeded"
-                                                                ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-                                                                : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
-                                                        }`}>
-                                                            {player.entryTier === "seeded" ? "S" : "WC"}
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                            )}
-                                        </div>
+                                        {player.entryTier ? <EntryTierBadge tier={player.entryTier} /> : null}
                                     </div>
-                                )}
-                            </td>
-                            <td className="px-2 py-2 text-center font-semibold">{player.place}</td>
-                            <td className="px-2 py-2 text-center">{formatRecord(player.record)}</td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.totalPoints)}</td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.totalInnings)}</td>
-                            <td className="px-2 py-2 text-center">
-                                {formatAverage(player.totalPoints, player.totalInnings)}
-                            </td>
-                            <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
-                            {showBestAverageColumn && (
-                                <td className="px-2 py-2 text-center">
-                                    {formatTruncatedNumber(player.bestAverage)}
+                                ) : null}
+                            </div>
+                        )
+
+                        const playerHref = `${embedded ? '/embed' : ''}/players/${player.playerId}-${player.playerName.trim().replace(/\s+/g, '-')}${
+                            tournamentContextSlug
+                                ? `?tournament=${encodeURIComponent(tournamentContextSlug)}`
+                                : ''
+                        }`
+
+                        return (
+                            <tr
+                                key={player.key}
+                                className="border-t border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                            >
+                                <td className="px-3 py-2 font-medium">
+                                    {player.playerId ? (
+                                        <Link
+                                            href={playerHref}
+                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                                        >
+                                            {playerCell}
+                                        </Link>
+                                    ) : (
+                                        playerCell
+                                    )}
                                 </td>
-                            )}
-                            {showHighRun2Column && (
-                                <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
-                            )}
-                        </tr>
-                            )
-                        })()
-                    ))}
+                                <td className="px-2 py-2 text-center font-semibold">{player.place}</td>
+                                <td className="px-2 py-2 text-center">{formatRecord(player.record)}</td>
+                                <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
+                                <td className="px-2 py-2 text-center">{formatNumberValue(player.totalPoints)}</td>
+                                <td className="px-2 py-2 text-center">{formatNumberValue(player.totalInnings)}</td>
+                                <td className="px-2 py-2 text-center">
+                                    {formatAverage(player.totalPoints, player.totalInnings)}
+                                </td>
+                                <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun)}</td>
+                                {showBestAverageColumn && (
+                                    <td className="px-2 py-2 text-center">
+                                        {formatTruncatedNumber(player.bestAverage)}
+                                    </td>
+                                )}
+                                {showHighRun2Column && (
+                                    <td className="px-2 py-2 text-center">{formatNumberValue(player.highRun2)}</td>
+                                )}
+                            </tr>
+                        )
+                    })}
                 </tbody>
             </table>
         </div>

@@ -53,8 +53,8 @@ import {
   resolveEntryTierRule,
   entryTierFromSeed,
   lookupEntryStage,
-  PlayerEntryBadges,
 } from "./entryHelpers";
+import { PlayerEntryBadges } from "./EntryBadges";
 import SingleElimBracket, {
   type BracketMatchView,
   type BracketRoundView,
