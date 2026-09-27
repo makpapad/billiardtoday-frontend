@@ -102,9 +102,12 @@ export function shortEntryStageLabel(title: string | null | undefined) {
 
   const condensed = raw.replace(/[^A-Za-z]/g, "");
   if (/^P*Q$/i.test(condensed)) return condensed.toUpperCase();
-  if (/^(?:pre)+qual(?:ification)?$/i.test(condensed)) {
+  // "QUALIFICATION", "PRE QUALIFICATION", "PP QUALIFICATION", "Qualification Round 2" …
+  // → Q / PQ / PPQ. The short code is the number of pre-rounds followed by Q.
+  if (/qual/i.test(condensed)) {
+    const leadingP = (condensed.match(/^(P+)/i)?.[1] ?? "").length;
     const preCount = (condensed.match(/pre/gi) ?? []).length;
-    return `${"P".repeat(preCount)}Q`;
+    return `${"P".repeat(Math.max(leadingP, preCount))}Q`;
   }
 
   const fraction = raw.match(/\d+\s*\/\s*\d+/);
