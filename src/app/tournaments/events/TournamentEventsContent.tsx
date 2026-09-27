@@ -48,6 +48,13 @@ import {
 import GroupStandingsTable from "./GroupStandingsTable";
 import StageCountryStats from "./StageCountryStats";
 import ShareMenuButton from "./ShareMenuButton";
+import {
+  buildEntryStageByPlayerKey,
+  resolveEntryTierRule,
+  entryTierFromSeed,
+  lookupEntryStage,
+  PlayerEntryBadges,
+} from "./entryHelpers";
 import SingleElimBracket, {
   type BracketMatchView,
   type BracketRoundView,
@@ -2926,175 +2933,7 @@ function buildStagePlayerCountryMap(stage: NormalizedEventStage) {
   });
 
   return map;
-}
-
-// ---------------------------------------------------------------------------
-// Entry stage ("started from") + entry tier (seeded / wildcard)
-//
-// Nothing about either value is stored per participant: the entry stage is
-// derived from the stages the player actually appears in (the lowest stage
-// order wins) and the seeded/wildcard tier is a pure ruleset rule applied to
-// the participant seed.
-// ---------------------------------------------------------------------------
-
-type EntryStageInfo = {
-  order: number | null;
-  title: string;
-  label: string | null;
-};
-
-type EntryTier = "seeded" | "wildcard";
-
-type EntryTierRule = {
-  /** Highest seed that enters the main tournament as a seeded player. */
-  seededThrough: number;
-  /** Highest seed that still counts as an entry wildcard. */
-  wildcardThrough: number;
-};
-
-// UMB World Cup 3-cushion: seeds 1-14 seeded, 15-17 wildcards (15 UMB, 16-17 organiser).
-// UMB World Championship 3-cushion: seeds 1-46 seeded, 47-48 wildcards.
-const ENTRY_TIER_RULES: Record<string, EntryTierRule> = {
-  umb_world_cup_3c_v1: { seededThrough: 14, wildcardThrough: 17 },
-  umb_world_3c_v1: { seededThrough: 46, wildcardThrough: 48 },
-};
-
-function resolveEntryTierRule(rulesetKey: string | null | undefined): EntryTierRule | null {
-  const key = typeof rulesetKey === "string" ? rulesetKey.trim().toLowerCase() : "";
-  if (!key) return null;
-  return ENTRY_TIER_RULES[key] ?? null;
-}
-
-function entryTierFromSeed(
-  seed: number | null | undefined,
-  rule: EntryTierRule | null,
-): EntryTier | null {
-  if (!rule || typeof seed !== "number" || !Number.isFinite(seed) || seed <= 0) return null;
-  if (seed <= rule.seededThrough) return "seeded";
-  if (seed <= rule.wildcardThrough) return "wildcard";
-  return null;
-}
-
-function collectStagePlayerKeys(stage: NormalizedEventStage) {
-  const keys = new Set<string>();
-  const add = (
-    documentId: string | null | undefined,
-    id: number | null | undefined,
-    name: string | null | undefined,
-  ) => {
-    if (documentId) keys.add(`doc:${documentId}`);
-    if (typeof id === "number") keys.add(`id:${id}`);
-    const nameKey = normalizeRankingPlayerName(name);
-    if (nameKey) keys.add(`name:${nameKey}`);
-  };
-
-  stage.groups.forEach((match) => {
-    add(match.player1.documentId, match.player1.id, match.player1.name || match.player1.nativeName);
-    add(match.player2.documentId, match.player2.id, match.player2.name || match.player2.nativeName);
-  });
-  stage.results.forEach((result) => {
-    add(result.playerDocumentId, result.playerId, result.playerName);
-  });
-
-  return keys;
-}
-
-// Short, readable form of a stage title: "Q", "PQ", "PPPQ", "PPQ", "1/16", "MAIN".
-function shortEntryStageLabel(title: string | null | undefined) {
-  const raw = String(title ?? "").trim();
-  if (!raw) return null;
-
-  const condensed = raw.replace(/[^A-Za-z]/g, "");
-  if (/^P*Q$/i.test(condensed)) return condensed.toUpperCase();
-  if (/^(?:pre)+qual(?:ification)?$/i.test(condensed)) {
-    const preCount = (condensed.match(/pre/gi) ?? []).length;
-    return `${"P".repeat(preCount)}Q`;
   }
-
-  const fraction = raw.match(/\d+\s*\/\s*\d+/);
-  if (fraction) return fraction[0].replace(/\s+/g, "");
-
-  if (/main/i.test(raw)) return "MAIN";
-
-  const firstWord = raw.split(/[\s-]+/)[0] ?? "";
-  return firstWord ? firstWord.slice(0, 6).toUpperCase() : null;
-}
-
-function buildEntryStageByPlayerKey(stages: NormalizedEventStage[]) {
-  const entryByKey = new Map<string, EntryStageInfo>();
-  [...stages]
-    .sort((a, b) => (a.order ?? Number.POSITIVE_INFINITY) - (b.order ?? Number.POSITIVE_INFINITY))
-    .forEach((stage) => {
-      const info: EntryStageInfo = {
-        order: stage.order,
-        title: stage.title,
-        label: shortEntryStageLabel(stage.title),
-      };
-      collectStagePlayerKeys(stage).forEach((key) => {
-        if (!entryByKey.has(key)) entryByKey.set(key, info);
-      });
-    });
-  return entryByKey;
-}
-
-function lookupEntryStage(
-  map: Map<string, EntryStageInfo>,
-  result: NormalizedStageResult,
-): EntryStageInfo | null {
-  return (
-    (result.playerDocumentId ? map.get(`doc:${result.playerDocumentId}`) : undefined) ??
-    (result.playerId !== null ? map.get(`id:${result.playerId}`) : undefined) ??
-    map.get(`name:${normalizeRankingPlayerName(result.playerName)}`) ??
-    null
-  );
-}
-
-function PlayerEntryBadges({
-  entryStage,
-  entryTier,
-  currentStageOrder,
-}: {
-  entryStage: EntryStageInfo | null;
-  entryTier: EntryTier | null;
-  currentStageOrder: number | null;
-}) {
-  // The start-stage badge is only informative when the player entered an
-  // earlier stage than the one being listed; otherwise every row of a stage
-  // ranking would just repeat that stage's own title.
-  const showStage =
-    entryStage !== null &&
-    entryStage.label !== null &&
-    (entryStage.order === null ||
-      currentStageOrder === null ||
-      entryStage.order < currentStageOrder);
-
-  if (!showStage && entryTier === null) return null;
-
-  return (
-    <span className="ml-2 inline-flex items-center gap-1 align-middle">
-      {showStage && entryStage ? (
-        <span
-          title={`Started in ${entryStage.title}`}
-          className="rounded border border-gray-300 bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-        >
-          {entryStage.label}
-        </span>
-      ) : null}
-      {entryTier !== null ? (
-        <span
-          className={clsx(
-            "rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
-            entryTier === "seeded"
-              ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-              : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-          )}
-        >
-          {entryTier === "seeded" ? "S" : "WC"}
-        </span>
-      ) : null}
-    </span>
-  );
-}
 
 function applyStageResultCountries(
   results: NormalizedStageResult[],
@@ -3633,8 +3472,13 @@ export function TournamentEventsContent({
         : null;
     return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
       ? tournamentRuleset.trim()
-      : null;
+            : null;
   }, [eventData]);
+  const entryStageByPlayerKey = useMemo(
+    () => buildEntryStageByPlayerKey(eventStages),
+    [eventStages],
+  );
+  const entryTierRule = useMemo(() => resolveEntryTierRule(eventRulesetKey), [eventRulesetKey]);
   const tournamentRulesetKey = useMemo(() => {
     const tournament = eventData?.data?.tournament;
     const tournamentRuleset =
@@ -8572,20 +8416,27 @@ export function TournamentEventsContent({
                                                 </table>
                                               </div>
                                               {showGroupStandings ? (
-                                                <GroupStandingsTable
-                                                  standings={buildGroupStandings(
-                                                    group.matches,
-                                                    {
-                                                      artistic: isArtisticEvent,
-                                                      suppressBestAverage: suppressDerivedBestAverage,
-                                                    },
-                                                  )}
-                                                  embedded={embedded}
-                                                  artistic={isArtisticEvent}
-                                                  showNativeNames={showNativePlayerNames}
-                                                  tournamentContextSlug={tournamentContextSlug}
-                                                />
-                                              ) : null}
+                                                                                              <GroupStandingsTable
+                                                                                                standings={buildGroupStandings(
+                                                                                                  group.matches,
+                                                                                                  {
+                                                                                                    artistic: isArtisticEvent,
+                                                                                                    suppressBestAverage: suppressDerivedBestAverage,
+                                                                                                    entryStageByPlayerKey,
+                                                                                                    playerSeedByDocumentId:
+                                                                                                      playerSeedByDocumentId.size > 0
+                                                                                                        ? playerSeedByDocumentId
+                                                                                                        : undefined,
+                                                                                                    entryTierRule,
+                                                                                                  },
+                                                                                                )}
+                                                                                                embedded={embedded}
+                                                                                                artistic={isArtisticEvent}
+                                                                                                showNativeNames={showNativePlayerNames}
+                                                                                                showEntryBadges
+                                                                                                tournamentContextSlug={tournamentContextSlug}
+                                                                                              />
+                                                                                            ) : null}
                                               </>
                                               )
                                               ) : null}

@@ -323,6 +323,8 @@ export type GroupStanding = {
   playerName: string;
   playerNativeName: string | null;
   playerCountry: string | null;
+  /** Player's documentId (Strapi UID) for cross-referencing with entry stage data */
+  playerDocumentId?: string;
   record: PlayerRecord;
   totalMatchPoints: number;
   totalPoints: number;
@@ -332,4 +334,8 @@ export type GroupStanding = {
   highRun: number | null;
   highRun2: number | null;
   place: number;
+  /** Entry stage info (order/label/title) populated when badges are available */
+  entryStage?: { order: number | null; label: string | null; title: string | null } | null;
+  /** Entry tier (seeded/wildcard) populated when badges are available */
+  entryTier?: "seeded" | "wildcard" | null;
 };

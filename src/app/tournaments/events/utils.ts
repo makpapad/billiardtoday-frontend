@@ -12,6 +12,8 @@ import type {
   PlayerRecord,
   GroupStanding,
 } from "./types";
+import type { EntryStageInfo, EntryTierRule } from "./entryHelpers";
+import { entryTierFromSeed, lookupEntryStageForPlayer } from "./entryHelpers";
 import { getCountryCode, getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 
 export const toNumber = (value: unknown): number | null => {
@@ -519,12 +521,23 @@ export const hasPlayedStageMatch = (
         (entry.player.matchPoints ?? 0) > 0),
   );
 
+export type BuildGroupStandingsOptions = {
+  artistic?: boolean;
+  suppressBestAverage?: boolean;
+  entryStageByPlayerKey?: Map<string, EntryStageInfo>;
+  playerSeedByDocumentId?: Map<string, number>;
+  entryTierRule?: EntryTierRule | null;
+};
+
 export const buildGroupStandings = (
   matches: StageMatchGroup["matches"],
-  options?: { artistic?: boolean; suppressBestAverage?: boolean },
+  options?: BuildGroupStandingsOptions,
 ): GroupStanding[] => {
   const artistic = options?.artistic === true;
   const suppressBestAverage = options?.suppressBestAverage === true;
+  const entryStageByPlayerKey = options?.entryStageByPlayerKey;
+  const playerSeedByDocumentId = options?.playerSeedByDocumentId;
+  const entryTierRule = options?.entryTierRule ?? null;
   const truncateTo3Decimals = (value: number): number =>
     Math.trunc(value * 1000) / 1000;
   const computeArtisticPercentage = (
@@ -670,23 +683,34 @@ export const buildGroupStandings = (
         const key =
           entry.player.documentId ?? `${entry.player.name}-${position}`;
         if (!acc[key]) {
-          acc[key] = {
-            key,
-            playerId: entry.player.id,
-            playerName: entry.player.name,
-            playerNativeName: entry.player.nativeName ?? null,
-            playerCountry: entry.player.country ?? null,
-            record: { wins: 0, draws: 0, losses: 0 },
-            totalMatchPoints: 0,
-            totalPoints: 0,
-            totalInnings: 0,
-            average: null,
-            bestAverage: null,
-            highRun: null,
-            highRun2: null,
-            place: 0,
-          };
-        }
+                  acc[key] = {
+                    key,
+                    playerId: entry.player.id,
+                    playerDocumentId: entry.player.documentId ?? undefined,
+                    playerName: entry.player.name,
+                    playerNativeName: entry.player.nativeName ?? null,
+                    playerCountry: entry.player.country ?? null,
+                    record: { wins: 0, draws: 0, losses: 0 },
+                    totalMatchPoints: 0,
+                    totalPoints: 0,
+                    totalInnings: 0,
+                    average: null,
+                    bestAverage: null,
+                    highRun: null,
+                    highRun2: null,
+                    place: 0,
+                    entryStage: entryStageByPlayerKey
+                      ? lookupEntryStageForPlayer(entryStageByPlayerKey, entry.player)
+                      : undefined,
+                    entryTier:
+                      playerSeedByDocumentId && entryTierRule
+                        ? entryTierFromSeed(
+                            playerSeedByDocumentId.get(entry.player.documentId ?? ""),
+                            entryTierRule,
+                          )
+                        : undefined,
+                  };
+                }
 
         const current = acc[key];
         const hasPlayedEntry =

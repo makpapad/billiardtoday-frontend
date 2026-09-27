@@ -9,6 +9,8 @@ type GroupStandingsTableProps = {
     artistic?: boolean
     showNativeNames?: boolean
     tournamentContextSlug?: string | null
+    /** When true, renders entry stage and tier badges in the player name cell */
+    showEntryBadges?: boolean
 }
 
 export default function GroupStandingsTable({
@@ -17,6 +19,7 @@ export default function GroupStandingsTable({
     artistic = false,
     showNativeNames = true,
     tournamentContextSlug = null,
+    showEntryBadges = false,
 }: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
@@ -76,6 +79,29 @@ export default function GroupStandingsTable({
                                                         {player.playerNativeName}
                                                     </span>
                                                 )}
+                                            {showEntryBadges && (
+                                                <div className="mt-0.5 inline-flex items-center gap-1">
+                                                    {player.entryStage && player.entryStage.label ? (
+                                                        <span
+                                                            title={player.entryStage.title ? `Started in ${player.entryStage.title}` : undefined}
+                                                            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                        >
+                                                            {player.entryStage.order != null
+                                                                ? `${player.entryStage.order}${player.entryStage.label}`
+                                                                : player.entryStage.label}
+                                                        </span>
+                                                    ) : null}
+                                                    {player.entryTier ? (
+                                                        <span className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 text-[10px] font-bold ${
+                                                            player.entryTier === "seeded"
+                                                                ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+                                                                : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                                                        }`}>
+                                                            {player.entryTier === "seeded" ? "S" : "WC"}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            )}
                                             </div>
                                         </div>
                                     </Link>
@@ -93,6 +119,29 @@ export default function GroupStandingsTable({
                                                         {player.playerNativeName}
                                                     </span>
                                                 )}
+                                            {showEntryBadges && (
+                                                <div className="mt-0.5 inline-flex items-center gap-1">
+                                                    {player.entryStage && player.entryStage.label ? (
+                                                        <span
+                                                            title={player.entryStage.title ? `Started in ${player.entryStage.title}` : undefined}
+                                                            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                        >
+                                                            {player.entryStage.order != null
+                                                                ? `${player.entryStage.order}${player.entryStage.label}`
+                                                                : player.entryStage.label}
+                                                        </span>
+                                                    ) : null}
+                                                    {player.entryTier ? (
+                                                        <span className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 text-[10px] font-bold ${
+                                                            player.entryTier === "seeded"
+                                                                ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+                                                                : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                                                        }`}>
+                                                            {player.entryTier === "seeded" ? "S" : "WC"}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
