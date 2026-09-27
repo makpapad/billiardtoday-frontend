@@ -59,7 +59,7 @@ function HoverBadge({
         <span
           role="tooltip"
           style={{ left: tooltip.x, top: tooltip.y - 8 }}
-          className="pointer-events-none fixed z-[80] w-max max-w-[16rem] -translate-x-1/2 -translate-y-full whitespace-normal rounded-md bg-slate-900 px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-white shadow-lg ring-1 ring-black/30 dark:bg-slate-100 dark:text-slate-900 dark:ring-black/10"
+          className="pointer-events-none fixed z-[80] w-max max-w-[16rem] -translate-x-1/2 -translate-y-full whitespace-normal rounded-lg border border-slate-700 bg-slate-950/95 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-2xl"
         >
           {help}
         </span>
