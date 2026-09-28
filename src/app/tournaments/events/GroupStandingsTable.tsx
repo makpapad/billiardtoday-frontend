@@ -71,32 +71,34 @@ export default function GroupStandingsTable({
                                     />
                                 ) : null}
                                 <div className="flex min-w-0 flex-1 flex-col leading-tight">
-                                    <span className="truncate">{player.playerName || '-'}</span>
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className="truncate">{player.playerName || '-'}</span>
+                                        {(() => {
+                                            if (!showEntryBadges) return null
+                                            const showStage = shouldShowEntryStage(
+                                                player.entryStage ?? null,
+                                                currentStageOrder,
+                                            )
+                                            const showTier = Boolean(player.entryTier)
+                                            if (!showStage && !showTier) return null
+                                            return (
+                                                <span className="flex shrink-0 items-center gap-1">
+                                                    {showStage && player.entryStage ? (
+                                                        <EntryStageBadge stage={player.entryStage} />
+                                                    ) : null}
+                                                    {showTier && player.entryTier ? (
+                                                        <EntryTierBadge tier={player.entryTier} />
+                                                    ) : null}
+                                                </span>
+                                            )
+                                        })()}
+                                    </div>
                                     {showNativeName ? (
                                         <span className="truncate text-[10px] text-gray-500 dark:text-gray-400">
                                             {player.playerNativeName}
                                         </span>
                                     ) : null}
                                 </div>
-                                {(() => {
-                                    if (!showEntryBadges) return null
-                                    const showStage = shouldShowEntryStage(
-                                        player.entryStage ?? null,
-                                        currentStageOrder,
-                                    )
-                                    const showTier = Boolean(player.entryTier)
-                                    if (!showStage && !showTier) return null
-                                    return (
-                                        <div className="flex shrink-0 items-center gap-1">
-                                            {showStage && player.entryStage ? (
-                                                <EntryStageBadge stage={player.entryStage} />
-                                            ) : null}
-                                            {showTier && player.entryTier ? (
-                                                <EntryTierBadge tier={player.entryTier} />
-                                            ) : null}
-                                        </div>
-                                    )
-                                })()}
                             </div>
                         )
 
