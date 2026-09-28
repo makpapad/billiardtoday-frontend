@@ -47,3 +47,6 @@ Dynamic_Sports_Landing_Page/
 
 # theme files
 theme/
+
+# Hermes terminal sentinel files (created per command, must never be committed)
+.hermes-tmp.*/
