@@ -24,22 +24,54 @@ export type EntryTierRule = {
   wildcardThrough: number;
 };
 
+/**
+ * A ruleset either fixes the tier by absolute seed numbers, or marks the
+ * trailing seeds of the field as wildcards.
+ */
+type EntryTierPolicy =
+  | EntryTierRule
+  | {
+      /** One wildcard per this many players in the field. */
+      playersPerWildcard: number;
+    };
+
 // UMB World Cup 3-cushion: seeds 1-14 seeded, 15-17 wildcards (15 UMB, 16-17 organiser).
-// UMB World Championship 3-cushion: seeds 1-46 seeded, 47-48 wildcards.
-export const ENTRY_TIER_RULES: Record<string, EntryTierRule> = {
+//
+// UMB World Championship 3-cushion allots one wildcard per 24 players in the
+// field: the 48-player men's championship has seeds 1-46 seeded with 47-48 as
+// wildcards, the 24-player ladies' and juniors' championships have seeds 1-23
+// seeded with seed 24 as the single wildcard. The men's and the juniors' events
+// share a ruleset key, so the field size — not the key alone — decides the tier.
+const ENTRY_TIER_POLICIES: Record<string, EntryTierPolicy> = {
   umb_world_cup_3c_v1: { seededThrough: 14, wildcardThrough: 17 },
-  umb_world_3c_v1: { seededThrough: 46, wildcardThrough: 48 },
+  umb_world_3c_v1: { playersPerWildcard: 24 },
+  umb_world_3c_ladies_v1: { playersPerWildcard: 24 },
 };
 
 export function resolveEntryTierRule(
   rulesetKey: string | null | undefined,
+  fieldSize?: number | null,
 ): EntryTierRule | null {
   const key =
     typeof rulesetKey === "string"
       ? rulesetKey.trim().toLowerCase()
       : "";
   if (!key) return null;
-  return ENTRY_TIER_RULES[key] ?? null;
+  const policy = ENTRY_TIER_POLICIES[key];
+  if (!policy) return null;
+  if (!("playersPerWildcard" in policy)) return policy;
+  if (
+    typeof fieldSize !== "number" ||
+    !Number.isFinite(fieldSize) ||
+    fieldSize <= 1
+  )
+    return null;
+  const size = Math.floor(fieldSize);
+  const wildcards = Math.min(
+    size - 1,
+    Math.max(1, Math.round(size / policy.playersPerWildcard)),
+  );
+  return { seededThrough: size - wildcards, wildcardThrough: size };
 }
 
 export function entryTierFromSeed(

@@ -2128,7 +2128,21 @@ function StageRankingTable({
     () => buildEntryStageByPlayerKey(allStages.length > 0 ? allStages : [stage]),
     [allStages, stage],
   );
-  const entryTierRule = useMemo(() => resolveEntryTierRule(eventRulesetKey), [eventRulesetKey]);
+  // The World Championship tier depends on the field size (48 players → 2
+  // wildcards, 24 → 1), so resolve it against the seeded participant count.
+  const entryFieldSize = useMemo(() => {
+    let seeded = 0;
+    playerSeedByDocumentId?.forEach((seed) => {
+      if (typeof seed === "number" && Number.isFinite(seed) && seed > 0) {
+        seeded += 1;
+      }
+    });
+    return seeded > 0 ? seeded : null;
+  }, [playerSeedByDocumentId]);
+  const entryTierRule = useMemo(
+    () => resolveEntryTierRule(eventRulesetKey, entryFieldSize),
+    [eventRulesetKey, entryFieldSize],
+  );
   const stageMetricMatches = useMemo<RankingMetricMatchCandidate[]>(
     () =>
       stageMatchGroups.flatMap((group) =>
@@ -3478,7 +3492,21 @@ export function TournamentEventsContent({
     () => buildEntryStageByPlayerKey(eventStages),
     [eventStages],
   );
-  const entryTierRule = useMemo(() => resolveEntryTierRule(eventRulesetKey), [eventRulesetKey]);
+  // The World Championship tier depends on the field size (48 players → 2
+  // wildcards, 24 → 1), so resolve it against the seeded participant count.
+  const entryFieldSize = useMemo(() => {
+    let seeded = 0;
+    playerSeedByDocumentId?.forEach((seed) => {
+      if (typeof seed === "number" && Number.isFinite(seed) && seed > 0) {
+        seeded += 1;
+      }
+    });
+    return seeded > 0 ? seeded : null;
+  }, [playerSeedByDocumentId]);
+  const entryTierRule = useMemo(
+    () => resolveEntryTierRule(eventRulesetKey, entryFieldSize),
+    [eventRulesetKey, entryFieldSize],
+  );
   const tournamentRulesetKey = useMemo(() => {
     const tournament = eventData?.data?.tournament;
     const tournamentRuleset =
