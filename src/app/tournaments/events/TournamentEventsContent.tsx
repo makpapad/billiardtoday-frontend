@@ -1758,19 +1758,21 @@ function buildStageRankByPlayerKey(
     finalPosition: result.finalPosition,
   }));
 
-  // No published ranking for this stage yet: for a single-group stage the RANKING
-  // tab ranks the players straight from the played matches, so mirror that here —
-  // this is what keeps a live, in-progress stage filled in.
-  if (rows.length === 0 && stageMatchGroups.length === 1) {
-    rows = buildGroupStandings(stageMatchGroups[0].matches, {
-      artistic: options.artistic,
-      suppressBestAverage: options.suppressBestAverage,
-    }).map((standing) => ({
-      playerId: standing.playerId,
-      playerDocumentId: standing.playerDocumentId ?? null,
-      groupPosition: standing.place,
-      finalPosition: null,
-    }));
+  // No stored ranking for this stage (the standings endpoint computes them from the
+  // played matches while the calculator has not published yet): rank the players the
+  // same way the RANKING tab does — from the group standings of the played matches.
+  if (rows.length === 0) {
+    rows = stageMatchGroups.flatMap((group) =>
+      buildGroupStandings(group.matches, {
+        artistic: options.artistic,
+        suppressBestAverage: options.suppressBestAverage,
+      }).map((standing) => ({
+        playerId: standing.playerId,
+        playerDocumentId: standing.playerDocumentId ?? null,
+        groupPosition: standing.place,
+        finalPosition: null,
+      })),
+    );
   }
 
   if (rows.length === 0) return rankByPlayerKey;
