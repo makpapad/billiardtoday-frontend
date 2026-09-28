@@ -321,16 +321,20 @@ function PlayerNameWithFlag({
   country,
   highlight = false,
   showNativeName = true,
+  truncateName = false,
 }: {
   name: string;
   nativeName?: string | null;
   country?: string | null;
   highlight?: boolean;
   showNativeName?: boolean;
+  /** Clip a too-long name with an ellipsis instead of pushing the cell wider
+   *  (used by the stage ranking, where badges sit right after the name). */
+  truncateName?: boolean;
 }) {
   const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
   return (
-    <div className="flex items-start gap-2 leading-tight">
+    <div className={clsx("flex items-start gap-2 leading-tight", truncateName && "min-w-0")}>
       {flagSrc ? (
         <img
           src={flagSrc}
@@ -340,10 +344,11 @@ function PlayerNameWithFlag({
           referrerPolicy="no-referrer"
         />
       ) : null}
-      <div className="flex flex-col leading-tight">
+      <div className={clsx("flex flex-col leading-tight", truncateName && "min-w-0")}>
         <span
           className={clsx(
             "font-semibold",
+            truncateName && "truncate",
             highlight && "text-yellow-600 dark:text-yellow-300",
           )}
         >
@@ -353,6 +358,7 @@ function PlayerNameWithFlag({
           <span
             className={clsx(
               "text-[10px] text-gray-500 dark:text-gray-400",
+              truncateName && "truncate",
               highlight && "text-yellow-600/80 dark:text-yellow-300/80",
             )}
           >
@@ -2777,31 +2783,35 @@ function StageRankingTable({
                   {formatNumberValue(displayRank)}
                 </td>
                 <td className="px-4 py-3 font-medium">
-                  {result.playerId ? (
-                    <Link
-                      href={playerProfileHref(result.playerId, result.playerName)}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
-                    >
+                  <div className="flex min-w-0 items-center gap-2">
+                    {result.playerId ? (
+                      <Link
+                        href={playerProfileHref(result.playerId, result.playerName)}
+                        className="min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                      >
+                        <PlayerNameWithFlag
+                          name={result.playerName || "Unknown"}
+                          nativeName={result.playerNativeName}
+                          country={result.playerCountry}
+                          showNativeName={showNativePlayerNames}
+                          truncateName
+                        />
+                      </Link>
+                    ) : (
                       <PlayerNameWithFlag
                         name={result.playerName || "Unknown"}
                         nativeName={result.playerNativeName}
                         country={result.playerCountry}
                         showNativeName={showNativePlayerNames}
+                        truncateName
                       />
-                    </Link>
-                  ) : (
-                    <PlayerNameWithFlag
-                      name={result.playerName || "Unknown"}
-                      nativeName={result.playerNativeName}
-                      country={result.playerCountry}
-                      showNativeName={showNativePlayerNames}
+                    )}
+                    <PlayerEntryBadges
+                      entryStage={playerEntryStage}
+                      entryTier={playerEntryTier}
+                      currentStageOrder={stage.order}
                     />
-                  )}
-                  <PlayerEntryBadges
-                    entryStage={playerEntryStage}
-                    entryTier={playerEntryTier}
-                    currentStageOrder={stage.order}
-                  />
+                  </div>
                 </td>
                 {showProgressColumn && (
                   <td className="px-4 py-3 text-center">
