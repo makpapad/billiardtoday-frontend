@@ -1744,37 +1744,60 @@ function hasMeaningfulStageResult(
 function buildStageRankByPlayerKey(
   stage: NormalizedEventStage,
   eventIsProvisional: boolean,
+  options: { artistic?: boolean; suppressBestAverage?: boolean } = {},
 ): Map<string, number> {
   const rankByPlayerKey = new Map<string, number>();
   // Bracket stages rank by match results and have no group standings to annotate.
   if (isBracketStage(stage)) return rankByPlayerKey;
 
-  const results = stage.results.filter(hasMeaningfulStageResult);
-  if (results.length === 0) return rankByPlayerKey;
+  const stageMatchGroups = buildStageMatchGroups(stage.groups);
+  let rows = stage.results.filter(hasMeaningfulStageResult).map((result) => ({
+    playerId: result.playerId,
+    playerDocumentId: result.playerDocumentId ?? null,
+    groupPosition: result.groupPosition,
+    finalPosition: result.finalPosition,
+  }));
+
+  // No published ranking for this stage yet: for a single-group stage the RANKING
+  // tab ranks the players straight from the played matches, so mirror that here —
+  // this is what keeps a live, in-progress stage filled in.
+  if (rows.length === 0 && stageMatchGroups.length === 1) {
+    rows = buildGroupStandings(stageMatchGroups[0].matches, {
+      artistic: options.artistic,
+      suppressBestAverage: options.suppressBestAverage,
+    }).map((standing) => ({
+      playerId: standing.playerId,
+      playerDocumentId: standing.playerDocumentId ?? null,
+      groupPosition: standing.place,
+      finalPosition: null,
+    }));
+  }
+
+  if (rows.length === 0) return rankByPlayerKey;
 
   const groupCount = new Set(
-    buildStageMatchGroups(stage.groups)
+    stageMatchGroups
       .map((group) => group.number)
       .filter((value): value is number => value !== null),
   ).size;
   const rankCountersByGroupPosition = new Map<number, number>();
 
-  results.forEach((result, index) => {
+  rows.forEach((row, index) => {
     let slottedRank: number | null = null;
-    if (groupCount > 0 && result.groupPosition !== null) {
+    if (groupCount > 0 && row.groupPosition !== null) {
       const rankWithinPosition =
-        (rankCountersByGroupPosition.get(result.groupPosition) ?? 0) + 1;
-      rankCountersByGroupPosition.set(result.groupPosition, rankWithinPosition);
-      slottedRank = (result.groupPosition - 1) * groupCount + rankWithinPosition;
+        (rankCountersByGroupPosition.get(row.groupPosition) ?? 0) + 1;
+      rankCountersByGroupPosition.set(row.groupPosition, rankWithinPosition);
+      slottedRank = (row.groupPosition - 1) * groupCount + rankWithinPosition;
     }
 
     const rank =
-      !eventIsProvisional && result.finalPosition !== null
-        ? result.finalPosition
+      !eventIsProvisional && row.finalPosition !== null
+        ? row.finalPosition
         : slottedRank ?? index + 1;
     const playerKey =
-      result.playerDocumentId ??
-      (result.playerId !== null ? `player:${result.playerId}` : null);
+      row.playerDocumentId ??
+      (row.playerId !== null ? `player:${row.playerId}` : null);
     if (playerKey && !rankByPlayerKey.has(playerKey)) {
       rankByPlayerKey.set(playerKey, rank);
     }
@@ -3535,18 +3558,6 @@ export function TournamentEventsContent({
     () => eventStagesHaveIncompleteMatches(eventStages),
     [eventStages],
   );
-  // Current stage ranking position per player, keyed by stage documentId — what
-  // the per-group standings show next to the group position.
-  const stageRankByPlayerKeyByStage = useMemo(() => {
-    const byStage = new Map<string, Map<string, number>>();
-    eventStages.forEach((stage) => {
-      byStage.set(
-        stage.documentId,
-        buildStageRankByPlayerKey(stage, eventHasIncompleteMatches),
-      );
-    });
-    return byStage;
-  }, [eventStages, eventHasIncompleteMatches]);
   const eventRulesetKey = useMemo(() => {
     const direct = eventData?.data?.ruleset_key;
     if (typeof direct === "string" && direct.trim()) return direct.trim();
@@ -5661,6 +5672,22 @@ export function TournamentEventsContent({
     title: eventInfo?.title,
     startDate: eventInfo?.startDate,
   });
+  // Current stage ranking position per player, keyed by stage documentId — what the
+  // per-group standings show next to the group position. Declared here (not next to
+  // eventStages) because it needs the artistic / best-average flags resolved below.
+  const stageRankByPlayerKeyByStage = useMemo(() => {
+    const byStage = new Map<string, Map<string, number>>();
+    eventStages.forEach((stage) => {
+      byStage.set(
+        stage.documentId,
+        buildStageRankByPlayerKey(stage, eventHasIncompleteMatches, {
+          artistic: isArtisticEvent,
+          suppressBestAverage: suppressDerivedBestAverage,
+        }),
+      );
+    });
+    return byStage;
+  }, [eventStages, eventHasIncompleteMatches, isArtisticEvent, suppressDerivedBestAverage]);
 
   // Route 5-pins events to the dedicated 5-pins UI (sets-based scoring).
   return (
