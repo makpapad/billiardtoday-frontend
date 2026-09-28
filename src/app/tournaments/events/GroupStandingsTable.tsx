@@ -71,7 +71,7 @@ export default function GroupStandingsTable({
                                     />
                                 ) : null}
                                 <div className="flex min-w-0 flex-1 flex-col leading-tight">
-                                    <div className="flex min-w-0 items-center gap-2">
+                                    <div className="flex min-w-0 items-center justify-between gap-2">
                                         <span className="truncate">{player.playerName || '-'}</span>
                                         {(() => {
                                             if (!showEntryBadges) return null
@@ -82,7 +82,7 @@ export default function GroupStandingsTable({
                                             const showTier = Boolean(player.entryTier)
                                             if (!showStage && !showTier) return null
                                             return (
-                                                <span className="flex shrink-0 items-center gap-1">
+                                                <span className="ml-auto flex shrink-0 items-center gap-1">
                                                     {showStage && player.entryStage ? (
                                                         <EntryStageBadge stage={player.entryStage} />
                                                     ) : null}

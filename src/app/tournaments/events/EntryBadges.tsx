@@ -148,7 +148,7 @@ export function PlayerEntryBadges({
   if (!showStage && entryTier === null) return null;
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 align-middle">
+    <span className="ml-auto inline-flex shrink-0 items-center gap-1 align-middle">
       {showStage && entryStage ? <EntryStageBadge stage={entryStage} /> : null}
       {entryTier !== null ? <EntryTierBadge tier={entryTier} /> : null}
     </span>

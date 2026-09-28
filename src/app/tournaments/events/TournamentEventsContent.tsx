@@ -2783,7 +2783,7 @@ function StageRankingTable({
                   {formatNumberValue(displayRank)}
                 </td>
                 <td className="px-4 py-3 font-medium">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
                     {result.playerId ? (
                       <Link
                         href={playerProfileHref(result.playerId, result.playerName)}
