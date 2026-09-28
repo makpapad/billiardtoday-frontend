@@ -1734,6 +1734,55 @@ function hasMeaningfulStageResult(
   );
 }
 
+/**
+ * Where each player currently stands in the stage — the same number the RANKING
+ * tab prints in its `#` column (see `displayRank` in StageRankingTable): the
+ * published final position once the whole event is complete, otherwise the slot
+ * implied by the group position, otherwise the row order.
+ * Keys: the player documentId when known, else `player:<playerId>`.
+ */
+function buildStageRankByPlayerKey(
+  stage: NormalizedEventStage,
+  eventIsProvisional: boolean,
+): Map<string, number> {
+  const rankByPlayerKey = new Map<string, number>();
+  // Bracket stages rank by match results and have no group standings to annotate.
+  if (isBracketStage(stage)) return rankByPlayerKey;
+
+  const results = stage.results.filter(hasMeaningfulStageResult);
+  if (results.length === 0) return rankByPlayerKey;
+
+  const groupCount = new Set(
+    buildStageMatchGroups(stage.groups)
+      .map((group) => group.number)
+      .filter((value): value is number => value !== null),
+  ).size;
+  const rankCountersByGroupPosition = new Map<number, number>();
+
+  results.forEach((result, index) => {
+    let slottedRank: number | null = null;
+    if (groupCount > 0 && result.groupPosition !== null) {
+      const rankWithinPosition =
+        (rankCountersByGroupPosition.get(result.groupPosition) ?? 0) + 1;
+      rankCountersByGroupPosition.set(result.groupPosition, rankWithinPosition);
+      slottedRank = (result.groupPosition - 1) * groupCount + rankWithinPosition;
+    }
+
+    const rank =
+      !eventIsProvisional && result.finalPosition !== null
+        ? result.finalPosition
+        : slottedRank ?? index + 1;
+    const playerKey =
+      result.playerDocumentId ??
+      (result.playerId !== null ? `player:${result.playerId}` : null);
+    if (playerKey && !rankByPlayerKey.has(playerKey)) {
+      rankByPlayerKey.set(playerKey, rank);
+    }
+  });
+
+  return rankByPlayerKey;
+}
+
 function hasMeaningfulFinalResult(
   result: NormalizedFinalResult,
 ): boolean {
@@ -3486,6 +3535,18 @@ export function TournamentEventsContent({
     () => eventStagesHaveIncompleteMatches(eventStages),
     [eventStages],
   );
+  // Current stage ranking position per player, keyed by stage documentId — what
+  // the per-group standings show next to the group position.
+  const stageRankByPlayerKeyByStage = useMemo(() => {
+    const byStage = new Map<string, Map<string, number>>();
+    eventStages.forEach((stage) => {
+      byStage.set(
+        stage.documentId,
+        buildStageRankByPlayerKey(stage, eventHasIncompleteMatches),
+      );
+    });
+    return byStage;
+  }, [eventStages, eventHasIncompleteMatches]);
   const eventRulesetKey = useMemo(() => {
     const direct = eventData?.data?.ruleset_key;
     if (typeof direct === "string" && direct.trim()) return direct.trim();
@@ -8473,6 +8534,7 @@ export function TournamentEventsContent({
                                                                                                 showNativeNames={showNativePlayerNames}
                                                                                                 showEntryBadges
                                                                                                 currentStageOrder={stage.order}
+                                                                                                stageRankByPlayerKey={stageRankByPlayerKeyByStage.get(stage.documentId)}
                                                                                                 tournamentContextSlug={tournamentContextSlug}
                                                                                               />
                                                                                             ) : null}

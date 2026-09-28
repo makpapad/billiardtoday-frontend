@@ -14,6 +14,8 @@ type GroupStandingsTableProps = {
     showEntryBadges?: boolean
     /** Order of the stage these groups belong to; hides the start-stage badge when it would just repeat this stage */
     currentStageOrder?: number | null
+    /** Current stage ranking position per player, keyed by player documentId (or `player:<playerId>`) */
+    stageRankByPlayerKey?: Map<string, number> | null
 }
 
 export default function GroupStandingsTable({
@@ -24,10 +26,19 @@ export default function GroupStandingsTable({
     tournamentContextSlug = null,
     showEntryBadges = false,
     currentStageOrder = null,
+    stageRankByPlayerKey = null,
 }: GroupStandingsTableProps) {
     if (standings.length === 0) {
         return null
     }
+
+    const stageRankKeyFor = (player: GroupStanding): string | null =>
+        player.playerDocumentId ?? (player.playerId !== null ? `player:${player.playerId}` : null)
+    const stageRankOf = (player: GroupStanding): number | null => {
+        const key = stageRankKeyFor(player)
+        return key && stageRankByPlayerKey ? stageRankByPlayerKey.get(key) ?? null : null
+    }
+    const showStageRankColumn = standings.some((player) => stageRankOf(player) !== null)
 
     const showBestAverageColumn = standings.some((player) => player.bestAverage !== null)
     const showHighRun2Column = !artistic && standings.some((player) => typeof player.highRun2 === 'number' && player.highRun2 > 0)
@@ -38,17 +49,20 @@ export default function GroupStandingsTable({
                 <thead className="bg-emerald-700 text-white">
                     <tr>
                         <th className="px-3 py-2 text-left font-medium w-56">Player</th>
-                        <th className="px-2 py-2 text-center font-medium w-14">Position</th>
-                        <th className="px-2 py-2 text-center font-medium w-20">Record</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Match Points</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">Points</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Possible points' : 'Innings'}</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? '%' : 'Average'}</th>
-                        <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best run' : 'High Run'}</th>
-                        {showBestAverageColumn && (
-                            <th className="px-2 py-2 text-center font-medium w-16">{artistic ? 'Best game' : 'Best AVG'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-12" title="Position in the group">Pos</th>
+                        {showStageRankColumn && (
+                            <th className="px-2 py-2 text-center font-medium w-12" title="Current ranking position in the stage">Rank</th>
                         )}
-                        {showHighRun2Column && <th className="px-2 py-2 text-center font-medium w-16">High Run 2</th>}
+                        <th className="px-2 py-2 text-center font-medium w-14" title="Matches won / lost">Rec</th>
+                        <th className="px-2 py-2 text-center font-medium w-14" title="Match points">MP</th>
+                        <th className="px-2 py-2 text-center font-medium w-14" title="Points (caroms)">Pts</th>
+                        <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Possible points' : 'Innings'}>{artistic ? 'Poss. pts' : 'Inn'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Percentage' : 'General average'}>{artistic ? '%' : 'Avg'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-14" title="High run">{artistic ? 'Best run' : 'HR'}</th>
+                        {showBestAverageColumn && (
+                            <th className="px-2 py-2 text-center font-medium w-14" title="Best average">{artistic ? 'Best game' : 'Best Avg'}</th>
+                        )}
+                        {showHighRun2Column && <th className="px-2 py-2 text-center font-medium w-14" title="Second-best high run">HR2</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -126,6 +140,9 @@ export default function GroupStandingsTable({
                                     )}
                                 </td>
                                 <td className="px-2 py-2 text-center font-semibold">{player.place}</td>
+                                {showStageRankColumn && (
+                                    <td className="px-2 py-2 text-center">{stageRankOf(player) ?? '-'}</td>
+                                )}
                                 <td className="px-2 py-2 text-center">{formatRecord(player.record)}</td>
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.totalPoints)}</td>
