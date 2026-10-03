@@ -7,7 +7,7 @@ import {
   CEB_RANKING_PAGE_SIZE,
   formatCebDate,
 } from "@/lib/cebRanking";
-import { readCebRanking } from "@/lib/cebRankingData";
+import { readCebPlayerLinks, readCebRanking } from "@/lib/cebRankingData";
 import { SITE_URL } from "@/lib/socialMetadata";
 import { notFound } from "next/navigation";
 
@@ -33,6 +33,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function CebThreeCushionIndividualPage() {
   const payload = readCebRanking(SLUG);
   if (!payload) notFound();
+  const playerLinks = readCebPlayerLinks();
 
   const { counts } = payload;
   const itemList = {
@@ -83,7 +84,7 @@ export default function CebThreeCushionIndividualPage() {
           ]}
         />
 
-        <CebRankingContent payload={payload} pageSize={CEB_RANKING_PAGE_SIZE} />
+        <CebRankingContent payload={payload} pageSize={CEB_RANKING_PAGE_SIZE} playerLinks={playerLinks} />
       </div>
     </>
   );

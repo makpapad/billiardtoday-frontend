@@ -37,6 +37,16 @@ export type CebRankingCounts = {
   suspended: number;
 };
 
+/** Link του πίνακα CEB προς το προφίλ του παίκτη (κλειδί = η θέση/rank της γραμμής). */
+export type CebPlayerLink = {
+  id: number;
+  slug: string;
+  db: string;
+  kind?: string;
+};
+
+export type CebPlayerLinks = Record<string, CebPlayerLink>;
+
 export type CebRankingPayload = {
   slug: string;
   title: string;

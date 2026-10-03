@@ -1,6 +1,8 @@
 import { PlayerBackButton } from "./PlayerBackButton";
 import PlayerProfileClient from "./PlayerProfileClient";
 import { PlayerInstantSummary } from "./PlayerInstantSummary";
+import { CebPlayerRankingCard } from "@/components/public/CebPlayerRankingCard";
+import { readCebPlayerRanking } from "@/lib/cebRankingData";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
 
@@ -65,6 +67,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   const { id } = await params;
   const summary = await getPublicPlayerProfileSummary(id);
   const structuredData = buildPlayerStructuredData(summary);
+  const cebRanking = readCebPlayerRanking(id);
 
   return (
     <>
@@ -84,6 +87,7 @@ export default async function PlayerProfilePage({ params }: Props) {
         </div>
       ) : null}
       {summary ? <PlayerInstantSummary summary={summary} /> : null}
+      {cebRanking ? <CebPlayerRankingCard ranking={cebRanking} /> : null}
       <PlayerProfileClient hasServerSummary={Boolean(summary)} />
     </>
   );

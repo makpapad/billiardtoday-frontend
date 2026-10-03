@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import { formatCebDate, type CebRankingPayload } from "@/lib/cebRanking";
+import { formatCebDate, type CebPlayerLinks, type CebRankingPayload } from "@/lib/cebRanking";
 
 type Props = {
   payload: CebRankingPayload;
   pageSize: number;
+  playerLinks?: CebPlayerLinks;
 };
 
 /** Compact page list: 1 … 4 5 [6] 7 8 … 42 */
@@ -31,7 +32,7 @@ const buildPageList = (page: number, pageCount: number): Array<number | "gap"> =
 
 const formatScale = (scale: number[]) => scale.join(" / ");
 
-export function CebRankingContent({ payload, pageSize }: Props) {
+export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
   const [query, setQuery] = useState("");
   const [fed, setFed] = useState("");
   const [showSuspended, setShowSuspended] = useState(true);
@@ -253,6 +254,7 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                 {visible.map((row) => {
                   const flag = getCountryFlagCdnUrl(payload.federations[row.fed] ?? null, 40);
                   const suspendedOn = formatCebDate(row.suspended);
+                  const link = playerLinks?.[String(row.rank)];
                   return (
                     <tr
                       key={`${row.rank}-${row.name}`}
@@ -278,9 +280,19 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                               className="h-[13px] w-[18px] shrink-0 rounded-[2px] object-cover"
                             />
                           ) : null}
-                          <span className="truncate text-[13.5px] font-semibold text-slate-900">
-                            {row.name}
-                          </span>
+                          {link ? (
+                            <Link
+                              href={`/players/${link.id}-${link.slug}`}
+                              title={`${link.db} — player profile`}
+                              className="truncate text-[13.5px] font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
+                            >
+                              {row.name}
+                            </Link>
+                          ) : (
+                            <span className="truncate text-[13.5px] font-semibold text-slate-900">
+                              {row.name}
+                            </span>
+                          )}
                           {suspendedOn ? (
                             <span
                               className="shrink-0 rounded-md border border-slate-400/50 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-slate-600"
