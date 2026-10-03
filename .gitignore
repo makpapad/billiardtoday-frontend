@@ -50,3 +50,6 @@ theme/
 
 # Hermes terminal sentinel files (created per command, must never be committed)
 .hermes-tmp.*/
+
+# local Hermes workspace (plans/state)
+.hermes/
