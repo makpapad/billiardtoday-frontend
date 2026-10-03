@@ -70,7 +70,7 @@ export default async function FederationPage({ params }: Props) {
     redirect(`/federations/${federation.slug}`);
   }
 
-  if (federation.slug === "ceb") {
+  if (federation.slug === "ceb" || federation.slug === "confederation-europeenne-de-billard") {
     const allFederations = await getFederations();
     const memberDirectoryEntries = CEB_MEMBER_SLUGS.flatMap((slug) => {
       const item = allFederations.find((entry) => entry.slug === slug && entry.level === "national");
