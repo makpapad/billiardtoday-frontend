@@ -7,6 +7,7 @@ import type { Federation } from "@/lib/directory";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { CEB_MEMBER_PIN_POSITIONS } from "@/components/public/cebFederationMapData";
+import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
 
 type TournamentItem = {
   documentId: string;
@@ -277,6 +278,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const [heroView, setHeroView] = useState<HeroView>("tournaments");
   const [tournaments, setTournaments] = useState<Record<string, TournamentItem[]>>({});
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
+  const [cebView, setCebView] = useTournamentView("table");
   const [cebTournaments, setCebTournaments] = useState<TournamentItem[] | null>(null);
   const [loadingCebTournaments, setLoadingCebTournaments] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
@@ -626,7 +628,9 @@ export function CebFederationExperience({ federation, members, embedded = false 
               Direct tournament calendar for events organized by the CEB itself.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <TournamentViewToggle mode={cebView} onChange={setCebView} />
+            <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex min-w-[180px] flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Season</span>
               <select
@@ -657,6 +661,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 ))}
               </select>
             </label>
+            </div>
           </div>
         </div>
 
@@ -665,6 +670,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
             Loading CEB tournaments...
           </div>
         ) : filteredCebTournaments.length > 0 ? (
+          cebView === "cards" ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredCebTournaments.map((item) => {
               const status = getStatus(item.start_date, item.end_date);
@@ -694,6 +700,37 @@ export function CebFederationExperience({ federation, members, embedded = false 
               );
             })}
           </div>
+          ) : (
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-[26px] border border-slate-200 bg-white">
+            {filteredCebTournaments.map((item) => {
+              const status = getStatus(item.start_date, item.end_date);
+              return (
+                <li key={item.documentId}>
+                  <Link
+                    href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
+                    className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 transition hover:bg-sky-50/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
+                        {item.game_type || "Tournament"}
+                      </div>
+                      <div className="mt-1 text-[15px] font-semibold text-slate-950">{item.title}</div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+                      <span>Season {item.season || "-"}</span>
+                      <span>
+                        {formatDate(item.start_date)} — {formatDate(item.end_date)}
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {status}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          )
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             No CEB tournaments match the selected filters.

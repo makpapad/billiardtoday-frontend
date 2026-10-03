@@ -33,6 +33,9 @@ const buildPageList = (page: number, pageCount: number): Array<number | "gap"> =
 const formatScale = (scale: number[]) => scale.join(" / ");
 
 export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
+  // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
+  const backLabel = `${payload.title} — European Ranking`;
+  const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
   const [query, setQuery] = useState("");
   const [fed, setFed] = useState("");
   const [showSuspended, setShowSuspended] = useState(true);
@@ -157,7 +160,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
                   <div className="min-w-0">
                     <div className="text-[13px] font-semibold leading-5 text-slate-900">
                       {event.href ? (
-                        <Link href={event.href} className="hover:text-sky-700 hover:underline">
+                        <Link href={withBack(event.href)} className="hover:text-sky-700 hover:underline">
                           {event.name}
                         </Link>
                       ) : (

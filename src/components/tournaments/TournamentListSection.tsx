@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CmsAppearance, CmsTournamentListSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
+import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
 import {
   getCmsSectionPaddingClass,
   getCmsSectionSurfaceStyle,
@@ -53,6 +54,8 @@ type Props = {
   embedded?: boolean;
   clubSlug?: string;
   federationId?: string;
+  /** Εμφάνιση διακόπτη λίστας/καρτών (προεπιλογή: λίστα). */
+  allowViewToggle?: boolean;
 };
 
 const EMPTY_PAGINATION = {
@@ -111,6 +114,7 @@ export function TournamentListSection({
   embedded = false,
   clubSlug,
   federationId,
+  allowViewToggle = false,
 }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -131,7 +135,8 @@ export function TournamentListSection({
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [debouncedSeason, setDebouncedSeason] = useState(initialSeason);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const isCards = section.layout === "cards";
+  const [view, setView] = useTournamentView(section.layout === "cards" ? "cards" : "table");
+  const isCards = view === "cards";
   const useTitleLink =
     (embedded ||
       pathname === "/tournaments" ||
@@ -396,6 +401,12 @@ export function TournamentListSection({
                 ) : null}
               </div>
             </div>
+          </div>
+        ) : null}
+
+        {allowViewToggle ? (
+          <div className="mb-4 flex justify-end">
+            <TournamentViewToggle mode={view} onChange={setView} />
           </div>
         ) : null}
 

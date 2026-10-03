@@ -103,6 +103,7 @@ export default async function FederationPage({ params }: Props) {
         }}
         appearance={appearance}
         federationId={federation.documentId}
+        allowViewToggle
       />
     </>
   );

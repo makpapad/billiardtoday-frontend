@@ -87,7 +87,9 @@ export default async function PlayerProfilePage({ params }: Props) {
         </div>
       ) : null}
       {summary ? <PlayerInstantSummary summary={summary} /> : null}
-      {cebRanking ? <CebPlayerRankingCard ranking={cebRanking} /> : null}
+      {cebRanking ? (
+        <CebPlayerRankingCard ranking={cebRanking} playerLabel={summary?.seoName ?? null} />
+      ) : null}
       <PlayerProfileClient hasServerSummary={Boolean(summary)} />
     </>
   );

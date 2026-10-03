@@ -4,14 +4,20 @@ import { formatCebDate } from "@/lib/cebRanking";
 
 type Props = {
   ranking: CebPlayerRanking;
+  /** Όνομα παίκτη για το «← Back to …» στη σελίδα τουρνουά. */
+  playerLabel?: string | null;
 };
 
 /**
  * Το CEB ranking του παίκτη, όπως στο προφίλ: θέση, σύνολο πόντων και η ανάλυση
  * ανά διοργάνωση (A–J, όπως ο επίσημος πίνακας). Server component — χωρίς JS.
  */
-export function CebPlayerRankingCard({ ranking }: Props) {
+export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
   const { row, events, federations } = ranking;
+  const withBack = (href: string) =>
+    playerLabel
+      ? `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(playerLabel)}`
+      : href;
   const suspendedOn = formatCebDate(row.suspended);
   const federationLabel = federations[row.fed] ?? row.fed;
   const counting = row.ev.filter((value) => value !== null).length;
@@ -95,7 +101,7 @@ export function CebPlayerRankingCard({ ranking }: Props) {
               return event.href ? (
                 <Link
                   key={event.key}
-                  href={event.href}
+                  href={withBack(event.href)}
                   title={`${title} — event page on BilliardToday`}
                   className={`${className} hover:border-blue-300 hover:bg-blue-50/70 dark:hover:border-blue-700 dark:hover:bg-gray-800`}
                 >

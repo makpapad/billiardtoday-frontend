@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
   LiveStatsHighlightModal,
@@ -7709,7 +7710,9 @@ export function TournamentDetailPage({
         </div>
       </section>
 
-      <div ref={tournamentContentRef} className="mt-8">
+      <BackButton fallbackHref="/tournaments" className="mt-4" />
+
+      <div ref={tournamentContentRef} className="mt-2">
         {mainContent}
       </div>
       <section className="mt-8">
