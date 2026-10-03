@@ -79,14 +79,15 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                 winners from outside Europe score no points here — the CEB ranking is a European circuit.
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">Only World Cups held in Europe count.</span>{" "}
-                Together with the European Championship and the national championships, they are the ten
-                counting events (columns A–J).
+                <span className="font-semibold text-slate-900">Six World Cups count — never more.</span>{" "}
+                Only the World Cups held in Europe are counted, and each new one takes the place of the
+                oldest of the six — so the list always follows the six most recent (columns E–J).
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">National championship points</span> are
-                reported by each national federation and entered from the official CEB list — they are not
-                recalculated by us.
+                <span className="font-semibold text-slate-900">One national championship counts, not three.</span> Columns B, C and D are the three seasons of the cycle and no player has points in more than one of them. The points are
+                reported by the national federation and entered from the official CEB list — we do not
+                recalculate them. Every total is therefore 8 events: 6 World Cups + 1 national championship
+                + the European Championship (column A) — the columns that do not count stay empty.
               </li>
             </ul>
           </div>
