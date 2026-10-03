@@ -135,7 +135,7 @@ export function CebRankingContent({ payload, pageSize }: Props) {
               <p className="text-[11px] leading-5 text-slate-500">
                 Points per finishing position, exactly as printed at the top of the official CEB list (the
                 ** column is the last one in that list). The European Championship pays double points and
-                the national championships stop at the 17–32 bracket.
+                the national championships stop at the 17–32 bracket. Rounds are marked in the same list: EC = European Championship, GP = the qualifying rounds (Q) of the UMB World Cups, plus the Preliminary and Qualification rounds of an event.
               </p>
             </div>
           </div>
