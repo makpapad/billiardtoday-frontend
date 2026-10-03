@@ -68,15 +68,15 @@ export default function CebThreeCushionIndividualPage() {
           asideHeader={
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white px-4 py-3">
               <Image
-                src="https://cdn.billiardtoday.com/uploads/umb_150_905ef4f186.png"
-                alt="UMB — Union Mondiale de Billard"
-                width={132}
-                height={44}
+                src="https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png"
+                alt="CEB — Confédération Européenne de Billard"
+                width={150}
+                height={147}
                 className="h-7 w-auto object-contain"
                 unoptimized
               />
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                UMB / CEB World Cup
+              <div className="text-[10px] font-semibold uppercase leading-4 tracking-[0.12em] text-slate-500">
+                Confédération Européenne de Billard
               </div>
             </div>
           }

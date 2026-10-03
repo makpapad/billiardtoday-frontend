@@ -62,7 +62,7 @@ uv run --python 3.12 python build_ceb_data.py                            # -> pu
 
 - Κουμπί **«Jump to the list ↓»** στο hero → `#list`· η ενότητα Standings έχει `id="list"` + `scroll-mt-24`
   (το `html { scroll-behavior: smooth }` υπάρχει ήδη στο globals.css).
-- **Λογότυπο UMB** (`https://cdn.billiardtoday.com/uploads/umb_150_905ef4f186.png`, 150×147) στο πάνω μέρος του
+- **Λογότυπο CEB** (`https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png`, 150×147) στο πάνω μέρος του
   δεξιού πλαισίου του hero, με το prop `asideHeader` του `PresentationHero` (νέο, προαιρετικό) — όχι δίπλα στα
   κουμπιά, για να μη στριμώχνονται.
 - **Εξωτερικά links** → `newTab: true` στο hero action (CEB PDF, πηγή): `target="_blank" rel="noopener noreferrer"`.
