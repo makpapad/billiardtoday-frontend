@@ -182,18 +182,18 @@ export function CebRankingContent({ payload, pageSize }: Props) {
             <table className="w-full min-w-[760px] border-separate border-spacing-0 text-right tabular-nums">
               <thead>
                 <tr className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                  <th className="w-12 border-b border-slate-200 px-2 py-2 text-right">#</th>
+                  <th className="w-10 border-b border-slate-200 px-1.5 py-2 text-right">#</th>
                   <th className="border-b border-slate-200 px-2 py-2 text-left">Player</th>
-                  <th className="w-14 border-b border-slate-200 px-2 py-2 text-center">Fed</th>
-                  <th className="w-14 border-b border-slate-200 px-2 py-2 text-right">Pts</th>
+                  <th className="w-12 border-b border-slate-200 px-1.5 py-2 text-center">Fed</th>
+                  <th className="w-12 border-b border-slate-200 px-1.5 py-2 text-right">Pts</th>
                   {payload.events.map((event) => (
                     <th
                       key={event.key}
-                      className="w-12 border-b border-slate-200 px-1 py-2 text-center align-bottom"
+                      className="min-w-[52px] border-b border-slate-200 px-1 py-2 text-center align-top"
                       title={`${event.name}${event.date ? ` · ${formatCebDate(event.date)}` : ""} · points ${formatScale(event.scale)}`}
                     >
-                      <div className="text-[12px] font-bold text-slate-500">{event.key}</div>
-                      <div className="text-[9px] font-medium normal-case tracking-normal text-slate-400">
+                      <div className="text-[12px] font-bold uppercase leading-tight text-slate-500">{event.key}</div>
+                      <div className="text-[9px] font-medium normal-case leading-tight tracking-normal text-slate-400">
                         {event.short}
                       </div>
                     </th>
