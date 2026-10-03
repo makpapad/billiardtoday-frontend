@@ -91,9 +91,9 @@ export function CebRankingContent({ payload, pageSize }: Props) {
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
                 <span className="font-semibold text-slate-900">
-                  Ties: the newest World Cup decides first.
+                  Ties: the most recent World Cup decides first.
                 </span>{" "}
-                Two players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
+                Two or more players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
                 then the national championship, and the European Championship last of all — even though it pays the most points. A negative
                 cell (a deduction) takes no part in that comparison.
               </li>
@@ -134,8 +134,8 @@ export function CebRankingContent({ payload, pageSize }: Props) {
               </div>
               <p className="text-[11px] leading-5 text-slate-500">
                 Points per finishing position, exactly as printed at the top of the official CEB list (the
-                ** column is the last one in that list). The European Championship pays double points and
-                the national championships stop at the 17–32 bracket. Rounds are marked in the same list: EC = European Championship and GP = the qualifying rounds (Q) of the UMB World Cups.
+                ** column is the last one in that list). The European Championship pays double points.
+                Rounds are marked in the same list: EC = European Championship and GP = the qualifying rounds (Q) of the UMB World Cups.
               </p>
             </div>
           </div>
