@@ -77,9 +77,10 @@ uv run --python 3.12 python build_ceb_data.py                            # -> pu
 | World Cups (E-J) | 40 | 27 | 19 | 13 | 8 | 4 | 2 |
 
 Στο PDF, η στενή στήλη δεξιά του πίνακα έχει ετικέτες ανά γραμμή: A=EC, B+C=Prelim.-Round, D=GP,
-E+F=Qualif.-Round. Στη σελίδα εξηγούνται: EC = European Championship, GP = τα Q (qualifying rounds) στα
-World Cups της UMB, Preliminary/Qualification Round = οι εναρκτήριοι γύροι (διευκρίνιση χρήστη 03/10/2026 —
-δεν υπάρχει γραπτή εξήγηση στο PDF).
+Στη σελίδα εξηγούνται μόνο τα δύο που επιβεβαιώθηκαν (EC = European Championship, GP = τα Q /
+qualifying rounds στα World Cups της UMB, διευκρίνιση χρήστη 03/10/2026). Οι ετικέτες «Prelim.-Round»
+και «Qualif.-Round» υπάρχουν μόνο στο PDF (στην ίδια στενή στήλη, σπασμένες σε δύο γραμμές η καθεμία) και
+δεν εξηγούνται πουθενά — δεν γράφονται στη σελίδα.
 
 | Στήλη | Διοργάνωση | Σελίδα στο site |
 |---|---|---|
