@@ -402,7 +402,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
   if (section.__component === "cms.logo-strip-section") return <LogoStripSection section={section} appearance={appearance} />;
   if (section.__component === "cms.testimonials-section") return <TestimonialsSection section={section} appearance={appearance} />;
   if (section.__component === "cms.posts-list-section") return <PostsListSection section={section} appearance={appearance} />;
-  if (section.__component === "cms.tournament-list-section") return <TournamentListSection section={section} appearance={appearance} embedded={embedded} />;
+  if (section.__component === "cms.tournament-list-section") return <TournamentListSection section={section} appearance={appearance} embedded={embedded} allowViewToggle />;
 
   if (section.__component === "cms.cta-banner") {
     const isSecondary = section.theme === "secondary";

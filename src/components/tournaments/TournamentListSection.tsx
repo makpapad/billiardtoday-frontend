@@ -9,6 +9,7 @@ import {
   TournamentCollection,
   tournamentStatus,
 } from "@/components/tournaments/TournamentCollection";
+import { normalizeTournamentGameType } from "@/lib/gameTypes";
 import {
   getCmsSectionPaddingClass,
   getCmsSectionSurfaceStyle,
@@ -98,6 +99,10 @@ export function TournamentListSection({
   const [error, setError] = useState<string | null>(null);
   const [seasonInput, setSeasonInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [gameType, setGameType] = useState(searchParams?.get("gameType") || "all");
+  const [gameTypeOptions, setGameTypeOptions] = useState<
+    Array<{ value: string; count: number }>
+  >([]);
 
   const itemsPerPage =
     section.itemsPerPage && section.itemsPerPage > 0
@@ -136,6 +141,36 @@ export function TournamentListSection({
   useEffect(() => {
     let mounted = true;
 
+    const loadGameTypes = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set("facets", "gameType");
+        if (clubSlug) params.set("clubSlug", clubSlug);
+        if (federationId) params.set("federationId", federationId);
+        const response = await fetch(`/api/tournaments?${params.toString()}`);
+        if (!response.ok) return;
+        const payload = await response.json().catch(() => null);
+        if (!mounted) return;
+        setGameTypeOptions(
+          Array.isArray(payload?.data)
+            ? payload.data.filter((entry: any) => entry?.value)
+            : [],
+        );
+      } catch {
+        /* το φίλτρο απλώς δεν εμφανίζεται αν το endpoint δεν απαντήσει */
+      }
+    };
+
+    loadGameTypes();
+
+    return () => {
+      mounted = false;
+    };
+  }, [clubSlug, federationId]);
+
+  useEffect(() => {
+    let mounted = true;
+
     const fetchTournaments = async () => {
       setIsLoading(true);
       setError(null);
@@ -146,6 +181,7 @@ export function TournamentListSection({
         params.set("pageSize", String(itemsPerPage));
         if (debouncedSeason) params.set("season", debouncedSeason);
         if (debouncedQuery) params.set("q", debouncedQuery);
+        if (gameType !== "all") params.set("gameType", gameType);
         if (clubSlug) params.set("clubSlug", clubSlug);
         if (federationId) params.set("federationId", federationId);
 
@@ -190,6 +226,7 @@ export function TournamentListSection({
     currentPage,
     debouncedSeason,
     debouncedQuery,
+    gameType,
     itemsPerPage,
     clubSlug,
     federationId,
@@ -299,7 +336,7 @@ export function TournamentListSection({
 
         {section.showSeasonFilter ? (
           <div
-            className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end"
+            className="mb-6 flex flex-col flex-wrap gap-3 sm:flex-row sm:items-end"
             style={{ alignItems: "flex-end" }}
           >
             <div
@@ -364,6 +401,32 @@ export function TournamentListSection({
                 ) : null}
               </div>
             </div>
+            {gameTypeOptions.length > 0 ? (
+              <div
+                className="w-full sm:flex-none"
+                style={{ width: "200px", maxWidth: "100%", flex: "0 0 200px" }}
+              >
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Game type
+                </label>
+                <select
+                  value={gameType}
+                  onChange={(event) => {
+                    setGameType(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                  aria-label="Game type"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                >
+                  <option value="all">All game types</option>
+                  {gameTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -405,7 +468,7 @@ export function TournamentListSection({
                 key: item.documentId,
                 title: item.title,
                 href,
-                gameType: item.game_type || null,
+                gameType: normalizeTournamentGameType(item.game_type) || null,
                 season: item.season,
                 startDate: section.showDate ? item.start_date : null,
                 endDate: section.showDate ? item.end_date : null,

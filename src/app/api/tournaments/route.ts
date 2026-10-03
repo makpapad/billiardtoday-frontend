@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeTournamentGameType } from "@/lib/gameTypes";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,38 @@ function normalizeToken(token: string): string {
     return "3-cushion";
   }
   return token;
+}
+
+function facetsPayload(items: any[]) {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const label = normalizeTournamentGameType(item?.game_type);
+    if (!label) continue;
+    counts.set(label, (counts.get(label) || 0) + 1);
+  }
+  const data = [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((left, right) => left.value.localeCompare(right.value, "en"));
+
+  return NextResponse.json(
+    {
+      data,
+      meta: {
+        pagination: {
+          page: 1,
+          pageSize: data.length,
+          pageCount: 1,
+          total: data.length,
+        },
+      },
+    },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    },
+  );
 }
 
 function emptyPayload(page: number, pageSize: number) {
@@ -137,6 +170,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("q")?.trim() ?? null;
     const clubSlug = searchParams.get("clubSlug");
     const federationId = searchParams.get("federationId");
+    const gameType = searchParams.get("gameType")?.trim() || null;
+    const wantsGameTypeFacets = searchParams.get("facets") === "gameType";
 
     if (clubSlug && !federationId) {
       const pageSizeForMerge = 500;
@@ -247,10 +282,17 @@ export async function GET(req: NextRequest) {
       ].sort(
         sortTournamentItems,
       );
-      const total = merged.length;
+      if (wantsGameTypeFacets) return facetsPayload(merged);
+
+      const scoped = gameType
+        ? merged.filter(
+            (item: any) => normalizeTournamentGameType(item?.game_type) === gameType,
+          )
+        : merged;
+      const total = scoped.length;
       const pageCount = Math.max(1, Math.ceil(total / pageSize));
       const start = (page - 1) * pageSize;
-      const data = merged.slice(start, start + pageSize);
+      const data = scoped.slice(start, start + pageSize);
 
       return NextResponse.json({
         data,
@@ -399,13 +441,20 @@ export async function GET(req: NextRequest) {
       upstreamPage += 1;
     }
 
-    const total = publishedEvents.length;
+    if (wantsGameTypeFacets) return facetsPayload(publishedEvents);
+
+    const scopedEvents = gameType
+      ? publishedEvents.filter(
+          (item: any) => normalizeTournamentGameType(item?.game_type) === gameType,
+        )
+      : publishedEvents;
+    const total = scopedEvents.length;
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
     const start = (page - 1) * pageSize;
 
     return NextResponse.json(
       {
-        data: publishedEvents.slice(start, start + pageSize),
+        data: scopedEvents.slice(start, start + pageSize),
         meta: {
           pagination: {
             page,

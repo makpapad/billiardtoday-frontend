@@ -12,29 +12,11 @@ import {
   TournamentCollection,
   tournamentStatus,
 } from "@/components/tournaments/TournamentCollection";
-import { normalizeGameTypeOrFallback } from "@/lib/gameTypes";
+import { normalizeTournamentGameType } from "@/lib/gameTypes";
 
-/**
- * Ίδιο παιχνίδι, διαφορετική γραφή στα δεδομένα (π.χ. «3-Cushion» vs
- * «Three-Cushion»). Τα γνωστά carom παιχνίδια τα κανονικοποιεί το
- * `@/lib/gameTypes`· εδώ μπαίνουν οι υπόλοιπες παραλλαγές ώστε το φίλτρο
- * «Game type» να έχει ΜΙΑ επιλογή ανά παιχνίδι.
- */
-const cebGameTypeAliases: Record<string, string> = {
-  "5 pins": "5 Pins",
-  "five pins": "5 Pins",
-  "five-pins": "5 Pins",
-  "cadre 47/2": "Balk-Line-47-2",
-  "cadre 71/2": "Balk-Line-71-2",
-};
-
-const cebGameType = (value?: string | null): string => {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const alias = cebGameTypeAliases[raw.toLowerCase()];
-  if (alias) return alias;
-  return normalizeGameTypeOrFallback(raw) || "";
-};
+/** Ετικέτα παιχνιδιού για το φίλτρο και τις κάρτες — μία γραφή ανά παιχνίδι. */
+const cebGameType = (value?: string | null): string =>
+  normalizeTournamentGameType(value) || "";
 
 type TournamentItem = {
   documentId: string;

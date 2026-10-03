@@ -62,6 +62,7 @@ export default async function EmbedClubPage({ params }: Props) {
         appearance={appearance}
         embedded
         clubSlug={club.slug}
+        allowViewToggle
       />
     </>
   );

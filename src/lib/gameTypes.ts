@@ -45,6 +45,30 @@ export function normalizeGameTypeOrFallback(value: unknown): string | null {
     return trimmed || null
 }
 
+/**
+ * Παραλλαγές γραφής που δεν ανήκουν στο επίσημο λεξιλόγιο `GameType` αλλά
+ * περιγράφουν το ΙΔΙΟ παιχνίδι (αποφάσεις χρήστη 10/2026).
+ */
+const extraGameTypeAliases: Record<string, string> = {
+    cadre472: 'Balk-Line-47-2',
+    cadre712: 'Balk-Line-71-2',
+    '5pins': '5 Pins',
+    fivepins: '5 Pins',
+}
+
+/**
+ * Η ετικέτα με την οποία εμφανίζεται/φιλτράρεται ένα τουρνουά σε λίστες:
+ * κανονικοποιεί τα γνωστά carom παιχνίδια και τις υπόλοιπες παραλλαγές, ώστε
+ * το φίλτρο «Game type» να έχει ΜΙΑ επιλογή ανά παιχνίδι.
+ */
+export function normalizeTournamentGameType(value: unknown): string | null {
+    const normalized = normalizeGameTypeOrFallback(value)
+    if (!normalized) return null
+    // το κλειδί πετάει και την κάθετο: «Cadre 47/2» -> cadre472
+    const key = toGameTypeKey(normalized).replace(/\//g, '')
+    return extraGameTypeAliases[key] || normalized
+}
+
 export const gameTypeLabels: Record<GameType | 'all', string> = {
     'Three-Cushion': '3 Cushion',
     'Balk-Line-47-1': 'Balk Line 47/1',

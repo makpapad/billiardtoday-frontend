@@ -134,6 +134,7 @@ export default async function ClubPage({ params }: Props) {
         }}
         appearance={appearance}
         clubSlug={club.slug}
+        allowViewToggle
       />
     </>
   );
