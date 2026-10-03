@@ -66,25 +66,20 @@ export default function CebThreeCushionIndividualPage() {
             { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
           asideHeader={
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white px-4 py-3">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
               <Image
                 src="https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png"
                 alt="CEB — Confédération Européenne de Billard"
                 width={150}
                 height={147}
-                className="h-7 w-auto object-contain"
+                className="max-h-36 w-auto object-contain"
                 unoptimized
               />
-              <div className="text-[10px] font-semibold uppercase leading-4 tracking-[0.12em] text-slate-500">
-                Confédération Européenne de Billard
-              </div>
             </div>
           }
           meta={[
             `Edition ${payload.edition} · last update ${formatCebDate(payload.updatedAt) ?? "—"}`,
             `${counts.players.toLocaleString("en-US")} ranked players · ${counts.federations} federations`,
-            `After ${payload.lastEvent ?? "the last counting event"}`,
-            `${counts.suspended} players are suspended — they stay listed and marked`,
           ]}
         />
 

@@ -62,9 +62,13 @@ uv run --python 3.12 python build_ceb_data.py                            # -> pu
 
 - Κουμπί **«Jump to the list ↓»** στο hero → `#list`· η ενότητα Standings έχει `id="list"` + `scroll-mt-24`
   (το `html { scroll-behavior: smooth }` υπάρχει ήδη στο globals.css).
-- **Λογότυπο CEB** (`https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png`, 150×147) στο πάνω μέρος του
-  δεξιού πλαισίου του hero, με το prop `asideHeader` του `PresentationHero` (νέο, προαιρετικό) — όχι δίπλα στα
-  κουμπιά, για να μη στριμώχνονται.
+- **Λογότυπο CEB** (`https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png`) στην κορυφή του δεξιού
+  πλαισίου του hero, με το prop `asideHeader` του `PresentationHero` (νέο, προαιρετικό). Ίδιο look με το hero
+  της σελίδας `/federations/confederation-europeenne-de-billard`: πλακίδιο `min-h-[180px] … bg-white/10
+  backdrop-blur-sm`, εικόνα `max-h-36` (≈144px), χωρίς λεζάντα.
+- Τα πλακίδια meta περιορίστηκαν σε 2 (Edition/update, players/federations) — κόπηκαν το «After UMB / CEB
+  World Cup — Lier (BE), 6 September 2026» και το «15 players are suspended» (αίτημα 03/10/2026). Η τελευταία
+  διοργάνωση φαίνεται στη λίστα «Counting tournaments» (στήλη J) και οι τιμωρημένοι στο φίλτρο «Suspended».
 - **Εξωτερικά links** → `newTab: true` στο hero action (CEB PDF, πηγή): `target="_blank" rel="noopener noreferrer"`.
   Εσωτερικά links (στήλες τουρνουά, «All CEB rankings») μένουν στην ίδια καρτέλα.
 
