@@ -89,6 +89,14 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                 recalculate them. Every total is therefore 8 events: 6 World Cups + 1 national championship
                 + the European Championship (column A) — the columns that do not count stay empty.
               </li>
+              <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                <span className="font-semibold text-slate-900">
+                  Ties are settled from the last result backwards.
+                </span>{" "}
+                When two players share the same total, the better result in the most recent counting event
+                ranks higher. If they are still level, the event before it decides, and so on back to the
+                oldest. A negative cell (a deduction) takes no part in that comparison.
+              </li>
             </ul>
           </div>
 
