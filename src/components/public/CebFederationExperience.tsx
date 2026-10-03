@@ -8,6 +8,10 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { CEB_MEMBER_PIN_POSITIONS } from "@/components/public/cebFederationMapData";
 import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
+import {
+  TournamentCollection,
+  tournamentStatus,
+} from "@/components/tournaments/TournamentCollection";
 import { normalizeGameTypeOrFallback } from "@/lib/gameTypes";
 
 /**
@@ -693,67 +697,24 @@ export function CebFederationExperience({ federation, members, embedded = false 
             Loading CEB tournaments...
           </div>
         ) : filteredCebTournaments.length > 0 ? (
-          cebView === "cards" ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredCebTournaments.map((item) => {
-              const status = getStatus(item.start_date, item.end_date);
-              return (
-                <Link
-                  key={item.documentId}
-                  href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
-                  className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                        {item.game_type || "Tournament"}
-                      </div>
-                      <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">{item.title}</h3>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {status}
-                    </span>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600">
-                    <span>Season {item.season || "-"}</span>
-                    <span>{formatDate(item.start_date)}</span>
-                    <span>{formatDate(item.end_date)}</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-          ) : (
-          <ul className="divide-y divide-slate-100 overflow-hidden rounded-[26px] border border-slate-200 bg-white">
-            {filteredCebTournaments.map((item) => {
-              const status = getStatus(item.start_date, item.end_date);
-              return (
-                <li key={item.documentId}>
-                  <Link
-                    href={buildTournamentHref(resolveTournamentCanonicalId(item), item.title, item.season, embedded)}
-                    className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 transition hover:bg-sky-50/40"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-                        {item.game_type || "Tournament"}
-                      </div>
-                      <div className="mt-1 text-[15px] font-semibold text-slate-950">{item.title}</div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
-                      <span>Season {item.season || "-"}</span>
-                      <span>
-                        {formatDate(item.start_date)} — {formatDate(item.end_date)}
-                      </span>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {status}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          )
+          <TournamentCollection
+            view={cebView}
+            items={filteredCebTournaments.map((item) => ({
+              key: item.documentId,
+              title: item.title,
+              href: buildTournamentHref(
+                resolveTournamentCanonicalId(item),
+                item.title,
+                item.season,
+                embedded,
+              ),
+              gameType: cebGameType(item.game_type) || null,
+              season: item.season,
+              startDate: item.start_date,
+              endDate: item.end_date,
+              status: tournamentStatus(item.start_date, item.end_date),
+            }))}
+          />
         ) : (
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             No CEB tournaments match the selected filters.

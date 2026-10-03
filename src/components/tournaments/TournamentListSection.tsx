@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CmsAppearance, CmsTournamentListSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
 import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
+import {
+  TournamentCollection,
+  tournamentStatus,
+} from "@/components/tournaments/TournamentCollection";
 import {
   getCmsSectionPaddingClass,
   getCmsSectionSurfaceStyle,
@@ -70,35 +73,6 @@ const toPositiveInt = (value: string | null, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const formatDate = (date: string | null) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("el-GR");
-};
-
-const getEndOfDayTime = (value: string | null) => {
-  if (!value) return null;
-  const dateTime = /^\d{4}-\d{2}-\d{2}T/.test(value) ? new Date(value) : null;
-  if (dateTime && !Number.isNaN(dateTime.getTime())) {
-    dateTime.setUTCDate(dateTime.getUTCDate() + 1);
-  }
-  const key = dateTime
-    ? dateTime.toISOString().slice(0, 10)
-    : value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
-  const end = key ? new Date(`${key}T23:59:59.999`) : new Date(value);
-  return Number.isNaN(end.getTime()) ? null : end.getTime();
-};
-
-const getStatus = (startDate: string | null, endDate: string | null) => {
-  const now = Date.now();
-  const start = startDate ? new Date(startDate) : null;
-  const endTime = getEndOfDayTime(endDate);
-
-  if (start && start.getTime() > now) return "Upcoming";
-  if (endTime !== null && endTime < now) return "Completed";
-  if (start || endTime !== null) return "Live";
-  return "Scheduled";
-};
-
 const resolveTournamentCanonicalId = (item: Tournament) =>
   item.tournament?.slug ||
   item.tournament?.attributes?.slug ||
@@ -136,7 +110,6 @@ export function TournamentListSection({
   const [debouncedSeason, setDebouncedSeason] = useState(initialSeason);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [view, setView] = useTournamentView(section.layout === "cards" ? "cards" : "table");
-  const isCards = view === "cards";
   const useTitleLink =
     (embedded ||
       pathname === "/tournaments" ||
@@ -299,16 +272,6 @@ export function TournamentListSection({
     ? "rounded-[24px] border border-black/5 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]"
     : "rounded-[28px] border border-black/5 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.08)]";
 
-  const statusTone = useMemo(
-    () => ({
-      Upcoming: "bg-amber-100 text-amber-800",
-      Live: "bg-emerald-100 text-emerald-800",
-      Completed: "bg-slate-200 text-slate-700",
-      Scheduled: "bg-sky-100 text-sky-800",
-    }),
-    [],
-  );
-
   return (
     <section
       ref={sectionRef}
@@ -428,183 +391,35 @@ export function TournamentListSection({
           >
             {section.emptyStateText || "No tournaments found."}
           </div>
-        ) : isCards ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => {
-              const status = getStatus(item.start_date, item.end_date);
-              return (
-                <article
-                  key={item.documentId}
-                  className="rounded-[24px] border border-black/5 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3
-                        className="text-xl font-semibold tracking-tight text-slate-950"
-                        style={{ fontFamily: tokens.headingFont }}
-                      >
-                        {useTitleLink ? (
-                          canOpenTournament(item) ? (
-                            <Link
-                              href={tournamentHrefForItem(item)}
-                              className="transition hover:text-sky-700"
-                            >
-                              {item.title}
-                            </Link>
-                          ) : (
-                            item.title
-                          )
-                        ) : (
-                          item.title
-                        )}
-                      </h3>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.game_type || "-"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Season {item.season || "-"}
-                      </p>
-                    </div>
-                    {section.showStatus ? (
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone[status]}`}
-                      >
-                        {status}
-                      </span>
-                    ) : null}
-                  </div>
-                  {section.showDate ? (
-                    <div className="mt-4 space-y-1 text-sm text-slate-600">
-                      <div>Start: {formatDate(item.start_date)}</div>
-                      <div>End: {formatDate(item.end_date)}</div>
-                    </div>
-                  ) : null}
-                  {section.showResultsLink &&
-                  !useTitleLink &&
-                  canOpenTournament(item) ? (
-                    <div className="mt-5">
-                      <Link
-                        href={tournamentHrefForItem(item)}
-                        className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        View tournament
-                      </Link>
-                    </div>
-                  ) : section.showResultsLink && !useTitleLink ? (
-                    <div className="mt-5 text-sm font-semibold text-slate-500">
-                      Club tournament
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
         ) : (
-          <div className={`${panelClass} overflow-hidden`}>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      Game Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      Season
-                    </th>
-                    {section.showDate ? (
-                      <>
-                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                          Start
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                          End
-                        </th>
-                      </>
-                    ) : null}
-                    {section.showStatus ? (
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        Status
-                      </th>
-                    ) : null}
-                    {section.showResultsLink && !useTitleLink ? (
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        Action
-                      </th>
-                    ) : null}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {items.map((item) => {
-                    const status = getStatus(item.start_date, item.end_date);
-                    return (
-                      <tr key={item.documentId} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                          {useTitleLink ? (
-                            canOpenTournament(item) ? (
-                              <Link
-                                href={tournamentHrefForItem(item)}
-                                className="transition hover:text-sky-700"
-                              >
-                                {item.title}
-                              </Link>
-                            ) : (
-                              item.title
-                            )
-                          ) : (
-                            item.title
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {item.game_type || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {item.season || "-"}
-                        </td>
-                        {section.showDate ? (
-                          <>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                              {formatDate(item.start_date)}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                              {formatDate(item.end_date)}
-                            </td>
-                          </>
-                        ) : null}
-                        {section.showStatus ? (
-                          <td className="px-6 py-4 text-sm">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone[status]}`}
-                            >
-                              {status}
-                            </span>
-                          </td>
-                        ) : null}
-                        {section.showResultsLink && !useTitleLink ? (
-                          <td className="px-6 py-4 text-sm">
-                            {canOpenTournament(item) ? (
-                              <Link
-                                href={tournamentHrefForItem(item)}
-                                className="font-semibold text-sky-700 transition hover:text-sky-900"
-                              >
-                                View tournament
-                              </Link>
-                            ) : (
-                              <span className="font-semibold text-slate-500">
-                                Club tournament
-                              </span>
-                            )}
-                          </td>
-                        ) : null}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TournamentCollection
+            view={view}
+            items={items.map((item) => {
+              const openable = canOpenTournament(item);
+              const href = useTitleLink && openable ? tournamentHrefForItem(item) : null;
+              const actionHref =
+                section.showResultsLink && !useTitleLink && openable
+                  ? tournamentHrefForItem(item)
+                  : null;
+              return {
+                key: item.documentId,
+                title: item.title,
+                href,
+                gameType: item.game_type || null,
+                season: item.season,
+                startDate: section.showDate ? item.start_date : null,
+                endDate: section.showDate ? item.end_date : null,
+                status: section.showStatus
+                  ? tournamentStatus(item.start_date, item.end_date)
+                  : null,
+                resultsHref: actionHref,
+                note:
+                  section.showResultsLink && !useTitleLink && !openable
+                    ? "Club tournament"
+                    : null,
+              };
+            })}
+          />
         )}
 
         {pagination.pageCount > 1 ? (
