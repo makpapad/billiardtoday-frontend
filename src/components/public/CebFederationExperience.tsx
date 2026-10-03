@@ -8,6 +8,29 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { CEB_MEMBER_PIN_POSITIONS } from "@/components/public/cebFederationMapData";
 import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
+import { normalizeGameTypeOrFallback } from "@/lib/gameTypes";
+
+/**
+ * Ίδιο παιχνίδι, διαφορετική γραφή στα δεδομένα (π.χ. «3-Cushion» vs
+ * «Three-Cushion»). Τα γνωστά carom παιχνίδια τα κανονικοποιεί το
+ * `@/lib/gameTypes`· εδώ μπαίνουν οι υπόλοιπες παραλλαγές ώστε το φίλτρο
+ * «Game type» να έχει ΜΙΑ επιλογή ανά παιχνίδι.
+ */
+const cebGameTypeAliases: Record<string, string> = {
+  "5 pins": "5 Pins",
+  "five pins": "5 Pins",
+  "five-pins": "5 Pins",
+  "cadre 47/2": "Balk-Line-47-2",
+  "cadre 71/2": "Balk-Line-71-2",
+};
+
+const cebGameType = (value?: string | null): string => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const alias = cebGameTypeAliases[raw.toLowerCase()];
+  if (alias) return alias;
+  return normalizeGameTypeOrFallback(raw) || "";
+};
 
 type TournamentItem = {
   documentId: string;
@@ -376,13 +399,13 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const cebGameTypeOptions = Array.from(
     new Set(
       (cebTournaments || [])
-        .map((item) => String(item.game_type || "").trim())
+        .map((item) => cebGameType(item.game_type))
         .filter((value) => value.length > 0),
     ),
   ).sort((a, b) => a.localeCompare(b, "en"));
   const filteredCebTournaments = (cebTournaments || []).filter((item) => {
     const seasonMatch = selectedSeason === "all" || String(item.season || "") === selectedSeason;
-    const gameTypeMatch = selectedGameType === "all" || String(item.game_type || "").trim() === selectedGameType;
+    const gameTypeMatch = selectedGameType === "all" || cebGameType(item.game_type) === selectedGameType;
     return seasonMatch && gameTypeMatch;
   });
   const upcomingCebTournaments = [...(cebTournaments || [])]
