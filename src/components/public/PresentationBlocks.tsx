@@ -10,6 +10,7 @@ type HeroProps = {
   actionSlot?: ReactNode;
   meta?: string[];
   aside?: ReactNode;
+  asideHeader?: ReactNode;
 };
 
 type SectionProps = {
@@ -19,7 +20,7 @@ type SectionProps = {
   action?: { label: string; href: string; newTab?: boolean };
 };
 
-export function PresentationHero({ eyebrow, title, description, actions = [], actionSlot, meta = [], aside }: HeroProps) {
+export function PresentationHero({ eyebrow, title, description, actions = [], actionSlot, meta = [], aside, asideHeader }: HeroProps) {
   return (
     <section className="overflow-hidden rounded-[36px] border border-black/5 bg-[linear-gradient(135deg,#081528_0%,#0f2f52_50%,#1d4ed8_100%)] text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)]">
       <div className="grid gap-10 px-6 py-10 lg:grid-cols-[1.4fr_0.8fr] lg:px-10 lg:py-12">
@@ -58,7 +59,7 @@ export function PresentationHero({ eyebrow, title, description, actions = [], ac
         {aside ? (
           <div>{aside}</div>
         ) : (
-          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">{asideHeader}
             {meta.map((item, index) => (
               <div key={`${item}-${index}`} className="rounded-2xl border border-white/10 bg-slate-950/25 p-4 text-sm text-white/85">
                 {item}

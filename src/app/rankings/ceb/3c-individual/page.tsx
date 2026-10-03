@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
 import { CebRankingContent } from "@/components/public/CebRankingContent";
 import { buildPageMetadata } from "@/lib/pageMetadata";
@@ -60,9 +61,25 @@ export default function CebThreeCushionIndividualPage() {
           title="3-Cushion Individual — European Ranking"
           description={`The official CEB ranking list with the point breakdown of every counting tournament. Each tournament column links to the event page on BilliardToday.`}
           actions={[
-            { label: "All CEB rankings", href: "/rankings/ceb" },
+            { label: "Jump to the list ↓", href: "#list" },
+            { label: "All CEB rankings", href: "/rankings/ceb", variant: "secondary" },
             { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
+          asideHeader={
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white px-4 py-3">
+              <Image
+                src="https://cdn.billiardtoday.com/uploads/umb_150_905ef4f186.png"
+                alt="UMB — Union Mondiale de Billard"
+                width={132}
+                height={44}
+                className="h-7 w-auto object-contain"
+                unoptimized
+              />
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                UMB / CEB World Cup
+              </div>
+            </div>
+          }
           meta={[
             `Edition ${payload.edition} · last update ${formatCebDate(payload.updatedAt) ?? "—"}`,
             `${counts.players.toLocaleString("en-US")} ranked players · ${counts.federations} federations`,

@@ -91,11 +91,11 @@ export function CebRankingContent({ payload, pageSize }: Props) {
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
                 <span className="font-semibold text-slate-900">
-                  Ties are settled from the last result backwards.
+                  Ties: the newest World Cup decides first.
                 </span>{" "}
-                When two players share the same total, the better result in the most recent counting event
-                ranks higher. If they are still level, the event before it decides, and so on back to the
-                oldest. A negative cell (a deduction) takes no part in that comparison.
+                Two players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
+                then the national championship, and the European Championship last of all — even though it pays the most points. A negative
+                cell (a deduction) takes no part in that comparison.
               </li>
             </ul>
             <div className="space-y-3 pt-1">
@@ -181,7 +181,7 @@ export function CebRankingContent({ payload, pageSize }: Props) {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-black/5 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+      <section id="list" className="scroll-mt-24 rounded-[32px] border border-black/5 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
         <div className="flex flex-wrap items-end justify-between gap-3 px-6 pt-6 sm:px-8">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-950">Standings</h2>
