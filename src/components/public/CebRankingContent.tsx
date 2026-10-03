@@ -94,7 +94,7 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                   Ties: the most recent World Cup decides first.
                 </span>{" "}
                 Two or more players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
-                then the national championship, and the European Championship last of all — even though it pays the most points. A negative
+                then the national championship, and the European Championship last of all. A negative
                 cell (a deduction) takes no part in that comparison.
               </li>
             </ul>
