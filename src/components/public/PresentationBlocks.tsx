@@ -6,7 +6,7 @@ type HeroProps = {
   eyebrow?: string | null;
   title: string;
   description?: string | null;
-  actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary" }>;
+  actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary"; newTab?: boolean }>;
   actionSlot?: ReactNode;
   meta?: string[];
   aside?: ReactNode;
@@ -16,7 +16,7 @@ type SectionProps = {
   eyebrow?: string;
   title: string;
   description?: string;
-  action?: { label: string; href: string };
+  action?: { label: string; href: string; newTab?: boolean };
 };
 
 export function PresentationHero({ eyebrow, title, description, actions = [], actionSlot, meta = [], aside }: HeroProps) {
@@ -40,6 +40,7 @@ export function PresentationHero({ eyebrow, title, description, actions = [], ac
               {actions.map((action) => (
                 <Link
                   key={`${action.label}-${action.href}`}
+                  {...(action.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   href={action.href}
                   className={
                     action.variant === "secondary"
@@ -82,6 +83,7 @@ export function SectionHeading({ eyebrow, title, description, action }: SectionP
         <Link
           href={action.href}
           className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          {...(action.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         >
           {action.label}
         </Link>

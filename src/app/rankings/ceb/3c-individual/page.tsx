@@ -61,7 +61,7 @@ export default function CebThreeCushionIndividualPage() {
           description={`The official CEB ranking list with the point breakdown of every counting tournament. Each tournament column links to the event page on BilliardToday.`}
           actions={[
             { label: "All CEB rankings", href: "/rankings/ceb" },
-            { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary" },
+            { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
           meta={[
             `Edition ${payload.edition} · last update ${formatCebDate(payload.updatedAt) ?? "—"}`,

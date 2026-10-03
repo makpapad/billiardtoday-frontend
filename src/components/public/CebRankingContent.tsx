@@ -98,6 +98,46 @@ export function CebRankingContent({ payload, pageSize }: Props) {
                 oldest. A negative cell (a deduction) takes no part in that comparison.
               </li>
             </ul>
+            <div className="space-y-3 pt-1">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                How players earn points
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Finish</th>
+                      {["1", "2", "3–4", "5–8", "9–16", "17–32", "**"].map((head) => (
+                        <th key={head} className="px-2 py-2 text-center">
+                          {head}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: "European Championship (A)", values: [80, 54, 38, 26, 16, 8, 4] },
+                      { label: "National championships (B–D)", values: [40, 27, 19, 13, 8, 4, null] },
+                      { label: "World Cups (E–J)", values: [40, 27, 19, 13, 8, 4, 2] },
+                    ].map((row) => (
+                      <tr key={row.label} className="border-t border-slate-100">
+                        <td className="px-3 py-2 font-medium text-slate-900">{row.label}</td>
+                        {row.values.map((points, index) => (
+                          <td key={index} className="px-2 py-2 text-center tabular-nums text-slate-600">
+                            {points ?? "–"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[11px] leading-5 text-slate-500">
+                Points per finishing position, exactly as printed at the top of the official CEB list (the
+                ** column is the last one in that list). The European Championship pays double points and
+                the national championships stop at the 17–32 bracket.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-4">

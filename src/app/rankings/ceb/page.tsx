@@ -36,7 +36,7 @@ export default function CebRankingsPage() {
         title="CEB official rankings"
         description="The official ranking lists of the Confédération Européenne de Billard, published here with the points of every counting tournament and a direct link to each event page."
         actions={[
-          { label: "CEB rankings (eurobillard.org)", href: index?.sourcePage ?? CEB_RANKINGS_URL, variant: "secondary" },
+          { label: "CEB rankings (eurobillard.org)", href: index?.sourcePage ?? CEB_RANKINGS_URL, variant: "secondary", newTab: true },
         ]}
         meta={[
           available.length === 1
