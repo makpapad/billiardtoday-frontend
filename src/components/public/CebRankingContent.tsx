@@ -263,8 +263,8 @@ export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
                         row.suspended
                           ? "bg-slate-200/70 text-slate-600"
                           : `${
-                              rowIndex % 2 === 1 ? "bg-slate-100/70" : "bg-white"
-                            } hover:bg-sky-50`
+                              rowIndex % 2 === 1 ? "bg-blue-100" : "bg-blue-50"
+                            } hover:bg-sky-200/60`
                       }
                     >
                       <td className="border-b border-slate-100 px-2 py-1.5 text-[13px] text-slate-400">
