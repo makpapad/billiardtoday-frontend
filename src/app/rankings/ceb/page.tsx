@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { buildPageMetadata } from "@/lib/pageMetadata";
@@ -38,12 +39,23 @@ export default function CebRankingsPage() {
         actions={[
           { label: "CEB rankings (eurobillard.org)", href: index?.sourcePage ?? CEB_RANKINGS_URL, variant: "secondary", newTab: true },
         ]}
+        asideHeader={
+          <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
+            <Image
+              src="https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png"
+              alt="CEB — Confédération Européenne de Billard"
+              width={150}
+              height={147}
+              className="max-h-36 w-auto object-contain"
+              unoptimized
+            />
+          </div>
+        }
         meta={[
           available.length === 1
             ? "1 CEB list published"
             : `${available.length} CEB lists published`,
           `${upcoming.length} more CEB lists are being added`,
-          "Only tournaments held in Europe count towards the CEB lists",
         ]}
       />
 
