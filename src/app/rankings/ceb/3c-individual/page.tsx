@@ -67,7 +67,7 @@ export default function CebThreeCushionIndividualPage() {
             { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
           asideHeader={
-            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4 backdrop-blur-sm">
               <Image
                 src="https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png"
                 alt="CEB — Confédération Européenne de Billard"

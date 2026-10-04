@@ -89,8 +89,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
                 <span className="font-semibold text-slate-900">One national championship counts, not three.</span> Columns B, C and D are the three seasons of the cycle and no player has points in more than one of them. The points are
-                reported by the national federation and entered from the official CEB list — we do not
-                recalculate them. Every total is therefore 8 events: 6 World Cups + 1 national championship
+                reported by the national federations and directly to CEB. Every total is therefore 8 events: 6 World Cups + 1 national championship
                 + the European Championship (column A) — the columns that do not count stay empty.
               </li>
               <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
@@ -98,8 +97,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
                   Ties: the most recent World Cup decides first.
                 </span>{" "}
                 Two or more players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
-                then the national championship, and the European Championship last of all. A negative
-                cell (a deduction) takes no part in that comparison.
+                then the national championship, and the European Championship last of all.
               </li>
             </ul>
             <div className="space-y-3 pt-1">
