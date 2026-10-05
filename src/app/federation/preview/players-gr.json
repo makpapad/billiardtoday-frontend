@@ -1,0 +1,952 @@
+{
+ "federation": "GR",
+ "federationName": "Greece",
+ "edition": "16/2026",
+ "season": "2026-27",
+ "seasons": [
+  {
+   "key": "B",
+   "season": "2024-25",
+   "label": "National Championships 2024/2025",
+   "scale": [
+    40,
+    27,
+    19,
+    13,
+    8,
+    4
+   ]
+  },
+  {
+   "key": "C",
+   "season": "2025-26",
+   "label": "National Championships 2025/2026",
+   "scale": [
+    40,
+    27,
+    19,
+    13,
+    8,
+    4
+   ]
+  },
+  {
+   "key": "D",
+   "season": "2026-27",
+   "label": "National Championships 2026/2027",
+   "scale": [
+    40,
+    27,
+    19,
+    13,
+    8,
+    4
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "rank": 16,
+   "name": "SELEVENTAS Dimitrios",
+   "umb": "3196",
+   "note": "matched",
+   "points": 66
+  },
+  {
+   "rank": 21,
+   "name": "POLYCHRONOPOULOS Nikos",
+   "umb": "0125",
+   "note": "matched",
+   "points": 53
+  },
+  {
+   "rank": 55,
+   "name": "ANTONATOS Kostas",
+   "umb": "0769",
+   "note": "matched",
+   "points": 27
+  },
+  {
+   "rank": 62,
+   "name": "MOULOS Vangelis",
+   "umb": "0214",
+   "note": "matched",
+   "points": 25
+  },
+  {
+   "rank": 65,
+   "name": "PAPAKONSTANTINOU Kostas",
+   "umb": "0167",
+   "note": "matched",
+   "points": 23
+  },
+  {
+   "rank": 78,
+   "name": "KOKKORIS Kostantinos",
+   "umb": "0293",
+   "note": "matched",
+   "points": 21
+  },
+  {
+   "rank": 94,
+   "name": "EVAGGELOU Nikos",
+   "umb": "1706",
+   "note": "matched",
+   "points": 19
+  },
+  {
+   "rank": 95,
+   "name": "BALOGIANNIS Apostolos",
+   "umb": "0217",
+   "note": "matched",
+   "points": 19
+  },
+  {
+   "rank": 111,
+   "name": "TSOKANTAS Dionisis",
+   "umb": "0587",
+   "note": "matched",
+   "points": 16
+  },
+  {
+   "rank": 121,
+   "name": "PRASSAS Konstantinos",
+   "umb": "3165",
+   "note": "matched",
+   "points": 14
+  },
+  {
+   "rank": 189,
+   "name": "MAVRIDOGLOU Litsa",
+   "umb": null,
+   "note": "ambiguous",
+   "points": 10
+  },
+  {
+   "rank": 218,
+   "name": "DALAKAS Dimitrios",
+   "umb": "1754",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 227,
+   "name": "KANETIS Vasileios",
+   "umb": "2568",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 228,
+   "name": "KOUKIS Thomas",
+   "umb": "0492",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 229,
+   "name": "ANAGNOSTOPOULOS George",
+   "umb": "1995",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 269,
+   "name": "GIANNAKOPOULOS Konstantinos",
+   "umb": "0821",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 270,
+   "name": "RETZIOS Gregory",
+   "umb": "0589",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 271,
+   "name": "ARGYROS Antonios",
+   "umb": "3456",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 272,
+   "name": "RAMMOS Elias",
+   "umb": "2274",
+   "note": "matched",
+   "points": 8
+  },
+  {
+   "rank": 306,
+   "name": "MATIAKIS Athanasios",
+   "umb": "1180",
+   "note": "matched",
+   "points": 6
+  },
+  {
+   "rank": 308,
+   "name": "CHRISTOFORIDIS Nikolaos",
+   "umb": "3449",
+   "note": "matched",
+   "points": 6
+  },
+  {
+   "rank": 327,
+   "name": "TSOKANTAS Georgios",
+   "umb": "1753",
+   "note": "matched",
+   "points": 6
+  },
+  {
+   "rank": 340,
+   "name": "BARTSOKAS Konstantinos",
+   "umb": "0258",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 346,
+   "name": "CHALKIADAKIS Emmanuel",
+   "umb": "3631",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 359,
+   "name": "KAMILAKIS Stefanos",
+   "umb": "1616",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 360,
+   "name": "MICHAILIDIS Alexandros",
+   "umb": "3625",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 399,
+   "name": "KOKKALIS Konstantinos",
+   "umb": "3312",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 400,
+   "name": "APOSTOLEAS Dimitris",
+   "umb": "0588",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 401,
+   "name": "KALLITSIS Dimitrios",
+   "umb": "0886",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 402,
+   "name": "ARGYRIOU Konstantinos",
+   "umb": "3628",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 403,
+   "name": "KARAPLIS Ilias",
+   "umb": "1707",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 404,
+   "name": "TREMOULIS Nikos",
+   "umb": "0585",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 405,
+   "name": "GEORGIOU Ioannis Alexios",
+   "umb": "3310",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 406,
+   "name": "VEVES Dimitrios",
+   "umb": "1606",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 409,
+   "name": "KOUTSIOUMPAS Karolos",
+   "umb": "3724",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 410,
+   "name": "DASKALOUDIS Nikos",
+   "umb": "3725",
+   "note": "matched",
+   "points": 4
+  },
+  {
+   "rank": 460,
+   "name": "SELEVENTAS Charis",
+   "umb": "1997",
+   "note": "matched",
+   "points": 2
+  },
+  {
+   "rank": 480,
+   "name": "TREMOULIS Alex",
+   "umb": "3323",
+   "note": "matched",
+   "points": 2
+  },
+  {
+   "rank": 494,
+   "name": "ALEXANDROPOULOS Stefanos",
+   "umb": "3723",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 510,
+   "name": "KALANTARIDIS Ioannis",
+   "umb": "3514",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 512,
+   "name": "FALANGAS Christos",
+   "umb": "3319",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 561,
+   "name": "ANTONIOU Ioannis",
+   "umb": "1170",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 570,
+   "name": "ANAGNOSTOPOULOS Ioannis",
+   "umb": "3624",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 571,
+   "name": "RAMOS Vasileios",
+   "umb": "0971",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 572,
+   "name": "RAMOS Elias",
+   "umb": "1162",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 573,
+   "name": "ROUSSELIOTAKIS Antonis",
+   "umb": "3314",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 574,
+   "name": "MANTZOROS Efstratios",
+   "umb": "2111",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 575,
+   "name": "PSARAKIS Apostolos",
+   "umb": "3626",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 576,
+   "name": "PATEROS Eleftherios",
+   "umb": "3627",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 577,
+   "name": "MAKROPOULOS Georgios",
+   "umb": "3629",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 680,
+   "name": "GKEVEZOS Dimitrios",
+   "umb": "1712",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 681,
+   "name": "KOUFOS George",
+   "umb": "2572",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 682,
+   "name": "LIANOS Spiridon",
+   "umb": "0359",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 683,
+   "name": "PAPAGEORGIOU Christos",
+   "umb": "2566",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 684,
+   "name": "THLIVEROS George",
+   "umb": "0590",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 685,
+   "name": "GEORGARAS Kostas",
+   "umb": "1992",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 686,
+   "name": "KRIKRIS Prokopis",
+   "umb": "2443",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 687,
+   "name": "BATSOULIS George",
+   "umb": "3455",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 688,
+   "name": "METAXAS Antonis",
+   "umb": "2360",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 801,
+   "name": "SYRIOTAKIS Andreas",
+   "umb": "2569",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 802,
+   "name": "KOUTSOFIOS Vangelis",
+   "umb": "1165",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 803,
+   "name": "PARAVALOS Dimitris",
+   "umb": "3308",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 804,
+   "name": "DIMOU Manolis",
+   "umb": "3309",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 805,
+   "name": "KALOTI Adriatik",
+   "umb": "3311",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 806,
+   "name": "MOUNTZOURIS Aristotelis",
+   "umb": "3313",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 899,
+   "name": "KORILIS Christos",
+   "umb": "2273",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 900,
+   "name": "CHATZIPAVLIS Nikos",
+   "umb": "0388",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 901,
+   "name": "KINTATOS Elefterios",
+   "umb": "1615",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 902,
+   "name": "PARAPONIARIS Kostas",
+   "umb": "2567",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 903,
+   "name": "STERGIOU George",
+   "umb": "1160",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 904,
+   "name": "MOUTSOS Dimitris",
+   "umb": "1998",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 905,
+   "name": "MARANIS George",
+   "umb": "1994",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 906,
+   "name": "METOS Charis",
+   "umb": "1999",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 907,
+   "name": "MAVRAGANIS Kostas",
+   "umb": "0491",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 908,
+   "name": "PAPAGEORGIOU George",
+   "umb": "1838",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 963,
+   "name": "PAPADOPOULOS Fanis",
+   "umb": "1988",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 976,
+   "name": "KASIDOKOSTAS Filipos",
+   "umb": "0104",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1071,
+   "name": "BITHAS Fotis",
+   "umb": "2782",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1072,
+   "name": "MOURLAS Dimitris",
+   "umb": "2783",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1285,
+   "name": "RIGOUTSOS Dimitris",
+   "umb": "2570",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1286,
+   "name": "DRAMOUNTANIS Panagiotis",
+   "umb": "2571",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1287,
+   "name": "KARAVVAS Kiriakos",
+   "umb": "2293",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1288,
+   "name": "SIAKAVARAS Lazaros",
+   "umb": "1197",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1289,
+   "name": "TZITZIKAS George",
+   "umb": "2255",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1290,
+   "name": "MANOUILIDIS Christos",
+   "umb": "2275",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1291,
+   "name": "RIZOS Aggelos",
+   "umb": "2276",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1292,
+   "name": "KALAMPALIKIS Kostas",
+   "umb": "2442",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1293,
+   "name": "VAITSIS Achileas",
+   "umb": "1705",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1294,
+   "name": "TSILIGKOS Dimitrios",
+   "umb": "2109",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1295,
+   "name": "MELIDIS Michalis",
+   "umb": "1843",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1296,
+   "name": "GRIGORIADIS Stathis",
+   "umb": "1848",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1297,
+   "name": "GAVRIILIDIS Athanasios",
+   "umb": "2272",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1298,
+   "name": "SOTIROPOULOS J",
+   "umb": "1168",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1299,
+   "name": "KARAKATSANIS George",
+   "umb": "0547",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1300,
+   "name": "SALOMON Arie",
+   "umb": null,
+   "note": "not-found",
+   "points": 0
+  },
+  {
+   "rank": 1301,
+   "name": "FILINIS Giorgos",
+   "umb": "0611",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1302,
+   "name": "KIKRILIS Pavlos",
+   "umb": "1750",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1303,
+   "name": "PAPADAKIS John",
+   "umb": "0510",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1304,
+   "name": "SERVETAS Dimitrios",
+   "umb": "1159",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1305,
+   "name": "MAYRAGANIS Kostas",
+   "umb": "0586",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1306,
+   "name": "GKOPTZIAS Anastasios",
+   "umb": "1987",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1307,
+   "name": "MARNELAKHS George",
+   "umb": "1989",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1308,
+   "name": "LONTZETIDIS Konstantinos",
+   "umb": "0825",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1309,
+   "name": "IOANNIDIS George",
+   "umb": "1990",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1310,
+   "name": "FESATIDIS Lefteris",
+   "umb": "1991",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1311,
+   "name": "FOUNTIS Dimitrios",
+   "umb": "1993",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1312,
+   "name": "DRAKOYLIS Iakovos",
+   "umb": "1996",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1313,
+   "name": "ARGYROPOULOS Dimitris",
+   "umb": "1708",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1314,
+   "name": "ARGYROS Christos",
+   "umb": "0888",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1315,
+   "name": "DAMOULAKIS Aris",
+   "umb": "1709",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1316,
+   "name": "LIANTOS George",
+   "umb": "1711",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1317,
+   "name": "MAROULIS Evangelos",
+   "umb": "0823",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1318,
+   "name": "TSAKLIDIS Nikolaos",
+   "umb": "1710",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1319,
+   "name": "ATHANASIOU Michalis",
+   "umb": "0889",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1320,
+   "name": "BALOMENOS Alexander",
+   "umb": null,
+   "note": "ambiguous",
+   "points": 0
+  },
+  {
+   "rank": 1321,
+   "name": "FELEKIDIS Panagiotis",
+   "umb": "0819",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1322,
+   "name": "GEVEZOS Dimitrios",
+   "umb": "0544",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1323,
+   "name": "MAROULIS V",
+   "umb": "1169",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1324,
+   "name": "MICHALIS Athanasios",
+   "umb": "0820",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1325,
+   "name": "PAPADIMITRIOU Dimitrios",
+   "umb": "0892",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1326,
+   "name": "PAPAECONOMOU Michael",
+   "umb": "0919",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1327,
+   "name": "PAPAZACHARIOU Vassilios",
+   "umb": "0895",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1328,
+   "name": "SAVVOPOULOS Ioannis",
+   "umb": "0891",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1329,
+   "name": "TETRIGKAS Konstantinos",
+   "umb": "0893",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1330,
+   "name": "TSOGANOS Athanasios",
+   "umb": "0410",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1331,
+   "name": "TRIANTOS Alkinoos",
+   "umb": "1755",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1332,
+   "name": "ATHANASIOU Athanasios",
+   "umb": "0591",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1333,
+   "name": "KARAVASILIS Konstantinos",
+   "umb": "2115",
+   "note": "matched",
+   "points": 0
+  },
+  {
+   "rank": 1478,
+   "name": "KOKOLOGIANNIS John",
+   "umb": "0595",
+   "note": "matched",
+   "points": 0
+  }
+ ]
+}
