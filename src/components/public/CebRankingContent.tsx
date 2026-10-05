@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { formatCebDate, type CebPlayerLinks, type CebRankingPayload } from "@/lib/cebRanking";
@@ -9,6 +10,8 @@ type Props = {
   payload: CebRankingPayload;
   pageSize: number;
   playerLinks?: CebPlayerLinks;
+  /** Σύνδεσμος προς το PDF export ακριβώς αυτής της έκδοσης (χωρίς τιμή = χωρίς κουμπί). */
+  downloadHref?: string | null;
 };
 
 /** Compact page list: 1 … 4 5 [6] 7 8 … 42 */
@@ -32,7 +35,7 @@ const buildPageList = (page: number, pageCount: number): Array<number | "gap"> =
 
 const formatScale = (scale: number[]) => scale.join(" / ");
 
-export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
+export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref }: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
   const backLabel = `${payload.title} — European Ranking`;
   const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
@@ -225,6 +228,16 @@ export function CebRankingContent({ payload, pageSize, playerLinks }: Props) {
             >
               Suspended ({payload.counts.suspended}) {showSuspended ? "shown" : "hidden"}
             </button>
+            {downloadHref ? (
+              <a
+                href={downloadHref}
+                download
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-700 bg-sky-700 px-4 py-2 text-xs font-semibold text-white transition hover:border-sky-800 hover:bg-sky-800"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                Download PDF
+              </a>
+            ) : null}
           </div>
         </div>
 

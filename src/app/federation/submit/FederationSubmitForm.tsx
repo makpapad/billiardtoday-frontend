@@ -45,6 +45,8 @@ export function FederationSubmitForm() {
   const [problems, setProblems] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<PortalSubmission | null>(null);
+  /** Η CEB ενημερώθηκε με email για την υποβολή (το λέει το meta της απάντησης). */
+  const [cebNotified, setCebNotified] = useState(false);
 
   useEffect(() => {
     const { token, context: saved } = readSession();
@@ -204,6 +206,7 @@ export function FederationSubmitForm() {
       setNotice({ tone: "bad", text: res.error || "The submission was not stored" });
       return;
     }
+    setCebNotified(Boolean(res.meta?.mail?.delivered));
     setDone(res.data);
   }
 
@@ -472,6 +475,12 @@ export function FederationSubmitForm() {
               <br />
               {done.rowCount} players with a position, {done.matchedCount} of them matched to a player of ours. Stored as{" "}
               <span className="chip warn">In review</span> — the CEB list is not touched until we approve it.
+              {cebNotified && (
+                <>
+                  <br />
+                  The CEB office has been notified by email and will check your list.
+                </>
+              )}
             </p>
             <div className="row between" style={{ marginTop: 16 }}>
               <span className="lock">You can come back and resubmit until we approve it.</span>

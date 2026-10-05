@@ -92,7 +92,12 @@ export default function CebThreeCushionIndividualPage() {
           currentEdition={payload.edition}
         />
 
-        <CebRankingContent payload={payload} pageSize={CEB_RANKING_PAGE_SIZE} playerLinks={playerLinks} />
+        <CebRankingContent
+          payload={payload}
+          pageSize={CEB_RANKING_PAGE_SIZE}
+          playerLinks={playerLinks}
+          downloadHref={`/api/rankings/ceb/pdf?slug=${SLUG}`}
+        />
       </div>
     </>
   );
