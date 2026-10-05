@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import type {
   CebPlayerLinks,
+  CebRankingArchive,
+  CebRankingArchiveEdition,
   CebRankingEvent,
   CebRankingIndex,
   CebRankingPayload,
@@ -15,7 +17,10 @@ import type {
  */
 
 const DATA_DIR = path.join(process.cwd(), "public", "data", "ceb-ranking");
+const ARCHIVE_DIR = path.join(DATA_DIR, "archive");
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+/** Κλειδί αρχειοθετημένης έκδοσης, π.χ. "16-2026". */
+const EDITION_KEY_PATTERN = /^\d{1,2}-\d{4}$/;
 /** Το ranking που τροφοδοτεί το block στο προφίλ του παίκτη. */
 const CEB_PLAYER_RANKING_SLUG = "3c-individual";
 
@@ -32,14 +37,46 @@ export const readCebRankingIndex = (): CebRankingIndex | null => {
   return parsed && Array.isArray(parsed.available) ? parsed : null;
 };
 
+const isRankingPayload = (parsed: CebRankingPayload | null): parsed is CebRankingPayload =>
+  Boolean(
+    parsed &&
+      Array.isArray(parsed.rows) &&
+      Array.isArray(parsed.events) &&
+      parsed.rows.length > 0 &&
+      parsed.federations &&
+      typeof parsed.federations === "object",
+  );
+
 export const readCebRanking = (slug: string): CebRankingPayload | null => {
   if (!SLUG_PATTERN.test(slug)) return null;
 
   const parsed = readJson<CebRankingPayload>(path.join(DATA_DIR, `${slug}.json`));
-  if (!parsed || !Array.isArray(parsed.rows) || !Array.isArray(parsed.events) || parsed.rows.length === 0) {
-    return null;
-  }
-  return parsed;
+  return isRankingPayload(parsed) ? parsed : null;
+};
+
+/** Οι εκδόσεις που κρατάμε για ένα ranking (νεότερη πρώτη) — άδειο αν δεν υπάρχει αρχείο. */
+export const readCebRankingArchive = (slug: string): CebRankingArchive | null => {
+  if (!SLUG_PATTERN.test(slug)) return null;
+
+  const parsed = readJson<CebRankingArchive>(path.join(ARCHIVE_DIR, slug, "index.json"));
+  if (!parsed || !Array.isArray(parsed.editions)) return null;
+
+  const editions = parsed.editions.filter(
+    (entry): entry is CebRankingArchiveEdition =>
+      Boolean(entry && typeof entry.key === "string" && EDITION_KEY_PATTERN.test(entry.key)),
+  );
+  return editions.length > 0 ? { ...parsed, editions } : null;
+};
+
+/**
+ * Μία αρχειοθετημένη έκδοση, στην ίδια μορφή με την τρέχουσα (`readCebRanking`)
+ * ώστε ο πίνακας να αποδίδεται με το ίδιο component.
+ */
+export const readCebRankingEdition = (slug: string, key: string): CebRankingPayload | null => {
+  if (!SLUG_PATTERN.test(slug) || !EDITION_KEY_PATTERN.test(key)) return null;
+
+  const parsed = readJson<CebRankingPayload>(path.join(ARCHIVE_DIR, slug, `${key}.json`));
+  return isRankingPayload(parsed) ? parsed : null;
 };
 
 /** Player-profile links for the CEB list: { "<rank>": { id, slug, db } }. */

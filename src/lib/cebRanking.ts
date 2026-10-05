@@ -107,3 +107,35 @@ export const formatCebDate = (value: string | null | undefined): string | null =
 export const formatCebScale = (scale: number[]) => scale.join(" / ");
 
 export const cebRankingHref = (slug: string) => `${CEB_RANKING_HUB_PATH}/${slug}`;
+
+/**
+ * Rankings archive — κάθε δημοσιευμένη έκδοση κρατιέται σε δικό της αντίγραφο
+ * (`public/data/ceb-ranking/archive/<slug>/<key>.json`), ώστε μια νέα έκδοση να
+ * μην σβήνει την προηγούμενη. Το κλειδί βγαίνει από την έκδοση: "16/2026" -> "16-2026".
+ */
+export const cebEditionKey = (edition: string): string => edition.trim().replace(/\//g, "-");
+
+export const cebEditionHref = (slug: string, key: string) =>
+  `${CEB_RANKING_HUB_PATH}/${slug}/${key}`;
+
+/** «16/2026» -> «2026» (η σεζόν), για ταξινόμηση και εμφάνιση. */
+export const cebEditionSeason = (edition: string): string => edition.split("/")[1]?.trim() ?? "";
+
+export type CebRankingArchiveEdition = {
+  key: string;
+  edition: string;
+  updatedAt: string | null;
+  archivedAt: string;
+  players: number;
+  federations: number;
+  suspended: number;
+  sourceUrl: string;
+};
+
+export type CebRankingArchive = {
+  slug: string;
+  title: string;
+  generatedAt: string;
+  /** Νεότερη έκδοση πρώτη. */
+  editions: CebRankingArchiveEdition[];
+};

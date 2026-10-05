@@ -127,6 +127,31 @@ parser ανά ομοσπονδία. Πλήρης κατάσταση, προδι�
 - Άθροισμα στηλών A–J = Pnts για κάθε γραμμή (0 mismatches).
 - Οι 7 σύνδεσμοι τουρνουά δοκιμάστηκαν ζωντανά στο billiardtoday.com → **HTTP 200**.
 
+## Rankings archive (05/10/2026)
+
+Κάθε δημοσιευμένη έκδοση κρατιέται σε δικό της αντίγραφο, ώστε μια νέα να μη σβήνει την προηγούμενη:
+
+* `public/data/ceb-ranking/<slug>.json` — η **τρέχουσα** έκδοση (ό,τι σερβίρει το site — δεν άλλαξε μορφή).
+* `public/data/ceb-ranking/archive/<slug>/<key>.json` — το αντίγραφο της έκδοσης (`16-2026.json`).
+* `public/data/ceb-ranking/archive/<slug>/index.json` — οι εκδόσεις (νεότερη πρώτη) για τη λωρίδα «Editions kept».
+* `docs/ai/ceb-ranking/editions/<key>.json` — meta + events + το clean JSON της έκδοσης (η πηγή του build).
+
+Κάθε έκδοση έχει το **δικό της** META/EVENTS, γιατί οι στήλες A–J αλλάζουν από έκδοση σε έκδοση — τα
+events της v16 δεν ισχύουν για παλιότερη έκδοση.
+
+```
+uv run --python 3.12 python build_ceb_data.py            # τρέχουσα έκδοση (editions/16-2026.json, live: true)
+uv run --python 3.12 python build_ceb_data.py 15-2026    # αρχειοθέτηση παλιότερης — δεν αγγίζει το ζωντανό αρχείο
+```
+
+Στο site: `/rankings/ceb/<slug>` = τρέχουσα, `/rankings/ceb/<slug>/<key>` = αρχειοθετημένη έκδοση
+(`dynamicParams = false` → ό,τι δεν υπάρχει στο αρχείο δίνει 404). Το αντίγραφο της *τρέχουσας* έκδοσης
+είναι `noindex` (ίδιο περιεχόμενο με τη ζωντανή σελίδα)· οι παλιότερες μπαίνουν στο sitemap.
+
+Backfill: οι παλιότερες εκδόσεις της CEB **είναι ακόμη διαθέσιμες** (ελεγμένα 05/10/2026) —
+`ceb-ranking-2026-v15.pdf` (1,4 MB), `v14`/`v13`/`v12` (~0,9 MB) → HTTP 200. Για κάθε μία θέλει parse
+(το `parse_final.py` έχει hardcoded `ceb16.pdf` + x-θέσεις), verify, και το δικό της `editions/<key>.json`.
+
 ## Παγίδες
 
 - **Μη χρησιμοποιείς `pdftotext -layout` για έλεγχο**: οι γραμμές του PDF είναι πολύ κοντά και ο

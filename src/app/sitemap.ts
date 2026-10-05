@@ -3,6 +3,8 @@ import { getClubs, getFederations } from "@/lib/directory";
 import { listNewsArticles } from "@/lib/cms/news";
 import { listPlayers, listTournamentEvents } from "@/lib/publicSiteData";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
+import { cebEditionHref } from "@/lib/cebRanking";
+import { readCebRankingArchive, readCebRankingIndex } from "@/lib/cebRankingData";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 
@@ -15,6 +17,7 @@ const staticRoutes = [
   "/clubs",
   "/federations",
   "/rankings",
+  "/rankings/ceb",
   "/news",
   "/live",
   "/manual",
@@ -35,6 +38,31 @@ const sitemapEntry = (
   ...options,
 });
 
+/**
+ * Οι σελίδες CEB: τα ζωντανά rankings και τα αρχειοθετημένα αντίγραφα κάθε έκδοσης.
+ * Το αντίγραφο της *τρέχουσας* έκδοσης μένει έξω — είναι noindex (ίδιο περιεχόμενο με τη ζωντανή σελίδα).
+ */
+const cebRankingEntries = (): MetadataRoute.Sitemap => {
+  const available = readCebRankingIndex()?.available ?? [];
+  const entries: MetadataRoute.Sitemap = [];
+
+  for (const item of available) {
+    entries.push(sitemapEntry(item.href, { changeFrequency: "weekly", priority: 0.7 }));
+
+    for (const edition of readCebRankingArchive(item.slug)?.editions ?? []) {
+      if (edition.edition === item.edition) continue;
+      entries.push(
+        sitemapEntry(cebEditionHref(item.slug, edition.key), {
+          changeFrequency: "monthly",
+          priority: 0.5,
+        }),
+      );
+    }
+  }
+
+  return entries;
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [clubs, federations, players, tournamentEvents, rankingSeries, newsArticles] =
     await Promise.all([
@@ -53,6 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: path === "/" ? 1 : 0.8,
       }),
     ),
+    ...cebRankingEntries(),
     ...clubs.map((club) =>
       sitemapEntry(`/clubs/${club.slug}`, {
         changeFrequency: "weekly",

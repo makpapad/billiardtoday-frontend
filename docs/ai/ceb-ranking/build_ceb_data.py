@@ -2,50 +2,30 @@
 
 Pipeline:  parse_final.py  ->  ceb16_clean.json  ->  build_ceb_data.py  ->  public/data/ceb-ranking/*.json
 
-    uv run --python 3.12 python build_ceb_data.py
+    uv run --python 3.12 python build_ceb_data.py             # την τρέχουσα έκδοση (editions/16-2026.json)
+    uv run --python 3.12 python build_ceb_data.py 15-2026     # μόνο αρχειοθέτηση παλιότερης έκδοσης
 
-The output lives in the frontend's public/ dir so the (later) daily importer can
-rewrite it on the server without a rebuild. Event hrefs point at the canonical
-tournament pages (verified live: 200, no documentId prefix).
+Κάθε έκδοση περιγράφεται σε δικό της αρχείο `editions/<key>.json` (meta + events + το clean JSON
+που παρήγαγε ο parser). Το build γράφει:
+
+* `public/data/ceb-ranking/<slug>.json` + `index.json` — μόνο για την έκδοση με `"live": true`
+  (το ζωντανό ranking που σερβίρει το site),
+* `public/data/ceb-ranking/archive/<slug>/<key>.json` + `archive/<slug>/index.json` — **πάντα**, ώστε
+  μια νέα έκδοση να μην σβήνει την προηγούμενη (το rankings archive του site).
+
+Το output μένει στο public/ ώστε ο (μελλοντικός) daily importer να το ξαναγράφει στον server χωρίς
+rebuild· οι σελίδες κάνουν revalidate κάθε 5 λεπτά. Τα hrefs των events δείχνουν στις κανονικές σελίδες
+τουρνουά (ελεγμένα live: 200, χωρίς documentId prefix).
 """
-import datetime, json, os, re
+import datetime, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.abspath(os.path.join(HERE, "..", "..", "..", "public", "data", "ceb-ranking"))
+ARCHIVE_DIR = os.path.join(OUT_DIR, "archive")
+EDITIONS_DIR = os.path.join(HERE, "editions")
 
-# JSON event keys are always A..J (column order in the official PDF).
-EVENTS = [
-    {"key": "A", "short": "EC", "name": "European Championship 3-Cushion Individual",
-     "city": "Antalya (TR)", "date": "2026-03-15", "scale": [80, 54, 38, 26, 16, 8, 4],
-     "href": "/tournaments/european-championship-3-cushion-individual-2026", "ours": True},
-    {"key": "B", "short": "Nat 24/25", "name": "National Championships — Season 2024/2025", "city": None,
-     "date": None, "scale": [40, 27, 19, 13, 8, 4], "href": None, "ours": False,
-     "note": "Points awarded by each national federation."},
-    {"key": "C", "short": "Nat 25/26", "name": "National Championships — Season 2025/2026", "city": None,
-     "date": None, "scale": [40, 27, 19, 13, 8, 4], "href": None, "ours": False,
-     "note": "Points awarded by each national federation."},
-    {"key": "D", "short": "Nat 26/27", "name": "National Championships — Season 2026/2027", "city": None,
-     "date": None, "scale": [40, 27, 19, 13, 8, 4], "href": None, "ours": False,
-     "note": "Points awarded by each national federation."},
-    {"key": "E", "short": "Ankara 25", "name": "UMB / CEB World Cup — Ankara (TR)", "city": "Ankara (TR)",
-     "date": "2025-06-15", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-ankara-2025", "ours": True},
-    {"key": "F", "short": "Porto 25", "name": "UMB / CEB World Cup — Porto (PT)", "city": "Porto (PT)",
-     "date": "2025-07-05", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-porto-2025", "ours": True},
-    {"key": "G", "short": "Antwerp 25", "name": "UMB / CEB World Cup — Antwerp (BE)", "city": "Antwerp (BE)",
-     "date": "2025-10-12", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-antwerp-2025", "ours": True},
-    {"key": "H", "short": "Ankara 26", "name": "UMB / CEB World Cup — Ankara (TR)", "city": "Ankara (TR)",
-     "date": "2026-06-14", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-ankara-2026", "ours": True},
-    {"key": "I", "short": "Porto 26", "name": "UMB / CEB World Cup — Porto / Matosinhos (PT)",
-     "city": "Porto / Matosinhos (PT)", "date": "2026-07-18", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-porto-matosinhos-2026", "ours": True},
-    {"key": "J", "short": "Lier 26", "name": "UMB / CEB World Cup — Lier (BE)", "city": "Lier (BE)",
-     "date": "2026-09-06", "scale": [40, 27, 19, 13, 8, 4, 2],
-     "href": "/tournaments/world-cup-3-cushion-lier-2026", "ours": True},
-]
+# Η έκδοση που σερβίρεται τώρα, όταν το script τρέξει χωρίς όρισμα.
+LIVE_KEY = "16-2026"
 
 FEDERATIONS = {
     "AL": "Albania", "AT": "Austria", "BE": "Belgium", "CH": "Switzerland", "CY": "Cyprus",
@@ -53,19 +33,6 @@ FEDERATIONS = {
     "FR": "France", "GR": "Greece", "HR": "Croatia", "HU": "Hungary", "IT": "Italy",
     "LU": "Luxembourg", "NL": "Netherlands", "NO": "Norway", "PL": "Poland", "PT": "Portugal",
     "SE": "Sweden", "TR": "Türkiye", "VN": "Vietnam",
-}
-
-META = {
-    "slug": "3c-individual",
-    "title": "3-Cushion Individual",
-    "discipline": "3-Cushion",
-    "categoryLabel": "Individual — Men",
-    "edition": "16/2026",
-    "updatedAt": "2026-09-06",
-    "lastEvent": "UMB / CEB World Cup — Lier (BE), 6 September 2026",
-    "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf",
-    "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
-    "sourceLabel": "CEB Ranking 3C Individual",
 }
 
 UPCOMING = [
@@ -86,6 +53,10 @@ UPCOMING = [
 ]
 
 
+def now_iso() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def iso(value: str | None) -> str | None:
     if not value:
         return None
@@ -96,8 +67,30 @@ def iso(value: str | None) -> str | None:
     return f"{y:04d}-{mo:02d}-{d:02d}"
 
 
-def main() -> None:
-    src = json.load(open(os.path.join(HERE, "ceb16_clean.json"), encoding="utf-8"))
+def edition_key(edition: str) -> str:
+    """«16/2026» -> «16-2026» (κλειδί αρχείου/URL)."""
+    return edition.strip().replace("/", "-")
+
+
+def season_sort(edition: str) -> tuple[int, int]:
+    m = re.fullmatch(r"(\d{1,2})/(\d{4})", (edition or "").strip())
+    return (int(m.group(2)), int(m.group(1))) if m else (0, 0)
+
+
+def load_edition(key: str) -> dict:
+    path = os.path.join(EDITIONS_DIR, f"{key}.json")
+    if not os.path.exists(path):
+        raise SystemExit(f"missing edition config: {path}")
+    cfg = json.load(open(path, encoding="utf-8"))
+    for field in ("meta", "events", "clean"):
+        if not cfg.get(field):
+            raise SystemExit(f"edition config {path} needs a non-empty '{field}'")
+    if edition_key(cfg["meta"]["edition"]) != key:
+        raise SystemExit(f"edition config {path}: meta.edition does not match the file name ({key})")
+    return cfg
+
+
+def build_rows(src: list) -> list:
     rows = []
     for r in sorted(src, key=lambda x: x["rank"]):
         ev = [r["ev"].get(c) for c in "ABCDEFGHIJ"]
@@ -109,45 +102,107 @@ def main() -> None:
             "ev": ev,
             "suspended": iso(r["dates"][0]) if r["dates"] else None,
         })
+    return rows
+
+
+def write_archive(payload: dict) -> int:
+    """Αντίγραφο της έκδοσης + ενημέρωση του index του αρχείου. Επιστρέφει το πλήθος εκδόσεων."""
+    slug = payload["slug"]
+    key = edition_key(payload["edition"])
+    out = os.path.join(ARCHIVE_DIR, slug)
+    os.makedirs(out, exist_ok=True)
+
+    snapshot = dict(payload)
+    snapshot["editionKey"] = key
+    snapshot["archivedAt"] = now_iso()
+    snapshot_path = os.path.join(out, f"{key}.json")
+    json.dump(snapshot, open(snapshot_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+
+    index_path = os.path.join(out, "index.json")
+    index = {"slug": slug, "title": payload["title"], "generatedAt": payload["generatedAt"], "editions": []}
+    if os.path.exists(index_path):
+        try:
+            index = json.load(open(index_path, encoding="utf-8"))
+        except (ValueError, OSError):
+            index = {"slug": slug, "title": payload["title"], "generatedAt": payload["generatedAt"], "editions": []}
+
+    entry = {
+        "key": key,
+        "edition": payload["edition"],
+        "updatedAt": payload["updatedAt"],
+        "archivedAt": snapshot["archivedAt"],
+        "players": payload["counts"]["players"],
+        "federations": payload["counts"]["federations"],
+        "suspended": payload["counts"]["suspended"],
+        "sourceUrl": payload["sourceUrl"],
+    }
+    editions = [e for e in index.get("editions", []) if e.get("key") != key]
+    editions.append(entry)
+    editions.sort(key=lambda e: season_sort(e.get("edition", "")), reverse=True)
+
+    index.update({
+        "slug": slug,
+        "title": payload["title"],
+        "generatedAt": payload["generatedAt"],
+        "editions": editions,
+    })
+    json.dump(index, open(index_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"archive: {len(editions)} edition(s) · written {snapshot_path}")
+    return len(editions)
+
+
+def main() -> None:
+    key = sys.argv[1] if len(sys.argv) > 1 else LIVE_KEY
+    cfg = load_edition(key)
+    meta, events = cfg["meta"], cfg["events"]
+
+    src = json.load(open(os.path.join(HERE, cfg["clean"]), encoding="utf-8"))
+    rows = build_rows(src)
 
     feds = sorted({row["fed"] for row in rows})
     missing = [f for f in feds if f not in FEDERATIONS]
     if missing:
         raise SystemExit(f"unknown federation codes: {missing}")
 
-    payload = dict(META)
+    payload = dict(meta)
     payload.update({
-        "generatedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generatedAt": now_iso(),
         "counts": {
             "players": len(rows),
             "federations": len(feds),
             "suspended": sum(1 for row in rows if row["suspended"]),
         },
-        "events": EVENTS,
+        "events": events,
         "federations": {f: FEDERATIONS[f] for f in feds},
         "rows": rows,
     })
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    path = os.path.join(OUT_DIR, f"{META['slug']}.json")
-    json.dump(payload, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
-    index = {
-        "sourcePage": META["sourcePage"],
-        "generatedAt": payload["generatedAt"],
-        "available": [{
-            "slug": META["slug"], "title": META["title"], "discipline": META["discipline"],
-            "categoryLabel": META["categoryLabel"], "edition": META["edition"],
-            "updatedAt": META["updatedAt"], "players": payload["counts"]["players"],
-            "federations": payload["counts"]["federations"], "suspended": payload["counts"]["suspended"],
-            "href": f"/rankings/ceb/{META['slug']}", "sourceUrl": META["sourceUrl"],
-        }],
-        "upcoming": UPCOMING,
-    }
-    json.dump(index, open(os.path.join(OUT_DIR, "index.json"), "w", encoding="utf-8"),
-              ensure_ascii=False, indent=1)
+    if cfg.get("live"):
+        path = os.path.join(OUT_DIR, f"{payload['slug']}.json")
+        json.dump(payload, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
-    print(f"written {path} ({os.path.getsize(path) / 1024:.1f} KB)")
+        index = {
+            "sourcePage": payload["sourcePage"],
+            "generatedAt": payload["generatedAt"],
+            "available": [{
+                "slug": payload["slug"], "title": payload["title"], "discipline": payload["discipline"],
+                "categoryLabel": payload["categoryLabel"], "edition": payload["edition"],
+                "updatedAt": payload["updatedAt"], "players": payload["counts"]["players"],
+                "federations": payload["counts"]["federations"], "suspended": payload["counts"]["suspended"],
+                "href": f"/rankings/ceb/{payload['slug']}", "sourceUrl": payload["sourceUrl"],
+            }],
+            "upcoming": UPCOMING,
+        }
+        json.dump(index, open(os.path.join(OUT_DIR, "index.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=1)
+        print(f"written {path} ({os.path.getsize(path) / 1024:.1f} KB)")
+    else:
+        print(f"edition {payload['edition']} is archived only (live: false) — το ζωντανό αρχείο δεν άλλαξε")
+
+    write_archive(payload)
+
     print("counts:", payload["counts"], "| feds:", len(feds))
     print("suspended rows:", [(r["rank"], r["name"], r["suspended"]) for r in rows if r["suspended"]])
     print("zero-point rows:", sum(1 for r in rows if r["points"] == 0))

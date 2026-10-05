@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "slug": "3c-individual",
+    "title": "3-Cushion Individual",
+    "discipline": "3-Cushion",
+    "categoryLabel": "Individual — Men",
+    "edition": "16/2026",
+    "updatedAt": "2026-09-06",
+    "lastEvent": "UMB / CEB World Cup — Lier (BE), 6 September 2026",
+    "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf",
+    "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
+    "sourceLabel": "CEB Ranking 3C Individual"
+  },
+  "events": [
+    {
+      "key": "A",
+      "short": "EC",
+      "name": "European Championship 3-Cushion Individual",
+      "city": "Antalya (TR)",
+      "date": "2026-03-15",
+      "scale": [80, 54, 38, 26, 16, 8, 4],
+      "href": "/tournaments/european-championship-3-cushion-individual-2026",
+      "ours": true
+    },
+    {
+      "key": "B",
+      "short": "Nat 24/25",
+      "name": "National Championships — Season 2024/2025",
+      "city": null,
+      "date": null,
+      "scale": [40, 27, 19, 13, 8, 4],
+      "href": null,
+      "ours": false,
+      "note": "Points awarded by each national federation."
+    },
+    {
+      "key": "C",
+      "short": "Nat 25/26",
+      "name": "National Championships — Season 2025/2026",
+      "city": null,
+      "date": null,
+      "scale": [40, 27, 19, 13, 8, 4],
+      "href": null,
+      "ours": false,
+      "note": "Points awarded by each national federation."
+    },
+    {
+      "key": "D",
+      "short": "Nat 26/27",
+      "name": "National Championships — Season 2026/2027",
+      "city": null,
+      "date": null,
+      "scale": [40, 27, 19, 13, 8, 4],
+      "href": null,
+      "ours": false,
+      "note": "Points awarded by each national federation."
+    },
+    {
+      "key": "E",
+      "short": "Ankara 25",
+      "name": "UMB / CEB World Cup — Ankara (TR)",
+      "city": "Ankara (TR)",
+      "date": "2025-06-15",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-ankara-2025",
+      "ours": true
+    },
+    {
+      "key": "F",
+      "short": "Porto 25",
+      "name": "UMB / CEB World Cup — Porto (PT)",
+      "city": "Porto (PT)",
+      "date": "2025-07-05",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-porto-2025",
+      "ours": true
+    },
+    {
+      "key": "G",
+      "short": "Antwerp 25",
+      "name": "UMB / CEB World Cup — Antwerp (BE)",
+      "city": "Antwerp (BE)",
+      "date": "2025-10-12",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-antwerp-2025",
+      "ours": true
+    },
+    {
+      "key": "H",
+      "short": "Ankara 26",
+      "name": "UMB / CEB World Cup — Ankara (TR)",
+      "city": "Ankara (TR)",
+      "date": "2026-06-14",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-ankara-2026",
+      "ours": true
+    },
+    {
+      "key": "I",
+      "short": "Porto 26",
+      "name": "UMB / CEB World Cup — Porto / Matosinhos (PT)",
+      "city": "Porto / Matosinhos (PT)",
+      "date": "2026-07-18",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-porto-matosinhos-2026",
+      "ours": true
+    },
+    {
+      "key": "J",
+      "short": "Lier 26",
+      "name": "UMB / CEB World Cup — Lier (BE)",
+      "city": "Lier (BE)",
+      "date": "2026-09-06",
+      "scale": [40, 27, 19, 13, 8, 4, 2],
+      "href": "/tournaments/world-cup-3-cushion-lier-2026",
+      "ours": true
+    }
+  ],
+  "clean": "ceb16_clean.json",
+  "live": true
+}

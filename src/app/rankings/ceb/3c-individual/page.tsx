@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
+import { CebEditionStrip } from "@/components/public/CebEditionStrip";
 import { CebRankingContent } from "@/components/public/CebRankingContent";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import {
   CEB_RANKING_PAGE_SIZE,
   formatCebDate,
 } from "@/lib/cebRanking";
-import { readCebPlayerLinks, readCebRanking } from "@/lib/cebRankingData";
+import { readCebPlayerLinks, readCebRanking, readCebRankingArchive } from "@/lib/cebRankingData";
 import { SITE_URL } from "@/lib/socialMetadata";
 import { notFound } from "next/navigation";
 
@@ -34,6 +35,7 @@ export default function CebThreeCushionIndividualPage() {
   const payload = readCebRanking(SLUG);
   if (!payload) notFound();
   const playerLinks = readCebPlayerLinks();
+  const archive = readCebRankingArchive(SLUG);
 
   const { counts } = payload;
   const itemList = {
@@ -82,6 +84,12 @@ export default function CebThreeCushionIndividualPage() {
             `Edition ${payload.edition} · last update ${formatCebDate(payload.updatedAt) ?? "—"}`,
             `${counts.players.toLocaleString("en-US")} ranked players · ${counts.federations} federations`,
           ]}
+        />
+
+        <CebEditionStrip
+          slug={SLUG}
+          editions={archive?.editions ?? []}
+          currentEdition={payload.edition}
         />
 
         <CebRankingContent payload={payload} pageSize={CEB_RANKING_PAGE_SIZE} playerLinks={playerLinks} />
