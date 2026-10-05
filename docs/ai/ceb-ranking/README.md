@@ -63,9 +63,11 @@ uv run --python 3.12 python build_ceb_data.py                            # -> pu
 - Κουμπί **«Jump to the list ↓»** στο hero → `#list`· η ενότητα Standings έχει `id="list"` + `scroll-mt-24`
   (το `html { scroll-behavior: smooth }` υπάρχει ήδη στο globals.css).
 - **Λογότυπο CEB** (`https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png`) στην κορυφή του δεξιού
-  πλαισίου του hero, με το prop `asideHeader` του `PresentationHero` (νέο, προαιρετικό). Ίδιο look με το hero
-  της σελίδας `/federations/confederation-europeenne-de-billard`: πλακίδιο `min-h-[180px] … bg-white/10
-  backdrop-blur-sm`, εικόνα `max-h-36` (≈144px), χωρίς λεζάντα.
+  πλαισίου του hero, με το prop `asideHeader` του `PresentationHero` (νέο, προαιρετικό). Εικόνα `max-h-36`
+  (≈144px), χωρίς λεζάντα. **04/10/2026:** το πλακίδιο είναι `border-white/10 bg-slate-950/25` **χωρίς δικό
+  του `backdrop-blur`** — με δικό του blur έβγαινε #213b6d αντί για το σκούρο των meta πλακιδίων (βλ. Παγίδες).
+  Η **ίδια** κεφαλίδα μπήκε και στη σελίδα `/rankings/ceb` (index)· εκεί κόπηκε και η φράση «Only tournaments
+  held in Europe count towards the CEB lists».
 - Τα πλακίδια meta περιορίστηκαν σε 2 (Edition/update, players/federations) — κόπηκαν το «After UMB / CEB
   World Cup — Lier (BE), 6 September 2026» και το «15 players are suspended» (αίτημα 03/10/2026). Η τελευταία
   διοργάνωση φαίνεται στη λίστα «Counting tournaments» (στήλη J) και οι τιμωρημένοι στο φίλτρο «Suspended».
@@ -97,6 +99,21 @@ qualifying rounds στα World Cups της UMB, διευκρίνιση χρήσ�
 | I | World Cup Porto / Matosinhos 18/07/2026 | `/tournaments/world-cup-3-cushion-porto-matosinhos-2026` |
 | J | World Cup Lier 06/09/2026 | `/tournaments/world-cup-3-cushion-lier-2026` |
 
+### Πίνακας κατάταξης (04/10/2026)
+
+- **Σκούρο header**: `bg-slate-900` με λευκά γράμματα (`text-white/90` για τα γράμματα στηλών, `text-white/55`
+  για τις συντομογραφίες), στρογγυλεμένες άκρες (`rounded-tl-xl`, `last:rounded-tr-xl` στην τελευταία στήλη).
+- **Εναλλάξ δύο μπλε γραμμές**: `bg-blue-50` / `bg-blue-100` (μετράει η **σειρά που βλέπεις**, index-based),
+  hover `bg-sky-200/60`. Οι τιμωρημένοι κρατούν το γκρι (`bg-slate-200/70`) εκτός εναλλάξ.
+- **50 γραμμές ανά σελίδα** (`CEB_RANKING_PAGE_SIZE`) — στο live βγαίνουν 25 + 25.
+
+### Εθνικά πρωταθλήματα (στήλες B–D) — ΕΚΚΡΕΜΕΙ
+
+Τα 6 αρχεία που έστειλαν 5 ομοσπονδίες βρίσκονται στο `docs/ai/ceb-ranking/national/` και είναι **5
+διαφορετικές διατάξεις**. Απόφαση 04/10/2026: **φόρμα εισαγωγής με paste** (έναν παίκτη ανά γραμμή), όχι
+parser ανά ομοσπονδία. Πλήρης κατάσταση, προδιαγραφές, εκτίμηση χρόνου και οι **ανοιχτές αποφάσεις**:
+`docs/ai/2026-10-04-ceb-ranking-handoff-el.md`.
+
 ## Τι έχει επαληθευτεί (03/10/2026)
 
 - 1482 γραμμές, 23 ομοσπονδίες (22 ευρωπαϊκές + VN), 15 τιμωρημένοι, 498 παίκτες με πόντους.
@@ -115,6 +132,8 @@ qualifying rounds στα World Cups της UMB, διευκρίνιση χρήσ�
 
 ## Επόμενα
 
+- **Εθνικά πρωταθλήματα (στήλες B–D):** φόρμα εισαγωγής με paste — περιμένει «go» + απάντηση αν πιάνει και
+  Γυναίκες/άλλες κατηγορίες. Βλ. `docs/ai/2026-10-04-ceb-ranking-handoff-el.md` §2.
 - Οι υπόλοιπες 14 κατατάξεις CEB: η λίστα με τα ονόματα/αρχεία είναι στο `index.json`
   (`upcoming`) και εμφανίζεται στη σελίδα `/rankings/ceb` ως «Coming next».
 - Αυτόματη ενημέρωση (cron): με νέα έκδοση PDF αλλάζει το όνομα του αρχείου — χρειάζεται
