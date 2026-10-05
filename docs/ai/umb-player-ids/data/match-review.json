@@ -1,0 +1,8565 @@
+[
+ {
+  "player_id": 4321,
+  "documentId": "ed598235-1ec3-4dd0-9816-9c9623a39c59",
+  "our_name": "OZDEMİR Fadil",
+  "our_name_en": "OZDEMİR Fadil",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1727",
+    "umb_name": "OZDEMIR Fadil",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2099",
+    "umb_name": "OZDEMİR Fadil",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 9,
+  "documentId": "3de6267e-a52c-11f0-901e-0a6230412745",
+  "our_name": "ATHANASIOU Elen",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0591",
+    "umb_name": "ATHANASIOU Athanasios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0889",
+    "umb_name": "ATHANASIOU Michalis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3944,
+  "documentId": "648c4e7d-8318-4c9c-a664-fa7aee708241",
+  "our_name": "ORTIZ Steven",
+  "our_name_en": "ORTIZ Steven",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3561",
+    "umb_name": "ORTIZ Steven",
+    "fed": "CO"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 5113,
+  "documentId": "hodr1ny2hiov3qndeui22drq",
+  "our_name": "VELANDIA David",
+  "our_name_en": "VELANDIA David",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "8075",
+    "umb_name": "VELANDIA David",
+    "fed": "CO"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 4105,
+  "documentId": "e869db3d-7b25-461c-a320-a0bf6fcef880",
+  "our_name": "CLERICO ANA Maria",
+  "our_name_en": "CLERICO ANA Maria",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1985",
+    "umb_name": "CLERICO ANA Maria",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "7105",
+    "umb_name": "CLERICO Ana Maria",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 907,
+  "documentId": "3dee98bb-a52c-11f0-901e-0a6230412745",
+  "our_name": "EVAGGELOU Panagiotis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1706",
+    "umb_name": "EVAGGELOU Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 609,
+  "documentId": "3deb12cc-a52c-11f0-901e-0a6230412745",
+  "our_name": "LEE Mi Rae ",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1878",
+    "umb_name": "LEE Mi Rae",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7059",
+    "umb_name": "LEE Mi Rae",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4405,
+  "documentId": "9e5db1e8-2fae-433f-97d6-cfb062dfdfb4",
+  "our_name": "SEGURA Ruth",
+  "our_name_en": "SEGURA Ruth",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0885",
+    "umb_name": "SEGURA Ruth",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7201",
+    "umb_name": "SEGURA RUTH",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 632,
+  "documentId": "3deb2de0-a52c-11f0-901e-0a6230412745",
+  "our_name": "TATARIS Michalis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0820",
+    "umb_name": "MICHALIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 731,
+  "documentId": "3dec1c4e-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPADIMITRIOU Athanasios",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0892",
+    "umb_name": "PAPADIMITRIOU Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 957,
+  "documentId": "3deed8b9-a52c-11f0-901e-0a6230412745",
+  "our_name": "LOUBARDIAS",
+  "our_name_en": "LOUBARDIAS",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8234",
+    "umb_name": "LOUBARDIAS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4087,
+  "documentId": "8886d591-7ef2-43ee-874b-57db32db69ed",
+  "our_name": "VINH Thuc Phan",
+  "our_name_en": "VINH Thuc Phan",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2725",
+    "umb_name": "VINH Thuc Phan",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2627",
+    "umb_name": "PHAN THUC Vinh",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3531,
+  "documentId": "880ab94a-a6c3-482b-9393-893ee7509392",
+  "our_name": "CARDOSO Jose",
+  "our_name_en": "CARDOSO Jose",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "1299",
+    "umb_name": "CARDOSO Jose",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2632",
+    "umb_name": "JOSE Cardoso",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4560,
+  "documentId": "58341d38-80c6-490d-8b4e-601ffddcf8fb",
+  "our_name": "CHOI Eun Ji",
+  "our_name_en": "CHOI Eun Ji",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2262",
+    "umb_name": "CHOI Eun Ji",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7149",
+    "umb_name": "CHOI Eun Ji",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4229,
+  "documentId": "1e77cffc-7edd-49e6-9199-51ad7a196c3f",
+  "our_name": "REYES Pablo",
+  "our_name_en": "REYES Pablo",
+  "country": "EC",
+  "candidates": [
+   {
+    "umb_id": "1605",
+    "umb_name": "REYES PRIETO PONGUILLO Pedro",
+    "fed": "EC"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1171,
+  "documentId": "3df149dd-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΧΡΙΣΤΟΦΟΡΙΔΗΣ Γεωργιος",
+  "our_name_en": "CHRISTOFORIDIS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3449",
+    "umb_name": "CHRISTOFORIDIS Nikolaos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1031,
+  "documentId": "3defc21e-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΤΣΑΒΑΡΗ Ελενη Πηγη",
+  "our_name_en": "TSAVARI Eleni Pigi",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "7224",
+    "umb_name": "TSAVARI Elena",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4621,
+  "documentId": "6878f4b1-231a-432a-8ceb-512465d27f7b",
+  "our_name": "KARAKASLI Guzin",
+  "our_name_en": "KARAKASLI Guzin",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2478",
+    "umb_name": "KARAKASLI Mujde",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "7009",
+    "umb_name": "KARAKASLI Guzin Mujde",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4264,
+  "documentId": "c2a5162b-fb7d-4b08-8e31-d73b5a8035d0",
+  "our_name": "ÖZDEMIR BBüüllentt",
+  "our_name_en": "ÖZDEMIR BBüüllentt",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0551",
+    "umb_name": "OZDEMIR Mahmut",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1727",
+    "umb_name": "OZDEMIR Fadil",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2780",
+    "umb_name": "OZDEMIR Bulent",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "0860",
+    "umb_name": "OZDEMIR Baybora",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2099",
+    "umb_name": "OZDEMİR Fadil",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4095,
+  "documentId": "68494216-1ebb-4d76-a0cf-19a5ec0bae58",
+  "our_name": "José Cardoso",
+  "our_name_en": "José Cardoso",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "2632",
+    "umb_name": "JOSE Cardoso",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "1299",
+    "umb_name": "CARDOSO Jose",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4562,
+  "documentId": "d43e2c24-b46b-43e1-b298-c67d5aa3e6a1",
+  "our_name": "HO Hoang Hung",
+  "our_name_en": "HO Hoang Hung",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2713",
+    "umb_name": "HUNG Manh Tran",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3260",
+    "umb_name": "HOANG Dinh Long",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2658",
+    "umb_name": "HOANG Duc Tai",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4580,
+  "documentId": "9c65bf5d-6976-4666-930f-c3c13a84fd4e",
+  "our_name": "HA JI YOUNG",
+  "our_name_en": "HA JI YOUNG",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2732",
+    "umb_name": "YOUNG Seob kim",
+    "fed": "KR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1495,
+  "documentId": "ygpl963ksrxlsnpm19nl9q4e",
+  "our_name": "ΜΠΟΤΗΣ Νικολαος",
+  "our_name_en": "BOTIS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8217",
+    "umb_name": "BOTIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 833,
+  "documentId": "3ded38fd-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΑΚΗΣ Χρήστος",
+  "our_name_en": "PAPADAKIS Christos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0510",
+    "umb_name": "PAPADAKIS John",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 539,
+  "documentId": "3dea3b2c-a52c-11f0-901e-0a6230412745",
+  "our_name": "LEGAZPI Alfonso",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "0132",
+    "umb_name": "LEGAZPI Ruben",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "0634",
+    "umb_name": "LEGAZPI LORENZO Alfonso",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "0656",
+    "umb_name": "LEGAZPI Adrian",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4435,
+  "documentId": "0e867d9d-1715-4f9d-8805-3b20cbe20d9d",
+  "our_name": "LE Thanh Phan",
+  "our_name_en": "LE Thanh Phan",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3093",
+    "umb_name": "PHAN THANH Phong",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3293",
+    "umb_name": "PHAN Ngoc Nam",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "1885",
+    "umb_name": "PHAN VAN Trung",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2474",
+    "umb_name": "PHAN MINH Viet",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "1887",
+    "umb_name": "PHAN NGUYEN NHAN Phu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2046",
+    "umb_name": "PHAN Quoc Huan",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 5121,
+  "documentId": "o1wpl9s7effn7ei8tvh7x42s",
+  "our_name": "KNUDSEN Thomas",
+  "our_name_en": "KNUDSEN Thomas",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "0273",
+    "umb_name": "KNUDSEN Brian",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3281",
+    "umb_name": "KNUDSEN Thomas Thorhauge",
+    "fed": "DK"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 1971,
+  "documentId": "9afc685d-3e40-4090-9312-99c77d2942d6",
+  "our_name": "FLORENT Jean-François",
+  "our_name_en": "FLORENT Jean-François",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "8197",
+    "umb_name": "FLORENT Louıs",
+    "fed": "FR"
+   },
+   {
+    "umb_id": "8204",
+    "umb_name": "FLORENT Louis",
+    "fed": "FR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2441,
+  "documentId": "1ad79f55-8fd3-47dc-a992-13584b3a1a97",
+  "our_name": "KILIC Muhemmed Mustafa",
+  "our_name_en": "KILIC Muhemmed Mustafa",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1113",
+    "umb_name": "KILIC Hayri",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1740",
+    "umb_name": "KILIC Halil",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4079,
+  "documentId": "a96f1330-63a6-452b-9758-96f2ade3594b",
+  "our_name": "PARK Choonwoo",
+  "our_name_en": "PARK Choonwoo",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1263",
+    "umb_name": "PARK Su Yeong",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2415",
+    "umb_name": "PARK Chun Woo",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3538",
+    "umb_name": "PARK Sam Gu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3102",
+    "umb_name": "PARK Sang June",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2240",
+    "umb_name": "PARK Hyun Gyu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3517",
+    "umb_name": "PARK Joong Kun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4098,
+  "documentId": "a131a1c0-e556-44af-9e2f-855f666c89b6",
+  "our_name": "Manuel Rio",
+  "our_name_en": "Manuel Rio",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "2635",
+    "umb_name": "Manuel Rio",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "1277",
+    "umb_name": "RIO Manuel",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 49,
+  "documentId": "3de656c6-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΕΩΡΓΑΡΑΣ Κωνσταντινος",
+  "our_name_en": "GEORGARAS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1992",
+    "umb_name": "GEORGARAS Kostas",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4104,
+  "documentId": "7defc15e-c7d8-45cc-a996-c1ef99e9b153",
+  "our_name": "ANTON Cuevas Jesús",
+  "our_name_en": "ANTON Cuevas Jesús",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "3389",
+    "umb_name": "ANTON Jesus",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "2291",
+    "umb_name": "ANTON Cuevas Jesus",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1954,
+  "documentId": "v9rinh8mjnbmmnpffcuexchd",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Αβραάμ",
+  "our_name_en": "PAPADOPOULOS Avraam",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 69,
+  "documentId": "3de66909-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΑΡΑΛΙΑΣ Αθανασιος",
+  "our_name_en": "KARALIAS Athanasios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1164",
+    "umb_name": "KARALIAS T",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 121,
+  "documentId": "3de73501-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΑΚΗΣ Ιωαννης",
+  "our_name_en": "PAPADAKIS Ioannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0510",
+    "umb_name": "PAPADAKIS John",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4309,
+  "documentId": "0a262161-4810-42a9-946f-c17aaaec569a",
+  "our_name": "BAYRAMOGLU Kaptan",
+  "our_name_en": "BAYRAMOGLU Kaptan",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1732",
+    "umb_name": "BAYRAMOGLU Temel Kaptan",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 696,
+  "documentId": "3debf575-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΟΥΤΣΟΣ Δημητριος",
+  "our_name_en": "MOUTSOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1998",
+    "umb_name": "MOUTSOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4641,
+  "documentId": "ce9b8d9b-17e0-43c8-a065-67614fc0ca0b",
+  "our_name": "PARK Jeongwoo",
+  "our_name_en": "PARK Jeongwoo",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1263",
+    "umb_name": "PARK Su Yeong",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2415",
+    "umb_name": "PARK Chun Woo",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3538",
+    "umb_name": "PARK Sam Gu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3102",
+    "umb_name": "PARK Sang June",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2240",
+    "umb_name": "PARK Hyun Gyu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3517",
+    "umb_name": "PARK Joong Kun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1075,
+  "documentId": "3df08890-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΠΟΤΗΣ Κωνσταντινος",
+  "our_name_en": "BOTIS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8217",
+    "umb_name": "BOTIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4394,
+  "documentId": "8d7d18d8-dbf6-4c1c-8db3-a2f6385bc598",
+  "our_name": "PATARROYO Hernan",
+  "our_name_en": "PATARROYO Hernan",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3158",
+    "umb_name": "HERNAN Del Valle",
+    "fed": "CO"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 165,
+  "documentId": "3de74ca6-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΤΡΕΜΟΥΛΗΣ Αλεξανδρος",
+  "our_name_en": "TREMOULIS Alexandros",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3323",
+    "umb_name": "TREMOULIS Alex",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0585",
+    "umb_name": "TREMOULIS Nikos",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0786",
+    "umb_name": "TREMOULIS Nick",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4515,
+  "documentId": "ce7fc256-8989-4850-93ea-9ab0f9322242",
+  "our_name": "SONG Eun Ju",
+  "our_name_en": "SONG Eun Ju",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2048",
+    "umb_name": "SONG Eun Ju",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7035",
+    "umb_name": "SONG Eun Ju",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 690,
+  "documentId": "3debef5b-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΣ Γεωργιος",
+  "our_name_en": "ANAGNOSTOPOULOS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1995",
+    "umb_name": "ANAGNOSTOPOULOS George",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "3624",
+    "umb_name": "ANAGNOSTOPOULOS Ioannis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 126,
+  "documentId": "3de73833-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Δημητριος",
+  "our_name_en": "PAPADOPOULOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3727,
+  "documentId": "a3e51d4b-f751-401d-b36c-c648aede256a",
+  "our_name": "VILLASENOR Ivan Rosales",
+  "our_name_en": "VILLASENOR Ivan Rosales",
+  "country": "US",
+  "candidates": [
+   {
+    "umb_id": "3223",
+    "umb_name": "VILLASENOR Ivan Rosales",
+    "fed": "US"
+   },
+   {
+    "umb_id": "3040",
+    "umb_name": "ROSALES Ivan",
+    "fed": "US"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1210,
+  "documentId": "3df1f81c-a52c-11f0-901e-0a6230412745",
+  "our_name": "NAPOLONI Theodhoraq",
+  "our_name_en": null,
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3446",
+    "umb_name": "NAPOLONI Theo",
+    "fed": "AL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4639,
+  "documentId": "3f825f7c-79b7-4187-9abe-536eef0763c3",
+  "our_name": "NGUYEN Thi Lien",
+  "our_name_en": "NGUYEN Thi Lien",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3722",
+    "umb_name": "NGUYEN Thi Lien",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "7411",
+    "umb_name": "NGUYEN Thi Lien",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4,
+  "documentId": "3de61fac-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΝΤΩΝΑΤΟΣ Κωνσταντινος",
+  "our_name_en": "ANTONATOS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0769",
+    "umb_name": "ANTONATOS Kostas",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4702,
+  "documentId": "f5af845f-99d0-4d54-b043-a7793aa5591d",
+  "our_name": "VINK Arie",
+  "our_name_en": "VINK Arie",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "1973",
+    "umb_name": "VINK Michael",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "1849",
+    "umb_name": "VINK Robert",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4682,
+  "documentId": "5faae4f6-a67a-4c47-a2a0-7599c5bd1274",
+  "our_name": "BAKKER John",
+  "our_name_en": "BAKKER John",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "7297",
+    "umb_name": "BAKKER Sabine",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 73,
+  "documentId": "3de66d6f-a52c-11f0-901e-0a6230412745",
+  "our_name": "KASIDOKOSTAS Georgios",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1158",
+    "umb_name": "KASIDOKOSTAS George",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0104",
+    "umb_name": "KASIDOKOSTAS Filipos",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4553,
+  "documentId": "ea20c62e-192b-4e1f-810d-8831e3c18c73",
+  "our_name": "RIO Manuel",
+  "our_name_en": "RIO Manuel",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "2635",
+    "umb_name": "Manuel Rio",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "1277",
+    "umb_name": "RIO Manuel",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2530,
+  "documentId": "eea570f0-8f9a-401a-ba52-b61c9a95ec75",
+  "our_name": "SØRENSEN Charlotte",
+  "our_name_en": "SORENSEN Charlotte",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "1774",
+    "umb_name": "SORENSEN Jacob",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "1436",
+    "umb_name": "SORENSEN Danny",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4030,
+  "documentId": "b6d46992-0e0d-4a0e-9e38-5a187cc53723",
+  "our_name": "LE DINH Dung",
+  "our_name_en": "LE DINH Dung",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3609",
+    "umb_name": "DINH The Vinh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2006",
+    "umb_name": "DINH Quang Hai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2625",
+    "umb_name": "DINH NAM Khanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "8205",
+    "umb_name": "DINH Trong Van",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 220,
+  "documentId": "3de7fcc3-a52c-11f0-901e-0a6230412745",
+  "our_name": "KIM Kyung-Roul",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3135",
+    "umb_name": "KIM Kyung Baeg",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3438",
+    "umb_name": "KIM Do Kyung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7268",
+    "umb_name": "KIM Do Kyung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7057",
+    "umb_name": "KIM Kyung Ja",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 94,
+  "documentId": "3de68295-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΛΙΑΝΟΣ Σπυριδων",
+  "our_name_en": "LIANOS Spyridon",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0359",
+    "umb_name": "LIANOS Spiridon",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3465,
+  "documentId": "4e42066a-a157-4055-8c2f-ce6bb957c3bf",
+  "our_name": "LE Thanh Tien",
+  "our_name_en": "LE Thanh Tien",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3091",
+    "umb_name": "THANH Pham Duy",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 375,
+  "documentId": "3de832a3-a52c-11f0-901e-0a6230412745",
+  "our_name": "SEYHAN Ybrahim",
+  "our_name_en": null,
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0894",
+    "umb_name": "SEYHAN Ibrahim",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 994,
+  "documentId": "3def8c67-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΗΓΟΥΤΣΟΣ Ιωαννης",
+  "our_name_en": "RIGOUTSOS Ioannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2570",
+    "umb_name": "RIGOUTSOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3961,
+  "documentId": "6ad569ff-be13-449f-bf84-b9284519a1c4",
+  "our_name": "OH Sung Uk",
+  "our_name_en": "OH Sung Uk",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3144",
+    "umb_name": "SUNG Nak Hun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2425",
+    "umb_name": "SUNG Sangeun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1234,
+  "documentId": "3df209e4-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Φωτιος",
+  "our_name_en": "PAPADOPOULOS Fotios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4699,
+  "documentId": "79da8d26-0371-4612-847e-883755847726",
+  "our_name": "BLAZINA Wilhelm",
+  "our_name_en": "BLAZINA Wilhelm",
+  "country": "AT",
+  "candidates": [
+   {
+    "umb_id": "3007",
+    "umb_name": "BLAZINA Heimo",
+    "fed": "AT"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4686,
+  "documentId": "36a0da13-2a56-4ea2-8b9e-b5ebcc35db74",
+  "our_name": "VAN DER HOUT Marco",
+  "our_name_en": "VAN DER HOUT Marco",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "3209",
+    "umb_name": "VAN DER STAPPEN John",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "3541",
+    "umb_name": "VAN DER VEEN Gert Jan",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "0675",
+    "umb_name": "VAN DER SPOEL Martien",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "0939",
+    "umb_name": "VAN DER HEIJDEN Peter",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "8060",
+    "umb_name": "VAN DER HOUT Levi",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 946,
+  "documentId": "3deecf24-a52c-11f0-901e-0a6230412745",
+  "our_name": "MATIAKIS Nikos",
+  "our_name_en": "MATIAKIS NIKOS",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1180",
+    "umb_name": "MATIAKIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 972,
+  "documentId": "3def6bab-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΟΚΟΛΟΓΙΑΝΝΗΣ Γεωργιος",
+  "our_name_en": "KOKOLOGIANNIS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0595",
+    "umb_name": "KOKOLOGIANNIS John",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3420,
+  "documentId": "0ca0bf03-eb1b-451b-8301-c8cad35c3710",
+  "our_name": "SANTIAGO Martinez",
+  "our_name_en": "SANTIAGO Martinez",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3403",
+    "umb_name": "MARTINEZ Santiago",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3693",
+    "umb_name": "SANTIAGO Martinez",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 353,
+  "documentId": "3de825f1-a52c-11f0-901e-0a6230412745",
+  "our_name": "DEL Salto Juan Carlo",
+  "our_name_en": null,
+  "country": "EC",
+  "candidates": [
+   {
+    "umb_id": "0218",
+    "umb_name": "DEL SALTO ALDAS Juan",
+    "fed": "EC"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 333,
+  "documentId": "3de819c8-a52c-11f0-901e-0a6230412745",
+  "our_name": "FERREIRA Joao",
+  "our_name_en": null,
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "0244",
+    "umb_name": "FERREIRA Joao Pedro",
+    "fed": "PT"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4637,
+  "documentId": "27232cfa-6571-4c54-a6e9-335ab89b9ff4",
+  "our_name": "CHOI Bo Mi",
+  "our_name_en": "CHOI Bo Mi",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1871",
+    "umb_name": "CHOI Wan Young",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3656",
+    "umb_name": "CHOI Woo Hyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7382",
+    "umb_name": "CHOI Bom E",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2974",
+    "umb_name": "CHOI Ho Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2045",
+    "umb_name": "CHOI Sung Bo",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3147",
+    "umb_name": "CHOI Yeoung Woon",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1044,
+  "documentId": "3defd5f0-a52c-11f0-901e-0a6230412745",
+  "our_name": "ATHANASIOU Christos",
+  "our_name_en": "Athanasiou Christos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0591",
+    "umb_name": "ATHANASIOU Athanasios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0889",
+    "umb_name": "ATHANASIOU Michalis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4002,
+  "documentId": "0b692547-a2ab-4140-8798-4a49c49e32ff",
+  "our_name": "KIM Young Seob",
+  "our_name_en": "KIM Young Seob",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2732",
+    "umb_name": "YOUNG Seob kim",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0596",
+    "umb_name": "KIM Young Seob",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1992,
+  "documentId": "189cc008-e9d5-4b05-89a9-8c025bdee4da",
+  "our_name": "JACQUET David",
+  "our_name_en": "JACQUET David",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "8192",
+    "umb_name": "DAVID Noah",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 102,
+  "documentId": "3de68c75-a52c-11f0-901e-0a6230412745",
+  "our_name": "MAROULIS Evaggelos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0823",
+    "umb_name": "MAROULIS Evangelos",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1169",
+    "umb_name": "MAROULIS V",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4089,
+  "documentId": "cffe1be5-4fee-48f3-8bd0-5e20b9c9c03e",
+  "our_name": "YU DEOK Choi",
+  "our_name_en": "YU DEOK Choi",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1871",
+    "umb_name": "CHOI Wan Young",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3656",
+    "umb_name": "CHOI Woo Hyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7382",
+    "umb_name": "CHOI Bom E",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2974",
+    "umb_name": "CHOI Ho Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2045",
+    "umb_name": "CHOI Sung Bo",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3147",
+    "umb_name": "CHOI Yeoung Woon",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 871,
+  "documentId": "3dedf070-a52c-11f0-901e-0a6230412745",
+  "our_name": "PARAVALOS Manolis",
+  "our_name_en": "PARAVALOS Manolis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3308",
+    "umb_name": "PARAVALOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3857,
+  "documentId": "f682dd58-f76b-4e94-a310-8df0f5406683",
+  "our_name": "MARTINEZ Santiago",
+  "our_name_en": "MARTINEZ Santiago",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3693",
+    "umb_name": "SANTIAGO Martinez",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3403",
+    "umb_name": "MARTINEZ Santiago",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4039,
+  "documentId": "b8350db4-ac0a-4a24-8bac-7347053b8b9f",
+  "our_name": "PHUNG Kien Tuong",
+  "our_name_en": "PHUNG Kien Tuong",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2834",
+    "umb_name": "PHUNG Kien Tuong",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "7259",
+    "umb_name": "PHUNG Kien Tuong",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4027,
+  "documentId": "a2a06df8-6504-45cf-a7c1-0c31afefeb89",
+  "our_name": "KIM MIN A",
+  "our_name_en": "KIM MIN A",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2329",
+    "umb_name": "KIM Min A",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7036",
+    "umb_name": "KIM MIN A",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2788",
+    "umb_name": "MIN A Kim",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4152,
+  "documentId": "e7494e0c-783b-48a6-97db-e6d6d19f9c2a",
+  "our_name": "TUYLUOGLU Memis",
+  "our_name_en": "TUYLUOGLU Memis",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0973",
+    "umb_name": "TUYLUOGLU Memis",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1226",
+    "umb_name": "TUYLUOGLU Memis",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4626,
+  "documentId": "1b70106b-acb8-48ee-a7e5-abc6e49ad187",
+  "our_name": "SAKAI Ayako",
+  "our_name_en": "SAKAI Ayako",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "2737",
+    "umb_name": "SAKAI Ayako",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7181",
+    "umb_name": "SAKAI Ayako",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4096,
+  "documentId": "2af7ab2d-8147-4719-8f14-533276572242",
+  "our_name": "José Escudeiro",
+  "our_name_en": "José Escudeiro",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "1978",
+    "umb_name": "ESCUDEIRO Jose",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2631",
+    "umb_name": "JOSE Escudeiro",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4299,
+  "documentId": "5e7488c8-c096-4c54-8e0f-afb3774306fd",
+  "our_name": "ARGON AZIZ",
+  "our_name_en": "ARGON AZIZ",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1904",
+    "umb_name": "ARGON Abdul Aziz",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4320,
+  "documentId": "8ffb050c-d35a-472e-970a-4220db46b9d1",
+  "our_name": "OZBAY Turgut",
+  "our_name_en": "OZBAY Turgut",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2184",
+    "umb_name": "OZBAY Mustafa",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2100",
+    "umb_name": "OZBAY Turgut NCBF",
+    "fed": ""
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4563,
+  "documentId": "0bffce0d-30e6-46dd-9bb5-2b25015c9d2f",
+  "our_name": "JEON Inhyeok",
+  "our_name_en": "JEON Inhyeok",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2833",
+    "umb_name": "JEON Ki Won",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "1874",
+    "umb_name": "JEON Sung Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2247",
+    "umb_name": "JEON Jungwu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2249",
+    "umb_name": "Jeon In Hyeok",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7431",
+    "umb_name": "JEON Jeong Bin",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7247",
+    "umb_name": "JEON Aerin",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3903,
+  "documentId": "87b2aa3a-f9c6-492d-bd4c-83595772a747",
+  "our_name": "DO Hyun Kim",
+  "our_name_en": "DO Hyun Kim",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3445",
+    "umb_name": "KIM Do Hyeon",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3230",
+    "umb_name": "KIM Tae Hyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3141",
+    "umb_name": "KIM Kwang Hyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0524",
+    "umb_name": "KIM Hyun Jung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "1258",
+    "umb_name": "KIM Gi Hyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3438",
+    "umb_name": "KIM Do Kyung",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4298,
+  "documentId": "f2c98274-ebbc-45e5-8e8e-7722782f229c",
+  "our_name": "ALTINBAS Bulent",
+  "our_name_en": "ALTINBAS Bulent",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1593",
+    "umb_name": "ALTINBAS Bulent NCBF",
+    "fed": ""
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2438,
+  "documentId": "631b645b-ef2f-42ad-9a58-f8d4560e8d4a",
+  "our_name": "JENSEN Bjørn",
+  "our_name_en": "Jensen Bjørn",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3738",
+    "umb_name": "JENSEN Michael",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3478",
+    "umb_name": "JENSEN Bjorn M",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "0361",
+    "umb_name": "JENSEN Allan",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "2602",
+    "umb_name": "JENSEN Nicolai",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7397",
+    "umb_name": "JENSEN Jeanette",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4017,
+  "documentId": "d07232bf-5074-4d79-93ef-dd53fb3536b5",
+  "our_name": "TO THANH Tu",
+  "our_name_en": "TO THANH Tu",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3091",
+    "umb_name": "THANH Pham Duy",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4057,
+  "documentId": "e8bd8951-1576-41b1-ae05-60b612089c57",
+  "our_name": "LU Dinh Sang",
+  "our_name_en": "LU Dinh Sang",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3609",
+    "umb_name": "DINH The Vinh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2006",
+    "umb_name": "DINH Quang Hai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2625",
+    "umb_name": "DINH NAM Khanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "8205",
+    "umb_name": "DINH Trong Van",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4097,
+  "documentId": "cdd2957c-ef1e-49bf-8bc0-4f9aa66e6713",
+  "our_name": "Luis Santos",
+  "our_name_en": "Luis Santos",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "1285",
+    "umb_name": "SANTOS Luis",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2633",
+    "umb_name": "Luis Santos",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 670,
+  "documentId": "3debdae8-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΟΛΥΧΡΟΝΟΠΟΥΛΟΣ Σεραφείμ",
+  "our_name_en": "POLYCHRONOPOULOS Serafim",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0125",
+    "umb_name": "POLYCHRONOPOULOS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4031,
+  "documentId": "f0f8c3f0-36fc-4cd6-acc7-93104c6fc179",
+  "our_name": "LE QUOC Cuong",
+  "our_name_en": "LE QUOC Cuong",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2726",
+    "umb_name": "QUOC Dinh Nguyen",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 156,
+  "documentId": "3de747c5-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΣΩΤΗΡΟΠΟΥΛΟΣ Αθανασιος",
+  "our_name_en": "SOTIROPOULOS Athanasios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1168",
+    "umb_name": "SOTIROPOULOS J",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4578,
+  "documentId": "2dabcc09-92a7-46fe-ab41-b0ba389765aa",
+  "our_name": "ARAP YAMAN Haci",
+  "our_name_en": "ARAP YAMAN Haci",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2368",
+    "umb_name": "YAMAN Haci Arap",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2392",
+    "umb_name": "ARAP YAMAN Haci",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2835,
+  "documentId": "f4a1b64c-9b71-43b7-925b-5873ef36f0b7",
+  "our_name": "HERNANDEZ Francisco",
+  "our_name_en": "HERNANDEZ Francisco",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1410",
+    "umb_name": "HERNANDEZ Raul",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "2483",
+    "umb_name": "HERNANDEZ Lucas Luis",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1063",
+    "umb_name": "HERNANDEZ MARTIN Adolfo",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 74,
+  "documentId": "3de66eb6-a52c-11f0-901e-0a6230412745",
+  "our_name": "KASIDOKOSTAS Filippos",
+  "our_name_en": "KASIDOKOSTAS Filippos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1158",
+    "umb_name": "KASIDOKOSTAS George",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0104",
+    "umb_name": "KASIDOKOSTAS Filipos",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4461,
+  "documentId": "8a9d479d-979b-431e-89f7-a5635df9edba",
+  "our_name": "El Allawy Mohamed",
+  "our_name_en": "El Allawy Mohamed",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "0530",
+    "umb_name": "MOHAMED Zayed",
+    "fed": "EG"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1086,
+  "documentId": "3df08ff2-a52c-11f0-901e-0a6230412745",
+  "our_name": "APOSTOLOGIORGAKIS Michalis",
+  "our_name_en": "APOSTOLOGIORGAKIS Michalis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0820",
+    "umb_name": "MICHALIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2184,
+  "documentId": "0bd0e21f-f0ff-491d-a911-143dba7b3f1d",
+  "our_name": "CHATZIPAVLIS Nikolaos",
+  "our_name_en": "CHATZIPAVLIS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0388",
+    "umb_name": "CHATZIPAVLIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3595,
+  "documentId": "bef9ce78-b571-4520-acd0-9cf5d4c4f1b0",
+  "our_name": "MINAOGLU Manol",
+  "our_name_en": "MINAOGLU Manol",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0358",
+    "umb_name": "MINAOGLU Manolis",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 40,
+  "documentId": "3de64cb7-a52c-11f0-901e-0a6230412745",
+  "our_name": "EVAGGELOU Manos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1706",
+    "umb_name": "EVAGGELOU Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4203,
+  "documentId": "11b6622a-82ba-46ad-8417-7b9c8e3b4677",
+  "our_name": "SLIKKER Herman",
+  "our_name_en": "SLIKKER Herman",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "3329",
+    "umb_name": "SLIKKER Tom",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4061,
+  "documentId": "aa45f554-b9bd-4e46-9189-fcc64e24328f",
+  "our_name": "OH Young Je",
+  "our_name_en": "OH Young Je",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2732",
+    "umb_name": "YOUNG Seob kim",
+    "fed": "KR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3557,
+  "documentId": "75f7249a-dd24-4022-ab3b-f443ca8d2835",
+  "our_name": "NGUYEN Dinh Quoc",
+  "our_name_en": "NGUYEN Dinh Quoc",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2726",
+    "umb_name": "QUOC Dinh Nguyen",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "0153",
+    "umb_name": "NGUYEN Quoc Nguyen",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3942,
+  "documentId": "5e0fe46e-9b4c-4613-8c10-a9958aaac10b",
+  "our_name": "MONTOYA Jaime",
+  "our_name_en": "MONTOYA Jaime",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3175",
+    "umb_name": "MONTOYA Camilo",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "1383",
+    "umb_name": "MONTOYA Arley",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 19,
+  "documentId": "3de63165-a52c-11f0-901e-0a6230412745",
+  "our_name": "BRAZITIKOS George",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1157",
+    "umb_name": "BRAZITIKOS Georgios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 48,
+  "documentId": "3de655a1-a52c-11f0-901e-0a6230412745",
+  "our_name": "GAVRIILIDIS Nasos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2272",
+    "umb_name": "GAVRIILIDIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 64,
+  "documentId": "3de664b9-a52c-11f0-901e-0a6230412745",
+  "our_name": "KALLITSIS Dimitris",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0886",
+    "umb_name": "KALLITSIS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4709,
+  "documentId": "tx2bjmwsn5hkrlrmkp6l9iet",
+  "our_name": "ΚΩΝΣΤΑΝΤΙΝΟΣ ΠΑΠΑΔΟΠΟΥΛΟΣ - ΚΥΖΟΥΛΗΣ",
+  "our_name_en": "KONSTANTINOS PAPADOPOULOS - KYZOULIS",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3945,
+  "documentId": "7f5251a1-f17d-4a69-a812-1886a82f11a3",
+  "our_name": "TORRES Santiago",
+  "our_name_en": "TORRES Santiago",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3570",
+    "umb_name": "TORRES Santiago",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "8143",
+    "umb_name": "TORRES Santıago",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 419,
+  "documentId": "3de8cddd-a52c-11f0-901e-0a6230412745",
+  "our_name": "LY The Vinh",
+  "our_name_en": null,
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2725",
+    "umb_name": "VINH Thuc Phan",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 476,
+  "documentId": "3de9863e-a52c-11f0-901e-0a6230412745",
+  "our_name": "JOSE Torrisco Enrique ",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1270",
+    "umb_name": "TORRISCO Enrique Jose",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1833",
+    "umb_name": "JOSE Torrisco Enrique",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1588,
+  "documentId": "do83u5aht12rmqh16vmcfybr",
+  "our_name": "ΜΑΥΡΙΔΟΓΛΟΥ Λίτσα",
+  "our_name_en": "MAVRIDOGLOU Litsa",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3352",
+    "umb_name": "MAVRIDOGLOU Litsa",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "7428",
+    "umb_name": "MAVRIDOGLOU Litsa",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 606,
+  "documentId": "3deb0e46-a52c-11f0-901e-0a6230412745",
+  "our_name": "LIM Jeong Wan ",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3358",
+    "umb_name": "JEONG Yeok Geun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0954",
+    "umb_name": "JEONG Sung Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3192",
+    "umb_name": "JEONG Ye Sung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0602",
+    "umb_name": "JEONG Yeon Cheol",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2975",
+    "umb_name": "JEONG Byeong Jin",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "1235",
+    "umb_name": "JEONG Byung Hoon",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4111,
+  "documentId": "ce0fd66a-60ce-410d-adf1-de312a8f0d9c",
+  "our_name": "BALLOUARD Philippe",
+  "our_name_en": "BALLOUARD Philippe",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "2647",
+    "umb_name": "BALLOUARD Ilippe",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 729,
+  "documentId": "3dec1a24-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΑΡΑΝΗΣ Γεωργιος",
+  "our_name_en": "MARANIS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1994",
+    "umb_name": "MARANIS George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1235,
+  "documentId": "3df20a8a-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΗΓΟΥΤΣΟΣ Ιωαννης Κ",
+  "our_name_en": "RIGOUTSOS Ioannis K",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2570",
+    "umb_name": "RIGOUTSOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2033,
+  "documentId": "30dbf143-935d-4b04-995a-d5981ccc8d63",
+  "our_name": "DUDINK Leon",
+  "our_name_en": "DUDINK Leon",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "2937",
+    "umb_name": "DUDINK Nick",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 741,
+  "documentId": "3dec2734-a52c-11f0-901e-0a6230412745",
+  "our_name": "CHATZIPAVLIS Antreas",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0388",
+    "umb_name": "CHATZIPAVLIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4049,
+  "documentId": "69e95618-454c-4d53-96ab-afc3eb66e911",
+  "our_name": "DUONG Thanh Luan",
+  "our_name_en": "DUONG Thanh Luan",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2416",
+    "umb_name": "DUONG Thanh Luan",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2533",
+    "umb_name": "DUONG Thanh Luan",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3833,
+  "documentId": "c32bf672-b480-4fa3-ad04-4b40dcfddf46",
+  "our_name": "LE Dinh Sy",
+  "our_name_en": "LE Dinh Sy",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3609",
+    "umb_name": "DINH The Vinh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2006",
+    "umb_name": "DINH Quang Hai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2625",
+    "umb_name": "DINH NAM Khanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "8205",
+    "umb_name": "DINH Trong Van",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2144,
+  "documentId": "68526e8d-1e52-4e34-bb72-46a7f2541df0",
+  "our_name": "ANDERSEN Thomas K",
+  "our_name_en": "Andersen Thomas K",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "0204",
+    "umb_name": "ANDERSEN Thomas",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3479",
+    "umb_name": "ANDERSEN Thomas",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4519,
+  "documentId": "b8980f42-51be-4a05-9e5d-c54ecb00a549",
+  "our_name": "VO Thanh Phong",
+  "our_name_en": "VO Thanh Phong",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2714",
+    "umb_name": "PHONG Thanh Nguyen",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3091",
+    "umb_name": "THANH Pham Duy",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 142,
+  "documentId": "3de7405e-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΟΛΥΧΡΟΝΟΠΟΥΛΟΣ Νικολαος",
+  "our_name_en": "POLYCHRONOPOULOS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0125",
+    "umb_name": "POLYCHRONOPOULOS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2878,
+  "documentId": "caf97128-1d13-4620-94b6-710df0880745",
+  "our_name": "MARTIN Alvaro",
+  "our_name_en": "MARTIN Alvaro",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2595",
+    "umb_name": "MARTIN VIALE Jorge",
+    "fed": "AR"
+   },
+   {
+    "umb_id": "0988",
+    "umb_name": "MARTIN Jose",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1651,
+  "documentId": "i6wwmpg8vmp50dzwo8if6h8u",
+  "our_name": "ALCALA Carlos",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "3337",
+    "umb_name": "CARLOS Castromil",
+    "fed": "ES"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4041,
+  "documentId": "4cd61c9e-534a-45d3-8e5a-de2d316d4373",
+  "our_name": "SRUONG Pheavy",
+  "our_name_en": "SRUONG Pheavy",
+  "country": "KH",
+  "candidates": [
+   {
+    "umb_id": "2722",
+    "umb_name": "SRUONG Pheavy",
+    "fed": "KH"
+   },
+   {
+    "umb_id": "7243",
+    "umb_name": "SRUONG Pheavy",
+    "fed": "KH"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3878,
+  "documentId": "6c902b7c-c73d-449b-89a7-78bc317672aa",
+  "our_name": "KIM Hyeon Woo",
+  "our_name_en": "KIM Hyeon Woo",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3518",
+    "umb_name": "KIM Hyeon Woo",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "8072",
+    "umb_name": "KIM Hyeon Woo",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4502,
+  "documentId": "466d91de-3c2f-41bc-b7b0-c537e8ce6a53",
+  "our_name": "JEONG Bo Ra",
+  "our_name_en": "JEONG Bo Ra",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2031",
+    "umb_name": "JEONG Bo Ra",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7322",
+    "umb_name": "JEONG Bo-Ra",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7112",
+    "umb_name": "JEONG Bo Ra",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2181,
+  "documentId": "3d51941d-00e0-4cc3-8316-009f986aeb5b",
+  "our_name": "JUAREZ Ana",
+  "our_name_en": "JUAREZ Ana",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "7202",
+    "umb_name": "JUAREZ Ana",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "8166",
+    "umb_name": "JUAREZ Ana",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4081,
+  "documentId": "1d05dae3-aa8f-439e-b73c-fc266be5dbe3",
+  "our_name": "QUOC Dinh Nguyen",
+  "our_name_en": "QUOC Dinh Nguyen",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2726",
+    "umb_name": "QUOC Dinh Nguyen",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "0153",
+    "umb_name": "NGUYEN Quoc Nguyen",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2147,
+  "documentId": "046de81e-bfdd-4449-8db8-d70bf689a5ba",
+  "our_name": "SANCHEZ Antonio",
+  "our_name_en": "SANCHEZ Antonio",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3468",
+    "umb_name": "SANCHEZ Ubaldo",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "0798",
+    "umb_name": "SANCHEZ Cristian",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "0709",
+    "umb_name": "SANCHEZ Norberto",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "3542",
+    "umb_name": "SANCHEZ Agustin",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1569",
+    "umb_name": "SANCHEZ ALMEIDA Yerovi",
+    "fed": "EC"
+   },
+   {
+    "umb_id": "0188",
+    "umb_name": "SANCHEZ Hugo",
+    "fed": "BO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2452,
+  "documentId": "ed6fdb1f-30b3-48af-8dc8-12f65e521a89",
+  "our_name": "LENNY Pallucca",
+  "our_name_en": "Lenny Pallucca",
+  "country": "LU",
+  "candidates": [
+   {
+    "umb_id": "3653",
+    "umb_name": "PALLUCCA Carlo",
+    "fed": "LU"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4532,
+  "documentId": "f6c01e12-649d-450c-80da-dfe1725d22df",
+  "our_name": "BAYRAMOGLU Temel",
+  "our_name_en": "BAYRAMOGLU Temel",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1732",
+    "umb_name": "BAYRAMOGLU Temel Kaptan",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2178,
+  "documentId": "0ef0f206-d69a-4e69-9c87-bf053c783e1d",
+  "our_name": "BAJTNER Yenny",
+  "our_name_en": "Bajtner Yenny",
+  "country": "SE",
+  "candidates": [
+   {
+    "umb_id": "2919",
+    "umb_name": "BAJTNER Yenny",
+    "fed": "SE"
+   },
+   {
+    "umb_id": "7241",
+    "umb_name": "BAJTNER Yenny",
+    "fed": "SE"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2281,
+  "documentId": "86201527-a316-4bd1-976f-c3b09cbb5d4b",
+  "our_name": "VAN Den Bergh Léo",
+  "our_name_en": "VAN DEN BERGH Léo",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "0606",
+    "umb_name": "VAN DEN BERGH Patrick",
+    "fed": "BE"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3702,
+  "documentId": "58866f77-0dd2-46f8-82c7-9daece52e12d",
+  "our_name": "GOMEZ Soledad",
+  "our_name_en": "GOMEZ Soledad",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3240",
+    "umb_name": "GOMEZ Soledad",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7189",
+    "umb_name": "GOMEZ Soledad",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3813,
+  "documentId": "41dec97d-5257-4eef-8781-26355fdeb41e",
+  "our_name": "KANG Min Jung",
+  "our_name_en": "KANG Min Jung",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3266",
+    "umb_name": "KANG Min Jung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7385",
+    "umb_name": "KANG Min Jung",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2529,
+  "documentId": "e2f347e8-cf24-4311-82b7-afc793712932",
+  "our_name": "HERMIDA Eva",
+  "our_name_en": "HERMIDA Eva",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "7365",
+    "umb_name": "HERMIDA Eva Maria",
+    "fed": "ES"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3717,
+  "documentId": "a46a7fab-2f74-41bb-8095-61858d0660ec",
+  "our_name": "PENA Harry",
+  "our_name_en": "PENA Harry",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0799",
+    "umb_name": "PENA Jeferson E",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7402",
+    "umb_name": "PENA Paula",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "8104",
+    "umb_name": "PENA Kevin",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 971,
+  "documentId": "3def6a8f-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΟΚΚΑΛΗΣ Σωτηριος",
+  "our_name_en": "KOKKALIS Sotirios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3312",
+    "umb_name": "KOKKALIS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1026,
+  "documentId": "3defbadc-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΟΥΡΛΑΣ Δημητριος",
+  "our_name_en": "MOURLAS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2783",
+    "umb_name": "MOURLAS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4174,
+  "documentId": "1ee06c60-f522-4e10-bdd8-12eeda0c147c",
+  "our_name": "DERELI Ferhat",
+  "our_name_en": "DERELI Ferhat",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0613",
+    "umb_name": "DERELI Ferhat",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2396",
+    "umb_name": "DERELI Ferhat",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2119,
+  "documentId": "5a97659d-e328-4e19-b01d-5c7f2de2ff2d",
+  "our_name": "WEINGESL Peter",
+  "our_name_en": "WEINGESL Peter",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2521",
+    "umb_name": "Peter Francisco",
+    "fed": "ZA"
+   },
+   {
+    "umb_id": "0672",
+    "umb_name": "PETER Palffy",
+    "fed": "SE"
+   },
+   {
+    "umb_id": "3169",
+    "umb_name": "PETER Hans Josef",
+    "fed": "DE"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2029,
+  "documentId": "c9989e55-1faa-4763-b9b3-e5aa5c19fd7e",
+  "our_name": "ALMEIDA Luis",
+  "our_name_en": "Almeida Luis",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "1983",
+    "umb_name": "ALMEIDA Carlos",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2633",
+    "umb_name": "Luis Santos",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4028,
+  "documentId": "4653a51c-bb40-4671-b832-6bb12592300f",
+  "our_name": "KO Jun Seo",
+  "our_name_en": "KO Jun Seo",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3206",
+    "umb_name": "JUN SANG Ko",
+    "fed": "KR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 546,
+  "documentId": "3dea4504-a52c-11f0-901e-0a6230412745",
+  "our_name": "PENA Jefferson",
+  "our_name_en": null,
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0799",
+    "umb_name": "PENA Jeferson E",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7402",
+    "umb_name": "PENA Paula",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "8104",
+    "umb_name": "PENA Kevin",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3586,
+  "documentId": "ecc5d986-07fc-4ce5-ab38-e2b4827fe9e5",
+  "our_name": "HAN Jieun",
+  "our_name_en": "HAN Jieun",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2933",
+    "umb_name": "HAN Jieun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7152",
+    "umb_name": "HAN Jieun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2491,
+  "documentId": "2a7989c1-c045-4982-9012-2c7ff7b6e220",
+  "our_name": "PHILIPOOM Luca",
+  "our_name_en": "PHILIPOOM Luca",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "3457",
+    "umb_name": "PHILIPOOM Luca",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "8056",
+    "umb_name": "PHILIPOOM Luca",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3838,
+  "documentId": "20383cec-7754-43c4-ac45-29c94dbea3f6",
+  "our_name": "NGUYEN Nhi Hoangyen",
+  "our_name_en": "NGUYEN Nhi Hoangyen",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3432",
+    "umb_name": "NGUYEN Nhi Hoangyen",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "7376",
+    "umb_name": "NGUYEN Nhi Hoangyen",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2327,
+  "documentId": "fdda84b1-9bb4-4325-b53a-f7a02f267c8a",
+  "our_name": "JENSEN Mikkel Bjørn",
+  "our_name_en": "Jensen Mikkel Bjørn",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3738",
+    "umb_name": "JENSEN Michael",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3478",
+    "umb_name": "JENSEN Bjorn M",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "0361",
+    "umb_name": "JENSEN Allan",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "2602",
+    "umb_name": "JENSEN Nicolai",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7397",
+    "umb_name": "JENSEN Jeanette",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2328,
+  "documentId": "62398ab3-dc1c-4b14-8b04-759d3eec307d",
+  "our_name": "JENSEN Bjørn Mikkel",
+  "our_name_en": "Jensen Bjørn Mikkel",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3738",
+    "umb_name": "JENSEN Michael",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3478",
+    "umb_name": "JENSEN Bjorn M",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "0361",
+    "umb_name": "JENSEN Allan",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "2602",
+    "umb_name": "JENSEN Nicolai",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7397",
+    "umb_name": "JENSEN Jeanette",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2840,
+  "documentId": "c8df5588-f4eb-4b9d-b7ed-781d31ba12a8",
+  "our_name": "VAN Den Zegel Erik",
+  "our_name_en": "VAN DEN ZEGEL Erik",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "0606",
+    "umb_name": "VAN DEN BERGH Patrick",
+    "fed": "BE"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4663,
+  "documentId": "71ca12e0-2230-4c7c-b75a-c497223dad56",
+  "our_name": "DALLINGA Louis",
+  "our_name_en": "DALLINGA Louis",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0908",
+    "umb_name": "DALLINGA Berry",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "1292",
+    "umb_name": "DALLINGA Meerten",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3759,
+  "documentId": "6dc3137a-58a3-4af9-be18-7ff01a159309",
+  "our_name": "LE HOANG Kim",
+  "our_name_en": "LE HOANG Kim",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3260",
+    "umb_name": "HOANG Dinh Long",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2658",
+    "umb_name": "HOANG Duc Tai",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2104,
+  "documentId": "6f5940f0-82e3-41df-99d0-f3efa10ff210",
+  "our_name": "DVORACEK Vaclav",
+  "our_name_en": "Dvoracek Vaclav",
+  "country": "CZ",
+  "candidates": [
+   {
+    "umb_id": "3061",
+    "umb_name": "DVORACEK Jan",
+    "fed": "CZ"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2470,
+  "documentId": "bd3d74d5-5bbf-45e0-94a1-237d1d9788d4",
+  "our_name": "PETERSEN Nanna",
+  "our_name_en": "Petersen Nanna",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "2005",
+    "umb_name": "PETERSEN Claus",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3186",
+    "umb_name": "PETERSEN Tommy",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3112",
+    "umb_name": "PETERSEN Steen",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7179",
+    "umb_name": "PETERSEN Nana",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4661,
+  "documentId": "3ebf7363-90bc-4217-8ca0-547699917f88",
+  "our_name": "VAN DEN HEUVEL Erwin",
+  "our_name_en": "VAN DEN HEUVEL Erwin",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0526",
+    "umb_name": "VAN DEN BERG Wim",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "1945",
+    "umb_name": "VAN DEN HEUVEL Wiljan",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7065",
+    "umb_name": "VAN DEN Eijnden Cora",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3486,
+  "documentId": "84ebfd62-212f-4a62-908b-0ea3df7fb137",
+  "our_name": "INOUE Makiko",
+  "our_name_en": "INOUE Makiko",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "2838",
+    "umb_name": "INOUE Makiko",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7110",
+    "umb_name": "INOUE Makiko",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2170,
+  "documentId": "19db9632-5cd8-49f6-94c1-7dbc86cee652",
+  "our_name": "KRAUSOVA Veronika",
+  "our_name_en": "KRAUSOVA Veronika",
+  "country": "CZ",
+  "candidates": [
+   {
+    "umb_id": "2059",
+    "umb_name": "KRAUSOVA Veronika",
+    "fed": "CZ"
+   },
+   {
+    "umb_id": "7236",
+    "umb_name": "KRAUSOVA Veronika",
+    "fed": "CZ"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2114,
+  "documentId": "a44c118c-b91f-49d6-8e93-370c79fb6958",
+  "our_name": "JODL Martin",
+  "our_name_en": "JODL Martin",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2595",
+    "umb_name": "MARTIN VIALE Jorge",
+    "fed": "AR"
+   },
+   {
+    "umb_id": "0988",
+    "umb_name": "MARTIN Jose",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3807,
+  "documentId": "b8e330c0-4159-4849-b195-4fdbac1f148a",
+  "our_name": "BEERSMA Gerritsen",
+  "our_name_en": "BEERSMA Gerritsen",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "2877",
+    "umb_name": "BEERSMA Gerritsen",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7298",
+    "umb_name": "BEERSMA Gerritsen",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 23,
+  "documentId": "3de637ba-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΧΑΤΖΗΠΑΥΛΗΣ Ευσταθιος",
+  "our_name_en": "CHATZIPAVLIS Evstathios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0388",
+    "umb_name": "CHATZIPAVLIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4631,
+  "documentId": "b105590e-8275-49cc-b380-b70f59535396",
+  "our_name": "NGUYEN Hoang Yen Nhi",
+  "our_name_en": "NGUYEN Hoang Yen Nhi",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2027",
+    "umb_name": "NGUYEN Tran Thanh Tu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2978",
+    "umb_name": "NGUYEN Hoan Tat",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2977",
+    "umb_name": "NGUYEN Van Tai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2723",
+    "umb_name": "NGUYEN Van Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 482,
+  "documentId": "3de98ebf-a52c-11f0-901e-0a6230412745",
+  "our_name": "KANG In-Won",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0385",
+    "umb_name": "KANG Ja In",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3266",
+    "umb_name": "KANG Min Jung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3095",
+    "umb_name": "KANG Kiwoong",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2022",
+    "umb_name": "KANG In Seok",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0363",
+    "umb_name": "KANG Ho Gyu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2013",
+    "umb_name": "KANG Seung Gu",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2689,
+  "documentId": "d207d1c9-9252-4b0c-82e5-c15f5fca7f77",
+  "our_name": "ČERMÁK Nicolas",
+  "our_name_en": "Čermák Nicolas",
+  "country": "CZ",
+  "candidates": [
+   {
+    "umb_id": "3709",
+    "umb_name": "CERMAK Nicolas",
+    "fed": "CZ"
+   },
+   {
+    "umb_id": "8062",
+    "umb_name": "CERMAK Nicolas",
+    "fed": "CZ"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2145,
+  "documentId": "e5c43955-07a7-41bc-a8b1-8d833fba7ffa",
+  "our_name": "SØLBERG Michael",
+  "our_name_en": "Sølberg Michael",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "0486",
+    "umb_name": "MICHAEL Andreas",
+    "fed": "CY"
+   },
+   {
+    "umb_id": "0447",
+    "umb_name": "MICHAEL Toudahl",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "0686",
+    "umb_name": "MICHAEL Hansen",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3907,
+  "documentId": "49505b41-1cfb-4012-9d40-eddaf2d3ed02",
+  "our_name": "TAKESHIMA Junko",
+  "our_name_en": "TAKESHIMA Junko",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "3467",
+    "umb_name": "TAKESHIMA Junko",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7256",
+    "umb_name": "TAKESHIMA Junko",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2831,
+  "documentId": "42eae721-a238-4a4b-8393-8f96e79db86c",
+  "our_name": "KOYUNCUOGLU Ipek",
+  "our_name_en": "KOYUNCUOGLU ipek",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3409",
+    "umb_name": "KOYUNCUOGLU Saadet Ipek",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 589,
+  "documentId": "3dea78e5-a52c-11f0-901e-0a6230412745",
+  "our_name": "EDWAR Gomez",
+  "our_name_en": null,
+  "country": "US",
+  "candidates": [
+   {
+    "umb_id": "0580",
+    "umb_name": "GOMEZ Edward",
+    "fed": "US"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3811,
+  "documentId": "b0aa9d19-c7d3-4c34-b88d-0c127792bbba",
+  "our_name": "ISHII Mai",
+  "our_name_en": "ISHII Mai",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "2078",
+    "umb_name": "ISHII Mai",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7396",
+    "umb_name": "ISHII Mai",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2120,
+  "documentId": "b4f73bd2-32cb-48b7-8503-9e82bf6ba95d",
+  "our_name": "DRIESSEN Ernst Jan",
+  "our_name_en": "Driessen Ernst Jan",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "2779",
+    "umb_name": "DRIESSEN Fred",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "2848",
+    "umb_name": "DRIESSEN Arno",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1512,
+  "documentId": "tncisa5ocsfuqyukwid3tkii",
+  "our_name": "ANDERSEN Thomas",
+  "our_name_en": "ANDERSEN Thomas",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "0204",
+    "umb_name": "ANDERSEN Thomas",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3479",
+    "umb_name": "ANDERSEN Thomas",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3787,
+  "documentId": "6d97935b-7e1a-48af-9684-57f49f60a503",
+  "our_name": "SO Jae Kwon",
+  "our_name_en": "SO Jae Kwon",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3637",
+    "umb_name": "KWON Miru",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3661",
+    "umb_name": "KWON Minsu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2855",
+    "umb_name": "KWON Young Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2248",
+    "umb_name": "KWON Young Gap",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2036",
+    "umb_name": "KWON Hyeok Min",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2720",
+    "umb_name": "Kwon Ki Yong",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 92,
+  "documentId": "3de6806f-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΟΥΤΣΟΦΙΟΣ Ευαγγελος",
+  "our_name_en": "KOUTSOFIOS Evagelos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1165",
+    "umb_name": "KOUTSOFIOS Vangelis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2703,
+  "documentId": "c524c191-674f-4e07-95c4-3389093c96b7",
+  "our_name": "AYGUN Samet",
+  "our_name_en": "AYGUN Samet",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "8054",
+    "umb_name": "AYGUN Samed",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 111,
+  "documentId": "3de693b8-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΟΥΛΟΣ Ευαγγελος",
+  "our_name_en": "MOULOS Evagelos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0214",
+    "umb_name": "MOULOS Vangelis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4219,
+  "documentId": "9ca4035b-680a-47a5-967d-ed5256c04af9",
+  "our_name": "KANG HHo GGyu",
+  "our_name_en": "KANG HHo GGyu",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0385",
+    "umb_name": "KANG Ja In",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3266",
+    "umb_name": "KANG Min Jung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3095",
+    "umb_name": "KANG Kiwoong",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2022",
+    "umb_name": "KANG In Seok",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0363",
+    "umb_name": "KANG Ho Gyu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2013",
+    "umb_name": "KANG Seung Gu",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3720,
+  "documentId": "26cab3a0-e339-4c31-a8c0-cf4cd147f6d9",
+  "our_name": "RODRIGUEZ Coronel Jorge",
+  "our_name_en": "RODRIGUEZ Coronel Jorge",
+  "country": "MX",
+  "candidates": [
+   {
+    "umb_id": "3239",
+    "umb_name": "RODRIGUEZ coronel Jorge",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "1388",
+    "umb_name": "RODRIGUEZ Jorge",
+    "fed": "MX"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 132,
+  "documentId": "3de73c09-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPAZACHARIOU Vassilis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0895",
+    "umb_name": "PAPAZACHARIOU Vassilios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3832,
+  "documentId": "8f9ea299-edca-445e-b030-e178860d6972",
+  "our_name": "HO Thanh Nguyen",
+  "our_name_en": "HO Thanh Nguyen",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2027",
+    "umb_name": "NGUYEN Tran Thanh Tu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2978",
+    "umb_name": "NGUYEN Hoan Tat",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2977",
+    "umb_name": "NGUYEN Van Tai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2723",
+    "umb_name": "NGUYEN Van Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4431,
+  "documentId": "1118dfad-c37e-4e2d-82ce-9129f492a81f",
+  "our_name": "KIM Seong-Gwan",
+  "our_name_en": "KIM Seong-Gwan",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0565",
+    "umb_name": "KIM Seong Gwan",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2463",
+    "umb_name": "KIM Seong Gwan",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4647,
+  "documentId": "1a63e66b-6031-4573-9e2b-3c7a0588d044",
+  "our_name": "NGUYEN Minh Tri",
+  "our_name_en": "NGUYEN Minh Tri",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3713",
+    "umb_name": "NGUYEN Minh Tri",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "8206",
+    "umb_name": "NGUYEN Minh Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 899,
+  "documentId": "3dee8d62-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΡΑΒΑΛΟΣ Δημητριος",
+  "our_name_en": "PARAVALOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3308",
+    "umb_name": "PARAVALOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4385,
+  "documentId": "cb90a729-a55c-4344-92e0-0d63e9e45502",
+  "our_name": "MARTINEZ Julio 30",
+  "our_name_en": "MARTINEZ Julio 30",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "0803",
+    "umb_name": "MARTINEZ Julio",
+    "fed": "PE"
+   },
+   {
+    "umb_id": "1677",
+    "umb_name": "MARTINEZ Julio",
+    "fed": "PE"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 772,
+  "documentId": "3dece332-a52c-11f0-901e-0a6230412745",
+  "our_name": "KALOMIRIS Rizos",
+  "our_name_en": "Kalomiris Rizos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2276",
+    "umb_name": "RIZOS Aggelos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 332,
+  "documentId": "3de81915-a52c-11f0-901e-0a6230412745",
+  "our_name": "TACHOIRE Adrian",
+  "our_name_en": null,
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "0838",
+    "umb_name": "TACHOIRE Adrien",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 10,
+  "documentId": "3de627f6-a52c-11f0-901e-0a6230412745",
+  "our_name": "ATHANASIOU Thanos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0591",
+    "umb_name": "ATHANASIOU Athanasios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0889",
+    "umb_name": "ATHANASIOU Michalis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3840,
+  "documentId": "e9f88e7f-4fe2-4370-84bd-a0032a456f2e",
+  "our_name": "PHAM Duy Thanh",
+  "our_name_en": "PHAM Duy Thanh",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3424",
+    "umb_name": "PHAM Duy Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3091",
+    "umb_name": "THANH Pham Duy",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4608,
+  "documentId": "4d64ce1f-25da-4f43-9a05-1a344a5e635d",
+  "our_name": "HEO Jung Hun",
+  "our_name_en": "HEO Jung Hun",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3086",
+    "umb_name": "JUNG Jaein",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2539",
+    "umb_name": "JUNG Sung Taek",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2044",
+    "umb_name": "JUNG Dong Keun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2854",
+    "umb_name": "JUNG Dong Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2649",
+    "umb_name": "JUNG Young Kyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0514",
+    "umb_name": "JUNG Ho Suk",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3860,
+  "documentId": "4ce05fa2-8bb7-472d-9db0-c83665fef7fd",
+  "our_name": "NARANJO Andres F",
+  "our_name_en": "NARANJO Andres F",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0170",
+    "umb_name": "NARANJO Andres F",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "0539",
+    "umb_name": "NARANJO Andres",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3866,
+  "documentId": "5775bb04-6560-4ccb-954d-2e93cf702872",
+  "our_name": "AN Ki Sung",
+  "our_name_en": "AN Ki Sung",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3144",
+    "umb_name": "SUNG Nak Hun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2425",
+    "umb_name": "SUNG Sangeun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3886,
+  "documentId": "48c548fe-3041-4966-a694-668bf2444ed4",
+  "our_name": "KNUDSEN Thomas Thorhauge",
+  "our_name_en": "KNUDSEN Thomas Thorhauge",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "3281",
+    "umb_name": "KNUDSEN Thomas Thorhauge",
+    "fed": "DK"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 4990,
+  "documentId": "bmr91dlks0xixvpqespfw0tb",
+  "our_name": "PETERSEN Magnus",
+  "our_name_en": null,
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "2005",
+    "umb_name": "PETERSEN Claus",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3186",
+    "umb_name": "PETERSEN Tommy",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3112",
+    "umb_name": "PETERSEN Steen",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7179",
+    "umb_name": "PETERSEN Nana",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 525,
+  "documentId": "3dea2a40-a52c-11f0-901e-0a6230412745",
+  "our_name": "VILLIERS Bemard",
+  "our_name_en": null,
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "2541",
+    "umb_name": "VILLIERS Bernard",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 566,
+  "documentId": "3dea5d11-a52c-11f0-901e-0a6230412745",
+  "our_name": "LEE Jeong Hui",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3358",
+    "umb_name": "JEONG Yeok Geun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0954",
+    "umb_name": "JEONG Sung Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3192",
+    "umb_name": "JEONG Ye Sung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0602",
+    "umb_name": "JEONG Yeon Cheol",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2975",
+    "umb_name": "JEONG Byeong Jin",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "1235",
+    "umb_name": "JEONG Byung Hoon",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 179,
+  "documentId": "3de7da5a-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΒΑΙΤΣΗΣ Αχιλλευς",
+  "our_name_en": "VAITSIS Achillevs",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1705",
+    "umb_name": "VAITSIS Achileas",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 889,
+  "documentId": "3dee01e0-a52c-11f0-901e-0a6230412745",
+  "our_name": "ROUSSOS Georgiou Ioannis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3310",
+    "umb_name": "GEORGIOU Ioannis Alexios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3718,
+  "documentId": "c301a348-a2a3-4d77-bfa5-58394f905a8d",
+  "our_name": "PINEDA Vicky",
+  "our_name_en": "PINEDA Vicky",
+  "country": "US",
+  "candidates": [
+   {
+    "umb_id": "2219",
+    "umb_name": "PINEDA Vicke",
+    "fed": "US"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 829,
+  "documentId": "3ded3383-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPADOPOULOS Dionysis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2027,
+  "documentId": "fd8d51a7-341a-4d9b-a993-26c4a2d3e369",
+  "our_name": "JENSEN Mikkel",
+  "our_name_en": "Jensen Mikkel",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "3738",
+    "umb_name": "JENSEN Michael",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3478",
+    "umb_name": "JENSEN Bjorn M",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "0361",
+    "umb_name": "JENSEN Allan",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "2602",
+    "umb_name": "JENSEN Nicolai",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7397",
+    "umb_name": "JENSEN Jeanette",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3668,
+  "documentId": "9a02b99f-9590-42cd-bdbb-7fea877cdbd0",
+  "our_name": "THANH Pham Duy",
+  "our_name_en": "THANH Pham Duy",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3424",
+    "umb_name": "PHAM Duy Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3091",
+    "umb_name": "THANH Pham Duy",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 900,
+  "documentId": "3dee8e0b-a52c-11f0-901e-0a6230412745",
+  "our_name": "PRASSAS Alex",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3165",
+    "umb_name": "PRASSAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4038,
+  "documentId": "bff5efbd-0aca-41f4-80b3-727245c3c3be",
+  "our_name": "OH Jung Soo",
+  "our_name_en": "OH Jung Soo",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3086",
+    "umb_name": "JUNG Jaein",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2539",
+    "umb_name": "JUNG Sung Taek",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2044",
+    "umb_name": "JUNG Dong Keun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2854",
+    "umb_name": "JUNG Dong Il",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2649",
+    "umb_name": "JUNG Young Kyun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0514",
+    "umb_name": "JUNG Ho Suk",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 819,
+  "documentId": "3ded2544-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPAGEORGIOU Ioannis",
+  "our_name_en": "PAPAGEORGIOU Ioannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2566",
+    "umb_name": "PAPAGEORGIOU Christos",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1838",
+    "umb_name": "PAPAGEORGIOU George",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1179,
+  "documentId": "3df14f3d-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Αθανασιος",
+  "our_name_en": "PAPADOPOULOS Athanasios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 76,
+  "documentId": "3de670f0-a52c-11f0-901e-0a6230412745",
+  "our_name": "KINTATOS Lefteris",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1615",
+    "umb_name": "KINTATOS Elefterios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1167",
+    "umb_name": "KINTATOS N",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3485,
+  "documentId": "7af36bbf-d1b4-47c8-a0a4-76ffd747a711",
+  "our_name": "LE Nguyen Nhu",
+  "our_name_en": "LE Nguyen Nhu",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2027",
+    "umb_name": "NGUYEN Tran Thanh Tu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2978",
+    "umb_name": "NGUYEN Hoan Tat",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2977",
+    "umb_name": "NGUYEN Van Tai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2723",
+    "umb_name": "NGUYEN Van Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 751,
+  "documentId": "3dec3211-a52c-11f0-901e-0a6230412745",
+  "our_name": "MALOUTAS Giannis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1587",
+    "umb_name": "MALOUTAS Ioannis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3050,
+  "documentId": "1bb5c8c3-ea62-4d22-b057-fadb28fd8b74",
+  "our_name": "BALDIR Muhammet Deniz",
+  "our_name_en": "BALDIR Muhammet Deniz",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "3353",
+    "umb_name": "DENIZ Sezer",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4539,
+  "documentId": "0ed60844-bbe5-41a8-bd82-d9114af01705",
+  "our_name": "KURBETLİ Selahattin",
+  "our_name_en": "KURBETLİ Selahattin",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2177",
+    "umb_name": "KURBETLI Selahittin",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3846,
+  "documentId": "8b288cb3-d6d3-44da-80fb-588e0749677e",
+  "our_name": "VO Cao Thang",
+  "our_name_en": "VO Cao Thang",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2724",
+    "umb_name": "THANG Quoc Vo",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3483,
+  "documentId": "ecd5ab39-da45-41ba-ac61-c30116421cdd",
+  "our_name": "NGUYEN Huu Thanh",
+  "our_name_en": "NGUYEN Huu Thanh",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2020",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4505,
+  "documentId": "c384576c-187f-4875-9bea-acc16d0fd553",
+  "our_name": "LE Phuc Thien",
+  "our_name_en": "LE Phuc Thien",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3150",
+    "umb_name": "PHUC Luc Hoang",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "3092",
+    "umb_name": "PHUC Nguyen Van",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1491,
+  "documentId": "lv4eu2s0zlgbahxmezngn72q",
+  "our_name": "ΜΑΡΟΥΛΗΣ Χαραλαμπος",
+  "our_name_en": "MAROULIS Charalampos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0823",
+    "umb_name": "MAROULIS Evangelos",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1169",
+    "umb_name": "MAROULIS V",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3598,
+  "documentId": "4298754f-e9ff-40fa-827d-cc621ceb88ae",
+  "our_name": "OH Sung Kyu",
+  "our_name_en": "OH Sung Kyu",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3144",
+    "umb_name": "SUNG Nak Hun",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2425",
+    "umb_name": "SUNG Sangeun",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 123,
+  "documentId": "3de73649-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPADIMITRIOU Thanos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0892",
+    "umb_name": "PAPADIMITRIOU Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4384,
+  "documentId": "bade314b-33a6-4aab-9b3f-dc33ffca4b54",
+  "our_name": "MARTINEZ Julio",
+  "our_name_en": "MARTINEZ Julio",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0290",
+    "umb_name": "MARTINEZ Luis",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3684",
+    "umb_name": "MARTINEZ Duvan",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "0577",
+    "umb_name": "MARTINEZ Jhon Fredy",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3403",
+    "umb_name": "MARTINEZ Santiago",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3443",
+    "umb_name": "MARTINEZ Fabian Rivcardo",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3033",
+    "umb_name": "MARTINEZ Jorge Puerto",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 703,
+  "documentId": "3debfcb4-a52c-11f0-901e-0a6230412745",
+  "our_name": "ARGYROS Dimitris",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3456",
+    "umb_name": "ARGYROS Antonios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0888",
+    "umb_name": "ARGYROS Christos",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 713,
+  "documentId": "3dec0777-a52c-11f0-901e-0a6230412745",
+  "our_name": "METAXAS Alexandros",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2360",
+    "umb_name": "METAXAS Antonis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 44,
+  "documentId": "3de65131-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΦΙΛΙΝΗΣ Γεωργιος",
+  "our_name_en": "FILINIS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0611",
+    "umb_name": "FILINIS Giorgos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4416,
+  "documentId": "ba8015dd-70a4-40c5-af45-61e5b838cb26",
+  "our_name": "BURY JJeremy",
+  "our_name_en": "BURY JJeremy",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "0103",
+    "umb_name": "BURY Jeremy",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4633,
+  "documentId": "33b8c261-662d-4df6-b4c3-8c2da4825924",
+  "our_name": "VAN EXTEREN Monique",
+  "our_name_en": "VAN EXTEREN Monique",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0561",
+    "umb_name": "VAN HAMOND Monique",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7044",
+    "umb_name": "VAN EXTER Monique",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1090,
+  "documentId": "3df09142-a52c-11f0-901e-0a6230412745",
+  "our_name": "KARAVASILIS Vasilis",
+  "our_name_en": "KARAVASILIS Vasilis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2115",
+    "umb_name": "KARAVASILIS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1237,
+  "documentId": "3df20d40-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Ιορδανης",
+  "our_name_en": "PAPADOPOULOS Iordanis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 100,
+  "documentId": "3de68a1c-a52c-11f0-901e-0a6230412745",
+  "our_name": "MANTZOROS Stratos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2111",
+    "umb_name": "MANTZOROS Efstratios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 125,
+  "documentId": "3de7378a-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΗΜΗΤΡΙΟΥ Γιαννης",
+  "our_name_en": "PAPADIMITRIOU Giannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0892",
+    "umb_name": "PAPADIMITRIOU Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4166,
+  "documentId": "4dd224d3-494d-4c69-8b17-f796913e1aae",
+  "our_name": "BARTSOKAS Konstentinos",
+  "our_name_en": "BARTSOKAS Konstentinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0258",
+    "umb_name": "BARTSOKAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4498,
+  "documentId": "91170aa2-6ce8-4784-840d-db4556b34474",
+  "our_name": "SALEH Mohammed",
+  "our_name_en": "SALEH Mohammed",
+  "country": "IQ",
+  "candidates": [
+   {
+    "umb_id": "3070",
+    "umb_name": "SALEH Mohamed",
+    "fed": "IQ"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3376,
+  "documentId": "07adfa21-c751-47f2-b6bb-90c8115225ed",
+  "our_name": "MONTOYA Camilo",
+  "our_name_en": "MONTOYA Camilo",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "1383",
+    "umb_name": "MONTOYA Arley",
+    "fed": "CO"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 371,
+  "documentId": "3de8302f-a52c-11f0-901e-0a6230412745",
+  "our_name": "HOVORKA Stipan",
+  "our_name_en": null,
+  "country": "CZ",
+  "candidates": [
+   {
+    "umb_id": "0390",
+    "umb_name": "HOVORKA Stepan",
+    "fed": "CZ"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2175,
+  "documentId": "2eeccea2-b900-4aef-98d9-4ccef8de7895",
+  "our_name": "MORTENSEN Marianne",
+  "our_name_en": "MORTENSEN Marianne",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "2319",
+    "umb_name": "MORTENSEN Marianne",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "7002",
+    "umb_name": "MORTENSEN Marianne",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 519,
+  "documentId": "3de9a38f-a52c-11f0-901e-0a6230412745",
+  "our_name": "KEITH Alan",
+  "our_name_en": null,
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "0261",
+    "umb_name": "KEITH Allan",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "3613",
+    "umb_name": "KEITH Allan II",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 150,
+  "documentId": "3de74415-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΣΕΛΕΒΕΝΤΑΣ Χαραλαμπος",
+  "our_name_en": "SELEVENTAS Charalabos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3196",
+    "umb_name": "SELEVENTAS Dimitrios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1997",
+    "umb_name": "SELEVENTAS Charis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2383,
+  "documentId": "7dd85d20-beaf-477b-b16d-0c7f8dc1b3d2",
+  "our_name": "ARNAU Ricard",
+  "our_name_en": "ARNAU Ricard",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "8138",
+    "umb_name": "ARNAU Aleix",
+    "fed": "ES"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3405,
+  "documentId": "cd5849e2-15d1-4111-9d53-105af3bb094e",
+  "our_name": "SANCHEZ Ubaldo",
+  "our_name_en": "SANCHEZ Ubaldo",
+  "country": "MX",
+  "candidates": [
+   {
+    "umb_id": "3468",
+    "umb_name": "SANCHEZ Ubaldo",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "8041",
+    "umb_name": "SANCHEZ Ubaldo",
+    "fed": "MX"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3789,
+  "documentId": "d1a84b09-dd09-4743-b656-46f79850bb08",
+  "our_name": "WON Jae Yoon",
+  "our_name_en": "WON Jae Yoon",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3148",
+    "umb_name": "WON Jae Yoon",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3516",
+    "umb_name": "WON Jae Yoon",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 653,
+  "documentId": "3debc9e3-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΝΕΟΦΥΤΟΣ Αλμπερτ Κωνσταντινος",
+  "our_name_en": "NEOFYTOS Albert Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2330",
+    "umb_name": "NEOFYTOS Almpert Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1178,
+  "documentId": "3df14e95-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΗΜΗΤΡΙΟΥ Κωστας",
+  "our_name_en": "PAPADIMITRIOU Kostas",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0892",
+    "umb_name": "PAPADIMITRIOU Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4099,
+  "documentId": "a8cb9ef9-31f0-42ad-a0b4-2d50df6237cf",
+  "our_name": "Paulo Palhares",
+  "our_name_en": "Paulo Palhares",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "2634",
+    "umb_name": "Paulo Palhares",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2455",
+    "umb_name": "PALHARES Paulo",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 705,
+  "documentId": "3debfece-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΕΤΑΞΑΣ Αντωνιος",
+  "our_name_en": "METAXAS Antonios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2360",
+    "umb_name": "METAXAS Antonis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2589,
+  "documentId": "bc8c1ca3-6863-4e68-8005-07d377c78715",
+  "our_name": "YAMAN Haci Arap",
+  "our_name_en": "YAMAN Haci Arap",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2368",
+    "umb_name": "YAMAN Haci Arap",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "2392",
+    "umb_name": "ARAP YAMAN Haci",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2690,
+  "documentId": "ae0ff1de-d745-44f6-8867-72b255270319",
+  "our_name": "SVENSSON Mio",
+  "our_name_en": "SVENSSON Mio",
+  "country": "SE",
+  "candidates": [
+   {
+    "umb_id": "3395",
+    "umb_name": "SVENSSON Mio",
+    "fed": "SE"
+   },
+   {
+    "umb_id": "8230",
+    "umb_name": "SVENSSON Mio",
+    "fed": "SE"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3384,
+  "documentId": "ae0d9e85-d2b0-44bf-ae8d-cfc97ce79cf4",
+  "our_name": "MARTINEZ Duvan",
+  "our_name_en": "MARTINEZ Duvan",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3684",
+    "umb_name": "MARTINEZ Duvan",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "8175",
+    "umb_name": "MARTINEZ Duvan",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4650,
+  "documentId": "459e792b-a814-4598-b176-07ade05f3221",
+  "our_name": "LUONG Thi Thom",
+  "our_name_en": "LUONG Thi Thom",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3719",
+    "umb_name": "LUONG Thi Thom",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "7419",
+    "umb_name": "LUONG Thi Thom",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 843,
+  "documentId": "3ded472d-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΑΜΜΟΣ Ηλιας",
+  "our_name_en": "RAMMOS Ilias",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2274",
+    "umb_name": "RAMMOS Elias",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 861,
+  "documentId": "3dede3dd-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΤΕΡΟΣ Ελευθεριος",
+  "our_name_en": "PATEROS Elevtherios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3627",
+    "umb_name": "PATEROS Eleftherios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4424,
+  "documentId": "4526d78a-ff59-4cc1-a514-74bba3756c38",
+  "our_name": "FUKAO Noriko",
+  "our_name_en": "FUKAO Noriko",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "2332",
+    "umb_name": "FUKAO Noriko",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7183",
+    "umb_name": "FUKAO Noriko",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 879,
+  "documentId": "3dedf6e9-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΕΩΡΓΙΟΥ Γεωργιος",
+  "our_name_en": "GEORGIOU Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3310",
+    "umb_name": "GEORGIOU Ioannis Alexios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1750,
+  "documentId": "tyc4ybyrk7ilyli8cppe429d",
+  "our_name": "ΔΗΜΟΥ Ανδρεας",
+  "our_name_en": "DIMOU Andreas",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3309",
+    "umb_name": "DIMOU Manolis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3153,
+  "documentId": "97f98083-3651-4049-807c-b153a8d8cb55",
+  "our_name": "BAKKER Matthijs",
+  "our_name_en": "BAKKER Matthijs",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "7297",
+    "umb_name": "BAKKER Sabine",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3400,
+  "documentId": "67869687-d6d1-4712-9728-e6f62239f35a",
+  "our_name": "LEON Lara Jose Isidro",
+  "our_name_en": "LEON Lara Jose Isidro",
+  "country": "MX",
+  "candidates": [
+   {
+    "umb_id": "3471",
+    "umb_name": "LEON Isidro",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "3686",
+    "umb_name": "LEON Lara Jose Isidro",
+    "fed": "MX"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 693,
+  "documentId": "3debf26e-a52c-11f0-901e-0a6230412745",
+  "our_name": "ATHANASIOU John",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0591",
+    "umb_name": "ATHANASIOU Athanasios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0889",
+    "umb_name": "ATHANASIOU Michalis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3763,
+  "documentId": "3b61158f-6d3d-4963-8de1-4abd8e9aed09",
+  "our_name": "REFASSI Badreddine",
+  "our_name_en": "REFASSI Badreddine",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "3076",
+    "umb_name": "REFASSI Abdelghani",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 684,
+  "documentId": "3debe929-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΛΟΥΜΠΑΡΔΙΑΣ Ανδρεας",
+  "our_name_en": "LOUBARDIAS Andreas",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8234",
+    "umb_name": "LOUBARDIAS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 441,
+  "documentId": "3de95c57-a52c-11f0-901e-0a6230412745",
+  "our_name": "HOFMAN Glen",
+  "our_name_en": null,
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0129",
+    "umb_name": "HOFMAN Glenn",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "2787",
+    "umb_name": "HOFMAN Andrea",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7222",
+    "umb_name": "HOFMAN Andrea",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 15,
+  "documentId": "3de62de9-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΠΑΤΣΟΥΛΗΣ Γεωργιος",
+  "our_name_en": "BATSOULIS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3455",
+    "umb_name": "BATSOULIS George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 681,
+  "documentId": "3debe600-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΙΖΟΣ Αγγελος",
+  "our_name_en": "RIZOS Agelos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2276",
+    "umb_name": "RIZOS Aggelos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1998,
+  "documentId": "044f08f2-e75d-4f0f-be7e-7c3e3db7f321",
+  "our_name": "MARQUES Carlos",
+  "our_name_en": "MARQUES Carlos",
+  "country": "LU",
+  "candidates": [
+   {
+    "umb_id": "3400",
+    "umb_name": "Marques C",
+    "fed": "LU"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2050,
+  "documentId": "a2e777f3-57ef-4251-b899-553394e6bf92",
+  "our_name": "PALLUCCA Lenny",
+  "our_name_en": "PALLUCCA Lenny",
+  "country": "LU",
+  "candidates": [
+   {
+    "umb_id": "3653",
+    "umb_name": "PALLUCCA Carlo",
+    "fed": "LU"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 590,
+  "documentId": "3deafbef-a52c-11f0-901e-0a6230412745",
+  "our_name": "KIM Hyung Kon",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0393",
+    "umb_name": "KIM Hyeong Kon",
+    "fed": "KR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 572,
+  "documentId": "3dea657a-a52c-11f0-901e-0a6230412745",
+  "our_name": "DO Nguyen Trung Hau",
+  "our_name_en": null,
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2027",
+    "umb_name": "NGUYEN Tran Thanh Tu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2978",
+    "umb_name": "NGUYEN Hoan Tat",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2977",
+    "umb_name": "NGUYEN Van Tai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2723",
+    "umb_name": "NGUYEN Van Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2179,
+  "documentId": "2719ec2a-bc0f-4c01-8cf9-0af0cf9b49f8",
+  "our_name": "DASKE Steffi",
+  "our_name_en": "Daske Steffi",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "0731",
+    "umb_name": "DASKE Sven",
+    "fed": "DE"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 131,
+  "documentId": "3de73b69-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPAOIKONOMOU Michalis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0820",
+    "umb_name": "MICHALIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 184,
+  "documentId": "3de7e0d0-a52c-11f0-901e-0a6230412745",
+  "our_name": "VEROULIS Michalis",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0820",
+    "umb_name": "MICHALIS Athanasios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 800,
+  "documentId": "3ded0b4f-a52c-11f0-901e-0a6230412745",
+  "our_name": "CHALKIADAKIS Lambros",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3631",
+    "umb_name": "CHALKIADAKIS Emmanuel",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2511,
+  "documentId": "d3427a80-f2bf-4fc6-812f-6a41246c50ab",
+  "our_name": "KARA Yigit Baran",
+  "our_name_en": "KARA Yigit Baran",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2127",
+    "umb_name": "KARA Volkan Ozgur",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "0556",
+    "umb_name": "KARA Ahmet",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1595",
+    "umb_name": "KARA Haluk",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2301,
+  "documentId": "40ca5dc1-a575-485c-a172-0c85e8538724",
+  "our_name": "SCHEUR Van De Peter",
+  "our_name_en": "Scheur van de Peter",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2521",
+    "umb_name": "Peter Francisco",
+    "fed": "ZA"
+   },
+   {
+    "umb_id": "0672",
+    "umb_name": "PETER Palffy",
+    "fed": "SE"
+   },
+   {
+    "umb_id": "3169",
+    "umb_name": "PETER Hans Josef",
+    "fed": "DE"
+   },
+   {
+    "umb_id": "0440",
+    "umb_name": "VAN DE VEN Harrie",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "3678",
+    "umb_name": "VAN DE KLUNDERT Jack",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "0939",
+    "umb_name": "VAN DER HEIJDEN Peter",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2390,
+  "documentId": "b7980df4-5c85-4d51-a218-9911eb77e31a",
+  "our_name": "FLORENT Julien",
+  "our_name_en": "FLORENT Julien",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "8197",
+    "umb_name": "FLORENT Louıs",
+    "fed": "FR"
+   },
+   {
+    "umb_id": "8204",
+    "umb_name": "FLORENT Louis",
+    "fed": "FR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2143,
+  "documentId": "cdb3cffd-9c0b-4791-a43e-0154f1ceeff3",
+  "our_name": "LIST Rico",
+  "our_name_en": "List Rico",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1363",
+    "umb_name": "RICO Ignacio",
+    "fed": "MX"
+   },
+   {
+    "umb_id": "1936",
+    "umb_name": "RICO Jesus",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2125,
+  "documentId": "647acd2d-38d4-4351-9151-bd5c9c739803",
+  "our_name": "DANIEL Ricardo Lopez",
+  "our_name_en": "Daniel Ricardo LOPEZ",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3120",
+    "umb_name": "LOPEZ Diego",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3128",
+    "umb_name": "LOPEZ Oscar",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "2159",
+    "umb_name": "LOPEZ Yampol",
+    "fed": "GT"
+   },
+   {
+    "umb_id": "1323",
+    "umb_name": "LOPEZ Jhonny",
+    "fed": "BO"
+   },
+   {
+    "umb_id": "0874",
+    "umb_name": "LOPEZ Alirio",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "1827",
+    "umb_name": "LOPEZ Luis",
+    "fed": "CR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 335,
+  "documentId": "3de81b0a-a52c-11f0-901e-0a6230412745",
+  "our_name": "REYES Pedro",
+  "our_name_en": null,
+  "country": "EC",
+  "candidates": [
+   {
+    "umb_id": "1605",
+    "umb_name": "REYES PRIETO PONGUILLO Pedro",
+    "fed": "EC"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 913,
+  "documentId": "3deea238-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΑΚΗΣ Ντιμιτρισα",
+  "our_name_en": "PAPADAKIS Dimitris",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0510",
+    "umb_name": "PAPADAKIS John",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4708,
+  "documentId": "e245f996-dbcc-4871-9395-cae9a1299c3f",
+  "our_name": "KOSTER Henk",
+  "our_name_en": "KOSTER Henk",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "3105",
+    "umb_name": "KOSTER Robert",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 596,
+  "documentId": "3deb01b7-a52c-11f0-901e-0a6230412745",
+  "our_name": "MORALES Robinson",
+  "our_name_en": null,
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0537",
+    "umb_name": "MORALES Daniel",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "0282",
+    "umb_name": "MORALES Julian",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "3022",
+    "umb_name": "MORALES Jair",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7326",
+    "umb_name": "MORALES Yuriam",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7344",
+    "umb_name": "MORALES Mara",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7339",
+    "umb_name": "MORALES Maria",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3077,
+  "documentId": "750f57d8-b9d6-41f5-980d-b217594dacd8",
+  "our_name": "DEMIR Kaan",
+  "our_name_en": "DEMIR Kaan",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "3349",
+    "umb_name": "DEMIR Ilhan",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1537",
+    "umb_name": "DEMIR Huseyin",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "8117",
+    "umb_name": "DEMIR Kagan",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3182,
+  "documentId": "ee93bf19-1ce0-4694-b57a-aebab88cbea9",
+  "our_name": "CEYLAN Mustafa",
+  "our_name_en": "CEYLAN Mustafa",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "3714",
+    "umb_name": "CEYLAN Mustafa Oguz",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2535,
+  "documentId": "2ec1e56f-0251-400a-9449-fb9a6f631e75",
+  "our_name": "BEERSMA Jetty",
+  "our_name_en": "BEERSMA Jetty",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "2875",
+    "umb_name": "BEERSMA Jetty",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7261",
+    "umb_name": "BEERSMA Jetty",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2137,
+  "documentId": "f7ec2f98-5b2e-45fc-a716-08e5a3c4af29",
+  "our_name": "DAVID Nicolas",
+  "our_name_en": "DAVID NICOLAS",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "8192",
+    "umb_name": "DAVID Noah",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2623,
+  "documentId": "d08f6b35-23d6-422b-90b7-502567c2c4a5",
+  "our_name": "GENC Brhan",
+  "our_name_en": "GENC Brhan",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1510",
+    "umb_name": "GENC Burhan",
+    "fed": "TR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 906,
+  "documentId": "3dee96f1-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΡΑΠΟΝΙΑΡΗΣ Κωσταντινος",
+  "our_name_en": "PARAPONIARIS Kostantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2567",
+    "umb_name": "PARAPONIARIS Kostas",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3535,
+  "documentId": "97b52254-745f-419c-bb7a-a300ba0a15e5",
+  "our_name": "ESCUDEIRO Jose",
+  "our_name_en": "ESCUDEIRO Jose",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "1978",
+    "umb_name": "ESCUDEIRO Jose",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2631",
+    "umb_name": "JOSE Escudeiro",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 664,
+  "documentId": "3debd4b4-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Σπυριδων",
+  "our_name_en": "PAPADOPOULOS Spyridon",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 977,
+  "documentId": "3def77a7-a52c-11f0-901e-0a6230412745",
+  "our_name": "GEVEZOS Marios",
+  "our_name_en": "GEVEZOS Marios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0544",
+    "umb_name": "GEVEZOS Dimitrios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "0787",
+    "umb_name": "GEVEZOS K",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 706,
+  "documentId": "3debffd7-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΟΥΦΟΣ Γεωργιος",
+  "our_name_en": "KOUFOS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2572",
+    "umb_name": "KOUFOS George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3078,
+  "documentId": "2ca21e71-8163-455d-8797-415011ce5b0f",
+  "our_name": "KORKMAZ Cinar",
+  "our_name_en": "KORKMAZ Cinar",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1982",
+    "umb_name": "KORKMAZ Fatih",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1519",
+    "umb_name": "CINAR Cem Tolga",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 849,
+  "documentId": "3ded4f67-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΣΤΕΡΓΙΟΥ Γεωργιος",
+  "our_name_en": "STERGIOU Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1160",
+    "umb_name": "STERGIOU George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 556,
+  "documentId": "3dea5005-a52c-11f0-901e-0a6230412745",
+  "our_name": "LE Hoang Mai Phuoc",
+  "our_name_en": null,
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "3260",
+    "umb_name": "HOANG Dinh Long",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2658",
+    "umb_name": "HOANG Duc Tai",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4577,
+  "documentId": "6bb2bc03-ad40-4c02-8ae8-82eb6bd5f84d",
+  "our_name": "YAMADA Shigeko",
+  "our_name_en": "YAMADA Shigeko",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "2263",
+    "umb_name": "YAMADA Shigeko",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7296",
+    "umb_name": "YAMADA Shigeko",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 910,
+  "documentId": "3dee9db8-a52c-11f0-901e-0a6230412745",
+  "our_name": "IOANNIDIS Spiros",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1990",
+    "umb_name": "IOANNIDIS George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2425,
+  "documentId": "0c21bac4-34e6-4296-be5c-9d5f4e63301d",
+  "our_name": "SORENSEN Jacop",
+  "our_name_en": "SORENSEN Jacop",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1774",
+    "umb_name": "SORENSEN Jacob",
+    "fed": "DK"
+   },
+   {
+    "umb_id": "1436",
+    "umb_name": "SORENSEN Danny",
+    "fed": "DK"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1111,
+  "documentId": "3df0a3a7-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΕΩΡΓΙΟΥ Παναγιωτης",
+  "our_name_en": "GEORGIOU Panagiotis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3310",
+    "umb_name": "GEORGIOU Ioannis Alexios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4495,
+  "documentId": "e5bd4105-38d4-4d65-9791-0292274eab5d",
+  "our_name": "GIRGIS Kyrollos",
+  "our_name_en": "GIRGIS Kyrollos",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "8235",
+    "umb_name": "GIRGIS Fady",
+    "fed": "EG"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1180,
+  "documentId": "3df14fe2-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΑΠΑΔΟΠΟΥΛΟΣ Κυζουλης Κωνσταντινος",
+  "our_name_en": "PAPADOPOULOS Kyzoulis Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1988",
+    "umb_name": "PAPADOPOULOS Fanis",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2166,
+  "documentId": "2f9cf283-0610-4465-8bac-ddbbdb3c40f9",
+  "our_name": "GOK Arzu",
+  "our_name_en": "GOK Arzu",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2481",
+    "umb_name": "GOK Arzu",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "7012",
+    "umb_name": "GOK Arzu",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 163,
+  "documentId": "3de74c09-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΘΛΙΒΕΡΟΣ Γεωργιος",
+  "our_name_en": "THLIVEROS Georgios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0590",
+    "umb_name": "THLIVEROS George",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 341,
+  "documentId": "3de81eae-a52c-11f0-901e-0a6230412745",
+  "our_name": "ELMESSERY Mohamed",
+  "our_name_en": null,
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "0530",
+    "umb_name": "MOHAMED Zayed",
+    "fed": "EG"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 345,
+  "documentId": "3de8211b-a52c-11f0-901e-0a6230412745",
+  "our_name": "BITETTI Andre",
+  "our_name_en": null,
+  "country": "IT",
+  "candidates": [
+   {
+    "umb_id": "0205",
+    "umb_name": "BITETTI Andrea",
+    "fed": "IT"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 529,
+  "documentId": "3dea2fd8-a52c-11f0-901e-0a6230412745",
+  "our_name": "PETIT Johann",
+  "our_name_en": null,
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "7254",
+    "umb_name": "PETIT Lucie",
+    "fed": "FR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 21,
+  "documentId": "3de632d2-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΧΑΛΚΙΑΔΑΚΗΣ Εμμανουηλ",
+  "our_name_en": "CHALKIADAKIS Emmanouil",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3631",
+    "umb_name": "CHALKIADAKIS Emmanuel",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 122,
+  "documentId": "3de735a7-a52c-11f0-901e-0a6230412745",
+  "our_name": "PAPADIMITRIOU Dimitris",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0892",
+    "umb_name": "PAPADIMITRIOU Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 794,
+  "documentId": "3ded0130-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΚΙΝΤΑΤΟΣ Στεφανος",
+  "our_name_en": "KINTATOS Stefanos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1615",
+    "umb_name": "KINTATOS Elefterios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1167",
+    "umb_name": "KINTATOS N",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 1671,
+  "documentId": "gpdyugk6zds1eyam64zwvzwj",
+  "our_name": "ΜΑΝΤΖΩΡΟΣ Ευστρατιος",
+  "our_name_en": "MANTZOROS Evstratios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2111",
+    "umb_name": "MANTZOROS Efstratios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 701,
+  "documentId": "3debfaad-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΦΕΣΑΤΙΔΗΣ Ελευθεριος",
+  "our_name_en": "FESATIDIS Elevtherios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1991",
+    "umb_name": "FESATIDIS Lefteris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 707,
+  "documentId": "3dec00f1-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΗΓΟΥΤΣΟΣ Δημητριος",
+  "our_name_en": "RIGOUTSOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "2570",
+    "umb_name": "RIGOUTSOS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4671,
+  "documentId": "0018e7e0-44af-4db8-88c1-47a1424524d7",
+  "our_name": "HENDRICKX Eric",
+  "our_name_en": "HENDRICKX Eric",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "0416",
+    "umb_name": "HENDRICKX Rudi",
+    "fed": "BE"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 3012,
+  "documentId": "eb891082-14c5-4d01-87fc-ef3e228e2cc1",
+  "our_name": "SCHRØDER Allan",
+  "our_name_en": "Schrøder Allan",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "0615",
+    "umb_name": "SCHRODER Allen",
+    "fed": "DK"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 890,
+  "documentId": "3dee84ef-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΔΑΣΚΑΛΟΥΔΗΣ Νικολαος",
+  "our_name_en": "DASKALOUDIS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3725",
+    "umb_name": "DASKALOUDIS Nikos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1184,
+  "documentId": "3df1529a-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΣ Κωνσταντινος",
+  "our_name_en": "ANAGNOSTOPOULOS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1995",
+    "umb_name": "ANAGNOSTOPOULOS George",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "3624",
+    "umb_name": "ANAGNOSTOPOULOS Ioannis",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4646,
+  "documentId": "dda30e0f-8c14-45c5-87a7-4018705ab5a9",
+  "our_name": "HO Quan Thai",
+  "our_name_en": "HO Quan Thai",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2712",
+    "umb_name": "THAI Hong Chiem",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2663",
+    "umb_name": "THAI HONG Phuong",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2030",
+    "umb_name": "THAI Dai Khanh",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 170,
+  "documentId": "3de74fb6-a52c-11f0-901e-0a6230412745",
+  "our_name": "TSAKLIDIS Nikos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1710",
+    "umb_name": "TSAKLIDIS Nikolaos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1653,
+  "documentId": "ewuxfud7nucjinxg84edlsnj",
+  "our_name": "WILKOWSKI Joeri",
+  "our_name_en": null,
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "8038",
+    "umb_name": "WILKOWSKI Joeri",
+    "fed": "NL"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 4992,
+  "documentId": "ovjdqyaih7rwm57vyvsacwt0",
+  "our_name": "CHRISTOPOULOU Konstantina",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "7474",
+    "umb_name": "CHRISTOPOULOU Konstantina",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "8219",
+    "umb_name": "CHRISTOPOULOU Konstantina",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2288,
+  "documentId": "7678f1f5-caef-46c0-8d90-64ccb42fbda4",
+  "our_name": "GREWE Günter",
+  "our_name_en": "Grewe Günter",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2508",
+    "umb_name": "GUNTER Lars",
+    "fed": "DE"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2536,
+  "documentId": "06108066-d7ba-4252-a7e7-92434677a84e",
+  "our_name": "BEERSMA-GERRITSEN Pauline",
+  "our_name_en": "BEERSMA-GERRITSEN Pauline",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "7209",
+    "umb_name": "GERRITSEN Pauline",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "2877",
+    "umb_name": "BEERSMA Gerritsen",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7298",
+    "umb_name": "BEERSMA Gerritsen",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2087,
+  "documentId": "a4c5f8c0-6f7f-4823-af7c-a5922469cb1c",
+  "our_name": "SANCHEZ Sergio",
+  "our_name_en": "SANCHEZ Sergio",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "3542",
+    "umb_name": "SANCHEZ Agustin",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "0109",
+    "umb_name": "SANCHEZ Daniel",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "0989",
+    "umb_name": "SANCHEZ Faraco Jaime",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2310,
+  "documentId": "261ee635-ede1-46d8-b393-803467c802a4",
+  "our_name": "GARCIA Adria",
+  "our_name_en": "GARCIA Adria",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "8137",
+    "umb_name": "GARCIA Toni",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1182",
+    "umb_name": "GARCIA CALVO Julian Angel",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "0262",
+    "umb_name": "GARCIA ALARCON Ricardo",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "2793",
+    "umb_name": "GARCIA Samuel",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1820",
+    "umb_name": "GARCIA PEREZ Angel",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "1940",
+    "umb_name": "GARCIA CIURANA Carlos",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2167,
+  "documentId": "e510d362-aec6-4aa8-8be6-a522bfecda4a",
+  "our_name": "MICHALKOVA Irena",
+  "our_name_en": "MICHALKOVA Irena",
+  "country": "CZ",
+  "candidates": [
+   {
+    "umb_id": "2236",
+    "umb_name": "MICHALKOVA Irena",
+    "fed": "CZ"
+   },
+   {
+    "umb_id": "7185",
+    "umb_name": "MICHALKOVA Irena",
+    "fed": "CZ"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2547,
+  "documentId": "52bd2191-c414-47b2-ba73-4732a1337cca",
+  "our_name": "BARAN Kara Yigit",
+  "our_name_en": "Baran KARA Yigit",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2127",
+    "umb_name": "KARA Volkan Ozgur",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "0556",
+    "umb_name": "KARA Ahmet",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "1595",
+    "umb_name": "KARA Haluk",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2694,
+  "documentId": "d573a0b6-3e5a-4a54-8a4d-9e83174391c5",
+  "our_name": "MARTINEZ Bruno",
+  "our_name_en": "MARTINEZ Bruno",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "3460",
+    "umb_name": "MARTINEZ Bruno",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "8161",
+    "umb_name": "MARTINEZ Bruno",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2382,
+  "documentId": "ca84b526-2bae-49d5-803c-e637d90754d9",
+  "our_name": "ALBERT José",
+  "our_name_en": "ALBERT José",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1833",
+    "umb_name": "JOSE Torrisco Enrique",
+    "fed": "ES"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2930,
+  "documentId": "cf44fc98-1b21-4cc4-834b-b49c085ad6cf",
+  "our_name": "ZOTOV Arturo",
+  "our_name_en": "ZOTOV Arturo",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "3216",
+    "umb_name": "ZOTOV Arturo",
+    "fed": "ES"
+   },
+   {
+    "umb_id": "8061",
+    "umb_name": "ZOTOV Arturo",
+    "fed": "ES"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3414,
+  "documentId": "52419322-9774-432c-ae6b-1ed18235a9c6",
+  "our_name": "SANDOVAL Johana",
+  "our_name_en": "SANDOVAL Johana",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3691",
+    "umb_name": "SANDOVAL Johana",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7191",
+    "umb_name": "SANDOVAL Johana",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2121,
+  "documentId": "699d39f0-f1b5-4e0f-a143-246671bf627b",
+  "our_name": "DRIESSEN Ernst",
+  "our_name_en": "Driessen Ernst",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "2359",
+    "umb_name": "ERNST Dieter",
+    "fed": "DE"
+   },
+   {
+    "umb_id": "2779",
+    "umb_name": "DRIESSEN Fred",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "2848",
+    "umb_name": "DRIESSEN Arno",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3479,
+  "documentId": "2df73c5a-4f45-4a8c-9167-04cacea16d02",
+  "our_name": "YASUMA Kaori",
+  "our_name_en": "YASUMA Kaori",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "1248",
+    "umb_name": "YASUMA Kaori",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7299",
+    "umb_name": "YASUMA Kaori",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2895,
+  "documentId": "a9bedf84-c281-4dc6-b74c-7b99a4f85c3f",
+  "our_name": "BOLLANSEE Toon",
+  "our_name_en": "BOLLANSEE Toon",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "8064",
+    "umb_name": "BOLLANSEE Toon",
+    "fed": "BE"
+   }
+  ],
+  "why": "διπλό ID στη λίστα UMB"
+ },
+ {
+  "player_id": 1025,
+  "documentId": "3defb969-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΡΑΜΟΣ Βασιλης",
+  "our_name_en": "RAMOS Vasilis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0971",
+    "umb_name": "RAMOS Vasileios",
+    "fed": "GR"
+   },
+   {
+    "umb_id": "1162",
+    "umb_name": "RAMOS Elias",
+    "fed": "GR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3539,
+  "documentId": "2aa3b4ee-b1c1-4703-9c51-8008c05139a9",
+  "our_name": "Pinto Vítor",
+  "our_name_en": "Pinto Vítor",
+  "country": "PT",
+  "candidates": [
+   {
+    "umb_id": "2454",
+    "umb_name": "PINTO Vitor",
+    "fed": "PT"
+   },
+   {
+    "umb_id": "2287",
+    "umb_name": "Pinto Vítor",
+    "fed": "PT"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 3554,
+  "documentId": "87a7783a-7071-4b31-a80b-08629df63b95",
+  "our_name": "LE Quoc Ho",
+  "our_name_en": "LE Quoc Ho",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2726",
+    "umb_name": "QUOC Dinh Nguyen",
+    "fed": "VN"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2168,
+  "documentId": "f91442eb-6b78-41f5-9d2a-189e96c1bfd4",
+  "our_name": "KARAKASLI Guzin Mujde",
+  "our_name_en": "KARAKASLI Guzin Mujde",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2478",
+    "umb_name": "KARAKASLI Mujde",
+    "fed": "TR"
+   },
+   {
+    "umb_id": "7009",
+    "umb_name": "KARAKASLI Guzin Mujde",
+    "fed": "TR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4050,
+  "documentId": "be319104-fd64-493d-be8c-16cb8fe94a8a",
+  "our_name": "GIL Woo Chal",
+  "our_name_en": "GIL Woo Chal",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "2312",
+    "umb_name": "Gil Woo Cheol",
+    "fed": "KR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2127,
+  "documentId": "400f25eb-e4b2-4247-9692-c63f662c4014",
+  "our_name": "CAMILO Gomez",
+  "our_name_en": "Camilo GOMEZ",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "3240",
+    "umb_name": "GOMEZ Soledad",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "0877",
+    "umb_name": "GOMEZ Diego",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7189",
+    "umb_name": "GOMEZ Soledad",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "7403",
+    "umb_name": "GOMEZ Lucero",
+    "fed": "CO"
+   },
+   {
+    "umb_id": "8078",
+    "umb_name": "GOMEZ Santiago",
+    "fed": "CO"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4085,
+  "documentId": "b3b32707-ebbd-4857-9a2e-8408ac436564",
+  "our_name": "TU Thanh Nguyen",
+  "our_name_en": "TU Thanh Nguyen",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2027",
+    "umb_name": "NGUYEN Tran Thanh Tu",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2409",
+    "umb_name": "NGUYEN Dinh Quoc",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2978",
+    "umb_name": "NGUYEN Hoan Tat",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2977",
+    "umb_name": "NGUYEN Van Tai",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2418",
+    "umb_name": "NGUYEN Huu Thanh",
+    "fed": "VN"
+   },
+   {
+    "umb_id": "2723",
+    "umb_name": "NGUYEN Van Tri",
+    "fed": "VN"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2834,
+  "documentId": "1b0d5e16-e971-45a1-9574-f7a400f088f5",
+  "our_name": "HOFMAN Andrea",
+  "our_name_en": "Hofman Andrea",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "2787",
+    "umb_name": "HOFMAN Andrea",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "7222",
+    "umb_name": "HOFMAN Andrea",
+    "fed": "NL"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 2241,
+  "documentId": "9b62ce7c-599c-4cf5-93cb-76fe48e88bb2",
+  "our_name": "VIRTANEN Miika",
+  "our_name_en": "Virtanen Miika",
+  "country": "FI",
+  "candidates": [
+   {
+    "umb_id": "0792",
+    "umb_name": "VIRTANEN Jyri",
+    "fed": "FI"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2385,
+  "documentId": "d3073aa7-35a1-4809-9bbd-89493dc62695",
+  "our_name": "JANSSEN Marteen",
+  "our_name_en": "JANSSEN Marteen",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1048",
+    "umb_name": "JANSSEN Marco",
+    "fed": "BE"
+   },
+   {
+    "umb_id": "3386",
+    "umb_name": "JANSSEN Maarten",
+    "fed": "BE"
+   },
+   {
+    "umb_id": "2676",
+    "umb_name": "JANSSEN Wil",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "2846",
+    "umb_name": "JANSSEN Henk",
+    "fed": "NL"
+   },
+   {
+    "umb_id": "1219",
+    "umb_name": "JANSSEN Marc",
+    "fed": "BE"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 914,
+  "documentId": "3deea3a9-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΛΟΥMΠΑΡΔΙΑΣ Δημήτρης",
+  "our_name_en": "LOUBARDIAS Dimitris",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8234",
+    "umb_name": "LOUBARDIAS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1093,
+  "documentId": "3df09340-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ Αθανασιος",
+  "our_name_en": "GIANNAKOPOULOS Athanasios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0821",
+    "umb_name": "GIANNAKOPOULOS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1666,
+  "documentId": "xpmxdi3kow5tj928cu50nt5y",
+  "our_name": "ΠΑΠΑΚΩΝΣΤΑΝΤΙΝΟΥ Παναγιωτης",
+  "our_name_en": "PAPAKONSTANTINOU Panagiotis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0167",
+    "umb_name": "PAPAKONSTANTINOU Kostas",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 2010,
+  "documentId": "d3fedb9c-33b0-43c4-9809-5f9c1fe6a037",
+  "our_name": "VAN Yperen Francine",
+  "our_name_en": "van Yperen Francine",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "7075",
+    "umb_name": "VAN YPEREN Francien",
+    "fed": "NL"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 1072,
+  "documentId": "3df08684-a52c-11f0-901e-0a6230412745",
+  "our_name": "SIAKAVARAS Stavros",
+  "our_name_en": "SIAKAVARAS Stavros",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1197",
+    "umb_name": "SIAKAVARAS Lazaros",
+    "fed": "GR"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4024,
+  "documentId": "00f71fa7-b0cd-4d30-8767-8e6cc41b9bf2",
+  "our_name": "HIDA Orie",
+  "our_name_en": "HIDA Orie",
+  "country": "JP",
+  "candidates": [
+   {
+    "umb_id": "1964",
+    "umb_name": "HIDA Orie",
+    "fed": "JP"
+   },
+   {
+    "umb_id": "7005",
+    "umb_name": "HIDA Orie",
+    "fed": "JP"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4218,
+  "documentId": "1cb05985-8795-411c-90cc-3023c72676ef",
+  "our_name": "KANG Dongg Koongg",
+  "our_name_en": "KANG Dongg Koongg",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0385",
+    "umb_name": "KANG Ja In",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3266",
+    "umb_name": "KANG Min Jung",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "3095",
+    "umb_name": "KANG Kiwoong",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2022",
+    "umb_name": "KANG In Seok",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "0363",
+    "umb_name": "KANG Ho Gyu",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "2013",
+    "umb_name": "KANG Seung Gu",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4623,
+  "documentId": "9038d859-77b2-4431-b19d-4d7765e97c03",
+  "our_name": "LEE Mee Rae",
+  "our_name_en": "LEE Mee Rae",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "3537",
+    "umb_name": "LEE Hyong Rae",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "1878",
+    "umb_name": "LEE Mi Rae",
+    "fed": "KR"
+   },
+   {
+    "umb_id": "7059",
+    "umb_name": "LEE Mi Rae",
+    "fed": "KR"
+   }
+  ],
+  "why": "διφορούμενο"
+ },
+ {
+  "player_id": 4275,
+  "documentId": "29007a80-ed76-49b2-b6b0-ca741096ba62",
+  "our_name": "DE BIASI Daniele",
+  "our_name_en": "DE BIASI Daniele",
+  "country": "IT",
+  "candidates": [
+   {
+    "umb_id": "3623",
+    "umb_name": "DANIELE Luigi",
+    "fed": "IT"
+   }
+  ],
+  "why": "ίδιο επίθετο μόνο"
+ },
+ {
+  "player_id": 4588,
+  "documentId": "9c7249c9-0764-4bbe-aeb0-26ea477553aa",
+  "our_name": "CC DIAB Mohsen",
+  "our_name_en": "CC DIAB Mohsen",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "1638",
+    "umb_name": "DIAB Mohsen",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "1638",
+  "umb_name": "DIAB Mohsen",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2194,
+  "documentId": "d7075c08-cd83-4c8d-ac0d-6fed86bdb8ea",
+  "our_name": "BEHZAT Cetin",
+  "our_name_en": "BEHZAT Cetin",
+  "country": "CH",
+  "candidates": [
+   {
+    "umb_id": "0312",
+    "umb_name": "CETIN Behzat",
+    "fed": "CH"
+   }
+  ],
+  "umb_id": "0312",
+  "umb_name": "CETIN Behzat",
+  "umb_fed": "CH",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4083,
+  "documentId": "ea457a4b-fe65-4a08-95a1-5266d4f2d7c9",
+  "our_name": "THUAN Quoc Pham",
+  "our_name_en": "THUAN Quoc Pham",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "1856",
+    "umb_name": "PHAM Quoc Thuan",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "1856",
+  "umb_name": "PHAM Quoc Thuan",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4325,
+  "documentId": "202eaf7b-49f5-4779-bd8d-a16ead96ce14",
+  "our_name": "SIAKAVARAS Lazaros",
+  "our_name_en": "SIAKAVARAS Lazaros",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1197",
+    "umb_name": "SIAKAVARAS Lazaros",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "1197",
+  "umb_name": "SIAKAVARAS Lazaros",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4598,
+  "documentId": "163b9fd2-9cf9-4a7f-9db5-7887f3577b2c",
+  "our_name": "GG HALAWA Abdel-Hamid",
+  "our_name_en": "GG HALAWA Abdel-Hamid",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "1637",
+    "umb_name": "HALAWA Abdel Hamid",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "1637",
+  "umb_name": "HALAWA Abdel Hamid",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 410,
+  "documentId": "3de8c828-a52c-11f0-901e-0a6230412745",
+  "our_name": "SALMAN Gokhan",
+  "our_name_en": null,
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0226",
+    "umb_name": "SALMAN Gokhan",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "0226",
+  "umb_name": "SALMAN Gokhan",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3884,
+  "documentId": "95778811-90fa-4388-ab76-cb113f21184a",
+  "our_name": "ADEM Doganoglu",
+  "our_name_en": "ADEM Doganoglu",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "3262",
+    "umb_name": "DOGANOGLU Adem",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "3262",
+  "umb_name": "DOGANOGLU Adem",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3007,
+  "documentId": "a98dd5a1-91fa-434c-b774-0845f734980b",
+  "our_name": "MELING Sebastian",
+  "our_name_en": "Meling Sebastian",
+  "country": "NO",
+  "candidates": [
+   {
+    "umb_id": "3250",
+    "umb_name": "MELING Sebastian",
+    "fed": "NO"
+   }
+  ],
+  "umb_id": "3250",
+  "umb_name": "MELING Sebastian",
+  "umb_fed": "NO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4593,
+  "documentId": "d969de72-0f5c-4b65-b773-1478dfebbdec",
+  "our_name": "II ERCIYAS Ibrahim",
+  "our_name_en": "II ERCIYAS Ibrahim",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0378",
+    "umb_name": "ERCIYAS Ibrahim",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "0378",
+  "umb_name": "ERCIYAS Ibrahim",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4121,
+  "documentId": "8fd616c0-e60e-41cf-9860-ded80d4a1e73",
+  "our_name": "CEMAL Geyik Cem",
+  "our_name_en": "CEMAL Geyik Cem",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2849",
+    "umb_name": "GEYIK Cem",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "2849",
+  "umb_name": "GEYIK Cem",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 3 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3092,
+  "documentId": "yz3tedblrixwtquoa213ef00",
+  "our_name": "ΛΟΥΜΠΑΡΔΙΑΣ Δημήτριος",
+  "our_name_en": "LOUBARDIAS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8234",
+    "umb_name": "LOUBARDIAS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "8234",
+  "umb_name": "LOUBARDIAS Dimitrios",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2632,
+  "documentId": "44ca6482-b118-495b-a110-1f2996e75749",
+  "our_name": "HAACK-SØRENSEN Jacob",
+  "our_name_en": "Haack-Sørensen Jacob",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "1774",
+    "umb_name": "SORENSEN Jacob",
+    "fed": "DK"
+   }
+  ],
+  "umb_id": "1774",
+  "umb_name": "SORENSEN Jacob",
+  "umb_fed": "DK",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3447,
+  "documentId": "5966a997-4559-4282-a6cb-e05e7bfa3857",
+  "our_name": "GEYIK Cem",
+  "our_name_en": "GEYIK Cem",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2849",
+    "umb_name": "GEYIK Cem",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "2849",
+  "umb_name": "GEYIK Cem",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 3 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 416,
+  "documentId": "3de8cbf2-a52c-11f0-901e-0a6230412745",
+  "our_name": "MAS José-Maria",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "0211",
+    "umb_name": "MAS Jose Maria",
+    "fed": "ES"
+   }
+  ],
+  "umb_id": "0211",
+  "umb_name": "MAS Jose Maria",
+  "umb_fed": "ES",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 5,
+  "documentId": "3de6210f-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΝΤΩΝΙΟΥ Ιωαννης",
+  "our_name_en": "ANTONIOU Ioannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1170",
+    "umb_name": "ANTONIOU Ioannis",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "1170",
+  "umb_name": "ANTONIOU Ioannis",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2729,
+  "documentId": "593fb141-eff1-4cf0-b2f6-854c2c43af65",
+  "our_name": "ALTUNTASLAR Ibrahim Hayri",
+  "our_name_en": "ALTUNTASLAR Ibrahim Hayri",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1748",
+    "umb_name": "ALTUNTASLAR Hayri",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1748",
+  "umb_name": "ALTUNTASLAR Hayri",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 8,
+  "documentId": "3de62546-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΡΓΥΡΟΣ Χρηστος",
+  "our_name_en": "ARGYROS Christos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0888",
+    "umb_name": "ARGYROS Christos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0888",
+  "umb_name": "ARGYROS Christos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4223,
+  "documentId": "41e15603-db3d-4bcc-a3be-c22c48e70db4",
+  "our_name": "KIM Jae Sam",
+  "our_name_en": "KIM Jae Sam",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0901",
+    "umb_name": "KIM Jae Sam",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "0901",
+  "umb_name": "KIM Jae Sam",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3099,
+  "documentId": "f5b7b522-1ec7-4238-8a75-e5c87ec63626",
+  "our_name": "ZOLA Hansen Brian",
+  "our_name_en": "Zola Hansen Brian",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "1773",
+    "umb_name": "HANSEN Brian",
+    "fed": "DK"
+   }
+  ],
+  "umb_id": "1773",
+  "umb_name": "HANSEN Brian",
+  "umb_fed": "DK",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 541,
+  "documentId": "3dea3e02-a52c-11f0-901e-0a6230412745",
+  "our_name": "SAYGINER Semih",
+  "our_name_en": null,
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1829",
+    "umb_name": "SAYGINER Semih",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1829",
+  "umb_name": "SAYGINER Semih",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3624,
+  "documentId": "0087b8ab-651b-491e-a058-a5fd9cc41409",
+  "our_name": "ALTUNTASLAR Hayri",
+  "our_name_en": "ALTUNTASLAR Hayri",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1748",
+    "umb_name": "ALTUNTASLAR Hayri",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1748",
+  "umb_name": "ALTUNTASLAR Hayri",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4596,
+  "documentId": "f0504980-8502-4c65-b86d-a4b9c359e52a",
+  "our_name": "DD CHO Chi Yeon",
+  "our_name_en": "DD CHO Chi Yeon",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0277",
+    "umb_name": "CHO Chi Yeon",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "0277",
+  "umb_name": "CHO Chi Yeon",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4566,
+  "documentId": "be2b5de1-42f7-4610-bcae-c9857a92dd88",
+  "our_name": "KIM Bo Mi 2",
+  "our_name_en": "KIM Bo Mi 2",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "7092",
+    "umb_name": "KIM Bo Mi",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "7092",
+  "umb_name": "KIM Bo Mi",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4587,
+  "documentId": "66f5df83-4927-43e0-b04a-b6a5d5b1ecfc",
+  "our_name": "FF KIM Jae Sam",
+  "our_name_en": "FF KIM Jae Sam",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0901",
+    "umb_name": "KIM Jae Sam",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "0901",
+  "umb_name": "KIM Jae Sam",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3168,
+  "documentId": "a6e4f671-e56e-42ee-a9e4-293d4d02e01e",
+  "our_name": "",
+  "our_name_en": "HOFMAN Glenn",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0129",
+    "umb_name": "HOFMAN Glenn",
+    "fed": "NL"
+   }
+  ],
+  "umb_id": "0129",
+  "umb_name": "HOFMAN Glenn",
+  "umb_fed": "NL",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4234,
+  "documentId": "6550ab6c-4bc3-4562-b29c-d68681f025e8",
+  "our_name": "GEVEZOS Dimitrios",
+  "our_name_en": "GEVEZOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0544",
+    "umb_name": "GEVEZOS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0544",
+  "umb_name": "GEVEZOS Dimitrios",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4285,
+  "documentId": "4ec4e741-b94e-4018-ab95-f1d51b28ac7e",
+  "our_name": "OKCI Levent",
+  "our_name_en": "OKCI Levent",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1742",
+    "umb_name": "OKCI Levent",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1742",
+  "umb_name": "OKCI Levent",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3975,
+  "documentId": "c141eb15-3e06-4406-a42a-6c1e65b0575d",
+  "our_name": "HOSNY Medhat",
+  "our_name_en": "HOSNY Medhat",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "0618",
+    "umb_name": "HOSNY Medhat",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "0618",
+  "umb_name": "HOSNY Medhat",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4232,
+  "documentId": "5cf590aa-cce9-48ae-a461-ebefae8c28cc",
+  "our_name": "ARGYROS Christos",
+  "our_name_en": "ARGYROS Christos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0888",
+    "umb_name": "ARGYROS Christos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0888",
+  "umb_name": "ARGYROS Christos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 6,
+  "documentId": "3de62234-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΑΠΟΣΤΟΛΕΑΣ Δημητρης",
+  "our_name_en": "APOSTOLEAS Dimitris",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0588",
+    "umb_name": "APOSTOLEAS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0588",
+  "umb_name": "APOSTOLEAS Dimitris",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4590,
+  "documentId": "797964d5-eb7d-4d4f-89bd-22f4ce6c513d",
+  "our_name": "DD SOUMAGNE Pierre",
+  "our_name_en": "DD SOUMAGNE Pierre",
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "0160",
+    "umb_name": "SOUMAGNE Pierre",
+    "fed": "FR"
+   }
+  ],
+  "umb_id": "0160",
+  "umb_name": "SOUMAGNE Pierre",
+  "umb_fed": "FR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2414,
+  "documentId": "d93f7a3b-8712-42d5-ac1c-37940fd52f54",
+  "our_name": "HANSEN Brian",
+  "our_name_en": "HANSEN Brian",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "1773",
+    "umb_name": "HANSEN Brian",
+    "fed": "DK"
+   }
+  ],
+  "umb_id": "1773",
+  "umb_name": "HANSEN Brian",
+  "umb_fed": "DK",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 5015,
+  "documentId": "fqt5cjwrtdqjlj2i6zrpesb5",
+  "our_name": "PROFKA Konstantinos",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8218",
+    "umb_name": "PROFKA Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "8218",
+  "umb_name": "PROFKA Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3607,
+  "documentId": "7ee74894-951d-4b9b-9f4e-161610a398f3",
+  "our_name": "ANTONIOU Ioannis",
+  "our_name_en": "ANTONIOU Ioannis",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1170",
+    "umb_name": "ANTONIOU Ioannis",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "1170",
+  "umb_name": "ANTONIOU Ioannis",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3910,
+  "documentId": "503bc0c9-8525-4509-9b6c-58b8b5bf9a16",
+  "our_name": "CARRANCO Ricardo Jr",
+  "our_name_en": "CARRANCO Ricardo Jr",
+  "country": "US",
+  "candidates": [
+   {
+    "umb_id": "2221",
+    "umb_name": "CARRANCO Ricardo",
+    "fed": "US"
+   }
+  ],
+  "umb_id": "2221",
+  "umb_name": "CARRANCO Ricardo",
+  "umb_fed": "US",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4250,
+  "documentId": "ba90c3cb-43ed-4854-89d9-d3a623589aab",
+  "our_name": "DIAB Mohsen",
+  "our_name_en": "DIAB Mohsen",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "1638",
+    "umb_name": "DIAB Mohsen",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "1638",
+  "umb_name": "DIAB Mohsen",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4591,
+  "documentId": "f17e7d46-15fa-4332-af90-b6fc2d13695e",
+  "our_name": "JJ MARTINICORENA Cesar",
+  "our_name_en": "JJ MARTINICORENA Cesar",
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1841",
+    "umb_name": "MARTINICORENA Cesar",
+    "fed": "ES"
+   }
+  ],
+  "umb_id": "1841",
+  "umb_name": "MARTINICORENA Cesar",
+  "umb_fed": "ES",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 1532,
+  "documentId": "tkx54ikd6mzdu7es1py86oyt",
+  "our_name": "KAHOFER Arnim",
+  "our_name_en": "KAHOFER Arnim",
+  "country": "AT",
+  "candidates": [
+   {
+    "umb_id": "0154",
+    "umb_name": "KAHOFER Arnim",
+    "fed": "AT"
+   }
+  ],
+  "umb_id": "0154",
+  "umb_name": "KAHOFER Arnim",
+  "umb_fed": "AT",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3371,
+  "documentId": "29d01960-d838-4830-836f-5452a55e7790",
+  "our_name": "PHAM Quoc Thuan",
+  "our_name_en": "PHAM Quoc Thuan",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "1856",
+    "umb_name": "PHAM Quoc Thuan",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "1856",
+  "umb_name": "PHAM Quoc Thuan",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4177,
+  "documentId": "f9970948-efcf-4114-bbd5-11db277a59a0",
+  "our_name": "ERCIYAS Ibrahim",
+  "our_name_en": "ERCIYAS Ibrahim",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0378",
+    "umb_name": "ERCIYAS Ibrahim",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "0378",
+  "umb_name": "ERCIYAS Ibrahim",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 5010,
+  "documentId": "uskjry8m442ybded7okwe3x8",
+  "our_name": "LOUBARDIAS Dimitrios",
+  "our_name_en": null,
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8234",
+    "umb_name": "LOUBARDIAS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "8234",
+  "umb_name": "LOUBARDIAS Dimitrios",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2176,
+  "documentId": "bd565c03-1edf-444f-947c-28e6b1cfb8eb",
+  "our_name": "PRUIM-EMMENS Mirjam",
+  "our_name_en": "PRUIM-EMMENS Mirjam",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "7061",
+    "umb_name": "PRUIM Mirjam",
+    "fed": "NL"
+   }
+  ],
+  "umb_id": "7061",
+  "umb_name": "PRUIM Mirjam",
+  "umb_fed": "NL",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 361,
+  "documentId": "3de82be1-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΠΡΑΣΣΑΣ Κωνσταντινος",
+  "our_name_en": "PRASSAS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3165",
+    "umb_name": "PRASSAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "3165",
+  "umb_name": "PRASSAS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3584,
+  "documentId": "9800d0c4-4932-4302-b923-dbb80a56317d",
+  "our_name": "GEYIK Cem Cemal",
+  "our_name_en": "GEYIK Cem Cemal",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "2849",
+    "umb_name": "GEYIK Cem",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "2849",
+  "umb_name": "GEYIK Cem",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 3 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4077,
+  "documentId": "f5758aab-d679-4e78-b234-d78b4bfe22d1",
+  "our_name": "MINH Duc Tran",
+  "our_name_en": "MINH Duc Tran",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2009",
+    "umb_name": "TRAN Duc Minh",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "2009",
+  "umb_name": "TRAN Duc Minh",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3754,
+  "documentId": "1529388a-89c3-464a-97e1-ed859dbb4791",
+  "our_name": "CHRISTOFORIDIS Nikolaos",
+  "our_name_en": "CHRISTOFORIDIS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3449",
+    "umb_name": "CHRISTOFORIDIS Nikolaos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "3449",
+  "umb_name": "CHRISTOFORIDIS Nikolaos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4589,
+  "documentId": "292ef293-8d20-48d5-a11e-009c2bb81722",
+  "our_name": "CC SALMAN Gokhan",
+  "our_name_en": "SALMAN Gokhan",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "0226",
+    "umb_name": "SALMAN Gokhan",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "0226",
+  "umb_name": "SALMAN Gokhan",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3695,
+  "documentId": "6f468cfd-30cc-44c6-bff7-64be48132485",
+  "our_name": "CARRANCO Ricardo",
+  "our_name_en": "CARRANCO Ricardo",
+  "country": "US",
+  "candidates": [
+   {
+    "umb_id": "2221",
+    "umb_name": "CARRANCO Ricardo",
+    "fed": "US"
+   }
+  ],
+  "umb_id": "2221",
+  "umb_name": "CARRANCO Ricardo",
+  "umb_fed": "US",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4326,
+  "documentId": "fbabcb09-55df-49f1-99e8-7d37a023f514",
+  "our_name": "SONER Tas",
+  "our_name_en": "SONER Tas",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1211",
+    "umb_name": "TAS Soner",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1211",
+  "umb_name": "TAS Soner",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 53,
+  "documentId": "3de65a83-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΚΕΒΕΖΟΣ Δημητριος",
+  "our_name_en": "GEVEZOS Dimitrios",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0544",
+    "umb_name": "GEVEZOS Dimitrios",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0544",
+  "umb_name": "GEVEZOS Dimitrios",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3568,
+  "documentId": "1683d78a-1464-46e7-b892-1437c605f350",
+  "our_name": "TRAN Duc Minh",
+  "our_name_en": "TRAN Duc Minh",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "2009",
+    "umb_name": "TRAN Duc Minh",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "2009",
+  "umb_name": "TRAN Duc Minh",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4120,
+  "documentId": "9aec1013-f665-4efd-9efe-c37c944e3c3b",
+  "our_name": "APOSTOLEAS Dimitris",
+  "our_name_en": "APOSTOLEAS Dimitris",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0588",
+    "umb_name": "APOSTOLEAS Dimitris",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0588",
+  "umb_name": "APOSTOLEAS Dimitris",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3603,
+  "documentId": "5a427fd6-244a-4ed0-97ea-04933c152202",
+  "our_name": "SORENSEN Jacob",
+  "our_name_en": "SORENSEN Jacob",
+  "country": "DK",
+  "candidates": [
+   {
+    "umb_id": "1774",
+    "umb_name": "SORENSEN Jacob",
+    "fed": "DK"
+   }
+  ],
+  "umb_id": "1774",
+  "umb_name": "SORENSEN Jacob",
+  "umb_fed": "DK",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2738,
+  "documentId": "7a580d40-3fa7-4b7a-959c-b806aec2e289",
+  "our_name": "BJÖRNSTAD Jo",
+  "our_name_en": "Björnstad Jo",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "3414",
+    "umb_name": "BJORNSTAD Jo",
+    "fed": "NO"
+   }
+  ],
+  "umb_id": "3414",
+  "umb_name": "BJORNSTAD Jo",
+  "umb_fed": "NO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 260,
+  "documentId": "3de8134e-a52c-11f0-901e-0a6230412745",
+  "our_name": "KAHOFER Armin",
+  "our_name_en": "KAHOFER Arnim (merged→1532)",
+  "country": "AT",
+  "candidates": [
+   {
+    "umb_id": "0154",
+    "umb_name": "KAHOFER Arnim",
+    "fed": "AT"
+   }
+  ],
+  "umb_id": "0154",
+  "umb_name": "KAHOFER Arnim",
+  "umb_fed": "AT",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3140,
+  "documentId": "2bc54e58-54da-4845-95e1-160d716a26d2",
+  "our_name": "ROUFFA Marie Rose",
+  "our_name_en": "ROUFFA Marie Rose",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "7363",
+    "umb_name": "ROUFFA Marie Rose",
+    "fed": "BE"
+   }
+  ],
+  "umb_id": "7363",
+  "umb_name": "ROUFFA Marie Rose",
+  "umb_fed": "BE",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 14,
+  "documentId": "3de62cc8-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΜΠΑΡΤΣΩΚΑΣ Κωνσταντινος",
+  "our_name_en": "BARTSOKAS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0258",
+    "umb_name": "BARTSOKAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0258",
+  "umb_name": "BARTSOKAS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4070,
+  "documentId": "058b7162-5803-422c-be36-86a4fb8f904d",
+  "our_name": "DUC Kien Hua",
+  "our_name_en": "DUC Kien Hua",
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "1881",
+    "umb_name": "HUA KIEN DUC",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "1881",
+  "umb_name": "HUA KIEN DUC",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2634,
+  "documentId": "fc0b242d-290f-42fc-983d-d8900307f7d9",
+  "our_name": "SEBASTIAN Meling",
+  "our_name_en": "Sebastian MELING",
+  "country": "NO",
+  "candidates": [
+   {
+    "umb_id": "3250",
+    "umb_name": "MELING Sebastian",
+    "fed": "NO"
+   }
+  ],
+  "umb_id": "3250",
+  "umb_name": "MELING Sebastian",
+  "umb_fed": "NO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2466,
+  "documentId": "891bd807-74f8-4bd6-b402-c3316fdcb1d2",
+  "our_name": "PRUIM Mirjam",
+  "our_name_en": "Pruim Mirjam",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "7061",
+    "umb_name": "PRUIM Mirjam",
+    "fed": "NL"
+   }
+  ],
+  "umb_id": "7061",
+  "umb_name": "PRUIM Mirjam",
+  "umb_fed": "NL",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 153,
+  "documentId": "3de745ef-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΣΙΑΚΑΒΑΡΑΣ Λαζαρος",
+  "our_name_en": "SIAKAVARAS Lazaros",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "1197",
+    "umb_name": "SIAKAVARAS Lazaros",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "1197",
+  "umb_name": "SIAKAVARAS Lazaros",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 1536,
+  "documentId": "zu4pweqmcrnas6g354c4se04",
+  "our_name": "HOFMAN Glenn",
+  "our_name_en": "HOFMAN Glenn",
+  "country": "NL",
+  "candidates": [
+   {
+    "umb_id": "0129",
+    "umb_name": "HOFMAN Glenn",
+    "fed": "NL"
+   }
+  ],
+  "umb_id": "0129",
+  "umb_name": "HOFMAN Glenn",
+  "umb_fed": "NL",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4595,
+  "documentId": "c290dade-4396-413f-827f-762c461d76a0",
+  "our_name": "LL OKCI Levent",
+  "our_name_en": "LL OKCI Levent",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1742",
+    "umb_name": "OKCI Levent",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1742",
+  "umb_name": "OKCI Levent",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4597,
+  "documentId": "88a8b2aa-9635-47fa-9f97-6a29ca4b8b31",
+  "our_name": "JJ KIM Tae Kwan",
+  "our_name_en": "JJ KIM Tae Kwan",
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1876",
+    "umb_name": "KIM Tae Kwan",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "1876",
+  "umb_name": "KIM Tae Kwan",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 51,
+  "documentId": "3de6580f-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ Κωνσταντινος",
+  "our_name_en": "GIANNAKOPOULOS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0821",
+    "umb_name": "GIANNAKOPOULOS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0821",
+  "umb_name": "GIANNAKOPOULOS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 557,
+  "documentId": "3dea5182-a52c-11f0-901e-0a6230412745",
+  "our_name": "HUA Kien Duc",
+  "our_name_en": null,
+  "country": "VN",
+  "candidates": [
+   {
+    "umb_id": "1881",
+    "umb_name": "HUA KIEN DUC",
+    "fed": "VN"
+   }
+  ],
+  "umb_id": "1881",
+  "umb_name": "HUA KIEN DUC",
+  "umb_fed": "VN",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 422,
+  "documentId": "3de8cfcb-a52c-11f0-901e-0a6230412745",
+  "our_name": "SOUMAGNE Pierre",
+  "our_name_en": null,
+  "country": "FR",
+  "candidates": [
+   {
+    "umb_id": "0160",
+    "umb_name": "SOUMAGNE Pierre",
+    "fed": "FR"
+   }
+  ],
+  "umb_id": "0160",
+  "umb_name": "SOUMAGNE Pierre",
+  "umb_fed": "FR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 2462,
+  "documentId": "1abdda09-e72e-4eb4-86f5-05ab03b9f1da",
+  "our_name": "ROUFFA Marie-Rose",
+  "our_name_en": "ROUFFA Marie-Rose",
+  "country": "BE",
+  "candidates": [
+   {
+    "umb_id": "7363",
+    "umb_name": "ROUFFA Marie Rose",
+    "fed": "BE"
+   }
+  ],
+  "umb_id": "7363",
+  "umb_name": "ROUFFA Marie Rose",
+  "umb_fed": "BE",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 608,
+  "documentId": "3deb11a1-a52c-11f0-901e-0a6230412745",
+  "our_name": "KIM Tae Kwan ",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "1876",
+    "umb_name": "KIM Tae Kwan",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "1876",
+  "umb_name": "KIM Tae Kwan",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3520,
+  "documentId": "7eb6bb5b-472e-44aa-95f4-b387b3affd01",
+  "our_name": "BARTSOKAS Konstantinos",
+  "our_name_en": "BARTSOKAS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0258",
+    "umb_name": "BARTSOKAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0258",
+  "umb_name": "BARTSOKAS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4257,
+  "documentId": "13aef5fd-ebeb-443c-a6bd-c235caca5fe7",
+  "our_name": "HALAWA Abdel-Hamid",
+  "our_name_en": "HALAWA Abdel-Hamid",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "1637",
+    "umb_name": "HALAWA Abdel Hamid",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "1637",
+  "umb_name": "HALAWA Abdel Hamid",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 1102,
+  "documentId": "3df09bef-a52c-11f0-901e-0a6230412745",
+  "our_name": "ΧΡΙΣΤΟΦΟΡΙΔΗΣ Νικολαος",
+  "our_name_en": "CHRISTOFORIDIS Nikolaos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3449",
+    "umb_name": "CHRISTOFORIDIS Nikolaos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "3449",
+  "umb_name": "CHRISTOFORIDIS Nikolaos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 337,
+  "documentId": "3de81c43-a52c-11f0-901e-0a6230412745",
+  "our_name": "CRISTIAN Sanchez",
+  "our_name_en": null,
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0798",
+    "umb_name": "SANCHEZ Cristian",
+    "fed": "CO"
+   }
+  ],
+  "umb_id": "0798",
+  "umb_name": "SANCHEZ Cristian",
+  "umb_fed": "CO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4599,
+  "documentId": "8cd60682-479c-4a19-a7f5-1c851ea60b27",
+  "our_name": "KIM Bo Mi",
+  "our_name_en": "KIM Bo Mi",
+  "country": "",
+  "candidates": [
+   {
+    "umb_id": "7092",
+    "umb_name": "KIM Bo Mi",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "7092",
+  "umb_name": "KIM Bo Mi",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3378,
+  "documentId": "8e1dfed1-b05d-4936-b14d-b05bb66b4866",
+  "our_name": "TAS Soner",
+  "our_name_en": "TAS Soner",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1211",
+    "umb_name": "TAS Soner",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1211",
+  "umb_name": "TAS Soner",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 401,
+  "documentId": "3de8c30d-a52c-11f0-901e-0a6230412745",
+  "our_name": "CHO Chi Yeon",
+  "our_name_en": null,
+  "country": "KR",
+  "candidates": [
+   {
+    "umb_id": "0277",
+    "umb_name": "CHO Chi Yeon",
+    "fed": "KR"
+   }
+  ],
+  "umb_id": "0277",
+  "umb_name": "CHO Chi Yeon",
+  "umb_fed": "KR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 473,
+  "documentId": "3de984db-a52c-11f0-901e-0a6230412745",
+  "our_name": "MARTINICORENA Cesar",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "1841",
+    "umb_name": "MARTINICORENA Cesar",
+    "fed": "ES"
+   }
+  ],
+  "umb_id": "1841",
+  "umb_name": "MARTINICORENA Cesar",
+  "umb_fed": "ES",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3419,
+  "documentId": "7cb62a69-470b-4eab-9a9d-86b083bbb348",
+  "our_name": "SANCHEZ Cristian",
+  "our_name_en": "SANCHEZ Cristian",
+  "country": "CO",
+  "candidates": [
+   {
+    "umb_id": "0798",
+    "umb_name": "SANCHEZ Cristian",
+    "fed": "CO"
+   }
+  ],
+  "umb_id": "0798",
+  "umb_name": "SANCHEZ Cristian",
+  "umb_fed": "CO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 1591,
+  "documentId": "k22iri0cg0q2lzl5qyb554ii",
+  "our_name": "MAS Jose Maria",
+  "our_name_en": null,
+  "country": "ES",
+  "candidates": [
+   {
+    "umb_id": "0211",
+    "umb_name": "MAS Jose Maria",
+    "fed": "ES"
+   }
+  ],
+  "umb_id": "0211",
+  "umb_name": "MAS Jose Maria",
+  "umb_fed": "ES",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3091,
+  "documentId": "so26vqzscvfho9tw74ssul7x",
+  "our_name": "ΠΡΟΦΚΑ Κωνσταντίνος",
+  "our_name_en": "PROFKA Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "8218",
+    "umb_name": "PROFKA Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "8218",
+  "umb_name": "PROFKA Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3008,
+  "documentId": "df093f7e-38c7-47ea-9e49-792544364a69",
+  "our_name": "BJØRNSTAD Jo",
+  "our_name_en": "Bjørnstad Jo",
+  "country": "NO",
+  "candidates": [
+   {
+    "umb_id": "3414",
+    "umb_name": "BJORNSTAD Jo",
+    "fed": "NO"
+   }
+  ],
+  "umb_id": "3414",
+  "umb_name": "BJORNSTAD Jo",
+  "umb_fed": "NO",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3446,
+  "documentId": "92c4fcab-0197-4f3f-b645-fc5d1b2482db",
+  "our_name": "PRASSAS Konstantinos",
+  "our_name_en": "PRASSAS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "3165",
+    "umb_name": "PRASSAS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "3165",
+  "umb_name": "PRASSAS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3475,
+  "documentId": "fc8e02d1-2d7c-4107-9f72-32de93072e0d",
+  "our_name": "DOGANOGLU Adem",
+  "our_name_en": "DOGANOGLU Adem",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "3262",
+    "umb_name": "DOGANOGLU Adem",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "3262",
+  "umb_name": "DOGANOGLU Adem",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4235,
+  "documentId": "039e3df1-e0da-4b5e-80fb-1a98fd78e56b",
+  "our_name": "GIANNAKOPOULOS Konstantinos",
+  "our_name_en": "GIANNAKOPOULOS Konstantinos",
+  "country": "GR",
+  "candidates": [
+   {
+    "umb_id": "0821",
+    "umb_name": "GIANNAKOPOULOS Konstantinos",
+    "fed": "GR"
+   }
+  ],
+  "umb_id": "0821",
+  "umb_name": "GIANNAKOPOULOS Konstantinos",
+  "umb_fed": "GR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 3608,
+  "documentId": "6ea220f1-dd2d-4e90-a975-e0624f813b6a",
+  "our_name": "CETIN Behzat",
+  "our_name_en": "CETIN Behzat",
+  "country": "CH",
+  "candidates": [
+   {
+    "umb_id": "0312",
+    "umb_name": "CETIN Behzat",
+    "fed": "CH"
+   }
+  ],
+  "umb_id": "0312",
+  "umb_name": "CETIN Behzat",
+  "umb_fed": "CH",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4592,
+  "documentId": "77a69f65-f006-4895-8c2f-17b99130de15",
+  "our_name": "FF HOSNY Medhat",
+  "our_name_en": "FF HOSNY Medhat",
+  "country": "EG",
+  "candidates": [
+   {
+    "umb_id": "0618",
+    "umb_name": "HOSNY Medhat",
+    "fed": "EG"
+   }
+  ],
+  "umb_id": "0618",
+  "umb_name": "HOSNY Medhat",
+  "umb_fed": "EG",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ },
+ {
+  "player_id": 4594,
+  "documentId": "0e72e3ea-bca0-47e7-9368-6e84fd85a334",
+  "our_name": "II SAYGINER Semih",
+  "our_name_en": "II SAYGINER Semih",
+  "country": "TR",
+  "candidates": [
+   {
+    "umb_id": "1829",
+    "umb_name": "SAYGINER Semih",
+    "fed": "TR"
+   }
+  ],
+  "umb_id": "1829",
+  "umb_name": "SAYGINER Semih",
+  "umb_fed": "TR",
+  "rule": "επίθετο + όνομα",
+  "why": "ίδιο UMB ID σε 2 δικούς μας παίκτες"
+ }
+]
