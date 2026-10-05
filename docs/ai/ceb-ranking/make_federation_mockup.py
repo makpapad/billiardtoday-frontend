@@ -17,7 +17,27 @@ from collections import defaultdict
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CEB = ROOT / "public" / "data" / "ceb-ranking" / "3c-individual.json"
 REG = ROOT / "docs" / "ai" / "umb-player-ids" / "data" / "umb-ids.json"
-EDITION = ROOT / "docs" / "ai" / "ceb-ranking" / "editions" / "16-2026.json"
+EDITIONS = ROOT / "docs" / "ai" / "ceb-ranking" / "editions"
+
+
+def current_edition_file() -> pathlib.Path:
+    """Η τρέχουσα έκδοση CEB — η ζωντανή αν υπάρχει, αλλιώς η πιο πρόσφατη.
+
+    Δεν είναι καρφιτσωμένο όνομα αρχείου: όταν μπει νέα έκδοση στον φάκελο,
+    η σελίδα ακολουθεί μόνη της.
+    """
+    loaded: list[tuple[pathlib.Path, dict]] = []
+    for path in sorted(EDITIONS.glob("*.json")):
+        try:
+            loaded.append((path, json.loads(path.read_text(encoding="utf-8"))))
+        except Exception:
+            continue
+    if not loaded:
+        raise SystemExit(f"δεν βρέθηκε έκδοση CEB στον φάκελο {EDITIONS}")
+    live = [item for item in loaded if item[1].get("live")]
+    pool = live or loaded
+    pool.sort(key=lambda item: ((item[1].get("meta") or {}).get("updatedAt") or "", item[0].name))
+    return pool[-1][0]
 OUT = ROOT / "public" / "mockups" / "federation-submission.html"
 PREVIEW_JSON = ROOT / "src" / "app" / "federation" / "preview" / "players-gr.json"
 
@@ -69,12 +89,11 @@ def match(name: str, fed: str, index) -> tuple[str | None, str]:
     return None, "not-found"
 
 
-def seasons_from_edition() -> list[dict]:
+def seasons_from_edition() -> tuple[list[dict], str]:
     """Οι σεζόν των εθνικών πρωταθλημάτων όπως τις ορίζει η τρέχουσα έκδοση CEB."""
-    try:
-        cfg = json.loads(EDITION.read_text(encoding="utf-8"))
-    except Exception:
-        return []
+    path = current_edition_file()
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    label = (cfg.get("meta") or {}).get("edition") or path.stem
     out = []
     for event in cfg.get("events", []):
         name = event.get("name") or ""
@@ -88,7 +107,7 @@ def seasons_from_edition() -> list[dict]:
                     "scale": event.get("scale"),
                 }
             )
-    return out
+    return out, label
 
 
 def main() -> None:
@@ -112,7 +131,7 @@ def main() -> None:
         )
 
     with_id = [r for r in rows if r["umb"]]
-    seasons = seasons_from_edition()
+    seasons, edition_label = seasons_from_edition()
     season = seasons[-1]["season"] if seasons else SEASON
     html = TEMPLATE.replace("/*__ROWS__*/[]", json.dumps(rows, ensure_ascii=False))
     html = html.replace("/*__SEASONS__*/[]", json.dumps(seasons, ensure_ascii=False))
@@ -120,7 +139,7 @@ def main() -> None:
         html.replace("__FED_NAME__", FED_NAME)
         .replace("__FED__", FED)
         .replace("__SEASON__", season)
-        .replace("__EDITION__", "16/2026")
+        .replace("__EDITION__", edition_label)
         .replace("__TOTAL__", str(len(rows)))
         .replace("__WITH_ID__", str(len(with_id)))
     )
@@ -133,7 +152,7 @@ def main() -> None:
             {
                 "federation": FED,
                 "federationName": FED_NAME,
-                "edition": "16/2026",
+                "edition": edition_label,
                 "season": season,
                 "seasons": seasons,
                 "rows": rows,
