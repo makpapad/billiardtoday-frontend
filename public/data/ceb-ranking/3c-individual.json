@@ -9,7 +9,7 @@
   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf",
   "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
   "sourceLabel": "CEB Ranking 3C Individual",
-  "generatedAt": "2026-10-06T15:02:01.287Z",
+  "generatedAt": "2026-10-06T18:25:37.641Z",
   "counts": {
     "players": 1476,
     "federations": 22,
@@ -1080,25 +1080,6 @@
     },
     {
       "rank": 46,
-      "name": "GUSTAFSSON Bosse",
-      "fed": "SE",
-      "points": 31,
-      "ev": [
-        null,
-        null,
-        31,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      "suspended": null
-    },
-    {
-      "rank": 47,
       "name": "KNUDSEN Brian",
       "fed": "DK",
       "points": 31,
@@ -1117,7 +1098,7 @@
       "suspended": null
     },
     {
-      "rank": 48,
+      "rank": 47,
       "name": "KARAKURT Omer",
       "fed": "TR",
       "points": 30,
@@ -1136,7 +1117,7 @@
       "suspended": null
     },
     {
-      "rank": 49,
+      "rank": 48,
       "name": "BOUERDICK Tobias",
       "fed": "DE",
       "points": 29,
@@ -1155,7 +1136,7 @@
       "suspended": null
     },
     {
-      "rank": 50,
+      "rank": 49,
       "name": "KOSTISTANSKY Gerhard",
       "fed": "AT",
       "points": 29,
@@ -1174,7 +1155,7 @@
       "suspended": null
     },
     {
-      "rank": 51,
+      "rank": 50,
       "name": "ANDERSEN Thomas",
       "fed": "DK",
       "points": 29,
@@ -1193,7 +1174,7 @@
       "suspended": null
     },
     {
-      "rank": 52,
+      "rank": 51,
       "name": "MORTENSEN Lukas",
       "fed": "DK",
       "points": 27,
@@ -1212,7 +1193,7 @@
       "suspended": null
     },
     {
-      "rank": 53,
+      "rank": 52,
       "name": "ANTONATOS Kostas",
       "fed": "GR",
       "points": 27,
@@ -1231,7 +1212,7 @@
       "suspended": null
     },
     {
-      "rank": 54,
+      "rank": 53,
       "name": "CORTESE Fabrizio",
       "fed": "IT",
       "points": 27,
@@ -1250,7 +1231,7 @@
       "suspended": null
     },
     {
-      "rank": 55,
+      "rank": 54,
       "name": "HANNULA Sami",
       "fed": "FI",
       "points": 27,
@@ -1269,7 +1250,7 @@
       "suspended": null
     },
     {
-      "rank": 56,
+      "rank": 55,
       "name": "HAUGE Espen",
       "fed": "NO",
       "points": 27,
@@ -1288,7 +1269,7 @@
       "suspended": null
     },
     {
-      "rank": 57,
+      "rank": 56,
       "name": "RASPEL Carsten",
       "fed": "DE",
       "points": 27,
@@ -1307,7 +1288,7 @@
       "suspended": null
     },
     {
-      "rank": 58,
+      "rank": 57,
       "name": "COCOLI Kleland",
       "fed": "AL",
       "points": 27,
@@ -1326,7 +1307,7 @@
       "suspended": null
     },
     {
-      "rank": 59,
+      "rank": 58,
       "name": "GOEDERT Gerard",
       "fed": "LU",
       "points": 27,
@@ -1345,7 +1326,7 @@
       "suspended": null
     },
     {
-      "rank": 60,
+      "rank": 59,
       "name": "RECH Pierre Alain",
       "fed": "CH",
       "points": 27,
@@ -1364,7 +1345,7 @@
       "suspended": null
     },
     {
-      "rank": 61,
+      "rank": 60,
       "name": "MORALES Marcos",
       "fed": "ES",
       "points": 26,
@@ -1383,7 +1364,7 @@
       "suspended": null
     },
     {
-      "rank": 62,
+      "rank": 61,
       "name": "MOULOS Vangelis",
       "fed": "GR",
       "points": 25,
@@ -1402,7 +1383,7 @@
       "suspended": null
     },
     {
-      "rank": 63,
+      "rank": 62,
       "name": "DE BACKER Peter",
       "fed": "BE",
       "points": 25,
@@ -1421,7 +1402,7 @@
       "suspended": null
     },
     {
-      "rank": 64,
+      "rank": 63,
       "name": "BRANTS Ronny",
       "fed": "BE",
       "points": 23,
@@ -1440,7 +1421,7 @@
       "suspended": null
     },
     {
-      "rank": 65,
+      "rank": 64,
       "name": "SAINZ-PARDO Daniel",
       "fed": "ES",
       "points": 23,
@@ -1459,7 +1440,7 @@
       "suspended": null
     },
     {
-      "rank": 66,
+      "rank": 65,
       "name": "OZCAN Yilmaz",
       "fed": "TR",
       "points": 23,
@@ -1478,7 +1459,7 @@
       "suspended": null
     },
     {
-      "rank": 67,
+      "rank": 66,
       "name": "PAPAKONSTANTINOU Kostas",
       "fed": "GR",
       "points": 23,
@@ -1497,7 +1478,7 @@
       "suspended": null
     },
     {
-      "rank": 68,
+      "rank": 67,
       "name": "RODRIGUES Francisco",
       "fed": "PT",
       "points": 23,
@@ -1516,7 +1497,7 @@
       "suspended": null
     },
     {
-      "rank": 69,
+      "rank": 68,
       "name": "TRUONG Tay Dien",
       "fed": "DE",
       "points": 23,
@@ -1535,7 +1516,7 @@
       "suspended": null
     },
     {
-      "rank": 70,
+      "rank": 69,
       "name": "BOHAC Martin",
       "fed": "CZ",
       "points": 23,
@@ -1554,7 +1535,7 @@
       "suspended": null
     },
     {
-      "rank": 71,
+      "rank": 70,
       "name": "Hjort Timo",
       "fed": "FI",
       "points": 23,
@@ -1573,7 +1554,7 @@
       "suspended": null
     },
     {
-      "rank": 72,
+      "rank": 71,
       "name": "MAKIK Karl",
       "fed": "AT",
       "points": 23,
@@ -1592,7 +1573,7 @@
       "suspended": null
     },
     {
-      "rank": 73,
+      "rank": 72,
       "name": "CANTURK Kenan",
       "fed": "CH",
       "points": 23,
@@ -1611,7 +1592,7 @@
       "suspended": null
     },
     {
-      "rank": 74,
+      "rank": 73,
       "name": "Pallucca Carlo",
       "fed": "LU",
       "points": 23,
@@ -1630,7 +1611,7 @@
       "suspended": null
     },
     {
-      "rank": 75,
+      "rank": 74,
       "name": "YAVUZ Tarik",
       "fed": "TR",
       "points": 22,
@@ -1649,7 +1630,7 @@
       "suspended": null
     },
     {
-      "rank": 76,
+      "rank": 75,
       "name": "SOUMAGNE Pierre",
       "fed": "FR",
       "points": 22,
@@ -1668,7 +1649,7 @@
       "suspended": null
     },
     {
-      "rank": 77,
+      "rank": 76,
       "name": "KOKKORIS Kostantinos",
       "fed": "GR",
       "points": 21,
@@ -1687,7 +1668,7 @@
       "suspended": null
     },
     {
-      "rank": 78,
+      "rank": 77,
       "name": "DURIEZ Nathan",
       "fed": "FR",
       "points": 21,
@@ -1706,7 +1687,7 @@
       "suspended": null
     },
     {
-      "rank": 79,
+      "rank": 78,
       "name": "ORLANDO Francesco",
       "fed": "IT",
       "points": 21,
@@ -1725,7 +1706,7 @@
       "suspended": null
     },
     {
-      "rank": 80,
+      "rank": 79,
       "name": "FERRARA Giuseppe",
       "fed": "IT",
       "points": 21,
@@ -1744,7 +1725,7 @@
       "suspended": null
     },
     {
-      "rank": 81,
+      "rank": 80,
       "name": "REVERCHON Jean",
       "fed": "FR",
       "points": 21,
@@ -1763,7 +1744,7 @@
       "suspended": null
     },
     {
-      "rank": 82,
+      "rank": 81,
       "name": "OLSSON Nalle",
       "fed": "SE",
       "points": 21,
@@ -1782,7 +1763,7 @@
       "suspended": null
     },
     {
-      "rank": 83,
+      "rank": 82,
       "name": "BAS Serdal",
       "fed": "TR",
       "points": 20,
@@ -1801,7 +1782,7 @@
       "suspended": null
     },
     {
-      "rank": 84,
+      "rank": 83,
       "name": "STAMM Lukas",
       "fed": "DE",
       "points": 20,
@@ -1820,7 +1801,7 @@
       "suspended": null
     },
     {
-      "rank": 85,
+      "rank": 84,
       "name": "VASSEUR Kevin",
       "fed": "FR",
       "points": 20,
@@ -1839,7 +1820,7 @@
       "suspended": null
     },
     {
-      "rank": 86,
+      "rank": 85,
       "name": "EGERT Lucas",
       "fed": "DE",
       "points": 20,
@@ -1858,7 +1839,7 @@
       "suspended": null
     },
     {
-      "rank": 87,
+      "rank": 86,
       "name": "CAVUSOGLU Muhammed",
       "fed": "TR",
       "points": 19,
@@ -1877,7 +1858,7 @@
       "suspended": null
     },
     {
-      "rank": 88,
+      "rank": 87,
       "name": "BALOGIANNIS Apostolos",
       "fed": "GR",
       "points": 19,
@@ -1896,7 +1877,7 @@
       "suspended": null
     },
     {
-      "rank": 89,
+      "rank": 88,
       "name": "DIAZ Javier",
       "fed": "ES",
       "points": 19,
@@ -1915,7 +1896,7 @@
       "suspended": null
     },
     {
-      "rank": 90,
+      "rank": 89,
       "name": "EVAGGELOU Nikos",
       "fed": "GR",
       "points": 19,
@@ -1934,7 +1915,7 @@
       "suspended": null
     },
     {
-      "rank": 91,
+      "rank": 90,
       "name": "KALITA Henryk",
       "fed": "SE",
       "points": 19,
@@ -1953,7 +1934,7 @@
       "suspended": null
     },
     {
-      "rank": 92,
+      "rank": 91,
       "name": "KOZAK Adam",
       "fed": "CZ",
       "points": 19,
@@ -1972,7 +1953,7 @@
       "suspended": null
     },
     {
-      "rank": 93,
+      "rank": 92,
       "name": "MATHISEN Terje",
       "fed": "NO",
       "points": 19,
@@ -1991,7 +1972,7 @@
       "suspended": null
     },
     {
-      "rank": 94,
+      "rank": 93,
       "name": "PETTERSEN Steinar",
       "fed": "NO",
       "points": 19,
@@ -2010,7 +1991,7 @@
       "suspended": null
     },
     {
-      "rank": 95,
+      "rank": 94,
       "name": "POLAT Yuksel",
       "fed": "SE",
       "points": 19,
@@ -2029,7 +2010,7 @@
       "suspended": null
     },
     {
-      "rank": 96,
+      "rank": 95,
       "name": "SOLHAGEN Sauli",
       "fed": "FI",
       "points": 19,
@@ -2048,7 +2029,7 @@
       "suspended": null
     },
     {
-      "rank": 97,
+      "rank": 96,
       "name": "GRETILLAT Xavier",
       "fed": "CH",
       "points": 19,
@@ -2067,7 +2048,7 @@
       "suspended": null
     },
     {
-      "rank": 98,
+      "rank": 97,
       "name": "GUIDEZ Laurent",
       "fed": "LU",
       "points": 19,
@@ -2086,7 +2067,7 @@
       "suspended": null
     },
     {
-      "rank": 99,
+      "rank": 98,
       "name": "MEZINI Orges",
       "fed": "AL",
       "points": 19,
@@ -2105,7 +2086,7 @@
       "suspended": null
     },
     {
-      "rank": 100,
+      "rank": 99,
       "name": "SOKOLI Sehar",
       "fed": "AL",
       "points": 19,
@@ -2124,7 +2105,7 @@
       "suspended": null
     },
     {
-      "rank": 101,
+      "rank": 100,
       "name": "WILKOWSKI Huub",
       "fed": "NL",
       "points": 18,
@@ -2143,7 +2124,7 @@
       "suspended": null
     },
     {
-      "rank": 102,
+      "rank": 101,
       "name": "CIN Aygun",
       "fed": "DE",
       "points": 18,
@@ -2162,7 +2143,7 @@
       "suspended": null
     },
     {
-      "rank": 103,
+      "rank": 102,
       "name": "DE BONDT Andy",
       "fed": "BE",
       "points": 17,
@@ -2181,7 +2162,7 @@
       "suspended": null
     },
     {
-      "rank": 104,
+      "rank": 103,
       "name": "WUYTS Danny",
       "fed": "BE",
       "points": 17,
@@ -2200,7 +2181,7 @@
       "suspended": null
     },
     {
-      "rank": 105,
+      "rank": 104,
       "name": "D'AGATA Alessio",
       "fed": "IT",
       "points": 17,
@@ -2219,7 +2200,7 @@
       "suspended": null
     },
     {
-      "rank": 106,
+      "rank": 105,
       "name": "TACHOIRE Adrien",
       "fed": "FR",
       "points": 17,
@@ -2238,7 +2219,7 @@
       "suspended": null
     },
     {
-      "rank": 107,
+      "rank": 106,
       "name": "ESCUDEIRO Jose",
       "fed": "PT",
       "points": 17,
@@ -2257,7 +2238,7 @@
       "suspended": null
     },
     {
-      "rank": 108,
+      "rank": 107,
       "name": "FIGUEIREDO Artur",
       "fed": "PT",
       "points": 17,
@@ -2276,7 +2257,7 @@
       "suspended": null
     },
     {
-      "rank": 109,
+      "rank": 108,
       "name": "ALP Ahmet",
       "fed": "TR",
       "points": 16,
@@ -2295,7 +2276,7 @@
       "suspended": null
     },
     {
-      "rank": 110,
+      "rank": 109,
       "name": "CETIN Volkan",
       "fed": "NL",
       "points": 16,
@@ -2314,7 +2295,7 @@
       "suspended": null
     },
     {
-      "rank": 111,
+      "rank": 110,
       "name": "TSOKANTAS Dionisis",
       "fed": "GR",
       "points": 16,
@@ -2333,7 +2314,7 @@
       "suspended": null
     },
     {
-      "rank": 112,
+      "rank": 111,
       "name": "Ebeling Tommy",
       "fed": "DK",
       "points": 16,
@@ -2352,7 +2333,7 @@
       "suspended": null
     },
     {
-      "rank": 113,
+      "rank": 112,
       "name": "IBRAIMOV Bajram",
       "fed": "DE",
       "points": 15,
@@ -2371,7 +2352,7 @@
       "suspended": null
     },
     {
-      "rank": 114,
+      "rank": 113,
       "name": "VAN ACKER Steven",
       "fed": "BE",
       "points": 15,
@@ -2390,7 +2371,7 @@
       "suspended": null
     },
     {
-      "rank": 115,
+      "rank": 114,
       "name": "ÖZCELIK Adem",
       "fed": "TR",
       "points": 15,
@@ -2409,7 +2390,7 @@
       "suspended": null
     },
     {
-      "rank": 116,
+      "rank": 115,
       "name": "ANDRADE Paulo",
       "fed": "PT",
       "points": 15,
@@ -2428,7 +2409,7 @@
       "suspended": null
     },
     {
-      "rank": 117,
+      "rank": 116,
       "name": "CUNHA Fernando",
       "fed": "PT",
       "points": 15,
@@ -2447,7 +2428,7 @@
       "suspended": null
     },
     {
-      "rank": 118,
+      "rank": 117,
       "name": "Demming Adrie",
       "fed": "NL",
       "points": 15,
@@ -2466,7 +2447,7 @@
       "suspended": null
     },
     {
-      "rank": 119,
+      "rank": 118,
       "name": "LEGAZPI LORENZO Alfonso",
       "fed": "ES",
       "points": 15,
@@ -2485,7 +2466,7 @@
       "suspended": null
     },
     {
-      "rank": 120,
+      "rank": 119,
       "name": "RAHMET Muammer",
       "fed": "TR",
       "points": 14,
@@ -2504,7 +2485,7 @@
       "suspended": null
     },
     {
-      "rank": 121,
+      "rank": 120,
       "name": "KRISTIANSEN Daniel",
       "fed": "DK",
       "points": 14,
@@ -2523,7 +2504,7 @@
       "suspended": null
     },
     {
-      "rank": 122,
+      "rank": 121,
       "name": "ROESTEL Norbert",
       "fed": "DE",
       "points": 14,
@@ -2542,7 +2523,7 @@
       "suspended": null
     },
     {
-      "rank": 123,
+      "rank": 122,
       "name": "ANDALUZ ANTON Valentin",
       "fed": "ES",
       "points": 14,
@@ -2561,7 +2542,7 @@
       "suspended": null
     },
     {
-      "rank": 124,
+      "rank": 123,
       "name": "ESCRIBANO Joseba",
       "fed": "ES",
       "points": 14,
@@ -2580,7 +2561,7 @@
       "suspended": null
     },
     {
-      "rank": 125,
+      "rank": 124,
       "name": "ALES Jan",
       "fed": "CZ",
       "points": 13,
@@ -2599,7 +2580,7 @@
       "suspended": null
     },
     {
-      "rank": 126,
+      "rank": 125,
       "name": "ALVBERGER Alf Karlsson",
       "fed": "SE",
       "points": 13,
@@ -2618,7 +2599,7 @@
       "suspended": null
     },
     {
-      "rank": 127,
+      "rank": 126,
       "name": "BACA Miroslav",
       "fed": "CZ",
       "points": 13,
@@ -2637,7 +2618,7 @@
       "suspended": null
     },
     {
-      "rank": 128,
+      "rank": 127,
       "name": "BJERRING Poul",
       "fed": "DK",
       "points": 13,
@@ -2656,7 +2637,7 @@
       "suspended": null
     },
     {
-      "rank": 129,
+      "rank": 128,
       "name": "BURGMAN Raimond",
       "fed": "NL",
       "points": 13,
@@ -2675,7 +2656,7 @@
       "suspended": null
     },
     {
-      "rank": 130,
+      "rank": 129,
       "name": "CARLSEN Tonny",
       "fed": "DK",
       "points": 13,
@@ -2694,7 +2675,7 @@
       "suspended": null
     },
     {
-      "rank": 131,
+      "rank": 130,
       "name": "CEULEMANS Kurt",
       "fed": "BE",
       "points": 13,
@@ -2713,7 +2694,7 @@
       "suspended": null
     },
     {
-      "rank": 132,
+      "rank": 131,
       "name": "CHRISTIANI Dave",
       "fed": "NL",
       "points": 13,
@@ -2732,7 +2713,7 @@
       "suspended": null
     },
     {
-      "rank": 133,
+      "rank": 132,
       "name": "DIRN Marcel",
       "fed": "CZ",
       "points": 13,
@@ -2751,7 +2732,7 @@
       "suspended": null
     },
     {
-      "rank": 134,
+      "rank": 133,
       "name": "FIGUEROA Paul",
       "fed": "FI",
       "points": 13,
@@ -2770,7 +2751,7 @@
       "suspended": null
     },
     {
-      "rank": 135,
+      "rank": 134,
       "name": "GARRIGA Jordi",
       "fed": "ES",
       "points": 13,
@@ -2789,9 +2770,28 @@
       "suspended": null
     },
     {
-      "rank": 136,
+      "rank": 135,
       "name": "GAZDOS Ivo",
       "fed": "CZ",
+      "points": 13,
+      "ev": [
+        null,
+        null,
+        13,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "suspended": null
+    },
+    {
+      "rank": 136,
+      "name": "GUSTAFSSON Bosse",
+      "fed": "SE",
       "points": 13,
       "ev": [
         null,
@@ -28269,7 +28269,7 @@
     }
   ],
   "dataSource": "computed",
-  "computedAt": "2026-10-06T12:53:48.654Z",
+  "computedAt": "2026-10-06T18:23:21.622Z",
   "computedNote": "Υπολογισμένη από τα αποτελέσματα των τουρνουά μας (μηχανή cebRankingEngine) — μόνο ευρωπαίοι αθλητές.",
   "nonEuropeanExcluded": 71,
   "scope": "european",
