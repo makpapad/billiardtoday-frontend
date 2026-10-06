@@ -9,7 +9,7 @@
   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf",
   "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
   "sourceLabel": "CEB Ranking 3C Individual",
-  "generatedAt": "2026-10-06T18:25:37.641Z",
+  "generatedAt": "2026-10-06T23:18:14.549Z",
   "counts": {
     "players": 1476,
     "federations": 22,
@@ -28269,7 +28269,7 @@
     }
   ],
   "dataSource": "computed",
-  "computedAt": "2026-10-06T18:23:21.622Z",
+  "computedAt": "2026-10-06T23:18:14.498Z",
   "computedNote": "Υπολογισμένη από τα αποτελέσματα των τουρνουά μας (μηχανή cebRankingEngine) — μόνο ευρωπαίοι αθλητές.",
   "nonEuropeanExcluded": 71,
   "scope": "european",

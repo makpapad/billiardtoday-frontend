@@ -533,12 +533,6 @@
     "db": "KOZAK Adam",
     "kind": "COMPUTED"
   },
-  "94": {
-    "id": 233,
-    "slug": "POLAT-Yuksel",
-    "db": "POLAT Yuksel",
-    "kind": "COMPUTED"
-  },
   "95": {
     "id": 2243,
     "slug": "SOLHAGEN-Sauli",
@@ -771,12 +765,6 @@
     "id": 2564,
     "slug": "HIKL-Michael",
     "db": "HIKL Michael",
-    "kind": "COMPUTED"
-  },
-  "140": {
-    "id": 2049,
-    "slug": "JOHANSSON-Jeppe",
-    "db": "JOHANSSON Jeppe",
     "kind": "COMPUTED"
   },
   "141": {
@@ -1245,18 +1233,6 @@
     "id": 2294,
     "slug": "HUBER-Walter",
     "db": "HUBER Walter",
-    "kind": "COMPUTED"
-  },
-  "249": {
-    "id": 2587,
-    "slug": "HULTQVIST-Ken",
-    "db": "HULTQVIST Ken",
-    "kind": "COMPUTED"
-  },
-  "250": {
-    "id": 3845,
-    "slug": "JENABPOUR-Mark",
-    "db": "JENABPOUR Mark",
     "kind": "COMPUTED"
   },
   "252": {
@@ -1869,12 +1845,6 @@
     "id": 2281,
     "slug": "SPERNANZONI-Leo",
     "db": "SPERNANZONI Leo",
-    "kind": "COMPUTED"
-  },
-  "413": {
-    "id": 3791,
-    "slug": "TAVAKOLIZADEH-Emad",
-    "db": "TAVAKOLIZADEH Emad",
     "kind": "COMPUTED"
   },
   "414": {
