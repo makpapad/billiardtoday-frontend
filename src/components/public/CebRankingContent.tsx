@@ -35,6 +35,17 @@ const buildPageList = (page: number, pageCount: number): Array<number | "gap"> =
 
 const formatScale = (scale: number[]) => scale.join(" / ");
 
+/**
+ * Μετάλλια στις πρώτες θέσεις της λίστας. Η CEB απονέμει δύο χάλκινα (3η και 4η θέση),
+ * γι' αυτό το 🥉 εμφανίζεται δύο φορές· από την 5η θέση και κάτω κανένα.
+ */
+const MEDALS: Record<number, { emoji: string; label: string }> = {
+  1: { emoji: "🏆", label: "1st place — gold cup" },
+  2: { emoji: "🥈", label: "2nd place — silver medal" },
+  3: { emoji: "🥉", label: "3rd place — bronze medal" },
+  4: { emoji: "🥉", label: "4th place — bronze medal" },
+};
+
 export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref }: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
   const backLabel = `${payload.title} — European Ranking`;
@@ -276,6 +287,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                   const flag = getCountryFlagCdnUrl(payload.federations[row.fed] ?? null, 40);
                   const suspendedOn = formatCebDate(row.suspended);
                   const link = playerLinks?.[String(row.rank)];
+                  const medal = MEDALS[row.rank];
                   return (
                     <tr
                       key={`${row.rank}-${row.name}`}
@@ -288,7 +300,19 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                       }
                     >
                       <td className="border-b border-slate-100 px-2 py-1.5 text-[13px] text-slate-400">
-                        {row.rank}
+                        <span className="inline-flex items-center gap-1">
+                          <span>{row.rank}</span>
+                          {medal ? (
+                            <span
+                              role="img"
+                              aria-label={medal.label}
+                              title={medal.label}
+                              className="text-[11px] leading-none"
+                            >
+                              {medal.emoji}
+                            </span>
+                          ) : null}
+                        </span>
                       </td>
                       <td className="border-b border-slate-100 px-2 py-1.5 text-left">
                         <span className="flex items-center gap-2">
