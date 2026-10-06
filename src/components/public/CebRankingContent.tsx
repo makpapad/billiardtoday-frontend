@@ -39,14 +39,15 @@ const formatScale = (scale: number[]) => scale.join(" / ");
  * Μετάλλια δίπλα στους βαθμούς της διοργάνωσης. Κάθε στήλη πληρώνει με τη δική της
  * κλίμακα (European Championship 80/54/38/26/16/8/4, World Cup 40/27/19/13/8/4/2,
  * εθνικό πρωτάθλημα 40/27/19/13/8/4), άρα η θέση βγαίνει από το ύψος των βαθμών:
- * πρώτη τιμή = 1η θέση → 🏆, δεύτερη → 🥈, τρίτη και τέταρτη → 🥉 (η CEB απονέμει
- * δύο χάλκινα, στην 3η και στην 4η θέση). Από την 5η θέση και κάτω, κανένα μετάλλιο.
+ * πρώτη τιμή = 1η θέση → 🏆, δεύτερη → 🥈, τρίτη και τέταρτη τιμή → 🥉.
+ * Δεν υπάρχει 4η θέση στα τρίσποντα: οι δύο χαμένοι των ημιτελικών είναι και οι δύο 3οι.
+ * Από την 5η θέση και κάτω, κανένα μετάλλιο.
  */
 const PLACE_MEDALS: Record<number, { emoji: string; label: string }> = {
   1: { emoji: "🏆", label: "1st place — gold cup" },
   2: { emoji: "🥈", label: "2nd place — silver medal" },
   3: { emoji: "🥉", label: "3rd place — bronze medal" },
-  4: { emoji: "🥉", label: "4th place — bronze medal" },
+  4: { emoji: "🥉", label: "3rd place — bronze medal" },
 };
 
 const medalForPoints = (scale: number[] | undefined, value: number | null) => {
