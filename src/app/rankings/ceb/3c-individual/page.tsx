@@ -34,7 +34,9 @@ export const metadata: Metadata = buildPageMetadata({
 export default function CebThreeCushionIndividualPage() {
   const payload = readCebRanking(SLUG);
   if (!payload) notFound();
-  const playerLinks = readCebPlayerLinks();
+  // Η τρέχουσα λίστα μπορεί να είναι υπολογισμένη από τα δικά μας αποτελέσματα
+  // (`links: "computed"`) — τότε οι σύνδεσμοι προφίλ ακολουθούν τη νέα αρίθμηση.
+  const playerLinks = readCebPlayerLinks(payload.links ?? "official");
   const archive = readCebRankingArchive(SLUG);
 
   const { counts } = payload;

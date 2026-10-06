@@ -63,6 +63,14 @@ export type CebRankingPayload = {
   events: CebRankingEvent[];
   federations: Record<string, string>;
   rows: CebRankingRow[];
+  /**
+   * Ποιο αρχείο συνδέσμων προφίλ (θέση → παίκτης) ανήκει σε αυτή τη λίστα:
+   * "official" (προεπιλογή, `player-links.json`) ή "computed"
+   * (`player-links-computed.json`) — η αρίθμηση των θέσεων αλλάζει μαζί με τη λίστα.
+   */
+  links?: string;
+  /** "computed" = υπολογισμένη από τα δικά μας αποτελέσματα, όχι αντίγραφο του PDF. */
+  dataSource?: string;
 };
 
 export type CebRankingIndexEntry = {

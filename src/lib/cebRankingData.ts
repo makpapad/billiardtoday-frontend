@@ -79,9 +79,18 @@ export const readCebRankingEdition = (slug: string, key: string): CebRankingPayl
   return isRankingPayload(parsed) ? parsed : null;
 };
 
-/** Player-profile links for the CEB list: { "<rank>": { id, slug, db } }. */
-export const readCebPlayerLinks = (): CebPlayerLinks => {
-  const parsed = readJson<CebPlayerLinks>(path.join(DATA_DIR, "player-links.json"));
+/** Επιτρεπτά κλειδιά αρχείου συνδέσμων (αποφυγή path traversal). */
+const LINKS_KEY_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
+/**
+ * Player-profile links for the CEB list: { "<rank>": { id, slug, db } }.
+ * `key` = "official" (το αρχείο του PDF της CEB, προεπιλογή) ή "computed"
+ * (η υπολογισμένη λίστα — άλλη αρίθμηση θέσεων, άλλοι σύνδεσμοι).
+ */
+export const readCebPlayerLinks = (key: string = "official"): CebPlayerLinks => {
+  const safeKey = key && LINKS_KEY_PATTERN.test(key) ? key : "official";
+  const file = safeKey === "official" ? "player-links.json" : `player-links-${safeKey}.json`;
+  const parsed = readJson<CebPlayerLinks>(path.join(DATA_DIR, file));
   if (!parsed || typeof parsed !== "object") return {};
   return Object.fromEntries(
     Object.entries(parsed).filter(
