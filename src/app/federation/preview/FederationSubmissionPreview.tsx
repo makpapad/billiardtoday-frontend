@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type KeyboardEvent, useMemo, useRef, useState } from "react";
 import "./mockup.css";
 
 type Row = {
@@ -38,6 +38,16 @@ const pointsFor = (position: number) =>
   position === 1 ? 40 : position === 2 ? 27 : position <= 4 ? 19 : position <= 8 ? 13 : position <= 16 ? 8 : position <= 32 ? 4 : 0;
 
 const normalise = (value: string) => (value || "").toUpperCase().replace(/[^A-Z ]+/g, " ").replace(/\s+/g, " ").trim();
+
+/** Ψάχνει επώνυμο ή/και όνομα: χωρίς τόνους, χωρίς διάκριση πεζών/κεφαλαίων. */
+const foldName = (value: string) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0370-\u03ff ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const DEMO_PASTE = `1 ATHANASIOU Michalis
 2 FELEKIDIS Panagiotis
@@ -87,6 +97,11 @@ export function FederationSubmissionPreview({
     })),
   );
 
+  const [search, setSearch] = useState("");
+  const [activeMatch, setActiveMatch] = useState(0);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const positionRefs = useRef<Array<HTMLInputElement | null>>([]);
+
   const duplicates = useMemo(() => {
     const seen = new Set<number>();
     const duplicate = new Set<number>();
@@ -98,6 +113,21 @@ export function FederationSubmissionPreview({
     });
     return duplicate;
   }, [rows]);
+
+  const searchTerms = useMemo(() => foldName(search).split(" ").filter(Boolean), [search]);
+
+  /** Δείκτες αθλητών που ταιριάζουν με το επώνυμο ή/και το όνομα — «έξυπνη» αναζήτηση. */
+  const matches = useMemo(() => {
+    if (!searchTerms.length) return rows.map((_, index) => index);
+    return rows.reduce<number[]>((acc, row, index) => {
+      const haystack = foldName(row.name);
+      if (searchTerms.every((term) => haystack.includes(term))) acc.push(index);
+      return acc;
+    }, []);
+  }, [rows, searchTerms]);
+
+  const visibleIndices = searchTerms.length ? matches : rows.map((_, index) => index);
+  const activeIndex = matches.length ? Math.min(activeMatch, matches.length - 1) : 0;
 
   const positioned = rows.filter((row) => row.position);
   const positionedWithId = positioned.filter((row) => row.positionedUmb);
@@ -113,6 +143,38 @@ export function FederationSubmissionPreview({
   function setUmb(index: number, value: string) {
     const clean = value.replace(/[^0-9]/g, "").slice(0, 4);
     setRows((current) => current.map((row, i) => (i === index ? { ...row, positionedUmb: clean } : row)));
+  }
+
+  /** Άλμα απευθείας στο πεδίο θέσης του επιλεγμένου αθλητή. */
+  function focusPosition(index: number) {
+    const input = positionRefs.current[index];
+    if (!input) return;
+    input.scrollIntoView({ block: "center", behavior: "smooth" });
+    input.focus();
+    input.select();
+  }
+
+  /** Βελάκια = αλλαγή ταιριάσματος, Enter = άλμα στο πεδίο θέσης του. */
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!matches.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveMatch((current) => (current + 1) % matches.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveMatch((current) => (current - 1 + matches.length) % matches.length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      focusPosition(matches[activeIndex]);
+    }
+  }
+
+  /** Μόλις καταχωρηθεί θέση, το πεδίο αναζήτησης καθαρίζει για τον επόμενο αθλητή. */
+  function clearSearchAfterPosition(refocus = false) {
+    if (!search) return;
+    setSearch("");
+    setActiveMatch(0);
+    if (refocus) requestAnimationFrame(() => searchRef.current?.focus());
   }
 
   /** Βάζει θέσεις από όποια πηγή (αρχείο / επικόλληση) ταιριάζοντας τα ονόματα. */
@@ -387,6 +449,195 @@ export function FederationSubmissionPreview({
           </div>
 
           <div className="card">
+            <div className="row between" style={{ marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Step 3 — Check before you submit</h3>
+              <div className="row">
+                <button onClick={handleDemoAnswer}>Fill a demo answer</button>
+                <button onClick={() => setRows((current) => current.map((row) => ({ ...row, position: "" })))}>
+                  Clear positions
+                </button>
+              </div>
+            </div>
+
+            <div className="bars">
+              <div className="stat">
+                <span>Positioned</span>
+                <b>{positioned.length}</b>
+              </div>
+              <div className="stat">
+                <span>Of players</span>
+                <b>{rows.length}</b>
+              </div>
+              <div className="stat">
+                <span>Matched to ID</span>
+                <b>{positionedWithId.length}</b>
+              </div>
+              <div className="stat">
+                <span>Need your attention</span>
+                <b>{flagged.length}</b>
+              </div>
+            </div>
+
+            {warnings.map((warning) => (
+              <div
+                key={warning}
+                className={`msg ${duplicates.size ? "bad" : withoutId.length ? "info" : "ok"}`}
+              >
+                {warning}
+              </div>
+            ))}
+
+            <div className="searchbar">
+              <input
+                ref={searchRef}
+                type="search"
+                autoComplete="off"
+                aria-label="Search a player by surname or first name"
+                placeholder="Search a player — surname or first name…"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setActiveMatch(0);
+                }}
+                onKeyDown={handleSearchKeyDown}
+              />
+              <span className="lock searchcount">
+                {searchTerms.length === 0 ? (
+                  <>Type a surname or first name · ↓ ↑ to pick · Enter jumps to the position field</>
+                ) : matches.length === 0 ? (
+                  <>No player matches “{search}” — check the spelling.</>
+                ) : (
+                  <>
+                    <b>
+                      {matches.length} of {rows.length}
+                    </b>{" "}
+                    {matches.length === 1 ? "player matches" : "players match"}
+                    {" · "}
+                    {matches.length > 1 ? "↓ ↑ to pick · Enter jumps to that player" : "Enter jumps to their position field"}
+                  </>
+                )}
+              </span>
+            </div>
+
+            {searchTerms.length > 0 && matches.length > 0 && (
+              <div className="lock" style={{ marginBottom: 8 }}>
+                Selected: <b>{rows[matches[activeIndex]].name}</b>
+              </div>
+            )}
+
+            <div className="gridbox" style={{ marginTop: 14 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      CEB list<span className="sub">reference</span>
+                    </th>
+                    <th>
+                      Player<span className="sub">as in the CEB list</span>
+                    </th>
+                    <th>
+                      UMB ID<span className="sub">key of the player</span>
+                    </th>
+                    <th>
+                      Position<span className="sub">what you fill</span>
+                    </th>
+                    <th>
+                      Points<span className="sub">auto</span>
+                    </th>
+                    <th>
+                      Check<span className="sub">live</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleIndices.map((index) => {
+                    const row = rows[index];
+                    const isDuplicate = Boolean(row.position) && duplicates.has(Number(row.position));
+                    const needsId = Boolean(row.position) && !row.positionedUmb;
+                    const isActive = searchTerms.length > 0 && matches[activeIndex] === index;
+                    const points = row.position ? pointsFor(Number(row.position)) : 0;
+                    const chipClass = !row.position ? "plain" : !row.positionedUmb ? "warn" : isDuplicate ? "bad" : "ok";
+                    const chipText = !row.position
+                      ? row.positionedUmb
+                        ? "Matched"
+                        : "No UMB ID"
+                      : !row.positionedUmb
+                        ? "Needs ID"
+                        : isDuplicate
+                          ? "Position twice"
+                          : "Ready";
+                    return (
+                      <tr
+                        key={row.name + index}
+                        className={[row.position ? (needsId || isDuplicate ? "flagged" : "done") : "", isActive ? "active" : ""]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        <td className="num muted">{row.rank ?? "—"}</td>
+                        <td>
+                          <b>{row.name}</b>
+                        </td>
+                        <td>
+                          <input
+                            className="idbox"
+                            inputMode="numeric"
+                            placeholder="0"
+                            title="UMB ID — leave 0 if unknown"
+                            value={row.positionedUmb}
+                            onChange={(event) => setUmb(index, event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            ref={(element) => {
+                              positionRefs.current[index] = element;
+                            }}
+                            className="pos"
+                            inputMode="numeric"
+                            placeholder="—"
+                            title="Finishing position in your national championship"
+                            value={row.position}
+                            onChange={(event) => setPosition(index, event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                clearSearchAfterPosition(true);
+                              }
+                            }}
+                            onBlur={() => {
+                              if (search && row.position) clearSearchAfterPosition();
+                            }}
+                          />
+                        </td>
+                        <td className="pts num">{points ? points : "—"}</td>
+                        <td>
+                          <span className={`chip ${chipClass}`}>{chipText}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="row between" style={{ marginTop: 18 }}>
+              <span className="lock">
+                {positioned.length
+                  ? ready
+                    ? `${positioned.length} players ready — submit when you are.`
+                    : `Fix the highlighted rows first (${flagged.length}).`
+                  : "No positions filled yet."}
+              </span>
+              <div className="row">
+                <button onClick={() => setView("home")}>Cancel</button>
+                <button className="primary" disabled={!ready} onClick={() => setModal(true)}>
+                  Submit for review
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
             <h3>Step 1 — Download the template</h3>
             <div className="row between">
               <div>
@@ -435,7 +686,7 @@ export function FederationSubmissionPreview({
                 <div className="drop">
                   <b>Drop the filled file here</b>
                   <p className="muted">
-                    .xlsx or .csv — the positions fill the grid below instantly. Nothing is submitted yet.
+                    .xlsx or .csv — the positions fill the grid above instantly. Nothing is submitted yet.
                   </p>
                   <button style={{ marginTop: 8 }} onClick={handleUpload}>
                     Choose file (demo)
@@ -464,142 +715,10 @@ export function FederationSubmissionPreview({
 
             {mode === "grid" && (
               <p className="muted">
-                Type the position next to each player in the grid below. Rows left empty simply mean “did not take
+                Type the position next to each player in the grid above. Rows left empty simply mean “did not take
                 part”.
               </p>
             )}
-          </div>
-
-          <div className="card">
-            <div className="row between" style={{ marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>Step 3 — Check before you submit</h3>
-              <div className="row">
-                <button onClick={handleDemoAnswer}>Fill a demo answer</button>
-                <button onClick={() => setRows((current) => current.map((row) => ({ ...row, position: "" })))}>
-                  Clear positions
-                </button>
-              </div>
-            </div>
-
-            <div className="bars">
-              <div className="stat">
-                <span>Positioned</span>
-                <b>{positioned.length}</b>
-              </div>
-              <div className="stat">
-                <span>Of players</span>
-                <b>{rows.length}</b>
-              </div>
-              <div className="stat">
-                <span>Matched to ID</span>
-                <b>{positionedWithId.length}</b>
-              </div>
-              <div className="stat">
-                <span>Need your attention</span>
-                <b>{flagged.length}</b>
-              </div>
-            </div>
-
-            {warnings.map((warning) => (
-              <div
-                key={warning}
-                className={`msg ${duplicates.size ? "bad" : withoutId.length ? "info" : "ok"}`}
-              >
-                {warning}
-              </div>
-            ))}
-
-            <div className="gridbox" style={{ marginTop: 14 }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      CEB list<span className="sub">reference</span>
-                    </th>
-                    <th>
-                      Player<span className="sub">as in the CEB list</span>
-                    </th>
-                    <th>
-                      UMB ID<span className="sub">key of the player</span>
-                    </th>
-                    <th>
-                      Position<span className="sub">what you fill</span>
-                    </th>
-                    <th>
-                      Points<span className="sub">auto</span>
-                    </th>
-                    <th>
-                      Check<span className="sub">live</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, index) => {
-                    const isDuplicate = Boolean(row.position) && duplicates.has(Number(row.position));
-                    const needsId = Boolean(row.position) && !row.positionedUmb;
-                    const points = row.position ? pointsFor(Number(row.position)) : 0;
-                    const chipClass = !row.position ? "plain" : !row.positionedUmb ? "warn" : isDuplicate ? "bad" : "ok";
-                    const chipText = !row.position
-                      ? row.positionedUmb
-                        ? "Matched"
-                        : "No UMB ID"
-                      : !row.positionedUmb
-                        ? "Needs ID"
-                        : isDuplicate
-                          ? "Position twice"
-                          : "Ready";
-                    return (
-                      <tr key={row.name + index} className={row.position ? (needsId || isDuplicate ? "flagged" : "done") : ""}>
-                        <td className="num muted">{row.rank ?? "—"}</td>
-                        <td>
-                          <b>{row.name}</b>
-                        </td>
-                        <td>
-                          <input
-                            className="idbox"
-                            inputMode="numeric"
-                            placeholder="0"
-                            title="UMB ID — leave 0 if unknown"
-                            value={row.positionedUmb}
-                            onChange={(event) => setUmb(index, event.target.value)}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            className="pos"
-                            inputMode="numeric"
-                            placeholder="—"
-                            title="Finishing position in your national championship"
-                            value={row.position}
-                            onChange={(event) => setPosition(index, event.target.value)}
-                          />
-                        </td>
-                        <td className="pts num">{points ? points : "—"}</td>
-                        <td>
-                          <span className={`chip ${chipClass}`}>{chipText}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="row between" style={{ marginTop: 18 }}>
-              <span className="lock">
-                {positioned.length
-                  ? ready
-                    ? `${positioned.length} players ready — submit when you are.`
-                    : `Fix the highlighted rows first (${flagged.length}).`
-                  : "No positions filled yet."}
-              </span>
-              <div className="row">
-                <button onClick={() => setView("home")}>Cancel</button>
-                <button className="primary" disabled={!ready} onClick={() => setModal(true)}>
-                  Submit for review
-                </button>
-              </div>
-            </div>
           </div>
 
           <div className="card tight">

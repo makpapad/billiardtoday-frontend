@@ -162,7 +162,10 @@ export async function portalFetch<T>(
   }
 }
 
-/** Θέσεις -> πόντοι: 1, 2, 3-4, 5-8 … όσες τιμές έχει η κλίμακα της σεζόν. */
+/**
+ * Θέσεις -> πόντοι: 1, 2, 3-4, 5-8, 9-16, 17-32… (διπλασιασμός ζώνης), όσες τιμές
+ * έχει η κλίμακα της σεζόν — ίδιο σχήμα με τον server (positionBands).
+ */
 export function pointsForPosition(position: number, scale: number[] | null | undefined): number {
   if (!Number.isFinite(position) || position < 1 || !Array.isArray(scale) || scale.length === 0) return 0;
   const bands: Array<[number, number]> = [
@@ -170,15 +173,19 @@ export function pointsForPosition(position: number, scale: number[] | null | und
     [2, 2],
   ];
   let from = 3;
+  let size = 2;
   while (bands.length < scale.length) {
-    bands.push([from, from * 2 - 1]);
-    from *= 2;
+    bands.push([from, from + size - 1]);
+    from += size;
+    size *= 2;
   }
   for (let i = 0; i < bands.length; i += 1) {
     const [start, end] = bands[i];
     if (position >= start && position <= end) return Number(scale[i] ?? 0) || 0;
   }
-  return 0;
+  // Πάνω από την τελευταία ζώνη (π.χ. 33ος σε κλίμακα 6 τιμών) παίρνει την
+  // τελευταία τιμή — ίδιο με τη μηχανή της κατάταξης (cebRankingEngine).
+  return Number(scale[scale.length - 1] ?? 0) || 0;
 }
 
 export function scaleText(scale: number[] | null | undefined): string {

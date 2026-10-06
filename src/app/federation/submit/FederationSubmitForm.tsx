@@ -120,22 +120,21 @@ export function FederationSubmitForm() {
   const categoryLabel = edition?.categories.find((category) => category.slug === SLUG)?.categoryLabel ?? "Individual";
 
   const positioned = rows.filter((row) => row.position);
-  const duplicates = useMemo(() => {
-    const seen = new Set<number>();
-    const twice = new Set<number>();
-    positioned.forEach((row) => {
-      const position = Number(row.position);
-      if (seen.has(position)) twice.add(position);
-      else seen.add(position);
-    });
-    return twice;
-  }, [positioned]);
 
-  const checkByPosition = useMemo(() => {
-    const map = new Map<number, CheckResult["rows"][number]>();
-    (check?.rows ?? []).forEach((row) => map.set(row.position, row));
+  // Οι θέσεις ΕΠΑΝΑΛΑΜΒΑΝΟΝΤΑΙ κανονικά (πόντοι ανά ζώνη: 3-4, 5-8, 9-16…), γι' αυτό
+  // το αποτέλεσμα του ελέγχου αντιστοιχίζεται στη γραμμή με το ΟΝΟΜΑ και όχι με τη θέση.
+  const checkByName = useMemo(() => {
+    const map = new Map<string, CheckResult["rows"][number]>();
+    (check?.rows ?? []).forEach((row) => {
+      const key = (row.name ?? "").trim().toUpperCase();
+      if (key && !map.has(key)) map.set(key, row);
+    });
     return map;
   }, [check]);
+
+  function sentName(row: GridRow) {
+    return (row.matchedName || row.name || "").trim();
+  }
 
   function setPosition(index: number, value: string) {
     const clean = value.replace(/[^0-9]/g, "").slice(0, 3);
@@ -153,6 +152,25 @@ export function FederationSubmitForm() {
     setProblems([]);
   }
 
+  /** Προσθήκη αθλητή που δεν είναι στη λίστα μας (η CEB λίστα δεν είναι πλήρης). */
+  function addRow() {
+    setRows((current) => [
+      ...current,
+      { rank: null, name: "", matchedName: null, umbId: "", position: "" },
+    ]);
+    setCheck(null);
+  }
+
+  function setName(index: number, value: string) {
+    setRows((current) => current.map((row, i) => (i === index ? { ...row, name: value } : row)));
+    setCheck(null);
+  }
+
+  function removeRow(index: number) {
+    setRows((current) => current.filter((_, i) => i !== index));
+    setCheck(null);
+  }
+
   function payloadRows() {
     return positioned.map((row) => ({
       position: Number(row.position),
@@ -166,8 +184,8 @@ export function FederationSubmitForm() {
       setNotice({ tone: "bad", text: "No positions filled yet." });
       return;
     }
-    if (duplicates.size > 0) {
-      setNotice({ tone: "bad", text: `Position ${[...duplicates].sort((a, b) => a - b).join(", ")} is used twice — fix it first.` });
+    if (positioned.some((row) => !sentName(row))) {
+      setNotice({ tone: "bad", text: "A row has no player name — fill it or remove the row." });
       return;
     }
     setChecking(true);
@@ -195,6 +213,10 @@ export function FederationSubmitForm() {
   }
 
   async function submit() {
+    if (positioned.some((row) => !sentName(row))) {
+      setNotice({ tone: "bad", text: "A row has no player name — fill it or remove the row." });
+      return;
+    }
     setSubmitting(true);
     setNotice(null);
     const res = await portalFetch<PortalSubmission>("submissions", {
@@ -282,6 +304,9 @@ export function FederationSubmitForm() {
         <div className="row between" style={{ marginBottom: 12 }}>
           <h3 style={{ margin: 0 }}>Enter the positions, check and submit</h3>
           <div className="row">
+            <button type="button" onClick={addRow}>
+              + Add a player
+            </button>
             <button type="button" onClick={clearPositions}>
               Clear positions
             </button>
@@ -302,7 +327,7 @@ export function FederationSubmitForm() {
               className="primary"
               type="button"
               onClick={submit}
-              disabled={submitting || positioned.length === 0 || duplicates.size > 0}
+              disabled={submitting || positioned.length === 0}
             >
               {submitting ? "Submitting…" : "Submit for review"}
             </button>
@@ -325,8 +350,7 @@ export function FederationSubmitForm() {
           <div className="stat">
             <span>To confirm</span>
             <b>
-              {[...duplicates].length +
-                (check ? (check.counts.notFound ?? 0) + (check.counts.ambiguous ?? 0) + (check.counts.manual ?? 0) : 0)}
+              {check ? (check.counts.notFound ?? 0) + (check.counts.ambiguous ?? 0) + (check.counts.manual ?? 0) : 0}
             </b>
           </div>
         </div>
@@ -369,51 +393,70 @@ export function FederationSubmitForm() {
               {!loadingRows &&
                 rows.map((row, index) => {
                   const position = Number(row.position);
-                  const isDuplicate = Boolean(row.position) && duplicates.has(position);
-                  const result = row.position ? checkByPosition.get(position) : undefined;
+                  const isNew = row.rank === null;
+                  const result = row.position ? checkByName.get(sentName(row).toUpperCase()) : undefined;
                   const points = row.position
                     ? result?.points ?? pointsForPosition(position, scale)
                     : 0;
                   const chipClass = !row.position
                     ? "plain"
-                    : isDuplicate
-                      ? "bad"
-                      : result
-                        ? result.matchStatus === "matched"
-                          ? "ok"
-                          : "warn"
-                        : "plain";
+                    : result
+                      ? result.matchStatus === "matched"
+                        ? "ok"
+                        : "warn"
+                      : "plain";
                   const chipText = !row.position
                     ? "—"
-                    : isDuplicate
-                      ? "Position twice"
-                      : result
-                        ? result.matchStatus === "matched"
-                          ? "Matched"
-                          : result.matchStatus === "ambiguous"
-                            ? "Check the name"
-                            : "We add the player"
-                        : row.umbId
-                          ? "Ready"
-                          : "By name";
+                    : result
+                      ? result.matchStatus === "matched"
+                        ? "Matched"
+                        : result.matchStatus === "ambiguous"
+                          ? "Check the name"
+                          : "We add the player"
+                      : row.umbId
+                        ? "Ready"
+                        : "By name";
                   return (
-                    <tr key={`${row.name}-${index}`} className={row.position ? (isDuplicate ? "flagged" : "done") : ""}>
+                    <tr key={`${row.name}-${index}`} className={row.position ? "done" : ""}>
                       <td className="num muted">{row.rank ?? "—"}</td>
                       <td>
-                        <b>{row.name}</b>
-                        {row.matchedName && row.matchedName.toUpperCase() !== row.name.toUpperCase() && (
-                          <span className="lock"> · in our database: {row.matchedName}</span>
+                        {isNew ? (
+                          <span className="row" style={{ gap: 6 }}>
+                            <input
+                              className="idbox"
+                              style={{ width: 190 }}
+                              placeholder="Player name"
+                              value={row.name}
+                              onChange={(event) => setName(index, event.target.value)}
+                            />
+                            <button type="button" title="Remove this row" onClick={() => removeRow(index)}>
+                              ×
+                            </button>
+                          </span>
+                        ) : (
+                          <>
+                            <b>{row.name}</b>
+                            {row.matchedName && row.matchedName.toUpperCase() !== row.name.toUpperCase() && (
+                              <span className="lock"> · in our database: {row.matchedName}</span>
+                            )}
+                          </>
                         )}
                       </td>
                       <td>
-                        <input
-                          className="idbox"
-                          inputMode="numeric"
-                          placeholder="0"
-                          title="UMB ID — optional; a row without one is matched by name"
-                          value={row.umbId}
-                          onChange={(event) => setUmb(index, event.target.value)}
-                        />
+                        {isNew ? (
+                          <input
+                            className="idbox"
+                            inputMode="numeric"
+                            placeholder="0"
+                            title="UMB ID — optional; a row without one is matched by name"
+                            value={row.umbId}
+                            onChange={(event) => setUmb(index, event.target.value)}
+                          />
+                        ) : (
+                          <span className="lock" title="UMB ID — pre-filled, you do not type it">
+                            {row.umbId || "—"}
+                          </span>
+                        )}
                       </td>
                       <td>
                         <input
@@ -453,7 +496,7 @@ export function FederationSubmitForm() {
           </div>
           <div className="step">
             <b>2 · We check</b>
-            <p>Every name by hand — the UMB ID where there is one; players new to us get added.</p>
+            <p>The names and UMB IDs are already filled in — only the positions come from you.</p>
           </div>
           <div className="step">
             <b>3 · It is published</b>
