@@ -2522,7 +2522,10 @@ function StageRankingTable({
         Number.isFinite(result.highRun2) &&
       result.highRun2 > 0,
     );
-  const showSetsColumn = artistic && artisticSets;
+  const showSetsColumn =
+    artistic &&
+    artisticSets &&
+    visibleResults.some((result) => typeof result.setsWon === "number" || typeof result.setsLost === "number");
   const trailingTotalsColSpan =
     2 +
     (showStageHighRun2Column ? 1 : 0) +

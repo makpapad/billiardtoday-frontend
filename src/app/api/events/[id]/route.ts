@@ -29,6 +29,24 @@ const asArray = (value: unknown): Record<string, unknown>[] =>
 
 const isMissingStat = (value: unknown) => value === undefined || value === null || value === ''
 
+/**
+ * Sets won/lost of a match sheet (set-scored rulesets: CEB Artistic 2026-2027,
+ * 5-pins). Returns null when the sheet carries no set score.
+ */
+const readSheetSetScore = (
+    sheet: unknown,
+): { player1: number; player2: number } | null => {
+    const sheetObject = asObject(sheet)
+    if (!sheetObject) return null
+
+    const setScore = asObject(sheetObject.setScore) ?? asObject(sheetObject.set_score)
+    const player1 = toNumber(setScore?.player1)
+    const player2 = toNumber(setScore?.player2)
+    if (player1 === null || player2 === null) return null
+
+    return { player1, player2 }
+}
+
 const isKnockoutStageType = (value: unknown): boolean => {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
     return ['single_elimination', 'double_elimination', 'knockout', 'brackets'].includes(normalized)
@@ -317,6 +335,17 @@ const compareClubRuntimeStandingRows = (
     const matchPointsDiff = (toNumber(b.match_points) ?? 0) - (toNumber(a.match_points) ?? 0)
     if (options.includeMatchPoints !== false && matchPointsDiff !== 0) return matchPointsDiff
 
+    // Set-scored rulesets (CEB Artistic 2026-2027) order by sets won then lost.
+    const setsWonA = toNumber(a.sets_won)
+    const setsWonB = toNumber(b.sets_won)
+    if (setsWonA !== null || setsWonB !== null) {
+        const setsWonDiff = (setsWonB ?? 0) - (setsWonA ?? 0)
+        if (setsWonDiff !== 0) return setsWonDiff
+
+        const setsLostDiff = (toNumber(a.sets_lost) ?? 0) - (toNumber(b.sets_lost) ?? 0)
+        if (setsLostDiff !== 0) return setsLostDiff
+    }
+
     const averageA =
         (toNumber(a.innings) ?? 0) > 0
             ? Math.trunc(((toNumber(a.points) ?? 0) / (toNumber(a.innings) ?? 1)) * 1000) / 1000
@@ -368,6 +397,8 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
                 best_average: 0,
                 high_run: 0,
                 high_run_2: 0,
+                sets_won: 0,
+                sets_lost: 0,
                 group_number: groupNumber,
                 group_position: 0,
                 final_position: null,
@@ -425,6 +456,15 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
         p2.best_average = Math.max(toNumber(p2.best_average) ?? 0, p2Average)
         p2.high_run = Math.max(toNumber(p2.high_run) ?? 0, toNumber(match.player2_high_run) ?? 0)
         p2.high_run_2 = Math.max(toNumber(p2.high_run_2) ?? 0, toNumber(match.player2_high_run_2) ?? 0)
+
+        // Set-scored rulesets publish the match result as sets won-lost.
+        const setScore = readSheetSetScore(match.matchSheetJson)
+        if (setScore) {
+            p1.sets_won = (toNumber(p1.sets_won) ?? 0) + setScore.player1
+            p1.sets_lost = (toNumber(p1.sets_lost) ?? 0) + setScore.player2
+            p2.sets_won = (toNumber(p2.sets_won) ?? 0) + setScore.player2
+            p2.sets_lost = (toNumber(p2.sets_lost) ?? 0) + setScore.player1
+        }
     })
 
     const rankedByGroup = new Map<number, Record<string, unknown>[]>()
@@ -833,6 +873,8 @@ const mapStageResultToFinalResult = (
         innings: toNumber(row.innings),
         high_run: toNumber(row.high_run),
         high_run_2: toNumber(row.high_run_2),
+        sets_won: toNumber(row.sets_won),
+        sets_lost: toNumber(row.sets_lost),
         player: row.player,
         source: row.source ?? 'stage-standings',
     }
@@ -863,6 +905,8 @@ const mergeStandingTotals = (
         innings: (toNumber(current?.innings) ?? 0) + (toNumber(row.innings) ?? 0),
         high_run: maxNumber(current?.high_run, row.high_run),
         high_run_2: maxNumber(current?.high_run_2, row.high_run_2),
+        sets_won: (toNumber(current?.sets_won) ?? 0) + (toNumber(row.sets_won) ?? 0),
+        sets_lost: (toNumber(current?.sets_lost) ?? 0) + (toNumber(row.sets_lost) ?? 0),
         best_average: maxNumber(
             current?.best_average ?? current?.average,
             row.best_average ?? row.average,
