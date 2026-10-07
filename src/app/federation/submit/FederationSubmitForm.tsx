@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import "../preview/mockup.css";
+import { matchesAll, playerHaystack, searchTerms } from "@/lib/playerSearch";
 import {
   CheckResult,
   FederationContext,
@@ -47,6 +48,11 @@ export function FederationSubmitForm() {
   const [done, setDone] = useState<PortalSubmission | null>(null);
   /** Η CEB ενημερώθηκε με email για την υποβολή (το λέει το meta της απάντησης). */
   const [cebNotified, setCebNotified] = useState(false);
+  /** «Έξυπνη» αναζήτηση: γράφεις επώνυμο/όνομα/UMB ID και πηγαίνεις κατευθείαν στη θέση. */
+  const [search, setSearch] = useState("");
+  const [activeMatch, setActiveMatch] = useState(0);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const positionRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     const { token, context: saved } = readSession();
@@ -131,6 +137,57 @@ export function FederationSubmitForm() {
     });
     return map;
   }, [check]);
+
+  // --- «Έξυπνη» αναζήτηση στη λίστα των αθλητών ---------------------------------
+  // Γράφεις π.χ. «polat», «yuksel polat» ή «3062»: φιλτράρεται η λίστα και με Enter
+  // πας κατευθείαν στο πεδίο της θέσης. Μόλις βάλεις θέση, η αναζήτηση καθαρίζει
+  // για τον επόμενο αθλητή.
+  const terms = useMemo(() => searchTerms(search), [search]);
+
+  const matches = useMemo(() => {
+    if (!terms.length) return rows.map((_, index) => index);
+    return rows.reduce<number[]>((acc, row, index) => {
+      const haystack = playerHaystack(row.name, row.matchedName, row.umbId);
+      if (matchesAll(haystack, terms)) acc.push(index);
+      return acc;
+    }, []);
+  }, [rows, terms]);
+
+  const visibleIndices = terms.length ? matches : rows.map((_, index) => index);
+  const activeIndex = matches.length ? Math.min(activeMatch, matches.length - 1) : 0;
+  const activeRow = terms.length && matches.length ? rows[matches[activeIndex]] : null;
+
+  /** Άλμα απευθείας στο πεδίο θέσης του επιλεγμένου αθλητή. */
+  function focusPosition(index: number) {
+    const input = positionRefs.current[index];
+    if (!input) return;
+    input.scrollIntoView({ block: "center", behavior: "smooth" });
+    input.focus();
+    input.select();
+  }
+
+  /** Βελάκια = αλλαγή ταιριάσματος, Enter = άλμα στο πεδίο θέσης του. */
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!matches.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveMatch((current) => (current + 1) % matches.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveMatch((current) => (current - 1 + matches.length) % matches.length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      focusPosition(matches[activeIndex]);
+    }
+  }
+
+  /** Μόλις καταχωρηθεί θέση, το πεδίο αναζήτησης καθαρίζει για τον επόμενο αθλητή. */
+  function clearSearchAfterPosition(refocus = false) {
+    if (!search) return;
+    setSearch("");
+    setActiveMatch(0);
+    if (refocus) requestAnimationFrame(() => searchRef.current?.focus());
+  }
 
   function sentName(row: GridRow) {
     return (row.matchedName || row.name || "").trim();
@@ -358,6 +415,51 @@ export function FederationSubmitForm() {
         {notice && <div className={`msg ${notice.tone}`}>{notice.text}</div>}
         {problems.length > 0 && <div className="msg bad">{problems.slice(0, 6).join(" · ")}</div>}
 
+        <div className="searchbar">
+          <input
+            ref={searchRef}
+            type="search"
+            autoComplete="off"
+            aria-label="Search a player by surname, first name or UMB ID"
+            placeholder="Search a player — surname, first name or UMB ID…"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setActiveMatch(0);
+            }}
+            onKeyDown={handleSearchKeyDown}
+          />
+          <span className="lock searchcount">
+            {terms.length === 0 ? (
+              <>
+                Type a surname, a first name or a UMB ID — any order. ↓ ↑ picks, Enter jumps straight to that
+                player&apos;s position.
+              </>
+            ) : matches.length === 0 ? (
+              <>No player matches “{search}” — check the spelling, or add the player with “+ Add a player”.</>
+            ) : (
+              <>
+                <b>
+                  {matches.length} of {rows.length}
+                </b>{" "}
+                {matches.length === 1 ? "player matches" : "players match"}
+                {" · "}
+                {matches.length > 1
+                  ? "↓ ↑ to pick · Enter jumps to that player"
+                  : "Enter jumps to their position field"}
+              </>
+            )}
+          </span>
+        </div>
+
+        {activeRow && (
+          <div className="lock" style={{ marginBottom: 8 }}>
+            Selected: <b>{activeRow.name}</b>
+            {activeRow.umbId ? ` · UMB ID ${activeRow.umbId}` : ""}
+            {activeRow.position ? ` · position ${activeRow.position} (type a new one to change it)` : ""}
+          </div>
+        )}
+
         <div className="gridbox" style={{ marginTop: 14 }}>
           <table>
             <thead>
@@ -390,8 +492,17 @@ export function FederationSubmitForm() {
                   </td>
                 </tr>
               )}
+              {!loadingRows && terms.length > 0 && matches.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="muted">
+                    No player matches “{search}” — check the spelling, or add the player with “+ Add a player”.
+                  </td>
+                </tr>
+              )}
               {!loadingRows &&
-                rows.map((row, index) => {
+                visibleIndices.map((index) => {
+                  const row = rows[index];
+                  const isActive = terms.length > 0 && matches[activeIndex] === index;
                   const position = Number(row.position);
                   const isNew = row.rank === null;
                   const result = row.position ? checkByName.get(sentName(row).toUpperCase()) : undefined;
@@ -417,7 +528,10 @@ export function FederationSubmitForm() {
                         ? "Ready"
                         : "By name";
                   return (
-                    <tr key={`${row.name}-${index}`} className={row.position ? "done" : ""}>
+                    <tr
+                      key={`${row.name}-${index}`}
+                      className={[row.position ? "done" : "", isActive ? "active" : ""].filter(Boolean).join(" ")}
+                    >
                       <td className="num muted">{row.rank ?? "—"}</td>
                       <td>
                         {isNew ? (
@@ -460,12 +574,24 @@ export function FederationSubmitForm() {
                       </td>
                       <td>
                         <input
+                          ref={(element) => {
+                            positionRefs.current[index] = element;
+                          }}
                           className="pos"
                           inputMode="numeric"
                           placeholder="—"
                           title="Finishing position in your national championship"
                           value={row.position}
                           onChange={(event) => setPosition(index, event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              clearSearchAfterPosition(true);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (search && row.position) clearSearchAfterPosition();
+                          }}
                         />
                       </td>
                       <td className="pts num">{points ? points : "—"}</td>

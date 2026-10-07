@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, useMemo, useRef, useState } from "react";
 import "./mockup.css";
+import { foldName } from "@/lib/playerSearch";
 
 type Row = {
   rank: number | null;
@@ -38,16 +39,6 @@ const pointsFor = (position: number) =>
   position === 1 ? 40 : position === 2 ? 27 : position <= 4 ? 19 : position <= 8 ? 13 : position <= 16 ? 8 : position <= 32 ? 4 : 0;
 
 const normalise = (value: string) => (value || "").toUpperCase().replace(/[^A-Z ]+/g, " ").replace(/\s+/g, " ").trim();
-
-/** Ψάχνει επώνυμο ή/και όνομα: χωρίς τόνους, χωρίς διάκριση πεζών/κεφαλαίων. */
-const foldName = (value: string) =>
-  (value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0370-\u03ff ]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 
 const DEMO_PASTE = `1 ATHANASIOU Michalis
 2 FELEKIDIS Panagiotis
