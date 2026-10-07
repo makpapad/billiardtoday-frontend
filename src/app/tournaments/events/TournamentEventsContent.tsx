@@ -75,6 +75,8 @@ import {
   BiathlonFinalRankingTable,
   BiathlonBracketModal,
 } from "./BiathlonTables";
+import { isArtisticSetsEvent } from "./artisticSets";
+import { ArtisticSetsGroupMatchesTable } from "./ArtisticSetsTables";
 import { getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
@@ -1744,7 +1746,7 @@ function hasMeaningfulStageResult(
 function buildStageRankByPlayerKey(
   stage: NormalizedEventStage,
   eventIsProvisional: boolean,
-  options: { artistic?: boolean; suppressBestAverage?: boolean } = {},
+  options: { artistic?: boolean; artisticSets?: boolean; suppressBestAverage?: boolean } = {},
 ): Map<string, number> {
   const rankByPlayerKey = new Map<string, number>();
   // Bracket stages rank by match results and have no group standings to annotate.
@@ -1765,6 +1767,7 @@ function buildStageRankByPlayerKey(
     rows = stageMatchGroups.flatMap((group) =>
       buildGroupStandings(group.matches, {
         artistic: options.artistic,
+        artisticSets: options.artisticSets,
         suppressBestAverage: options.suppressBestAverage,
       }).map((standing) => ({
         playerId: standing.playerId,
@@ -2159,6 +2162,7 @@ function StageRankingTable({
   embedded,
   playerProfileHref,
   artistic = false,
+  artisticSets = false,
   groupLabelMode = "numbers",
   suppressDerivedBestAverage = false,
   koRankingRound = "opening-final",
@@ -2174,6 +2178,7 @@ function StageRankingTable({
   embedded: boolean;
   playerProfileHref: (playerId: string | number, playerName: string) => string;
   artistic?: boolean;
+  artisticSets?: boolean;
   groupLabelMode?: GroupLabelMode;
   suppressDerivedBestAverage?: boolean;
   koRankingRound?: KoRankingRound;
@@ -2517,8 +2522,12 @@ function StageRankingTable({
         Number.isFinite(result.highRun2) &&
       result.highRun2 > 0,
     );
+  const showSetsColumn = artistic && artisticSets;
   const trailingTotalsColSpan =
-    2 + (showStageHighRun2Column ? 1 : 0) + (showBestAverageColumn || artistic ? 1 : 0);
+    2 +
+    (showStageHighRun2Column ? 1 : 0) +
+    (showBestAverageColumn || artistic ? 1 : 0) +
+    (showSetsColumn ? 1 : 0);
   const countryFilteredResults = countryFilterId
     ? visibleResults.filter((result) =>
         resolveCountryBucketId(result.playerCountry) === countryFilterId,
@@ -2770,6 +2779,11 @@ function StageRankingTable({
                   {artistic ? "Best run" : "H.R."}
                 </th>
               )}
+              {showSetsColumn && (
+                <th className="px-4 py-3 text-center font-semibold" title="Sets won - lost (best of 5)">
+                  Sets
+                </th>
+              )}
               {showStageHighRun2Column && (
                 <th className="px-4 py-3 text-center font-semibold">
                   H.R.2
@@ -2966,6 +2980,13 @@ function StageRankingTable({
                     )
                   )}
                 </td>
+                {showSetsColumn && (
+                  <td className="px-4 py-3 text-center">
+                    {typeof result.setsWon === "number" || typeof result.setsLost === "number"
+                      ? `${result.setsWon ?? 0}-${result.setsLost ?? 0}`
+                      : "-"}
+                  </td>
+                )}
                 {showStageHighRun2Column && (
                   <td className="px-4 py-3 text-center">
                     {formatNumberValue(result.highRun2)}
@@ -4097,6 +4118,8 @@ export function TournamentEventsContent({
     [eventData],
   );
   const isArtisticEvent = eventGameType === "artistic";
+  /** CEB Artistic 2026-2027 (best of 5 sets of 7 figures). */
+  const isArtisticSets = isArtisticSetsEvent(eventData);
   const isFivePinsFinalEvent = isFivePinsEvent(eventData);
 
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
@@ -5214,7 +5237,9 @@ export function TournamentEventsContent({
             "player2",
           );
           const isFivePinsBracket = isFivePinsEvent(eventData);
-          const score1 = isFivePinsBracket
+          // 5-pins and CEB Artistic 2026-2027 publish the match result as sets won.
+          const bracketScoreUsesSets = isFivePinsBracket || isArtisticSets;
+          const score1 = bracketScoreUsesSets
             ? (readBracketSetsWon(m as Record<string, unknown>, 1) ??
               toNumber(
                 (
@@ -5232,7 +5257,7 @@ export function TournamentEventsContent({
                 ).player1_points,
               ) ??
               readStoredBracketMatchPoints(m as Record<string, unknown>, 1));
-          const score2 = isFivePinsBracket
+          const score2 = bracketScoreUsesSets
             ? (readBracketSetsWon(m as Record<string, unknown>, 2) ??
               toNumber(
                 (
@@ -5541,13 +5566,15 @@ export function TournamentEventsContent({
               ? getCountryFlagCdnUrl(p2.country, 40)
               : null;
             const isFivePinsBracket = isFivePinsEvent(eventData);
-            const score1 = isFivePinsBracket
+            // 5-pins and CEB Artistic 2026-2027 publish the result as sets won.
+            const bracketScoreUsesSets = isFivePinsBracket || isArtisticSets;
+            const score1 = bracketScoreUsesSets
               ? (readBracketSetsWon(m as Record<string, unknown>, 1) ??
                 toNumber((m as { player1_points?: unknown }).player1_points) ??
                 readStoredBracketMatchPoints(m as Record<string, unknown>, 1))
               : (toNumber((m as { player1_points?: unknown }).player1_points) ??
                 readStoredBracketMatchPoints(m as Record<string, unknown>, 1));
-            const score2 = isFivePinsBracket
+            const score2 = bracketScoreUsesSets
               ? (readBracketSetsWon(m as Record<string, unknown>, 2) ??
                 toNumber((m as { player2_points?: unknown }).player2_points) ??
                 readStoredBracketMatchPoints(m as Record<string, unknown>, 2))
@@ -5684,12 +5711,13 @@ export function TournamentEventsContent({
         stage.documentId,
         buildStageRankByPlayerKey(stage, eventHasIncompleteMatches, {
           artistic: isArtisticEvent,
+          artisticSets: isArtisticSets,
           suppressBestAverage: suppressDerivedBestAverage,
         }),
       );
     });
     return byStage;
-  }, [eventStages, eventHasIncompleteMatches, isArtisticEvent, suppressDerivedBestAverage]);
+  }, [eventStages, eventHasIncompleteMatches, isArtisticEvent, isArtisticSets, suppressDerivedBestAverage]);
 
   // Route 5-pins events to the dedicated 5-pins UI (sets-based scoring).
   return (
@@ -5799,6 +5827,11 @@ export function TournamentEventsContent({
                                 <th className="px-4 py-3 text-center font-semibold">
                                   Match Pts
                                 </th>
+                                {isArtisticSets && (
+                                  <th className="px-4 py-3 text-center font-semibold" title="Sets won - lost (best of 5)">
+                                    Sets
+                                  </th>
+                                )}
                                 <th className="px-4 py-3 text-center font-semibold">
                                   {isFivePinsFinalEvent ? "P+" : isArtisticEvent ? "Points" : "Caroms"}
                                 </th>
@@ -5922,6 +5955,14 @@ export function TournamentEventsContent({
                                   <td className="px-4 py-3 text-center">
                                     {formatNumberValue(result.matchPoints)}
                                   </td>
+                                  {isArtisticSets && (
+                                    <td className="px-4 py-3 text-center">
+                                      {typeof result.setsWon === "number" ||
+                                      typeof result.setsLost === "number"
+                                        ? `${result.setsWon ?? 0}-${result.setsLost ?? 0}`
+                                        : "-"}
+                                    </td>
+                                  )}
                                   <td className="px-4 py-3 text-center">
                                     {formatNumberValue(
                                       result.caroms ?? result.points,
@@ -6353,6 +6394,7 @@ export function TournamentEventsContent({
                                   embedded={embedded}
                                   playerProfileHref={playerProfileHref}
                                   artistic={isArtisticEvent}
+                                  artisticSets={isArtisticSets}
                                   groupLabelMode={groupLabelMode}
                                   suppressDerivedBestAverage={suppressDerivedBestAverage}
                                   koRankingRound={koRankingRound}
@@ -8543,12 +8585,24 @@ export function TournamentEventsContent({
                                                   </tbody>
                                                 </table>
                                               </div>
+                                              {isArtisticSets ? (
+                                                <div className="mt-3">
+                                                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                                    Set details · best of 5 sets × 7 figures
+                                                  </div>
+                                                  <ArtisticSetsGroupMatchesTable
+                                                    group={group}
+                                                    showNativePlayerNames={showNativePlayerNames}
+                                                  />
+                                                </div>
+                                              ) : null}
                                               {showGroupStandings ? (
                                                                                               <GroupStandingsTable
                                                                                                 standings={buildGroupStandings(
                                                                                                   group.matches,
                                                                                                   {
                                                                                                     artistic: isArtisticEvent,
+                                                                                                    artisticSets: isArtisticSets,
                                                                                                     suppressBestAverage: suppressDerivedBestAverage,
                                                                                                     entryStageByPlayerKey,
                                                                                                     playerSeedByDocumentId:
@@ -8560,6 +8614,7 @@ export function TournamentEventsContent({
                                                                                                 )}
                                                                                                 embedded={embedded}
                                                                                                 artistic={isArtisticEvent}
+                                                                                                setCounts={isArtisticSets}
                                                                                                 showNativeNames={showNativePlayerNames}
                                                                                                 showEntryBadges
                                                                                                 currentStageOrder={stage.order}

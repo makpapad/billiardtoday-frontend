@@ -226,6 +226,9 @@ export type NormalizedStageResult = {
   highRun: number | null;
   highRun2: number | null;
   setPoints: number | null;
+  /** Sets won / lost — set-scored rulesets (CEB Artistic 2026-2027, 5-pins) */
+  setsWon?: number | null;
+  setsLost?: number | null;
   groupNumber: number | null;
   groupPosition: number | null;
   finalPosition: number | null;
@@ -250,6 +253,9 @@ export type NormalizedFinalResult = {
   innings: number | null;
   highRun: number | null;
   highRun2: number | null;
+  /** Sets won / lost — set-scored rulesets (CEB Artistic 2026-2027, 5-pins) */
+  setsWon?: number | null;
+  setsLost?: number | null;
   rankingPoints: number | null;
   penalty: number | null;
   finalPoints: number | null;
@@ -333,6 +339,9 @@ export type GroupStanding = {
   bestAverage: number | null;
   highRun: number | null;
   highRun2: number | null;
+  /** Sets won / lost — populated for set-scored rulesets (CEB Artistic 2026-2027, 5-pins) */
+  setsWon?: number;
+  setsLost?: number;
   place: number;
   /** Entry stage info (order/label/title) populated when badges are available */
   entryStage?: { order: number | null; label: string | null; title: string | null } | null;

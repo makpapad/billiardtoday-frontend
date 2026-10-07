@@ -618,6 +618,8 @@ const fetchStoredStageResults = async (
     url.searchParams.set('fields[10]', 'qualified')
     url.searchParams.set('fields[11]', 'qualification_type')
     url.searchParams.set('fields[12]', 'source')
+    url.searchParams.set('fields[13]', 'sets_won')
+    url.searchParams.set('fields[14]', 'sets_lost')
     url.searchParams.set('pagination[pageSize]', '1000')
     url.searchParams.set('sort[0]', 'final_position:asc')
     url.searchParams.set('sort[1]', 'group_number:asc')

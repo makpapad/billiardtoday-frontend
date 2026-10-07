@@ -8,6 +8,8 @@ type GroupStandingsTableProps = {
     standings: GroupStanding[]
     embedded?: boolean
     artistic?: boolean
+    /** CEB Artistic 2026-2027 (best of 5 sets): renders the sets won-lost column */
+    setCounts?: boolean
     showNativeNames?: boolean
     tournamentContextSlug?: string | null
     /** When true, renders entry stage and tier badges in the player name cell */
@@ -22,6 +24,7 @@ export default function GroupStandingsTable({
     standings,
     embedded = false,
     artistic = false,
+    setCounts = false,
     showNativeNames = true,
     tournamentContextSlug = null,
     showEntryBadges = false,
@@ -55,6 +58,9 @@ export default function GroupStandingsTable({
                         )}
                         <th className="px-2 py-2 text-center font-medium w-14" title="Matches won / lost">Rec</th>
                         <th className="px-2 py-2 text-center font-medium w-14" title="Match points">MP</th>
+                        {setCounts && (
+                            <th className="px-2 py-2 text-center font-medium w-16" title="Sets won - lost (best of 5)">Sets</th>
+                        )}
                         <th className="px-2 py-2 text-center font-medium w-14" title="Points (caroms)">Pts</th>
                         <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Possible points' : 'Innings'}>{artistic ? 'Poss. pts' : 'Inn'}</th>
                         <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Percentage' : 'General average'}>{artistic ? '%' : 'Avg'}</th>
@@ -145,6 +151,13 @@ export default function GroupStandingsTable({
                                 )}
                                 <td className="px-2 py-2 text-center">{formatRecord(player.record)}</td>
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.totalMatchPoints)}</td>
+                                {setCounts && (
+                                    <td className="px-2 py-2 text-center">
+                                        {(player.setsWon ?? 0) > 0 || (player.setsLost ?? 0) > 0
+                                            ? `${player.setsWon ?? 0}-${player.setsLost ?? 0}`
+                                            : '-'}
+                                    </td>
+                                )}
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.totalPoints)}</td>
                                 <td className="px-2 py-2 text-center">{formatNumberValue(player.totalInnings)}</td>
                                 <td className="px-2 py-2 text-center">

@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import type { EntryStageInfo, EntryTierRule } from "./entryHelpers";
 import { entryTierFromSeed, lookupEntryStageForPlayer } from "./entryHelpers";
+import { readArtisticSetSummary } from "./artisticSets";
 import { getCountryCode, getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
 
 export const toNumber = (value: unknown): number | null => {
@@ -254,6 +255,8 @@ export const normalizeResult = (
     highRun: toNumber(normalized.high_run),
     highRun2: toNumber(normalized.high_run_2),
     setPoints: toNumber((normalized as typeof normalized & { set_points?: unknown }).set_points),
+    setsWon: toNumber((normalized as Record<string, unknown>).sets_won),
+    setsLost: toNumber((normalized as Record<string, unknown>).sets_lost),
     groupNumber: toNumber(normalized.group_number),
     groupPosition: toNumber(normalized.group_position),
     finalPosition: toNumber(normalized.final_position),
@@ -286,6 +289,8 @@ export const normalizeFinalResult = (
     innings: toNumber(normalized.innings),
     highRun: toNumber(normalized.high_run),
     highRun2: toNumber(normalized.high_run_2),
+    setsWon: toNumber((normalized as Record<string, unknown>).sets_won),
+    setsLost: toNumber((normalized as Record<string, unknown>).sets_lost),
     rankingPoints: toNumber(normalized.ranking_points),
     penalty: toNumber(normalized.penalty),
     finalPoints: toNumber(normalized.final_points),
@@ -523,6 +528,11 @@ export const hasPlayedStageMatch = (
 
 export type BuildGroupStandingsOptions = {
   artistic?: boolean;
+  /**
+   * CEB Artistic 2026-2027 (best of 5 sets): adds the sets won/lost criteria
+   * right after the match points (MP -> sets won -> sets lost -> % -> best run).
+   */
+  artisticSets?: boolean;
   suppressBestAverage?: boolean;
   entryStageByPlayerKey?: Map<string, EntryStageInfo>;
   playerSeedByDocumentId?: Map<string, number>;
@@ -534,6 +544,7 @@ export const buildGroupStandings = (
   options?: BuildGroupStandingsOptions,
 ): GroupStanding[] => {
   const artistic = options?.artistic === true;
+  const artisticSets = options?.artisticSets === true;
   const suppressBestAverage = options?.suppressBestAverage === true;
   const entryStageByPlayerKey = options?.entryStageByPlayerKey;
   const playerSeedByDocumentId = options?.playerSeedByDocumentId;
@@ -580,9 +591,42 @@ export const buildGroupStandings = (
 
     return a.playerName.localeCompare(b.playerName);
   };
+  /**
+   * CEB Artistic 2026-2027 order: match points -> sets won -> sets lost -> % ->
+   * best run. Applied only for the sets-based artistic ruleset; every other
+   * discipline keeps the metrics-based comparator above.
+   */
+  const compareArtisticSetsMetrics = (
+    a: GroupStanding,
+    b: GroupStanding,
+    compareOptions?: { includeHighRun?: boolean },
+  ): number => {
+    if (a.totalMatchPoints !== b.totalMatchPoints) {
+      return b.totalMatchPoints - a.totalMatchPoints;
+    }
+
+    const setsWonA = a.setsWon ?? 0;
+    const setsWonB = b.setsWon ?? 0;
+    if (setsWonA !== setsWonB) return setsWonB - setsWonA;
+
+    const setsLostA = a.setsLost ?? 0;
+    const setsLostB = b.setsLost ?? 0;
+    if (setsLostA !== setsLostB) return setsLostA - setsLostB;
+
+    return compareArtisticMetrics(a, b, {
+      includeMatchPoints: false,
+      includeHighRun: compareOptions?.includeHighRun,
+    });
+  };
   const resolveArtisticDirectComparison = (
     standings: GroupStanding[],
+    primaryCompare: (a: GroupStanding, b: GroupStanding) => number = (a, b) =>
+      compareArtisticMetrics(a, b),
   ): GroupStanding[] => {
+    const compareForTieBreak = (a: GroupStanding, b: GroupStanding): number =>
+      artisticSets
+        ? compareArtisticSetsMetrics(a, b, { includeHighRun: false })
+        : compareArtisticMetrics(a, b, { includeHighRun: false });
     const resolved: GroupStanding[] = [];
     let index = 0;
 
@@ -593,9 +637,7 @@ export const buildGroupStandings = (
 
       while (
         nextIndex < standings.length &&
-        compareArtisticMetrics(current, standings[nextIndex], {
-          includeHighRun: false,
-        }) === 0
+        compareForTieBreak(current, standings[nextIndex]) === 0
       ) {
         tiedBlock.push(standings[nextIndex]);
         nextIndex += 1;
@@ -610,11 +652,17 @@ export const buildGroupStandings = (
       const tiedKeys = new Set(tiedBlock.map((standing) => standing.key));
       const directStats = new Map<
         string,
-        { totalMatchPoints: number; totalPoints: number; totalInnings: number }
+        {
+          totalMatchPoints: number;
+          totalPoints: number;
+          totalInnings: number;
+          setsWon: number;
+          setsLost: number;
+        }
       >(
         tiedBlock.map((standing) => [
           standing.key,
-          { totalMatchPoints: 0, totalPoints: 0, totalInnings: 0 },
+          { totalMatchPoints: 0, totalPoints: 0, totalInnings: 0, setsWon: 0, setsLost: 0 },
         ]),
       );
 
@@ -635,6 +683,21 @@ export const buildGroupStandings = (
         bottomStats.totalMatchPoints += match.bottom.player.matchPoints ?? 0;
         bottomStats.totalPoints += match.bottom.player.points ?? 0;
         bottomStats.totalInnings += match.bottom.player.innings ?? 0;
+
+        if (artisticSets) {
+          const summary = readArtisticSetSummary(match.matchSheetJson ?? match.inningsDetail, {
+            player1_points: match.top.player.points,
+            player2_points: match.bottom.player.points,
+            player1_innings: match.top.player.innings,
+            player2_innings: match.bottom.player.innings,
+          });
+          if (summary.setsWon) {
+            topStats.setsWon += summary.setsWon.player1;
+            topStats.setsLost += summary.setsWon.player2;
+            bottomStats.setsWon += summary.setsWon.player2;
+            bottomStats.setsLost += summary.setsWon.player1;
+          }
+        }
       });
 
       const sortedBlock = [...tiedBlock].sort((left, right) => {
@@ -644,6 +707,14 @@ export const buildGroupStandings = (
         if (leftDirect && rightDirect) {
           if (leftDirect.totalMatchPoints !== rightDirect.totalMatchPoints) {
             return rightDirect.totalMatchPoints - leftDirect.totalMatchPoints;
+          }
+
+          if (artisticSets && leftDirect.setsWon !== rightDirect.setsWon) {
+            return rightDirect.setsWon - leftDirect.setsWon;
+          }
+
+          if (artisticSets && leftDirect.setsLost !== rightDirect.setsLost) {
+            return leftDirect.setsLost - rightDirect.setsLost;
           }
 
           const directPctLeft = computeArtisticPercentage(
@@ -659,7 +730,7 @@ export const buildGroupStandings = (
           }
         }
 
-        return compareArtisticMetrics(left, right);
+        return primaryCompare(left, right);
       });
 
       resolved.push(...sortedBlock);
@@ -677,6 +748,7 @@ export const buildGroupStandings = (
       const applyEntry = (
         entry: typeof match.top,
         position: "top" | "bottom",
+        side: "player1" | "player2",
       ) => {
         if (isDynamicPlaceholderPlayer(entry.player)) return;
 
@@ -698,6 +770,8 @@ export const buildGroupStandings = (
                     bestAverage: null,
                     highRun: null,
                     highRun2: null,
+                    setsWon: 0,
+                    setsLost: 0,
                     place: 0,
                     entryStage: entryStageByPlayerKey
                       ? lookupEntryStageForPlayer(entryStageByPlayerKey, entry.player)
@@ -737,6 +811,20 @@ export const buildGroupStandings = (
           entry.player.innings > 0
             ? truncateTo3Decimals(entry.player.points / entry.player.innings)
             : null;
+        let setsWonDelta = 0;
+        let setsLostDelta = 0;
+        if (artisticSets && hasPlayedEntry) {
+          const summary = readArtisticSetSummary(match.matchSheetJson ?? match.inningsDetail, {
+            player1_points: match.top.player.points,
+            player2_points: match.bottom.player.points,
+            player1_innings: match.top.player.innings,
+            player2_innings: match.bottom.player.innings,
+          });
+          if (summary.setsWon) {
+            setsWonDelta = side === "player1" ? summary.setsWon.player1 : summary.setsWon.player2;
+            setsLostDelta = side === "player1" ? summary.setsWon.player2 : summary.setsWon.player1;
+          }
+        }
         acc[key] = {
           ...current,
           record: aggregateRecord(current.record, entry.outcome),
@@ -751,11 +839,13 @@ export const buildGroupStandings = (
               : Math.max(current.bestAverage ?? 0, bestAverageCandidate),
           highRun: Math.max(current.highRun ?? 0, entry.player.highRun ?? 0),
           highRun2: Math.max(current.highRun2 ?? 0, entry.player.highRun2 ?? 0),
+          setsWon: (current.setsWon ?? 0) + setsWonDelta,
+          setsLost: (current.setsLost ?? 0) + setsLostDelta,
         };
       };
 
-      applyEntry(match.top, "top");
-      applyEntry(match.bottom, "bottom");
+      applyEntry(match.top, "top", "player1");
+      applyEntry(match.bottom, "bottom", "player2");
 
       return acc;
     },
@@ -781,7 +871,10 @@ export const buildGroupStandings = (
 
   const sortedStandings = artistic
     ? resolveArtisticDirectComparison(
-        [...standings].sort((a, b) => compareArtisticMetrics(a, b)),
+        [...standings].sort((a, b) =>
+          artisticSets ? compareArtisticSetsMetrics(a, b) : compareArtisticMetrics(a, b),
+        ),
+        (a, b) => (artisticSets ? compareArtisticSetsMetrics(a, b) : compareArtisticMetrics(a, b)),
       )
     : [...standings].sort((a, b) => {
         if (a.totalMatchPoints !== b.totalMatchPoints)
