@@ -76,7 +76,7 @@ export function FederationSignIn() {
           {error && <div className="msg bad">{error}</div>}
 
           <div className="row between" style={{ marginTop: 16 }}>
-            <span className="lock">Forgot your password? Write to us and we reset it.</span>
+            <span className="lock">Forgot your password? Please contact the CEB.</span>
             <button className="primary" type="submit" disabled={busy}>
               {busy ? "Signing in…" : "Sign in"}
             </button>
@@ -84,9 +84,9 @@ export function FederationSignIn() {
         </form>
 
         <div className="msg info" style={{ marginTop: 18 }}>
-          <b>Federation accounts are created by BilliardToday.</b> Each account is tied to one federation, so the
-          country is fixed from the first minute. If your federation needs access, write to us from the email of the
-          federation and we will set it up.
+          <b>Federation accounts are created by CEB and handed to BilliardToday to load into the ranking platform.</b> Each account is tied to one federation, so the
+          country is fixed from the first minute. Federations reach these pages from the CEB website — if your
+          federation needs access, please contact the CEB.
         </div>
 
         <p className="foot" style={{ marginTop: 14 }}>

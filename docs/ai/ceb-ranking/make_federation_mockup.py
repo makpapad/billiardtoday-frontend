@@ -323,9 +323,9 @@ TEMPLATE = r"""<!doctype html>
       </div>
 
       <div class="msg info" style="margin-top:18px">
-        <b>Federation accounts are reviewed by us.</b> A new registration shows
-        <span class="chip warn">Pending verification</span> until we confirm it (usually within one
-        business day) — the same rule as player accounts.
+        <b>Federation accounts are created by CEB and handed to BilliardToday to load into the ranking platform.</b>
+        Each account is tied to one federation, so the country is fixed from the first minute — federations do not
+        register here.
       </div>
     </div>
   </section>

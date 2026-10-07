@@ -163,3 +163,38 @@
 .fedmock .searchbar .searchcount { flex: 1 1 auto; }
 .fedmock .searchbar .searchcount b { color: var(--brand); }
 .fedmock tr.active td { background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand); }
+
+/* Χρώμα στη λίστα των αθλητών — ίδια «οικογένεια» με τη μεγάλη λίστα της CEB
+   (σκούρη κεφαλίδα, εναλλαγή γραμμών, χρωματιστές πινακίδες θέσης/πόντων). */
+.fedmock .gridbox thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--ink); color: #fff; border-bottom: 0;
+}
+.fedmock .gridbox thead th .sub { color: rgba(255, 255, 255, 0.55); }
+
+.fedmock .gridbox tbody tr:nth-child(even):not(.done):not(.active):not(.flagged) td { background: #f4faff; }
+.fedmock .gridbox tbody tr:not(.done):not(.active):not(.flagged):hover td { background: #e0f2fe; }
+.fedmock .gridbox tr.done td { background: #f2fdf7; }
+.fedmock .gridbox tr.done:hover td { background: #e8fbf0; }
+.fedmock .gridbox tr.active td { background: var(--brand-soft); }
+.fedmock .gridbox tr.active:hover td { background: #cfeaff; }
+
+.fedmock .crefcell { text-align: right; }
+.fedmock .cref { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.fedmock .cref.new { color: var(--brand); font-weight: 700; }
+.fedmock tr.done .cref { color: #94a3b8; }
+
+.fedmock .pillpts {
+  display: inline-block; min-width: 32px; padding: 1px 8px; border-radius: 9px;
+  background: var(--brand-soft); color: var(--brand);
+  font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.fedmock tr.done .pillpts { background: #d1fae5; color: var(--ok); }
+.fedmock .gridbox tr.done .pos { border-color: #a7f3d0; background: #f0fdf4; color: var(--ok); font-weight: 700; }
+
+/* Όταν προσθέτεις νέο αθλητή: η γραμμή «αναβοσβήνει» μία φορά, ώστε να φανεί. */
+.fedmock tr.just-added td { animation: fedadded 1.6s ease-out 1; }
+@keyframes fedadded {
+  0% { background: #fde68a; }
+  100% { background: transparent; }
+}

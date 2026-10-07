@@ -53,6 +53,10 @@ export function FederationSubmitForm() {
   const [activeMatch, setActiveMatch] = useState(0);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const positionRefs = useRef<Array<HTMLInputElement | null>>([]);
+  /** Η γραμμή που μόλις προστέθηκε με «+ Add a player» — πάμε εκεί με το μάτι και τον κέρσορα. */
+  const nameRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const [focusRow, setFocusRow] = useState<number | null>(null);
+  const [justAdded, setJustAdded] = useState<number | null>(null);
 
   useEffect(() => {
     const { token, context: saved } = readSession();
@@ -147,6 +151,12 @@ export function FederationSubmitForm() {
   const matches = useMemo(() => {
     if (!terms.length) return rows.map((_, index) => index);
     return rows.reduce<number[]>((acc, row, index) => {
+      // Μια γραμμή που μόλις προστέθηκε με «+ Add a player» μένει ΠΑΝΤΑ ορατή —
+      // αλλιώς η αναζήτηση θα την έκρυβε την ώρα που τη συμπληρώνεις.
+      if (row.rank === null) {
+        acc.push(index);
+        return acc;
+      }
       const haystack = playerHaystack(row.name, row.matchedName, row.umbId);
       if (matchesAll(haystack, terms)) acc.push(index);
       return acc;
@@ -211,12 +221,29 @@ export function FederationSubmitForm() {
 
   /** Προσθήκη αθλητή που δεν είναι στη λίστα μας (η CEB λίστα δεν είναι πλήρης). */
   function addRow() {
+    const index = rows.length;
     setRows((current) => [
       ...current,
       { rank: null, name: "", matchedName: null, umbId: "", position: "" },
     ]);
     setCheck(null);
+    setSearch(""); // τυχόν αναζήτηση θα έκρυβε τη νέα γραμμή μπροστά στα μάτια του χρήστη
+    setActiveMatch(0);
+    setFocusRow(index);
   }
+
+  /** Πάει το οπτικό πεδίο στη νέα γραμμή και βάζει τον κέρσορα στο όνομα. */
+  useEffect(() => {
+    if (focusRow === null) return;
+    const input = nameRefs.current[focusRow];
+    if (!input) return;
+    input.scrollIntoView({ block: "center", behavior: "smooth" });
+    input.focus({ preventScroll: true });
+    setJustAdded(focusRow);
+    setFocusRow(null);
+    const timer = window.setTimeout(() => setJustAdded(null), 1800);
+    return () => window.clearTimeout(timer);
+  }, [focusRow, rows]);
 
   function setName(index: number, value: string) {
     setRows((current) => current.map((row, i) => (i === index ? { ...row, name: value } : row)));
@@ -465,9 +492,6 @@ export function FederationSubmitForm() {
             <thead>
               <tr>
                 <th>
-                  CEB list<span className="sub">reference</span>
-                </th>
-                <th>
                   Player<span className="sub">as in the CEB list</span>
                 </th>
                 <th>
@@ -481,6 +505,9 @@ export function FederationSubmitForm() {
                 </th>
                 <th>
                   Check<span className="sub">after you press check</span>
+                </th>
+                <th>
+                  CEB list<span className="sub">reference · changes each tournament</span>
                 </th>
               </tr>
             </thead>
@@ -530,13 +557,21 @@ export function FederationSubmitForm() {
                   return (
                     <tr
                       key={`${row.name}-${index}`}
-                      className={[row.position ? "done" : "", isActive ? "active" : ""].filter(Boolean).join(" ")}
+                      className={[
+                        row.position ? "done" : "",
+                        isActive ? "active" : "",
+                        justAdded === index ? "just-added" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     >
-                      <td className="num muted">{row.rank ?? "—"}</td>
                       <td>
                         {isNew ? (
                           <span className="row" style={{ gap: 6 }}>
                             <input
+                              ref={(element) => {
+                                nameRefs.current[index] = element;
+                              }}
                               className="idbox"
                               style={{ width: 190 }}
                               placeholder="Player name"
@@ -594,9 +629,18 @@ export function FederationSubmitForm() {
                           }}
                         />
                       </td>
-                      <td className="pts num">{points ? points : "—"}</td>
+                      <td className="pts num">
+                        {points ? <span className="pillpts">{points}</span> : "—"}
+                      </td>
                       <td>
                         <span className={`chip ${chipClass}`}>{chipText}</span>
+                      </td>
+                      <td className="crefcell">
+                        {isNew ? (
+                          <span className="cref new">new</span>
+                        ) : (
+                          <span className="cref">{row.rank ?? "—"}</span>
+                        )}
                       </td>
                     </tr>
                   );

@@ -315,9 +315,9 @@ export function FederationSubmissionPreview({
           </div>
 
           <div className="msg info" style={{ marginTop: 18 }}>
-            <b>Federation accounts are reviewed by us.</b> A new registration shows{" "}
-            <span className="chip warn">Pending verification</span> until we confirm it (usually within one business
-            day) — the same rule as player accounts.
+            <b>Federation accounts are created by CEB and handed to BilliardToday to load into the ranking platform.</b>{" "}
+            Each account is tied to one federation, so the country is fixed from the first minute — federations do not
+            register here.
           </div>
         </section>
       )}
@@ -521,9 +521,6 @@ export function FederationSubmissionPreview({
                 <thead>
                   <tr>
                     <th>
-                      CEB list<span className="sub">reference</span>
-                    </th>
-                    <th>
                       Player<span className="sub">as in the CEB list</span>
                     </th>
                     <th>
@@ -537,6 +534,9 @@ export function FederationSubmissionPreview({
                     </th>
                     <th>
                       Check<span className="sub">live</span>
+                    </th>
+                    <th>
+                      CEB list<span className="sub">reference · changes each tournament</span>
                     </th>
                   </tr>
                 </thead>
@@ -564,7 +564,6 @@ export function FederationSubmissionPreview({
                           .filter(Boolean)
                           .join(" ")}
                       >
-                        <td className="num muted">{row.rank ?? "—"}</td>
                         <td>
                           <b>{row.name}</b>
                         </td>
@@ -603,6 +602,9 @@ export function FederationSubmissionPreview({
                         <td className="pts num">{points ? points : "—"}</td>
                         <td>
                           <span className={`chip ${chipClass}`}>{chipText}</span>
+                        </td>
+                        <td className="crefcell">
+                          <span className="cref">{row.rank ?? "—"}</span>
                         </td>
                       </tr>
                     );
