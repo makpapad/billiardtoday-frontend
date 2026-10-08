@@ -157,6 +157,170 @@ export const resolveCebPlayerLink = (
   return undefined;
 };
 
+/**
+ * Επεξηγηματικό κείμενο μιας λίστας CEB (η αριστερή στήλη «How this list is built»).
+ * Είναι data-driven: κάθε κατηγορία φέρνει το δικό της κείμενο στο JSON, ώστε άλλες
+ * κατηγορίες (π.χ. Ladies) να μην κληρονομούν το κείμενο του Individual. Όταν το πεδίο
+ * λείπει, το `resolveCebIntro` χτίζει ένα γενικό κείμενο από τα δικά της τουρνουά.
+ */
+export type CebRankingIntroItem = {
+  /** Έντονη αρχή της παραγράφου (προαιρετική). */
+  lead: string;
+  /** Η συνέχεια/επεξήγηση. */
+  body: string;
+};
+
+/** Γραμμή του πίνακα «How players earn points» (θέση → πόντοι· null = δεν πληρώνει). */
+export type CebRankingPointsRow = {
+  label: string;
+  values: (number | null)[];
+};
+
+export type CebRankingIntro = {
+  items: CebRankingIntroItem[];
+  /** Κεφαλίδες στηλών της κλίμακας· όταν λείπει, χρησιμοποιούνται οι πρότυπες της CEB. */
+  pointsHeader?: string[];
+  pointsRows: CebRankingPointsRow[];
+  pointsNote?: string;
+};
+
+/** Πρότυπες κεφαλίδες στηλών της κλίμακας πόντων (1 … 32, με την τελευταία στήλη «**»). */
+export const CEB_POINTS_HEADER = ["1", "2", "3–4", "5–8", "9–16", "17–32", "**"];
+
+const coerceCebIntro = (value: unknown): CebRankingIntro | null => {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+
+  const items: CebRankingIntroItem[] = Array.isArray(raw.items)
+    ? raw.items
+        .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+        .map((entry) => ({
+          lead: typeof entry.lead === "string" ? entry.lead.trim() : "",
+          body: typeof entry.body === "string" ? entry.body.trim() : "",
+        }))
+        .filter((entry) => entry.lead.length > 0 || entry.body.length > 0)
+    : [];
+
+  const pointsRows: CebRankingPointsRow[] = Array.isArray(raw.pointsRows)
+    ? raw.pointsRows
+        .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+        .map((entry) => ({
+          label: typeof entry.label === "string" ? entry.label.trim() : "",
+          values: Array.isArray(entry.values)
+            ? entry.values.map((point) =>
+                typeof point === "number" && Number.isFinite(point) ? point : null,
+              )
+            : [],
+        }))
+        .filter((entry) => entry.label.length > 0 && entry.values.length > 0)
+    : [];
+
+  const pointsHeader = Array.isArray(raw.pointsHeader)
+    ? raw.pointsHeader.filter((head): head is string => typeof head === "string").map((head) => head.trim())
+    : undefined;
+  const pointsNote = typeof raw.pointsNote === "string" ? raw.pointsNote.trim() : "";
+
+  if (items.length === 0 && pointsRows.length === 0) return null;
+  return { items, pointsHeader, pointsRows, pointsNote };
+};
+
+/** Σκάλα κλίμακας σε επτά στήλες (όσοι και οι θέσεις του πίνακα), με `null` για το κενό. */
+const padScale = (scale: number[]): (number | null)[] => {
+  const values: (number | null)[] = scale.slice(0, CEB_POINTS_HEADER.length);
+  while (values.length < CEB_POINTS_HEADER.length) values.push(null);
+  return values;
+};
+
+/** «B, C, D» → «B–D» όταν τα κλειδιά είναι συνεχόμενα μονογράμματα· αλλιώς λίστα με κόμματα. */
+const columnRangeLabel = (keys: string[]): string => {
+  if (keys.length === 0) return "";
+  if (keys.length === 1) return keys[0];
+  const single = keys.every((key) => key.length === 1);
+  const contiguous = single && keys.every((key, index) => index === 0 || key.charCodeAt(0) === keys[index - 1].charCodeAt(0) + 1);
+  return contiguous ? `${keys[0]}–${keys[keys.length - 1]}` : keys.join(", ");
+};
+
+/**
+ * Γενικό κείμενο, χτισμένο ΑΠΟΚΛΕΙΣΤΙΚΑ από τα δεδομένα της ίδιας της λίστας, όταν το
+ * JSON δεν φέρνει δικό του `intro`. Έτσι μια κατηγορία χωρίς κείμενο δείχνει σωστές
+ * πληροφορίες (τα δικά της τουρνουά και τις δικές τους κλίμακες) — ποτέ το κείμενο άλλης.
+ */
+export const buildFallbackCebIntro = (payload: CebRankingPayload): CebRankingIntro => {
+  const events = Array.isArray(payload.events) ? payload.events : [];
+  const keys = events.map((event) => event.key).filter(Boolean);
+  const range = keys.length > 1 ? `${keys[0]}–${keys[keys.length - 1]}` : (keys[0] ?? "");
+
+  // Ομαδοποίηση των στηλών που μοιράζονται την ίδια κλίμακα πόντων → μία γραμμή πίνακα.
+  const groups = new Map<string, { keys: string[]; scale: number[] }>();
+  for (const event of events) {
+    if (!event || !Array.isArray(event.scale)) continue;
+    const key = JSON.stringify(event.scale);
+    const existing = groups.get(key);
+    if (existing) existing.keys.push(event.key);
+    else groups.set(key, { keys: [event.key], scale: event.scale });
+  }
+  const pointsRows: CebRankingPointsRow[] = Array.from(groups.values()).map((group) => ({
+    label: `Columns ${columnRangeLabel(group.keys)}`,
+    values: padScale(group.scale),
+  }));
+
+  return {
+    items: [
+      {
+        lead: "European players only.",
+        body: "The CEB ranking is a European circuit — only players registered with a European federation are listed.",
+      },
+      {
+        lead: `${events.length} counting tournaments.`,
+        body: `Every total is the points a player earned in the tournaments that count for this list${
+          range ? ` (columns ${range})` : ""
+        }. The columns that do not count stay empty.`,
+      },
+      {
+        lead: "Points follow the official scale.",
+        body: "Each tournament pays the finishing positions as printed on the official CEB sheet — the scale of every column is shown next to it.",
+      },
+      {
+        lead: "Ties follow the official order.",
+        body: "Players on the same total are ordered as the official CEB sheet publishes them.",
+      },
+    ],
+    pointsRows,
+    pointsNote: "Points per finishing position, exactly as printed at the top of the official CEB list.",
+  };
+};
+
+/**
+ * Το επεξηγηματικό κείμενο της λίστας: το `intro` του JSON όταν υπάρχει (αντικείμενο ή
+ * απλό κείμενο), αλλιώς το `dataNote`, αλλιώς το γενικό κείμενο από τα δεδομένα της λίστας.
+ * Ποτέ δεν πέφτει σε κείμενο άλλης κατηγορίας.
+ */
+export const resolveCebIntro = (payload: CebRankingPayload): CebRankingIntro => {
+  const structured = coerceCebIntro(payload.intro);
+  if (structured) return structured;
+
+  const raw = payload.intro as unknown;
+  const note = (typeof raw === "string" ? raw.trim() : "") || (payload.dataNote ?? "").trim();
+  if (note) return { items: [{ lead: "", body: note }], pointsRows: [] };
+
+  return buildFallbackCebIntro(payload);
+};
+
+/**
+ * Σύντομη ετικέτα κατηγορίας για το eyebrow της σελίδας: «Individual — Men» → «Individual»,
+ * «Ladies» → «Ladies». Πέφτει στο discipline/τίτλο όταν λείπει η ετικέτα.
+ */
+export const cebCategoryShortLabel = (
+  payload: Pick<CebRankingPayload, "categoryLabel" | "discipline" | "title">,
+): string => {
+  const label = (payload.categoryLabel ?? "").trim();
+  if (label) {
+    const short = label.split(/\s*[—–]\s*/)[0]?.trim();
+    if (short) return short;
+  }
+  return payload.discipline?.trim() || payload.title?.trim() || "Ranking";
+};
+
 export type CebRankingPayload = {
   slug: string;
   title: string;
@@ -173,6 +337,14 @@ export type CebRankingPayload = {
   events: CebRankingEvent[];
   federations: Record<string, string>;
   rows: CebRankingRow[];
+  /**
+   * Το επεξηγηματικό κείμενο της λίστας (data-driven, ανά κατηγορία). Μπορεί να είναι
+   * πλήρες αντικείμενο ή απλό κείμενο· όταν λείπει, ο πίνακας χτίζει γενικό κείμενο
+   * από τα δικά του τουρνουά (βλ. `resolveCebIntro`).
+   */
+  intro?: CebRankingIntro | string;
+  /** Εναλλακτικό σημείο εισόδου για το ίδιο κείμενο (απλό κείμενο). */
+  dataNote?: string;
   /**
    * Ποιο αρχείο συνδέσμων προφίλ (θέση → παίκτης) ανήκει σε αυτή τη λίστα:
    * "official" (προεπιλογή, `player-links.json`) ή "computed"

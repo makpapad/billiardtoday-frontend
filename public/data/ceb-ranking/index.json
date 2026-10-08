@@ -22,9 +22,11 @@
    "categoryLabel": "Ladies",
    "edition": "13/2026",
    "updatedAt": "2026-10-08",
+   "players": 206,
+   "federations": 11,
+   "suspended": 0,
    "href": "/rankings/ceb/3c-ladies",
-   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf",
-   "mode": "pdf"
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf"
   }
  ],
  "upcoming": [

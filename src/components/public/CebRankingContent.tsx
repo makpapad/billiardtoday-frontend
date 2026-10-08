@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink } from "@/lib/cebRanking";
+import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink, resolveCebIntro, CEB_POINTS_HEADER } from "@/lib/cebRanking";
 import type { CebPlayerLinks, CebRankingPayload, CebSuspensionMark } from "@/lib/cebRanking";
 import { embedLinkTarget, reportCebEmbedClick, withCebAttribution } from "@/lib/embedLinks";
 import { SITE_URL } from "@/lib/socialMetadata";
@@ -97,6 +97,10 @@ export function CebRankingContent({
 }: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
   const backLabel = `${payload.title} — European Ranking`;
+  // Το επεξηγηματικό κείμενο («How this list is built») έρχεται από τα δεδομένα της
+  // λίστας — ποτέ καρφωτό κείμενο άλλης κατηγορίας (βλ. resolveCebIntro).
+  const intro = useMemo(() => resolveCebIntro(payload), [payload]);
+  const pointsHeader = intro.pointsHeader?.length ? intro.pointsHeader : CEB_POINTS_HEADER;
   const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
   const [query, setQuery] = useState("");
   const [fed, setFed] = useState("");
@@ -164,68 +168,57 @@ export function CebRankingContent({
               How this list is built
             </div>
             <ul className="space-y-3 text-sm leading-7 text-slate-600">
-              <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">European players only.</span> World Cup
-                winners from outside Europe score no points here — the CEB ranking is a European circuit.
-              </li>
-              <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">Six World Cups count — never more.</span>{" "}
-                Only the World Cups held in Europe are counted, and each new one takes the place of the
-                oldest of the six — so the list always follows the six most recent (columns E–J).
-              </li>
-              <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">One national championship counts, not three.</span> Columns B, C and D are the three seasons of the cycle and no player has points in more than one of them. The points are
-                reported by the national federations and directly to CEB. Every total is therefore 8 events: 6 World Cups + 1 national championship
-                + the European Championship (column A) — the columns that do not count stay empty.
-              </li>
-              <li className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="font-semibold text-slate-900">
-                  Ties: the most recent World Cup decides first.
-                </span>{" "}
-                Two or more players on the same total are compared in this order: the most recent of the six World Cups first, then World Cup by World Cup back to the oldest,
-                then the national championship, and the European Championship last of all.
-              </li>
+              {intro.items.map((item, index) => (
+                <li
+                  key={index}
+                  className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3"
+                >
+                  {item.lead ? (
+                    <>
+                      <span className="font-semibold text-slate-900">{item.lead}</span>
+                      {item.body ? " " : null}
+                    </>
+                  ) : null}
+                  {item.body}
+                </li>
+              ))}
             </ul>
-            <div className="space-y-3 pt-1">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                How players earn points
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <table className="w-full text-[12px]">
-                  <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Finish</th>
-                      {["1", "2", "3–4", "5–8", "9–16", "17–32", "**"].map((head) => (
-                        <th key={head} className="px-2 py-2 text-center">
-                          {head}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { label: "European Championship (A)", values: [80, 54, 38, 26, 16, 8, 4] },
-                      { label: "National championships (B–D)", values: [40, 27, 19, 13, 8, 4, null] },
-                      { label: "World Cups (E–J)", values: [40, 27, 19, 13, 8, 4, 2] },
-                    ].map((row) => (
-                      <tr key={row.label} className="border-t border-slate-100">
-                        <td className="px-3 py-2 font-medium text-slate-900">{row.label}</td>
-                        {row.values.map((points, index) => (
-                          <td key={index} className="px-2 py-2 text-center tabular-nums text-slate-600">
-                            {points ?? "–"}
-                          </td>
+            {intro.pointsRows.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                  How players earn points
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <table className="w-full text-[12px]">
+                    <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Finish</th>
+                        {pointsHeader.map((head) => (
+                          <th key={head} className="px-2 py-2 text-center">
+                            {head}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {intro.pointsRows.map((row) => (
+                        <tr key={row.label} className="border-t border-slate-100">
+                          <td className="px-3 py-2 font-medium text-slate-900">{row.label}</td>
+                          {row.values.map((points, index) => (
+                            <td key={index} className="px-2 py-2 text-center tabular-nums text-slate-600">
+                              {points ?? "–"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {intro.pointsNote ? (
+                  <p className="text-[11px] leading-5 text-slate-500">{intro.pointsNote}</p>
+                ) : null}
               </div>
-              <p className="text-[11px] leading-5 text-slate-500">
-                Points per finishing position, exactly as printed at the top of the official CEB list (the
-                ** column is the last one in that list). The European Championship pays double points.
-                Rounds are marked in the same list: EC = European Championship and GP = the qualifying rounds (Q) of the UMB World Cups.
-              </p>
-            </div>
+            ) : null}
           </div>
 
           <div className="space-y-4">

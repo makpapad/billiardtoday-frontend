@@ -1,23 +1,6 @@
 {
   "generatedAt": "2026-10-08T14:55:08Z",
   "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
-  "note": "Temporary: these categories show the official CEB PDF inside our ranking page until the data version is built.",
-  "categories": [
-    {
-      "slug": "3c-ladies",
-      "title": "3-Cushion Ladies",
-      "discipline": "3-Cushion",
-      "categoryLabel": "Ladies",
-      "editionLabel": "13/2026",
-      "lastUpdate": "2026-10-08",
-      "lastUpdateNote": "Update for new sport season 2026-2027",
-      "pdfUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf",
-      "file": "/data/ceb-ranking/pdf/3c-ladies.pdf",
-      "bytes": 337081,
-      "sha256": "69c4e9a29355b8b4e5ec229ca941ab2a49dfdd2e3702013d5a1ef5ac87475b23",
-      "fetchedAt": "2026-10-08T14:55:08Z",
-      "rows": 206,
-      "suspendedNote": true
-    }
-  ]
+  "note": "pdf-mode fallback: a category listed here is served as the official CEB sheet inside our own ranking page until its data version is built. Empty for now — every published CEB category has its data list; each new one is moved here only while it is still a PDF.",
+  "categories": []
 }
