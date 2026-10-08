@@ -10,6 +10,7 @@ import {
   readCebRanking,
   readCebRankingArchive,
   readCebRankingIndex,
+  withCebDbPlayerLinks,
 } from "@/lib/cebRankingData";
 
 export const revalidate = 300;
@@ -91,7 +92,10 @@ export default async function CebCategoryPage({ params }: Props) {
   // 1) Κατηγορία με δεδομένα → ίδια σελίδα με το 3c-individual (ένα κοινό render).
   const payload = readCebRanking(slug);
   if (payload) {
-    const playerLinks = readCebPlayerLinks(payload.links ?? "official");
+    const playerLinks = await withCebDbPlayerLinks(
+      payload,
+      readCebPlayerLinks(payload.links ?? "official"),
+    );
     const archive = readCebRankingArchive(slug);
     return (
       <CebRankingCategoryView

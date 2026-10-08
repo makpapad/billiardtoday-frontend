@@ -3,7 +3,6 @@ import path from "node:path";
 import type {
   CebPdfCategory,
   CebPdfSources,
-  CebPlayerLink,
   CebPlayerLinks,
   CebRankingArchive,
   CebRankingArchiveEdition,
@@ -12,7 +11,8 @@ import type {
   CebRankingPayload,
   CebRankingRow,
 } from "@/lib/cebRanking";
-import { normalizeCebName, normalizeCebNameLoose } from "@/lib/cebRanking";
+import { buildCebDbPlayerLinks, readCebDbNameIndex } from "@/lib/cebPlayerNameIndex";
+import { mergeCebPlayerLinks, normalizeCebName, normalizeCebNameLoose } from "@/lib/cebRanking";
 
 /**
  * Server-side readers for the CEB ranking JSON (see `cebRanking.ts` for the shape).
@@ -146,6 +146,29 @@ export const readCebPlayerLinks = (key: string = "official"): CebPlayerLinks => 
   );
 };
 
+/**
+ * Οι σύνδεσμοι προφίλ ΜΙΑΣ λίστας, όπως τους βλέπει ο πίνακας: πρώτα το curated
+ * αρχείο της λίστας (θέση → παίκτης, όπως σήμερα), μετά ό,τι βρει το DB name index
+ * (όνομα → παίκτης, μοναδικό ταίριασμα) ώστε ΚΑΘΕ γραμμή της οποίας ο αθλητής
+ * υπάρχει στη βάση να συνδέεται — χωρίς per-list αρχείο. Server components only.
+ */
+export const withCebDbPlayerLinks = async (
+  payload: CebRankingPayload,
+  links: CebPlayerLinks,
+): Promise<CebPlayerLinks> => {
+  try {
+    const extra = await buildCebDbPlayerLinks(
+      payload.rows,
+      links,
+      Object.values(payload.federations ?? {}),
+    );
+    return mergeCebPlayerLinks(links, extra);
+  } catch {
+    // Η βάση δεν είναι διαθέσιμη: μένουμε στους curated συνδέσμους, όπως πριν.
+    return links;
+  }
+};
+
 export type CebPlayerRanking = {
   rankingTitle: string;
   /** Η ετικέτα της κατηγορίας της ίδιας της λίστας (π.χ. «Individual — Men», «Ladies»). */
@@ -172,30 +195,52 @@ const cebLinkKeysForPayload = (payload: CebRankingPayload): string[] =>
 /**
  * Η γραμμή του παίκτη σε μία λίστα CEB — ΜΕ ΤΑΥΤΟΤΗΤΑ, όχι από τη θέση.
  *
- * Κοινός πυρήνας των `readCebPlayerRanking` / `readCebPlayerRankings`: από το `id`
- * του URL βρίσκουμε τον σύνδεσμο προφίλ, και με το `db` του ταιριάζουμε τη γραμμή
- * με το ίδιο (κανονικοποιημένο) όνομα. Επιστρέφει `null` — χωρίς σφάλμα — όταν
- * λείπει σύνδεσμος ή γραμμή (π.χ. λίστα ομάδων χωρίς ατομική ταυτότητα).
+ * Κοινός πυρήνας των `readCebPlayerRanking` / `readCebPlayerRankings`:
+ * (a) από το `id` του URL βρίσκουμε τον curated σύνδεσμο προφίλ και με το `db` του
+ *     ταιριάζουμε τη γραμμή με το ίδιο (κανονικοποιημένο) όνομα·
+ * (b) αν ο παίκτης δεν έχει curated σύνδεσμο (οι νέες λίστες π.χ. Ladies δεν έχουν
+ *     αρχείο), τον αναζητούμε στο DB name index: τα δικά του κλειδιά ονόματος →
+ *     γραμμή της λίστας, και ΜΟΝΟ όταν το όνομα ανήκει σε αυτόν και σε κανέναν άλλον.
+ *
+ * Επιστρέφει `null` — χωρίς σφάλμα — όταν λείπει γραμμή/ταίριασμα ή το όνομα είναι
+ * διφορούμενο (ποτέ λάθος θέση). Server components only.
  */
-const resolveCebPlayerRow = (
+const resolveCebPlayerRow = async (
   payload: CebRankingPayload,
   numericId: string,
-): CebRankingRow | null => {
-  let link: CebPlayerLink | undefined;
+): Promise<CebRankingRow | null> => {
+  // (a) curated σύνδεσμος της λίστας (identity, όχι θέση).
   for (const key of cebLinkKeysForPayload(payload)) {
-    link = Object.values(readCebPlayerLinks(key)).find((entry) => String(entry.id) === numericId);
-    if (link) break;
+    const link = Object.values(readCebPlayerLinks(key)).find(
+      (entry) => String(entry.id) === numericId,
+    );
+    if (!link) continue;
+    const nameKey = normalizeCebName(link.db);
+    const row =
+      payload.rows.find((entry) => normalizeCebName(entry.name) === nameKey) ??
+      payload.rows.find(
+        (entry) => normalizeCebNameLoose(entry.name) === normalizeCebNameLoose(link.db),
+      ) ??
+      null;
+    if (row) return row;
   }
-  if (!link) return null;
 
-  const nameKey = normalizeCebName(link.db);
-  return (
-    payload.rows.find((entry) => normalizeCebName(entry.name) === nameKey) ??
-    payload.rows.find(
-      (entry) => normalizeCebNameLoose(entry.name) === normalizeCebNameLoose(link.db),
-    ) ??
-    null
-  );
+  // (b) DB name index — μόνο μοναδικά ταιριάσματα και μόνο για αυτόν τον παίκτη.
+  const index = await readCebDbNameIndex().catch(() => null);
+  const nameKeys = index?.namesById.get(Number(numericId));
+  if (!index || !nameKeys) return null;
+
+  for (const key of nameKeys) {
+    const hit = index.byName.get(key);
+    if (!hit || hit.id !== Number(numericId)) continue; // άγνωστο ή διφορούμενο
+    const row =
+      payload.rows.find((entry) => normalizeCebName(entry.name) === key) ??
+      payload.rows.find((entry) => normalizeCebNameLoose(entry.name) === key) ??
+      null;
+    if (row) return row;
+  }
+
+  return null;
 };
 
 /** Το αντικείμενο που αποδίδει το card, από τη λίστα + τη γραμμή του παίκτη. */
@@ -227,14 +272,16 @@ const cebPlayerRankingId = (playerId: string | number): string =>
  * Διατηρείται για κάθε παλιό caller· το προφίλ πλέον χρησιμοποιεί το
  * `readCebPlayerRankings`, που δίνει μία κάρτα ανά λίστα. Server components only.
  */
-export const readCebPlayerRanking = (playerId: string | number): CebPlayerRanking | null => {
+export const readCebPlayerRanking = async (
+  playerId: string | number,
+): Promise<CebPlayerRanking | null> => {
   const numericId = cebPlayerRankingId(playerId);
   if (!numericId) return null;
 
   const payload = readCebRanking(CEB_PLAYER_RANKING_SLUG);
   if (!payload) return null;
 
-  const row = resolveCebPlayerRow(payload, numericId);
+  const row = await resolveCebPlayerRow(payload, numericId);
   return row ? buildCebPlayerRanking(payload, row) : null;
 };
 
@@ -248,7 +295,9 @@ export const readCebPlayerRanking = (playerId: string | number): CebPlayerRankin
  * ομάδων χωρίς ατομική ταυτότητα) ΠΑΡΑΛΕΙΠΟΝΤΑΙ σιωπηλά — ποτέ σφάλμα, ποτέ κενή
  * κάρτα. Server components only.
  */
-export const readCebPlayerRankings = (playerId: string | number): CebPlayerRanking[] => {
+export const readCebPlayerRankings = async (
+  playerId: string | number,
+): Promise<CebPlayerRanking[]> => {
   const numericId = cebPlayerRankingId(playerId);
   if (!numericId) return [];
 
@@ -259,7 +308,7 @@ export const readCebPlayerRankings = (playerId: string | number): CebPlayerRanki
   for (const entry of index.available) {
     const payload = readCebRanking(entry.slug);
     if (!payload) continue;
-    const row = resolveCebPlayerRow(payload, numericId);
+    const row = await resolveCebPlayerRow(payload, numericId);
     if (!row) continue;
     rankings.push(buildCebPlayerRanking(payload, row));
   }

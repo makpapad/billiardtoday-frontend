@@ -9,6 +9,7 @@ import {
   readCebPlayerLinks,
   readCebRanking,
   readCebRankingArchive,
+  withCebDbPlayerLinks,
 } from "@/lib/cebRankingData";
 
 export const revalidate = 300;
@@ -44,7 +45,10 @@ export default async function EmbedCebRankingPage({ params }: Props) {
 
   const payload = readCebRanking(slug);
   if (payload) {
-    const playerLinks = readCebPlayerLinks(payload.links ?? "official");
+    const playerLinks = await withCebDbPlayerLinks(
+      payload,
+      readCebPlayerLinks(payload.links ?? "official"),
+    );
     const archive = readCebRankingArchive(slug);
     return (
       <CebRankingCategoryView

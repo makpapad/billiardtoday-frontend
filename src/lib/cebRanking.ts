@@ -133,6 +133,26 @@ export const buildCebPlayerLinkIndex = (
 };
 
 /**
+ * Κλειδί ενός συνδέσμου που προέρχεται από το DB name index. ΔΕΝ είναι θέση: οι
+ * curated σύνδεσμοι είναι keyed με θέση («1», «2», …), οπότε ένα ευρετήριο χωρίς
+ * θέση δεν πρέπει να μπερδεύεται με positional fallback (βλ. `resolveCebPlayerLink`).
+ */
+export const CEB_DB_LINK_KEY_PREFIX = "db-";
+
+export const cebDbLinkKey = (id: number | string) => `${CEB_DB_LINK_KEY_PREFIX}${id}`;
+
+/**
+ * Συγχώνευση των συνδέσμων μιας λίστας: οι curated (per-list αρχείο, keyed με θέση)
+ * κερδίζουν πάντα στην ίδια θέση/κλειδί, και από κάτω μπαίνουν οι σύνδεσμοι που
+ * βρήκε το DB name index (`db-<id>`) — αρκετοί για να καλυφθεί το σύνολο της λίστας
+ * χωρίς να αλλάξει το `buildCebPlayerLinkIndex` (πρώτη-νίκη-κερδίζει ανά όνομα).
+ */
+export const mergeCebPlayerLinks = (
+  curated: CebPlayerLinks | undefined,
+  extra: CebPlayerLinks | undefined,
+): CebPlayerLinks => ({ ...(extra ?? {}), ...(curated ?? {}) });
+
+/**
  * Ο σύνδεσμος προφίλ μιας γραμμής του πίνακα — ΜΕ ΤΑΥΤΟΤΗΤΑ, όχι με θέση.
  *
  * Το αρχείο `player-links*.json` είναι keyed με τη ΘΕΣΗ, αλλά η σειρά του δεν

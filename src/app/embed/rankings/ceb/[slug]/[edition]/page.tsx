@@ -17,6 +17,7 @@ import {
   readCebRanking,
   readCebRankingArchive,
   readCebRankingEdition,
+  withCebDbPlayerLinks,
 } from "@/lib/cebRankingData";
 import { toEmbedHref } from "@/lib/embedLinks";
 
@@ -51,7 +52,7 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
 
   const current = readCebRanking(slug);
   const archive = readCebRankingArchive(slug);
-  const playerLinks = readCebPlayerLinks(payload.links ?? "official");
+  const playerLinks = await withCebDbPlayerLinks(payload, readCebPlayerLinks(payload.links ?? "official"));
 
   const isCurrent = current?.edition === payload.edition;
   const updated = formatCebDate(payload.updatedAt);

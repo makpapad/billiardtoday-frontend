@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CebRankingCategoryView } from "@/components/public/CebRankingCategoryView";
 import { buildPageMetadata } from "@/lib/pageMetadata";
-import { readCebPlayerLinks, readCebRanking, readCebRankingArchive } from "@/lib/cebRankingData";
+import { readCebPlayerLinks, readCebRanking, readCebRankingArchive, withCebDbPlayerLinks } from "@/lib/cebRankingData";
 import { notFound } from "next/navigation";
 
 export const revalidate = 300;
@@ -23,12 +23,14 @@ export const metadata: Metadata = buildPageMetadata({
   ],
 });
 
-export default function CebThreeCushionIndividualPage() {
+export default async function CebThreeCushionIndividualPage() {
   const payload = readCebRanking(SLUG);
   if (!payload) notFound();
   // Η τρέχουσα λίστα μπορεί να είναι υπολογισμένη από τα δικά μας αποτελέσματα
   // (`links: "computed"`) — τότε οι σύνδεσμοι προφίλ ακολουθούν τη νέα αρίθμηση.
-  const playerLinks = readCebPlayerLinks(payload.links ?? "official");
+  // Πάνω τους μπαίνει το DB name index, ώστε κάθε γραμμή που ο αθλητής της υπάρχει
+  // στη βάση να συνδέεται με το προφίλ του.
+  const playerLinks = await withCebDbPlayerLinks(payload, readCebPlayerLinks(payload.links ?? "official"));
   const archive = readCebRankingArchive(SLUG);
 
   // Το ίδιο component με κάθε άλλη data-category (π.χ. /rankings/ceb/[slug]) — ένα render,

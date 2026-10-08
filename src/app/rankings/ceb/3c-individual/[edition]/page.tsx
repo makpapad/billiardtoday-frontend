@@ -17,6 +17,7 @@ import {
   readCebRanking,
   readCebRankingArchive,
   readCebRankingEdition,
+  withCebDbPlayerLinks,
 } from "@/lib/cebRankingData";
 import { SITE_URL } from "@/lib/socialMetadata";
 
@@ -73,7 +74,7 @@ export default async function CebThreeCushionEditionPage({ params }: Props) {
   const archive = readCebRankingArchive(SLUG);
   // Η αρίθμηση θέσεων αλλάζει μαζί με τη λίστα: τα αρχεία σύνδεσμων προφίλ
   // ακολουθούν το `links` της έκδοσης ("computed" για τη δική μας υπολογισμένη).
-  const playerLinks = readCebPlayerLinks(payload.links ?? "official");
+  const playerLinks = await withCebDbPlayerLinks(payload, readCebPlayerLinks(payload.links ?? "official"));
 
   const isCurrent = current?.edition === payload.edition;
   const updated = formatCebDate(payload.updatedAt);

@@ -71,7 +71,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   const structuredData = buildPlayerStructuredData(summary);
   // Μία κάρτα CEB ανά λίστα στην οποία ο παίκτης εμφανίζεται (π.χ. Individual + Ladies),
   // με τα δικά της counting tournaments κάθε λίστας. Μετά, η UMB κάρτα παραμένει ως έχει.
-  const cebRankings = readCebPlayerRankings(id);
+  const cebRankings = await readCebPlayerRankings(id);
   const umbRanking = readUmbPlayerRanking(id);
 
   return (
