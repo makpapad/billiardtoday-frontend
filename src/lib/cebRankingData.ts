@@ -148,6 +148,8 @@ export const readCebPlayerLinks = (key: string = "official"): CebPlayerLinks => 
 
 export type CebPlayerRanking = {
   rankingTitle: string;
+  /** Η ετικέτα της κατηγορίας της ίδιας της λίστας (π.χ. «Individual — Men», «Ladies»). */
+  rankingCategoryLabel: string;
   rankingSlug: string;
   edition: string;
   updatedAt: string | null;
@@ -160,45 +162,106 @@ export type CebPlayerRanking = {
 };
 
 /**
- * Το CEB ranking του παίκτη (αν υπάρχει). Η γραμμή βρίσκεται ΜΕ ΤΑΥΤΟΤΗΤΑ: από
- * το `id` του URL παίρνουμε τον σύνδεσμο, μετά τη γραμμή με το ίδιο όνομα — όχι
- * από τη θέση, γιατί η σειρά του player-links αρχείου δεν συμπίπτει με τη λίστα
- * (μια θέση θα έδειχνε άλλον αθλητή). Server components only.
+ * Τα αρχεία συνδέσμων προφίλ που δοκιμάζουμε για μια λίστα, με σειρά προτίμησης:
+ * πρώτα ό,τι δηλώνει η ίδια η λίστα (`links`), μετά τα γνωστά αρχεία (identity,
+ * όχι θέση — το `db` κάθε καταχώρισης δίνει το όνομα για την αντιστοίχιση).
  */
-export const readCebPlayerRanking = (playerId: string | number): CebPlayerRanking | null => {
-  // Το [id] του URL είναι τύπου "216-MERCKX-Eddy" — κρατάμε το νούμερο (όπως και το publicSiteData).
-  const numericId = String(playerId).split("-")[0]?.trim();
-  if (!numericId) return null;
+const cebLinkKeysForPayload = (payload: CebRankingPayload): string[] =>
+  Array.from(new Set([payload.links ?? "official", "official", "computed"]));
 
-  const payload = readCebRanking(CEB_PLAYER_RANKING_SLUG);
-  if (!payload) return null;
-
-  // Πρώτα το αρχείο της ίδιας της λίστας, μετά το άλλο — το `db` κάθε καταχώρισης
-  // δίνει το όνομα για την αντιστοίχιση ταυτότητας με τη γραμμή.
-  const linkKeys = Array.from(new Set([payload.links ?? "official", "official", "computed"]));
+/**
+ * Η γραμμή του παίκτη σε μία λίστα CEB — ΜΕ ΤΑΥΤΟΤΗΤΑ, όχι από τη θέση.
+ *
+ * Κοινός πυρήνας των `readCebPlayerRanking` / `readCebPlayerRankings`: από το `id`
+ * του URL βρίσκουμε τον σύνδεσμο προφίλ, και με το `db` του ταιριάζουμε τη γραμμή
+ * με το ίδιο (κανονικοποιημένο) όνομα. Επιστρέφει `null` — χωρίς σφάλμα — όταν
+ * λείπει σύνδεσμος ή γραμμή (π.χ. λίστα ομάδων χωρίς ατομική ταυτότητα).
+ */
+const resolveCebPlayerRow = (
+  payload: CebRankingPayload,
+  numericId: string,
+): CebRankingRow | null => {
   let link: CebPlayerLink | undefined;
-  for (const key of linkKeys) {
+  for (const key of cebLinkKeysForPayload(payload)) {
     link = Object.values(readCebPlayerLinks(key)).find((entry) => String(entry.id) === numericId);
     if (link) break;
   }
   if (!link) return null;
 
   const nameKey = normalizeCebName(link.db);
-  const row =
+  return (
     payload.rows.find((entry) => normalizeCebName(entry.name) === nameKey) ??
-    payload.rows.find((entry) => normalizeCebNameLoose(entry.name) === normalizeCebNameLoose(link.db));
-  if (!row) return null;
+    payload.rows.find(
+      (entry) => normalizeCebNameLoose(entry.name) === normalizeCebNameLoose(link.db),
+    ) ??
+    null
+  );
+};
 
-  return {
-    rankingTitle: payload.title,
-    rankingSlug: payload.slug,
-    edition: payload.edition,
-    updatedAt: payload.updatedAt,
-    sourceUrl: payload.sourceUrl,
-    sourcePage: payload.sourcePage,
-    sourceLabel: payload.sourceLabel,
-    events: payload.events,
-    row,
-    federations: payload.federations,
-  };
+/** Το αντικείμενο που αποδίδει το card, από τη λίστα + τη γραμμή του παίκτη. */
+const buildCebPlayerRanking = (
+  payload: CebRankingPayload,
+  row: CebRankingRow,
+): CebPlayerRanking => ({
+  rankingTitle: payload.title,
+  rankingCategoryLabel: payload.categoryLabel,
+  rankingSlug: payload.slug,
+  edition: payload.edition,
+  updatedAt: payload.updatedAt,
+  sourceUrl: payload.sourceUrl,
+  sourcePage: payload.sourcePage,
+  sourceLabel: payload.sourceLabel,
+  events: payload.events,
+  row,
+  federations: payload.federations,
+});
+
+/** Η λίστα στην οποία ανήκει το block του προφίλ, όταν δεν έχει περάσει κάποια άλλη. */
+const cebPlayerRankingId = (playerId: string | number): string =>
+  // Το [id] του URL είναι τύπου "216-MERCKX-Eddy" — κρατάμε το νούμερο (όπως και το publicSiteData).
+  String(playerId).split("-")[0]?.trim() ?? "";
+
+/**
+ * Το CEB ranking του παίκτη (αν υπάρχει) από τη βασική λίστα (`3c-individual`).
+ *
+ * Διατηρείται για κάθε παλιό caller· το προφίλ πλέον χρησιμοποιεί το
+ * `readCebPlayerRankings`, που δίνει μία κάρτα ανά λίστα. Server components only.
+ */
+export const readCebPlayerRanking = (playerId: string | number): CebPlayerRanking | null => {
+  const numericId = cebPlayerRankingId(playerId);
+  if (!numericId) return null;
+
+  const payload = readCebRanking(CEB_PLAYER_RANKING_SLUG);
+  if (!payload) return null;
+
+  const row = resolveCebPlayerRow(payload, numericId);
+  return row ? buildCebPlayerRanking(payload, row) : null;
+};
+
+/**
+ * ΟΛΑ τα CEB rankings του παίκτη: μία εγγραφή ανά δημοσιευμένη λίστα
+ * (`index.json` → `available`, με τη σειρά τους) στην οποία ο παίκτης υπάρχει ΜΕ
+ * ΤΑΥΤΟΤΗΤΑ. Έτσι μια μελλοντική λίστα (π.χ. 3-Cushion Ladies) εμφανίζεται μόνη
+ * της, χωρίς αλλαγή κώδικα.
+ *
+ * Λίστες όπου ο παίκτης δεν βρίσκεται (λείπει σύνδεσμος, λείπει αρχείο, λίστα
+ * ομάδων χωρίς ατομική ταυτότητα) ΠΑΡΑΛΕΙΠΟΝΤΑΙ σιωπηλά — ποτέ σφάλμα, ποτέ κενή
+ * κάρτα. Server components only.
+ */
+export const readCebPlayerRankings = (playerId: string | number): CebPlayerRanking[] => {
+  const numericId = cebPlayerRankingId(playerId);
+  if (!numericId) return [];
+
+  const index = readCebRankingIndex();
+  if (!index) return [];
+
+  const rankings: CebPlayerRanking[] = [];
+  for (const entry of index.available) {
+    const payload = readCebRanking(entry.slug);
+    if (!payload) continue;
+    const row = resolveCebPlayerRow(payload, numericId);
+    if (!row) continue;
+    rankings.push(buildCebPlayerRanking(payload, row));
+  }
+  return rankings;
 };

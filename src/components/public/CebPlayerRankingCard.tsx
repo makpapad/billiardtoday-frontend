@@ -1,11 +1,33 @@
 import Link from "next/link";
 import type { CebPlayerRanking } from "@/lib/cebRankingData";
+import type { CebRankingEvent } from "@/lib/cebRanking";
 import { formatCebDate, normalizeCebSuspension } from "@/lib/cebRanking";
 
 type Props = {
   ranking: CebPlayerRanking;
   /** Όνομα παίκτη για το «← Back to …» στη σελίδα τουρνουά. */
   playerLabel?: string | null;
+};
+
+/**
+ * Σύντομη περιγραφή από τα ΙΔΙΑ τα τουρνουά της λίστας (όχι hardcoded World Cups):
+ * η Individual λίστα μετρά EC + World Cups, η Ladies EC + εθνικά + Grand Prix — το
+ * κείμενο ακολουθεί τα `events` του payload, ώστε μια μη-individual κάρτα να μη
+ * διαφημίζει τους αγώνες άλλης λίστας.
+ */
+const describeCebEvents = (events: CebRankingEvent[]): string => {
+  const families: string[] = [];
+  const push = (label: string) => {
+    if (!families.includes(label)) families.push(label);
+  };
+  for (const event of events) {
+    const name = (event?.name ?? "").toLowerCase();
+    if (name.includes("grand prix")) push("the CEB Grand Prix");
+    else if (name.includes("world cup")) push("the World Cups");
+    else if (name.includes("national championship")) push("the national championships");
+    else if (name.includes("european championship")) push("the European Championship");
+  }
+  return families.length > 0 ? families.join(" + ") : "every counting tournament";
 };
 
 /**
@@ -33,11 +55,10 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
                 Official CEB ranking · edition {ranking.edition}
               </p>
               <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-gray-100">
-                3-Cushion Individual — European Ranking
+                {ranking.rankingTitle} — European Ranking
               </h2>
               <p className="mt-1 text-[12.5px] text-slate-500">
-                Position and points of every counting tournament (European Championship + the World Cups held
-                in Europe).
+                Position and points of every counting tournament ({describeCebEvents(events)}).
               </p>
             </div>
             <div className="flex items-stretch gap-2">

@@ -3,7 +3,7 @@ import PlayerProfileClient from "./PlayerProfileClient";
 import { PlayerInstantSummary } from "./PlayerInstantSummary";
 import { CebPlayerRankingCard } from "@/components/public/CebPlayerRankingCard";
 import { UmbPlayerRankingCard } from "@/components/public/UmbPlayerRankingCard";
-import { readCebPlayerRanking } from "@/lib/cebRankingData";
+import { readCebPlayerRankings } from "@/lib/cebRankingData";
 import { readUmbPlayerRanking } from "@/lib/umbRankingData";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
@@ -69,7 +69,9 @@ export default async function PlayerProfilePage({ params }: Props) {
   const { id } = await params;
   const summary = await getPublicPlayerProfileSummary(id);
   const structuredData = buildPlayerStructuredData(summary);
-  const cebRanking = readCebPlayerRanking(id);
+  // Μία κάρτα CEB ανά λίστα στην οποία ο παίκτης εμφανίζεται (π.χ. Individual + Ladies),
+  // με τα δικά της counting tournaments κάθε λίστας. Μετά, η UMB κάρτα παραμένει ως έχει.
+  const cebRankings = readCebPlayerRankings(id);
   const umbRanking = readUmbPlayerRanking(id);
 
   return (
@@ -90,9 +92,13 @@ export default async function PlayerProfilePage({ params }: Props) {
         </div>
       ) : null}
       {summary ? <PlayerInstantSummary summary={summary} /> : null}
-      {cebRanking ? (
-        <CebPlayerRankingCard ranking={cebRanking} playerLabel={summary?.seoName ?? null} />
-      ) : null}
+      {cebRankings.map((cebRanking) => (
+        <CebPlayerRankingCard
+          key={cebRanking.rankingSlug}
+          ranking={cebRanking}
+          playerLabel={summary?.seoName ?? null}
+        />
+      ))}
       {umbRanking ? (
         <UmbPlayerRankingCard ranking={umbRanking} playerLabel={summary?.seoName ?? null} />
       ) : null}
