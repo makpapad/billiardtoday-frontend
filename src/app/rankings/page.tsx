@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
 import { buildPageMetadata } from "@/lib/pageMetadata";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Rankings",
@@ -72,7 +73,9 @@ export default async function RankingsPage() {
               <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
                 {series.title}
               </h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{series.description}</p>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                <RichDescription value={series.description} />
+              </p>
               <div className="mt-5 text-sm font-semibold text-sky-700">
                 Open ranking
               </div>

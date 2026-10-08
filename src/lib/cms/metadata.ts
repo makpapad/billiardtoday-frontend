@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CmsPage, CmsSeo, CmsSiteSettings } from "@/lib/cms/types";
 import { buildDefaultOpenGraphImage, buildOpenGraphImage, toAbsoluteUrl } from "@/lib/socialMetadata";
+import { toPlainText } from "@/lib/richText";
 
 const pickSeo = (pageSeo?: CmsSeo | null, fallbackSeo?: CmsSeo | null) =>
   pageSeo || fallbackSeo || null;
@@ -18,7 +19,7 @@ export const buildCmsMetadata = ({
   const title = seo?.metaTitle || page?.title || settings?.siteName || "Billiard Today";
   const description =
     seo?.metaDescription ||
-    page?.summary ||
+    toPlainText(page?.summary) ||
     settings?.siteTagline ||
     "Billiard tournaments, results, rankings, clubs, players, and CMS-managed content.";
   const canonicalUrl = toAbsoluteUrl(seo?.canonicalUrl || path || "/");

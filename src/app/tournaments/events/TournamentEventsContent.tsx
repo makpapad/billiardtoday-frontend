@@ -23,6 +23,7 @@ import type {
   StrapiEventTimetableSlot,
   StageMatchGroup,
 } from "./types";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import { buildTournamentSlug } from "@/lib/tournaments";
 import {
   toRelationArray,
@@ -6235,7 +6236,7 @@ export function TournamentEventsContent({
                                         ) : null}
                                         {slot.slotType !== "training" && slot.description ? (
                                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                                            {slot.description}
+                                            <RichDescription value={slot.description} />
                                           </span>
                                         ) : null}
                                       </div>

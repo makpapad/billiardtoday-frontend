@@ -4,6 +4,7 @@ import { CmsPageView } from "@/components/cms/CmsPageView";
 import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getNewsArticleBySlug } from "@/lib/cms/news";
+import { toPlainText } from "@/lib/richText";
 import type { CmsPage } from "@/lib/cms/types";
 
 type Params = {
@@ -138,7 +139,7 @@ export default async function NewsArticlePage({
     "@context": "https://schema.org",
     "@type": "Article",
     headline: page.title,
-    description: page.summary || undefined,
+    description: toPlainText(page.summary) || undefined,
     datePublished: page.publishedAt || undefined,
     dateModified: page.updatedAt || undefined,
     image: page.coverImage?.url ? [page.coverImage.url] : undefined,

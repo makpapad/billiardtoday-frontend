@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import type { NewsArticleSummary } from "@/lib/cms/news";
 
 const formatDate = (value?: string | null) => {
@@ -54,7 +55,9 @@ export function LatestNews({ articles }: { articles: NewsArticleSummary[] }) {
                   </Link>
                 </h3>
                 {article.summary ? (
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{article.summary}</p>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                    <RichDescription value={article.summary} />
+                  </p>
                 ) : null}
                 <Link href={`/news/${article.slug}`} className="mt-5 inline-flex text-sm font-semibold text-red-700">
                   Read article

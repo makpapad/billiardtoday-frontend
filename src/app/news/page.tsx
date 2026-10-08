@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { listNewsArticles } from "@/lib/cms/news";
 
@@ -70,7 +71,7 @@ export default async function NewsIndexPage() {
                     </h2>
                     {article.summary ? (
                       <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-600">
-                        {article.summary}
+                        <RichDescription value={article.summary} />
                       </p>
                     ) : null}
                     <Link href={`/news/${article.slug}`} className="mt-6 inline-flex text-sm font-semibold text-red-700">

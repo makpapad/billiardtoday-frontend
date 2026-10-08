@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getRankingSeriesData } from "@/lib/rankings";
+import { toPlainText } from "@/lib/richText";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -42,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return buildPageMetadata({
     title: data.title,
-    description: data.description,
+    description: toPlainText(data.description),
     path: `/rankings/${data.slug}`,
   });
 }
@@ -75,7 +77,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
             </div>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{data.title}</h1>
             <p className="max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-              {data.description}
+              <RichDescription value={data.description} />
             </p>
           </div>
           <Link
