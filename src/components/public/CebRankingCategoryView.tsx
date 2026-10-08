@@ -100,7 +100,11 @@ export function CebRankingCategoryView({
         <PresentationHero
           eyebrow={`CEB Official Ranking · ${cebCategoryShortLabel(payload)}`}
           title={cebRankingPageTitle(payload.title)}
-          description="The official CEB ranking list with the point breakdown of every counting tournament. Each tournament column links to the event page on BilliardToday."
+          description={`The official CEB ranking list with the point breakdown of every counting tournament.${
+            payload.events.some((event) => event.href)
+              ? " Each tournament column links to the event page on BilliardToday."
+              : ""
+          }`}
           actions={[
             { label: "Jump to the list ↓", href: "#list" },
             { label: "All CEB rankings", href: allRankingsHref, variant: "secondary" },
