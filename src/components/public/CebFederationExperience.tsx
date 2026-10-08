@@ -13,6 +13,7 @@ import {
   tournamentStatus,
 } from "@/components/tournaments/TournamentCollection";
 import { normalizeTournamentGameType } from "@/lib/gameTypes";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 
 /** Ετικέτα παιχνιδιού για το φίλτρο και τις κάρτες — μία γραφή ανά παιχνίδι. */
 const cebGameType = (value?: string | null): string =>
@@ -731,7 +732,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">
                   {series.title}
                 </h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{series.description}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600"><RichDescription value={series.description} /></p>
                 <div className="mt-5 text-sm font-semibold text-sky-700">Open ranking page</div>
               </Link>
             ))}

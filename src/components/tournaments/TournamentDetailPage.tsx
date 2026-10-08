@@ -52,6 +52,7 @@ import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
 import { RichDescription } from "@/components/tournaments/RichDescription";
+import { toPlainText } from "@/lib/richText";
 import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
 import {
   buildTournamentDateRangeLabel,
@@ -7097,7 +7098,7 @@ export function TournamentDetailPage({
                                 {slot.description && slot.slotType !== "training" ? (
                                   <span className="text-xs text-slate-500">
                                     {highlightText(
-                                      slot.description,
+                                      toPlainText(slot.description),
                                       timetableSearchQuery,
                                     )}
                                   </span>
