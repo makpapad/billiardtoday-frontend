@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/socialMetadata";
+import { withCebAttribution } from "@/lib/embedLinks";
 
 type Props = {
   /**
@@ -8,6 +9,8 @@ type Props = {
   href: string;
   /** Κείμενο του συνδέσμου — προεπιλογή «BilliardToday». */
   label?: string;
+  /** Καμπάνια GA4 για τη μέτρηση της κίνησης που έρχεται από τη CEB. */
+  campaign?: string;
 };
 
 /**
@@ -15,8 +18,9 @@ type Props = {
  * Server component· ο σύνδεσμος ανοίγει πάντα σε νέα καρτέλα, ώστε ο επισκέπτης
  * του iframe να βγαίνει στην κανονική σελίδα όποτε το θελήσει.
  */
-export function EmbedSourceBar({ href, label = "BilliardToday" }: Props) {
-  const url = href.startsWith("http") ? href : `${SITE_URL}${href}`;
+export function EmbedSourceBar({ href, label = "BilliardToday", campaign = "ceb-ranking" }: Props) {
+  const base = href.startsWith("http") ? href : `${SITE_URL}${href}`;
+  const url = withCebAttribution(base, campaign);
 
   return (
     <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 border-t border-slate-100 px-4 pt-4 text-[11px] text-slate-400">

@@ -29,3 +29,35 @@ export function embedLinkTarget(href: string, siteUrl: string): { href: string; 
   if (/^https?:\/\//i.test(href) || href.startsWith("#")) return { href, newTab: href.startsWith("#") ? false : true };
   return { href: `${siteUrl}${href}`, newTab: true };
 }
+
+/**
+ * Κίνηση από τη CEB: ό,τι λινκ βγαίνει από το embed παίρνει UTM ώστε στο GA4 να
+ * ξεχωρίζει καθαρά η επισκεψιμότητα που έρχεται μέσω του iframe της CEB.
+ */
+export const CEB_EMBED_SOURCE = "ceb";
+
+export function withCebAttribution(url: string, campaign: string): string {
+  if (!/^https?:\/\//i.test(url)) return url;
+  const [base, hash] = url.split("#");
+  const sep = base.includes("?") ? "&" : "?";
+  const qs = `utm_source=${CEB_EMBED_SOURCE}&utm_medium=embed&utm_campaign=${encodeURIComponent(campaign)}`;
+  return `${base}${sep}${qs}${hash ? `#${hash}` : ""}`;
+}
+
+type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
+
+/**
+ * Στέλνει στο GA4 το κλικ που έγινε ΜΕΣΑ στο embed, πριν φύγει ο επισκέπτης στο
+ * billiardtoday.com. Έτσι μετριούνται και τα κλικ που δεν καταλήγουν σε παραμονή.
+ */
+export function reportCebEmbedClick(campaign: string, kind: "player" | "tournament" | "source", label: string): void {
+  if (typeof window === "undefined") return;
+  const w = window as GtagWindow;
+  if (typeof w.gtag !== "function") return;
+  w.gtag("event", "ceb_embed_click", {
+    campaign,
+    link_kind: kind,
+    link_label: label,
+    transport_type: "beacon",
+  });
+}

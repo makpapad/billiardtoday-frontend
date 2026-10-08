@@ -89,9 +89,10 @@ export default async function EmbedCebRankingPage({ params }: Props) {
         playerLinks={playerLinks}
         downloadHref={`/api/rankings/ceb/pdf?slug=${slug}`}
         embedded
+        campaign={`ceb-ranking-${slug}`}
       />
 
-      <EmbedSourceBar href={`/rankings/ceb/${slug}`} />
+      <EmbedSourceBar href={`/rankings/ceb/${slug}`} campaign={`ceb-ranking-${slug}`} />
     </div>
   );
 }

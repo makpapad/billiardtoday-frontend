@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink } from "@/lib/cebRanking";
 import type { CebPlayerLinks, CebRankingPayload, CebSuspensionMark } from "@/lib/cebRanking";
-import { embedLinkTarget } from "@/lib/embedLinks";
+import { embedLinkTarget, reportCebEmbedClick, withCebAttribution } from "@/lib/embedLinks";
 import { SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
@@ -26,6 +26,8 @@ type Props = {
    *   iframe). Τουρνουά και προφίλ αθλητή ανοίγουν στο billiardtoday.com σε νέα καρτέλα.
    */
   embedded?: boolean;
+  /** Όνομα καμπάνιας GA4 για τα λινκ που βγαίνουν από το embed (π.χ. `ceb-ranking-3c-individual`). */
+  campaign?: string;
 };
 
 /** Compact page list: 1 … 4 5 [6] 7 8 … 42 */
@@ -85,7 +87,14 @@ const SUSPENSION_DATE_CLASS: Record<CebSuspensionMark, string> = {
   yellow: "text-amber-700",
 };
 
-export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref, embedded = false }: Props) {
+export function CebRankingContent({
+  payload,
+  pageSize,
+  playerLinks,
+  downloadHref,
+  embedded = false,
+  campaign = "ceb-ranking",
+}: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
   const backLabel = `${payload.title} — European Ranking`;
   const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
@@ -237,9 +246,10 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                       {event.href ? (
                         embedded ? (
                           <a
-                            href={embedLinkTarget(withBack(event.href), SITE_URL).href}
+                            href={withCebAttribution(embedLinkTarget(withBack(event.href), SITE_URL).href, campaign)}
                             target={embedLinkTarget(withBack(event.href), SITE_URL).newTab ? "_blank" : undefined}
                             rel="noopener noreferrer"
+                            onClick={() => reportCebEmbedClick(campaign, "tournament", event.name)}
                             className="hover:text-sky-700 hover:underline"
                           >
                             {event.name}
@@ -386,9 +396,10 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                           {link ? (
                             embedded ? (
                               <a
-                                href={`${SITE_URL}/players/${link.id}-${link.slug}`}
+                                href={withCebAttribution(`${SITE_URL}/players/${link.id}-${link.slug}`, campaign)}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={() => reportCebEmbedClick(campaign, "player", link.db)}
                                 title={`${link.db} — player profile`}
                                 className="truncate text-[13.5px] font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
                               >
