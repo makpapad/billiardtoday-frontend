@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CebPlayerRanking } from "@/lib/cebRankingData";
-import { formatCebDate } from "@/lib/cebRanking";
+import { formatCebDate, normalizeCebSuspension } from "@/lib/cebRanking";
 
 type Props = {
   ranking: CebPlayerRanking;
@@ -18,7 +18,8 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
     playerLabel
       ? `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(playerLabel)}`
       : href;
-  const suspendedOn = formatCebDate(row.suspended);
+  const suspension = normalizeCebSuspension(row.suspended);
+  const suspendedOn = formatCebDate(suspension?.since);
   const federationLabel = federations[row.fed] ?? row.fed;
   const counting = row.ev.filter((value) => value !== null).length;
 
@@ -68,8 +69,15 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
           </div>
 
           {suspendedOn ? (
-            <p className="mt-3 inline-flex rounded-md border border-slate-400/50 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide text-slate-600">
-              suspended for 1 year from {suspendedOn}
+            <p
+              className={`mt-3 inline-flex rounded-md border px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide ${
+                suspension?.mark === "yellow"
+                  ? "border-amber-400/60 text-amber-700"
+                  : "border-slate-400/50 text-slate-600"
+              }`}
+            >
+              {suspension?.mark === "yellow" ? "suspended for 3 months" : "suspended for 1 year"} from{" "}
+              {suspendedOn}
             </p>
           ) : null}
 

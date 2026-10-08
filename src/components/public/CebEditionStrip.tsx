@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cebEditionHref, formatCebDate, type CebRankingArchiveEdition } from "@/lib/cebRanking";
+import { SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
   slug: string;
@@ -8,13 +9,18 @@ type Props = {
   currentEdition: string | null;
   /** Το κλειδί της έκδοσης που βλέπει ο επισκέπτης (στην αρχειοθετημένη σελίδα). */
   viewingKey?: string;
+  /**
+   * Σε embed: τα πλακίδια εκδόσεων δείχνουν σελιδοποιημένα billiardtoday.com —
+   * απόλυτο URL + νέα καρτέλα, ώστε ο επισκέπτης του iframe να μη «φυλακίζεται».
+   */
+  embedded?: boolean;
 };
 
 /**
  * «Editions kept» — η λωρίδα που δείχνει ποιες εκδόσεις κρατάμε και οδηγεί
  * στα αρχειοθετημένα αντίγραφα. Server component, χωρίς JS.
  */
-export function CebEditionStrip({ slug, editions, currentEdition, viewingKey }: Props) {
+export function CebEditionStrip({ slug, editions, currentEdition, viewingKey, embedded = false }: Props) {
   if (editions.length === 0) return null;
 
   return (
@@ -30,7 +36,7 @@ export function CebEditionStrip({ slug, editions, currentEdition, viewingKey }: 
             ? "you are here"
             : isCurrent
               ? "current"
-              : (formatCebDate(entry.updatedAt) ?? "archived");
+              : (formatCebDate(entry.computedAt ?? entry.updatedAt) ?? "archived");
           const className = [
             "inline-flex items-center rounded-full border px-4 py-2 text-sm transition",
             isViewing
@@ -48,11 +54,27 @@ export function CebEditionStrip({ slug, editions, currentEdition, viewingKey }: 
             </>
           );
 
-          return isViewing ? (
-            <span key={entry.key} className={className}>
-              {body}
-            </span>
-          ) : (
+          if (isViewing) {
+            return (
+              <span key={entry.key} className={className}>
+                {body}
+              </span>
+            );
+          }
+          if (embedded) {
+            return (
+              <a
+                key={entry.key}
+                href={`${SITE_URL}${cebEditionHref(slug, entry.key)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+              >
+                {body}
+              </a>
+            );
+          }
+          return (
             <Link key={entry.key} href={cebEditionHref(slug, entry.key)} className={className}>
               {body}
             </Link>

@@ -22,13 +22,65 @@ export type CebRankingEvent = {
   note?: string;
 };
 
+/**
+ * Χρώμα σήμανσης του αποκλεισμένου αθλητή, όπως στο επίσημο φύλλο της CEB:
+ * γκρι = αποκλεισμός 1 χρόνου, κίτρινο = αποκλεισμός 3 μηνών.
+ */
+export type CebSuspensionMark = "grey" | "yellow";
+
+/** Αποκλεισμός στη νέα μορφή που στέλνει η μηχανή. */
+export type CebSuspension = {
+  mark: CebSuspensionMark;
+  since: string | null;
+  until: string | null;
+  tillFurtherNotice: boolean;
+};
+
+/**
+ * Το `suspended` κάθε γραμμής: ημερομηνία σε μορφή string (παλιά μορφή — γκρι,
+ * χωρίς ημερομηνία λήξης· «till further notice»), αντικείμενο (νέα μορφή) ή null.
+ */
+export type CebSuspensionValue = string | CebSuspension | null;
+
+/**
+ * Κανονικοποιεί το `suspended` της γραμμής σε μία μορφή, ώστε ο πίνακας να
+ * δουλεύει και με τις δύο μορφές δεδομένων:
+ * - string ημερομηνίας → γκρι, από εκείνη την ημερομηνία, χωρίς λήξη
+ *   (till further notice)
+ * - αντικείμενο → όπως δίνεται· το `mark` πέφτει σε γκρι όταν λείπει ή είναι άγνωστο
+ */
+export const normalizeCebSuspension = (
+  value: CebSuspensionValue | undefined,
+): CebSuspension | null => {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const since = value.trim();
+    return since ? { mark: "grey", since, until: null, tillFurtherNotice: true } : null;
+  }
+  const since = typeof value.since === "string" && value.since.trim() ? value.since.trim() : null;
+  const until = typeof value.until === "string" && value.until.trim() ? value.until.trim() : null;
+  return {
+    mark: value.mark === "yellow" ? "yellow" : "grey",
+    since,
+    until,
+    tillFurtherNotice: value.tillFurtherNotice ?? !until,
+  };
+};
+
+/**
+ * Ο μύθος του επίσημου φύλλου της CEB, αυτολεξεί στα αγγλικά (όπως στο PDF).
+ * Δεν αλλάζει η διατύπωσή του.
+ */
+export const CEB_SUSPENSION_LEGEND =
+  "Grey marked entries suspended for 1 year starting from the mentioned date and till further notice. Yellow marked entries suspended for 3 months from the mentioned date.";
+
 export type CebRankingRow = {
   rank: number;
   name: string;
   fed: string;
   points: number;
   ev: (number | null)[];
-  suspended: string | null;
+  suspended: CebSuspensionValue;
 };
 
 export type CebRankingCounts = {
@@ -46,6 +98,64 @@ export type CebPlayerLink = {
 };
 
 export type CebPlayerLinks = Record<string, CebPlayerLink>;
+
+/**
+ * Κανονικοποίηση ονόματος για αντιστοίχιση ταυτότητας: πεζά, χωρίς τόνους/διακριτικά,
+ * με ένα κενό ανάμεσα στα λεκτικά. Η σειρά των λεκτικών διατηρείται (δεν ταξινομείται),
+ * ώστε η αντιστοίχιση γραμμής ↔ `db` να μην παράγει ψευδείς ταιριάσματα.
+ */
+export const normalizeCebName = (value: string | null | undefined): string =>
+  (value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/** Ίδιο με το `normalizeCebName`, αλλά με ταξινομημένα λεκτικά (για αντίστροφη αναζήτηση). */
+export const normalizeCebNameLoose = (value: string | null | undefined): string =>
+  normalizeCebName(value).split(" ").filter(Boolean).sort().join(" ");
+
+/**
+ * Ευρετήριο ταυτότητας των συνδέσμων προφίλ: κανονικοποιημένο όνομα (`db`) → σύνδεσμος.
+ * Χτίζεται μία φορά ανά λίστα αντί να γίνεται αναζήτηση σε κάθε γραμμή.
+ */
+export const buildCebPlayerLinkIndex = (
+  links?: CebPlayerLinks,
+): Map<string, CebPlayerLink> => {
+  const index = new Map<string, CebPlayerLink>();
+  if (!links) return index;
+  for (const link of Object.values(links)) {
+    const key = normalizeCebName(link?.db);
+    if (key && !index.has(key)) index.set(key, link);
+  }
+  return index;
+};
+
+/**
+ * Ο σύνδεσμος προφίλ μιας γραμμής του πίνακα — ΜΕ ΤΑΥΤΟΤΗΤΑ, όχι με θέση.
+ *
+ * Το αρχείο `player-links*.json` είναι keyed με τη ΘΕΣΗ, αλλά η σειρά του δεν
+ * συμπίπτει με τις γραμμές της λίστας· μια αλλαγή αρίθμησης θα έδειχνε άλλον
+ * αθλητή. Πρώτα ψάχνουμε σύνδεσμο με το ίδιο κανονικοποιημένο όνομα, και τη θέση
+ * τη δεχόμαστε μόνο ως fallback — και ΠΟΤΕ σύνδεσμο του οποίου το όνομα δεν
+ * ταιριάζει με τη γραμμή.
+ */
+export const resolveCebPlayerLink = (
+  row: { name: string; rank: number },
+  links?: CebPlayerLinks,
+  index?: Map<string, CebPlayerLink>,
+): CebPlayerLink | undefined => {
+  if (!links) return undefined;
+  const nameKey = normalizeCebName(row.name);
+  if (!nameKey) return undefined;
+  const byName = index ?? buildCebPlayerLinkIndex(links);
+  const identity = byName.get(nameKey);
+  if (identity) return identity;
+  const positional = links[String(row.rank)];
+  if (positional && normalizeCebName(positional.db) === nameKey) return positional;
+  return undefined;
+};
 
 export type CebRankingPayload = {
   slug: string;
@@ -138,6 +248,15 @@ export type CebRankingArchiveEdition = {
   federations: number;
   suspended: number;
   sourceUrl: string;
+  /**
+   * Προαιρετικά πεδία που γράφονται μόνο όταν κρατάμε και το δικό μας
+   * υπολογισμένο αντίγραφο της έκδοσης (`archive/<slug>/<key>.computed.json`).
+   * Οι παλιές εγγραφές δεν τα έχουν — ό,τι λείπει πέφτει στα βασικά πεδία.
+   */
+  computedFile?: string | null;
+  computedAt?: string | null;
+  computedPlayers?: number | null;
+  computedPoints?: number | null;
 };
 
 export type CebRankingArchive = {

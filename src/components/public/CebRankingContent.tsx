@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import { formatCebDate, type CebPlayerLinks, type CebRankingPayload } from "@/lib/cebRanking";
+import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink } from "@/lib/cebRanking";
+import type { CebPlayerLinks, CebRankingPayload, CebSuspensionMark } from "@/lib/cebRanking";
+import { SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
   payload: CebRankingPayload;
@@ -12,6 +14,15 @@ type Props = {
   playerLinks?: CebPlayerLinks;
   /** Σύνδεσμος προς το PDF export ακριβώς αυτής της έκδοσης (χωρίς τιμή = χωρίς κουμπί). */
   downloadHref?: string | null;
+  /**
+   * Σε embed (iframe σε ξένο site):
+   * - οι σύνδεσμοι προς billiardtoday.com (προφίλ παίκτη, σελίδες διοργανώσεων) γίνονται
+   *   απόλυτοι και ανοίγουν σε νέα καρτέλα — ο επισκέπτης δεν «φυλακίζεται» στο iframe·
+   * - ο πίνακας αποκτά δικό του κάθετο scroll (σταθερό ύψος) ώστε η σελίδα να χωρά σε
+   *   iframe σταθερού ύψους χωρίς να κόβεται, και το sticky header «κολλά» στην κορυφή
+   *   του scroll container (όχι κάτω από το header του site, που εδώ δεν υπάρχει).
+   */
+  embedded?: boolean;
 };
 
 /** Compact page list: 1 … 4 5 [6] 7 8 … 42 */
@@ -55,7 +66,23 @@ const medalForPoints = (scale: number[] | undefined, value: number | null) => {
   return PLACE_MEDALS[place];
 };
 
-export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref }: Props) {
+/**
+ * Χρώμα γραμμής για αποκλεισμένο αθλητή, όπως στο επίσημο φύλλο της CEB:
+ * γκρι = 1 χρόνος, κίτρινο = 3 μήνες. Η γραμμή κρατά το δικό της χρώμα και
+ * μένει έξω από το ζέβρωμα των υπόλοιπων γραμμών.
+ */
+const SUSPENSION_ROW_CLASS: Record<CebSuspensionMark, string> = {
+  grey: "bg-slate-200/70 text-slate-600",
+  yellow: "bg-yellow-100 text-yellow-900",
+};
+
+/** Απόχρωση της ημερομηνίας έναρξης του αποκλεισμού μέσα στη γραμμή. */
+const SUSPENSION_DATE_CLASS: Record<CebSuspensionMark, string> = {
+  grey: "text-slate-500",
+  yellow: "text-amber-700",
+};
+
+export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref, embedded = false }: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
   const backLabel = `${payload.title} — European Ranking`;
   const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
@@ -72,10 +99,25 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [payload]);
 
+  // Πόσες γραμμές έχουν σήμανση αποκλεισμού — μετριούνται από τα δεδομένα, ώστε
+  // να δουλεύει και με τις δύο μορφές του `suspended` (string ή αντικείμενο).
+  const suspendedCount = useMemo(
+    () =>
+      payload.rows.reduce(
+        (count, row) => (normalizeCebSuspension(row.suspended) ? count + 1 : count),
+        0,
+      ),
+    [payload],
+  );
+
+  // Ευρετήριο ταυτότητας: το player-links αρχείο είναι keyed με τη θέση, αλλά η σειρά
+  // του αλλάζει μαζί με τη λίστα — ο σύνδεσμος αποδίδεται με ΟΝΟΜΑ, όχι με θέση.
+  const linkIndex = useMemo(() => buildCebPlayerLinkIndex(playerLinks), [playerLinks]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return payload.rows.filter((row) => {
-      if (!showSuspended && row.suspended) return false;
+      if (!showSuspended && normalizeCebSuspension(row.suspended)) return false;
       if (fed && row.fed !== fed) return false;
       if (needle && !row.name.toLowerCase().includes(needle)) return false;
       return true;
@@ -97,7 +139,9 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
   // cell carries its own background + stacking context (rows scroll underneath).
   // The wrapper only drops its scroll container at lg (>=1024px), where the table fits,
   // so horizontal scroll still works on narrow viewports.
-  const headCell = "bg-slate-900 lg:sticky lg:top-[97px] lg:z-20";
+  const headCell = embedded
+    ? "bg-slate-900 sticky top-0 z-20"
+    : "bg-slate-900 lg:sticky lg:top-[97px] lg:z-20";
 
   return (
     <div className="flex flex-col gap-6">
@@ -188,9 +232,20 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                   <div className="min-w-0">
                     <div className="text-[13px] font-semibold leading-5 text-slate-900">
                       {event.href ? (
-                        <Link href={withBack(event.href)} className="hover:text-sky-700 hover:underline">
-                          {event.name}
-                        </Link>
+                        embedded ? (
+                          <a
+                            href={`${SITE_URL}${withBack(event.href)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-sky-700 hover:underline"
+                          >
+                            {event.name}
+                          </a>
+                        ) : (
+                          <Link href={withBack(event.href)} className="hover:text-sky-700 hover:underline">
+                            {event.name}
+                          </Link>
+                        )
                       ) : (
                         event.name
                       )}
@@ -253,7 +308,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                   : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
               }`}
             >
-              Suspended ({payload.counts.suspended}) {showSuspended ? "shown" : "hidden"}
+              Suspended ({suspendedCount}) {showSuspended ? "shown" : "hidden"}
             </button>
             {downloadHref ? (
               <a
@@ -269,7 +324,7 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
         </div>
 
         <div className="px-2 pb-2 pt-5 sm:px-4">
-          <div className="overflow-x-auto lg:overflow-x-clip">
+          <div className={embedded ? "max-h-[560px] overflow-auto" : "overflow-x-auto lg:overflow-x-clip"}>
             <table className="w-full min-w-[760px] border-separate border-spacing-0 text-right tabular-nums">
               <thead>
                 <tr className="bg-slate-900 text-[11px] font-semibold uppercase tracking-wide text-white">
@@ -294,14 +349,16 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
               <tbody>
                 {visible.map((row, rowIndex) => {
                   const flag = getCountryFlagCdnUrl(payload.federations[row.fed] ?? null, 40);
-                  const suspendedOn = formatCebDate(row.suspended);
-                  const link = playerLinks?.[String(row.rank)];
+                  const suspension = normalizeCebSuspension(row.suspended);
+                  const suspendedOn = formatCebDate(suspension?.since);
+                  const link = resolveCebPlayerLink(row, playerLinks, linkIndex);
                   return (
                     <tr
                       key={`${row.rank}-${row.name}`}
+                      data-suspension={suspension ? suspension.mark : undefined}
                       className={
-                        row.suspended
-                          ? "bg-slate-200/70 text-slate-600"
+                        suspension
+                          ? SUSPENSION_ROW_CLASS[suspension.mark]
                           : `${
                               rowIndex % 2 === 1 ? "bg-blue-100" : "bg-blue-50"
                             } hover:bg-sky-200/60`
@@ -324,13 +381,25 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                             />
                           ) : null}
                           {link ? (
-                            <Link
-                              href={`/players/${link.id}-${link.slug}`}
-                              title={`${link.db} — player profile`}
-                              className="truncate text-[13.5px] font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
-                            >
-                              {row.name}
-                            </Link>
+                            embedded ? (
+                              <a
+                                href={`${SITE_URL}/players/${link.id}-${link.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`${link.db} — player profile`}
+                                className="truncate text-[13.5px] font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
+                              >
+                                {row.name}
+                              </a>
+                            ) : (
+                              <Link
+                                href={`/players/${link.id}-${link.slug}`}
+                                title={`${link.db} — player profile`}
+                                className="truncate text-[13.5px] font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
+                              >
+                                {row.name}
+                              </Link>
+                            )
                           ) : (
                             <span className="truncate text-[13.5px] font-semibold text-slate-900">
                               {row.name}
@@ -338,10 +407,19 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                           )}
                           {suspendedOn ? (
                             <span
-                              className="shrink-0 rounded-md border border-slate-400/50 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-slate-600"
-                              title={`Suspended for 1 year from ${suspendedOn}`}
+                              data-suspension={suspension?.mark}
+                              className={`shrink-0 text-[10px] font-semibold tabular-nums ${SUSPENSION_DATE_CLASS[suspension?.mark ?? "grey"]}`}
+                              title={
+                                suspension?.mark === "yellow"
+                                  ? `Suspended for 3 months from ${suspendedOn}${
+                                      suspension.until ? ` until ${formatCebDate(suspension.until)}` : ""
+                                    }`
+                                  : `Suspended for 1 year from ${suspendedOn}${
+                                      suspension?.tillFurtherNotice ? " and till further notice" : ""
+                                    }`
+                              }
                             >
-                              suspended · {suspendedOn}
+                              {suspendedOn}
                             </span>
                           ) : null}
                         </span>
@@ -384,6 +462,15 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
             </table>
           </div>
         </div>
+
+        {suspendedCount > 0 ? (
+          <p
+            id="ceb-suspension-legend"
+            className="px-6 pt-4 text-[11.5px] leading-5 text-slate-500 sm:px-8"
+          >
+            {CEB_SUSPENSION_LEGEND}
+          </p>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 px-6 py-4 text-sm text-slate-500 sm:px-8">
           <span>

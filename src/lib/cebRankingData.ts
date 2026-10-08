@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type {
+  CebPlayerLink,
   CebPlayerLinks,
   CebRankingArchive,
   CebRankingArchiveEdition,
@@ -9,6 +10,7 @@ import type {
   CebRankingPayload,
   CebRankingRow,
 } from "@/lib/cebRanking";
+import { normalizeCebName, normalizeCebNameLoose } from "@/lib/cebRanking";
 
 /**
  * Server-side readers for the CEB ranking JSON (see `cebRanking.ts` for the shape).
@@ -71,12 +73,20 @@ export const readCebRankingArchive = (slug: string): CebRankingArchive | null =>
 /**
  * Μία αρχειοθετημένη έκδοση, στην ίδια μορφή με την τρέχουσα (`readCebRanking`)
  * ώστε ο πίνακας να αποδίδεται με το ίδιο component.
+ *
+ * Αν για την έκδοση υπάρχει το δικό μας υπολογισμένο αντίγραφο
+ * (`archive/<slug>/<key>.computed.json`) το προτιμάμε σιωπηλά· αλλιώς πέφτουμε
+ * στο επίσημο αρχείο `archive/<slug>/<key>.json`.
  */
 export const readCebRankingEdition = (slug: string, key: string): CebRankingPayload | null => {
   if (!SLUG_PATTERN.test(slug) || !EDITION_KEY_PATTERN.test(key)) return null;
 
-  const parsed = readJson<CebRankingPayload>(path.join(ARCHIVE_DIR, slug, `${key}.json`));
-  return isRankingPayload(parsed) ? parsed : null;
+  const dir = path.join(ARCHIVE_DIR, slug);
+  for (const file of [`${key}.computed.json`, `${key}.json`]) {
+    const parsed = readJson<CebRankingPayload>(path.join(dir, file));
+    if (isRankingPayload(parsed)) return parsed;
+  }
+  return null;
 };
 
 /** Επιτρεπτά κλειδιά αρχείου συνδέσμων (αποφυγή path traversal). */
@@ -113,21 +123,33 @@ export type CebPlayerRanking = {
 };
 
 /**
- * Το CEB ranking του παίκτη (αν υπάρχει), με αντίστροφη αναζήτηση μέσω του
- * player-links.json (rank -> id). Server components only.
+ * Το CEB ranking του παίκτη (αν υπάρχει). Η γραμμή βρίσκεται ΜΕ ΤΑΥΤΟΤΗΤΑ: από
+ * το `id` του URL παίρνουμε τον σύνδεσμο, μετά τη γραμμή με το ίδιο όνομα — όχι
+ * από τη θέση, γιατί η σειρά του player-links αρχείου δεν συμπίπτει με τη λίστα
+ * (μια θέση θα έδειχνε άλλον αθλητή). Server components only.
  */
 export const readCebPlayerRanking = (playerId: string | number): CebPlayerRanking | null => {
   // Το [id] του URL είναι τύπου "216-MERCKX-Eddy" — κρατάμε το νούμερο (όπως και το publicSiteData).
   const numericId = String(playerId).split("-")[0]?.trim();
   if (!numericId) return null;
 
-  const rank = Object.entries(readCebPlayerLinks()).find(([, link]) => String(link.id) === numericId)?.[0];
-  if (!rank) return null;
-
   const payload = readCebRanking(CEB_PLAYER_RANKING_SLUG);
   if (!payload) return null;
 
-  const row = payload.rows.find((entry) => String(entry.rank) === rank);
+  // Πρώτα το αρχείο της ίδιας της λίστας, μετά το άλλο — το `db` κάθε καταχώρισης
+  // δίνει το όνομα για την αντιστοίχιση ταυτότητας με τη γραμμή.
+  const linkKeys = Array.from(new Set([payload.links ?? "official", "official", "computed"]));
+  let link: CebPlayerLink | undefined;
+  for (const key of linkKeys) {
+    link = Object.values(readCebPlayerLinks(key)).find((entry) => String(entry.id) === numericId);
+    if (link) break;
+  }
+  if (!link) return null;
+
+  const nameKey = normalizeCebName(link.db);
+  const row =
+    payload.rows.find((entry) => normalizeCebName(entry.name) === nameKey) ??
+    payload.rows.find((entry) => normalizeCebNameLoose(entry.name) === normalizeCebNameLoose(link.db));
   if (!row) return null;
 
   return {

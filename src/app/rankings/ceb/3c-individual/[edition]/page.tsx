@@ -71,7 +71,9 @@ export default async function CebThreeCushionEditionPage({ params }: Props) {
 
   const current = readCebRanking(SLUG);
   const archive = readCebRankingArchive(SLUG);
-  const playerLinks = readCebPlayerLinks();
+  // Η αρίθμηση θέσεων αλλάζει μαζί με τη λίστα: τα αρχεία σύνδεσμων προφίλ
+  // ακολουθούν το `links` της έκδοσης ("computed" για τη δική μας υπολογισμένη).
+  const playerLinks = readCebPlayerLinks(payload.links ?? "official");
 
   const isCurrent = current?.edition === payload.edition;
   const updated = formatCebDate(payload.updatedAt);
