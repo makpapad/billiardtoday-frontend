@@ -4,7 +4,7 @@ import { PresentationHero, SectionHeading } from "@/components/public/Presentati
 import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
 import { formatCebDate } from "@/lib/cebRanking";
 import { readCebRankingIndex } from "@/lib/cebRankingData";
-import { SITE_URL } from "@/lib/socialMetadata";
+import { toEmbedHref } from "@/lib/embedLinks";
 
 export const revalidate = 300;
 
@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 
 /**
  * EMBED: ο «κόμβος» των κατατάξεων CEB (/rankings/ceb) χωρίς το chrome του site,
- * έτοιμος για iframe σε ξένο site. Κάθε πλακίδιο κατάταξης ανοίγει την κανονική
- * σελίδα σε νέα καρτέλα, ώστε ο επισκέπτης να μη «φυλακίζεται» στο iframe.
+ * έτοιμος για iframe σε ξένο site. Κάθε πλακίδιο κατάταξης ανοίγει το `/embed`
+ * μονοπάτι της, ώστε η περιήγηση να μένει μέσα στο iframe.
  */
 export default function EmbedCebRankingsPage() {
   const index = readCebRankingIndex();
@@ -37,9 +37,7 @@ export default function EmbedCebRankingsPage() {
         asideHeader={
           <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
             <a
-              href={`${SITE_URL}/rankings/ceb`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/embed/rankings/ceb"
               className="inline-flex"
               aria-label="CEB rankings on BilliardToday"
             >
@@ -73,9 +71,7 @@ export default function EmbedCebRankingsPage() {
           {available.map((entry) => (
             <a
               key={entry.slug}
-              href={`${SITE_URL}${entry.href}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={toEmbedHref(entry.href)}
               className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
             >
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">

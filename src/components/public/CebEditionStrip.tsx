@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cebEditionHref, formatCebDate, type CebRankingArchiveEdition } from "@/lib/cebRanking";
-import { SITE_URL } from "@/lib/socialMetadata";
+import { toEmbedHref } from "@/lib/embedLinks";
 
 type Props = {
   slug: string;
@@ -10,8 +10,8 @@ type Props = {
   /** Το κλειδί της έκδοσης που βλέπει ο επισκέπτης (στην αρχειοθετημένη σελίδα). */
   viewingKey?: string;
   /**
-   * Σε embed: τα πλακίδια εκδόσεων δείχνουν σελιδοποιημένα billiardtoday.com —
-   * απόλυτο URL + νέα καρτέλα, ώστε ο επισκέπτης του iframe να μη «φυλακίζεται».
+   * Σε embed: τα πλακίδια εκδόσεων δείχνουν στα `/embed` μονοπάτια — η αλλαγή έκδοσης
+   * γίνεται μέσα στο iframe, χωρίς να φύγει ο επισκέπτης από το site που το φιλοξενεί.
    */
   embedded?: boolean;
 };
@@ -63,13 +63,7 @@ export function CebEditionStrip({ slug, editions, currentEdition, viewingKey, em
           }
           if (embedded) {
             return (
-              <a
-                key={entry.key}
-                href={`${SITE_URL}${cebEditionHref(slug, entry.key)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={className}
-              >
+              <a key={entry.key} href={toEmbedHref(cebEditionHref(slug, entry.key))} className={className}>
                 {body}
               </a>
             );

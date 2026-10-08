@@ -442,7 +442,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               ? "Meet the CEB leadership team through a dedicated board roster with portraits, roles, and direct contact details."
             : "Explore the European carom network through an interactive federation map. Select a country pin to inspect the national federation, review its tournaments, and browse its connected clubs."
         }
-        actions={[{ label: "CEB rankings", href: "/rankings/ceb", variant: "secondary" }]}
+        actions={[{ label: "CEB rankings", href: `${embedded ? "/embed" : ""}/rankings/ceb`, variant: "secondary" }]}
         actionSlot={
           <div className="inline-flex flex-wrap gap-2">
             {([

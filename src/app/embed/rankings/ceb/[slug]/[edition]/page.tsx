@@ -18,7 +18,7 @@ import {
   readCebRankingArchive,
   readCebRankingEdition,
 } from "@/lib/cebRankingData";
-import { SITE_URL } from "@/lib/socialMetadata";
+import { toEmbedHref } from "@/lib/embedLinks";
 
 export const revalidate = 300;
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * EMBED: μια αρχειοθετημένη έκδοση της κατάταξης CEB
  * (/rankings/ceb/<slug>/<edition>) χωρίς το chrome του site. Ίδιο περιεχόμενο με
  * την κανονική σελίδα έκδοσης (hero + ειδοποίηση αρχείου + λωρίδα εκδόσεων +
- * πίνακας), με τους συνδέσμους προς billiardtoday.com να ανοίγουν σε νέα καρτέλα.
+ * πίνακας), με τα λινκ να δείχνουν στα `/embed` μονοπάτια (πλοήγηση μέσα στο iframe).
  */
 export default async function EmbedCebRankingEditionPage({ params }: Props) {
   const { slug, edition } = await params;
@@ -69,16 +69,14 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
             : "The list exactly as the CEB published it, with the point breakdown of every counting tournament of that edition. Kept online after the next edition arrived."
         }
         actions={[
-          { label: "Current CEB list →", href: `${SITE_URL}${cebRankingHref(slug)}`, newTab: true },
-          { label: "All CEB rankings", href: `${SITE_URL}/rankings/ceb`, variant: "secondary", newTab: true },
+          { label: "Current CEB list →", href: toEmbedHref(cebRankingHref(slug)) },
+          { label: "All CEB rankings", href: "/embed/rankings/ceb", variant: "secondary" },
           { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
         ]}
         asideHeader={
           <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
             <a
-              href={`${SITE_URL}${cebEditionHref(slug, editionKey)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={toEmbedHref(cebEditionHref(slug, editionKey))}
               className="inline-flex"
               aria-label={`${payload.title} edition ${payload.edition} on BilliardToday`}
             >
@@ -105,12 +103,7 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
             <span className="font-semibold">Archived copy of the current edition.</span> The ranking the
             CEB publishes today is edition {payload.edition}
             {updated ? ` (last update ${updated})` : ""} —{" "}
-            <a
-              href={`${SITE_URL}${cebRankingHref(slug)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold underline"
-            >
+            <a href={toEmbedHref(cebRankingHref(slug))} className="font-semibold underline">
               open the current list
             </a>
             . When the CEB publishes the next edition, this page keeps today&apos;s numbers.
@@ -119,12 +112,7 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
           <>
             <span className="font-semibold">Archived edition — {payload.edition}</span>
             {updated ? `, last updated ${updated}` : ""}. This is not the list the CEB publishes today:{" "}
-            <a
-              href={`${SITE_URL}${cebRankingHref(slug)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold underline"
-            >
+            <a href={toEmbedHref(cebRankingHref(slug))} className="font-semibold underline">
               open the current edition{current ? ` (${current.edition})` : ""}
             </a>
             .

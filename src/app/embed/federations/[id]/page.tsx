@@ -39,7 +39,7 @@ export default async function EmbedFederationPage({ params }: Props) {
   // χωρίς κάρτες κατάταξης/χάρτη — μόνο η κατάταξη.
   const federationActions =
     federation.slug === "umb" || federation.slug === "union-mondiale-de-billard"
-      ? [{ label: "UMB rankings", href: "/rankings/umb", variant: "secondary" as const }]
+      ? [{ label: "UMB rankings", href: "/embed/rankings/umb", variant: "secondary" as const }]
       : [];
 
   return (

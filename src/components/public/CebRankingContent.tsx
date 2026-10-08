@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink } from "@/lib/cebRanking";
 import type { CebPlayerLinks, CebRankingPayload, CebSuspensionMark } from "@/lib/cebRanking";
+import { embedLinkTarget } from "@/lib/embedLinks";
 import { SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
@@ -21,6 +22,8 @@ type Props = {
    * - ο πίνακας αποκτά δικό του κάθετο scroll (σταθερό ύψος) ώστε η σελίδα να χωρά σε
    *   iframe σταθερού ύψους χωρίς να κόβεται, και το sticky header «κολλά» στην κορυφή
    *   του scroll container (όχι κάτω από το header του site, που εδώ δεν υπάρχει).
+   * - τα λινκ προς κατατάξεις/ομοσπονδίες δείχνουν στο `/embed` μονοπάτι τους (μένουν στο
+   *   iframe). Τουρνουά και προφίλ αθλητή ανοίγουν στο billiardtoday.com σε νέα καρτέλα.
    */
   embedded?: boolean;
 };
@@ -234,8 +237,8 @@ export function CebRankingContent({ payload, pageSize, playerLinks, downloadHref
                       {event.href ? (
                         embedded ? (
                           <a
-                            href={`${SITE_URL}${withBack(event.href)}`}
-                            target="_blank"
+                            href={embedLinkTarget(withBack(event.href), SITE_URL).href}
+                            target={embedLinkTarget(withBack(event.href), SITE_URL).newTab ? "_blank" : undefined}
                             rel="noopener noreferrer"
                             className="hover:text-sky-700 hover:underline"
                           >

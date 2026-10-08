@@ -7,7 +7,7 @@ import { CebRankingContent } from "@/components/public/CebRankingContent";
 import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
 import { CEB_RANKING_PAGE_SIZE, formatCebDate } from "@/lib/cebRanking";
 import { readCebPlayerLinks, readCebRanking, readCebRankingArchive } from "@/lib/cebRankingData";
-import { SITE_URL } from "@/lib/socialMetadata";
+import { toEmbedHref } from "@/lib/embedLinks";
 
 export const revalidate = 300;
 
@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /**
  * EMBED: η τρέχουσα κατάταξη CEB (/rankings/ceb/<slug>) χωρίς το chrome του site.
  * Ίδιο περιεχόμενο με την κανονική σελίδα (hero + λωρίδα εκδόσεων + πίνακας με
- * φίλτρα/αναζήτηση/PDF + μύθος ποινών), με τους συνδέσμους προς billiardtoday.com
- * να ανοίγουν σε νέα καρτέλα και τον πίνακα να κάνει scroll μέσα του.
+ * φίλτρα/αναζήτηση/PDF + μύθος ποινών), με τα λινκ να δείχνουν στα `/embed` μονοπάτια
+ * (η πλοήγηση μένει μέσα στο iframe) και τον πίνακα να κάνει scroll μέσα του.
  */
 export default async function EmbedCebRankingPage({ params }: Props) {
   const { slug } = await params;
@@ -49,15 +49,13 @@ export default async function EmbedCebRankingPage({ params }: Props) {
         description="The official CEB ranking list with the point breakdown of every counting tournament. Each tournament column links to the event page on BilliardToday."
         actions={[
           { label: "Jump to the list ↓", href: "#list" },
-          { label: "All CEB rankings", href: `${SITE_URL}/rankings/ceb`, variant: "secondary", newTab: true },
+          { label: "All CEB rankings", href: "/embed/rankings/ceb", variant: "secondary" },
           { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
         ]}
         asideHeader={
           <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
             <a
-              href={`${SITE_URL}/rankings/ceb/${slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={toEmbedHref(`/rankings/ceb/${slug}`)}
               className="inline-flex"
               aria-label={`${payload.title} on BilliardToday`}
             >
