@@ -40,6 +40,26 @@ export default async function RankingsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <Link
+            href="/rankings/umb"
+            className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
+          >
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+              UMB
+            </div>
+            <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+              UMB Events Ranking
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              The official UMB world Events Ranking for 3-cushion individual — the World Championship and
+              the ten most recent World Cups, with the points and absence penalties of every counting
+              tournament.
+            </p>
+            <div className="mt-5 text-sm font-semibold text-sky-700">
+              Open ranking
+            </div>
+          </Link>
+
           {seriesList.map((series) => (
             <Link
               key={series.slug}

@@ -1,0 +1,47 @@
+{
+ "slug": "3c-individual",
+ "title": "Events Ranking — 3-Cushion Individual",
+ "generatedAt": "2026-10-08T00:39:48Z",
+ "editions": [
+  {
+   "key": "09-2026",
+   "edition": "09/2026",
+   "updatedAt": "2026-09-23",
+   "archivedAt": "2026-10-08T00:39:48Z",
+   "players": 497,
+   "federations": 36,
+   "suspended": 0,
+   "sourceUrl": "https://www.umb-carom.org/uploads/rankings/dwipva2s.dyr.pdf"
+  },
+  {
+   "key": "05-2026",
+   "edition": "05/2026",
+   "updatedAt": "2026-09-06",
+   "archivedAt": "2026-10-08T00:39:48Z",
+   "players": 491,
+   "federations": 38,
+   "suspended": 0,
+   "sourceUrl": "https://www.umb-carom.org/ranking/archive"
+  },
+  {
+   "key": "04-2026",
+   "edition": "04/2026",
+   "updatedAt": "2026-07-18",
+   "archivedAt": "2026-10-08T00:39:48Z",
+   "players": 487,
+   "federations": 37,
+   "suspended": 0,
+   "sourceUrl": "https://www.umb-carom.org/ranking/archive"
+  },
+  {
+   "key": "03-2026",
+   "edition": "03/2026",
+   "updatedAt": "2026-06-14",
+   "archivedAt": "2026-10-08T00:39:48Z",
+   "players": 489,
+   "federations": 37,
+   "suspended": 0,
+   "sourceUrl": "https://www.umb-carom.org/ranking/archive"
+  }
+ ]
+}
