@@ -68,26 +68,43 @@ export default function CebRankingsPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-          {available.map((entry) => (
-            <Link
-              key={entry.slug}
-              href={entry.href}
-              className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
-            >
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                {entry.discipline} · {entry.categoryLabel}
-              </div>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
-                {entry.title}
-              </h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                Edition {entry.edition}
-                {entry.updatedAt ? ` · updated ${formatCebDate(entry.updatedAt)}` : ""} ·{" "}
-                {entry.players.toLocaleString("en-US")} players · {entry.federations} federations
-              </p>
-              <div className="mt-5 text-sm font-semibold text-sky-700">Open ranking</div>
-            </Link>
-          ))}
+          {available.map((entry) => {
+            const isPdf = entry.mode === "pdf";
+            return (
+              <Link
+                key={entry.slug}
+                href={entry.href}
+                className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                    {entry.discipline} · {entry.categoryLabel}
+                  </div>
+                  {isPdf ? (
+                    <span
+                      className="inline-flex shrink-0 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700"
+                      title="Official CEB sheet (PDF) — the full data version is being prepared"
+                    >
+                      PDF
+                    </span>
+                  ) : null}
+                </div>
+                <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                  {entry.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Edition {entry.edition}
+                  {entry.updatedAt ? ` · updated ${formatCebDate(entry.updatedAt)}` : ""} ·{" "}
+                  {isPdf
+                    ? "official CEB sheet (PDF)"
+                    : `${(entry.players ?? 0).toLocaleString("en-US")} players · ${entry.federations ?? 0} federations`}
+                </p>
+                <div className="mt-5 text-sm font-semibold text-sky-700">
+                  {isPdf ? "Open the sheet" : "Open ranking"}
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         {available.length === 0 ? (

@@ -183,6 +183,8 @@ export type CebRankingPayload = {
   dataSource?: string;
 };
 
+export type CebRankingIndexMode = "data" | "pdf";
+
 export type CebRankingIndexEntry = {
   slug: string;
   title: string;
@@ -190,11 +192,56 @@ export type CebRankingIndexEntry = {
   categoryLabel: string;
   edition: string;
   updatedAt: string | null;
-  players: number;
-  federations: number;
-  suspended: number;
+  /**
+   * Πόσοι αθλητές/ομοσπονδίες/αποκλεισμοί — λείπουν στις εγγραφές `mode: "pdf"`
+   * (η κατηγορία σερβίρεται ακόμη ως το επίσημο φύλλο της CEB, χωρίς δεδομένα).
+   */
+  players?: number;
+  federations?: number;
+  suspended?: number;
   href: string;
   sourceUrl: string;
+  /**
+   * `"pdf"` = η κατηγορία δείχνει το επίσημο φύλλο της CEB μέσα στη σελίδα μας
+   * (βλ. `public/data/ceb-ranking/pdf-sources.json`) μέχρι να χτιστεί η έκδοση με
+   * δεδομένα· ό,τι άλλο/λείπει = κανονική κατάταξη με πίνακα.
+   */
+  mode?: CebRankingIndexMode;
+};
+
+/**
+ * Κατηγορία που σερβίρεται ακόμη ως το ΕΠΙΣΗΜΟ φύλλο PDF της CEB, ενώ ετοιμάζεται
+ * η έκδοση με δεδομένα. Πηγή: `public/data/ceb-ranking/pdf-sources.json`
+ * (γραμμένο από τον importer). Ένα αντίγραφο του PDF κρατιέται στο `file` (ίδιο
+ * origin, ώστε να αποδίδεται σε `<object>`/`<iframe>` χωρίς X-Frame-Options).
+ */
+export type CebPdfCategory = {
+  slug: string;
+  title: string;
+  discipline: string;
+  categoryLabel: string;
+  /** Π.χ. "13/2026" — η έκδοση όπως τη γράφει το φύλλο της CEB. */
+  editionLabel: string;
+  /** Ημερομηνία τελευταίας ενημέρωσης του φύλλου (YYYY-MM-DD) ή null. */
+  lastUpdate: string | null;
+  lastUpdateNote?: string | null;
+  /** Απόλυτο URL του επίσημου PDF στη CEB (eurobillard.org) — ανοίγει σε νέα καρτέλα. */
+  pdfUrl: string;
+  /** Αυτο-φιλοξενούμενο αντίγραφο, σχετική διαδρομή κάτω από το public/ (π.χ. `/data/ceb-ranking/pdf/3c-ladies.pdf`). */
+  file: string;
+  bytes?: number | null;
+  sha256?: string | null;
+  fetchedAt?: string | null;
+  rows?: number | null;
+  /** true = το φύλλο έχει γραμμές με σήμανση αποκλεισμού (γκρι/κίτρινο) — δείχνουμε τον μύθο. */
+  suspendedNote?: boolean;
+};
+
+export type CebPdfSources = {
+  generatedAt: string;
+  sourcePage: string;
+  note?: string;
+  categories: CebPdfCategory[];
 };
 
 export type CebRankingIndex = {

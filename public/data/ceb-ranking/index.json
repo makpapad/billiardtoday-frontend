@@ -14,15 +14,20 @@
    "suspended": 15,
    "href": "/rankings/ceb/3c-individual",
    "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v17.pdf"
+  },
+  {
+   "slug": "3c-ladies",
+   "title": "3-Cushion Ladies",
+   "discipline": "3-Cushion",
+   "categoryLabel": "Ladies",
+   "edition": "13/2026",
+   "updatedAt": "2026-10-08",
+   "href": "/rankings/ceb/3c-ladies",
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf",
+   "mode": "pdf"
   }
  ],
  "upcoming": [
-  {
-   "title": "3-Cushion Ladies",
-   "file": "ceb-ladies-rank-2026-v13.pdf",
-   "pdfUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf",
-   "note": "v13 online (8/10/2026)"
-  },
   {
    "title": "3-Cushion National Teams",
    "file": "ranking-3c-national-teams-15-03-2026-antalya.pdf",

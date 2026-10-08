@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import type {
+  CebPdfCategory,
+  CebPdfSources,
   CebPlayerLink,
   CebPlayerLinks,
   CebRankingArchive,
@@ -37,6 +39,41 @@ const readJson = <T,>(file: string): T | null => {
 export const readCebRankingIndex = (): CebRankingIndex | null => {
   const parsed = readJson<CebRankingIndex>(path.join(DATA_DIR, "index.json"));
   return parsed && Array.isArray(parsed.available) ? parsed : null;
+};
+
+/**
+ * Ελάχιστος έλεγχος μιας εγγραφής pdf-mode: χρειαζόμαστε τουλάχιστον slug, τίτλο
+ * και URL του επίσημου PDF για να αποδοθεί η σελίδα χωρίς σφάλμα. Ό,τι λείπει
+ * πέφτει σε ασφαλείς προεπιλογές στην απόδοση.
+ */
+const isPdfCategory = (value: unknown): value is CebPdfCategory => {
+  if (!value || typeof value !== "object") return false;
+  const entry = value as Record<string, unknown>;
+  return (
+    typeof entry.slug === "string" &&
+    SLUG_PATTERN.test(entry.slug) &&
+    typeof entry.title === "string" &&
+    entry.title.trim().length > 0 &&
+    typeof entry.pdfUrl === "string" &&
+    entry.pdfUrl.trim().length > 0
+  );
+};
+
+/**
+ * Οι κατηγορίες CEB που σερβίρονται ακόμη ως το επίσημο φύλλο PDF
+ * (`public/data/ceb-ranking/pdf-sources.json`). Server components only. Επιστρέφει
+ * `[]` — ποτέ σφάλμα — όταν το αρχείο λείπει ή δεν έχει έγκυρες εγγραφές.
+ */
+export const readCebPdfCategories = (): CebPdfCategory[] => {
+  const parsed = readJson<CebPdfSources>(path.join(DATA_DIR, "pdf-sources.json"));
+  if (!parsed || !Array.isArray(parsed.categories)) return [];
+  return parsed.categories.filter(isPdfCategory);
+};
+
+/** Μία κατηγορία pdf-mode με το slug της, ή null όταν δεν υπάρχει/δεν είναι έγκυρη. */
+export const readCebPdfCategory = (slug: string): CebPdfCategory | null => {
+  if (!SLUG_PATTERN.test(slug)) return null;
+  return readCebPdfCategories().find((entry) => entry.slug === slug) ?? null;
 };
 
 const isRankingPayload = (parsed: CebRankingPayload | null): parsed is CebRankingPayload =>

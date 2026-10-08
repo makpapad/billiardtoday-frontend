@@ -50,7 +50,11 @@ type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
  * Στέλνει στο GA4 το κλικ που έγινε ΜΕΣΑ στο embed, πριν φύγει ο επισκέπτης στο
  * billiardtoday.com. Έτσι μετριούνται και τα κλικ που δεν καταλήγουν σε παραμονή.
  */
-export function reportCebEmbedClick(campaign: string, kind: "player" | "tournament" | "source", label: string): void {
+export function reportCebEmbedClick(
+  campaign: string,
+  kind: "player" | "tournament" | "source" | "pdf",
+  label: string,
+): void {
   if (typeof window === "undefined") return;
   const w = window as GtagWindow;
   if (typeof w.gtag !== "function") return;

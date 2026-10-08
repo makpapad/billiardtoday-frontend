@@ -4,9 +4,15 @@ import { notFound } from "next/navigation";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
 import { CebEditionStrip } from "@/components/public/CebEditionStrip";
 import { CebRankingContent } from "@/components/public/CebRankingContent";
+import { CebPdfRankingContent } from "@/components/public/CebPdfRankingContent";
 import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
-import { CEB_RANKING_PAGE_SIZE, formatCebDate } from "@/lib/cebRanking";
-import { readCebPlayerLinks, readCebRanking, readCebRankingArchive } from "@/lib/cebRankingData";
+import { CEB_RANKING_PAGE_SIZE, cebRankingHref, formatCebDate } from "@/lib/cebRanking";
+import {
+  readCebPdfCategory,
+  readCebPlayerLinks,
+  readCebRanking,
+  readCebRankingArchive,
+} from "@/lib/cebRankingData";
 import { toEmbedHref } from "@/lib/embedLinks";
 
 export const revalidate = 300;
@@ -18,23 +24,43 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const payload = readCebRanking(slug);
+  const pdfCategory = payload ? null : readCebPdfCategory(slug);
   return {
-    title: payload ? `${payload.title} — CEB Ranking` : "CEB Ranking",
+    title: payload
+      ? `${payload.title} — CEB Ranking`
+      : pdfCategory
+        ? `${pdfCategory.title} — CEB Ranking`
+        : "CEB Ranking",
     robots: { index: false, follow: false },
   };
 }
 
 /**
  * EMBED: η τρέχουσα κατάταξη CEB (/rankings/ceb/<slug>) χωρίς το chrome του site.
- * Ίδιο περιεχόμενο με την κανονική σελίδα (hero + λωρίδα εκδόσεων + πίνακας με
- * φίλτρα/αναζήτηση/PDF + μύθος ποινών), με τα λινκ να δείχνουν στα `/embed` μονοπάτια
- * (η πλοήγηση μένει μέσα στο iframe) και τον πίνακα να κάνει scroll μέσα του.
+ * Δέχεται και τις κατηγορίες pdf-mode (π.χ. 3c-ladies): όταν δεν υπάρχει πίνακας
+ * δεδομένων αλλά υπάρχει εγγραφή στο `pdf-sources.json`, δείχνει το επίσημο φύλλο
+ * της CEB στο ίδιο layout — ίδιο περιεχόμενο με τη δημόσια σελίδα, χωρίς chrome.
  */
 export default async function EmbedCebRankingPage({ params }: Props) {
   const { slug } = await params;
 
   const payload = readCebRanking(slug);
-  if (!payload) notFound();
+  if (!payload) {
+    const pdfCategory = readCebPdfCategory(slug);
+    if (pdfCategory) {
+      return (
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
+          <CebPdfRankingContent
+            category={pdfCategory}
+            embedded
+            campaign={`ceb-ranking-${slug}`}
+          />
+          <EmbedSourceBar href={cebRankingHref(slug)} campaign={`ceb-ranking-${slug}`} />
+        </div>
+      );
+    }
+    notFound();
+  }
 
   const playerLinks = readCebPlayerLinks(payload.links ?? "official");
   const archive = readCebRankingArchive(slug);
