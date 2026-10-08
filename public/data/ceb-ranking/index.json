@@ -1,25 +1,26 @@
 {
  "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
- "generatedAt": "2026-10-05T07:15:25Z",
+ "generatedAt": "2026-10-08T14:24:23Z",
  "available": [
   {
    "slug": "3c-individual",
    "title": "3-Cushion Individual",
    "discipline": "3-Cushion",
    "categoryLabel": "Individual — Men",
-   "edition": "16/2026",
-   "updatedAt": "2026-09-06",
-   "players": 1482,
-   "federations": 23,
+   "edition": "17/2026",
+   "updatedAt": "2026-10-07",
+   "players": 1468,
+   "federations": 22,
    "suspended": 15,
    "href": "/rankings/ceb/3c-individual",
-   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf"
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v17.pdf"
   }
  ],
  "upcoming": [
   {
    "title": "3-Cushion Ladies",
-   "file": "ceb-ladies-rank-2026-v12.pdf"
+   "file": "ceb-ladies-rank-2026-v13.pdf",
+   "note": "v13 online (8/10/2026)"
   },
   {
    "title": "3-Cushion National Teams",
@@ -27,7 +28,8 @@
   },
   {
    "title": "3-Cushion Ladies National Teams",
-   "file": "ranking-3c-ladies-national-teams-15-03-2026-antalya.pdf"
+   "file": "ceb-ladies-rank-2026-v13.pdf",
+   "note": "v13 online (8/10/2026)"
   },
   {
    "title": "5-Pins National Teams",

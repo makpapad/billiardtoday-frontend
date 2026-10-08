@@ -1,0 +1,52 @@
+CEB RANKING — EMBED ON THE CEB WEBSITE
+(English message, ready to send to Stefano — first person, no jargon)
+=====================================================================
+
+Hi Stefano,
+
+It's ready — you can try it now. I built a version of the ranking page made for
+embedding: no site menu, no footer, just the ranking (the CEB logo, the counting
+tournaments, the full list with search and country filter, the suspended players
+and the PDF button).
+
+Paste this where you want it on the CEB site:
+
+<iframe src="https://billiardtoday.com/embed/rankings/ceb/3c-individual"
+        title="CEB 3-Cushion Individual — European Ranking (BilliardToday)"
+        width="100%" height="1400" style="border:0;"
+        loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+Any width works, and the list scrolls inside the frame, so its length doesn't
+matter.
+
+Two other addresses, same idea:
+- all CEB ranking lists: https://billiardtoday.com/embed/rankings/ceb
+- a past edition:        https://billiardtoday.com/embed/rankings/ceb/3c-individual/16-2026
+
+One clarification, so there are no surprises:
+
+- Moving between editions (and "all CEB rankings") stays inside the frame.
+- Clicking a player's name, or a counting tournament, opens that page on
+  BilliardToday (billiardtoday.com) in a new tab — that is where the player's
+  profile, the tournament bracket and the full results live.
+- Those clicks are recorded on my side, so I can tell you how much traffic the CEB
+  website sends to BilliardToday, and which players and tournaments people are
+  looking at.
+
+If you want a different height, or the large header hidden so it sits tighter in
+your page, tell me and I'll change it.
+
+One more thing: the frame is fully under my control. Anything you would like
+different inside it — the size, the colours, which links are clickable, which
+parts are shown or hidden — I can change without touching the BilliardToday
+website itself. So tell me what you would like and I will adjust it.
+
+If you want, I can also put links to your own pages inside the frame — your
+ranking list, your calendar, your news — so a visitor can move between the two.
+Those open on the CEB site itself (not inside the frame), and I can count those
+clicks too, so you can see how much traffic the ranking sends your way. Tell me
+which pages you would like.
+
+Let me know how it looks.
+
+Makis

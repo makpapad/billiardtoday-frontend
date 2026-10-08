@@ -1,15 +1,15 @@
 {
  "slug": "3c-individual",
  "title": "3-Cushion Individual",
- "generatedAt": "2026-10-05T07:15:25Z",
+ "generatedAt": "2026-10-08T14:24:23Z",
  "editions": [
   {
    "key": "16-2026",
    "edition": "16/2026",
    "updatedAt": "2026-09-06",
-   "archivedAt": "2026-10-05T07:15:25Z",
-   "players": 1482,
-   "federations": 23,
+   "archivedAt": "2026-10-08T14:24:23Z",
+   "players": 1467,
+   "federations": 22,
    "suspended": 15,
    "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ranking-2026-v16.pdf"
   }

@@ -1,0 +1,12 @@
+CEB — V17 STATUS (message for Stefano, ready to send)
+=====================================================
+
+Hi Stefano,
+
+Thanks — good to know V17 is out.
+
+The embedded version is already live. On BilliardToday I have only delayed
+putting the new edition up — I am still running my tests on it. As soon as they
+are done I switch it on and let you know.
+
+Makis
