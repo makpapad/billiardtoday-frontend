@@ -201,7 +201,12 @@ export type CebRankingIndex = {
   sourcePage: string;
   generatedAt: string;
   available: CebRankingIndexEntry[];
-  upcoming: Array<{ title: string; file: string }>;
+  /**
+   * Οι κατατάξεις που δεν έχουν ακόμη χτιστεί στο BilliardToday. Όσο λείπουν, ο κόμβος
+   * τις δείχνει με σύνδεσμο προς το επίσημο PDF τους στη CEB (`pdfUrl`) — απόλυτο URL,
+   * ώστε να μη χρειάζεται rebuild όταν η CEB αλλάξει αρχείο.
+   */
+  upcoming: Array<{ title: string; file: string; pdfUrl?: string; note?: string }>;
 };
 
 export const CEB_RANKING_HUB_PATH = "/rankings/ceb";

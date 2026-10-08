@@ -61,3 +61,20 @@ export function reportCebEmbedClick(campaign: string, kind: "player" | "tourname
     transport_type: "beacon",
   });
 }
+
+/**
+ * Κλικ στον σύνδεσμο προς το ΕΠΙΣΗΜΟ PDF της CEB (κατάταξη που δεν έχει ακόμη χτιστεί
+ * στο BilliardToday). Μετριέται στο GA4 πριν ο επισκέπτης φύγει για το eurobillard.org,
+ * ώστε να φαίνεται ποιες κατηγορίες τραβούν κόσμο προς τα επίσημα έγγραφα.
+ */
+export function reportCebPdfClick(label: string, campaign: string = "ceb-ranking"): void {
+  if (typeof window === "undefined") return;
+  const w = window as GtagWindow;
+  if (typeof w.gtag !== "function") return;
+  w.gtag("event", "ceb_pdf_click", {
+    campaign,
+    link_kind: "official_pdf",
+    link_label: label,
+    transport_type: "beacon",
+  });
+}

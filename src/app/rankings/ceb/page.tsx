@@ -5,6 +5,7 @@ import { PresentationHero, SectionHeading } from "@/components/public/Presentati
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { formatCebDate } from "@/lib/cebRanking";
 import { readCebRankingIndex } from "@/lib/cebRankingData";
+import { OfficialCebPdfLink } from "@/components/public/OfficialCebPdfLink";
 
 export const revalidate = 300;
 
@@ -107,10 +108,19 @@ export default function CebRankingsPage() {
             {upcoming.map((entry) => (
               <li
                 key={entry.title}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-slate-600"
+                className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-slate-600"
               >
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
-                <span className="font-medium text-slate-800">{entry.title}</span>
+                <span className="flex items-center gap-3">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                  <span className="font-medium text-slate-800">{entry.title}</span>
+                </span>
+                {entry.pdfUrl ? (
+                  <OfficialCebPdfLink
+                    href={entry.pdfUrl}
+                    label={entry.title}
+                    className="ml-[18px] inline-flex w-fit items-center rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-900"
+                  />
+                ) : null}
               </li>
             ))}
           </ul>
