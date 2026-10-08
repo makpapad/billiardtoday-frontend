@@ -33,7 +33,7 @@ type Props = {
   campaign?: string;
   /** Περιγραφή για το JSON-LD ItemList (συνήθως ίδια με το <meta description> της σελίδας). */
   itemListDescription?: string | null;
-  /** Προαιρετικό περιεχόμενο στο τέλος (π.χ. το EmbedSourceBar του embed). */
+  /** Προαιρετικό περιεχόμενο στο τέλος της σελίδας. */
   footer?: ReactNode;
 };
 

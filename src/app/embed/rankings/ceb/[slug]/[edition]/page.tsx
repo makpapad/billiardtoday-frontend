@@ -4,13 +4,15 @@ import { notFound } from "next/navigation";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
 import { CebEditionStrip } from "@/components/public/CebEditionStrip";
 import { CebRankingContent } from "@/components/public/CebRankingContent";
-import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
 import {
   CEB_RANKING_PAGE_SIZE,
   cebEditionHref,
   cebEditionKey,
+  cebFederationCountClause,
   cebRankingHref,
+  cebUnitCountRanked,
   formatCebDate,
+  resolveCebUnits,
 } from "@/lib/cebRanking";
 import {
   readCebPlayerLinks,
@@ -57,6 +59,7 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
   const isCurrent = current?.edition === payload.edition;
   const updated = formatCebDate(payload.updatedAt);
   const { counts } = payload;
+  const units = resolveCebUnits(payload);
   const editionKey = cebEditionKey(payload.edition);
 
   return (
@@ -94,7 +97,7 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
         }
         meta={[
           `Edition ${payload.edition} · last update ${updated ?? "—"}`,
-          `${counts.players.toLocaleString("en-US")} ranked players · ${counts.federations} federations`,
+          `${cebUnitCountRanked(counts.players.toLocaleString("en-US"), units)}${cebFederationCountClause(counts.federations, units)}`,
         ]}
       />
 
@@ -138,7 +141,6 @@ export default async function EmbedCebRankingEditionPage({ params }: Props) {
         campaign={`ceb-ranking-${slug}-${editionKey}`}
       />
 
-      <EmbedSourceBar href={`/rankings/ceb/${slug}/${editionKey}`} campaign={`ceb-ranking-${slug}-${editionKey}`} />
     </div>
   );
 }

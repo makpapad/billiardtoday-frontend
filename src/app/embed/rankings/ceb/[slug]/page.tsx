@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CebPdfRankingContent } from "@/components/public/CebPdfRankingContent";
 import { CebRankingCategoryView } from "@/components/public/CebRankingCategoryView";
-import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
-import { cebRankingHref } from "@/lib/cebRanking";
 import {
   readCebPdfCategory,
   readCebPlayerLinks,
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  *
  * - Κατηγορία με δεδομένα (έχει JSON): ΙΔΙΑ σελίδα με το embed του 3c-individual, μέσω του
  *   κοινού `CebRankingCategoryView` (ίδιος πίνακας, ίδιο hero, χωρίς header του site) — το
- *   ίδιο render με τη δημόσια σελίδα, συν το EmbedSourceBar στο τέλος.
+ *   ίδιο render με τη δημόσια σελίδα, χωρίς γραμμή «Source».
  * - Διαφορετικά, pdf-mode fallback: το επίσημο φύλλο της CEB στο ίδιο layout.
  */
 export default async function EmbedCebRankingPage({ params }: Props) {
@@ -58,7 +56,6 @@ export default async function EmbedCebRankingPage({ params }: Props) {
         archive={archive}
         embedded
         campaign={`ceb-ranking-${slug}`}
-        footer={<EmbedSourceBar href={`/rankings/ceb/${slug}`} campaign={`ceb-ranking-${slug}`} />}
       />
     );
   }
@@ -72,7 +69,6 @@ export default async function EmbedCebRankingPage({ params }: Props) {
           embedded
           campaign={`ceb-ranking-${slug}`}
         />
-        <EmbedSourceBar href={cebRankingHref(slug)} campaign={`ceb-ranking-${slug}`} />
       </div>
     );
   }

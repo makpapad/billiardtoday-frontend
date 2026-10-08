@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
-import { EmbedSourceBar } from "@/components/embed/EmbedSourceBar";
-import { formatCebDate } from "@/lib/cebRanking";
-import { readCebRankingIndex } from "@/lib/cebRankingData";
+import { cebFederationCountClause, cebUnitCount, formatCebDate, resolveCebUnits } from "@/lib/cebRanking";
+import { readCebRanking, readCebRankingIndex } from "@/lib/cebRankingData";
 import { toEmbedHref } from "@/lib/embedLinks";
 import { OfficialCebPdfLink } from "@/components/public/OfficialCebPdfLink";
 
@@ -71,6 +70,7 @@ export default function EmbedCebRankingsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {available.map((entry) => {
             const isPdf = entry.mode === "pdf";
+            const units = resolveCebUnits(readCebRanking(entry.slug));
             return (
               <a
                 key={entry.slug}
@@ -98,7 +98,7 @@ export default function EmbedCebRankingsPage() {
                   {entry.updatedAt ? ` · updated ${formatCebDate(entry.updatedAt)}` : ""} ·{" "}
                   {isPdf
                     ? "official CEB sheet (PDF)"
-                    : `${(entry.players ?? 0).toLocaleString("en-US")} players · ${entry.federations ?? 0} federations`}
+                    : `${cebUnitCount((entry.players ?? 0).toLocaleString("en-US"), units)}${cebFederationCountClause(entry.federations ?? 0, units)}`}
                 </p>
                 <div className="mt-5 text-sm font-semibold text-sky-700">
                   {isPdf ? "Open the sheet →" : "Open ranking →"}
@@ -146,7 +146,6 @@ export default function EmbedCebRankingsPage() {
         </section>
       ) : null}
 
-      <EmbedSourceBar href="/rankings/ceb" />
     </div>
   );
 }
