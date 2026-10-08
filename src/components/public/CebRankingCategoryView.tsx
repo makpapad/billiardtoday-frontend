@@ -7,6 +7,11 @@ import {
   CEB_RANKING_PAGE_SIZE,
   cebCategoryShortLabel,
   formatCebDate,
+  resolveCebUnits,
+  cebUnitCountRanked,
+  cebFederationCountClause,
+  cebRankingPageTitle,
+  cebRankingTitleName,
 } from "@/lib/cebRanking";
 import type {
   CebPlayerLinks,
@@ -52,12 +57,16 @@ export function CebRankingCategoryView({
   footer,
 }: Props) {
   const { counts } = payload;
+  // Οι ετικέτες/μονάδες της λίστας (data-driven· προεπιλογές = η σημερινή διατύπωση των
+  // λιστών αθλητών). Ο τίτλος περνά από τον κοινό κανόνα, ώστε ένα όνομα που τελειώνει
+  // ήδη σε «— European Ranking» να μην το ξαναγράψει.
+  const units = resolveCebUnits(payload);
   const allRankingsHref = embedded ? "/embed/rankings/ceb" : "/rankings/ceb";
 
   const itemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `CEB ${payload.title} Ranking — edition ${payload.edition}`,
+    name: `CEB ${cebRankingTitleName(payload.title)} — edition ${payload.edition}`,
     url: `${SITE_URL}/rankings/ceb/${slug}`,
     description:
       itemListDescription ??
@@ -90,7 +99,7 @@ export function CebRankingCategoryView({
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
         <PresentationHero
           eyebrow={`CEB Official Ranking · ${cebCategoryShortLabel(payload)}`}
-          title={`${payload.title} — European Ranking`}
+          title={cebRankingPageTitle(payload.title)}
           description="The official CEB ranking list with the point breakdown of every counting tournament. Each tournament column links to the event page on BilliardToday."
           actions={[
             { label: "Jump to the list ↓", href: "#list" },
@@ -114,7 +123,7 @@ export function CebRankingCategoryView({
           }
           meta={[
             `Edition ${payload.edition} · last update ${formatCebDate(payload.updatedAt) ?? "—"}`,
-            `${counts.players.toLocaleString("en-US")} ranked players · ${counts.federations} federations`,
+            `${cebUnitCountRanked(counts.players.toLocaleString("en-US"), units)}${cebFederationCountClause(counts.federations, units)}`,
           ]}
         />
 

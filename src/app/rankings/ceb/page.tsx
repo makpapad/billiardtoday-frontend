@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
 import { buildPageMetadata } from "@/lib/pageMetadata";
-import { formatCebDate } from "@/lib/cebRanking";
-import { readCebRankingIndex } from "@/lib/cebRankingData";
+import { formatCebDate, resolveCebUnits, cebUnitCount, cebFederationCountClause } from "@/lib/cebRanking";
+import { readCebRanking, readCebRankingIndex } from "@/lib/cebRankingData";
 import { OfficialCebPdfLink } from "@/components/public/OfficialCebPdfLink";
 
 export const revalidate = 300;
@@ -30,6 +30,13 @@ export default function CebRankingsPage() {
   const index = readCebRankingIndex();
   const available = index?.available ?? [];
   const upcoming = index?.upcoming ?? [];
+  // Η πρόταση πλήθους κάθε κάρτας μιλά τη γλώσσα της ΙΔΙΑΣ της λίστας (π.χ. «20 nations»
+  // για τις εθνικές ομάδες) — οι ετικέτες έρχονται από τα δεδομένα της λίστας, με
+  // προεπιλογές παικτών όταν λείπουν (βλ. resolveCebUnits). Καμία per-slug συνθήκη εδώ.
+  const cards = available.map((entry) => ({
+    entry,
+    units: resolveCebUnits(readCebRanking(entry.slug)),
+  }));
 
   return (
     <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
@@ -68,7 +75,7 @@ export default function CebRankingsPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-          {available.map((entry) => {
+          {cards.map(({ entry, units }) => {
             const isPdf = entry.mode === "pdf";
             return (
               <Link
@@ -97,7 +104,7 @@ export default function CebRankingsPage() {
                   {entry.updatedAt ? ` · updated ${formatCebDate(entry.updatedAt)}` : ""} ·{" "}
                   {isPdf
                     ? "official CEB sheet (PDF)"
-                    : `${(entry.players ?? 0).toLocaleString("en-US")} players · ${entry.federations ?? 0} federations`}
+                    : `${cebUnitCount((entry.players ?? 0).toLocaleString("en-US"), units)}${cebFederationCountClause(entry.federations ?? 0, units)}`}
                 </p>
                 <div className="mt-5 text-sm font-semibold text-sky-700">
                   {isPdf ? "Open the sheet" : "Open ranking"}

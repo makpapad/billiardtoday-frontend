@@ -240,7 +240,7 @@ const coerceCebIntro = (value: unknown): CebRankingIntro | null => {
     : undefined;
   const pointsNote = typeof raw.pointsNote === "string" ? raw.pointsNote.trim() : "";
 
-  if (items.length === 0 && pointsRows.length === 0) return null;
+  if (items.length === 0 && pointsRows.length === 0 && pointsNote.length === 0) return null;
   return { items, pointsHeader, pointsRows, pointsNote };
 };
 
@@ -327,6 +327,105 @@ export const resolveCebIntro = (payload: CebRankingPayload): CebRankingIntro => 
 };
 
 /**
+ * Οι ετικέτες/μονάδες της λίστας. Όταν λείπει το πεδίο, ο πίνακας μιλά για ΠΑΙΚΤΕΣ —
+ * οι προεπιλογές αναπαράγουν ακριβώς τη σημερινή διατύπωση των λιστών αθλητών. Μια λίστα
+ * εθνικών ομάδων αλλάζει τη γλώσσα ΜΕ ΔΕΔΟΜΕΝΑ (`units` στο JSON της), χωρίς per-slug
+ * έλεγχο στον κώδικα.
+ */
+export type CebRankingUnits = {
+  /** Ενικό ουσιαστικό της μονάδας («player» / «nation»). */
+  one: string;
+  /** Πληθυντικό για τις προτάσεις μέτρησης («players» / «nations»). */
+  many: string;
+  /** Κεφαλίδα της στήλης του ονόματος («Player» / «Nation»). */
+  row: string;
+  /** Όρος αναζήτησης για το placeholder («player name» / «nation»). */
+  search: string;
+  /**
+   * Το επίθετο μπροστά από τον πληθυντικό όπου οι λίστες αθλητών λένε «ranked players»
+   * (hero meta, footer). Προεπιλογή «ranked»· οι λίστες εθνικών ομάδων το αφήνουν κενό
+   * («20 nations», χωρίς «ranked»).
+   */
+  ranked: string;
+  /**
+   * true = κάθε γραμμή ΕΙΝΑΙ ομοσπονδία (εθνική ομάδα): η στήλη «Fed», το φίλτρο
+   * ομοσπονδιών και το πλήθος τους είναι περιττά και παραλείπονται. Τα πεδία `fed`
+   * των γραμμών ΜΕΝΟΥΝ στα δεδομένα — άλλα σημεία τα χρησιμοποιούν.
+   */
+  federationIsRow: boolean;
+};
+
+/** Προεπιλογές = η σημερινή διατύπωση των λιστών αθλητών. */
+export const CEB_RANKING_UNITS: CebRankingUnits = {
+  one: "player",
+  many: "players",
+  row: "Player",
+  search: "player name",
+  ranked: "ranked",
+  federationIsRow: false,
+};
+
+/** Οι ετικέτες της λίστας, με προεπιλογές παικτών για κάθε πεδίο που λείπει. */
+export const resolveCebUnits = (
+  payload: Pick<CebRankingPayload, "units"> | null | undefined,
+): CebRankingUnits => {
+  const units = payload?.units;
+  const pick = (value: string | undefined, fallback: string) =>
+    typeof value === "string" && value.trim() ? value.trim() : fallback;
+  return {
+    one: pick(units?.one, CEB_RANKING_UNITS.one),
+    many: pick(units?.many, CEB_RANKING_UNITS.many),
+    row: pick(units?.row, CEB_RANKING_UNITS.row),
+    search: pick(units?.search, CEB_RANKING_UNITS.search),
+    // Το `ranked` επιτρέπεται ρητά να είναι κενό (εθνικές ομάδες): μόνο όταν το πεδίο
+    // λείπει εντελώς πέφτουμε στην προεπιλογή «ranked».
+    ranked: typeof units?.ranked === "string" ? units.ranked.trim() : CEB_RANKING_UNITS.ranked,
+    federationIsRow: units?.federationIsRow === true,
+  };
+};
+
+/**
+ * Η φράση πλήθους ΧΩΡΙΣ επίθετο: «1,468 players» / «20 nations» (υπότιτλος πίνακα, κάρτα
+ * του κόμβου).
+ */
+export const cebUnitCount = (formattedCount: string, units: CebRankingUnits): string =>
+  `${formattedCount} ${units.many}`;
+
+/**
+ * Η φράση πλήθους με το επίθετο: «1,468 ranked players» / «20 nations» (hero meta, footer).
+ * Το `ranked` είναι κενό στις λίστες εθνικών ομάδων, οπότε δεν τυπώνεται διπλό κενό.
+ */
+export const cebUnitCountRanked = (formattedCount: string, units: CebRankingUnits): string =>
+  `${formattedCount} ${[units.ranked, units.many].filter(Boolean).join(" ")}`;
+
+/**
+ * Η κατάληξη «· 22 federations» των προτάσεων πλήθους: κενή όταν κάθε γραμμή ΕΙΝΑΙ
+ * ομοσπονδία (εθνικές ομάδες), ώστε να μη λέει δύο φορές το ίδιο πλήθος.
+ */
+export const cebFederationCountClause = (count: number, units: CebRankingUnits): string =>
+  units.federationIsRow ? "" : ` · ${count} federations`;
+
+/**
+ * Ενώνει το όνομα μιας λίστας με μια κατάληξη («— European Ranking», «Ranking») ΜΟΝΟ όταν
+ * το όνομα δεν την περιέχει ήδη στο τέλος του: κάποιες λίστες φέρνουν επίσημο όνομα που
+ * τελειώνει σε «… — European Ranking» (Artistic, Cadre 47/2, Cadre 71/2, 1-Cushion), οπότε
+ * η παλιά απευθείας συνένωση έβγαζε «… — European Ranking — European Ranking» / «Ranking Ranking».
+ */
+const withCebTitleSuffix = (title: string, suffix: string): string => {
+  const clean = (title ?? "").trim();
+  if (!clean) return suffix.trim();
+  const needle = suffix.replace(/^[—–-]\s*/, "").trim().toLowerCase();
+  return clean.toLowerCase().endsWith(needle) ? clean : `${clean} ${suffix}`;
+};
+
+/** «Artistic — European Ranking» → ίδιο· «3-Cushion Individual» → «… — European Ranking». */
+export const cebRankingPageTitle = (title: string): string =>
+  withCebTitleSuffix(title, "— European Ranking");
+
+/** Το ίδιο, με κατάληξη «Ranking» (JSON-LD `name`, τίτλοι σελίδων). */
+export const cebRankingTitleName = (title: string): string => withCebTitleSuffix(title, "Ranking");
+
+/**
  * Σύντομη ετικέτα κατηγορίας για το eyebrow της σελίδας: «Individual — Men» → «Individual»,
  * «Ladies» → «Ladies». Πέφτει στο discipline/τίτλο όταν λείπει η ετικέτα.
  */
@@ -363,6 +462,12 @@ export type CebRankingPayload = {
    * από τα δικά του τουρνουά (βλ. `resolveCebIntro`).
    */
   intro?: CebRankingIntro | string;
+  /**
+   * Οι ετικέτες/μονάδες της λίστας (π.χ. εθνικές ομάδες: «nations», στήλη «Nation»,
+   * χωρίς στήλη/φίλτρο ομοσπονδίας). Όταν λείπει, η λίστα μιλά για παίκτες —
+   * βλ. `resolveCebUnits` και τις προεπιλογές `CEB_RANKING_UNITS`.
+   */
+  units?: Partial<CebRankingUnits>;
   /** Εναλλακτικό σημείο εισόδου για το ίδιο κείμενο (απλό κείμενο). */
   dataNote?: string;
   /**

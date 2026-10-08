@@ -1,8 +1,10 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import {
   formatCebDate,
+  resolveCebUnits,
   type CebRankingPayload,
   type CebRankingRow,
+  type CebRankingUnits,
 } from "@/lib/cebRanking";
 
 /**
@@ -68,6 +70,23 @@ const FED_X = PLAYER_X + COL_PLAYER_W;
 const POINTS_X = FED_X + COL_FED_W;
 const EVENTS_X = POINTS_X + COL_POINTS_W;
 const RIGHT_EDGE = EVENTS_X + EVENT_COL_W * 10;
+
+/**
+ * Η διάταξη των στηλών του πίνακα. Λίστες όπου κάθε γραμμή ΕΙΝΑΙ ομοσπονδία (εθνικές
+ * ομάδες) δεν έχουν στήλη «Nat»: το πλάτος της δίνεται στη στήλη του ονόματος, οπότε τα
+ * x των στηλών Points και A…J μένουν ΑΚΡΙΒΩΣ τα ίδια (κανένα iota μετατόπιση).
+ */
+type TableLayout = {
+  /** x της στήλης Nat — `null` όταν η λίστα δεν έχει (εθνικές ομάδες). */
+  fedX: number | null;
+  fedW: number;
+  playerW: number;
+};
+
+const layoutFor = (units: CebRankingUnits): TableLayout =>
+  units.federationIsRow
+    ? { fedX: null, fedW: 0, playerW: COL_PLAYER_W + COL_FED_W }
+    : { fedX: FED_X, fedW: COL_FED_W, playerW: COL_PLAYER_W };
 
 // Προαιρετική τελευταία στήλη «μέσος όρος» (`percent`): υπάρχει ΜΟΝΟ σε λίστες που το
 // φύλλο της CEB τυπώνει (σήμερα Artistic). Μπαίνει ΜΕΤΑ τις στήλες των events και
@@ -202,6 +221,10 @@ const drawLegend = (
   topY: number,
 ) => {
   const events = payload.events;
+  // Λίστες χωρίς σταθερή κλίμακα (`scale: []` — εθνικές ομάδες: οι πόντοι βγαίνουν από τη
+  // μορφή κάθε έκδοσης): οι στήλες θέσεων και τα σχόλια περί κλίμακας δεν έχουν περιεχόμενο,
+  // οπότε παραλείπονται ολόκληρα αντί να τυπώνονται κενά.
+  const hasScale = events.some((event) => (event.scale?.length ?? 0) > 0);
 
   drawCell(
     page,
@@ -240,19 +263,21 @@ const drawLegend = (
     headerBaseline,
   );
   const bandsX = MARGIN + LEG_COL_W + LEG_EVENT_W + LEG_WHERE_W + LEG_DATE_W;
-  POSITION_BANDS.forEach((band, index) => {
-    drawCell(
-      page,
-      band,
-      bandsX + LEG_BAND_W * index,
-      LEG_BAND_W,
-      "center",
-      bold,
-      7.5,
-      COLOR_TEXT,
-      headerBaseline,
-    );
-  });
+  if (hasScale) {
+    POSITION_BANDS.forEach((band, index) => {
+      drawCell(
+        page,
+        band,
+        bandsX + LEG_BAND_W * index,
+        LEG_BAND_W,
+        "center",
+        bold,
+        7.5,
+        COLOR_TEXT,
+        headerBaseline,
+      );
+    });
+  }
 
   let cursor = headerTop - LEGEND_HEADER_HEIGHT;
   events.forEach((event, index) => {
@@ -298,6 +323,7 @@ const drawLegend = (
       baseline,
     );
     POSITION_BANDS.forEach((_band, bandIndex) => {
+      if (!hasScale) return;
       const value = event.scale?.[bandIndex];
       if (value === undefined || value === null) return;
       drawCell(
@@ -316,6 +342,9 @@ const drawLegend = (
   });
 
   const noteBaseline = cursor - 8;
+  // Χωρίς κλίμακα δεν υπάρχουν σχόλια κλίμακας: ούτε οι θέσεις, ούτε η υποσημείωση για
+  // τις στήλες B-D (τις συμπληρώνουν οι εθνικές ομοσπονδίες — δεν αφορά λίστες ομάδων).
+  if (!hasScale) return noteBaseline;
   drawCell(
     page,
     "Points by finishing place, as in the official CEB list:  1 · 2 · 3-4 · 5-8 · 9-16 · 17-32 · ** = 33rd and below",
@@ -348,6 +377,8 @@ const drawTableHeader = (
   bold: import("pdf-lib").PDFFont,
   payload: CebRankingPayload,
   percent: PercentColumn | null,
+  layout: TableLayout,
+  units: CebRankingUnits,
 ) => {
   page.drawRectangle({
     x: MARGIN,
@@ -358,8 +389,11 @@ const drawTableHeader = (
   });
   const baseline = tableTop - TABLE_HEADER_HEIGHT + 5.5;
   drawCell(page, "Rank", RANK_X, COL_RANK_W, "center", bold, 8, COLOR_WHITE, baseline);
-  drawCell(page, "Player", PLAYER_X + 4, COL_PLAYER_W - 4, "left", bold, 9, COLOR_WHITE, baseline);
-  drawCell(page, "Nat", FED_X, COL_FED_W, "center", bold, 8, COLOR_WHITE, baseline);
+  drawCell(page, units.row, PLAYER_X + 4, layout.playerW - 4, "left", bold, 9, COLOR_WHITE, baseline);
+  // Η στήλη «Nat» λείπει όταν κάθε γραμμή είναι ομοσπονδία (εθνικές ομάδες).
+  if (layout.fedX !== null) {
+    drawCell(page, "Nat", layout.fedX, layout.fedW, "center", bold, 8, COLOR_WHITE, baseline);
+  }
   drawCell(page, "Points", POINTS_X, COL_POINTS_W, "center", bold, 8, COLOR_WHITE, baseline);
   payload.events.forEach((event, index) => {
     const x = EVENTS_X + EVENT_COL_W * index;
@@ -465,6 +499,10 @@ export const renderCebRankingPdf = async ({
 
   const pages = paginate(payload.rows, firstTableTop(payload.events.length));
   const sourceLabel = `Source: CEB — ${payload.sourceLabel} · edition ${payload.edition}`;
+  // Οι ετικέτες/μονάδες της λίστας (data-driven· προεπιλογές = οι λίστες αθλητών, byte-identical)
+  // και η διάταξη των στηλών που βγαίνει από αυτές (χωρίς στήλη Nat για λίστες ομάδων).
+  const units = resolveCebUnits(payload);
+  const layout = layoutFor(units);
 
   // Στήλη μέσου όρου: μόνο όταν η λίστα φέρνει `percent` και χωρά μετά τις στήλες των
   // events (τερματίζει στο RIGHT_EDGE, μέσα στα περιθώρια). Αλλιώς `null` — καμία αλλαγή.
@@ -489,7 +527,7 @@ export const renderCebRankingPdf = async ({
       drawFirstPageHeader(page, font, bold, payload, createdLabel);
       drawLegend(page, font, bold, payload, PAGE_HEIGHT - MARGIN - HEADER_BLOCK);
     }
-    drawTableHeader(page, tableTop, bold, payload, percentColumn);
+    drawTableHeader(page, tableTop, bold, payload, percentColumn, layout, units);
 
     let cursor = tableTop - TABLE_HEADER_HEIGHT;
     rows.forEach((row, rowIndex) => {
@@ -525,16 +563,18 @@ export const renderCebRankingPdf = async ({
       drawCell(page, String(row.rank), RANK_X, COL_RANK_W, "center", font, 8, COLOR_MUTED, baseline);
       drawCell(
         page,
-        fitText(row.name ?? "", bold, 8, COL_PLAYER_W - 8),
+        fitText(row.name ?? "", bold, 8, layout.playerW - 8),
         PLAYER_X + 4,
-        COL_PLAYER_W - 8,
+        layout.playerW - 8,
         "left",
         bold,
         8,
         textColor,
         baseline,
       );
-      drawCell(page, row.fed ?? "", FED_X, COL_FED_W, "center", font, 8, COLOR_MUTED, baseline);
+      if (layout.fedX !== null) {
+        drawCell(page, row.fed ?? "", layout.fedX, layout.fedW, "center", font, 8, COLOR_MUTED, baseline);
+      }
 
       drawCell(
         page,

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CEB_SUSPENSION_LEGEND, formatCebDate, type CebPdfCategory } from "@/lib/cebRanking";
+import { CEB_SUSPENSION_LEGEND, cebRankingPageTitle, formatCebDate, type CebPdfCategory } from "@/lib/cebRanking";
 import { withCebAttribution } from "@/lib/embedLinks";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
 import { CebPdfSourceLink } from "@/components/public/CebPdfSourceLink";
@@ -39,7 +39,7 @@ export function CebPdfRankingContent({ category, embedded = false, campaign = "c
     <>
       <PresentationHero
         eyebrow={`CEB Official Ranking · ${category.discipline} · ${category.categoryLabel}`}
-        title={`${category.title} — European Ranking`}
+        title={cebRankingPageTitle(category.title)}
         description="The official CEB ranking sheet for this category, shown here exactly as the CEB publishes it while the full data version is being prepared."
         actions={[
           { label: "Jump to the sheet ↓", href: "#sheet" },

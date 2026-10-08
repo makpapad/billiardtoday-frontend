@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
-import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink, resolveCebIntro, CEB_POINTS_HEADER } from "@/lib/cebRanking";
+import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink, resolveCebIntro, CEB_POINTS_HEADER, resolveCebUnits, cebUnitCount, cebUnitCountRanked, cebFederationCountClause, cebRankingPageTitle } from "@/lib/cebRanking";
 import type { CebPlayerLinks, CebRankingPayload, CebRankingRow, CebSuspensionMark } from "@/lib/cebRanking";
 import { embedLinkTarget, reportCebEmbedClick, withCebAttribution } from "@/lib/embedLinks";
 import { SITE_URL } from "@/lib/socialMetadata";
@@ -114,11 +114,23 @@ export function CebRankingContent({
   campaign = "ceb-ranking",
 }: Props) {
   // Το «πίσω» στη σελίδα τουρνουά δείχνει από πού ήρθες (τίτλος = το H1 αυτής της σελίδας).
-  const backLabel = `${payload.title} — European Ranking`;
+  // Η κατάληξη «— European Ranking» μπαίνει με τον κοινό κανόνα, χωρίς διπλή κατάληξη.
+  const backLabel = cebRankingPageTitle(payload.title);
+  // Οι ετικέτες/μονάδες της λίστας: όταν η λίστα δεν ορίζει τίποτα, ο πίνακας μιλά για
+  // παίκτες ΑΚΡΙΒΩΣ όπως σήμερα (βλ. resolveCebUnits). Μια λίστα εθνικών ομάδων φέρνει
+  // «nations»/«Nation» στα δεδομένα της — κανένας per-slug έλεγχος εδώ.
+  const units = useMemo(() => resolveCebUnits(payload), [payload]);
   // Το επεξηγηματικό κείμενο («How this list is built») έρχεται από τα δεδομένα της
   // λίστας — ποτέ καρφωτό κείμενο άλλης κατηγορίας (βλ. resolveCebIntro).
   const intro = useMemo(() => resolveCebIntro(payload), [payload]);
   const pointsHeader = intro.pointsHeader?.length ? intro.pointsHeader : CEB_POINTS_HEADER;
+  // Το `pointsNote` δημοσιεύεται ΑΝΕΞΑΡΤΗΤΑ από τον πίνακα κλιμάκων: μια λίστα χωρίς
+  // σταθερή κλίμακα (εθνικές ομάδες) φέρνει μόνο το σχόλιο, και ένα payload που το έχει
+  // μόνο εκεί δεν πρέπει να το χάνει σιωπηλά. Δεν ξανατυπώνεται όταν το ίδιο κείμενο
+  // είναι ήδη ένα από τα «How this list is built» παραπάνω (θα φαινόταν δύο φορές).
+  const pointsNote = intro.pointsNote?.trim() ?? "";
+  const showPointsNote =
+    pointsNote.length > 0 && !intro.items.some((item) => item.body.trim() === pointsNote);
   // Η στήλη του μέσου όρου (βλ. CebRowPercent): εμφανίζεται ΜΟΝΟ όταν η λίστα φέρνει
   // `percent` σε τουλάχιστον μία γραμμή — data-driven, ώστε η επόμενη λίστα που θα το
   // αποκτήσει (π.χ. Artistic national teams) να το πάρει χωρίς αλλαγή κώδικα.
@@ -135,12 +147,15 @@ export function CebRankingContent({
   const [page, setPage] = useState(1);
 
   const federationOptions = useMemo(() => {
+    // Λίστες όπου ΚΑΘΕ γραμμή είναι ομοσπονδία (εθνικές ομάδες): στήλη και φίλτρο
+    // ομοσπονδίας είναι περιττά — τα `fed` μένουν στα δεδομένα, απλώς δεν φιλτράρουν.
+    if (units.federationIsRow) return [];
     const counts = new Map<string, number>();
     for (const row of payload.rows) counts.set(row.fed, (counts.get(row.fed) ?? 0) + 1);
     return Array.from(counts.entries())
       .map(([code, count]) => ({ code, count, label: payload.federations[code] ?? code }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [payload]);
+  }, [payload, units]);
 
   // Πόσες γραμμές έχουν σήμανση αποκλεισμού — μετριούνται από τα δεδομένα, ώστε
   // να δουλεύει και με τις δύο μορφές του `suspended` (string ή αντικείμενο).
@@ -210,39 +225,43 @@ export function CebRankingContent({
                 </li>
               ))}
             </ul>
-            {intro.pointsRows.length > 0 ? (
+            {intro.pointsRows.length > 0 || showPointsNote ? (
               <div className="space-y-3 pt-1">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                  How players earn points
-                </div>
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                  <table className="w-full text-[12px]">
-                    <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Finish</th>
-                        {pointsHeader.map((head) => (
-                          <th key={head} className="px-2 py-2 text-center">
-                            {head}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {intro.pointsRows.map((row) => (
-                        <tr key={row.label} className="border-t border-slate-100">
-                          <td className="px-3 py-2 font-medium text-slate-900">{row.label}</td>
-                          {row.values.map((points, index) => (
-                            <td key={index} className="px-2 py-2 text-center tabular-nums text-slate-600">
-                              {points ?? "–"}
-                            </td>
+                {intro.pointsRows.length > 0 ? (
+                  <>
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                      How {units.many} earn points
+                    </div>
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                      <table className="w-full text-[12px]">
+                        <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          <tr>
+                            <th className="px-3 py-2 text-left">Finish</th>
+                            {pointsHeader.map((head) => (
+                              <th key={head} className="px-2 py-2 text-center">
+                                {head}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {intro.pointsRows.map((row) => (
+                            <tr key={row.label} className="border-t border-slate-100">
+                              <td className="px-3 py-2 font-medium text-slate-900">{row.label}</td>
+                              {row.values.map((points, index) => (
+                                <td key={index} className="px-2 py-2 text-center tabular-nums text-slate-600">
+                                  {points ?? "–"}
+                                </td>
+                              ))}
+                            </tr>
                           ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {intro.pointsNote ? (
-                  <p className="text-[11px] leading-5 text-slate-500">{intro.pointsNote}</p>
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : null}
+                {showPointsNote ? (
+                  <p className="text-[11px] leading-5 text-slate-500">{pointsNote}</p>
                 ) : null}
               </div>
             ) : null}
@@ -253,49 +272,63 @@ export function CebRankingContent({
               Counting tournaments
             </div>
             <ol className="space-y-2">
-              {payload.events.map((event) => (
-                <li
-                  key={event.key}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2"
-                >
-                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[11px] font-bold text-white">
-                    {event.key}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-[13px] font-semibold leading-5 text-slate-900">
-                      {event.href ? (
-                        embedded ? (
-                          <a
-                            href={withCebAttribution(embedLinkTarget(withBack(event.href), SITE_URL).href, campaign)}
-                            target={embedLinkTarget(withBack(event.href), SITE_URL).newTab ? "_blank" : undefined}
-                            rel="noopener noreferrer"
-                            onClick={() => reportCebEmbedClick(campaign, "tournament", event.name)}
-                            className="hover:text-sky-700 hover:underline"
-                          >
-                            {event.name}
-                          </a>
-                        ) : (
-                          <Link href={withBack(event.href)} className="hover:text-sky-700 hover:underline">
-                            {event.name}
-                          </Link>
-                        )
-                      ) : (
-                        event.name
-                      )}
-                    </div>
-                    <div className="text-[11px] leading-5 text-slate-500">
-                      {[formatCebDate(event.date), `points ${formatScale(event.scale)}`]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </div>
-                  </div>
-                  {event.href ? (
-                    <span className="ml-auto shrink-0 text-[11px] font-semibold text-sky-700">
-                      Results
+              {payload.events.map((event) => {
+                // Το badge δείχνει το `key`. Όταν το `name` είναι το ΙΔΙΟ (εθνικές ομάδες:
+                // key «2022», name «2022») δεν το ξανατυπώνουμε — εμφανιζόταν «2022 2022».
+                const eventLabel = (event.name ?? "").trim();
+                const showEventLabel = eventLabel.length > 0 && eventLabel !== event.key;
+                // Χωρίς σταθερή κλίμακα (`scale: []`) δεν μένει σκέτο «points » — η γραμμή
+                // μένει με ό,τι υπάρχει (ημερομηνία) ή δεν τυπώνεται καθόλου.
+                const eventMeta = [
+                  formatCebDate(event.date),
+                  event.scale?.length ? `points ${formatScale(event.scale)}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+                return (
+                  <li
+                    key={event.key}
+                    className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2"
+                  >
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[11px] font-bold text-white">
+                      {event.key}
                     </span>
-                  ) : null}
-                </li>
-              ))}
+                    <div className="min-w-0">
+                      {showEventLabel ? (
+                        <div className="text-[13px] font-semibold leading-5 text-slate-900">
+                          {event.href ? (
+                            embedded ? (
+                              <a
+                                href={withCebAttribution(embedLinkTarget(withBack(event.href), SITE_URL).href, campaign)}
+                                target={embedLinkTarget(withBack(event.href), SITE_URL).newTab ? "_blank" : undefined}
+                                rel="noopener noreferrer"
+                                onClick={() => reportCebEmbedClick(campaign, "tournament", event.name)}
+                                className="hover:text-sky-700 hover:underline"
+                              >
+                                {event.name}
+                              </a>
+                            ) : (
+                              <Link href={withBack(event.href)} className="hover:text-sky-700 hover:underline">
+                                {event.name}
+                              </Link>
+                            )
+                          ) : (
+                            event.name
+                          )}
+                        </div>
+                      ) : null}
+                      {eventMeta ? (
+                        <div className="text-[11px] leading-5 text-slate-500">{eventMeta}</div>
+                      ) : null}
+                    </div>
+                    {event.href ? (
+                      <span className="ml-auto shrink-0 text-[11px] font-semibold text-sky-700">
+                        Results
+                      </span>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>
@@ -306,8 +339,9 @@ export function CebRankingContent({
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-950">Standings</h2>
             <p className="mt-1 text-sm text-slate-500">
-              {payload.counts.players.toLocaleString("en-US")} players ·{" "}
-              {payload.counts.federations} federations · column points per counting tournament
+              {cebUnitCount(payload.counts.players.toLocaleString("en-US"), units)}
+              {cebFederationCountClause(payload.counts.federations, units)} · column points per
+              counting tournament
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -315,23 +349,25 @@ export function CebRankingContent({
               type="search"
               value={query}
               onChange={(event) => setFilter(() => setQuery(event.target.value))}
-              placeholder="Search player name…"
+              placeholder={`Search ${units.search}…`}
               className="w-56 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-300"
-              aria-label="Search player"
+              aria-label={`Search ${units.one}`}
             />
-            <select
-              value={fed}
-              onChange={(event) => setFilter(() => setFed(event.target.value))}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-300"
-              aria-label="Filter by federation"
-            >
-              <option value="">All federations ({federationOptions.length})</option>
-              {federationOptions.map((option) => (
-                <option key={option.code} value={option.code}>
-                  {option.label} — {option.count}
-                </option>
-              ))}
-            </select>
+            {units.federationIsRow ? null : (
+              <select
+                value={fed}
+                onChange={(event) => setFilter(() => setFed(event.target.value))}
+                className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-300"
+                aria-label="Filter by federation"
+              >
+                <option value="">All federations ({federationOptions.length})</option>
+                {federationOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label} — {option.count}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               type="button"
               onClick={() => setFilter(() => setShowSuspended((value) => !value))}
@@ -362,14 +398,19 @@ export function CebRankingContent({
               <thead>
                 <tr className="bg-slate-900 text-[11px] font-semibold uppercase tracking-wide text-white">
                   <th className={`${headCell} w-10 rounded-tl-xl px-1.5 py-2.5 text-right`}>#</th>
-                  <th className={`${headCell} px-2 py-2.5 text-left`}>Player</th>
-                  <th className={`${headCell} w-12 px-1.5 py-2.5 text-center`}>Fed</th>
+                  <th className={`${headCell} px-2 py-2.5 text-left`}>{units.row}</th>
+                  {units.federationIsRow ? null : (
+                    <th className={`${headCell} w-12 px-1.5 py-2.5 text-center`}>Fed</th>
+                  )}
                   <th className={`${headCell} w-12 px-1.5 py-2.5 text-right`}>Pts</th>
                   {payload.events.map((event) => (
                     <th
                       key={event.key}
                       className={`${headCell} min-w-[52px] px-1 py-2.5 text-center align-top last:rounded-tr-xl`}
-                      title={`${event.name}${event.date ? ` · ${formatCebDate(event.date)}` : ""} · points ${formatScale(event.scale)}`}
+                      title={`${event.name}${event.date ? ` · ${formatCebDate(event.date)}` : ""}${
+                        // Χωρίς κλίμακα (εθνικές ομάδες) το tooltip δεν λέει «points » σκέτο.
+                        event.scale?.length ? ` · points ${formatScale(event.scale)}` : ""
+                      }`}
                     >
                       <div className="text-[12px] font-bold uppercase leading-tight text-white/90">{event.key}</div>
                       <div className="text-[9px] font-medium normal-case leading-tight tracking-normal text-white/55">
@@ -468,9 +509,11 @@ export function CebRankingContent({
                           ) : null}
                         </span>
                       </td>
-                      <td className="border-b border-slate-100 px-2 py-1.5 text-center text-[12px] font-semibold text-slate-500">
-                        {row.fed}
-                      </td>
+                      {units.federationIsRow ? null : (
+                        <td className="border-b border-slate-100 px-2 py-1.5 text-center text-[12px] font-semibold text-slate-500">
+                          {row.fed}
+                        </td>
+                      )}
                       <td className="border-b border-slate-100 px-2 py-1.5 text-[13.5px] font-bold text-slate-900">
                         {row.points}
                       </td>
@@ -525,7 +568,7 @@ export function CebRankingContent({
           <span>
             <strong className="font-semibold text-slate-900">{visible.length}</strong> shown ·{" "}
             {filtered.length.toLocaleString("en-US")} match the filters ·{" "}
-            {payload.counts.players.toLocaleString("en-US")} ranked players
+            {cebUnitCountRanked(payload.counts.players.toLocaleString("en-US"), units)}
           </span>
           {pageCount > 1 ? (
             <div className="ml-auto flex items-center gap-1">

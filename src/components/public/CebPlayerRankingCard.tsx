@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CebPlayerRanking } from "@/lib/cebRankingData";
 import type { CebRankingEvent } from "@/lib/cebRanking";
-import { formatCebDate, normalizeCebSuspension } from "@/lib/cebRanking";
+import { cebRankingPageTitle, formatCebDate, normalizeCebSuspension } from "@/lib/cebRanking";
 
 type Props = {
   ranking: CebPlayerRanking;
@@ -55,7 +55,7 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
                 Official CEB ranking · edition {ranking.edition}
               </p>
               <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-gray-100">
-                {ranking.rankingTitle} — European Ranking
+                {cebRankingPageTitle(ranking.rankingTitle)}
               </h2>
               <p className="mt-1 text-[12.5px] text-slate-500">
                 Position and points of every counting tournament ({describeCebEvents(events)}).

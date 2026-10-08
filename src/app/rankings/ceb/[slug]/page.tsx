@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cebRankingTitleName } from "@/lib/cebRanking";
 import { CebPdfRankingContent } from "@/components/public/CebPdfRankingContent";
 import { CebRankingCategoryView } from "@/components/public/CebRankingCategoryView";
 import { buildPageMetadata } from "@/lib/pageMetadata";
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (payload) {
     const categoryLabel = payload.categoryLabel.toLowerCase();
     return buildPageMetadata({
-      title: `CEB ${payload.title} Ranking — European Standings`,
+      title: `CEB ${cebRankingTitleName(payload.title)} — European Standings`,
       description: `The official CEB ${payload.discipline.toLowerCase()} ${categoryLabel} ranking (Confédération Européenne de Billard), edition ${payload.edition}, with the points of every counting tournament and a link to each event page on BilliardToday.`,
       path: `/rankings/ceb/${slug}` as `/${string}`,
       keywords: [
@@ -73,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const categoryLabel = category.categoryLabel.toLowerCase();
 
   return buildPageMetadata({
-    title: `CEB ${category.title} Ranking — European Standings (official sheet)`,
+    title: `CEB ${cebRankingTitleName(category.title)} — European Standings (official sheet)`,
     description: `The official CEB ${category.discipline.toLowerCase()} ${categoryLabel} ranking (Confédération Européenne de Billard), shown as the CEB publishes it — the official sheet, edition ${category.editionLabel}, with the full BilliardToday data version on the way.`,
     path: `/rankings/ceb/${slug}` as `/${string}`,
     keywords: [
