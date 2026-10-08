@@ -1,4 +1,5 @@
 import type { TournamentEventSummary } from "@/lib/tournaments";
+import { toPlainText } from "@/lib/richText";
 
 const cleanText = (value: string | null | undefined) =>
   String(value || "").trim() || "";
@@ -80,7 +81,7 @@ export const buildTournamentOverviewParagraphs = (
     summary.endDate,
     locale,
   );
-  const sourceDescription = cleanText(summary.description);
+  const sourceDescription = toPlainText(summary.description);
 
   const opening = addSentencePeriod(
     joinClauses([

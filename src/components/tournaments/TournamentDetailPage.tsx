@@ -51,6 +51,7 @@ import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
 import {
   buildTournamentDateRangeLabel,
@@ -6180,7 +6181,7 @@ export function TournamentDetailPage({
                   Description
                 </div>
                 <div className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
-                  {summary.description}
+                  <RichDescription value={summary.description} />
                 </div>
               </div>
             ) : null}
@@ -7726,7 +7727,7 @@ export function TournamentDetailPage({
                 {tournamentTitle}
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-[15px]">
-                {overviewParagraphs[0]}
+                <RichDescription value={overviewParagraphs[0]} />
               </p>
             </div>
             <div className="flex flex-wrap gap-2 lg:max-w-[320px] lg:justify-end">

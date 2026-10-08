@@ -1,5 +1,6 @@
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentSlug } from "@/lib/tournaments";
+import { toPlainText } from "@/lib/richText";
 import {
   buildTournamentDateRangeLabel,
   buildTournamentDescription,
@@ -41,7 +42,7 @@ export function buildTournamentStructuredData(summary: TournamentEventSummary) {
   const title = buildTournamentTitle(summary);
   const url = buildTournamentUrl(summary);
   const description =
-    cleanText(summary.description) ||
+    toPlainText(summary.description) ||
     buildTournamentDescription(summary) ||
     cleanText(
       [
