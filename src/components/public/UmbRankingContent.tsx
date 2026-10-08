@@ -304,12 +304,29 @@ export function UmbRankingContent({ payload, pageSize, playerLinks, downloadHref
                         event.date ? ` · ${formatCebDate(event.date)}` : ""
                       } · points ${formatScale(event.scale)}`}
                     >
-                      <div className="text-[12px] font-bold uppercase leading-tight text-white/90">
-                        {event.key}
-                      </div>
-                      <div className="text-[9px] font-medium normal-case leading-tight tracking-normal text-white/55">
-                        {event.short}
-                      </div>
+                      {event.href ? (
+                        <Link
+                          href={event.href}
+                          className="block hover:underline"
+                          title={`${event.name}${event.city ? ` — ${event.city}` : ""} — event page on BilliardToday`}
+                        >
+                          <div className="text-[12px] font-bold uppercase leading-tight text-white/90">
+                            {event.key}
+                          </div>
+                          <div className="text-[9px] font-medium normal-case leading-tight tracking-normal text-white/55">
+                            {event.short}
+                          </div>
+                        </Link>
+                      ) : (
+                        <>
+                          <div className="text-[12px] font-bold uppercase leading-tight text-white/90">
+                            {event.key}
+                          </div>
+                          <div className="text-[9px] font-medium normal-case leading-tight tracking-normal text-white/55">
+                            {event.short}
+                          </div>
+                        </>
+                      )}
                     </th>
                   ))}
                 </tr>

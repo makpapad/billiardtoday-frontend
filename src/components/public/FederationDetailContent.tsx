@@ -6,6 +6,8 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 type Props = {
   federation: Federation;
   embedded?: boolean;
+  /** Κουμπιά-σύνδεσμοι στο hero (π.χ. «UMB rankings» → /rankings/umb). */
+  actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary"; newTab?: boolean }>;
 };
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
@@ -18,7 +20,7 @@ const buildClubHref = (slug?: string | null, documentId?: string | null, embedde
   return target ? `${embedded ? "/embed" : ""}/clubs/${target}` : "#";
 };
 
-export function FederationDetailContent({ federation, embedded = false }: Props) {
+export function FederationDetailContent({ federation, embedded = false, actions = [] }: Props) {
   const logoUrl = resolveLogoUrl(federation.logo);
 
   return (
@@ -27,7 +29,7 @@ export function FederationDetailContent({ federation, embedded = false }: Props)
         eyebrow="Federation"
         title={federation.name}
         description={`Discover official billiard tournaments, affiliated clubs, and the competitive presence of ${federation.name} through a public page designed for visibility, trust, and search.`}
-        actions={[]}
+        actions={actions}
         aside={
           <div className="flex flex-col gap-4">
             <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">

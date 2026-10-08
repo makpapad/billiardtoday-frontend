@@ -4,8 +4,11 @@ import type {
   UmbPlayerLinks,
   UmbRankingArchive,
   UmbRankingArchiveEdition,
+  UmbRankingCounts,
+  UmbRankingEvent,
   UmbRankingIndex,
   UmbRankingPayload,
+  UmbRankingRow,
 } from "@/lib/umbRanking";
 
 /**
@@ -100,3 +103,53 @@ export const readUmbPlayerLinks = (key: string = "computed"): UmbPlayerLinks => 
 };
 
 export { UMB_PLAYER_RANKING_SLUG };
+
+export type UmbPlayerRanking = {
+  rankingTitle: string;
+  rankingSlug: string;
+  edition: string;
+  updatedAt: string | null;
+  sourceUrl: string;
+  sourcePage: string;
+  sourceLabel: string;
+  events: UmbRankingEvent[];
+  row: UmbRankingRow;
+  federations: Record<string, string>;
+  counts: UmbRankingCounts;
+};
+
+/**
+ * Το UMB ranking του παίκτη (αν υπάρχει), με αντίστροφη αναζήτηση μέσω του
+ * `player-links-computed.json` (rank -> id). Ίδιο μοτίβο με το `readCebPlayerRanking`.
+ * Server components only.
+ */
+export const readUmbPlayerRanking = (playerId: string | number): UmbPlayerRanking | null => {
+  // Το [id] του URL είναι τύπου "216-MERCKX-Eddy" — κρατάμε το νούμερο (όπως και το publicSiteData).
+  const numericId = String(playerId).split("-")[0]?.trim();
+  if (!numericId) return null;
+
+  const rank = Object.entries(readUmbPlayerLinks("computed")).find(
+    ([, link]) => String(link.id) === numericId,
+  )?.[0];
+  if (!rank) return null;
+
+  const payload = readUmbRanking(UMB_PLAYER_RANKING_SLUG);
+  if (!payload) return null;
+
+  const row = payload.rows.find((entry) => String(entry.rank) === rank);
+  if (!row) return null;
+
+  return {
+    rankingTitle: payload.title,
+    rankingSlug: payload.slug,
+    edition: payload.edition,
+    updatedAt: payload.updatedAt,
+    sourceUrl: payload.sourceUrl,
+    sourcePage: payload.sourcePage,
+    sourceLabel: payload.sourceLabel,
+    events: payload.events,
+    row,
+    federations: payload.federations,
+    counts: payload.counts,
+  };
+};

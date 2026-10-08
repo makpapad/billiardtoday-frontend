@@ -84,9 +84,16 @@ export default async function FederationPage({ params }: Props) {
     return <CebFederationExperience federation={federation} members={members} />;
   }
 
+  // UMB ομοσπονδία: ίδιο κουμπί-σύνδεσμος όπως η CEB («CEB rankings» → /rankings/ceb),
+  // χωρίς κάρτες κατάταξης/χάρτη — μόνο η κατάταξη.
+  const federationActions =
+    federation.slug === "umb" || federation.slug === "union-mondiale-de-billard"
+      ? [{ label: "UMB rankings", href: "/rankings/umb", variant: "secondary" as const }]
+      : [];
+
   return (
     <>
-      <FederationDetailContent federation={federation} />
+      <FederationDetailContent federation={federation} actions={federationActions} />
 
       <TournamentListSection
         section={{

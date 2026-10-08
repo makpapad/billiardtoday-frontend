@@ -9,7 +9,7 @@
   "sourceUrl": "https://www.umb-carom.org/uploads/rankings/dwipva2s.dyr.pdf",
   "sourcePage": "https://www.umb-carom.org/ranking/archive",
   "sourceLabel": "UMB Events Ranking — 3-Cushion Individual",
-  "generatedAt": "2026-10-07T18:27:42.929Z",
+  "generatedAt": "2026-10-08T03:04:04.547Z",
   "counts": {
     "players": 497,
     "federations": 36,
@@ -31,7 +31,7 @@
         10,
         8
       ],
-      "href": null,
+      "href": "/tournaments/world-championship-3-cushion-blois-2026",
       "ours": true
     },
     {
@@ -53,7 +53,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-ankara-2025",
       "ours": true
     },
     {
@@ -75,7 +75,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-porto-2025",
       "ours": true
     },
     {
@@ -97,7 +97,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-antwerp-2025",
       "ours": true
     },
     {
@@ -119,7 +119,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-gwangju-metropolitan-city-2025",
       "ours": true
     },
     {
@@ -141,7 +141,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-sharm-el-sheikh-2025",
       "ours": true
     },
     {
@@ -163,7 +163,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-bogota-2026",
       "ours": true
     },
     {
@@ -185,7 +185,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-ho-chi-minh-city-2026",
       "ours": true
     },
     {
@@ -207,7 +207,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-ankara-2026",
       "ours": true
     },
     {
@@ -229,7 +229,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-porto-matosinhos-2026",
       "ours": true
     },
     {
@@ -251,7 +251,7 @@
         3,
         2
       ],
-      "href": null,
+      "href": "/tournaments/world-cup-3-cushion-lier-2026",
       "ours": true
     }
   ],
