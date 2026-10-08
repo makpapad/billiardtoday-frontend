@@ -4,22 +4,22 @@ import type { ReactNode } from "react";
 import { reportCebEmbedClick, reportCebPdfClick, withCebAttribution } from "@/lib/embedLinks";
 
 type Props = {
-  /** Απόλυτο URL του επίσημου PDF της CEB (eurobillard.org). */
+  /** Absolute URL of the official CEB PDF (eurobillard.org). */
   href: string;
-  /** Η κατηγορία — στέλνεται στο GA4 μαζί με το κλικ. */
+  /** The category — sent to GA4 along with the click. */
   label: string;
-  /** GA4 campaign (ξεχωρίζει η κίνηση που έρχεται μέσα από το embed). */
+  /** GA4 campaign (separates the traffic coming in through the embed). */
   campaign?: string;
-  /** Σε embed: προσθέτει UTM και μετρά `ceb_embed_click` (kind `pdf`) αντί `ceb_pdf_click`. */
+  /** In an embed: adds UTM and reports `ceb_embed_click` (kind `pdf`) instead of `ceb_pdf_click`. */
   embedded?: boolean;
   className?: string;
   children: ReactNode;
 };
 
 /**
- * Σύνδεσμος προς το ΕΠΙΣΗΜΟ φύλλο PDF της CEB — client component μόνο και μόνο για
- * το `onClick`. Ανοίγει πάντα σε νέα καρτέλα· σε embed παίρνει το UTM convention και
- * το GA4 συμβάν `ceb_embed_click` με `link_kind: "pdf"`, εκτός embed το `ceb_pdf_click`.
+ * Link to the OFFICIAL CEB PDF sheet — a client component only for the `onClick`.
+ * Always opens in a new tab; in an embed it gets the UTM convention and the GA4 event
+ * `ceb_embed_click` with `link_kind: "pdf"`, outside an embed `ceb_pdf_click`.
  */
 export function CebPdfSourceLink({
   href,

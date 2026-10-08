@@ -42,9 +42,9 @@ export const readCebRankingIndex = (): CebRankingIndex | null => {
 };
 
 /**
- * Ελάχιστος έλεγχος μιας εγγραφής pdf-mode: χρειαζόμαστε τουλάχιστον slug, τίτλο
- * και URL του επίσημου PDF για να αποδοθεί η σελίδα χωρίς σφάλμα. Ό,τι λείπει
- * πέφτει σε ασφαλείς προεπιλογές στην απόδοση.
+ * Minimal validation of a pdf-mode entry: we need at least a slug, a title and the
+ * official PDF URL to render the page without error. Anything missing falls back to
+ * safe defaults at render time.
  */
 const isPdfCategory = (value: unknown): value is CebPdfCategory => {
   if (!value || typeof value !== "object") return false;
@@ -60,9 +60,9 @@ const isPdfCategory = (value: unknown): value is CebPdfCategory => {
 };
 
 /**
- * Οι κατηγορίες CEB που σερβίρονται ακόμη ως το επίσημο φύλλο PDF
- * (`public/data/ceb-ranking/pdf-sources.json`). Server components only. Επιστρέφει
- * `[]` — ποτέ σφάλμα — όταν το αρχείο λείπει ή δεν έχει έγκυρες εγγραφές.
+ * The CEB categories still served as the official PDF sheet
+ * (`public/data/ceb-ranking/pdf-sources.json`). Server components only. Returns `[]`
+ * — never an error — when the file is missing or has no valid entries.
  */
 export const readCebPdfCategories = (): CebPdfCategory[] => {
   const parsed = readJson<CebPdfSources>(path.join(DATA_DIR, "pdf-sources.json"));
@@ -70,7 +70,7 @@ export const readCebPdfCategories = (): CebPdfCategory[] => {
   return parsed.categories.filter(isPdfCategory);
 };
 
-/** Μία κατηγορία pdf-mode με το slug της, ή null όταν δεν υπάρχει/δεν είναι έγκυρη. */
+/** One pdf-mode category by its slug, or null when it does not exist / is not valid. */
 export const readCebPdfCategory = (slug: string): CebPdfCategory | null => {
   if (!SLUG_PATTERN.test(slug)) return null;
   return readCebPdfCategories().find((entry) => entry.slug === slug) ?? null;

@@ -6,9 +6,9 @@ import { CebPdfSourceLink } from "@/components/public/CebPdfSourceLink";
 
 type Props = {
   category: CebPdfCategory;
-  /** Σε embed (iframe ξένου site): λινκ στο `/embed` μονοπάτι, UTM + GA4 για τη CEB. */
+  /** In an embed (a third-party site's iframe): links point to the `/embed` path, with UTM + GA4 for the CEB. */
   embedded?: boolean;
-  /** GA4 campaign για τα λινκ που βγαίνουν από το embed. */
+  /** GA4 campaign for the links that leave the embed. */
   campaign?: string;
 };
 
@@ -16,11 +16,11 @@ const CEB_LOGO = "https://cdn.billiardtoday.com/uploads/CEB_150_fa0cdec244.png";
 const FRAME_CLASS = "block h-[70vh] min-h-[600px] w-full sm:h-[85vh] sm:min-h-[900px]";
 
 /**
- * Σελίδα κατηγορίας CEB που σερβίρει το ΕΠΙΣΗΜΟ φύλλο PDF (pdf-mode) μέσα στο δικό
- * μας layout — ίδιο look με τις χτισμένες κατατάξεις (hero, λευκές rounded κάρτες).
- * Ένα κοινό component για τη δημόσια σελίδα και το embed· η κατηγορία και κάθε τιμή
- * έρχονται από το `public/data/ceb-ranking/pdf-sources.json`, ώστε κάθε επόμενη
- * κατηγορία να είναι καθαρά δεδομένα, χωρίς νέο κώδικα.
+ * A CEB category page that serves the OFFICIAL PDF sheet (pdf-mode) inside our own
+ * layout — same look as the built rankings (hero, white rounded cards). One shared
+ * component for the public page and the embed; the category and every value come from
+ * `public/data/ceb-ranking/pdf-sources.json`, so every future category is pure data,
+ * with no new code.
  */
 export function CebPdfRankingContent({ category, embedded = false, campaign = "ceb-ranking" }: Props) {
   const lastUpdate = formatCebDate(category.lastUpdate);

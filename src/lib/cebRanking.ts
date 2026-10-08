@@ -193,8 +193,8 @@ export type CebRankingIndexEntry = {
   edition: string;
   updatedAt: string | null;
   /**
-   * Πόσοι αθλητές/ομοσπονδίες/αποκλεισμοί — λείπουν στις εγγραφές `mode: "pdf"`
-   * (η κατηγορία σερβίρεται ακόμη ως το επίσημο φύλλο της CEB, χωρίς δεδομένα).
+   * Player/federation/suspension counts — absent on `mode: "pdf"` entries (the
+   * category is still served as the official CEB sheet, without data).
    */
   players?: number;
   federations?: number;
@@ -202,38 +202,38 @@ export type CebRankingIndexEntry = {
   href: string;
   sourceUrl: string;
   /**
-   * `"pdf"` = η κατηγορία δείχνει το επίσημο φύλλο της CEB μέσα στη σελίδα μας
-   * (βλ. `public/data/ceb-ranking/pdf-sources.json`) μέχρι να χτιστεί η έκδοση με
-   * δεδομένα· ό,τι άλλο/λείπει = κανονική κατάταξη με πίνακα.
+   * `"pdf"` = the category shows the official CEB sheet inside our page (see
+   * `public/data/ceb-ranking/pdf-sources.json`) until the data edition is built;
+   * anything else/absent = a regular ranking with a table.
    */
   mode?: CebRankingIndexMode;
 };
 
 /**
- * Κατηγορία που σερβίρεται ακόμη ως το ΕΠΙΣΗΜΟ φύλλο PDF της CEB, ενώ ετοιμάζεται
- * η έκδοση με δεδομένα. Πηγή: `public/data/ceb-ranking/pdf-sources.json`
- * (γραμμένο από τον importer). Ένα αντίγραφο του PDF κρατιέται στο `file` (ίδιο
- * origin, ώστε να αποδίδεται σε `<object>`/`<iframe>` χωρίς X-Frame-Options).
+ * A category still served as the OFFICIAL CEB PDF sheet while the data edition is
+ * being prepared. Source: `public/data/ceb-ranking/pdf-sources.json` (written by the
+ * importer). A copy of the PDF is kept in `file` (same origin, so it renders in an
+ * `<object>`/`<iframe>` without X-Frame-Options issues).
  */
 export type CebPdfCategory = {
   slug: string;
   title: string;
   discipline: string;
   categoryLabel: string;
-  /** Π.χ. "13/2026" — η έκδοση όπως τη γράφει το φύλλο της CEB. */
+  /** E.g. "13/2026" — the edition as the CEB sheet writes it. */
   editionLabel: string;
-  /** Ημερομηνία τελευταίας ενημέρωσης του φύλλου (YYYY-MM-DD) ή null. */
+  /** Last-update date of the sheet (YYYY-MM-DD) or null. */
   lastUpdate: string | null;
   lastUpdateNote?: string | null;
-  /** Απόλυτο URL του επίσημου PDF στη CEB (eurobillard.org) — ανοίγει σε νέα καρτέλα. */
+  /** Absolute URL of the official PDF at the CEB (eurobillard.org) — opens in a new tab. */
   pdfUrl: string;
-  /** Αυτο-φιλοξενούμενο αντίγραφο, σχετική διαδρομή κάτω από το public/ (π.χ. `/data/ceb-ranking/pdf/3c-ladies.pdf`). */
+  /** Self-hosted copy, a relative path under public/ (e.g. `/data/ceb-ranking/pdf/3c-ladies.pdf`). */
   file: string;
   bytes?: number | null;
   sha256?: string | null;
   fetchedAt?: string | null;
   rows?: number | null;
-  /** true = το φύλλο έχει γραμμές με σήμανση αποκλεισμού (γκρι/κίτρινο) — δείχνουμε τον μύθο. */
+  /** true = the sheet has rows marked as suspended (grey/yellow) — we show the legend. */
   suspendedNote?: boolean;
 };
 
