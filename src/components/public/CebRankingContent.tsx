@@ -290,7 +290,7 @@ export function CebRankingContent({
                     key={event.key}
                     className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2"
                   >
-                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[11px] font-bold text-white">
+                    <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 px-2 text-[11px] font-bold text-white">
                       {event.key}
                     </span>
                     <div className="min-w-0">
