@@ -25,6 +25,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
       { label: "BTR Rating", href: "/rankings/btr" },
       { label: "Clubs", href: "/clubs" },
       { label: "Federations", href: "/federations" },
+      { label: "Federation login", href: "/federation/login" },
       { label: "Players", href: "/players" },
       { label: "Account", href: "/account" },
     ],
