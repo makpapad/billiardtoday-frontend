@@ -69,6 +69,22 @@ const POINTS_X = FED_X + COL_FED_W;
 const EVENTS_X = POINTS_X + COL_POINTS_W;
 const RIGHT_EDGE = EVENTS_X + EVENT_COL_W * 10;
 
+// Προαιρετική τελευταία στήλη «μέσος όρος» (`percent`): υπάρχει ΜΟΝΟ σε λίστες που το
+// φύλλο της CEB τυπώνει (σήμερα Artistic). Μπαίνει ΜΕΤΑ τις στήλες των events και
+// τερματίζει στο RIGHT_EDGE, ώστε τα x των στηλών Rank/Player/Nat/Points/A…J να μένουν
+// ΑΜΕΤΑΒΛΗΤΑ — οι λίστες χωρίς `percent` δεν αποκτούν στήλη ούτε αλλάζουν κατά ένα iota.
+const PERCENT_COL_MIN_W = 24;
+/** Ετικέτα της στήλης όταν το payload δεν δίνει δική του (`percentLabel`). */
+const DEFAULT_PERCENT_LABEL = "Avg";
+type CebRowPercent = { percent?: number | null };
+type CebPercentMeta = { percentLabel?: string; percentNote?: string };
+/** Η τιμή όπως τυπώνεται στο φύλλο: τρία δεκαδικά, τελεία ως υποδιαστολή· κενό όταν λείπει. */
+const formatCebPercent = (value: number | null | undefined): string =>
+  typeof value === "number" && Number.isFinite(value) ? value.toFixed(3) : "";
+
+/** Η προαιρετική στήλη μέσου όρου: ετικέτα + x/πλάτος, στοιχεία που υπολογίζονται μία φορά. */
+type PercentColumn = { label: string; x: number; width: number };
+
 // Legend columns: Col | Counting event | Venue | Date | 1 | 2 | 3-4 | 5-8 | 9-16 | 17-32 | **
 // Οι στήλες των θέσεων είναι όπως στο επίσημο PDF της CEB: μία στήλη ανά ζώνη θέσεων,
 // ώστε να φαίνεται τι πόντοι δίνονται σε κάθε θέση κι όχι μόνο η σειρά 80/54/38/…
@@ -331,6 +347,7 @@ const drawTableHeader = (
   tableTop: number,
   bold: import("pdf-lib").PDFFont,
   payload: CebRankingPayload,
+  percent: PercentColumn | null,
 ) => {
   page.drawRectangle({
     x: MARGIN,
@@ -355,6 +372,16 @@ const drawTableHeader = (
       color: rgb(0.35, 0.42, 0.55),
     });
   });
+  // Στήλη μέσου όρου (μόνο όταν υπάρχει): διαχωριστικό + ετικέτα δεξιά, στο RIGHT_EDGE.
+  if (percent) {
+    page.drawLine({
+      start: { x: percent.x, y: tableTop - TABLE_HEADER_HEIGHT + 3 },
+      end: { x: percent.x, y: tableTop - 3 },
+      thickness: 0.3,
+      color: rgb(0.35, 0.42, 0.55),
+    });
+    drawCell(page, percent.label, percent.x, percent.width, "right", bold, 8, COLOR_WHITE, baseline);
+  }
 };
 
 const drawFooter = (
@@ -439,6 +466,20 @@ export const renderCebRankingPdf = async ({
   const pages = paginate(payload.rows, firstTableTop(payload.events.length));
   const sourceLabel = `Source: CEB — ${payload.sourceLabel} · edition ${payload.edition}`;
 
+  // Στήλη μέσου όρου: μόνο όταν η λίστα φέρνει `percent` και χωρά μετά τις στήλες των
+  // events (τερματίζει στο RIGHT_EDGE, μέσα στα περιθώρια). Αλλιώς `null` — καμία αλλαγή.
+  const percentX = EVENTS_X + EVENT_COL_W * payload.events.length;
+  const percentWidth = RIGHT_EDGE - percentX;
+  const showPercent =
+    payload.rows.some((row) => typeof (row as CebRowPercent).percent === "number") &&
+    percentWidth >= PERCENT_COL_MIN_W;
+  const percentLabel =
+    ((payload as CebRankingPayload & CebPercentMeta).percentLabel ?? "").trim() ||
+    DEFAULT_PERCENT_LABEL;
+  const percentColumn: PercentColumn | null = showPercent
+    ? { label: percentLabel, x: percentX, width: percentWidth }
+    : null;
+
   pages.forEach((rows, pageIndex) => {
     const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     const isFirst = pageIndex === 0;
@@ -448,7 +489,7 @@ export const renderCebRankingPdf = async ({
       drawFirstPageHeader(page, font, bold, payload, createdLabel);
       drawLegend(page, font, bold, payload, PAGE_HEIGHT - MARGIN - HEADER_BLOCK);
     }
-    drawTableHeader(page, tableTop, bold, payload);
+    drawTableHeader(page, tableTop, bold, payload, percentColumn);
 
     let cursor = tableTop - TABLE_HEADER_HEIGHT;
     rows.forEach((row, rowIndex) => {
@@ -523,6 +564,24 @@ export const renderCebRankingPdf = async ({
           baseline,
         );
       });
+
+      // Μέσος όρος (non-pointing trailing column): όπως τυπώνεται, 3 δεκαδικά· κενό όταν λείπει.
+      if (percentColumn) {
+        const percentValue = (row as CebRankingRow & CebRowPercent).percent;
+        if (percentValue !== null && percentValue !== undefined) {
+          drawCell(
+            page,
+            formatCebPercent(percentValue),
+            percentColumn.x,
+            percentColumn.width,
+            "right",
+            font,
+            8,
+            textColor,
+            baseline,
+          );
+        }
+      }
 
       cursor = rowBottom;
     });

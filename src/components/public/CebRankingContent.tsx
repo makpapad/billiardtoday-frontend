@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { formatCebDate, normalizeCebSuspension, CEB_SUSPENSION_LEGEND, buildCebPlayerLinkIndex, resolveCebPlayerLink, resolveCebIntro, CEB_POINTS_HEADER } from "@/lib/cebRanking";
-import type { CebPlayerLinks, CebRankingPayload, CebSuspensionMark } from "@/lib/cebRanking";
+import type { CebPlayerLinks, CebRankingPayload, CebRankingRow, CebSuspensionMark } from "@/lib/cebRanking";
 import { embedLinkTarget, reportCebEmbedClick, withCebAttribution } from "@/lib/embedLinks";
 import { SITE_URL } from "@/lib/socialMetadata";
 
@@ -87,6 +87,24 @@ const SUSPENSION_DATE_CLASS: Record<CebSuspensionMark, string> = {
   yellow: "text-amber-700",
 };
 
+/**
+ * Το `percent` είναι η ΤΕΛΕΥΤΑΙΑ στήλη του επίσημου φύλλου της CEB, αλλά ΔΕΝ είναι
+ * πόντοι κατάταξης: το φύλλο την τυπώνει ως «overall percentage» (μόνο EC και CEB
+ * Grand-Prix· αλλιώς το ποσοστό του τελευταίου NC). Τη συμπληρώνει χειροκίνητα η
+ * επιτροπή artistic, οπότε τη δείχνουμε ΑΥΤΟΛΕΞΕΙ όπως τυπώνεται (3 δεκαδικά),
+ * ως ξεχωριστή τελευταία στήλη — χωρίς μετάλλια, χρώματα ή ταξινόμηση πάνω της.
+ * Λίστες χωρίς `percent` (όλα τα υπόλοιπα CEB/UMB) δεν αποκτούν στήλη.
+ */
+type CebRowPercent = { percent?: number | null };
+type CebPercentMeta = { percentLabel?: string; percentNote?: string };
+const DEFAULT_PERCENT_LABEL = "Avg";
+const DEFAULT_PERCENT_NOTE =
+  "Overall percentage — only EC and CEB Grand Prix, if not available percentage of the last NC";
+
+/** Η τιμή όπως τυπώνεται στο φύλλο: τρία δεκαδικά, τελεία ως υποδιαστολή· κενό όταν λείπει. */
+const formatCebPercent = (value: number | null | undefined): string =>
+  typeof value === "number" && Number.isFinite(value) ? value.toFixed(3) : "";
+
 export function CebRankingContent({
   payload,
   pageSize,
@@ -101,6 +119,15 @@ export function CebRankingContent({
   // λίστας — ποτέ καρφωτό κείμενο άλλης κατηγορίας (βλ. resolveCebIntro).
   const intro = useMemo(() => resolveCebIntro(payload), [payload]);
   const pointsHeader = intro.pointsHeader?.length ? intro.pointsHeader : CEB_POINTS_HEADER;
+  // Η στήλη του μέσου όρου (βλ. CebRowPercent): εμφανίζεται ΜΟΝΟ όταν η λίστα φέρνει
+  // `percent` σε τουλάχιστον μία γραμμή — data-driven, ώστε η επόμενη λίστα που θα το
+  // αποκτήσει (π.χ. Artistic national teams) να το πάρει χωρίς αλλαγή κώδικα.
+  const percentMeta = payload as CebRankingPayload & CebPercentMeta;
+  const hasPercent = payload.rows.some(
+    (row) => typeof (row as CebRankingRow & CebRowPercent).percent === "number",
+  );
+  const percentLabel = percentMeta.percentLabel?.trim() || DEFAULT_PERCENT_LABEL;
+  const percentNote = percentMeta.percentNote?.trim() || DEFAULT_PERCENT_NOTE;
   const withBack = (href: string) => `${href}${href.includes("?") ? "&" : "?"}back=${encodeURIComponent(backLabel)}`;
   const [query, setQuery] = useState("");
   const [fed, setFed] = useState("");
@@ -350,6 +377,16 @@ export function CebRankingContent({
                       </div>
                     </th>
                   ))}
+                  {hasPercent ? (
+                    <th
+                      className={`${headCell} min-w-[56px] rounded-tr-xl px-2 py-2.5 text-right align-top`}
+                      title={percentNote}
+                    >
+                      <div className="text-[12px] font-bold uppercase leading-tight whitespace-nowrap text-white/90">
+                        {percentLabel}
+                      </div>
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -462,6 +499,11 @@ export function CebRankingContent({
                           </td>
                         );
                       })}
+                      {hasPercent ? (
+                        <td className="border-b border-slate-100 px-2 py-1.5 text-right text-[13px] tabular-nums text-slate-700">
+                          {formatCebPercent((row as CebRankingRow & CebRowPercent).percent)}
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}
