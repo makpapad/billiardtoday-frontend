@@ -192,6 +192,20 @@ def main() -> None:
         "rows": rows,
     })
 
+    # Το επεξηγηματικό κείμενο της λίστας (`intro`) έρχεται από τη ρύθμιση· όταν λείπει,
+    # κρατιέται από το ήδη δημοσιευμένο αρχείο, ώστε ένα νέο τρέξιμο να μη το σβήνει
+    # σιωπηλά (τότε η σελίδα θα γυρνούσε στο γενικό κείμενο χωρίς να το καταλάβει κανείς).
+    live_path = os.path.join(OUT_DIR, f"{payload['slug']}.json")
+    if "intro" not in payload and os.path.exists(live_path):
+        try:
+            published = json.load(open(live_path, encoding="utf-8"))
+        except (ValueError, OSError) as exc:
+            published = {}
+            print(f"intro: δεν διαβάστηκε το δημοσιευμένο αρχείο ({exc})")
+        if "intro" in published:
+            payload["intro"] = published["intro"]
+            print("intro: κρατήθηκε από το δημοσιευμένο αρχείο")
+
     os.makedirs(OUT_DIR, exist_ok=True)
 
     if cfg.get("live"):
