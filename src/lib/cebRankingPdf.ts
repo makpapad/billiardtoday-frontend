@@ -52,7 +52,7 @@ const firstTableTop = (eventCount: number): number =>
   PAGE_HEIGHT - MARGIN - HEADER_BLOCK - legendHeight(eventCount);
 const OTHER_TABLE_TOP = PAGE_HEIGHT - MARGIN; // ~801.89
 
-// Players table: Rank | Player | Nat | A…J | Points
+// Players table: Rank | Player | Nat | Points | A…J
 const COL_RANK_W = 28;
 const COL_FED_W = 24;
 const COL_POINTS_W = 32;
@@ -63,9 +63,11 @@ const COL_PLAYER_W =
 const RANK_X = MARGIN;
 const PLAYER_X = RANK_X + COL_RANK_W;
 const FED_X = PLAYER_X + COL_PLAYER_W;
-const EVENTS_X = FED_X + COL_FED_W;
-const POINTS_X = EVENTS_X + EVENT_COL_W * 10;
-const RIGHT_EDGE = POINTS_X + COL_POINTS_W;
+// Η στήλη Points μπαίνει αμέσως μετά το Nat (federation)· οι στήλες των events
+// (A…J) ακολουθούν, με το RIGHT_EDGE στην άκρη της τελευταίας στήλης event.
+const POINTS_X = FED_X + COL_FED_W;
+const EVENTS_X = POINTS_X + COL_POINTS_W;
+const RIGHT_EDGE = EVENTS_X + EVENT_COL_W * 10;
 
 // Legend columns: Col | Counting event | Venue | Date | 1 | 2 | 3-4 | 5-8 | 9-16 | 17-32 | **
 // Οι στήλες των θέσεων είναι όπως στο επίσημο PDF της CEB: μία στήλη ανά ζώνη θέσεων,
@@ -341,6 +343,7 @@ const drawTableHeader = (
   drawCell(page, "Rank", RANK_X, COL_RANK_W, "center", bold, 8, COLOR_WHITE, baseline);
   drawCell(page, "Player", PLAYER_X + 4, COL_PLAYER_W - 4, "left", bold, 9, COLOR_WHITE, baseline);
   drawCell(page, "Nat", FED_X, COL_FED_W, "center", bold, 8, COLOR_WHITE, baseline);
+  drawCell(page, "Points", POINTS_X, COL_POINTS_W, "center", bold, 8, COLOR_WHITE, baseline);
   payload.events.forEach((event, index) => {
     const x = EVENTS_X + EVENT_COL_W * index;
     drawCell(page, event.key, x, EVENT_COL_W, "center", bold, 8, COLOR_WHITE, baseline);
@@ -352,7 +355,6 @@ const drawTableHeader = (
       color: rgb(0.35, 0.42, 0.55),
     });
   });
-  drawCell(page, "Points", POINTS_X, COL_POINTS_W, "center", bold, 8, COLOR_WHITE, baseline);
 };
 
 const drawFooter = (
@@ -493,6 +495,18 @@ export const renderCebRankingPdf = async ({
       );
       drawCell(page, row.fed ?? "", FED_X, COL_FED_W, "center", font, 8, COLOR_MUTED, baseline);
 
+      drawCell(
+        page,
+        String(row.points),
+        POINTS_X,
+        COL_POINTS_W - 2,
+        "right",
+        bold,
+        9,
+        textColor,
+        baseline,
+      );
+
       payload.events.forEach((_event, index) => {
         const value = row.ev?.[index] ?? 0;
         if (value === 0) return;
@@ -509,18 +523,6 @@ export const renderCebRankingPdf = async ({
           baseline,
         );
       });
-
-      drawCell(
-        page,
-        String(row.points),
-        POINTS_X,
-        COL_POINTS_W - 2,
-        "right",
-        bold,
-        9,
-        textColor,
-        baseline,
-      );
 
       cursor = rowBottom;
     });
