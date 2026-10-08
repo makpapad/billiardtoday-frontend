@@ -27,6 +27,58 @@
    "suspended": 0,
    "href": "/rankings/ceb/3c-ladies",
    "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf"
+  },
+  {
+   "slug": "artistic-individual",
+   "title": "Artistic — European Ranking",
+   "discipline": "Artistic",
+   "categoryLabel": "Individual",
+   "edition": "2026-09-05",
+   "updatedAt": "2026-09-05",
+   "players": 75,
+   "federations": 9,
+   "suspended": 1,
+   "href": "/rankings/ceb/artistic-individual",
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/artistic/ceb-ranking-billiard-artistic-2026-09-05.pdf"
+  },
+  {
+   "slug": "cadre-472",
+   "title": "Cadre 47/2 — European Ranking",
+   "discipline": "Cadre 47/2",
+   "categoryLabel": "European Ranking",
+   "edition": "4/2026",
+   "updatedAt": "2026-09-04",
+   "players": 135,
+   "federations": 11,
+   "suspended": 0,
+   "href": "/rankings/ceb/cadre-472",
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-cadre-47-2-2026-v04-4-9-2026.pdf"
+  },
+  {
+   "slug": "cadre-712",
+   "title": "Cadre 71/2 — European Ranking",
+   "discipline": "Cadre 71/2",
+   "categoryLabel": "Individual — Men",
+   "edition": "4/2026",
+   "updatedAt": "2026-09-06",
+   "players": 122,
+   "federations": 11,
+   "suspended": 0,
+   "href": "/rankings/ceb/cadre-712",
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-cadre-71-2-2026-v04-6-9-2026.pdf"
+  },
+  {
+   "slug": "1c-individual",
+   "title": "1-Cushion — European Ranking",
+   "discipline": "1-Cushion",
+   "categoryLabel": "Individual",
+   "edition": "4/2026",
+   "updatedAt": "2026-09-05",
+   "players": 150,
+   "federations": 12,
+   "suspended": 0,
+   "href": "/rankings/ceb/1c-individual",
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-1-cushion-2026-v04-5-9-2026.pdf"
   }
  ],
  "upcoming": [
@@ -46,29 +98,9 @@
    "pdfUrl": "https://www.eurobillard.org/medias/rankings/5-pins-nt/european-ranking-national-teams-5pins-updated-15-03-2026.pdf"
   },
   {
-   "title": "Artistic — Individual",
-   "file": "ceb-ranking-billiard-artistic-2026-09-05.pdf",
-   "pdfUrl": "https://www.eurobillard.org/medias/rankings/artistic/ceb-ranking-billiard-artistic-2026-09-05.pdf"
-  },
-  {
    "title": "Artistic — National Teams",
    "file": "ceb-ranking-billiard-artistic-nt-2026-03-13.pdf",
    "pdfUrl": "https://www.eurobillard.org/medias/rankings/artistic/ceb-ranking-billiard-artistic-nt-2026-03-13.pdf"
-  },
-  {
-   "title": "Cadre 47/2",
-   "file": "ceb-ranking-cadre-47-2-2026-v04-4-9-2026.pdf",
-   "pdfUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-cadre-47-2-2026-v04-4-9-2026.pdf"
-  },
-  {
-   "title": "Cadre 71/2",
-   "file": "ceb-ranking-cadre-71-2-2026-v04-6-9-2026.pdf",
-   "pdfUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-cadre-71-2-2026-v04-6-9-2026.pdf"
-  },
-  {
-   "title": "1-Cushion",
-   "file": "ceb-ranking-1-cushion-2026-v04-5-9-2026.pdf",
-   "pdfUrl": "https://www.eurobillard.org/medias/rankings/new-rankings-jds-from-1-9-2024/ceb-ranking-1-cushion-2026-v04-5-9-2026.pdf"
   },
   {
    "title": "Longoni Next Gen 3-Cushion U21 2025/26",
