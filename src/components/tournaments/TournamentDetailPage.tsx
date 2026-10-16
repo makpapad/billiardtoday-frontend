@@ -2362,8 +2362,14 @@ export function TournamentDetailPage({
 
     const refreshExternalLiveTables = async () => {
       try {
+        const liveTablesParams = new URLSearchParams();
+        liveTablesParams.set("competitionIdx", summary.externalLiveCompetitionIdx ?? "");
+        liveTablesParams.set("source", summary.externalLiveSource ?? "five-six");
+        if (summary.externalLiveKozoomEventId) {
+          liveTablesParams.set("kozoomEventId", summary.externalLiveKozoomEventId);
+        }
         const response = await fetch(
-          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables?competitionIdx=${encodeURIComponent(summary.externalLiveCompetitionIdx ?? "")}`,
+          `/api/tournaments/${encodeURIComponent(summary.documentId)}/external-live-tables?${liveTablesParams.toString()}`,
           { cache: "no-store" },
         );
         const payload = (await response.json().catch(() => ({ data: [] }))) as {

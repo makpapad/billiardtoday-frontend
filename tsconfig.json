@@ -36,6 +36,7 @@
   ],
   "exclude": [
     "node_modules",
-    "Dynamic_Sports_Landing_Page"
+    "Dynamic_Sports_Landing_Page",
+    "scripts"
   ]
 }

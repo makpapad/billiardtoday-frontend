@@ -39,6 +39,8 @@ export type TournamentEventSummary = {
   externalLiveTablesHref: string | null;
   externalLiveScoresEnabled: boolean;
   externalLiveCompetitionIdx: string | null;
+  externalLiveSource: "five-six" | "kozoom";
+  externalLiveKozoomEventId: string | null;
   stages: TournamentEventStageSummary[];
 };
 
@@ -148,7 +150,12 @@ const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => 
 
 const readExternalLiveScoresConfig = (
   timetableConfig: unknown,
-): { enabled: boolean; competitionIdx: string | null } => {
+): {
+  enabled: boolean;
+  competitionIdx: string | null;
+  source: "five-six" | "kozoom";
+  kozoomEventId: string | null;
+} => {
   const config =
     timetableConfig && typeof timetableConfig === "object" && !Array.isArray(timetableConfig)
       ? (timetableConfig as Record<string, unknown>)
@@ -169,6 +176,8 @@ const readExternalLiveScoresConfig = (
   return {
     enabled: liveScores.enabled === true,
     competitionIdx: readString(externalResultSync.competitionIdx),
+    source: liveScores.source === "kozoom" ? "kozoom" : "five-six",
+    kozoomEventId: readString(liveScores.kozoomEventId),
   };
 };
 
@@ -355,6 +364,8 @@ const normalizeClubTournamentSummary = (
     externalLiveTablesHref: null,
     externalLiveScoresEnabled: false,
     externalLiveCompetitionIdx: null,
+    externalLiveSource: "five-six",
+    externalLiveKozoomEventId: null,
     stages: readClubRuntimeStages(tournament).map((stage, index) =>
       normalizeStage(stage, index),
     ),
@@ -659,6 +670,8 @@ const fetchTournamentEventSummaryById = async (
     externalLiveTablesHref,
     externalLiveScoresEnabled: externalLiveScores.enabled,
     externalLiveCompetitionIdx: externalLiveScores.competitionIdx,
+    externalLiveSource: externalLiveScores.source,
+    externalLiveKozoomEventId: externalLiveScores.kozoomEventId,
     stages: stagesRaw.map((stage, index) => normalizeStage(stage, index)),
   };
 };
