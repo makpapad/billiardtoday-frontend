@@ -7189,7 +7189,7 @@ export function TournamentDetailPage({
                 <div className="flex flex-wrap items-center justify-between gap-3 px-1">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
-                      Five&amp;Six live
+                      {summary.externalLiveSource === "kozoom" ? "Kozoom live" : "Five&Six live"}
                     </div>
                     <h2 className="mt-1 text-xl font-black tracking-normal text-slate-950">
                       Live tables
@@ -7224,7 +7224,7 @@ export function TournamentDetailPage({
                           inlineExpandable
                           expanded={expandedLiveSessionIds.has(session.sessionId)}
                           onExpandedChange={handleInlineCardExpandedChange}
-                          clubName="Five&Six"
+                          clubName={session.clubName}
                           updatedAt={session.updatedAt}
                           timerRunning={state.isRunning}
                           inningsCount={state.inningsCount}
