@@ -57,6 +57,7 @@ import {
 } from "./entryHelpers";
 import { PlayerEntryBadges } from "./EntryBadges";
 import SingleElimBracket, {
+  type BracketBrandingView,
   type BracketMatchView,
   type BracketRoundView,
 } from "./SingleElimBracket";
@@ -271,6 +272,8 @@ type TournamentEventsContentProps = {
   emptyStateMessage?: string;
   liveSessionsOverride?: EventLiveSession[] | null;
   onLiveMatchOpen?: (sessionId: string) => void;
+  /** Organizer logo + title/subtitle drawn on the KO bracket (header band + watermark). */
+  bracketBranding?: BracketBrandingView | null;
 };
 
 type EventLiveSession = {
@@ -3238,6 +3241,7 @@ export function TournamentEventsContent({
   emptyStateMessage = "Select a tournament event from the list to view its stages.",
   liveSessionsOverride = null,
   onLiveMatchOpen,
+  bracketBranding = null,
 }: TournamentEventsContentProps = {}) {
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -6854,6 +6858,7 @@ export function TournamentEventsContent({
                                           }
                                           timezoneName={timezoneName}
                                           searchQuery={playerSearchQuery}
+                                          branding={bracketBranding}
                                         />
                                       ) : (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">

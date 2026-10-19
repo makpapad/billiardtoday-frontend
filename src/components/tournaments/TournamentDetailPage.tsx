@@ -1740,6 +1740,24 @@ export function TournamentDetailPage({
     ],
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
+  // KO bracket branding: organizer logo in the header band + a faint watermark
+  // of the same logo behind the bracket (same look as the CEB print brackets).
+  const bracketBranding = useMemo(
+    () => ({
+      logoUrl: organizerLogoUrl,
+      logoName: summary.organizerLogoName,
+      title: summary.title || summary.tournamentTitle || "",
+      subtitle: [locationLabel, scheduleLabel].filter(Boolean).join(" · "),
+    }),
+    [
+      locationLabel,
+      organizerLogoUrl,
+      scheduleLabel,
+      summary.organizerLogoName,
+      summary.title,
+      summary.tournamentTitle,
+    ],
+  );
   const venueMetaParts = useMemo(() => {
     const uniquePush = (parts: string[], value: string) => {
       const normalizedValue = value.trim();
@@ -7167,6 +7185,7 @@ export function TournamentDetailPage({
             showEventHeader={false}
             emptyStateMessage="This tournament page is missing event data."
             liveSessionsOverride={presentedEventLiveSessions}
+            bracketBranding={bracketBranding}
             onLiveMatchOpen={(sessionId) => {
               setHighlightedLiveSessionId(sessionId);
               switchToLive();

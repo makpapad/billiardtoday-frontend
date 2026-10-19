@@ -61,6 +61,14 @@ const buildIncomingMatchNumbersByTargetId = (rounds: BracketRoundView[]) => {
     return incoming
 }
 
+export type BracketBrandingView = {
+    /** Organizer / federation logo — used in the header band and as watermark. */
+    logoUrl?: string | null
+    logoName?: string | null
+    title?: string | null
+    subtitle?: string | null
+}
+
 const MATCH_HEIGHT = 92
 const MATCH_META_HEIGHT = 16
 const MATCH_GAP = 16
@@ -69,6 +77,11 @@ const COLUMN_GAP = 32
 const TOP_OFFSET = 48
 const BLOCK_HEIGHT = MATCH_HEIGHT + MATCH_GAP
 const LEFT_GUTTER = 36
+/** Height of the branded header band drawn above the rounds (logo + title). */
+const BRAND_HEADER_HEIGHT = 76
+const BRAND_HEADER_GAP = 14
+/** Opacity of the logo watermark drawn behind the bracket (colour, not grayscale). */
+const BRAND_WATERMARK_OPACITY = 0.16
 
 const resolveRoundLabel = (label: string): string => {
     const key = label.trim().toUpperCase()
@@ -159,13 +172,20 @@ export default function SingleElimBracket({
     timezoneOffsetMinutes = null,
     timezoneName = null,
     searchQuery = '',
+    branding = null,
 }: {
     rounds: BracketRoundView[]
     onMatchClick?: (matchId: string) => void
     timezoneOffsetMinutes?: number | null
     timezoneName?: string | null
     searchQuery?: string
+    branding?: BracketBrandingView | null
 }) {
+    const brandLogoUrl = (branding?.logoUrl || '').trim()
+    const brandTitle = (branding?.title || '').trim()
+    const brandSubtitle = (branding?.subtitle || '').trim()
+    const showBrandHeader = Boolean(brandLogoUrl || brandTitle)
+    const headerOffset = showBrandHeader ? BRAND_HEADER_HEIGHT + BRAND_HEADER_GAP : 0
     const baseScale = rounds.length >= 4 ? 0.75 : 1
     const [scale, setScale] = useState(baseScale)
     const firstRoundSeeds = useMemo(
@@ -176,7 +196,7 @@ export default function SingleElimBracket({
     const getMatchTop = (roundIndex: number, matchIndex: number) => {
         const spacing = Math.pow(2, roundIndex)
         const offset = ((spacing - 1) * BLOCK_HEIGHT) / 2
-        return TOP_OFFSET + matchIndex * spacing * BLOCK_HEIGHT + offset
+        return TOP_OFFSET + headerOffset + matchIndex * spacing * BLOCK_HEIGHT + offset
     }
 
     const totalHeight = useMemo(() => {
@@ -185,9 +205,10 @@ export default function SingleElimBracket({
             (firstCount - 1) * BLOCK_HEIGHT +
             MATCH_HEIGHT +
             MATCH_META_HEIGHT +
-            TOP_OFFSET
+            TOP_OFFSET +
+            headerOffset
         )
-    }, [rounds])
+    }, [headerOffset, rounds])
 
     const totalWidth = useMemo(
         () =>
@@ -199,6 +220,13 @@ export default function SingleElimBracket({
     )
     const scaledWidth = totalWidth * scale
     const scaledHeight = totalHeight * scale
+
+    // Watermark fills the whole bracket area (top of the first round to the
+    // bottom of the pyramid), clamped so it never spills past the columns.
+    const watermarkSize = Math.max(
+        0,
+        Math.min(totalWidth * 0.92, (totalHeight - headerOffset) * 0.96),
+    )
 
     const layouts = useMemo(() => {
         const map = new Map<string, { left: number; top: number }>()
@@ -381,6 +409,117 @@ export default function SingleElimBracket({
                         transformOrigin: 'top left',
                     }}
                 >
+                    {brandLogoUrl ? (
+                        <div
+                            aria-hidden="true"
+                            style={{
+                                position: 'absolute',
+                                top: headerOffset,
+                                left: 0,
+                                width: totalWidth,
+                                height: Math.max(0, totalHeight - headerOffset),
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                pointerEvents: 'none',
+                                zIndex: 0,
+                            }}
+                        >
+                            <img
+                                src={brandLogoUrl}
+                                alt=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                style={{
+                                    width: watermarkSize,
+                                    height: watermarkSize,
+                                    objectFit: 'contain',
+                                    opacity: BRAND_WATERMARK_OPACITY,
+                                }}
+                            />
+                        </div>
+                    ) : null}
+
+                    {showBrandHeader ? (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: totalWidth,
+                                height: BRAND_HEADER_HEIGHT,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 16,
+                                padding: '0 22px',
+                                boxSizing: 'border-box',
+                                backgroundColor: '#0E2666',
+                                borderRadius: 6,
+                                color: '#FFFFFF',
+                                zIndex: 2,
+                            }}
+                        >
+                            {brandLogoUrl ? (
+                                <img
+                                    src={brandLogoUrl}
+                                    alt={branding?.logoName || ''}
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer"
+                                    style={{
+                                        height: 48,
+                                        width: 48,
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        backgroundColor: '#FFFFFF',
+                                        flexShrink: 0,
+                                    }}
+                                />
+                            ) : null}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 3,
+                                    minWidth: 0,
+                                }}
+                            >
+                                {brandTitle ? (
+                                    <span
+                                        style={{
+                                            fontSize: 20,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.04em',
+                                            textTransform: 'uppercase',
+                                            lineHeight: '22px',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                        }}
+                                    >
+                                        {brandTitle}
+                                    </span>
+                                ) : null}
+                                {brandSubtitle ? (
+                                    <span
+                                        style={{
+                                            fontSize: 12,
+                                            letterSpacing: '0.1em',
+                                            textTransform: 'uppercase',
+                                            opacity: 0.82,
+                                            lineHeight: '14px',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                        }}
+                                    >
+                                        {brandSubtitle}
+                                    </span>
+                                ) : null}
+                            </div>
+                        </div>
+                    ) : null}
+
                     <svg
                         width={totalWidth}
                         height={totalHeight}
@@ -406,7 +545,7 @@ export default function SingleElimBracket({
                                 key={`lbl-${round.label}-${roundIdx}`}
                                 style={{
                                     position: 'absolute',
-                                    top: 8,
+                                    top: 8 + headerOffset,
                                     left,
                                     width: COLUMN_WIDTH,
                                     height: TOP_OFFSET - 12,
