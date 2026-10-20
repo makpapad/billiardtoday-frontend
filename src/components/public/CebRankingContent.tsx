@@ -83,7 +83,7 @@ const SUSPENSION_ROW_CLASS: Record<CebSuspensionMark, string> = {
 
 /** Απόχρωση της ημερομηνίας έναρξης του αποκλεισμού μέσα στη γραμμή. */
 const SUSPENSION_DATE_CLASS: Record<CebSuspensionMark, string> = {
-  grey: "text-slate-500",
+  grey: "text-rose-600",
   yellow: "text-amber-700",
 };
 

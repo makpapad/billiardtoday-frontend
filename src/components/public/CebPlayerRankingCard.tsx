@@ -93,8 +93,8 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
             <p
               className={`mt-3 inline-flex rounded-md border px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide ${
                 suspension?.mark === "yellow"
-                  ? "border-amber-400/60 text-amber-700"
-                  : "border-slate-400/50 text-slate-600"
+                  ? "border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-400/50 dark:bg-amber-400/10 dark:text-amber-300"
+                  : "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-400/40 dark:bg-rose-400/10 dark:text-rose-300"
               }`}
             >
               {suspension?.mark === "yellow"
