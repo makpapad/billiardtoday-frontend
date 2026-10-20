@@ -499,9 +499,9 @@ export function CebRankingContent({
                                   ? `Suspended for 3 months from ${suspendedOn}${
                                       suspension.until ? ` until ${formatCebDate(suspension.until)}` : ""
                                     }`
-                                  : `Suspended for 1 year from ${suspendedOn}${
-                                      suspension?.tillFurtherNotice ? " and till further notice" : ""
-                                    }`
+                                  : suspension?.tillFurtherNotice
+                                    ? `Suspended from ${suspendedOn} until further notice`
+                                    : `Suspended for 1 year from ${suspendedOn}`
                               }
                             >
                               {suspendedOn}

@@ -97,8 +97,11 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
                   : "border-slate-400/50 text-slate-600"
               }`}
             >
-              {suspension?.mark === "yellow" ? "suspended for 3 months" : "suspended for 1 year"} from{" "}
-              {suspendedOn}
+              {suspension?.mark === "yellow"
+                ? `suspended for 3 months from ${suspendedOn}`
+                : suspension?.tillFurtherNotice
+                  ? `suspended from ${suspendedOn} until further notice`
+                  : `suspended for 1 year from ${suspendedOn}`}
             </p>
           ) : null}
 
