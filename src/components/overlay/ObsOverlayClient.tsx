@@ -144,6 +144,7 @@ type WsPayload = {
 
 const DEFAULT_WIDTH = 540;
 const DEFAULT_HEIGHT = 146;
+const WS_ONLY_ITEM_PREFIX = "ws:";
 const WS_TOKEN = process.env.NEXT_PUBLIC_WS_TOKEN || "BT_WS_RELAY_TOKEN_2025";
 const OVERLAY_WS_RECONNECT_MS = 2500;
 function getParamValue(value: string | string[] | undefined): string | undefined {
@@ -400,6 +401,33 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
   };
 }
 
+function buildLiveItemFromWsPayload(
+  payload: WsPayload,
+  fallbackScreenId: string,
+): LiveScoreItem {
+  const screenId =
+    normalizeString(payload.screenId) ??
+    normalizeString(payload.screenIdentifier) ??
+    fallbackScreenId;
+
+  const base: LiveScoreItem = {
+    id: `${WS_ONLY_ITEM_PREFIX}${screenId}`,
+    sessionId: normalizeString(payload.sessionId) ?? "",
+    screenId,
+    updatedAt: new Date().toISOString(),
+    clubId: null,
+    clubName: null,
+    clubCity: null,
+    clubFederationName: null,
+    state: {
+      current: undefined,
+      totalBlocks: coerceNumber(payload.totalBlocks, 40),
+    },
+  };
+
+  return applyWsUpdate(base, payload);
+}
+
 function resolveCountryCode(rawCountry: string | null | undefined): string | null {
   if (!rawCountry) return null;
   const trimmed = rawCountry.trim();
@@ -527,7 +555,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
         setError(null);
       } catch (err) {
         if (!options?.preserveItem) {
-          setItem(null);
+          setItem((current: LiveScoreItem | null) =>
+            current?.id.startsWith(WS_ONLY_ITEM_PREFIX) ? current : null,
+          );
         }
         setError(err instanceof Error ? err.message : "Failed to load screen session");
       } finally {
@@ -610,9 +640,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   }, [loadScreenSession, loadSession, resolvedScreenId, sessionId]);
 
   React.useEffect(() => {
-    if (!item?.screenId) return;
     const currentSessionId = sessionId ?? null;
-    const currentScreenId = item.screenId ?? resolvedScreenId;
+    const currentScreenId =
+      normalizeString(item?.screenId) ?? normalizeString(resolvedScreenId);
     if (!currentScreenId) return;
 
     const wsUrl = normalizeWebSocketUrl(
@@ -638,7 +668,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
         try {
           const payload = JSON.parse(String(event.data || "{}")) as WsPayload;
           const payloadScreenId = normalizeString(payload.screenId) ?? normalizeString(payload.screenIdentifier);
-          if (payloadScreenId && payloadScreenId !== item.screenId) return;
+          if (payloadScreenId && payloadScreenId !== currentScreenId) return;
 
           if (payload.type === "overlay:break:start") {
             setBreakStatsOpen(true);
@@ -664,7 +694,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
           if (payload.type !== "score:update") return;
           setError(null);
-          setItem((current) => (current ? applyWsUpdate(current, payload) : current));
+          setItem((current: LiveScoreItem | null) =>
+            current?.screenId
+              ? applyWsUpdate(current, payload)
+              : buildLiveItemFromWsPayload(payload, currentScreenId),
+          );
         } catch {
           // Ignore malformed realtime payloads for overlay rendering.
         }
