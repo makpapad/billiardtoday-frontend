@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { CountryFlag, PresentationHero, SectionHeading } from "@/components/public/PresentationBlocks";
+import { CountryFlag, PresentationHero } from "@/components/public/PresentationBlocks";
+import { FederationClubsSection } from "@/components/public/FederationClubsSection";
 import type { Federation } from "@/lib/directory";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 
@@ -8,6 +8,11 @@ type Props = {
   embedded?: boolean;
   /** Κουμπιά-σύνδεσμοι στο hero (π.χ. «UMB rankings» → /rankings/umb). */
   actions?: Array<{ label: string; href: string; variant?: "primary" | "secondary"; newTab?: boolean }>;
+  /**
+   * Οι σύλλογοι. Στη σελίδα ομοσπονδίας μπαίνουν σε δική τους καρτέλα
+   * (`showClubs={false}`)· στα embeds μένουν κάτω από το hero.
+   */
+  showClubs?: boolean;
 };
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
@@ -15,12 +20,12 @@ const resolveLogoUrl = (value: Federation["logo"]): string | null => {
   return resolveMediaUrl(value.url);
 };
 
-const buildClubHref = (slug?: string | null, documentId?: string | null, embedded = false) => {
-  const target = slug || documentId;
-  return target ? `${embedded ? "/embed" : ""}/clubs/${target}` : "#";
-};
-
-export function FederationDetailContent({ federation, embedded = false, actions = [] }: Props) {
+export function FederationDetailContent({
+  federation,
+  embedded = false,
+  actions = [],
+  showClubs = true,
+}: Props) {
   const logoUrl = resolveLogoUrl(federation.logo);
 
   return (
@@ -56,37 +61,10 @@ export function FederationDetailContent({ federation, embedded = false, actions 
         }
       />
 
-      {federation.level === "national" && (
-        <section>
-          <SectionHeading
-            eyebrow="Club network"
-            title="Affiliated clubs"
-            description="Browse the clubs directly connected to this federation."
-          />
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {Array.isArray(federation.clubs) && federation.clubs.length > 0 ? (
-              federation.clubs.map((club) => (
-                <Link
-                  key={club.documentId}
-                  href={buildClubHref(club.slug, club.documentId, embedded)}
-                  className="rounded-[26px] border border-black/5 bg-white p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <CountryFlag country={federation.country || null} />
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{federation.country}</div>
-                  </div>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-950">{club.name}</h3>
-                  <div className="mt-2 text-sm text-slate-500">{club.city || club.address || "Club venue"}</div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                No clubs connected to this federation yet.
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {showClubs && federation.level === "national" ? (
+        <FederationClubsSection federation={federation} embedded={embedded} />
+      ) : null}
     </div>
   );
 }
+

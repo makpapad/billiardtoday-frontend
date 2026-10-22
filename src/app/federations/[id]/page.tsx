@@ -6,6 +6,14 @@ import { getFederations, requireFederationByIdentifier } from "@/lib/directory";
 import { CebFederationExperience } from "@/components/public/CebFederationExperience";
 import { CEB_MEMBER_SLUGS } from "@/components/public/cebFederationMapData";
 import { FederationDetailContent } from "@/components/public/FederationDetailContent";
+import { FederationClubsSection } from "@/components/public/FederationClubsSection";
+import { FederationRankingsSection } from "@/components/public/FederationRankingsSection";
+import { FederationPageTabs, type FederationTab } from "@/components/public/FederationPageTabs";
+import {
+  countFederationPublishedEvents,
+  fetchFederationRankingSeries,
+  fetchFederationTeamTournaments,
+} from "@/lib/federationPageData";
 import { buildDefaultOpenGraphImage, buildOpenGraphImage, SITE_URL } from "@/lib/socialMetadata";
 
 type Props = {
@@ -91,10 +99,45 @@ export default async function FederationPage({ params }: Props) {
       ? [{ label: "UMB rankings", href: "/rankings/umb", variant: "secondary" as const }]
       : [];
 
-  return (
-    <>
-      <FederationDetailContent federation={federation} actions={federationActions} />
+  // Κάθε καρτέλα εμφανίζεται μόνο όταν έχει περιεχόμενο — ένα κουμπί που οδηγεί
+  // στο «τίποτα» είναι χειρότερο από την απουσία του.
+  const [rankingSeries, teamTournaments, individualCount] = await Promise.all([
+    fetchFederationRankingSeries(federation.slug),
+    fetchFederationTeamTournaments(federation.documentId),
+    countFederationPublishedEvents(federation.documentId),
+  ]);
 
+  const clubCount = Array.isArray(federation.clubs) ? federation.clubs.length : 0;
+  const tabs: FederationTab[] = [];
+
+  if (federation.level === "national" && clubCount > 0) {
+    tabs.push({
+      key: "clubs",
+      label: "Affiliated Clubs",
+      content: (
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+          <FederationClubsSection federation={federation} />
+        </div>
+      ),
+    });
+  }
+
+  if (rankingSeries.length > 0) {
+    tabs.push({
+      key: "rankings",
+      label: "Rankings",
+      content: (
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+          <FederationRankingsSection federationName={federation.name} series={rankingSeries} />
+        </div>
+      ),
+    });
+  }
+
+  tabs.push({
+    key: "individual",
+    label: "Individual",
+    content: (
       <TournamentListSection
         section={{
           __component: "cms.tournament-list-section",
@@ -112,6 +155,49 @@ export default async function FederationPage({ params }: Props) {
         federationId={federation.documentId}
         allowViewToggle
       />
+    ),
+  });
+
+  if (teamTournaments.length > 0) {
+    tabs.push({
+      key: "team",
+      label: "Team",
+      content: (
+        <TournamentListSection
+          section={{
+            __component: "cms.tournament-list-section",
+            title: "Team tournaments",
+            subtitle: `Club team competitions organized by ${federation.name}.`,
+            layout: "table",
+            itemsPerPage: 20,
+            showSeasonFilter: true,
+            showDate: true,
+            showStatus: true,
+            showResultsLink: true,
+            emptyStateText: "No team tournaments found for this federation yet.",
+          }}
+          appearance={appearance}
+          federationId={federation.documentId}
+          source="team"
+          allowViewToggle
+        />
+      ),
+    });
+  }
+
+  // Προεπιλεγμένη η καρτέλα των ατομικών· αν δεν έχει τίποτα, ανοίγει σε ό,τι έχει.
+  const defaultKey =
+    individualCount > 0 || tabs.length === 1 ? "individual" : tabs[tabs.length - 1]!.key;
+
+  return (
+    <>
+      <FederationDetailContent federation={federation} actions={federationActions} showClubs={false} />
+
+      {tabs.length > 1 ? (
+        <FederationPageTabs tabs={tabs} defaultKey={defaultKey} />
+      ) : (
+        tabs[0]?.content
+      )}
     </>
   );
 }

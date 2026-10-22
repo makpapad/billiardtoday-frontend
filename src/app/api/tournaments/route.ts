@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeTournamentGameType } from "@/lib/gameTypes";
+import { isDraftTournament } from "@/lib/tournamentPublication";
 
 export const runtime = "nodejs";
 
@@ -128,25 +129,6 @@ function normalizeClubTournamentItem(item: any) {
         }
       : null,
   };
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-}
-
-function isDraftTournament(item: any): boolean {
-  const tournament = asRecord(item?.tournament) ?? asRecord(item);
-  const formatDefinition = asRecord(tournament?.format_definition);
-  const publication = asRecord(formatDefinition?.publication);
-  const publicationState = String(publication?.state ?? "").toLowerCase();
-  if (publicationState) return publicationState !== "published";
-
-  return Boolean(
-    formatDefinition?.clubRuntime ||
-      String(formatDefinition?.setupMode ?? "").startsWith("club_"),
-  );
 }
 
 function sortTournamentItems(left: any, right: any) {

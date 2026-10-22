@@ -19,8 +19,10 @@ import { buildTournamentHref } from "@/lib/tournaments";
 type Tournament = {
   id: string;
   documentId: string;
-  source?: "bt_event" | "club_tournament";
+  source?: "bt_event" | "club_tournament" | "team_tournament";
   canOpen?: boolean;
+  /** Έτοιμος σύνδεσμος όταν η πηγή δεν είναι το /api/tournaments (π.χ. ομαδικά). */
+  href?: string | null;
   title: string;
   game_type?: string | null;
   season: number | null;
@@ -58,6 +60,11 @@ type Props = {
   embedded?: boolean;
   clubSlug?: string;
   federationId?: string;
+  /**
+   * Από πού έρχονται οι γραμμές: τα ατομικά events (`/api/tournaments`) ή τα
+   * ομαδικά πρωταθλήματα (`/api/team-tournaments`). Η όψη είναι η ίδια.
+   */
+  source?: "events" | "team";
   /** Εμφάνιση διακόπτη λίστας/καρτών (προεπιλογή: λίστα). */
   allowViewToggle?: boolean;
 };
@@ -89,10 +96,12 @@ export function TournamentListSection({
   embedded = false,
   clubSlug,
   federationId,
+  source = "events",
   allowViewToggle = false,
 }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const endpoint = source === "team" ? "/api/team-tournaments" : "/api/tournaments";
   const [items, setItems] = useState<Tournament[]>([]);
   const [pagination, setPagination] = useState(EMPTY_PAGINATION);
   const [isLoading, setIsLoading] = useState(false);
@@ -147,7 +156,7 @@ export function TournamentListSection({
         params.set("facets", "gameType");
         if (clubSlug) params.set("clubSlug", clubSlug);
         if (federationId) params.set("federationId", federationId);
-        const response = await fetch(`/api/tournaments?${params.toString()}`);
+        const response = await fetch(`${endpoint}?${params.toString()}`);
         if (!response.ok) return;
         const payload = await response.json().catch(() => null);
         if (!mounted) return;
@@ -166,7 +175,7 @@ export function TournamentListSection({
     return () => {
       mounted = false;
     };
-  }, [clubSlug, federationId]);
+  }, [clubSlug, federationId, endpoint]);
 
   useEffect(() => {
     let mounted = true;
@@ -185,7 +194,7 @@ export function TournamentListSection({
         if (clubSlug) params.set("clubSlug", clubSlug);
         if (federationId) params.set("federationId", federationId);
 
-        const response = await fetch(`/api/tournaments?${params.toString()}`, {
+        const response = await fetch(`${endpoint}?${params.toString()}`, {
           cache: "no-store",
         });
         if (!response.ok) {
@@ -230,6 +239,7 @@ export function TournamentListSection({
     itemsPerPage,
     clubSlug,
     federationId,
+    endpoint,
   ]);
 
   const tournamentEventHref = (
@@ -245,14 +255,14 @@ export function TournamentListSection({
       embedded,
     );
 
-  const tournamentHrefForItem = (item: Tournament) => {
-    return tournamentEventHref(
+  const tournamentHrefForItem = (item: Tournament) =>
+    item.href ||
+    tournamentEventHref(
       item.documentId,
       item.title,
       item.season,
       resolveTournamentCanonicalId(item),
     );
-  };
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const didMountRef = useRef(false);
