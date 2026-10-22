@@ -8,7 +8,7 @@ import { CEB_MEMBER_SLUGS } from "@/components/public/cebFederationMapData";
 import { FederationDetailContent } from "@/components/public/FederationDetailContent";
 import { FederationClubsSection } from "@/components/public/FederationClubsSection";
 import { FederationRankingsSection } from "@/components/public/FederationRankingsSection";
-import { FederationPageTabs, type FederationTab } from "@/components/public/FederationPageTabs";
+import { FederationHeroMenu, FederationPanels, type FederationTab } from "@/components/public/FederationPageTabs";
 import {
   countFederationPublishedEvents,
   fetchFederationRankingSeries,
@@ -189,12 +189,23 @@ export default async function FederationPage({ params }: Props) {
   const defaultKey =
     individualCount > 0 || tabs.length === 1 ? "individual" : tabs[tabs.length - 1]!.key;
 
+  const menuTabs = tabs.map((tab) => ({ key: tab.key, label: tab.label }));
+
   return (
     <>
-      <FederationDetailContent federation={federation} actions={federationActions} showClubs={false} />
+      <FederationDetailContent
+        federation={federation}
+        actions={federationActions}
+        showClubs={false}
+        heroMenu={
+          menuTabs.length > 1 ? (
+            <FederationHeroMenu tabs={menuTabs} defaultKey={defaultKey} />
+          ) : undefined
+        }
+      />
 
       {tabs.length > 1 ? (
-        <FederationPageTabs tabs={tabs} defaultKey={defaultKey} />
+        <FederationPanels tabs={tabs} defaultKey={defaultKey} />
       ) : (
         tabs[0]?.content
       )}

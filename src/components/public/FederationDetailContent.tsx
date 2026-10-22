@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { CountryFlag, PresentationHero } from "@/components/public/PresentationBlocks";
 import { FederationClubsSection } from "@/components/public/FederationClubsSection";
 import type { Federation } from "@/lib/directory";
@@ -13,6 +14,11 @@ type Props = {
    * (`showClubs={false}`)· στα embeds μένουν κάτω από το hero.
    */
   showClubs?: boolean;
+  /**
+   * Μενού καρτελών ΜΕΣΑ στο hero (π.χ. Affiliated Clubs · Rankings · Individual ·
+   * Team). Τα περιεχόμενα των καρτελών αποδίδονται ξεχωριστά, κάτω από το hero.
+   */
+  heroMenu?: ReactNode;
 };
 
 const resolveLogoUrl = (value: Federation["logo"]): string | null => {
@@ -25,6 +31,7 @@ export function FederationDetailContent({
   embedded = false,
   actions = [],
   showClubs = true,
+  heroMenu,
 }: Props) {
   const logoUrl = resolveLogoUrl(federation.logo);
 
@@ -35,6 +42,7 @@ export function FederationDetailContent({
         title={federation.name}
         description={`Discover official billiard tournaments, affiliated clubs, and the competitive presence of ${federation.name} through a public page designed for visibility, trust, and search.`}
         actions={actions}
+        actionSlot={heroMenu}
         aside={
           <div className="flex flex-col gap-4">
             <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
