@@ -229,7 +229,7 @@ const transliterateGreek = (value: string): string =>
     })
     .join("");
 
-const slugify = (value: string): string =>
+export const slugifyTeamTournamentSlug = (value: string): string =>
   transliterateGreek(value)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -311,14 +311,14 @@ export const fetchTeamTournaments = async (): Promise<TeamTournamentSummary[]> =
 };
 
 export const buildTeamTournamentSlug = (summary: TeamTournamentSummary): string => {
-  const base = slugify(summary.title);
+  const base = slugifyTeamTournamentSlug(summary.title);
   return summary.season ? `${base}-${summary.season}` : base;
 };
 
 export const resolveTeamTournamentBySlug = async (
   slug: string,
 ): Promise<TeamTournamentSummary | null> => {
-  const cleanSlug = slugify(String(slug || "").trim());
+  const cleanSlug = slugifyTeamTournamentSlug(String(slug || "").trim());
   if (!cleanSlug) return null;
 
   const all = await fetchTeamTournaments();

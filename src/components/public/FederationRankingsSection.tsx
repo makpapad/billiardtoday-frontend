@@ -40,7 +40,10 @@ export function FederationRankingsSection({ federationName, series, embedded = f
               </div>
               <h3 className="text-xl font-semibold tracking-tight text-slate-950">{item.title}</h3>
               <div className="text-sm text-slate-500">
-                {countLabel(item.tournamentsCount ?? 0, "counting tournament")}
+                {countLabel(item.tournamentsCount, "tournament")}
+                {item.linkedEventsCount > 0
+                  ? ` · ${countLabel(item.linkedEventsCount, "event")} with standings`
+                  : ""}
               </div>
             </Link>
           ))}

@@ -7,6 +7,7 @@
  */
 
 import { fetchRankingSeriesIndex, type RankingSeriesIndexItem } from "@/lib/rankings";
+import { slugifyTeamTournamentSlug } from "@/lib/teamTournaments";
 import { isDraftTournament } from "@/lib/tournamentPublication";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
@@ -106,20 +107,12 @@ export type FederationTeamTournamentItem = {
   divisionName: string | null;
 };
 
-const slugifyValue = (value: string): string =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
 /** Το ίδιο σχήμα slug με το `buildTeamTournamentSlug` της σελίδας ομαδικών. */
 export const buildTeamTournamentSlugFromParts = (
   title: string,
   season: number | null,
 ): string => {
-  const base = slugifyValue(title);
+  const base = slugifyTeamTournamentSlug(title);
   return season ? `${base}-${season}` : base;
 };
 
@@ -133,8 +126,14 @@ const readTeamTournamentRow = (
     row.config && typeof row.config === "object"
       ? (row.config as Record<string, unknown>)
       : {};
-  const season = toNumber(config.season);
-  const gameType = readString(config.game_type);
+  // Το slug ΠΡΕΠΕΙ να βγει με τον ίδιο υπολογισμό σεζόν όπως στη σελίδα ομαδικών
+  // (μόνο αριθμητικό `config.season`), αλλιώς ο σύνδεσμος δεν βρίσκει τη σελίδα.
+  // Για εμφάνιση δεχόμαστε και το `seasonStart` (τα ομαδικά της ομοσπονδίας έχουν
+  // τη σεζόν ως «2026-2027»).
+  const slugSeason = toNumber(config.season);
+  const displaySeason = slugSeason ?? toNumber(config.seasonStart) ?? null;
+  const gameType =
+    readString(config.game_type) ?? readString(config.gameType);
 
   // Το συνδεδεμένο τουρνουά δίνει τις ημερομηνίες (το ομαδικό δεν έχει δικές του).
   let tournament: Record<string, unknown> = {};
@@ -153,7 +152,7 @@ const readTeamTournamentRow = (
     }
   }
 
-  const slug = buildTeamTournamentSlugFromParts(title, season);
+  const slug = buildTeamTournamentSlugFromParts(title, slugSeason);
   const documentId = readString(row.documentId) ?? "";
 
   return {
@@ -162,9 +161,9 @@ const readTeamTournamentRow = (
     slug,
     href: `/tournaments/team/${slug}`,
     gameType,
-    season,
-    startDate: readString(tournament.start_date),
-    endDate: readString(tournament.end_date),
+    season: displaySeason,
+    startDate: readString(tournament.startDate ?? tournament.start_date),
+    endDate: readString(tournament.endDate ?? tournament.end_date),
     divisionName: readString(row.division_name),
   };
 };
@@ -182,8 +181,8 @@ export const fetchFederationTeamTournaments = async (
   const params = new URLSearchParams();
   params.set("pagination[pageSize]", "200");
   params.set("sort[0]", "title:asc");
-  params.set("populate[tournament][fields][0]", "start_date");
-  params.set("populate[tournament][fields][1]", "end_date");
+  params.set("populate[tournament][fields][0]", "startDate");
+  params.set("populate[tournament][fields][1]", "endDate");
   params.set("filters[$or][0][federation][documentId][$eq]", federationDocumentId);
   params.set(
     "filters[$or][1][tournament][organizer_federation][documentId][$eq]",
