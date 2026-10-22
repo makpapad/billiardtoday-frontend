@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
-import { ArrowLeft, Calendar, ChevronDown, Trophy, Users } from "lucide-react";
+import { Calendar, ChevronDown, Trophy, Users } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
+import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import {
   formatAvg,
   type ComputedStandingRow,
@@ -27,6 +29,8 @@ type Props = {
 
 type StageKey = "qualifications" | "final";
 type ViewKey = "matches" | "ranking";
+/** Τα πλαίσια του hero menu — ίδια λογική με τη σελίδα ατομικού τουρνουά. */
+type PanelKey = "tournament" | "timetable" | "finals" | "participants" | "info";
 
 const formatSeason = (season: number | null): string | null => {
   if (season === null || !Number.isFinite(season)) return null;
@@ -489,7 +493,7 @@ function MatchCard({
             <ChevronDown
               className={clsx("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
             />
-            Boards ({match.sets.length})
+            Games ({match.sets.length})
           </button>
           {expanded ? (
             <div className="flex flex-col gap-1.5 border-t border-gray-100 px-4 py-3 dark:border-gray-700/60">
@@ -803,6 +807,7 @@ export function TeamTournamentDetailClient({
 }: Props) {
   const [stage, setStage] = useState<StageKey>("qualifications");
   const [view, setView] = useState<ViewKey>("matches");
+  const [panel, setPanel] = useState<PanelKey>("tournament");
 
   const summary = detail?.summary ?? null;
   const groups = detail?.groups ?? [];
@@ -841,6 +846,24 @@ export function TeamTournamentDetailClient({
       });
     if (start && end) return `${format(start)} - ${format(end)}`;
     return format(start ?? end ?? "");
+  }, [eventSummary]);
+
+  // Οι μάρκες φάσεων: τα στάδια του event όταν υπάρχουν, αλλιώς Qualifications /
+  // Final Round (όπως τα έδειχνε πάντα η σελίδα) ώστε να μη χάνεται η εναλλαγή.
+  const stageTabs = useMemo(() => {
+    const stages = eventSummary?.stages ?? [];
+    if (stages.length === 0) {
+      return [
+        { key: "qualifications" as StageKey, label: "Qualifications" },
+        { key: "final" as StageKey, label: "Final Round" },
+      ];
+    }
+    return stages.map((item, index) => ({
+      key: (/final/i.test(String(item.title ?? "")) || (stages.length === 2 && index === 1)
+        ? "final"
+        : "qualifications") as StageKey,
+      label: item.title?.trim() || `Stage ${index + 1}`,
+    }));
   }, [eventSummary]);
 
   const sortedGroups = useMemo(
@@ -899,18 +922,63 @@ export function TeamTournamentDetailClient({
     return unique;
   }, [standingsByGroup]);
 
+  // Τα στοιχεία που εμφανίζονται ως παστίλιες στο «Team tournament overview»
+  // (ίδια λογική με το overview της ατομικής σελίδας).
+  const overviewFacts = useMemo(
+    () =>
+      [
+        { label: "Game type", value: summary?.gameType || "Billiards" },
+        { label: "Dates", value: scheduleLabel || "To be announced" },
+        { label: "Division", value: summary?.divisionName || null },
+        {
+          label: "Format",
+          value: summary?.formatType
+            ? String(summary.formatType).replace(/_/g, " ")
+            : null,
+        },
+        {
+          label: "Team size",
+          value: summary?.teamSize ? `${summary.teamSize} players` : null,
+        },
+        { label: "Teams", value: summary?.teamCount ? String(summary.teamCount) : null },
+        { label: "Organiser", value: eventSummary?.organizerLogoName || null },
+      ].filter((item): item is { label: string; value: string } => Boolean(item.value)),
+    [eventSummary, scheduleLabel, summary],
+  );
+
+  const scheduleRows = useMemo(
+    () =>
+      [...matches]
+        .sort((a, b) => {
+          const left = a.matchDate ? new Date(a.matchDate).getTime() : Number.POSITIVE_INFINITY;
+          const right = b.matchDate ? new Date(b.matchDate).getTime() : Number.POSITIVE_INFINITY;
+          return left - right || (a.round ?? 0) - (b.round ?? 0);
+        })
+        .map((match, index) => ({
+          key: match.documentId || `match-${match.id ?? index}`,
+          dateLabel: formatDate(match.matchDate),
+          home: match.homeTeamName,
+          away: match.awayTeamName,
+          stageLabel: match.stage === "ko" ? "Final Round" : "Qualifications",
+          groupLabel:
+            match.groupKey && match.groupKey !== "-" ? `Group ${match.groupKey}` : null,
+          statusLabel:
+            match.status === "completed"
+              ? "Completed"
+              : match.matchDate
+                ? "Scheduled"
+                : "To be announced",
+        })),
+    [matches],
+  );
+
   return (
     <div
       className="mx-auto w-full px-4 py-8"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <div className="flex flex-col gap-6">
-        <Link
-          href="/tournaments/team"
-          className="inline-flex w-fit items-center gap-1 text-xs font-medium text-gray-500 transition-colors hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-300"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> All team tournaments
-        </Link>
+        <BackButton fallbackHref="/tournaments/team" />
 
         <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
@@ -954,10 +1022,36 @@ export function TeamTournamentDetailClient({
               </div>
               <div className="w-full overflow-hidden pb-1">
                 <div className="flex max-w-full flex-nowrap items-center gap-2">
-                  <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/85">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {scheduleLabel ?? "Schedule"}
-                  </div>
+                  <HeroMenuButton
+                    label="Tournament"
+                    iconSrc="/icons%20webp/Tournament1.webp"
+                    active={panel === "tournament"}
+                    onClick={() => setPanel("tournament")}
+                  />
+                  <HeroMenuButton
+                    label="Time Table"
+                    iconSrc="/icons%20webp/schedule1.webp"
+                    active={panel === "timetable"}
+                    onClick={() => setPanel("timetable")}
+                  />
+                  <HeroMenuButton
+                    label="Final standings"
+                    iconSrc="/icons%20webp/finalrank1.webp"
+                    active={panel === "finals"}
+                    onClick={() => setPanel("finals")}
+                  />
+                  <HeroMenuButton
+                    label="Participants"
+                    iconSrc="/icons%20webp/participants1.webp"
+                    active={panel === "participants"}
+                    onClick={() => setPanel("participants")}
+                  />
+                  <HeroMenuButton
+                    label="Info"
+                    iconSrc="/icons%20webp/info.webp"
+                    active={panel === "info"}
+                    onClick={() => setPanel("info")}
+                  />
                 </div>
               </div>
             </div>
@@ -1002,25 +1096,56 @@ export function TeamTournamentDetailClient({
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
-                  Stage overview
-                </div>
-                {eventSummary && eventSummary.stages.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {eventSummary.stages.map((stageItem, index) => (
-                      <span
-                        key={stageItem.documentId || `${stageItem.title}-${index}`}
-                        className="inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72"
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
+                    Stage overview
+                  </div>
+                  <div className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    {(
+                      [
+                        { key: "matches", label: "Matches" },
+                        { key: "ranking", label: "Ranking" },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => {
+                          setView(tab.key);
+                          setPanel("tournament");
+                        }}
+                        aria-pressed={view === tab.key}
+                        className={
+                          view === tab.key
+                            ? "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                            : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                        }
                       >
-                        {stageItem.title?.trim() || `Stage ${index + 1}`}
-                      </span>
+                        {tab.label}
+                      </button>
                     ))}
                   </div>
-                ) : (
-                  <div className="mt-3 text-sm text-white/70">
-                    No stages published yet.
-                  </div>
-                )}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {stageTabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => {
+                        setStage(tab.key);
+                        setPanel("tournament");
+                      }}
+                      aria-pressed={stage === tab.key}
+                      className={
+                        stage === tab.key
+                          ? "inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition"
+                          : "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
+                      }
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1035,66 +1160,17 @@ export function TeamTournamentDetailClient({
           </Link>
         ) : null}
 
-        {/* Stage chips + view tabs, like the tournament pages */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
-            {(
-              [
-                { key: "qualifications", label: "Qualifications" },
-                { key: "final", label: "Final Round" },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setStage(tab.key)}
-                className={clsx(
-                  "flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-                  stage === tab.key
-                    ? "bg-cyan-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50",
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
-            {(
-              [
-                { key: "matches", label: "Matches" },
-                { key: "ranking", label: "Ranking" },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setView(tab.key)}
-                className={clsx(
-                  "flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-                  view === tab.key
-                    ? "bg-cyan-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50",
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Ίδιο στήσιμο με τη σελίδα ατομικού τουρνουά: το μενού του hero ανοίγει
+            τα πλαίσια (Tournament / Time Table / Final standings / Participants /
+            Info), και οι δύο παλιές μπάρες καρτελών ζουν πλέον μέσα στο hero. */}
 
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-          {view === "matches" ? "Matches" : "Ranking"} ·{" "}
-          {stage === "qualifications" ? "Qualifications" : "Final Round"}
-        </div>
-
-        {detail === null ? (
+        {panel !== "info" && detail === null ? (
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
             <Trophy className="h-4 w-4" /> Tournament data is not available yet.
           </div>
         ) : null}
 
-        {detail !== null && stage === "qualifications" && view === "matches" ? (
+        {panel === "tournament" && detail !== null && stage === "qualifications" && view === "matches" ? (
           <div className="flex flex-col gap-6">
             {sortedGroups.length === 0 ? (
               <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
@@ -1113,7 +1189,7 @@ export function TeamTournamentDetailClient({
           </div>
         ) : null}
 
-        {detail !== null && stage === "qualifications" && view === "ranking" ? (
+        {panel === "tournament" && detail !== null && stage === "qualifications" && view === "ranking" ? (
           <div className="flex flex-col gap-6">
             <QualificationRankingTable
               rows={allStandingRows}
@@ -1134,7 +1210,7 @@ export function TeamTournamentDetailClient({
           </div>
         ) : null}
 
-        {detail !== null && stage === "final" && view === "matches" ? (
+        {panel === "tournament" && detail !== null && stage === "final" && view === "matches" ? (
           <div className="flex flex-col gap-6">
             {koMatches.length > 0 ? (
               <KnockoutBracket matches={koMatches} summary={summary} />
@@ -1146,7 +1222,7 @@ export function TeamTournamentDetailClient({
           </div>
         ) : null}
 
-        {detail !== null && stage === "final" && view === "ranking" ? (
+        {panel === "tournament" && detail !== null && stage === "final" && view === "ranking" ? (
           <div className="flex flex-col gap-6">
             {koMatches.length > 0 ? (
               <FinalStandingsTable
@@ -1159,6 +1235,129 @@ export function TeamTournamentDetailClient({
               </div>
             )}
           </div>
+        ) : null}
+
+        {/* Time Table — ό,τι ξέρουμε για κάθε συνάντηση, σε μία λίστα. */}
+        {panel === "timetable" ? (
+          <div className="rounded-[26px] border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
+            <div className="border-b border-slate-100 px-6 py-4 text-lg font-semibold tracking-tight text-slate-950">
+              Schedule
+            </div>
+            {scheduleRows.length === 0 ? (
+              <div className="px-6 py-8 text-sm text-slate-500">
+                The schedule will appear here once matches are published.
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {scheduleRows.map((row) => (
+                  <li
+                    key={row.key}
+                    className="flex flex-wrap items-center gap-x-6 gap-y-1 px-6 py-4"
+                  >
+                    <div className="w-28 text-sm font-semibold text-slate-950">
+                      {row.dateLabel ?? "To be announced"}
+                    </div>
+                    <div className="min-w-0 flex-1 text-[15px] font-semibold text-slate-950">
+                      {row.home} <span className="text-slate-400">–</span> {row.away}
+                    </div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {row.stageLabel}
+                      {row.groupLabel ? ` · ${row.groupLabel}` : ""}
+                    </div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {row.statusLabel}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null}
+
+        {/* Final standings — ίδιος πίνακας με την καρτέλα Ranking του Final Round. */}
+        {panel === "finals" ? (
+          <div className="flex flex-col gap-6">
+            {koMatches.length > 0 ? (
+              <FinalStandingsTable koMatches={koMatches} qualifiedRows={allStandingRows} />
+            ) : (
+              <div className="rounded-[26px] border border-slate-200 bg-white px-6 py-8 text-sm text-slate-500">
+                Final standings will appear here once the Final Round is complete.
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Participants — οι ομάδες ανά όμιλο. */}
+        {panel === "participants" ? (
+          <div className="flex flex-col gap-6">
+            {sortedGroups.length === 0 ? (
+              <div className="rounded-[26px] border border-slate-200 bg-white px-6 py-8 text-sm text-slate-500">
+                The teams will appear here once the draw is published.
+              </div>
+            ) : (
+              sortedGroups.map((group) => (
+                <div
+                  key={group.documentId || group.groupKey}
+                  className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]"
+                >
+                  <div className="border-b border-slate-100 px-6 py-4 text-lg font-semibold tracking-tight text-slate-950">
+                    {group.title || `Group ${group.groupKey}`}
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {group.teams.map((team) => (
+                      <li
+                        key={team.documentId || String(team.id ?? team.name)}
+                        className="px-6 py-3 text-[15px] font-semibold text-slate-950"
+                      >
+                        {team.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            )}
+          </div>
+        ) : null}
+
+        {/* Info — τα στοιχεία της διοργάνωσης, όπως το «Tournament overview». */}
+        {panel === "info" ? (
+          <details
+            open
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]"
+          >
+            <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8">
+              <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Team tournament overview
+              </div>
+              <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
+              <div className="flex flex-wrap gap-2">
+                {overviewFacts.map((item) => (
+                  <span
+                    key={item.label}
+                    className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600"
+                  >
+                    {item.label}: {item.value}
+                  </span>
+                ))}
+              </div>
+            </summary>
+            <div className="border-t border-slate-200 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+              <div className="flex flex-wrap gap-3 text-sm">
+                <Link
+                  href="/tournaments/team"
+                  className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
+                >
+                  All team tournaments →
+                </Link>
+                <Link
+                  href="/federations"
+                  className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
+                >
+                  Federations directory →
+                </Link>
+              </div>
+            </div>
+          </details>
         ) : null}
       </div>
     </div>
