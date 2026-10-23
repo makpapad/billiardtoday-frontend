@@ -299,10 +299,13 @@ function TemplateFiveBar({
   const leftName = normalizeString(state.playerAName) ?? "Player 1";
   const rightName = normalizeString(state.playerBName) ?? "Player 2";
   const activeSide = state.current;
-  const tournament = state.tournamentName ?? "Live Match";
-  const stage = stripLeadingWord(state.stageName ?? "-", "stage") ?? "-";
-  const table = stripLeadingWord(state.tableName ?? "-", "table") ?? "-";
-  const rightLabel = `${stage !== "-" ? `${stage} / ` : ""}T ${table}${target ? ` / Race ${target}` : ""}`;
+  // Χωρίς σταθερό «Live Match»: αν δεν υπάρχει όνομα τουρνουά, το κελί μένει κενό.
+  const tournament = normalizeString(state.tournamentName) ?? "";
+  const stage = stripLeadingWord(normalizeString(state.stageName), "stage") ?? "";
+  const table = stripLeadingWord(normalizeString(state.tableName), "table") ?? "";
+  const rightLabel = [stage, table ? `T ${table}` : "", target ? `Race ${target}` : ""]
+    .filter((part) => part.length > 0)
+    .join(" / ");
   const totalBlocks = 40;
   const elapsedBlocks = Math.min(totalBlocks, Math.max(0, Number(state.progress ?? 0)));
   const remainingBlocks = Math.max(totalBlocks - elapsedBlocks, 0);

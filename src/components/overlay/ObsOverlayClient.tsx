@@ -140,6 +140,14 @@ type WsPayload = {
   innings?: number | null;
   inningsDetail?: LiveScoreState["inningsDetail"];
   gameDurationSeconds?: number | null;
+  // Meta του αγώνα: το scoreboard τα στέλνει μαζί με το score:update (όπως το tableName),
+  // ώστε να ανανεώνονται ζωντανά χωρίς κλείσιμο/άνοιγμα του browser source στο OBS.
+  tournamentName?: string | null;
+  eventTitle?: string | null;
+  stageName?: string | null;
+  stageTitle?: string | null;
+  tableName?: string | null;
+  tableNumber?: string | null;
 };
 
 const DEFAULT_WIDTH = 540;
@@ -204,6 +212,11 @@ function preferWsPlayerName(
 }
 
 function preferWsCountry(incoming: unknown, current: string | null | undefined): string | null {
+  return normalizeString(incoming) ?? normalizeString(current) ?? null;
+}
+
+/** Ίδιο σκεπτικό με το όνομα: η τιμή του WS κερδίζει, αλλιώς κρατάμε ό,τι είχαμε. */
+function preferWsText(incoming: unknown, current: string | null | undefined): string | null {
   return normalizeString(incoming) ?? normalizeString(current) ?? null;
 }
 
@@ -374,6 +387,11 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
       playerBName: preferWsPlayerName(playerB.name, item.state.playerBName, "Player B"),
       playerACountry: preferWsCountry(playerA.country, item.state.playerACountry),
       playerBCountry: preferWsCountry(playerB.country, item.state.playerBCountry),
+      // Meta αγώνα: το tableName έρχεται ήδη στο payload του scoreboard (όπως πριν), τα
+      // eventTitle/stageTitle αν τα στείλει — έτσι ανανεώνονται χωρίς reload στο OBS.
+      tournamentName: preferWsText(payload.tournamentName ?? payload.eventTitle, item.state.tournamentName),
+      stageName: preferWsText(payload.stageName ?? payload.stageTitle, item.state.stageName),
+      tableName: preferWsText(payload.tableName ?? payload.tableNumber, item.state.tableName),
       current: nextCurrent,
       progress: coerceNumber(payload.progress, item.state.progress ?? 0),
       totalBlocks: coerceNumber(payload.totalBlocks, item.state.totalBlocks ?? 40),
