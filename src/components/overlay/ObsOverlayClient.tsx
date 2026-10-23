@@ -185,6 +185,28 @@ function coerceNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(num) ? num : fallback;
 }
 
+/**
+ * Το WebSocket είναι η πιο φρέσκια πηγή για όνομα/χώρα κατά τη διάρκεια του αγώνα
+ * (το HTTP από τη βάση είναι stale μέχρι να γίνει εγγραφή στο Strapi). Προτιμάμε
+ * λοιπόν την τιμή του payload — ΕΚΤΟΣ αν λείπει ή είναι placeholder («Player A»,
+ * «Player 1»), ώστε να μην σβήνει ένα καλό όνομα με κενό/γενικόλογο.
+ */
+const PLACEHOLDER_PLAYER_NAME = /^player\s*(?:[ab]|\d+)$/i;
+
+function preferWsPlayerName(
+  incoming: unknown,
+  current: string | null | undefined,
+  fallback: string,
+): string {
+  const candidate = normalizeString(incoming);
+  if (candidate && !PLACEHOLDER_PLAYER_NAME.test(candidate)) return candidate;
+  return normalizeString(current) ?? candidate ?? fallback;
+}
+
+function preferWsCountry(incoming: unknown, current: string | null | undefined): string | null {
+  return normalizeString(incoming) ?? normalizeString(current) ?? null;
+}
+
 function normalizeTargetPoints(...values: unknown[]): number | null {
   for (const value of values) {
     const num = Number(value);
@@ -348,10 +370,10 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
         coerceNumber(playerB.innings, 0),
         item.state.inningsCount ?? 0,
       ),
-      playerAName: item.state.playerAName ?? normalizeString(playerA.name) ?? "Player A",
-      playerBName: item.state.playerBName ?? normalizeString(playerB.name) ?? "Player B",
-      playerACountry: item.state.playerACountry ?? normalizeString(playerA.country) ?? null,
-      playerBCountry: item.state.playerBCountry ?? normalizeString(playerB.country) ?? null,
+      playerAName: preferWsPlayerName(playerA.name, item.state.playerAName, "Player A"),
+      playerBName: preferWsPlayerName(playerB.name, item.state.playerBName, "Player B"),
+      playerACountry: preferWsCountry(playerA.country, item.state.playerACountry),
+      playerBCountry: preferWsCountry(playerB.country, item.state.playerBCountry),
       current: nextCurrent,
       progress: coerceNumber(payload.progress, item.state.progress ?? 0),
       totalBlocks: coerceNumber(payload.totalBlocks, item.state.totalBlocks ?? 40),
