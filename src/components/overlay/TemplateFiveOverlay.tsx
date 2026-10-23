@@ -310,18 +310,20 @@ function TemplateFiveBar({
   const mainBarHeight = 50;
   const overlayHeight = topStripHeight + mainBarHeight;
   const statsColumnWidth = Math.max(92, Math.min(132, Math.round(width * 0.115)));
-  // Το top strip ευθυγραμμίζεται με τις άκρες της κύριας μπάρας (ίδιο width).
-  const topStripWidth = width;
+  const topStripWidth = Math.max(620, Math.min(width - 20, Math.round(width * 0.86)));
   const timeStripWidth = Math.max(240, Math.min(360, Math.round(width * 0.28)));
-  // Πόσοι χαρακτήρες χωρούν σε μία κολόνα ονόματος (το πλάτος του grid δίνεται στη
-  // μπάρα). Μόνο πάνω από αυτό το όριο πέφτουμε στη σύντμηση «Επώνυμο Α.».
+  // Πόσοι χαρακτήρες χωρούν σε μία κολόνα ονόματος: αφαιρούμε ό,τι άλλο ζει μέσα στο
+  // ίδιο κελί (σημαία 42 + ticks 16 + gaps 8 + padding 14) και μετράμε ~13,5px/χαρακτήρα
+  // στα 28px Barlow Condensed (μετρημένο στο live: «KLOMPENHOUWER Therese» = 270px).
+  // Η σύντμηση «Επώνυμο Α.» πέφτει ΜΟΝΟ πάνω από αυτό το όριο· το `truncate` μένει φρουρός.
   const nameFontSize = 28;
-  const centerBlockPx = 300; // 115 + 42 + 115.5 (auto κελιά κέντρου) + slack
+  const nameCellChromePx = 80;
+  const nameCharPx = 13.5;
   const nameColumnBudgetPx = Math.max(
     160,
-    width - statsColumnWidth * 2 - centerBlockPx - 6 * 4 /* columnGap */ - 24 /* px-3 */ - 28 /* padding των name cells */,
+    (width - statsColumnWidth * 2 - 300 /* κέντρο: 115 + 42 + 115 + slack */ - 6 * 4 /* columnGap */ - 24 /* px-3 */) / 2,
   );
-  const maxNameChars = Math.max(12, Math.floor(nameColumnBudgetPx / 2 / (nameFontSize * 0.5)));
+  const maxNameChars = Math.max(10, Math.floor((nameColumnBudgetPx - nameCellChromePx) / nameCharPx));
 
   return (
     <div
@@ -449,10 +451,8 @@ export default function TemplateFiveOverlay({
 
   const availableWidth = containerSize.width || width;
   const availableHeight = containerSize.height || height;
-  // Template 5: η μπάρα πιάνει σχεδόν όλο το πλάτος της όψης (98%, μικρό inset
-  // ασφαλείας). Το επιπλέον πλάτος το απορροφούν οι δύο κολόνες των ονομάτων —
-  // τα auto κελιά του κέντρου και οι στήλες AVG/H.R. μένουν σταθερά.
-  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.98));
+  // Το πλάτος της μπάρας παραμένει όπως ήταν (70% της όψης) — ΔΕΝ μεγαλώνει η μπάρα.
+  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.7));
   const overlayBottom = Math.max(12, Math.round(availableHeight * 0.04));
 
   return (
