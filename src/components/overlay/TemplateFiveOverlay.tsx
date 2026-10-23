@@ -107,10 +107,16 @@ function resolvePlayerAverage(
   return formatAverage(score, playerInnings ?? fallbackInnings ?? 0);
 }
 
-function formatTemplateFivePlayerName(value: string): string {
+/**
+ * Οθόνη ματς: το πλήρες όνομα του παίκτη εμφανίζεται κανονικά. Η σύντμηση
+ * («Επώνυμο Α.») είναι ΜΟΝΟ fallback, όταν το όνομα δεν χωράει πραγματικά στη
+ * κολόνα του (maxChars). Το `truncate` στο span μένει ως τελευταίος φρουρός.
+ */
+function formatTemplateFivePlayerName(value: string, maxChars?: number): string {
   const normalized = value.trim();
   const parts = normalized.split(/\s+/).filter(Boolean);
   if (parts.length <= 1) return normalized;
+  if (!maxChars || maxChars <= 0 || normalized.length <= maxChars) return normalized;
   const surname = parts[0];
   const givenInitial = Array.from(parts[1] ?? "").slice(0, 1).join("").trimEnd();
   return givenInitial ? `${surname} ${givenInitial}.` : surname;
@@ -304,8 +310,18 @@ function TemplateFiveBar({
   const mainBarHeight = 50;
   const overlayHeight = topStripHeight + mainBarHeight;
   const statsColumnWidth = Math.max(92, Math.min(132, Math.round(width * 0.115)));
-  const topStripWidth = Math.max(620, Math.min(width - 20, Math.round(width * 0.86)));
+  // Το top strip ευθυγραμμίζεται με τις άκρες της κύριας μπάρας (ίδιο width).
+  const topStripWidth = width;
   const timeStripWidth = Math.max(240, Math.min(360, Math.round(width * 0.28)));
+  // Πόσοι χαρακτήρες χωρούν σε μία κολόνα ονόματος (το πλάτος του grid δίνεται στη
+  // μπάρα). Μόνο πάνω από αυτό το όριο πέφτουμε στη σύντμηση «Επώνυμο Α.».
+  const nameFontSize = 28;
+  const centerBlockPx = 300; // 115 + 42 + 115.5 (auto κελιά κέντρου) + slack
+  const nameColumnBudgetPx = Math.max(
+    160,
+    width - statsColumnWidth * 2 - centerBlockPx - 6 * 4 /* columnGap */ - 24 /* px-3 */ - 28 /* padding των name cells */,
+  );
+  const maxNameChars = Math.max(12, Math.floor(nameColumnBudgetPx / 2 / (nameFontSize * 0.5)));
 
   return (
     <div
@@ -357,8 +373,8 @@ function TemplateFiveBar({
         <div className="flex min-w-0 items-center justify-end gap-2 overflow-hidden" style={{ paddingRight: 14 }}>
           <CompactTimeoutTicks activeCount={leftTimeouts} totalCount={leftMaxTimeouts} large />
           {leftFlag ? <SmallFlag countryCode={leftFlag} large /> : null}
-          <span className="min-w-0 truncate font-normal leading-none tracking-[0.03em]" style={{ fontSize: 28 }}>
-            {formatTemplateFivePlayerName(leftName)}
+          <span className="min-w-0 truncate font-normal leading-none tracking-[0.03em]" style={{ fontSize: nameFontSize }}>
+            {formatTemplateFivePlayerName(leftName, maxNameChars)}
           </span>
         </div>
 
@@ -387,8 +403,8 @@ function TemplateFiveBar({
         </div>
 
         <div className="flex min-w-0 items-center gap-2 overflow-hidden" style={{ paddingLeft: 14 }}>
-          <span className="min-w-0 truncate font-normal leading-none tracking-[0.03em]" style={{ fontSize: 28 }}>
-            {formatTemplateFivePlayerName(rightName)}
+          <span className="min-w-0 truncate font-normal leading-none tracking-[0.03em]" style={{ fontSize: nameFontSize }}>
+            {formatTemplateFivePlayerName(rightName, maxNameChars)}
           </span>
           {rightFlag ? <SmallFlag countryCode={rightFlag} large /> : null}
           <CompactTimeoutTicks activeCount={rightTimeouts} totalCount={rightMaxTimeouts} reverse large />
@@ -433,7 +449,10 @@ export default function TemplateFiveOverlay({
 
   const availableWidth = containerSize.width || width;
   const availableHeight = containerSize.height || height;
-  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.7));
+  // Template 5: η μπάρα πιάνει σχεδόν όλο το πλάτος της όψης (98%, μικρό inset
+  // ασφαλείας). Το επιπλέον πλάτος το απορροφούν οι δύο κολόνες των ονομάτων —
+  // τα auto κελιά του κέντρου και οι στήλες AVG/H.R. μένουν σταθερά.
+  const overlayWidth = Math.max(360, Math.round(availableWidth * 0.98));
   const overlayBottom = Math.max(12, Math.round(availableHeight * 0.04));
 
   return (
