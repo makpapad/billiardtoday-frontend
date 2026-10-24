@@ -673,6 +673,26 @@ export function LiveClubView({ club, embedded = false }: Props) {
   const itemsRef = React.useRef<LiveScoreItem[]>([]);
   const delayedItemsHistoryRef = React.useRef<Map<string, DelayedLiveScoreEntry[]>>(new Map());
   const liveScoreDelayByScreenIdRef = React.useRef<Record<string, number>>({});
+  // Sticky visibility: οθόνες/συνεδρίες που έκρυψε ο σύλλογος από το checkbox του scoreboard.
+  // Παλιές εκδόσεις της εφαρμογής δεν στέλνουν ΚΑΘΟΛΟΥ isPublic, οπότε ένα τέτοιο score:update
+  // δεν πρέπει να ξαναφέρει αγώνα που κρύφτηκε. Καθαρίζεται μόνο με ρητό isPublic: true.
+  const hiddenByVisibilityRef = React.useRef<Set<string>>(new Set());
+  const visibilityKeysFor = (screenId?: unknown, sessionId?: unknown) => {
+    const keys: string[] = [];
+    const sid = String(screenId ?? "").trim();
+    const sess = String(sessionId ?? "").trim();
+    if (sid) keys.push(`screen:${sid}`);
+    if (sess) keys.push(`session:${sess}`);
+    return keys;
+  };
+  const isHiddenByVisibility = (screenId?: unknown, sessionId?: unknown) =>
+    visibilityKeysFor(screenId, sessionId).some((k) => hiddenByVisibilityRef.current.has(k));
+  const setHiddenByVisibility = (hidden: boolean, screenId?: unknown, sessionId?: unknown) => {
+    visibilityKeysFor(screenId, sessionId).forEach((k) => {
+      if (hidden) hiddenByVisibilityRef.current.add(k);
+      else hiddenByVisibilityRef.current.delete(k);
+    });
+  };
   const sessionSnapshotsRef = React.useRef<Map<string, SessionSnapshot[]>>(new Map());
   const sessionDetailsRef = React.useRef<Map<string, InningDetailEntry[]>>(new Map());
   const sessionTargetsRef = React.useRef<Map<string, { a: number | null; b: number | null }>>(new Map());
@@ -785,6 +805,14 @@ export function LiveClubView({ club, embedded = false }: Props) {
         if (payload.type !== "score:update") return;
         if (String(payload.screenId || "") !== cleanScreenId) return;
         if (payload.isPublic === false) {
+          setHiddenByVisibility(true, cleanScreenId, payload.sessionId);
+          setItems((prev) => prev.filter((item) => item.screenId !== cleanScreenId));
+          return;
+        }
+        if (payload.isPublic === true) {
+          setHiddenByVisibility(false, cleanScreenId, payload.sessionId);
+        } else if (isHiddenByVisibility(cleanScreenId, payload.sessionId)) {
+          // Παλιά έκδοση εφαρμογής: χωρίς isPublic — σεβάσου το κρύψιμο.
           setItems((prev) => prev.filter((item) => item.screenId !== cleanScreenId));
           return;
         }
@@ -985,6 +1013,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
     setItems((prev) => {
       const filtered = prev.filter((item) => {
         if (item.state?.ended) return false;
+        if (isHiddenByVisibility(item.screenId, item.sessionId)) return false;
         if (!item.updatedAt) return true;
         const updatedAtMs = Date.parse(item.updatedAt);
         if (Number.isNaN(updatedAtMs)) return true;
@@ -1196,14 +1225,16 @@ export function LiveClubView({ club, embedded = false }: Props) {
         } as LiveScoreItem;
       });
       
-      if (nextItems.length > 0) {
-        setItems(nextItems);
-        nextItems.forEach((it) => {
+      const visibleItems = nextItems.filter((it) => !isHiddenByVisibility(it.screenId, it.sessionId));
+
+      if (visibleItems.length > 0) {
+        setItems(visibleItems);
+        visibleItems.forEach((it) => {
           if (it.screenId) {
             hydrateFromScreenSnapshot(it.screenId);
           }
         });
-        nextItems.forEach((it) => {
+        visibleItems.forEach((it) => {
           if (!it.sessionId) return;
           if (it.state?.targetPointsA == null || it.state?.targetPointsB == null) {
             void fetchSessionTargetsOnce(it.sessionId);
@@ -1253,7 +1284,7 @@ export function LiveClubView({ club, embedded = false }: Props) {
       const ageMs = typeof parsed.ts === "number" ? Date.now() - parsed.ts : 0;
       // Reject snapshots older than 5 minutes to avoid stale data
       if (ageMs > 5 * 60 * 1000) return;
-      setItems(parsed.items);
+      setItems(parsed.items.filter((it: LiveScoreItem) => !isHiddenByVisibility(it?.screenId, it?.sessionId)));
       console.log('[live view] Hydrated items from storage snapshot');
     } catch (e) {
       console.warn('[live view] Failed to hydrate from storage', e);
@@ -1343,7 +1374,26 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const ended = lifecycleStatus === "finished" || lifecycleStatus === "cancelled";
 
           // Ο σύλλογος έκρυψε τον αγώνα (checkbox στο scoreboard): βγάλε τον από το live.
-          if (sessionObj.isPublic === false) {
+          const lifecycleVisibility =
+            payload.isPublic === undefined || payload.isPublic === null
+              ? sessionObj.isPublic
+              : payload.isPublic;
+          if (lifecycleVisibility === false) {
+            setHiddenByVisibility(true, lifecycleScreenId, lifecycleSessionId);
+            setItems((prev) =>
+              prev.filter(
+                (x) =>
+                  x.sessionId !== lifecycleSessionId &&
+                  x.id !== lifecycleSessionId &&
+                  x.screenId !== lifecycleScreenId,
+              ),
+            );
+            return;
+          }
+          if (lifecycleVisibility === true) {
+            setHiddenByVisibility(false, lifecycleScreenId, lifecycleSessionId);
+          } else if (isHiddenByVisibility(lifecycleScreenId, lifecycleSessionId)) {
+            // Παλιά έκδοση εφαρμογής (χωρίς isPublic): μην ξαναφέρεις κρυμμένο αγώνα.
             setItems((prev) =>
               prev.filter(
                 (x) =>
@@ -1436,6 +1486,14 @@ export function LiveClubView({ club, embedded = false }: Props) {
         if (payload.type === "score:update" && String(payload.clubId) === String(clubId)) {
           // Ο σύλλογος έκρυψε τον αγώνα: ο επόμενος score:update δεν πρέπει να τον ξαναφέρει.
           if (payload.isPublic === false) {
+            setHiddenByVisibility(true, payload.screenId, payload.sessionId);
+            setItems((prev) => prev.filter((x) => x.screenId !== payload.screenId));
+            return;
+          }
+          if (payload.isPublic === true) {
+            setHiddenByVisibility(false, payload.screenId, payload.sessionId);
+          } else if (isHiddenByVisibility(payload.screenId, payload.sessionId)) {
+            // Παλιά έκδοση εφαρμογής (χωρίς isPublic): μην ξαναφέρεις κρυμμένο αγώνα.
             setItems((prev) => prev.filter((x) => x.screenId !== payload.screenId));
             return;
           }

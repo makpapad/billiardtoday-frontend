@@ -785,8 +785,14 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
     };
   }, [item?.screenId, item?.sessionId, loadScreenSession, loadSession, resolvedScreenId, sessionId]);
 
+  // Στο OBS (obsSafe) η πηγή δεν πρέπει να τυπώνει ΤΙΠΟΤΑ όταν δεν υπάρχει δημόσιος αγώνας —
+  // ούτε μήνυμα σφάλματος. Τα μηνύματα μένουν μόνο για έλεγχο σε browser.
+  const emptyOverlay = <div style={{ backgroundColor: "transparent" }} />;
+
   if (!sessionId && !requestedScreenSlug) {
-    return (
+    return obsSafe ? (
+      emptyOverlay
+    ) : (
       <CenteredMessage tone="muted">
         Provide `?session=&lt;id&gt;` or use `/embed/overlay/&lt;screen&gt;`.
       </CenteredMessage>
@@ -794,15 +800,17 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   }
 
   if (loading && !item) {
-    return <CenteredMessage tone="muted">Loading overlay...</CenteredMessage>;
+    return obsSafe ? emptyOverlay : <CenteredMessage tone="muted">Loading overlay...</CenteredMessage>;
   }
 
   if (error && !item) {
-    return <CenteredMessage tone="error">{error}</CenteredMessage>;
+    return obsSafe ? emptyOverlay : <CenteredMessage tone="error">{error}</CenteredMessage>;
   }
 
   if (!item) {
-    return (
+    return obsSafe ? (
+      emptyOverlay
+    ) : (
       <CenteredMessage tone="muted">
         {requestedScreenSlug && !sessionId
           ? "No live data found for this screen."
@@ -813,7 +821,7 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
   // Ο σύλλογος έκρυψε τον αγώνα (checkbox στο scoreboard): κενή οθόνη, χωρίς μήνυμα σφάλματος.
   if (item.isPublic === false) {
-    return <div style={{ backgroundColor: "transparent" }} />;
+    return emptyOverlay;
   }
 
   return (
