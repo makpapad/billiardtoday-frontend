@@ -424,6 +424,7 @@ type LiveScorePayload = {
   activePlayer?: 1 | 2;
   ended?: boolean;
   ts?: number; // Add timestamp property
+  isPublic?: boolean;
   innings?: number;
   progress?: number;
   totalBlocks?: number;
@@ -783,6 +784,10 @@ export function LiveClubView({ club, embedded = false }: Props) {
         if (applyLiveScoreDelayPayload(payload)) return;
         if (payload.type !== "score:update") return;
         if (String(payload.screenId || "") !== cleanScreenId) return;
+        if (payload.isPublic === false) {
+          setItems((prev) => prev.filter((item) => item.screenId !== cleanScreenId));
+          return;
+        }
 
         const players = Array.isArray(payload.players) ? payload.players : [];
         const sessionId = String(payload.sessionId ?? cleanScreenId).trim() || cleanScreenId;
@@ -1337,6 +1342,19 @@ export function LiveClubView({ club, embedded = false }: Props) {
           const lifecycleStatus = payload.status ?? sessionObj.status ?? null;
           const ended = lifecycleStatus === "finished" || lifecycleStatus === "cancelled";
 
+          // Ο σύλλογος έκρυψε τον αγώνα (checkbox στο scoreboard): βγάλε τον από το live.
+          if (sessionObj.isPublic === false) {
+            setItems((prev) =>
+              prev.filter(
+                (x) =>
+                  x.sessionId !== lifecycleSessionId &&
+                  x.id !== lifecycleSessionId &&
+                  x.screenId !== lifecycleScreenId,
+              ),
+            );
+            return;
+          }
+
           if (ended) {
             setItems((prev) =>
               prev.filter(
@@ -1416,6 +1434,12 @@ export function LiveClubView({ club, embedded = false }: Props) {
 
         // Match any score update where the clubId matches
         if (payload.type === "score:update" && String(payload.clubId) === String(clubId)) {
+          // Ο σύλλογος έκρυψε τον αγώνα: ο επόμενος score:update δεν πρέπει να τον ξαναφέρει.
+          if (payload.isPublic === false) {
+            setItems((prev) => prev.filter((x) => x.screenId !== payload.screenId));
+            return;
+          }
+
           // Ignore placeholder games (Player 1/Player 2) - these are stale cached payloads
           const hasPlaceholderNames = payload.players?.every((p) => isPlaceholderPlayerName(p?.name));
           

@@ -303,6 +303,7 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
   return {
     id: sessionId,
     sessionId,
+    isPublic: attrs?.isPublic !== false,
     screenId: attrs?.screenIdentifier ?? null,
     liveVideos: normalizeLiveVideoEntries(
       attrs?.liveVideos ?? attrs?.live_videos ?? attrs?.youtubeVideoId ?? attrs?.videoId,

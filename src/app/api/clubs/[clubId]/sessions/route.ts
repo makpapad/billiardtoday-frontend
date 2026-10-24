@@ -36,6 +36,11 @@ export async function GET(
     const rows = await fetchScoreboardSessionRows(statuses);
     const data = rows
       .filter((row: Record<string, unknown>) => matchesClub(row, club))
+      .filter((row: Record<string, unknown>) => {
+        const attrs =
+          (row?.attributes as Record<string, unknown> | undefined) ?? row;
+        return attrs?.isPublic !== false;
+      })
       .map((row: Record<string, unknown>) => normalizeLiveSessionRow(row));
 
     return NextResponse.json({ data }, { status: 200 });

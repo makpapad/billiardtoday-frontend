@@ -61,6 +61,7 @@ type LiveScoreItem = {
   id: string;
   sessionId: string;
   screenId?: string | null;
+  isPublic?: boolean;
   updatedAt?: string | null;
   clubId?: string | number | null;
   clubName?: string | null;
@@ -74,6 +75,7 @@ type SessionApiRecord = {
   sessionId?: string | number | null;
   screenId?: string | null;
   screenIdentifier?: string | null;
+  isPublic?: boolean | null;
   updatedAt?: string | null;
   clubId?: string | number | null;
   clubName?: string | null;
@@ -148,6 +150,8 @@ type WsPayload = {
   stageTitle?: string | null;
   tableName?: string | null;
   tableNumber?: string | null;
+  // Ορατότητα αγώνα (checkbox στο scoreboard). Αν λείπει → ορατό (παλιές εκδόσεις app).
+  isPublic?: boolean | null;
 };
 
 const DEFAULT_WIDTH = 540;
@@ -268,6 +272,7 @@ function normalizeSessionRecord(input: SessionApiRecord | null | undefined, fall
   return {
     id: normalizeString(input.id) ?? sessionId,
     sessionId,
+    isPublic: input.isPublic !== false,
     screenId: normalizeString(input.screenId) ?? normalizeString(input.screenIdentifier),
     updatedAt: normalizeString(input.updatedAt),
     clubId: input.clubId ?? null,
@@ -364,6 +369,10 @@ function applyWsUpdate(item: LiveScoreItem, payload: WsPayload): LiveScoreItem {
     ...item,
     updatedAt: new Date().toISOString(),
     screenId: normalizeString(payload.screenId) ?? item.screenId,
+    isPublic:
+      payload.isPublic === undefined || payload.isPublic === null
+        ? item.isPublic
+        : Boolean(payload.isPublic),
     state: {
       ...item.state,
       scoreA: nextScoreA,
@@ -454,6 +463,7 @@ function buildLiveItemFromWsPayload(
     id: `${WS_ONLY_ITEM_PREFIX}${screenId}`,
     sessionId: normalizeString(payload.sessionId) ?? "",
     screenId,
+    isPublic: undefined,
     updatedAt: new Date().toISOString(),
     clubId: null,
     clubName: null,
@@ -799,6 +809,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
           : "No live data found for this session."}
       </CenteredMessage>
     );
+  }
+
+  // Ο σύλλογος έκρυψε τον αγώνα (checkbox στο scoreboard): κενή οθόνη, χωρίς μήνυμα σφάλματος.
+  if (item.isPublic === false) {
+    return <div style={{ backgroundColor: "transparent" }} />;
   }
 
   return (
