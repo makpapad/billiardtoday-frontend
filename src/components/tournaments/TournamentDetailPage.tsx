@@ -5045,7 +5045,7 @@ export function TournamentDetailPage({
     const stages = toRelationArray(eventData?.data?.event_stages);
 
     stages.forEach((stage, stageIndex) => {
-      const normalizedStage = normalizeEntity<{ groups?: unknown }>(
+      const normalizedStage = normalizeEntity<{ groups?: unknown; results?: unknown }>(
         stage,
         `participant-stage-${stageIndex + 1}`,
       );
@@ -5092,6 +5092,56 @@ export function TournamentDetailPage({
             seriesRank: null,
             seriesTotalPoints: 0,
           });
+        });
+      });
+
+      // Φάσεις ΧΩΡΙΣ ζευγάρια αγώνων (π.χ. φάση με θέσεις/placeholders πρόκρισης):
+      // οι συμμετέχοντες υπάρχουν ως αποτελέσματα φάσης. Χωρίς αυτό, η σελίδα έδειχνε
+      // μόνο όσους είχαν ήδη αγώνα (η πρώτη φάση) και όχι όλους όσους θα παίξουν.
+      const stageResults = toRelationArray(
+        (normalizedStage as { results?: unknown }).results,
+      );
+      stageResults.forEach((result, resultIndex) => {
+        const normalizedResult = normalizeEntity<{ player?: unknown }>(
+          result,
+          `derived-result-${resultIndex + 1}`,
+        );
+        if (!normalizedResult.player) return;
+        const normalizedPlayer = normalizeEntity<{
+          full_name?: unknown;
+          full_name_en?: unknown;
+          country?: unknown;
+          birth_date?: unknown;
+        }>(normalizedResult.player, `derived-result-player-${resultIndex + 1}`);
+        if (uniquePlayers.has(normalizedPlayer.id)) return;
+        const name =
+          typeof normalizedPlayer.full_name_en === "string" && normalizedPlayer.full_name_en.trim()
+            ? normalizedPlayer.full_name_en.trim()
+            : typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
+              ? normalizedPlayer.full_name.trim()
+              : `Player ${uniquePlayers.size + 1}`;
+        const country =
+          typeof normalizedPlayer.country === "string" && normalizedPlayer.country.trim()
+            ? normalizedPlayer.country.trim()
+            : null;
+        const photoUrl =
+          normalizeMediaUrl(
+            (normalizedPlayer as { photo_main?: { url?: unknown } | unknown }).photo_main,
+          ) ??
+          photoFallbackByPlayerKey.get(normalizedPlayer.documentId ?? "") ??
+          photoFallbackByPlayerKey.get(normalizedPlayer.id) ??
+          null;
+        uniquePlayers.set(normalizedPlayer.id, {
+          id: normalizedPlayer.id,
+          documentId: normalizedPlayer.documentId ?? null,
+          name,
+          country,
+          photoUrl,
+          birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
+          registrationOrder: uniquePlayers.size,
+          stableDisplayNumber: uniquePlayers.size + 1,
+          seriesRank: null,
+          seriesTotalPoints: 0,
         });
       });
     });
@@ -7106,7 +7156,7 @@ export function TournamentDetailPage({
               setSelectedStageDocumentId(stageDocumentId);
             }}
             showPublishedFinalResults={tournamentPanelMode === "finals"}
-            showTimetable={false}
+            showTimetable
             stageViewMode={overviewMode}
             koRankingRound={koRankingRound}
             onKoRankingRoundChange={handleKoRankingRoundChange}
