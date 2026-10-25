@@ -547,6 +547,9 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   const [item, setItem] = React.useState<LiveScoreItem | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Ξεχωριστό από το `error`: το effect ~line 700 το σβήνει (`setError(null)`) όταν δεν υπάρχει
+  // resolved screen/session, οπότε ένα σφάλμα ανάλυσης ονόματος χανόταν πριν προλάβει να φανεί.
+  const [resolveError, setResolveError] = React.useState<string | null>(null);
   const [resolvedScreenId, setResolvedScreenId] = React.useState<string | null>(null);
   const [breakStatsOpen, setBreakStatsOpen] = React.useState(false);
 
@@ -642,10 +645,12 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
   React.useEffect(() => {
     if (sessionId) {
       setResolvedScreenId(null);
+      setResolveError(null);
       return;
     }
     if (!requestedScreenSlug) {
       setResolvedScreenId(null);
+      setResolveError(null);
       return;
     }
 
@@ -657,10 +662,22 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
           { cache: "no-store" },
         );
         const payload = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        // Διφορούμενο όνομα (δύο οθόνες με το ίδιο `name`): ΔΕΝ μαντεύουμε ποια εννοεί —
+        // 409 από το route, κενή οθόνη στο OBS και καθαρό μήνυμα σε browser.
+        if (response.status === 409) {
+          setResolveError(
+            normalizeString(payload?.error) ??
+              `Ambiguous screen name "${requestedScreenSlug}" — use the screen identifier.`,
+          );
+          setResolvedScreenId(null);
+          return;
+        }
         if (!response.ok) {
           setResolvedScreenId(requestedScreenSlug);
           return;
         }
+        setResolveError(null);
         const identifier = normalizeString(payload?.data?.identifier);
         setResolvedScreenId(identifier ?? requestedScreenSlug);
       } catch {
@@ -801,6 +818,11 @@ export default function ObsOverlayClient({ searchParams }: ObsOverlayClientProps
 
   if (loading && !item) {
     return obsSafe ? emptyOverlay : <CenteredMessage tone="muted">Loading overlay...</CenteredMessage>;
+  }
+
+  // Διφορούμενο όνομα οθόνης (2+ οθόνες με το ίδιο name): τίποτα στο OBS, μήνυμα σε browser.
+  if (resolveError && !item) {
+    return obsSafe ? emptyOverlay : <CenteredMessage tone="error">{resolveError}</CenteredMessage>;
   }
 
   if (error && !item) {

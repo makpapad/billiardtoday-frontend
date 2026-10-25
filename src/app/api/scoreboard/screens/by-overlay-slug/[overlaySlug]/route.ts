@@ -40,14 +40,27 @@ async function parseJsonSafe(response: Response): Promise<unknown> {
   }
 }
 
+type ScreenCandidate = { identifier: string; name: string | null };
+
+type ScreenResolution =
+  | { status: "ok"; payload: Record<string, unknown> }
+  | { status: "ambiguous"; candidates: ScreenCandidate[] }
+  | { status: "not_found" };
+
+// Το `name` ΔΕΝ είναι μοναδικό στο Strapi (μοναδικό είναι μόνο το `identifier`) — 3 οθόνες
+// μοιράζονται ήδη όνομα (Europe-S4, Kolonos-S3, Legend). Με παραπάνω από ένα ταιριάσματα ΔΕΝ
+// μαντεύουμε: ο caller παίρνει 409 και ζητά identifier, αλλιώς το overlay δείχνει σιωπηλά
+// τον αγώνα άλλης οθόνης (η σειρά του Postgres αλλάζει με κάθε update/restore).
+const MAX_RESOLUTION_ROWS = 10;
+
 async function resolveScreenByIdentifierOrName(
   value: string,
   headers: Record<string, string>,
-): Promise<Record<string, unknown> | null> {
+): Promise<ScreenResolution> {
   const params = new URLSearchParams();
   params.set("filters[$or][0][identifier][$eq]", value);
   params.set("filters[$or][1][name][$eqi]", value);
-  params.set("pagination[pageSize]", "2");
+  params.set("pagination[pageSize]", String(MAX_RESOLUTION_ROWS));
   params.set("sort[0]", "isActive:desc");
   params.set("sort[1]", "name:asc");
   params.append("fields[0]", "identifier");
@@ -58,25 +71,44 @@ async function resolveScreenByIdentifierOrName(
     cache: "no-store",
     headers,
   });
-  if (!response.ok) return null;
+  if (!response.ok) return { status: "not_found" };
 
   const payload = await parseJsonSafe(response);
   const rows = Array.isArray(asRecord(payload)?.data) ? (asRecord(payload)?.data as unknown[]) : [];
-  const exactIdentifierMatch = rows
+  const nodes = rows
     .map((row) => unwrapNode(row))
-    .find((node) => asString(node?.identifier) === value);
-  const exactNameMatch = rows
-    .map((row) => unwrapNode(row))
-    .find((node) => asString(node?.name)?.toLowerCase() === value.toLowerCase());
-  const node = exactIdentifierMatch ?? exactNameMatch ?? unwrapNode(rows[0]);
-  const identifier = asString(node?.identifier);
-  if (!identifier) return null;
+    .filter((node): node is Record<string, unknown> => Boolean(asString(node?.identifier)));
 
+  // Το identifier κερδίζει πάντα (είναι μοναδικό) — ακόμη κι αν κάποια οθόνη λέγεται έτσι.
+  const exactIdentifierMatch = nodes.find((node) => asString(node?.identifier) === value);
+  if (exactIdentifierMatch) return okResolution(exactIdentifierMatch);
+
+  const wantedName = value.toLowerCase();
+  const nameMatches = nodes.filter((node) => asString(node?.name)?.toLowerCase() === wantedName);
+  if (nameMatches.length > 1) {
+    return {
+      status: "ambiguous",
+      candidates: nameMatches.map((node) => ({
+        identifier: asString(node?.identifier) as string,
+        name: asString(node?.name),
+      })),
+    };
+  }
+
+  const node = nameMatches[0] ?? (nodes.length === 1 ? nodes[0] : null);
+  if (!node) return { status: "not_found" };
+  return okResolution(node);
+}
+
+function okResolution(node: Record<string, unknown>): ScreenResolution {
   return {
-    data: {
-      identifier,
-      name: asString(node?.name),
-      isActive: typeof node?.isActive === "boolean" ? node.isActive : null,
+    status: "ok",
+    payload: {
+      data: {
+        identifier: asString(node?.identifier),
+        name: asString(node?.name),
+        isActive: typeof node?.isActive === "boolean" ? node.isActive : null,
+      },
     },
   };
 }
@@ -110,9 +142,22 @@ export async function GET(_: Request, context: RouteContext) {
       return NextResponse.json(payload, { status: response.status });
     }
 
-    const fallbackPayload = await resolveScreenByIdentifierOrName(overlaySlug, headers);
-    if (fallbackPayload) {
-      return NextResponse.json(fallbackPayload);
+    const fallback = await resolveScreenByIdentifierOrName(overlaySlug, headers);
+    if (fallback.status === "ok") {
+      return NextResponse.json(fallback.payload);
+    }
+    if (fallback.status === "ambiguous") {
+      const identifiers = fallback.candidates.map((candidate) => candidate.identifier);
+      return NextResponse.json(
+        {
+          code: "AMBIGUOUS_SCREEN_NAME",
+          error:
+            `Ambiguous screen name "${overlaySlug}": ${identifiers.length} screens share it ` +
+            `(${identifiers.join(", ")}). Use the screen identifier in the overlay URL.`,
+          matches: fallback.candidates,
+        },
+        { status: 409 },
+      );
     }
 
     return NextResponse.json(
