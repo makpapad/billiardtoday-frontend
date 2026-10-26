@@ -15,6 +15,7 @@ import {
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 import { TeamGroupResults } from "@/components/teamTournaments/TeamGroupResults";
+import { TeamStatisticsPanel } from "@/components/teamTournaments/TeamStatisticsPanel";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 
@@ -29,7 +30,7 @@ type Props = {
 type StageKey = "qualifications" | "final";
 type ViewKey = "matches" | "ranking";
 /** Τα πλαίσια του hero menu — ίδια λογική με τη σελίδα ατομικού τουρνουά. */
-type PanelKey = "tournament" | "timetable" | "finals" | "participants" | "info";
+type PanelKey = "tournament" | "timetable" | "stats" | "finals" | "participants" | "info";
 
 const formatSeason = (season: number | null): string | null => {
   if (season === null || !Number.isFinite(season)) return null;
@@ -849,6 +850,12 @@ export function TeamTournamentDetailClient({
                     onClick={() => setPanel("timetable")}
                   />
                   <HeroMenuButton
+                    label="Statistics"
+                    iconSrc="/icons%20webp/stats1.webp"
+                    active={panel === "stats"}
+                    onClick={() => setPanel("stats")}
+                  />
+                  <HeroMenuButton
                     label="Final standings"
                     iconSrc="/icons%20webp/finalrank1.webp"
                     active={panel === "finals"}
@@ -1027,11 +1034,6 @@ export function TeamTournamentDetailClient({
 
         {panel === "tournament" && detail !== null && stage === "qualifications" && view === "ranking" ? (
           <div className="flex flex-col gap-6">
-            <QualificationRankingTable
-              rows={allStandingRows}
-              groups={groups}
-              biathlon={biathlon}
-            />
             {sortedGroups.map((group) => (
               <GroupStandingsTable
                 key={group.documentId || group.groupKey}
@@ -1043,6 +1045,11 @@ export function TeamTournamentDetailClient({
                 )}
               />
             ))}
+            <QualificationRankingTable
+              rows={allStandingRows}
+              groups={groups}
+              biathlon={biathlon}
+            />
           </div>
         ) : null}
 
@@ -1071,6 +1078,11 @@ export function TeamTournamentDetailClient({
               </div>
             )}
           </div>
+        ) : null}
+
+        {/* Statistics — ομαδικά & αθλητές, από τα καταχωρημένα αποτελέσματα. */}
+        {panel === "stats" ? (
+          <TeamStatisticsPanel matches={matches} groupCount={sortedGroups.length} />
         ) : null}
 
         {/* Time Table — ό,τι ξέρουμε για κάθε συνάντηση, σε μία λίστα. */}
