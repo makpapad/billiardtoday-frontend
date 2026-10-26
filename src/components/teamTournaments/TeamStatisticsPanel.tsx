@@ -83,48 +83,6 @@ export function TeamStatisticsPanel({ matches, groupCount }: Props) {
         <>
           <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
             <div className="border-b border-slate-200 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              Ομαδικά
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[12.5px]">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500">
-                    <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
-                    <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
-                    <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                    <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
-                    <th title="Μεγαλύτερη σειρά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
-                    <th title="Βαθμοί" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teams.map((row, index) => (
-                    <tr key={`${row.groupKey}-${row.teamName}`} className="border-t border-slate-100">
-                      <td className="px-2 py-2 text-center text-slate-400">{index + 1}</td>
-                      <th scope="row" className="max-w-[260px] px-2 py-2 text-left text-[12px] font-bold text-slate-900">
-                        {row.teamName}
-                      </th>
-                      <td className="px-2 py-2 text-center text-slate-600">{row.played}</td>
-                      <td className="px-2 py-2 text-center text-slate-600">{row.caroms}</td>
-                      <td className="px-2 py-2 text-center text-slate-600">{row.innings}</td>
-                      <td className="px-2 py-2 text-center font-semibold text-slate-800">{avgText(row.avg)}</td>
-                      <td className="px-2 py-2 text-center text-slate-600">
-                        {row.boardDiff > 0 ? `+${row.boardDiff}` : row.boardDiff}
-                      </td>
-                      <td className="px-2 py-2 text-center text-slate-600">{row.highRun || "—"}</td>
-                      <td className="px-2 py-2 text-center font-extrabold text-slate-900">{row.leaguePoints}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
-            <div className="border-b border-slate-200 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500">
               Αθλητές
             </div>
             <div className="overflow-x-auto">
@@ -170,6 +128,48 @@ export function TeamStatisticsPanel({ matches, groupCount }: Props) {
               </table>
             </div>
           </div>
+          <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              Ομαδικά
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500">
+                    <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
+                    <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
+                    <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
+                    <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                    <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
+                    <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
+                    <th title="Μεγαλύτερη σειρά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                    <th title="Βαθμοί" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teams.map((row, index) => (
+                    <tr key={`${row.groupKey}-${row.teamName}`} className="border-t border-slate-100">
+                      <td className="px-2 py-2 text-center text-slate-400">{index + 1}</td>
+                      <th scope="row" className="max-w-[260px] px-2 py-2 text-left text-[12px] font-bold text-slate-900">
+                        {row.teamName}
+                      </th>
+                      <td className="px-2 py-2 text-center text-slate-600">{row.played}</td>
+                      <td className="px-2 py-2 text-center text-slate-600">{row.caroms}</td>
+                      <td className="px-2 py-2 text-center text-slate-600">{row.innings}</td>
+                      <td className="px-2 py-2 text-center font-semibold text-slate-800">{avgText(row.avg)}</td>
+                      <td className="px-2 py-2 text-center text-slate-600">
+                        {row.boardDiff > 0 ? `+${row.boardDiff}` : row.boardDiff}
+                      </td>
+                      <td className="px-2 py-2 text-center text-slate-600">{row.highRun || "—"}</td>
+                      <td className="px-2 py-2 text-center font-extrabold text-slate-900">{row.leaguePoints}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </>
       )}
     </div>
