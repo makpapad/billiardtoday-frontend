@@ -31,17 +31,17 @@ export function GroupStandingsPanel({
   rows: ComputedStandingRow[];
 }) {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:sticky lg:top-4">
+    <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:sticky lg:top-[104px] lg:flex lg:max-h-[calc(100vh-120px)] lg:flex-col">
       <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
         <h3 className="text-[15px] font-semibold tracking-tight text-slate-950">
           {group.title || `Όμιλος ${group.groupKey}`}
         </h3>
         <span className="text-[11px] text-slate-500">Βαθμολογία ομίλου</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="min-h-0 overflow-x-auto lg:flex-1 lg:overflow-y-auto">
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
-            <tr className="bg-slate-50 text-slate-500">
+            <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
               <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
               <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
               <th title="Αγώνες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Α</th>
