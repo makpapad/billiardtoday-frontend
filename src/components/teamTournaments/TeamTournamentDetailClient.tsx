@@ -4,18 +4,17 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
-import { Calendar, ChevronDown, Trophy, Users } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import {
-  formatAvg,
   type ComputedStandingRow,
   type NormalizedTeamMatch,
   type TeamGroup,
-  type TeamMatchSet,
   type TeamTournamentDetail,
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
+import { TeamGroupResults } from "@/components/teamTournaments/TeamGroupResults";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 
@@ -47,20 +46,6 @@ const formatDate = (value: string | null): string | null => {
     year: "numeric",
   });
 };
-
-/** 3-Cushion board inside a biathlon match: avg = caroms/innings, stored x4. */
-const isCaromBoardIndex = (
-  summary: TeamTournamentSummary | null,
-  boardIndex: number | null,
-): boolean => {
-  const boardsPerMatch = Number(summary?.config?.boardsPerMatch);
-  return boardsPerMatch === 2 && boardIndex === 2;
-};
-
-const isCompleted = (match: NormalizedTeamMatch): boolean =>
-  match.status === "completed" ||
-  (match.computed.boardCount > 0 &&
-    (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
 
 /** Show declared teams (zeros) before any match completes, like a squad list. */
 const resolveStandingRows = (
@@ -355,193 +340,10 @@ function QualificationRankingTable({
   );
 }
 
-function SetRow({
-  set,
-  summary,
-}: {
-  set: TeamMatchSet;
-  summary: TeamTournamentSummary | null;
-}) {
-  const home = set.homePoints ?? 0;
-  const away = set.awayPoints ?? 0;
-  const homeWin = home > away;
-  const awayWin = away > home;
-  const caromBoard = isCaromBoardIndex(summary, set.boardIndex);
-
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 text-xs dark:bg-gray-900/60">
-      <div className="truncate text-right font-medium text-gray-800 dark:text-gray-200">
-        {homeWin ? (
-          <span className="font-bold">{set.homePlayerName || "—"}</span>
-        ) : (
-          set.homePlayerName || "—"
-        )}
-      </div>
-      <div className="shrink-0 px-2 text-center">
-        <div className="font-bold text-gray-900 dark:text-gray-100">
-          {home}–{away}
-        </div>
-        <div className="text-[10px] text-gray-400">
-          {set.homeInnings ?? "-"}/{set.awayInnings ?? "-"} inn · HR{" "}
-          {set.homeHighRun ?? 0}/{set.awayHighRun ?? 0}
-        </div>
-        <div className="text-[10px] text-gray-400">
-          AVG {formatAvg(set.homePoints ?? 0, set.homeInnings ?? 0, caromBoard)}/
-          {formatAvg(set.awayPoints ?? 0, set.awayInnings ?? 0, caromBoard)}
-        </div>
-      </div>
-      <div className="truncate text-left font-medium text-gray-800 dark:text-gray-200">
-        {awayWin ? (
-          <span className="font-bold">{set.awayPlayerName || "—"}</span>
-        ) : (
-          set.awayPlayerName || "—"
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MatchCard({
-  match,
-  summary,
-}: {
-  match: NormalizedTeamMatch;
-  summary: TeamTournamentSummary | null;
-}) {
-  const completed = isCompleted(match);
-  const [expanded, setExpanded] = useState(false);
-  const biathlon = summary?.config?.mode === "biathlon";
-  // Biathlon (C/27): winner decided by TOT (5P + 3C total points), not boards.
-  const homeScore = biathlon
-    ? match.computed.homeTotalPoints
-    : match.computed.homeBoardPoints;
-  const awayScore = biathlon
-    ? match.computed.awayTotalPoints
-    : match.computed.awayBoardPoints;
-  const homeWon = completed && homeScore > awayScore;
-  const awayWon = completed && awayScore > homeScore;
-  const draw = completed && homeScore === awayScore;
-  const dateLabel = formatDate(match.matchDate);
-
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-[11px] text-gray-500 dark:text-gray-400">
-        <span className="capitalize">Stage {match.stage}</span>
-        <span>Round {match.round ?? "-"}</span>
-        {dateLabel ? (
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="h-3 w-3" /> {dateLabel}
-          </span>
-        ) : null}
-        {!completed ? (
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
-            {match.status}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="flex items-center gap-3 px-4 pb-3">
-        <div
-          className={clsx(
-            "min-w-0 flex-1 truncate text-right text-sm font-semibold",
-            homeWon
-              ? "text-gray-900 dark:text-gray-50"
-              : "text-gray-600 dark:text-gray-300",
-          )}
-        >
-          {match.homeTeamName}
-        </div>
-        <div className="shrink-0 rounded-lg bg-gray-100 px-3 py-1 text-center dark:bg-gray-900/70">
-          <div className="text-sm font-black text-gray-900 dark:text-gray-100">
-            {completed ? `${homeScore}–${awayScore}` : "–"}
-          </div>
-          {completed ? (
-            <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-              {biathlon
-                ? homeWon
-                  ? "2–0"
-                  : awayWon
-                    ? "0–2"
-                    : "1–1"
-                : draw
-                  ? "1–1"
-                  : homeWon
-                    ? "2–0"
-                    : "0–2"}
-            </div>
-          ) : null}
-        </div>
-        <div
-          className={clsx(
-            "min-w-0 flex-1 truncate text-left text-sm font-semibold",
-            awayWon
-              ? "text-gray-900 dark:text-gray-50"
-              : "text-gray-600 dark:text-gray-300",
-          )}
-        >
-          {match.awayTeamName}
-        </div>
-      </div>
-
-      {match.sets.length > 0 ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="flex w-full items-center justify-center gap-1 border-t border-gray-100 px-4 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-800 dark:border-gray-700/60 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <ChevronDown
-              className={clsx("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
-            />
-            Games ({match.sets.length})
-          </button>
-          {expanded ? (
-            <div className="flex flex-col gap-1.5 border-t border-gray-100 px-4 py-3 dark:border-gray-700/60">
-              {match.sets.map((set) => (
-                <SetRow
-                  key={set.documentId || `${set.boardIndex}-${set.homePoints}-${set.awayPoints}`}
-                  set={set}
-                  summary={summary}
-                />
-              ))}
-            </div>
-          ) : null}
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function MatchesByGroup({
-  group,
-  matches,
-  summary,
-}: {
-  group: TeamGroup;
-  matches: NormalizedTeamMatch[];
-  summary: TeamTournamentSummary | null;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-        {group.title || `Group ${group.groupKey}`}
-      </div>
-      {matches.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-          No matches yet.
-        </div>
-      ) : (
-        matches.map((match) => (
-          <MatchCard
-            key={match.documentId || `${match.id}-${match.homeTeamId}-${match.awayTeamId}`}
-            match={match}
-            summary={summary}
-          />
-        ))
-      )}
-    </div>
-  );
-}
+const isCompleted = (match: NormalizedTeamMatch): boolean =>
+  match.status === "completed" ||
+  (match.computed.boardCount > 0 &&
+    (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
 
 /** Single KO match card — teams + TOT score, winner highlighted. */
 function KoMatchCard({
@@ -808,6 +610,8 @@ export function TeamTournamentDetailClient({
   const [stage, setStage] = useState<StageKey>("qualifications");
   const [view, setView] = useState<ViewKey>("matches");
   const [panel, setPanel] = useState<PanelKey>("tournament");
+  /** Ο επιλεγμένος όμιλος στα αποτελέσματα (πρώτος όμιλος εξ ορισμού). */
+  const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
 
   const summary = detail?.summary ?? null;
   const groups = detail?.groups ?? [];
@@ -884,9 +688,19 @@ export function TeamTournamentDetailClient({
       list.push(m);
       map.set(key, list);
     });
-    map.forEach((list) => list.sort((a, b) => (a.round ?? 0) - (b.round ?? 0)));
+    // Νεότερη αγωνιστική πρώτη — τα μπλοκ που βλέπει πρώτα ο επισκέπτης
+    // είναι τα πιο πρόσφατα αποτελέσματα.
+    map.forEach((list) => list.sort((a, b) => (b.round ?? 0) - (a.round ?? 0)));
     return map;
   }, [matches]);
+
+  const activeGroup = useMemo(
+    () =>
+      sortedGroups.find((group) => group.groupKey === activeGroupKey) ??
+      sortedGroups[0] ??
+      null,
+    [activeGroupKey, sortedGroups],
+  );
 
   // Knockout matches: stage "ko" (team module) or QF/SF/F group keys.
   const koMatches = useMemo(
@@ -1171,20 +985,42 @@ export function TeamTournamentDetailClient({
         ) : null}
 
         {panel === "tournament" && detail !== null && stage === "qualifications" && view === "matches" ? (
-          <div className="flex flex-col gap-6">
-            {sortedGroups.length === 0 ? (
+          <div className="flex flex-col gap-4">
+            {sortedGroups.length === 0 || activeGroup === null ? (
               <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                 No matches yet.
               </div>
             ) : (
-              sortedGroups.map((group) => (
-                <MatchesByGroup
-                  key={group.documentId || group.groupKey}
-                  group={group}
-                  matches={matchesByGroupKey.get(group.groupKey) ?? []}
+              <>
+                {sortedGroups.length > 1 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {sortedGroups.map((group) => (
+                      <button
+                        key={group.documentId || group.groupKey}
+                        type="button"
+                        onClick={() => setActiveGroupKey(group.groupKey)}
+                        aria-pressed={activeGroup.groupKey === group.groupKey}
+                        className={
+                          activeGroup.groupKey === group.groupKey
+                            ? "rounded-full border border-sky-600 bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 transition"
+                            : "rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 transition hover:text-slate-800"
+                        }
+                      >
+                        {group.title || `Group ${group.groupKey}`}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <TeamGroupResults
+                  group={activeGroup}
+                  matches={matchesByGroupKey.get(activeGroup.groupKey) ?? []}
+                  standings={resolveStandingRows(
+                    activeGroup,
+                    standingsByGroup[activeGroup.groupKey] ?? [],
+                  )}
                   summary={summary}
                 />
-              ))
+              </>
             )}
           </div>
         ) : null}
