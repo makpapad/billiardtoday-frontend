@@ -31,7 +31,7 @@ export function GroupStandingsPanel({
   rows: ComputedStandingRow[];
 }) {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:sticky lg:top-[104px] lg:flex lg:max-h-[calc(100vh-120px)] lg:flex-col">
+    <div className="lg:flex lg:max-h-[calc(100vh-150px)] lg:flex-col">
       <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
         <h3 className="text-[15px] font-semibold tracking-tight text-slate-950">
           {group.title || `Όμιλος ${group.groupKey}`}
@@ -108,11 +108,17 @@ export function GroupStandingsPanel({
 
 export function TeamGroupResults({
   group,
+  groups,
+  activeGroupKey,
+  onSelectGroup,
   matches,
   standings,
   summary,
 }: {
   group: TeamGroup;
+  groups: TeamGroup[];
+  activeGroupKey: string;
+  onSelectGroup: (groupKey: string) => void;
   matches: NormalizedTeamMatch[];
   standings: ComputedStandingRow[];
   summary: TeamTournamentSummary | null;
@@ -155,7 +161,28 @@ export function TeamGroupResults({
           )
         )}
       </div>
-      <GroupStandingsPanel group={group} rows={standings} />
+      <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-[104px]">
+        {groups.length > 1 ? (
+          <div className="flex flex-wrap gap-1.5 rounded-[16px] border border-slate-200 bg-white px-2.5 py-2">
+            {groups.map((item) => (
+              <button
+                key={item.documentId || item.groupKey}
+                type="button"
+                onClick={() => onSelectGroup(item.groupKey)}
+                aria-pressed={item.groupKey === activeGroupKey}
+                className={
+                  item.groupKey === activeGroupKey
+                    ? "rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-bold text-white transition"
+                    : "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-800"
+                }
+              >
+                {item.title || `Όμιλος ${item.groupKey}`}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <GroupStandingsPanel group={group} rows={standings} />
+      </div>
     </div>
   );
 }

@@ -962,36 +962,18 @@ export function TeamTournamentDetailClient({
                 No matches yet.
               </div>
             ) : (
-              <>
-                {sortedGroups.length > 1 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {sortedGroups.map((group) => (
-                      <button
-                        key={group.documentId || group.groupKey}
-                        type="button"
-                        onClick={() => setActiveGroupKey(group.groupKey)}
-                        aria-pressed={activeGroup.groupKey === group.groupKey}
-                        className={
-                          activeGroup.groupKey === group.groupKey
-                            ? "rounded-full border border-sky-600 bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 transition"
-                            : "rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 transition hover:text-slate-800"
-                        }
-                      >
-                        {group.title || `Group ${group.groupKey}`}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-                <TeamGroupResults
-                  group={activeGroup}
-                  matches={matchesByGroupKey.get(activeGroup.groupKey) ?? []}
-                  standings={resolveStandingRows(
-                    activeGroup,
-                    standingsByGroup[activeGroup.groupKey] ?? [],
-                  )}
-                  summary={summary}
-                />
-              </>
+              <TeamGroupResults
+                group={activeGroup}
+                groups={sortedGroups}
+                activeGroupKey={activeGroup.groupKey}
+                onSelectGroup={setActiveGroupKey}
+                matches={matchesByGroupKey.get(activeGroup.groupKey) ?? []}
+                standings={resolveStandingRows(
+                  activeGroup,
+                  standingsByGroup[activeGroup.groupKey] ?? [],
+                )}
+                summary={summary}
+              />
             )}
           </div>
         ) : null}
