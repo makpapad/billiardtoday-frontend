@@ -157,8 +157,9 @@ export function TeamMatchBlock({
         </div>
       </div>
 
-      {/* Στατιστικά ομάδων */}
-      <div className="overflow-x-auto">
+      {/* Στατιστικά ομάδων — εμφανίζονται μαζί με τα αναλυτικά */}
+      {open ? (
+        <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
             <tr className="bg-[#94dcf8] text-slate-950">
@@ -202,12 +203,13 @@ export function TeamMatchBlock({
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      ) : null}
 
       {/* Αναλυτικά ανά αθλητή — κλειστά εξ ορισμού */}
       <div className="flex items-center justify-center gap-1.5 border-t border-slate-200 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500">
         <span className={clsx("inline-block transition-transform", open && "rotate-180")}>▾</span>
-        Αναλυτικά ανά αθλητή
+        Αναλυτικά αγώνα
         <span className="font-semibold normal-case tracking-normal text-slate-400">
           ({match.sets.length} παρτίδες)
         </span>
