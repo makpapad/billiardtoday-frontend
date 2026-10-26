@@ -16,6 +16,7 @@ import {
 } from "@/lib/teamTournaments";
 import { TeamGroupResults } from "@/components/teamTournaments/TeamGroupResults";
 import { TeamStatisticsPanel } from "@/components/teamTournaments/TeamStatisticsPanel";
+import { TeamTimetablePanel } from "@/components/teamTournaments/TeamTimetablePanel";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 
@@ -35,17 +36,6 @@ type PanelKey = "tournament" | "timetable" | "stats" | "finals" | "participants"
 const formatSeason = (season: number | null): string | null => {
   if (season === null || !Number.isFinite(season)) return null;
   return `${season}-${(season + 1) % 100}`;
-};
-
-const formatDate = (value: string | null): string | null => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("el-GR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 };
 
 /** Show declared teams (zeros) before any match completes, like a squad list. */
@@ -761,32 +751,6 @@ export function TeamTournamentDetailClient({
     [eventSummary, scheduleLabel, summary],
   );
 
-  const scheduleRows = useMemo(
-    () =>
-      [...matches]
-        .sort((a, b) => {
-          const left = a.matchDate ? new Date(a.matchDate).getTime() : Number.POSITIVE_INFINITY;
-          const right = b.matchDate ? new Date(b.matchDate).getTime() : Number.POSITIVE_INFINITY;
-          return left - right || (a.round ?? 0) - (b.round ?? 0);
-        })
-        .map((match, index) => ({
-          key: match.documentId || `match-${match.id ?? index}`,
-          dateLabel: formatDate(match.matchDate),
-          home: match.homeTeamName,
-          away: match.awayTeamName,
-          stageLabel: match.stage === "ko" ? "Final Round" : "Qualifications",
-          groupLabel:
-            match.groupKey && match.groupKey !== "-" ? `Group ${match.groupKey}` : null,
-          statusLabel:
-            match.status === "completed"
-              ? "Completed"
-              : match.matchDate
-                ? "Scheduled"
-                : "To be announced",
-        })),
-    [matches],
-  );
-
   return (
     <div
       className="mx-auto w-full px-4 py-8"
@@ -1085,41 +1049,9 @@ export function TeamTournamentDetailClient({
           <TeamStatisticsPanel matches={matches} groupCount={sortedGroups.length} />
         ) : null}
 
-        {/* Time Table — ό,τι ξέρουμε για κάθε συνάντηση, σε μία λίστα. */}
+        {/* Time Table — μία κάρτα ανά αγωνιστική, με πρόοδο και φίλτρο ομίλου. */}
         {panel === "timetable" ? (
-          <div className="rounded-[26px] border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
-            <div className="border-b border-slate-100 px-6 py-4 text-lg font-semibold tracking-tight text-slate-950">
-              Schedule
-            </div>
-            {scheduleRows.length === 0 ? (
-              <div className="px-6 py-8 text-sm text-slate-500">
-                The schedule will appear here once matches are published.
-              </div>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {scheduleRows.map((row) => (
-                  <li
-                    key={row.key}
-                    className="flex flex-wrap items-center gap-x-6 gap-y-1 px-6 py-4"
-                  >
-                    <div className="w-28 text-sm font-semibold text-slate-950">
-                      {row.dateLabel ?? "To be announced"}
-                    </div>
-                    <div className="min-w-0 flex-1 text-[15px] font-semibold text-slate-950">
-                      {row.home} <span className="text-slate-400">–</span> {row.away}
-                    </div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {row.stageLabel}
-                      {row.groupLabel ? ` · ${row.groupLabel}` : ""}
-                    </div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {row.statusLabel}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <TeamTimetablePanel matches={matches} groups={sortedGroups} />
         ) : null}
 
         {/* Final standings — ίδιος πίνακας με την καρτέλα Ranking του Final Round. */}
