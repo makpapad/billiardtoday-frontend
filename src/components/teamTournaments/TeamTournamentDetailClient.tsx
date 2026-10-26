@@ -1009,11 +1009,15 @@ export function TeamTournamentDetailClient({
                 )}
               />
             ))}
-            <QualificationRankingTable
-              rows={allStandingRows}
-              groups={groups}
-              biathlon={biathlon}
-            />
+            {/* Με έναν μόνο όμιλο η «γενική» κατάταξη είναι ο όμιλος — δεν τη
+                δείχνουμε δεύτερη φορά. */}
+            {sortedGroups.length > 1 ? (
+              <QualificationRankingTable
+                rows={allStandingRows}
+                groups={groups}
+                biathlon={biathlon}
+              />
+            ) : null}
           </div>
         ) : null}
 
