@@ -65,7 +65,6 @@ export function TeamMatchBlock({
 
   const homePoints = c.homeTeamPoints;
   const awayPoints = c.awayTeamPoints;
-  const draw = completed && homePoints === awayPoints;
   const homeWon = completed && homePoints > awayPoints;
   const awayWon = completed && awayPoints > homePoints;
 
@@ -139,13 +138,10 @@ export function TeamMatchBlock({
         >
           {match.homeTeamName}
         </div>
-        <div className="min-w-[86px] rounded-xl bg-slate-950 px-3.5 py-1.5 text-center text-white">
+        <div className="rounded-xl bg-slate-950 px-3 py-1 text-center text-white">
           <b className="text-lg tracking-tight">
             {completed ? `${c.homeBoardPoints}–${c.awayBoardPoints}` : "–"}
           </b>
-          <small className="block text-[9.5px] uppercase tracking-[0.1em] text-white/65">
-            {completed ? `βαθμοί ${homePoints}–${awayPoints}` : "\u00a0"}
-          </small>
         </div>
         <div
           className={clsx(
