@@ -1,14 +1,20 @@
 "use client";
 
 /**
- * Ομαδικά αποτελέσματα ανά όμιλο: αριστερά τα μπλοκ αγώνων (νεότερη
- * αγωνιστική πρώτη, μόνο όσοι έχουν αποτέλεσμα), δεξιά η βαθμολογία του
- * ομίλου — ίδια λογική με τις σελίδες ατομικών τουρνουά.
+ * Αποτελέσματα ομαδικού τουρνουά.
+ *
+ * Κάθε αγωνιστική είναι ΕΝΑ box· μέσα του οι αγώνες ανά γραμμή, όπως πριν.
+ * Όταν το τουρνουά έχει πολλούς ομίλους, το box της αγωνιστικής περιέχει ένα
+ * box ανά όμιλο (κλειστό) και με κλικ στον όμιλο ανοίγουν οι αγώνες του.
+ * Δεξιά μένει σταθερή η βαθμολογία, με pills ομίλων από πάνω.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import clsx from "clsx";
-import { TeamMatchBlock } from "@/components/teamTournaments/TeamMatchBlock";
+import {
+  TeamMatchRow,
+  isCompletedMatch,
+} from "@/components/teamTournaments/TeamMatchBlock";
 import type {
   ComputedStandingRow,
   NormalizedTeamMatch,
@@ -16,12 +22,18 @@ import type {
   TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 
-const hasResult = (match: NormalizedTeamMatch): boolean =>
-  match.status === "completed" ||
-  (match.computed.boardCount > 0 &&
-    (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
+const formatDate = (value: string | null): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("el-GR", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
 
 const avgText = (value: number): string => (value > 0 ? value.toFixed(3) : "—");
+
+/* ------------------------------------------------------------------ */
+/* Βαθμολογία ομίλου (δεξιά, σταθερή)                                  */
+/* ------------------------------------------------------------------ */
 
 export function GroupStandingsPanel({
   group,
@@ -31,7 +43,7 @@ export function GroupStandingsPanel({
   rows: ComputedStandingRow[];
 }) {
   return (
-    <div className="lg:flex lg:max-h-[calc(100vh-150px)] lg:flex-col">
+    <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
       <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
         <h3 className="text-[15px] font-semibold tracking-tight text-slate-950">
           {group.title || `Όμιλος ${group.groupKey}`}
@@ -58,13 +70,7 @@ export function GroupStandingsPanel({
             {rows.map((row, index) => {
               const diff = row.framesFor - row.framesAgainst;
               return (
-                <tr
-                  key={row.key}
-                  className={clsx(
-                    "border-t border-slate-100",
-                    index < 2 && "bg-sky-50/40",
-                  )}
-                >
+                <tr key={row.key} className={clsx("border-t border-slate-100", index < 2 && "bg-sky-50/40")}>
                   <td
                     className={clsx(
                       "px-2 py-1.5 text-center",
@@ -90,9 +96,7 @@ export function GroupStandingsPanel({
                     {diff > 0 ? `+${diff}` : diff}
                   </td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{avgText(row.avg)}</td>
-                  <td className="px-1.5 py-1.5 text-center font-extrabold text-slate-900">
-                    {row.leaguePoints}
-                  </td>
+                  <td className="px-1.5 py-1.5 text-center font-extrabold text-slate-900">{row.leaguePoints}</td>
                 </tr>
               );
             })}
@@ -106,64 +110,189 @@ export function GroupStandingsPanel({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Box ομίλου μέσα στο box της αγωνιστικής                             */
+/* ------------------------------------------------------------------ */
+
+function GroupBox({
+  title,
+  matches,
+  summary,
+}: {
+  title: string;
+  matches: NormalizedTeamMatch[];
+  summary: TeamTournamentSummary | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const played = matches.filter(isCompletedMatch).length;
+
+  return (
+    <div className="overflow-hidden rounded-[14px] border border-slate-200">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="relative flex w-full items-center justify-center gap-2 bg-slate-50/80 px-8 py-2 text-center transition hover:bg-slate-100"
+      >
+        <span className="text-[12px] font-bold text-slate-900">{title}</span>
+        <span className="text-[11px] font-semibold text-slate-500">
+          {played}/{matches.length} αγώνες
+        </span>
+        <span
+          className={clsx(
+            "absolute right-3 text-[11px] text-slate-400 transition-transform",
+            open && "rotate-180",
+          )}
+        >
+          ▾
+        </span>
+      </button>
+      {open ? (
+        <div>
+          {matches.map((match) => (
+            <TeamMatchRow key={match.documentId || String(match.id)} match={match} summary={summary} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Η ενότητα                                                           */
+/* ------------------------------------------------------------------ */
+
 export function TeamGroupResults({
-  group,
   groups,
   activeGroupKey,
   onSelectGroup,
-  matches,
-  standings,
+  matchesByGroupKey,
+  standingsForGroup,
   summary,
 }: {
-  group: TeamGroup;
   groups: TeamGroup[];
+  /** «all» = όλοι οι όμιλοι (boxes ανά όμιλο) — αλλιώς ένας όμιλος (γραμμές ανά αγωνιστική). */
   activeGroupKey: string;
   onSelectGroup: (groupKey: string) => void;
-  matches: NormalizedTeamMatch[];
-  standings: ComputedStandingRow[];
+  matchesByGroupKey: Map<string, NormalizedTeamMatch[]>;
+  standingsForGroup: (group: TeamGroup) => ComputedStandingRow[];
   summary: TeamTournamentSummary | null;
 }) {
+  const multiGroup = groups.length > 1;
+  const visibleGroups = useMemo(
+    () =>
+      !multiGroup || activeGroupKey === "all"
+        ? groups
+        : groups.filter((group) => group.groupKey === activeGroupKey),
+    [activeGroupKey, groups, multiGroup],
+  );
+
   const rounds = useMemo(() => {
-    const byRound = new Map<number, NormalizedTeamMatch[]>();
-    matches
-      .filter(hasResult)
-      .forEach((match) => {
-        const round = match.round ?? 0;
-        const list = byRound.get(round) ?? [];
-        list.push(match);
-        byRound.set(round, list);
-      });
+    const byRound = new Map<number, Map<string, NormalizedTeamMatch[]>>();
+    visibleGroups.forEach((group) => {
+      (matchesByGroupKey.get(group.groupKey) ?? [])
+        .filter(isCompletedMatch)
+        .forEach((match) => {
+          const round = match.round ?? 0;
+          const buckets = byRound.get(round) ?? new Map<string, NormalizedTeamMatch[]>();
+          const list = buckets.get(group.groupKey) ?? [];
+          list.push(match);
+          buckets.set(group.groupKey, list);
+          byRound.set(round, buckets);
+        });
+    });
+
     return Array.from(byRound.entries())
       .sort((a, b) => b[0] - a[0])
-      .map(([round, list]) => ({
-        round,
-        matches: [...list].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
-      }));
-  }, [matches]);
+      .map(([round, buckets]) => {
+        const all = Array.from(buckets.values()).flat();
+        const dates = Array.from(
+          new Set(
+            all.map((match) => formatDate(match.matchDate)).filter((v): v is string => Boolean(v)),
+          ),
+        );
+        return {
+          round,
+          dateLabel: dates.length === 0 ? null : dates.length === 1 ? dates[0] : dates.join(" · "),
+          played: all.length,
+          buckets: Array.from(buckets.entries())
+            .map(([groupKey, matches]) => ({
+              groupKey,
+              matches: [...matches].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
+            }))
+            .sort((a, b) => a.groupKey.localeCompare(b.groupKey, undefined, { numeric: true })),
+        };
+      });
+  }, [matchesByGroupKey, visibleGroups]);
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)]">
       <div className="flex min-w-0 flex-col gap-3.5">
         {rounds.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
-            Δεν υπάρχουν ακόμη αποτελέσματα σε αυτόν τον όμιλο. Οι αγώνες εμφανίζονται
-            μόλις καταχωρηθούν.
+            Δεν υπάρχουν ακόμη αποτελέσματα. Οι αγώνες εμφανίζονται μόλις καταχωρηθούν.
           </div>
         ) : (
-          rounds.map((entry) =>
-            entry.matches.map((match) => (
-              <TeamMatchBlock
-                key={match.documentId || `${match.id}-${match.round}`}
-                match={match}
-                summary={summary}
-              />
-            )),
-          )
+          rounds.map((entry) => (
+            <section
+              key={entry.round}
+              className="overflow-hidden rounded-[18px] border border-slate-200 bg-white"
+            >
+              <header className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-[#ffc000] px-4 py-2 text-[11.5px] font-extrabold uppercase tracking-[0.06em] text-slate-950">
+                <span>Αγωνιστική {entry.round}</span>
+                {entry.dateLabel ? (
+                  <span className="font-semibold text-slate-800/80">{entry.dateLabel}</span>
+                ) : null}
+                <span className="ml-auto rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-white">
+                  {entry.played} {entry.played === 1 ? "αγώνας" : "αγώνες"}
+                </span>
+              </header>
+
+              {multiGroup && activeGroupKey === "all" ? (
+                <div className="flex flex-col gap-2 p-2.5">
+                  {entry.buckets.map((bucket) => {
+                    const group = groups.find((item) => item.groupKey === bucket.groupKey);
+                    return (
+                      <GroupBox
+                        key={bucket.groupKey}
+                        title={group?.title || `Όμιλος ${bucket.groupKey.replace(/^GROUP-?/i, "")}`}
+                        matches={bucket.matches}
+                        summary={summary}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div>
+                  {entry.buckets.flatMap((bucket) => bucket.matches).map((match) => (
+                    <TeamMatchRow
+                      key={match.documentId || String(match.id)}
+                      match={match}
+                      summary={summary}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          ))
         )}
       </div>
+
       <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-[104px]">
-        {groups.length > 1 ? (
+        {multiGroup ? (
           <div className="flex flex-wrap gap-1.5 rounded-[16px] border border-slate-200 bg-white px-2.5 py-2">
+            <button
+              type="button"
+              onClick={() => onSelectGroup("all")}
+              aria-pressed={activeGroupKey === "all"}
+              className={
+                activeGroupKey === "all"
+                  ? "rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-bold text-white transition"
+                  : "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-800"
+              }
+            >
+              Όλοι οι όμιλοι
+            </button>
             {groups.map((item) => (
               <button
                 key={item.documentId || item.groupKey}
@@ -181,7 +310,14 @@ export function TeamGroupResults({
             ))}
           </div>
         ) : null}
-        <GroupStandingsPanel group={group} rows={standings} />
+
+        {visibleGroups.map((group) => (
+          <GroupStandingsPanel
+            key={group.documentId || group.groupKey}
+            group={group}
+            rows={standingsForGroup(group)}
+          />
+        ))}
       </div>
     </div>
   );

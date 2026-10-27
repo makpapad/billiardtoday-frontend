@@ -601,7 +601,7 @@ export function TeamTournamentDetailClient({
   const [stage, setStage] = useState<StageKey>("qualifications");
   const [view, setView] = useState<ViewKey>("matches");
   const [panel, setPanel] = useState<PanelKey>("tournament");
-  /** Ο επιλεγμένος όμιλος στα αποτελέσματα (πρώτος όμιλος εξ ορισμού). */
+  /** Ο επιλεγμένος όμιλος στα αποτελέσματα («all» = όλοι οι όμιλοι). */
   const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
 
   const summary = detail?.summary ?? null;
@@ -687,9 +687,11 @@ export function TeamTournamentDetailClient({
 
   const activeGroup = useMemo(
     () =>
-      sortedGroups.find((group) => group.groupKey === activeGroupKey) ??
-      sortedGroups[0] ??
-      null,
+      activeGroupKey && activeGroupKey !== "all"
+        ? (sortedGroups.find((group) => group.groupKey === activeGroupKey) ??
+          sortedGroups[0] ??
+          null)
+        : (sortedGroups[0] ?? null),
     [activeGroupKey, sortedGroups],
   );
 
@@ -963,15 +965,13 @@ export function TeamTournamentDetailClient({
               </div>
             ) : (
               <TeamGroupResults
-                group={activeGroup}
                 groups={sortedGroups}
-                activeGroupKey={activeGroup.groupKey}
+                activeGroupKey={activeGroupKey ?? "all"}
                 onSelectGroup={setActiveGroupKey}
-                matches={matchesByGroupKey.get(activeGroup.groupKey) ?? []}
-                standings={resolveStandingRows(
-                  activeGroup,
-                  standingsByGroup[activeGroup.groupKey] ?? [],
-                )}
+                matchesByGroupKey={matchesByGroupKey}
+                standingsForGroup={(group) =>
+                  resolveStandingRows(group, standingsByGroup[group.groupKey] ?? [])
+                }
                 summary={summary}
               />
             )}
