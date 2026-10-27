@@ -25,6 +25,7 @@ type Club = {
   documentId: string;
   name: string;
   slug: string;
+  updatedAt?: string | null;
   city?: string | null;
   country?: string | null;
   address?: string | null;
@@ -54,6 +55,7 @@ type Federation = {
   documentId: string;
   slug: string;
   name: string;
+  updatedAt?: string | null;
   country?: string | null;
   level?: string | null;
   acronym?: string | null;
@@ -188,6 +190,7 @@ const mapClub = (value: unknown): Club | null => {
     documentId,
     name,
     slug,
+    updatedAt: readString(entity.updatedAt),
     city: readString(entity.city),
     country: readString(entity.country),
     address: readString(entity.address),
@@ -244,6 +247,7 @@ const mapFederation = (value: unknown): Federation | null => {
     documentId,
     slug,
     name,
+    updatedAt: readString(entity.updatedAt),
     country: readString(entity.country),
     level: readString(entity.level),
     acronym: readString(entity.acronym),
@@ -358,6 +362,7 @@ export async function getClubs(): Promise<Club[]> {
   params.set("fields[4]", "contactEmail");
   params.set("fields[5]", "contactPhone");
   params.set("fields[6]", "documentId");
+  params.set("fields[7]", "updatedAt");
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "country");
   params.set("populate[federation][fields][2]", "documentId");

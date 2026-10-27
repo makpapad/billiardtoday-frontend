@@ -3,6 +3,7 @@ import Image from "next/image";
 import { PresentationHero } from "@/components/public/PresentationBlocks";
 import { CebEditionStrip } from "@/components/public/CebEditionStrip";
 import { CebRankingContent } from "@/components/public/CebRankingContent";
+import { CebRankedPlayersIndex } from "@/components/public/CebRankedPlayersIndex";
 import {
   CEB_RANKING_PAGE_SIZE,
   cebCategoryShortLabel,
@@ -146,6 +147,12 @@ export function CebRankingCategoryView({
           embedded={embedded}
           campaign={campaign}
         />
+
+        {/* Server-rendered ευρετήριο όλων των αθλητών με σύνδεσμο προφίλ — μόνο στη
+            δημόσια σελίδα, ποτέ στο embed (τα iframe δεν πρέπει να μοιράζουν links). */}
+        {!embedded ? (
+          <CebRankedPlayersIndex payload={payload} playerLinks={playerLinks} />
+        ) : null}
 
         {footer}
       </div>

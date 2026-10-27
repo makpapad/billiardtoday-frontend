@@ -10,7 +10,7 @@ type Props = {
   totalPlayers?: number;
 };
 
-const DISPLAY_COUNT = 150;
+const DISPLAY_COUNT = 200;
 const SEARCH_RESULTS_LIMIT = 50;
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
@@ -125,7 +125,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
             ? remoteBusy
               ? "Searching..."
               : `Showing ${displayPlayers.length} ${displayPlayers.length === 1 ? "result" : "results"}`
-            : `Showing ${Math.min(DISPLAY_COUNT, players.length)} featured player profiles today`,
+            : `${displayPlayers.length} ${displayPlayers.length === 1 ? "profile" : "profiles"} on this page`,
         ]}
       />
 
@@ -210,10 +210,11 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
                 </Link>
               ))}
             </div>
-            {search.trim().length < MIN_QUERY_LENGTH && availablePlayers > displayPlayers.length ? (
+            {search.trim().length < MIN_QUERY_LENGTH ? (
               <p className="mt-6 max-w-3xl text-sm leading-7 text-slate-600">
-                Showing a daily rotating sample of {displayPlayers.length.toLocaleString("en-US")} public player profiles.
-                Use search to access the full index of {availablePlayers.toLocaleString("en-US")} players.
+                Browse the full index of {availablePlayers.toLocaleString("en-US")} public player
+                profiles with the letter index and page links below, or type a name, club, or city
+                to search the whole database.
               </p>
             ) : null}
           </>

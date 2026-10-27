@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamTournamentDetailClient } from "@/components/teamTournaments/TeamTournamentDetailClient";
+import { TeamTournamentSeoSection } from "@/components/public/TeamTournamentSeoSection";
 import {
   buildTeamTournamentSlug,
   fetchTeamTournamentDetail,
@@ -46,12 +47,16 @@ export default async function TeamTournamentPage({ params }: Props) {
   const isCanonical = slug === canonicalSlug;
 
   return (
-    <TeamTournamentDetailClient
-      detail={detail}
-      title={summary.title}
-      eventSummary={eventSummary}
-      canonicalSlug={canonicalSlug}
-      slugIsCanonical={isCanonical}
-    />
+    <>
+      <TeamTournamentDetailClient
+        detail={detail}
+        title={summary.title}
+        eventSummary={eventSummary}
+        canonicalSlug={canonicalSlug}
+        slugIsCanonical={isCanonical}
+      />
+      {/* Server-rendered ομάδες/ρόστερ: το tabbed UI δεν έβγαζε αθλητές στο HTML. */}
+      {detail ? <TeamTournamentSeoSection detail={detail} /> : null}
+    </>
   );
 }

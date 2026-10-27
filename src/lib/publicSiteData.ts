@@ -18,8 +18,10 @@ export type PublicPlayerCard = {
   country: string | null;
   city: string | null;
   clubName: string | null;
+  clubSlug?: string | null;
   photoUrl: string | null;
   href: string;
+  updatedAt?: string | null;
 };
 
 export type PublicPlayerGameStats = {
@@ -76,6 +78,7 @@ export type PublicClubCard = {
   playerCount: number;
   tournamentCount: number;
   href: string;
+  updatedAt?: string | null;
 };
 
 export type PublicClubDetail = PublicClubCard & {
@@ -113,6 +116,7 @@ export type PublicTournamentEventCard = {
   gameType: string | null;
   tournamentTitle: string | null;
   href: string;
+  updatedAt?: string | null;
 };
 
 const buildHeaders = (): HeadersInit => {
@@ -216,7 +220,7 @@ const resolveMediaUrl = (value: unknown): string | null => {
 export const isTestPlayerName = (name: string | null | undefined): boolean =>
   /^player\s*\d+$/i.test(String(name || "").trim());
 
-const buildPlayerHref = (id: number | string | null, name: string) => {
+export const buildPlayerHref = (id: number | string | null, name: string) => {
   const cleanId = String(id || "").trim();
   const cleanName = String(name || "")
     .trim()
@@ -271,8 +275,10 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
     country: readString(entity.country),
     city: readString(entity.city),
     clubName: readString(clubEntity?.name),
+    clubSlug: readString(clubEntity?.slug),
     photoUrl: resolveMediaUrl(entity.photo_main) || resolveMediaUrl(entity.photo_alt),
     href: buildPlayerHref(id, displayName),
+    updatedAt: readString(entity.updatedAt),
   };
 };
 
@@ -526,6 +532,7 @@ const mapClubCard = (value: unknown): PublicClubCard | null => {
     playerCount: players.length,
     tournamentCount: tournaments.length,
     href: `/clubs/${slug}`,
+    updatedAt: readString(entity.updatedAt),
   };
 };
 
@@ -574,6 +581,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
   params.set("fields[3]", "end_date");
   params.set("fields[4]", "game_type");
   params.set("fields[5]", "documentId");
+  params.set("fields[6]", "updatedAt");
   params.set("populate[tournament][fields][0]", "title");
   params.set("populate[tournament][fields][1]", "slug");
 
@@ -603,6 +611,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
         endDate: readString(entity.end_date),
         gameType: readString(entity.game_type),
         tournamentTitle: readString(tournamentEntity?.title),
+        updatedAt: readString(entity.updatedAt),
         href: buildTournamentHref(
           readString(tournamentEntity?.slug) || documentId,
           title,
@@ -625,6 +634,7 @@ export const listClubs = async (limit = 12): Promise<PublicClubCard[]> => {
   params.set("fields[5]", "contactEmail");
   params.set("fields[6]", "contactPhone");
   params.set("fields[7]", "documentId");
+  params.set("fields[8]", "updatedAt");
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "slug");
   params.set("populate[players][fields][0]", "documentId");
@@ -651,6 +661,7 @@ export const getClubBySlug = async (slug: string): Promise<PublicClubDetail | nu
   params.set("fields[5]", "contactEmail");
   params.set("fields[6]", "contactPhone");
   params.set("fields[7]", "documentId");
+  params.set("fields[8]", "updatedAt");
   params.set("populate[federation][fields][0]", "name");
   params.set("populate[federation][fields][1]", "slug");
   params.set("populate[players][fields][0]", "full_name");
@@ -687,6 +698,44 @@ export const getClubBySlug = async (slug: string): Promise<PublicClubDetail | nu
       .filter((row: PublicTournamentCard | null): row is PublicTournamentCard => Boolean(row))
       .slice(0, 12),
   };
+};
+
+/**
+ * Όλοι οι αθλητές που ανήκουν σε έναν σύλλογο — για τη δημόσια λίστα της σελίδας συλλόγου
+ * (server-side links προς τα προφίλ τους, ώστε να είναι crawlable).
+ */
+export const listClubPlayers = async (
+  clubDocumentId: string,
+  limit = 300,
+): Promise<PublicPlayerCard[]> => {
+  const clean = String(clubDocumentId || "").trim();
+  if (!clean) return [];
+
+  const params = new URLSearchParams();
+  params.set("filters[club][documentId][$eq]", clean);
+  params.set("filters[is_test_player][$ne]", "true");
+  params.set("pagination[pageSize]", String(Math.min(Math.max(limit, 1), 500)));
+  params.set("pagination[page]", "1");
+  params.set("sort[0]", "full_name:asc");
+  params.set("fields[0]", "full_name");
+  params.set("fields[1]", "full_name_en");
+  params.set("fields[2]", "country");
+  params.set("fields[3]", "city");
+  params.set("fields[4]", "documentId");
+  params.set("fields[5]", "updatedAt");
+  params.set("populate[club][fields][0]", "name");
+  params.set("populate[club][fields][1]", "slug");
+
+  const json = await fetchStrapiJson(`/api/bt-players?${params.toString()}`, 60).catch(() => null);
+  const rows = Array.isArray(json?.data) ? json.data : [];
+
+  return rows
+    .map(mapPlayerCard)
+    .filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row))
+    .filter(
+      (row: PublicPlayerCard) =>
+        !isTestPlayerName(row.fullName) && !isTestPlayerName(row.fullNameEn),
+    );
 };
 
 export const listFederations = async (limit = 12): Promise<PublicFederationCard[]> => {
@@ -1050,8 +1099,12 @@ export const getPublicPlayerProfileSummary = async (
   params.set("fields[3]", "city");
   params.set("fields[4]", "documentId");
   params.set("fields[5]", "career_stats");
+  params.set("fields[6]", "updatedAt");
   params.set("populate[photo_main][fields][0]", "url");
   params.set("populate[photo_alt][fields][0]", "url");
+  params.set("populate[club][fields][0]", "name");
+  params.set("populate[club][fields][1]", "slug");
+  params.set("populate[club][fields][2]", "documentId");
 
   if (/^\d+$/.test(playerId)) {
     params.set("filters[id][$eq]", playerId);
@@ -1098,7 +1151,9 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
   baseParams.set("fields[2]", "country");
   baseParams.set("fields[3]", "city");
   baseParams.set("fields[4]", "documentId");
+  baseParams.set("fields[5]", "updatedAt");
   baseParams.set("populate[club][fields][0]", "name");
+  baseParams.set("populate[club][fields][1]", "slug");
   baseParams.set("populate[photo_main][fields][0]", "url");
   baseParams.set("populate[photo_alt][fields][0]", "url");
   // Test profiles from scoreboard/import trials must never appear in the public directory.

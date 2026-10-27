@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
+import { TournamentSeoSection } from "@/components/public/TournamentSeoSection";
+import { getTournamentSeoData } from "@/lib/tournamentSeoServer";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
@@ -87,6 +89,10 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     ? await getRankingSeriesData(summary.rankingSeriesSlug)
     : null;
 
+  // Server-rendered περιεχόμενο διοργάνωσης (συμμετέχοντες + τελική κατάταξη): η
+  // σελίδα έβγαινε με ~1.600 χαρακτήρες κειμένου και κανένα link προς αθλητές.
+  const seoData = await getTournamentSeoData(summary.documentId);
+
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
       <script
@@ -115,6 +121,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             : null
         }
       />
+      {seoData ? <TournamentSeoSection data={seoData} /> : null}
     </CmsPageShell>
   );
 }

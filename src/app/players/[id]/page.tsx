@@ -3,8 +3,10 @@ import PlayerProfileClient from "./PlayerProfileClient";
 import { PlayerInstantSummary } from "./PlayerInstantSummary";
 import { CebPlayerRankingCard } from "@/components/public/CebPlayerRankingCard";
 import { UmbPlayerRankingCard } from "@/components/public/UmbPlayerRankingCard";
+import { PlayerArchiveSection } from "@/components/public/PlayerArchiveSection";
 import { readCebPlayerRankings } from "@/lib/cebRankingData";
 import { readUmbPlayerRanking } from "@/lib/umbRankingData";
+import { getPlayerHistoryForServer } from "@/lib/playerHistoryServer";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
 
@@ -54,6 +56,15 @@ const buildPlayerStructuredData = (
       nationality: summary.country || undefined,
       image: toAbsoluteUrl(summary.photoUrl) || undefined,
       url: pageUrl,
+      // Ο σύλλογος/ομάδα του αθλητή: πραγματικό, ήδη δημόσιο δεδομένο (όχι προσωπικά στοιχεία).
+      memberOf:
+        summary.clubName && summary.clubSlug
+          ? {
+              "@type": "SportsOrganization",
+              name: summary.clubName,
+              url: `${SITE_URL}/clubs/${summary.clubSlug}`,
+            }
+          : undefined,
       knowsAbout: [
         "Billiards",
         "Carom billiards",
@@ -73,6 +84,9 @@ export default async function PlayerProfilePage({ params }: Props) {
   // με τα δικά της counting tournaments κάθε λίστας. Μετά, η UMB κάρτα παραμένει ως έχει.
   const cebRankings = await readCebPlayerRankings(id);
   const umbRanking = readUmbPlayerRanking(id);
+  // Server-rendered αρχείο αγώνων: το ιστορικό φόρτωνε μόνο client-side, άρα το
+  // HTML είχε ~1.500 χαρακτήρες και τίποτα από αγώνες/αντιπάλους/σκορ.
+  const history = await getPlayerHistoryForServer(id, 25);
 
   return (
     <>
@@ -101,6 +115,13 @@ export default async function PlayerProfilePage({ params }: Props) {
       ))}
       {umbRanking ? (
         <UmbPlayerRankingCard ranking={umbRanking} playerLabel={summary?.seoName ?? null} />
+      ) : null}
+      {history && history.items.length > 0 ? (
+        <PlayerArchiveSection
+          items={history.items}
+          totalCount={history.totalCount}
+          playerLabel={summary?.seoName ?? "Player"}
+        />
       ) : null}
       <PlayerProfileClient hasServerSummary={Boolean(summary)} />
     </>

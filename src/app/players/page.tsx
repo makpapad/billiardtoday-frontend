@@ -1,33 +1,9 @@
 import type { Metadata } from "next";
+import { PlayerLetterNav, PlayerPagination } from "@/components/public/PlayersDirectoryNav";
 import { PlayersDirectoryContent } from "@/components/public/PlayersDirectoryContent";
 import { getPlayersTotalCount, listPlayers } from "@/lib/publicSiteData";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { SITE_URL } from "@/lib/socialMetadata";
-
-const PLAYER_DIRECTORY_POOL_SIZE = 3000;
-const PLAYER_DIRECTORY_VISIBLE_COUNT = 150;
-
-const hashString = (value: string) => {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-};
-
-const getDailyRotationKey = () => new Date().toISOString().slice(0, 10);
-
-const rotatePlayersForDiscovery = (
-  players: Awaited<ReturnType<typeof listPlayers>>,
-) => {
-  const rotationKey = getDailyRotationKey();
-  return [...players].sort((left, right) => {
-    const leftHash = hashString(`${rotationKey}:${left.documentId}:${left.id || ""}`);
-    const rightHash = hashString(`${rotationKey}:${right.documentId}:${right.id || ""}`);
-    return leftHash - rightHash;
-  });
-};
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Billiard Players Directory",
@@ -45,12 +21,63 @@ export const metadata: Metadata = buildPageMetadata({
   ],
 });
 
-export default async function PlayersPage() {
+/**
+ * Ο κατάλογος είναι πλέον σελιδοποιημένος με ΠΡΑΓΜΑΤΙΚΑ links (πριν: 150 τυχαία
+ * προφίλ την ημέρα + client-side αναζήτηση, άρα ο crawler δεν είχε δρόμο προς τις
+ * υπόλοιπες ~3.300 σελίδες αθλητών). Το `?letter=` δίνει ευρετήριο πρώτου γράμματος
+ * και το `?page=` αριθμημένες σελίδες — και τα δύο server-rendered.
+ */
+const PAGE_SIZE = 150;
+
+type Props = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const readParam = (
+  value: string | string[] | undefined,
+  fallback = "",
+): string => {
+  if (Array.isArray(value)) return value[0] ?? fallback;
+  return value ?? fallback;
+};
+
+/** Πρώτο γράμμα για το ευρετήριο — χωρίς τόνους, τα ψηφία/σύμβολα μαζεύονται στο "#". */
+const letterBucket = (playerLabel: string): string => {
+  const firstChar = playerLabel.trim().charAt(0);
+  if (!firstChar) return "#";
+  const normalised = firstChar
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+  return /^[0-9]/.test(normalised) || !/^[A-Z\u0391-\u03a9]/.test(normalised)
+    ? "#"
+    : normalised;
+};
+
+export default async function PlayersPage({ searchParams }: Props) {
+  const params = searchParams ? await searchParams : {};
+  const requestedLetter = readParam(params.letter).trim().toUpperCase().slice(0, 1);
+  const requestedPage = Number.parseInt(readParam(params.page, "1"), 10);
+
   const [allPlayers, totalPlayers] = await Promise.all([
-    listPlayers(PLAYER_DIRECTORY_POOL_SIZE),
+    listPlayers(50000),
     getPlayersTotalCount(),
   ]);
-  const players = rotatePlayersForDiscovery(allPlayers);
+
+  const letters = Array.from(
+    new Set(allPlayers.map((player) => letterBucket(player.fullNameEn || player.fullName))),
+  ).sort((left, right) => left.localeCompare(right, "en"));
+
+  const activeLetter = requestedLetter && letters.includes(requestedLetter) ? requestedLetter : null;
+  const filtered = activeLetter
+    ? allPlayers.filter(
+        (player) => letterBucket(player.fullNameEn || player.fullName) === activeLetter,
+      )
+    : allPlayers;
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const page = Number.isFinite(requestedPage) ? Math.min(Math.max(1, requestedPage), pageCount) : 1;
+  const pagePlayers = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const itemList = {
     "@context": "https://schema.org",
@@ -60,10 +87,10 @@ export default async function PlayersPage() {
     description: metadata.description,
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: Math.min(PLAYER_DIRECTORY_VISIBLE_COUNT, players.length),
-      itemListElement: players.slice(0, PLAYER_DIRECTORY_VISIBLE_COUNT).map((player, index) => ({
+      numberOfItems: pagePlayers.length,
+      itemListElement: pagePlayers.map((player, index) => ({
         "@type": "ListItem",
-        position: index + 1,
+        position: (page - 1) * PAGE_SIZE + index + 1,
         url: `${SITE_URL}${player.href}`,
         name: player.fullNameEn || player.fullName,
       })),
@@ -78,10 +105,11 @@ export default async function PlayersPage() {
           __html: JSON.stringify(itemList),
         }}
       />
-      <PlayersDirectoryContent
-        players={players.slice(0, PLAYER_DIRECTORY_VISIBLE_COUNT)}
-        totalPlayers={totalPlayers}
-      />
+      <PlayersDirectoryContent players={pagePlayers} totalPlayers={totalPlayers} />
+      <div className="mx-auto w-full max-w-[1320px] px-4 pb-14 sm:px-6">
+        <PlayerLetterNav letters={letters} activeLetter={activeLetter} />
+        <PlayerPagination page={page} pageCount={pageCount} letter={activeLetter} />
+      </div>
     </>
   );
 }

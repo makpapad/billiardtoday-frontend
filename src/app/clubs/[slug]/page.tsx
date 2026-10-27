@@ -5,6 +5,7 @@ import { CountryFlag, PresentationHero } from "@/components/public/PresentationB
 import { TournamentListSection } from "@/components/tournaments/TournamentListSection";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
+import { listClubPlayers } from "@/lib/publicSiteData";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 type Props = {
@@ -39,6 +40,10 @@ export default async function ClubPage({ params }: Props) {
   if (slug !== club.slug) {
     redirect(`/clubs/${club.slug}`);
   }
+
+  // Server-rendered λίστα αθλητών: τοπικά links προς τα προφίλ τους (crawlable),
+  // ώστε ο σύλλογος να «δίνει» δρόμο προς τις σελίδες αθλητών.
+  const clubPlayers = await listClubPlayers(club.documentId, 300).catch(() => []);
 
   return (
     <>
@@ -118,6 +123,40 @@ export default async function ClubPage({ params }: Props) {
           />
         </div>
       </section>
+
+      {clubPlayers.length > 0 ? (
+        <section className="px-4 pb-4 sm:px-6">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-[26px] border border-black/5 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-8">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
+                  Players at {club.name}
+                </h2>
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  {clubPlayers.length} {clubPlayers.length === 1 ? "profile" : "profiles"}
+                </span>
+              </div>
+              <ul className="mt-5 grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                {clubPlayers.map((player) => (
+                  <li key={player.documentId} className="min-w-0">
+                    <Link
+                      href={player.href}
+                      className="block truncate text-sm text-slate-700 transition hover:text-sky-700"
+                    >
+                      {player.fullNameEn || player.fullName}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {clubPlayers.length >= 300 ? (
+                <p className="mt-4 text-xs text-slate-500">
+                  Showing the first 300 profiles of this club.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <TournamentListSection
         section={{

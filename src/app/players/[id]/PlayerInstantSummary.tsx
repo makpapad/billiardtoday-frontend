@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags";
 import type { PublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
@@ -82,6 +83,30 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
                 {summary.otherGameLabels.length > 0 ? (
                   <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
                     Other recorded disciplines: {summary.otherGameLabels.join(", ")}.
+                  </p>
+                ) : null}
+                {/* Server-rendered πλαίσιο: σύλλογος (με σύνδεσμο) + τόπος. Καμία ημερομηνία γέννησης. */}
+                {summary.clubName || summary.city ? (
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                    {summary.clubName ? (
+                      <>
+                        Club:{" "}
+                        {summary.clubSlug ? (
+                          <Link
+                            href={`/clubs/${summary.clubSlug}`}
+                            className="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-300"
+                          >
+                            {summary.clubName}
+                          </Link>
+                        ) : (
+                          <span className="font-medium">{summary.clubName}</span>
+                        )}
+                      </>
+                    ) : null}
+                    {summary.clubName && summary.city ? " · " : null}
+                    {summary.city
+                      ? `${summary.city}${countryLabel ? `, ${countryLabel}` : ""}`
+                      : null}
                   </p>
                 ) : null}
               </div>

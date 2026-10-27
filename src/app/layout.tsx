@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Billiard Today",
   },
   description:
-    "Billiard tournaments, results, rankings, clubs, players, and structured CMS content for the Greek billiard community.",
+    "International billiard tournaments, live scores, results, world rankings, and club and player profiles for carom and 3-cushion billiards.",
   keywords: [
     "billiard",
     "tournaments",
@@ -39,19 +39,19 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "el_GR",
+    locale: "en_US",
     url: SITE_URL,
     siteName: "Billiard Today",
     title: "Billiard Today",
     description:
-      "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+      "International billiard tournaments, live scores, results, world rankings, and club and player profiles for carom and 3-cushion billiards.",
     images: [defaultSocialImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "Billiard Today",
     description:
-      "Billiard tournaments, results, rankings, clubs, players, and structured CMS content.",
+      "International billiard tournaments, live scores, results, world rankings, and club and player profiles for carom and 3-cushion billiards.",
     images: [String(defaultSocialImage.url)],
   },
 };
@@ -89,7 +89,7 @@ export default async function RootLayout({
 })();`;
 
   return (
-    <html lang="el" className={htmlClassName} suppressHydrationWarning>
+    <html lang="en" className={htmlClassName} suppressHydrationWarning>
       <head>
         {googleAnalyticsId ? (
           <script
