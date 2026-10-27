@@ -39,6 +39,10 @@ type PlayerHistoryPayload = {
   totalCount?: number;
 };
 
+/** Το SEO περιεχόμενο ΔΕΝ πρέπει να κρατά τη σελίδα: σύντομο timeout + cache. */
+const PLAYER_HISTORY_TIMEOUT_MS = 4000;
+const PLAYER_HISTORY_REVALIDATE_SECONDS = 300;
+
 const resolveOrigin = async (): Promise<string> => {
   try {
     const headerList = await headers();
@@ -68,7 +72,14 @@ export const getPlayerHistoryForServer = async (
     const params = new URLSearchParams({ limit: String(limit) });
     const response = await fetch(
       `${origin}/api/players/${encodeURIComponent(routeId)}/history?${params.toString()}`,
-      { cache: "no-store", signal: AbortSignal.timeout(20000) },
+      // ΠΡΟΣΟΧΗ (φορτίο): η κλήση γίνεται σε ΚΑΘΕ render σελίδας αθλητή. Με
+      // `no-store` κάθε επίσκεψη χτυπούσε το route (και πίσω του το Strapi) από την
+      // αρχή — με 3.100 σελίδες αθλητών αυτό πνίγει το Strapi. Με `revalidate`
+      // πληρώνουμε ένα query ανά 5 λεπτά ανά αθλητή.
+      {
+        next: { revalidate: PLAYER_HISTORY_REVALIDATE_SECONDS },
+        signal: AbortSignal.timeout(PLAYER_HISTORY_TIMEOUT_MS),
+      },
     );
     if (!response.ok) return null;
 

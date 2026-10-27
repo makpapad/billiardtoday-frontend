@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { normalizeGameTypeOrFallback } from '@/lib/gameTypes'
 
 export const runtime = 'nodejs'
+export const revalidate = 60
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
@@ -157,14 +158,14 @@ const fetchOpponentEnglishNames = async (
 
         let response = await fetch(url.toString(), {
             headers,
-            cache: 'no-store',
+            next: { revalidate: 60 }, // φορτίο: ήταν no-store → χτυπούσε Strapi σε κάθε render
         })
         if (
             !response.ok &&
             headers &&
             (response.status === 401 || response.status === 403)
         ) {
-            response = await fetch(url.toString(), { cache: 'no-store' })
+            response = await fetch(url.toString(), { next: { revalidate: 60 } })
         }
         if (!response.ok) continue
 
@@ -232,7 +233,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
                     useAuth && STRAPI_API_TOKEN && allowAuth
                         ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
                         : undefined,
-                cache: 'no-store',
+                next: { revalidate: 60 }, // φορτίο: ήταν no-store → χτυπούσε Strapi σε κάθε render
             })
 
         const runRequest = async (baseUrl: string, allowAuth = true) => {

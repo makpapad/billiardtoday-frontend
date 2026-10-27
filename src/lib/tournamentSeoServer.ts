@@ -27,6 +27,11 @@ const STRAPI_BASES = Array.from(
 
 const STRAPI_API_TOKEN = getServerEnv("STRAPI_API_TOKEN");
 
+const SEO_FETCH_TIMEOUT_MS = 3000;
+// 1 απόπειρα: στο production το base[0] ΕΙΝΑΙ το ίδιο Strapi στο 127.0.0.1 — μια
+// δεύτερη απόπειρα στο fallback διπλασιάζει την αναμονή χωρίς να δίνει δεδομένα.
+const SEO_MAX_ATTEMPTS = 1;
+
 export type TournamentSeoPlayer = {
   id: number | null;
   documentId: string;
@@ -114,6 +119,11 @@ export const getTournamentSeoData = async (
   params.set("fields[3]", "end_date");
   params.set("fields[4]", "game_type");
   params.set("fields[5]", "documentId");
+  // Ελαφρύ populate: χωρίς αυτό το Strapi επιστρέφει και τα βαριά json πεδία του
+  // tournament (format_definition/config), που αργούν να σειριοποιηθούν.
+  params.set("populate[tournament][fields][0]", "documentId");
+  params.set("populate[tournament][fields][1]", "title");
+  params.set("populate[tournament][fields][2]", "slug");
   params.set("populate[tournament][populate][participants][sort][0]", "ranking:asc");
   params.set("populate[tournament][populate][participants][fields][0]", "ranking");
   params.set("populate[tournament][populate][participants][fields][1]", "seed");
@@ -137,14 +147,17 @@ export const getTournamentSeoData = async (
     ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
     : {};
 
-  for (const base of STRAPI_BASES) {
+  // ΠΑΓΙΔΑ (φορτίο): η συνάρτηση καλείται σε ΚΑΘΕ render σελίδας διοργάνωσης. Με 3
+  // base URLs × 15s timeout μια αργή απάντηση κρατούσε τη σελίδα 45s και την έβγαζε
+  // 504. Κρατάμε το πολύ SEO_MAX_ATTEMPTS απόπειρες με 3s timeout (μέγιστο ~6s).
+  for (const base of STRAPI_BASES.slice(0, SEO_MAX_ATTEMPTS)) {
     try {
       const response = await fetch(
         `${base.replace(/\/$/, "")}/api/bt-events/${encodeURIComponent(documentId)}?${params.toString()}`,
         {
           headers,
           next: { revalidate: 300 },
-          signal: AbortSignal.timeout(15000),
+          signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
         },
       );
       if (!response.ok) continue;
