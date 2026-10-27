@@ -1032,7 +1032,11 @@ export function TeamTournamentDetailClient({
 
         {/* Statistics — ομαδικά & αθλητές, από τα καταχωρημένα αποτελέσματα. */}
         {panel === "stats" ? (
-          <TeamStatisticsPanel matches={matches} groupCount={sortedGroups.length} />
+          <TeamStatisticsPanel
+            matches={matches}
+            groupCount={sortedGroups.length}
+            nameVariant={summary?.nameVariant ?? "international"}
+          />
         ) : null}
 
         {/* Time Table — μία κάρτα ανά αγωνιστική, με πρόοδο και φίλτρο ομίλου. */}

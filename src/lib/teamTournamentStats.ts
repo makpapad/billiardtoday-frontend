@@ -7,6 +7,11 @@
  */
 
 import type { NormalizedTeamMatch } from "@/lib/teamTournaments";
+import {
+  pickPlayerName,
+  playerIdentityKey,
+  type NameVariant,
+} from "@/lib/playerNameVariant";
 
 export type TeamStatRow = {
   teamName: string;
@@ -23,6 +28,11 @@ export type TeamStatRow = {
 };
 
 export type PlayerStatRow = {
+  /** Σταθερό κλειδί ταυτότητας: documentId όταν υπάρχει, αλλιώς το όνομα. */
+  key: string;
+  /** Αριθμητικό id / documentId για τον σύνδεσμο προφίλ — `null` όταν λείπουν. */
+  playerId: number | null;
+  documentId: string | null;
   name: string;
   teamName: string;
   groupKey: string;
@@ -51,6 +61,8 @@ const isCounted = (match: NormalizedTeamMatch): boolean =>
 
 export const buildTeamTournamentStats = (
   matches: NormalizedTeamMatch[],
+  /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
+  nameVariant: NameVariant = "international",
 ): TeamTournamentStats => {
   const teams = new Map<string, TeamStatRow>();
   const players = new Map<string, PlayerStatRow>();
@@ -77,11 +89,20 @@ export const buildTeamTournamentStats = (
     return row;
   };
 
-  const playerRow = (name: string, teamName: string, groupKey: string): PlayerStatRow => {
-    const key = `${groupKey}|${teamName}|${name}`;
+  const playerRow = (
+    identityKey: string,
+    identity: { id: number | null; documentId: string | null },
+    name: string,
+    teamName: string,
+    groupKey: string,
+  ): PlayerStatRow => {
+    const key = `${groupKey}|${teamName}|${identityKey}`;
     let row = players.get(key);
     if (!row) {
       row = {
+        key: identityKey,
+        playerId: identity.id,
+        documentId: identity.documentId,
         name,
         teamName,
         groupKey,
@@ -133,7 +154,7 @@ export const buildTeamTournamentStats = (
 
       const sides = [
         {
-          name: set.homePlayerName,
+          player: set.homePlayer,
           team: match.homeTeamName,
           points: homePoints,
           innings: homeInnings,
@@ -142,7 +163,7 @@ export const buildTeamTournamentStats = (
           draw: homePoints === awayPoints,
         },
         {
-          name: set.awayPlayerName,
+          player: set.awayPlayer,
           team: match.awayTeamName,
           points: awayPoints,
           innings: awayInnings,
@@ -153,8 +174,16 @@ export const buildTeamTournamentStats = (
       ];
 
       sides.forEach((side) => {
-        if (!side.name) return;
-        const row = playerRow(side.name, side.team, match.groupKey);
+        const name = pickPlayerName(side.player, nameVariant);
+        const identityKey = playerIdentityKey(side.player, nameVariant);
+        if (!name || !identityKey) return;
+        const row = playerRow(
+          identityKey,
+          { id: side.player?.id ?? null, documentId: side.player?.documentId ?? null },
+          name,
+          side.team,
+          match.groupKey,
+        );
         row.games += 1;
         row.caroms += side.points;
         row.innings += side.innings;

@@ -7,13 +7,17 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import clsx from "clsx";
 import type { NormalizedTeamMatch } from "@/lib/teamTournaments";
 import { buildTeamTournamentStats } from "@/lib/teamTournamentStats";
+import { playerProfileHref, type NameVariant } from "@/lib/playerNameVariant";
 
 type Props = {
   matches: NormalizedTeamMatch[];
   groupCount: number;
+  /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
+  nameVariant?: NameVariant;
 };
 
 const avgText = (value: number): string => (value > 0 ? value.toFixed(3).replace(".", ",") : "—");
@@ -34,8 +38,15 @@ const GroupPill = ({ active, onClick, children }: { active: boolean; onClick: ()
   </button>
 );
 
-export function TeamStatisticsPanel({ matches, groupCount }: Props) {
-  const stats = useMemo(() => buildTeamTournamentStats(matches), [matches]);
+export function TeamStatisticsPanel({
+  matches,
+  groupCount,
+  nameVariant = "international",
+}: Props) {
+  const stats = useMemo(
+    () => buildTeamTournamentStats(matches, nameVariant),
+    [matches, nameVariant],
+  );
   const groupKeys = useMemo(
     () => Array.from(new Set(stats.teams.map((row) => row.groupKey))).sort(),
     [stats.teams],
@@ -105,10 +116,19 @@ export function TeamStatisticsPanel({ matches, groupCount }: Props) {
                 </thead>
                 <tbody>
                   {players.map((row, index) => (
-                    <tr key={`${row.groupKey}-${row.teamName}-${row.name}`} className="border-t border-slate-100">
+                    <tr key={`${row.groupKey}-${row.teamName}-${row.key}`} className="border-t border-slate-100">
                       <td className="px-2 py-2 text-center text-slate-400">{index + 1}</td>
                       <th scope="row" className="max-w-[220px] px-2 py-2 text-left text-[12px] font-bold text-slate-900">
-                        {row.name}
+                        {playerProfileHref({ id: row.playerId, documentId: row.documentId }, row.name) ? (
+                          <Link
+                            href={playerProfileHref({ id: row.playerId, documentId: row.documentId }, row.name)!}
+                            className="text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900"
+                          >
+                            {row.name}
+                          </Link>
+                        ) : (
+                          row.name
+                        )}
                       </th>
                       <td className="max-w-[200px] truncate px-2 py-2 text-left text-[11.5px] text-slate-500">
                         {row.teamName}

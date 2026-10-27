@@ -9,13 +9,20 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import clsx from "clsx";
 import {
   formatAvg,
   type NormalizedTeamMatch,
   type TeamMatchSet,
+  type TeamSetPlayer,
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
+import {
+  pickPlayerName,
+  playerProfileHref,
+  type NameVariant,
+} from "@/lib/playerNameVariant";
 
 const boardPoints = (set: TeamMatchSet): { home: number; away: number } => {
   const home = set.homePoints ?? 0;
@@ -41,6 +48,35 @@ export const isCompletedMatch = (match: NormalizedTeamMatch): boolean =>
   (match.computed.boardCount > 0 &&
     (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
 
+/**
+ * Το όνομα του αθλητή στη γραμμή της παρτίδας: σύνδεσμος προς το προφίλ όταν έχουμε
+ * ταυτότητα, αλλιώς σκέτο κείμενο (ποτέ σπασμένος σύνδεσμος).
+ */
+const SetPlayerName = ({
+  player,
+  variant,
+  className,
+}: {
+  player: TeamSetPlayer | null;
+  variant: NameVariant;
+  className?: string;
+}) => {
+  const name = pickPlayerName(player, variant) || "—";
+  const href = playerProfileHref(player, name);
+  if (!href) return <span className={className}>{name}</span>;
+  return (
+    <Link
+      href={href}
+      className={clsx(
+        className,
+        "text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950",
+      )}
+    >
+      {name}
+    </Link>
+  );
+};
+
 export function TeamMatchRow({
   match,
   summary,
@@ -51,6 +87,7 @@ export function TeamMatchRow({
   const [open, setOpen] = useState(false);
   const completed = isCompletedMatch(match);
   const biathlon = summary?.config?.mode === "biathlon";
+  const nameVariant: NameVariant = summary?.nameVariant ?? "international";
   const c = match.computed;
 
   const homePoints = c.homeTeamPoints;
@@ -230,13 +267,12 @@ export function TeamMatchRow({
                           {comma(formatAvg(home, homeInnings, caromBoard))}
                         </td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">{homeInnings}</td>
-                        <td
-                          className={clsx(
-                            "px-2.5 py-1.5 text-right",
-                            bp.home === 2 ? "font-bold text-slate-950" : "text-slate-700",
-                          )}
-                        >
-                          {set.homePlayerName || "—"}
+                        <td className="px-2.5 py-1.5 text-right">
+                          <SetPlayerName
+                            player={set.homePlayer}
+                            variant={nameVariant}
+                            className={bp.home === 2 ? "font-bold text-slate-950" : "text-slate-700"}
+                          />
                         </td>
                         <td
                           className={clsx(
@@ -255,13 +291,12 @@ export function TeamMatchRow({
                         >
                           {away}
                         </td>
-                        <td
-                          className={clsx(
-                            "px-2.5 py-1.5 text-left",
-                            bp.away === 2 ? "font-bold text-slate-950" : "text-slate-700",
-                          )}
-                        >
-                          {set.awayPlayerName || "—"}
+                        <td className="px-2.5 py-1.5 text-left">
+                          <SetPlayerName
+                            player={set.awayPlayer}
+                            variant={nameVariant}
+                            className={bp.away === 2 ? "font-bold text-slate-950" : "text-slate-700"}
+                          />
                         </td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">{awayInnings}</td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">

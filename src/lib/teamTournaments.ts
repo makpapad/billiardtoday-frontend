@@ -8,6 +8,12 @@
  * and the Strapi lifecycle src/api/team-match-set/content-types/team-match-set/lifecycles.js
  */
 
+import {
+  nameVariantForFederationLevel,
+  type NameVariant,
+  type PlayerNamePair,
+} from "@/lib/playerNameVariant";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -24,6 +30,10 @@ export type TeamTournamentSummary = {
   config: Record<string, unknown> | null;
   scoringConfig: Record<string, unknown> | null;
   teamCount: number;
+  /** `federation.level` (national / confederation / world) — κρίνει ποιο όνομα αθλητή δείχνουμε. */
+  federationLevel: string | null;
+  /** national → εθνικό όνομα· διεθνείς διοργανώσεις → International Name. */
+  nameVariant: NameVariant;
 };
 
 export type TeamEntity = {
@@ -42,6 +52,15 @@ export type TeamGroup = {
   teams: TeamEntity[];
 };
 
+/** Ο αθλητής μιας παρτίδας: ταυτότητα προφίλ + και τα δύο ονόματα. */
+export type TeamSetPlayer = PlayerNamePair & {
+  /** Αριθμητικό id — η σύμβαση του site για τους συνδέσμους προφίλ (`/players/1954-…`). */
+  id: number | null;
+  documentId: string | null;
+  national: string | null;
+  international: string | null;
+};
+
 export type TeamMatchSet = {
   id: number | null;
   documentId: string | null;
@@ -53,8 +72,8 @@ export type TeamMatchSet = {
   awayInnings: number | null;
   homeHighRun: number | null;
   awayHighRun: number | null;
-  homePlayerName: string | null;
-  awayPlayerName: string | null;
+  homePlayer: TeamSetPlayer | null;
+  awayPlayer: TeamSetPlayer | null;
 };
 
 export type MatchComputed = {
@@ -132,14 +151,25 @@ const STRAPI_URLS = Array.from(
   new Set([PRIMARY_STRAPI_URL, FALLBACK_STRAPI_URL].filter(Boolean)),
 ) as string[];
 
-const fetchPublic = async (path: string): Promise<unknown> => {
+/**
+ * Το token του server (ίδιο pattern με το federationPageData) — χρειάζεται για ό,τι δεν
+ * επιτρέπει ο δημόσιος ρόλος, π.χ. το `federation.level` πάνω στο team-tournament.
+ * Τρέχει μόνο server-side· αν λείπει, πέφτουμε στη δημόσια κλήση.
+ */
+const STRAPI_SERVER_TOKEN = (process.env.STRAPI_API_TOKEN ?? "").trim();
+
+const fetchPublic = async (path: string, opts?: { auth?: boolean }): Promise<unknown> => {
   const runtimeOptions: RequestInit & { next?: { revalidate: number } } = IS_PRODUCTION
     ? { next: { revalidate: 60 } }
     : { cache: "no-store" };
+  const headers =
+    opts?.auth && STRAPI_SERVER_TOKEN
+      ? { Authorization: `Bearer ${STRAPI_SERVER_TOKEN}` }
+      : undefined;
 
   for (const baseUrl of STRAPI_URLS) {
     const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
-    const response = await fetch(url, runtimeOptions).catch(() => null);
+    const response = await fetch(url, headers ? { ...runtimeOptions, headers } : runtimeOptions).catch(() => null);
     if (response?.ok) {
       return response.json().catch(() => null);
     }
@@ -258,6 +288,9 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
 
   const season = toNumber(config.season);
   const gameType = readString(config.game_type);
+  // Το επίπεδο της ομοσπονδίας φτάνει από το populate του federation (level).
+  const federation = flatten(entity.federation);
+  const federationLevel = readString(federation.level) || null;
 
   return {
     documentId: readString(entity.documentId) || "",
@@ -271,11 +304,14 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
     config,
     scoringConfig,
     teamCount: 0,
+    federationLevel,
+    nameVariant: nameVariantForFederationLevel(federationLevel),
   };
 };
 
 export const fetchTeamTournaments = async (): Promise<TeamTournamentSummary[]> => {
   const params = new URLSearchParams();
+  params.append("populate[federation][fields][0]", "level");
   params.set("pagination[pageSize]", "100");
   params.set("sort[0]", "title:asc");
   const json = await fetchPublic(`/api/team-tournaments?${params.toString()}`);
@@ -325,11 +361,17 @@ export const resolveTeamTournamentBySlug = async (
   return all.find((s) => buildTeamTournamentSlug(s) === cleanSlug) ?? null;
 };
 
+/** Το επίπεδο της ομοσπονδίας (national/confederation/world) — κρίνει το όνομα των αθλητών. */
+const FEDERATION_LEVEL_PARAM = "populate[federation][fields][0]=level";
+
 export const fetchTeamTournamentByDocumentId = async (
   documentId: string,
 ): Promise<TeamTournamentSummary | null> => {
   if (!documentId) return null;
-  const json = await fetchPublic(`/api/team-tournaments/${documentId}`);
+  const path = `/api/team-tournaments/${documentId}?${FEDERATION_LEVEL_PARAM}`;
+  // Ο δημόσιος ρόλος δεν βλέπει τη σχέση federation (γυρίζει null) — με το token του
+  // server έρχεται το επίπεδο, που κρίνει αν δείχνουμε εθνικά ή διεθνή ονόματα αθλητών.
+  const json = (await fetchPublic(path, { auth: true })) ?? (await fetchPublic(path));
   if (!json) return null;
   // Single-entity responses are wrapped in { data: {...} } — unwrap before normalize.
   const data = (json as { data?: unknown }).data ?? json;
@@ -390,10 +432,20 @@ export const fetchTeamGroups = async (
 // Matches + sets
 // ---------------------------------------------------------------------------
 
+const normalizeTeamSetPlayer = (raw: unknown): TeamSetPlayer | null => {
+  const player = flatten(raw);
+  const id = toNumber(player.id);
+  const documentId = readString(player.documentId) || null;
+  const national = readString(player.full_name) || null;
+  const international = readString(player.full_name_en) || null;
+  if (!id && !documentId && !national && !international) return null;
+  return { id, documentId, national, international };
+};
+
 const normalizeTeamMatchSet = (raw: unknown): TeamMatchSet | null => {
   const entity = flatten(raw);
-  const homePlayer = flatten(entity.home_player);
-  const awayPlayer = flatten(entity.away_player);
+  const homePlayer = normalizeTeamSetPlayer(entity.home_player);
+  const awayPlayer = normalizeTeamSetPlayer(entity.away_player);
 
   return {
     id: toNumber(entity.id),
@@ -406,8 +458,8 @@ const normalizeTeamMatchSet = (raw: unknown): TeamMatchSet | null => {
     awayInnings: toNumber(entity.away_innings),
     homeHighRun: toNumber(entity.home_high_run),
     awayHighRun: toNumber(entity.away_high_run),
-    homePlayerName: readString(homePlayer.full_name),
-    awayPlayerName: readString(awayPlayer.full_name),
+    homePlayer,
+    awayPlayer,
   };
 };
 
@@ -556,8 +608,16 @@ export const fetchTeamMatches = async (
   params.set("populate[sets][fields][5]", "away_innings");
   params.set("populate[sets][fields][6]", "home_high_run");
   params.set("populate[sets][fields][7]", "away_high_run");
+  // Και τα δύο ονόματα + documentId: το ένα δίνει το όνομα ανάλογα με τη διοργάνωση,
+  // το άλλο τον σύνδεσμο προς το προφίλ του αθλητή (/players/[id]).
   params.set("populate[sets][populate][home_player][fields][0]", "full_name");
+  params.set("populate[sets][populate][home_player][fields][1]", "full_name_en");
+  params.set("populate[sets][populate][home_player][fields][2]", "documentId");
   params.set("populate[sets][populate][away_player][fields][0]", "full_name");
+  params.set("populate[sets][populate][away_player][fields][1]", "full_name_en");
+  params.set("populate[sets][populate][away_player][fields][2]", "documentId");
+  // Το αριθμητικό id έρχεται από το Strapi χωρίς να ζητηθεί — το κρατάει ο normalizer
+  // (`toNumber(player.id)`) για τους συνδέσμους `/players/{id}-{όνομα}`.
   params.set("fields[0]", "stage");
   params.set("fields[1]", "group_key");
   params.set("fields[2]", "round");
