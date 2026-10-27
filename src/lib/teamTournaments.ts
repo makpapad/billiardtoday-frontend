@@ -478,6 +478,45 @@ export const formatAvg = (points: number, innings: number, caromBoard = false): 
   return avg.toFixed(3);
 };
 
+/**
+ * Οι πόντοι αγώνα (2/1/0) ενός board. Κρίνει ΠΡΩΤΑ το `result` που κρατά το BT:
+ * έτσι μετριέται σωστά και το «άνευ αγώνα» (F.F.), όπου δεν υπάρχουν νούμερα αθλητών.
+ */
+export const boardPointsOf = (set: TeamMatchSet): { home: number; away: number } => {
+  const result = String(set.result ?? "").trim().toLowerCase();
+  if (result === "home_win") return { home: 2, away: 0 };
+  if (result === "away_win") return { home: 0, away: 2 };
+  if (result === "draw") return { home: 1, away: 1 };
+  const home = set.homePoints ?? 0;
+  const away = set.awayPoints ?? 0;
+  if (home === 0 && away === 0) return { home: 0, away: 0 };
+  if (home > away) return { home: 2, away: 0 };
+  if (away > home) return { home: 0, away: 2 };
+  return { home: 1, away: 1 };
+};
+
+/**
+ * Board «άνευ αγώνα»: βγήκε νικητής αλλά δεν υπάρχουν νούμερα αθλητών
+ * (ούτε πόντοι, ούτε ονόματα) — δηλαδή η μία ομάδα δεν κατέβηκε.
+ */
+export const isForfeitBoard = (set: TeamMatchSet): boolean => {
+  const result = String(set.result ?? "").trim().toLowerCase();
+  if (result !== "home_win" && result !== "away_win") return false;
+  const home = set.homePoints ?? 0;
+  const away = set.awayPoints ?? 0;
+  return home === 0 && away === 0 && !set.homePlayer && !set.awayPlayer;
+};
+
+/** Board χωρίς νούμερα αθλητών: 2-0 στον παρόντα, 8-0 στην ομάδα στους 4 αγώνες. */
+export const matchBoardPointsOf = (sets: TeamMatchSet[]): { home: number; away: number } =>
+  sets.reduce(
+    (total, set) => {
+      const bp = boardPointsOf(set);
+      return { home: total.home + bp.home, away: total.away + bp.away };
+    },
+    { home: 0, away: 0 },
+  );
+
 const computeMatchTotals = (
   sets: TeamMatchSet[],
   opts?: { biathlon?: boolean },
@@ -509,17 +548,10 @@ const computeMatchTotals = (
       awayCaromPoints += ap;
     }
 
-    if (hp === 0 && ap === 0) return;
-    if (hp > ap) {
-      homeBoardPoints += 2;
-      return;
-    }
-    if (ap > hp) {
-      awayBoardPoints += 2;
-      return;
-    }
-    homeBoardPoints += 1;
-    awayBoardPoints += 1;
+    if (hp === 0 && ap === 0 && !isForfeitBoard(s)) return;
+    const bp = boardPointsOf(s);
+    homeBoardPoints += bp.home;
+    awayBoardPoints += bp.away;
   });
 
   // Biathlon (C/27): winner = higher TOT (5P + 3C points, first to 200 wins),

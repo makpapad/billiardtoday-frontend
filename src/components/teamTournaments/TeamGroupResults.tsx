@@ -90,7 +90,7 @@ export function GroupStandingsPanel({
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.draws}</td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.losses}</td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">
-                    {row.framesFor}–{row.framesAgainst}
+                    {row.framesFor} – {row.framesAgainst}
                   </td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">
                     {diff > 0 ? `+${diff}` : diff}
@@ -281,18 +281,7 @@ export function TeamGroupResults({
       <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-[104px]">
         {multiGroup ? (
           <div className="flex flex-wrap gap-1.5 rounded-[16px] border border-slate-200 bg-white px-2.5 py-2">
-            <button
-              type="button"
-              onClick={() => onSelectGroup("all")}
-              aria-pressed={activeGroupKey === "all"}
-              className={
-                activeGroupKey === "all"
-                  ? "rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-bold text-white transition"
-                  : "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-800"
-              }
-            >
-              Όλοι οι όμιλοι
-            </button>
+            {/* Χωρίς «Όλοι οι όμιλοι»: η προβολή είναι πάντα ένας όμιλος (προεπιλογή ο 1ος). */}
             {groups.map((item) => (
               <button
                 key={item.documentId || item.groupKey}

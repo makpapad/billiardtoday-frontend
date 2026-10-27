@@ -170,7 +170,7 @@ function GroupStandingsTable({
                 </>
               ) : (
                 <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
-                  {row.framesFor}–{row.framesAgainst}
+                  {row.framesFor} – {row.framesAgainst}
                 </td>
               )}
               <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
@@ -300,7 +300,7 @@ function QualificationRankingTable({
                   </>
                 ) : (
                   <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
-                    {row.framesFor}–{row.framesAgainst}
+                    {row.framesFor} – {row.framesAgainst}
                   </td>
                 )}
                 <td className="px-2 py-2.5 text-center text-gray-600 dark:text-gray-300">
@@ -390,7 +390,7 @@ function KoMatchCard({
           {match.homeTeamName}
         </div>
         <div className="shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-black text-gray-900 dark:bg-gray-900/70 dark:text-gray-100">
-          {completed ? `${homeScore}–${awayScore}` : "–"}
+          {completed ? `${homeScore} – ${awayScore}` : "–"}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -601,7 +601,7 @@ export function TeamTournamentDetailClient({
   const [stage, setStage] = useState<StageKey>("qualifications");
   const [view, setView] = useState<ViewKey>("matches");
   const [panel, setPanel] = useState<PanelKey>("tournament");
-  /** Ο επιλεγμένος όμιλος στα αποτελέσματα («all» = όλοι οι όμιλοι). */
+  /** Ο επιλεγμένος όμιλος στα αποτελέσματα — προεπιλογή ο 1ος όμιλος. */
   const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
 
   const summary = detail?.summary ?? null;
@@ -684,6 +684,15 @@ export function TeamTournamentDetailClient({
     map.forEach((list) => list.sort((a, b) => (b.round ?? 0) - (a.round ?? 0)));
     return map;
   }, [matches]);
+
+  /**
+   * Ο όμιλος που βλέπει ο επισκέπτης: πάντα ένας όμιλος (δεν υπάρχει πια «Όλοι οι όμιλοι»),
+   * με προεπιλογή τον 1ο όμιλο όσο δεν έχει διαλέξει κάποιον άλλον.
+   */
+  const effectiveGroupKey = useMemo(() => {
+    if (activeGroupKey && activeGroupKey !== "all") return activeGroupKey;
+    return sortedGroups[0]?.groupKey ?? "all";
+  }, [activeGroupKey, sortedGroups]);
 
   const activeGroup = useMemo(
     () =>
@@ -966,7 +975,7 @@ export function TeamTournamentDetailClient({
             ) : (
               <TeamGroupResults
                 groups={sortedGroups}
-                activeGroupKey={activeGroupKey ?? "all"}
+                activeGroupKey={effectiveGroupKey}
                 onSelectGroup={setActiveGroupKey}
                 matchesByGroupKey={matchesByGroupKey}
                 standingsForGroup={(group) =>

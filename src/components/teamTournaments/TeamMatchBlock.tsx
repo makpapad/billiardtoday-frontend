@@ -12,7 +12,9 @@ import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
+  boardPointsOf,
   formatAvg,
+  isForfeitBoard,
   type NormalizedTeamMatch,
   type TeamMatchSet,
   type TeamSetPlayer,
@@ -23,15 +25,6 @@ import {
   playerProfileHref,
   type NameVariant,
 } from "@/lib/playerNameVariant";
-
-const boardPoints = (set: TeamMatchSet): { home: number; away: number } => {
-  const home = set.homePoints ?? 0;
-  const away = set.awayPoints ?? 0;
-  if (home === 0 && away === 0) return { home: 0, away: 0 };
-  if (home > away) return { home: 2, away: 0 };
-  if (away > home) return { home: 0, away: 2 };
-  return { home: 1, away: 1 };
-};
 
 /** Ελληνικό δεκαδικό κόμμα στους μέσους όρους (0,300 αντί για 0.300). */
 const comma = (value: string): string => value.replace(".", ",");
@@ -129,6 +122,10 @@ export function TeamMatchRow({
 
   const caromValues = [c.homeCaromPoints, c.awayCaromPoints];
 
+  // Όλα τα boards «άνευ αγώνα»: δεν υπάρχουν νούμερα αθλητών — μένουν μόνο
+  // οι πόντοι αγώνα (Επιμ. 8-0) και οι βαθμοί ομάδας (Βαθ. 2-0).
+  const matchForfeit = match.sets.length > 0 && match.sets.every(isForfeitBoard);
+
   return (
     <div className="border-t border-slate-100 first:border-t-0">
       <div
@@ -158,7 +155,7 @@ export function TeamMatchRow({
             completed ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-400",
           )}
         >
-          {completed ? `${c.homeBoardPoints}–${c.awayBoardPoints}` : "–"}
+          {completed ? `${c.homeBoardPoints} – ${c.awayBoardPoints}` : "–"}
         </span>
         <span
           className={clsx(
@@ -215,12 +212,14 @@ export function TeamMatchRow({
                     >
                       {team.name}
                     </th>
-                    <td className="px-2 py-1.5 text-center text-slate-700">{completed ? team.points : "—"}</td>
-                    <td className="px-2 py-1.5 text-center text-slate-700">{completed ? team.innings : "—"}</td>
-                    <td className="px-2 py-1.5 text-center text-slate-700">{completed ? team.highRun : "—"}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.points : "—"}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.innings : "—"}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.highRun : "—"}</td>
                     <td className="px-2 py-1.5 text-center text-slate-700">{completed ? team.boards : "—"}</td>
                     <td className="px-2 py-1.5 text-center text-slate-700">
-                      {completed ? teamAvg(team.points, caromValues[index], team.innings) : "—"}
+                      {completed && !matchForfeit
+                        ? teamAvg(team.points, caromValues[index], team.innings)
+                        : "—"}
                     </td>
                     <td className="px-2 py-1.5 text-center font-extrabold text-slate-900">
                       {completed ? team.leaguePoints : "—"}
@@ -251,9 +250,13 @@ export function TeamMatchRow({
                 </thead>
                 <tbody>
                   {match.sets.map((set, index) => {
-                    const bp = boardPoints(set);
+                    const bp = boardPointsOf(set);
+                    const forfeit = isForfeitBoard(set);
                     const home = set.homePoints ?? 0;
                     const away = set.awayPoints ?? 0;
+                    // «Άνευ αγώνα»: 2-0 στο κάθε board, χωρίς ονόματα και νούμερα αθλητών.
+                    const shownHome = forfeit ? bp.home : home;
+                    const shownAway = forfeit ? bp.away : away;
                     const homeInnings = set.homeInnings ?? 0;
                     const awayInnings = set.awayInnings ?? 0;
                     const caromBoard = Boolean(biathlon && set.boardIndex === 2);
@@ -262,11 +265,11 @@ export function TeamMatchRow({
                         key={set.documentId || `${set.boardIndex}-${index}`}
                         className={index % 2 === 0 ? "bg-[#f7fbff]" : "bg-white"}
                       >
-                        <td className="px-1.5 py-1.5 text-center text-slate-600">{set.homeHighRun ?? 0}</td>
+                        <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : set.homeHighRun ?? 0}</td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">
-                          {comma(formatAvg(home, homeInnings, caromBoard))}
+                          {forfeit ? "" : comma(formatAvg(home, homeInnings, caromBoard))}
                         </td>
-                        <td className="px-1.5 py-1.5 text-center text-slate-600">{homeInnings}</td>
+                        <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : homeInnings}</td>
                         <td className="px-2.5 py-1.5 text-right">
                           <SetPlayerName
                             player={set.homePlayer}
@@ -280,7 +283,7 @@ export function TeamMatchRow({
                             bp.home === 2 ? "text-teal-700" : "text-slate-800",
                           )}
                         >
-                          {home}
+                          {shownHome}
                         </td>
                         <td className="text-center text-slate-300">–</td>
                         <td
@@ -289,7 +292,7 @@ export function TeamMatchRow({
                             bp.away === 2 ? "text-teal-700" : "text-slate-800",
                           )}
                         >
-                          {away}
+                          {shownAway}
                         </td>
                         <td className="px-2.5 py-1.5 text-left">
                           <SetPlayerName
@@ -298,11 +301,11 @@ export function TeamMatchRow({
                             className={bp.away === 2 ? "font-bold text-slate-950" : "text-slate-700"}
                           />
                         </td>
-                        <td className="px-1.5 py-1.5 text-center text-slate-600">{awayInnings}</td>
+                        <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : awayInnings}</td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">
-                          {comma(formatAvg(away, awayInnings, caromBoard))}
+                          {forfeit ? "" : comma(formatAvg(away, awayInnings, caromBoard))}
                         </td>
-                        <td className="px-1.5 py-1.5 text-center text-slate-600">{set.awayHighRun ?? 0}</td>
+                        <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : set.awayHighRun ?? 0}</td>
                       </tr>
                     );
                   })}

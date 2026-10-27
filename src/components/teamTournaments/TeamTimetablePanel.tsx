@@ -199,7 +199,7 @@ export function TeamTimetablePanel({
                         )}
                       >
                         {played
-                          ? `${match.computed.homeBoardPoints}–${match.computed.awayBoardPoints}`
+                          ? `${match.computed.homeBoardPoints} – ${match.computed.awayBoardPoints}`
                           : "–"}
                       </span>
                       <span
