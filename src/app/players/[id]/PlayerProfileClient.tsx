@@ -1,5 +1,6 @@
 "use client"
 
+import PlayerTeamHistory from "@/components/players/PlayerTeamHistory"
 import { useState, useEffect, useRef } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
@@ -66,6 +67,21 @@ type Player = {
             highestRun?: number
             yearsActive?: number[]
         }
+        /** Στατιστικά ανά είδος διοργάνωσης (π.χ. `team` = ομαδικά). */
+        byCompetitionType?: Record<
+            string,
+            {
+                totalMatches?: number
+                totalWins?: number
+                totalLosses?: number
+                totalDraws?: number
+                winPercentage?: number | string
+                avgPerInning?: number | string
+                bestAverageFromWins?: number | string
+                highestRun?: number
+                lastUpdated?: string
+            }
+        >
         byGameType?: Record<
             string,
             {
@@ -733,6 +749,12 @@ export default function PlayerProfileClient({
     const [participations, setParticipations] = useState<TournamentParticipation[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+    // Ατομικό (individual) ή Ομαδικό (team competitions) ιστορικό
+    const [historyMode, setHistoryMode] = useState<'individual' | 'team'>('individual')
+
+    // Ομαδικά αποτελέσματα υπάρχουν; (τότε και μόνο τότε δείχνουμε τον διακόπτη)
+    const hasTeamHistory =
+        (player?.career_stats?.byCompetitionType?.team?.totalMatches ?? 0) > 0
     const [error, setError] = useState<string | null>(null)
     const [selectedYear, setSelectedYear] = useState<string>('all')
     const [availableYears, setAvailableYears] = useState<number[]>([])
@@ -2650,224 +2672,251 @@ export default function PlayerProfileClient({
                                 <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                             )}
                         </h2>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            {/* Game Type Filter */}
-                            {gameTypeOptions.length > 0 && (
-                                <select
-                                    value={selectedGameType}
-                                    onChange={(e) =>
-                                        handleGameTypeChange(
-                                            e.target.value as GameType | 'all',
-                                        )
-                                    }
-                                    disabled={isLoadingHistory}
-                                    className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <option value="all">{t('players.profile.history.filter.gameType.all')}</option>
-                                    {gameTypeOptions.map((gameType) => (
-                                        <option key={gameType} value={gameType}>
-                                            {getGameTypeLabel(gameType)}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
-
-                            {filteredAvailableTournamentTypes.length > 0 && (
-                                <select
-                                    value={selectedTournamentType}
-                                    onChange={(e) =>
-                                        handleTournamentTypeChange(
-                                            e.target.value,
-                                        )
-                                    }
-                                    disabled={isLoadingHistory}
-                                    className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <option value="all">
-                                        All tournament types
-                                    </option>
-                                    {filteredAvailableTournamentTypes.map(
-                                        (tournamentType) => (
-                                            <option
-                                                key={tournamentType}
-                                                value={tournamentType}
-                                            >
-                                                {getTournamentTypeLabel(
-                                                    tournamentType,
-                                                )}
-                                            </option>
-                                        ),
-                                    )}
-                                </select>
-                            )}
-
-                            {/* Year Filter - Only show after game type is selected */}
-                            {selectedGameType !== 'all' &&
-                                filteredAvailableYears.length > 0 && (
+                        {/* Τα φίλτρα του ατομικού κρύβονται στο ομαδικό (έχει δικά του) */}
+                        {historyMode === 'individual' && (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Game Type Filter */}
+                                {gameTypeOptions.length > 0 && (
                                     <select
-                                        value={selectedYear}
+                                        value={selectedGameType}
                                         onChange={(e) =>
-                                            handleYearChange(e.target.value)
+                                            handleGameTypeChange(
+                                                e.target.value as GameType | 'all',
+                                            )
                                         }
                                         disabled={isLoadingHistory}
                                         className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <option value="all">{t('players.profile.history.filter.year.all')}</option>
-                                        {filteredAvailableYears.map((year) => (
-                                            <option key={year} value={year}>
-                                                {year}
+                                        <option value="all">{t('players.profile.history.filter.gameType.all')}</option>
+                                        {gameTypeOptions.map((gameType) => (
+                                            <option key={gameType} value={gameType}>
+                                                {getGameTypeLabel(gameType)}
                                             </option>
                                         ))}
                                     </select>
-                            )}
-                            {/* Opponent Filter (Head-to-Head) - custom smart autocomplete */}
-                            {selectedGameType !== 'all' && (
-                                <div
-                                    ref={opponentComboboxRef}
-                                    className="relative"
-                                >
-                                    <input
-                                        type="text"
-                                        name="player-h2h-opponent"
-                                        autoComplete="off"
-                                        autoCorrect="off"
-                                        autoCapitalize="none"
-                                        spellCheck={false}
-                                        placeholder={t('players.profile.h2h.searchPlaceholder')}
-                                        value={opponentQuery}
-                                        onFocus={() => setIsOpponentOpen(true)}
-                                        onChange={(e) => {
-                                            const val = e.target.value
-                                            setOpponentQuery(val)
-                                            setIsOpponentOpen(true)
-                                            setOpponentHighlight(0)
-                                            const exact = opponentsList.find(
-                                                (op) =>
-                                                    op.name.toLowerCase() ===
-                                                    val.toLowerCase(),
+                                )}
+
+                                {filteredAvailableTournamentTypes.length > 0 && (
+                                    <select
+                                        value={selectedTournamentType}
+                                        onChange={(e) =>
+                                            handleTournamentTypeChange(
+                                                e.target.value,
                                             )
-                                            setSelectedOpponentId(
-                                                exact ? exact.id : '',
-                                            )
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (!isOpponentOpen) return
-                                            const max = Math.max(
-                                                0,
-                                                Math.min(
-                                                    filteredOpponents.length,
-                                                    20,
-                                                ) - 1,
-                                            )
-                                            if (e.key === 'ArrowDown') {
-                                                e.preventDefault()
-                                                setOpponentHighlight((h) =>
-                                                    h < max ? h + 1 : h,
+                                        }
+                                        disabled={isLoadingHistory}
+                                        className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <option value="all">
+                                            All tournament types
+                                        </option>
+                                        {filteredAvailableTournamentTypes.map(
+                                            (tournamentType) => (
+                                                <option
+                                                    key={tournamentType}
+                                                    value={tournamentType}
+                                                >
+                                                    {getTournamentTypeLabel(
+                                                        tournamentType,
+                                                    )}
+                                                </option>
+                                            ),
+                                        )}
+                                    </select>
+                                )}
+
+                                {/* Year Filter - Only show after game type is selected */}
+                                {selectedGameType !== 'all' &&
+                                    filteredAvailableYears.length > 0 && (
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) =>
+                                                handleYearChange(e.target.value)
+                                            }
+                                            disabled={isLoadingHistory}
+                                            className="px-4 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <option value="all">{t('players.profile.history.filter.year.all')}</option>
+                                            {filteredAvailableYears.map((year) => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </select>
+                                )}
+                                {/* Opponent Filter (Head-to-Head) - custom smart autocomplete */}
+                                {selectedGameType !== 'all' && (
+                                    <div
+                                        ref={opponentComboboxRef}
+                                        className="relative"
+                                    >
+                                        <input
+                                            type="text"
+                                            name="player-h2h-opponent"
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            autoCapitalize="none"
+                                            spellCheck={false}
+                                            placeholder={t('players.profile.h2h.searchPlaceholder')}
+                                            value={opponentQuery}
+                                            onFocus={() => setIsOpponentOpen(true)}
+                                            onChange={(e) => {
+                                                const val = e.target.value
+                                                setOpponentQuery(val)
+                                                setIsOpponentOpen(true)
+                                                setOpponentHighlight(0)
+                                                const exact = opponentsList.find(
+                                                    (op) =>
+                                                        op.name.toLowerCase() ===
+                                                        val.toLowerCase(),
                                                 )
-                                            } else if (e.key === 'ArrowUp') {
-                                                e.preventDefault()
-                                                setOpponentHighlight((h) =>
-                                                    h > 0 ? h - 1 : 0,
+                                                setSelectedOpponentId(
+                                                    exact ? exact.id : '',
                                                 )
-                                            } else if (e.key === 'Enter') {
-                                                e.preventDefault()
-                                                const list =
-                                                    filteredOpponents.slice(
-                                                        0,
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (!isOpponentOpen) return
+                                                const max = Math.max(
+                                                    0,
+                                                    Math.min(
+                                                        filteredOpponents.length,
                                                         20,
+                                                    ) - 1,
+                                                )
+                                                if (e.key === 'ArrowDown') {
+                                                    e.preventDefault()
+                                                    setOpponentHighlight((h) =>
+                                                        h < max ? h + 1 : h,
                                                     )
-                                                const pick =
-                                                    list[opponentHighlight]
-                                                if (pick) {
-                                                    setOpponentQuery(pick.name)
-                                                    setSelectedOpponentId(pick.id)
+                                                } else if (e.key === 'ArrowUp') {
+                                                    e.preventDefault()
+                                                    setOpponentHighlight((h) =>
+                                                        h > 0 ? h - 1 : 0,
+                                                    )
+                                                } else if (e.key === 'Enter') {
+                                                    e.preventDefault()
+                                                    const list =
+                                                        filteredOpponents.slice(
+                                                            0,
+                                                            20,
+                                                        )
+                                                    const pick =
+                                                        list[opponentHighlight]
+                                                    if (pick) {
+                                                        setOpponentQuery(pick.name)
+                                                        setSelectedOpponentId(pick.id)
+                                                        setIsOpponentOpen(false)
+                                                    }
+                                                } else if (e.key === 'Escape') {
                                                     setIsOpponentOpen(false)
                                                 }
-                                            } else if (e.key === 'Escape') {
-                                                setIsOpponentOpen(false)
+                                            }}
+                                            disabled={
+                                                isLoadingHistory ||
+                                                opponentsList.length === 0
                                             }
-                                        }}
-                                        disabled={
-                                            isLoadingHistory ||
-                                            opponentsList.length === 0
-                                        }
-                                        className="px-4 pr-8 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-72"
-                                    />
-                                    {opponentQuery && (
-                                        <button
-                                            type="button"
-                                            aria-label="Clear opponent"
-                                            onMouseDown={(e) => {
-                                                e.preventDefault()
-                                            }}
-                                            onClick={() => {
-                                                setOpponentQuery('')
-                                                setSelectedOpponentId('')
-                                                setIsOpponentOpen(false)
-                                            }}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                                className="w-4 h-4"
+                                            className="px-4 pr-8 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-72"
+                                        />
+                                        {opponentQuery && (
+                                            <button
+                                                type="button"
+                                                aria-label="Clear opponent"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault()
+                                                }}
+                                                onClick={() => {
+                                                    setOpponentQuery('')
+                                                    setSelectedOpponentId('')
+                                                    setIsOpponentOpen(false)
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
                                             >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm2.28-10.28a.75.75 0 10-1.06-1.06L10 7.94 8.78 6.66a.75.75 0 10-1.06 1.06L8.94 9l-1.22 1.22a.75.75 0 101.06 1.06L10 10.06l1.22 1.22a.75.75 0 101.06-1.06L11.06 9l1.22-1.22z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                        </button>
-                                    )}
-                                    {isOpponentOpen &&
-                                        filteredOpponents.length > 0 && (
-                                            <div className="absolute z-20 mt-1 w-full max-w-full max-h-64 overflow-auto rounded-md border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                                                {filteredOpponents
-                                                    .slice(0, 20)
-                                                    .map((op, idx) => (
-                                                        <button
-                                                            key={op.id}
-                                                            type="button"
-                                                            onMouseDown={(e) => {
-                                                                e.preventDefault()
-                                                            }}
-                                                            onClick={() => {
-                                                                setOpponentQuery(
-                                                                    op.name,
-                                                                )
-                                                                setSelectedOpponentId(
-                                                                    op.id,
-                                                                )
-                                                                setIsOpponentOpen(
-                                                                    false,
-                                                                )
-                                                            }}
-                                                            className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm ${idx === opponentHighlight ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
-                                                        >
-                                                            <span
-                                                                className="block min-w-0 flex-1 truncate"
-                                                                title={op.name}
-                                                            >
-                                                                {op.name}
-                                                            </span>
-                                                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-                                                                {op.count}
-                                                            </span>
-                                                        </button>
-                                                    ))}
-                                                {filteredOpponents.length > 20 && (
-                                                    <div className="px-3 py-2 text-xs text-gray-500">
-                                                        {t('players.profile.h2h.moreResults')}
-                                                    </div>
-                                                )}
-                                            </div>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
+                                                    className="w-4 h-4"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm2.28-10.28a.75.75 0 10-1.06-1.06L10 7.94 8.78 6.66a.75.75 0 10-1.06 1.06L8.94 9l-1.22 1.22a.75.75 0 101.06 1.06L10 10.06l1.22 1.22a.75.75 0 101.06-1.06L11.06 9l1.22-1.22z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </button>
                                         )}
-                                </div>
-                            )}
-                        </div>
+                                        {isOpponentOpen &&
+                                            filteredOpponents.length > 0 && (
+                                                <div className="absolute z-20 mt-1 w-full max-w-full max-h-64 overflow-auto rounded-md border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                                                    {filteredOpponents
+                                                        .slice(0, 20)
+                                                        .map((op, idx) => (
+                                                            <button
+                                                                key={op.id}
+                                                                type="button"
+                                                                onMouseDown={(e) => {
+                                                                    e.preventDefault()
+                                                                }}
+                                                                onClick={() => {
+                                                                    setOpponentQuery(
+                                                                        op.name,
+                                                                    )
+                                                                    setSelectedOpponentId(
+                                                                        op.id,
+                                                                    )
+                                                                    setIsOpponentOpen(
+                                                                        false,
+                                                                    )
+                                                                }}
+                                                                className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm ${idx === opponentHighlight ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
+                                                            >
+                                                                <span
+                                                                    className="block min-w-0 flex-1 truncate"
+                                                                    title={op.name}
+                                                                >
+                                                                    {op.name}
+                                                                </span>
+                                                                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                                                                    {op.count}
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                    {filteredOpponents.length > 20 && (
+                                                        <div className="px-3 py-2 text-xs text-gray-500">
+                                                            {t('players.profile.h2h.moreResults')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
+
+                    {/* Ιστορικό: Ατομικό (individual) ή Ομαδικό (team competitions).
+                        Ο διακόπτης εμφανίζεται μόνο αν ο αθλητής έχει ομαδικά αποτελέσματα. */}
+                    {hasTeamHistory && (
+                    <div className="mb-6 inline-flex rounded-xl border-2 border-gray-200 p-1 dark:border-gray-700">
+                            {([
+                                { key: 'individual', label: t('players.profile.history.mode.individual') },
+                                { key: 'team', label: t('players.profile.history.mode.team') },
+                            ] as const).map((option) => (
+                                <button
+                                    key={option.key}
+                                    type="button"
+                                    aria-pressed={historyMode === option.key}
+                                    onClick={() => setHistoryMode(option.key)}
+                                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${historyMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                    </div>
+                    )}
+
+                    {historyMode === 'individual' ? (
+                        <>
 
                     {/* Head-to-Head Summary */}
                     {selectedGameType !== 'all' &&
@@ -3504,6 +3553,10 @@ export default function PlayerProfileClient({
                                 </div>
                             )}
                         </>
+                    )}
+                        </>
+                    ) : (
+                        <PlayerTeamHistory playerId={playerId} />
                     )}
                 </div>
 
