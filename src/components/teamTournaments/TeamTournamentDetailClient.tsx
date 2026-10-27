@@ -10,11 +10,13 @@ import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import {
   type ComputedStandingRow,
   type NormalizedTeamMatch,
+  type TeamEntity,
   type TeamGroup,
   type TeamTournamentDetail,
   type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 import { TeamGroupResults } from "@/components/teamTournaments/TeamGroupResults";
+import { TeamRosterModal } from "@/components/teamTournaments/TeamRosterModal";
 import { TeamStatisticsPanel } from "@/components/teamTournaments/TeamStatisticsPanel";
 import { TeamTimetablePanel } from "@/components/teamTournaments/TeamTimetablePanel";
 import type { TournamentEventSummary } from "@/lib/tournaments";
@@ -603,11 +605,14 @@ export function TeamTournamentDetailClient({
   const [panel, setPanel] = useState<PanelKey>("tournament");
   /** Ο επιλεγμένος όμιλος στα αποτελέσματα — προεπιλογή ο 1ος όμιλος. */
   const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
+  /** Η ομάδα της οποίας οι αθλητές δείχνονται στην καρτέλα «Συμμετοχές» (null = κλειστό). */
+  const [rosterTeam, setRosterTeam] = useState<TeamEntity | null>(null);
 
   const summary = detail?.summary ?? null;
   const groups = detail?.groups ?? [];
   const matches = detail?.matches ?? [];
   const standingsByGroup = detail?.standingsByGroup ?? {};
+  const rosters = detail?.rosters ?? {};
   const biathlon = summary?.config?.mode === "biathlon";
   const organizerLogoUrl = eventSummary
     ? resolveMediaUrl(eventSummary.organizerLogoUrl)
@@ -1088,7 +1093,14 @@ export function TeamTournamentDetailClient({
                         key={team.documentId || String(team.id ?? team.name)}
                         className="px-6 py-3 text-[15px] font-semibold text-slate-950"
                       >
-                        {team.name}
+                        <button
+                          type="button"
+                          onClick={() => setRosterTeam(team)}
+                          title="Άνοιγμα των αθλητών της ομάδας"
+                          className="text-left text-sky-700 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-900"
+                        >
+                          {team.name}
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -1137,6 +1149,16 @@ export function TeamTournamentDetailClient({
               </div>
             </div>
           </details>
+        ) : null}
+
+        {/* Κλικ σε ομάδα της καρτέλας «Συμμετοχές» → οι αθλητές που συμμετέχουν στην ομάδα. */}
+        {rosterTeam ? (
+          <TeamRosterModal
+            teamName={rosterTeam.name}
+            members={rosterTeam.documentId ? rosters[rosterTeam.documentId] ?? [] : []}
+            nameVariant={summary?.nameVariant ?? "international"}
+            onClose={() => setRosterTeam(null)}
+          />
         ) : null}
       </div>
     </div>

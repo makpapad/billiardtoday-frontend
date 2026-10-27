@@ -134,6 +134,8 @@ export type TeamTournamentDetail = {
   groups: TeamGroup[];
   matches: NormalizedTeamMatch[];
   standingsByGroup: Record<string, ComputedStandingRow[]>;
+  /** Ρόστερ ανά ομάδα (κλειδί: documentId ομάδας) — «ποιοι αθλητές συμμετέχουν». */
+  rosters: TeamRosters;
 };
 
 // ---------------------------------------------------------------------------
@@ -440,6 +442,90 @@ const normalizeTeamSetPlayer = (raw: unknown): TeamSetPlayer | null => {
   const international = readString(player.full_name_en) || null;
   if (!id && !documentId && !national && !international) return null;
   return { id, documentId, national, international };
+};
+
+// ---------------------------------------------------------------------------
+// Ρόστερ ομάδας (team-member) — «ποιοι αθλητές συμμετέχουν στην ομάδα»
+// ---------------------------------------------------------------------------
+
+/**
+ * Ο αθλητής του ρόστερ μιας ομάδας. Πηγή: `team-member` του BT (team + player + season) —
+ * ΟΧΙ τα boards των αγώνων, γι' αυτό φαίνεται και αθλητής που δεν έχει παίξει ακόμη.
+ */
+export type TeamRosterMember = TeamSetPlayer & {
+  /** captain · player · substitute (τιμές του BT). */
+  role: string | null;
+  isCaptain: boolean;
+  season: string | null;
+};
+
+/** Ρόστερ ανά ομάδα — κλειδί το `documentId` της ομάδας. */
+export type TeamRosters = Record<string, TeamRosterMember[]>;
+
+/** Όταν δεν υπάρχει ρόστερ για την περίοδο της διοργάνωσης, δείχνουμε ό,τι υπάρχει. */
+const preferSeason = (rows: TeamRosterMember[], seasonLabel: string | null): TeamRosterMember[] => {
+  if (!seasonLabel) return rows;
+  const inSeason = rows.filter((row) => row.season === seasonLabel);
+  return inSeason.length ? inSeason : rows;
+};
+
+const dedupeMembers = (rows: TeamRosterMember[]): TeamRosterMember[] => {
+  const seen = new Map<string, TeamRosterMember>();
+  for (const row of rows) {
+    const key = row.documentId
+      ? `d:${row.documentId}`
+      : `${row.national ?? ""}|${row.international ?? ""}`;
+    const existing = seen.get(key);
+    // Σε διπλή εγγραφή κερδίζει ο αρχηγός.
+    if (!existing || (row.isCaptain && !existing.isCaptain)) seen.set(key, row);
+  }
+  return Array.from(seen.values());
+};
+
+/**
+ * Ρόστερ των ομάδων ενός ομαδικού τουρνουά. Το `team-member` ΔΕΝ είναι στον δημόσιο ρόλο,
+ * γι' αυτό η κλήση γίνεται με το token του server (fallback στη δημόσια αν λείπει).
+ */
+const fetchTeamRosters = async (
+  teamDocumentIds: string[],
+  seasonLabel: string | null,
+): Promise<TeamRosters> => {
+  const ids = Array.from(
+    new Set(teamDocumentIds.map((value) => String(value || "").trim()).filter(Boolean)),
+  );
+  if (!ids.length) return {};
+
+  const params = new URLSearchParams();
+  // Επιλεγμένα πεδία (ΟΧΙ `populate=*`): το πλήρες populate του bt-player σκάει στο
+  // `photo_main` (πεδίο στο schema, όχι στη βάση) → ValidationError 400.
+  params.set("populate[player][fields][0]", "full_name");
+  params.set("populate[player][fields][1]", "full_name_en");
+  params.set("populate[team][fields][0]", "name");
+  params.set("pagination[pageSize]", "500");
+  ids.forEach((id, index) => params.set(`filters[team][documentId][$in][${index}]`, id));
+
+  const json = await fetchPublic(`/api/team-members?${params.toString()}`, { auth: true });
+
+  const byTeam = new Map<string, TeamRosterMember[]>();
+  for (const raw of readList(json)) {
+    const row = flatten(raw);
+    const teamDocumentId = readString(flatten(row.team).documentId);
+    const player = normalizeTeamSetPlayer(row.player);
+    if (!teamDocumentId || !player) continue;
+    const member: TeamRosterMember = {
+      ...player,
+      role: readString(row.role),
+      isCaptain: row.is_captain === true,
+      season: readString(row.season),
+    };
+    byTeam.set(teamDocumentId, [...(byTeam.get(teamDocumentId) ?? []), member]);
+  }
+
+  const rosters: TeamRosters = {};
+  for (const [teamDocumentId, rows] of byTeam) {
+    rosters[teamDocumentId] = dedupeMembers(preferSeason(rows, seasonLabel));
+  }
+  return rosters;
 };
 
 const normalizeTeamMatchSet = (raw: unknown): TeamMatchSet | null => {
@@ -822,15 +908,22 @@ export const fetchTeamTournamentDetail = async (
     fetchTeamMatches(documentId, { biathlon }),
   ]);
   const teamIds = new Set<number>();
+  const teamDocumentIds: string[] = [];
   for (const group of groups) {
     for (const team of group.teams) {
       if (team.id !== null) teamIds.add(team.id);
+      if (team.documentId) teamDocumentIds.push(team.documentId);
     }
   }
+  // Ρόστερ: «ποιοι αθλητές συμμετέχουν στην ομάδα» — από τη σεζόν της διοργάνωσης
+  // (π.χ. 2026 → «2026-2027»), με πτώση στη σεζόν που υπάρχει αν λείψει.
+  const seasonLabel = summary.season ? `${summary.season}-${summary.season + 1}` : null;
+  const rosters = await fetchTeamRosters(teamDocumentIds, seasonLabel);
   return {
     summary: { ...summary, teamCount: teamIds.size },
     groups,
     matches,
     standingsByGroup: computeStandingsByGroup(matches, { biathlon }),
+    rosters,
   };
 };
