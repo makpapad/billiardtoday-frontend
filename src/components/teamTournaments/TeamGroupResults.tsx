@@ -60,8 +60,8 @@ export function GroupStandingsPanel({
               <th title="Νίκες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
               <th title="Ισοπαλίες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ι</th>
               <th title="Ήττες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-              <th title="Επιμέρους πόντοι παρτίδων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Επιμ.</th>
-              <th title="Διαφορά παρτίδων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Διαφ.</th>
+              <th title="Επιμέρους πόντοι αγώνων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Επιμ.</th>
+              <th title="Διαφορά αγώνων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Διαφ.</th>
               <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
               <th title="Βαθμοί" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
             </tr>

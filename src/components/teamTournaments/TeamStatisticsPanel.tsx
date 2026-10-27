@@ -188,7 +188,7 @@ export function TeamStatisticsPanel({
               Από <strong className="text-slate-800">{stats.playedMatches}</strong> καταχωρημένες
               συναντήσεις ({stats.scheduledMatches} στο πρόγραμμα)
               {groupCount > 1 ? <> · {groupCount} όμιλοι</> : null}. Όλα βγαίνουν ζωντανά από τις
-              παρτίδες.
+              αγώνες.
             </p>
           </div>
           {groupKeys.length > 1 ? (

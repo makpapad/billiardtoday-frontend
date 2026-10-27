@@ -52,7 +52,7 @@ export type TeamGroup = {
   teams: TeamEntity[];
 };
 
-/** Ο αθλητής μιας παρτίδας: ταυτότητα προφίλ + και τα δύο ονόματα. */
+/** Ο αθλητής ενός αγώνα: ταυτότητα προφίλ + και τα δύο ονόματα. */
 export type TeamSetPlayer = PlayerNamePair & {
   /** Αριθμητικό id — η σύμβαση του site για τους συνδέσμους προφίλ (`/players/1954-…`). */
   id: number | null;

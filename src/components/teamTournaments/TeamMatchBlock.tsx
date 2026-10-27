@@ -3,7 +3,7 @@
 /**
  * Μία γραμμή αποτελέσματος μέσα στο box της αγωνιστικής:
  *   ομάδες + σκορ, και με κλικ ανοίγουν τα αναλυτικά
- *   (στατιστικά ομάδων Π/ΣΤ/Σερί/Επιμ./Μ.Ο./Βαθ. + παρτίδες ανά αθλητή).
+ *   (στατιστικά ομάδων Π/ΣΤ/Σερί/Επιμ./Μ.Ο./Βαθ. + αγώνες ανά αθλητή).
  *
  * Το πλαίσιο της αγωνιστικής (και οι όμιλοι μέσα του) ζουν στο TeamGroupResults.
  */
@@ -42,7 +42,7 @@ export const isCompletedMatch = (match: NormalizedTeamMatch): boolean =>
     (match.computed.homeBoardPoints > 0 || match.computed.awayBoardPoints > 0));
 
 /**
- * Το όνομα του αθλητή στη γραμμή της παρτίδας: σύνδεσμος προς το προφίλ όταν έχουμε
+ * Το όνομα του αθλητή στη γραμμή του αγώνα: σύνδεσμος προς το προφίλ όταν έχουμε
  * ταυτότητα, αλλιώς σκέτο κείμενο (ποτέ σπασμένος σύνδεσμος).
  */
 const SetPlayerName = ({
@@ -192,7 +192,7 @@ export function TeamMatchRow({
                   <th title="Πόντοι" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Π</th>
                   <th title="Στάσεις (innings)" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤ</th>
                   <th title="Μεγαλύτερη σειρά" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Σερί</th>
-                  <th title="Επιμέρους πόντοι παρτίδων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Επιμ.</th>
+                  <th title="Επιμέρους πόντοι αγώνων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Επιμ.</th>
                   <th title="Μέσος όρος" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Μ.Ο.</th>
                   <th title="Βαθμοί ομάδας" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Βαθ.</th>
                 </tr>
