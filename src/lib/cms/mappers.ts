@@ -280,7 +280,35 @@ const decodeLayoutStorageValue = (value: unknown): unknown => {
   );
 };
 
-const mapLayoutNodes = (value: unknown): CmsLayoutNode[] =>
+const resolveLayoutPropValue = (value: unknown, strapiBaseUrl: string): unknown => {
+  if (typeof value === "string") {
+    const raw = value.trim();
+    if (!raw) return value;
+    // HTML (rich text, FAQ απαντήσεις): ίδιος καθαρισμός ΚΑΙ ευθυγράμμιση των /uploads με ό,τι
+    // κάνει η διαδρομή των `sections` — αλλιώς τα άρθρα/σελίδες που στήνονται από τον builder
+    // (layoutTree) κρατούν relative /uploads/... και οι εικόνες είναι 404 στο billiardtoday.com.
+    if (/<[a-z][\s\S]*>/i.test(raw)) {
+      return sanitizeCmsHtml(raw, (v) => resolveMediaUrl(v, strapiBaseUrl));
+    }
+    // Σκέτο path/URL εικόνας (image/logo blocks): /uploads/x.jpg ή πλήρες CDN URL.
+    if (/^\/uploads\//i.test(raw) || /^https?:\/\/\S+\.(png|jpe?g|webp|gif|avif|svg)(\?\S*)?$/i.test(raw)) {
+      return resolveMediaUrl(raw, strapiBaseUrl) || value;
+    }
+    return value;
+  }
+  if (Array.isArray(value)) return value.map((entry) => resolveLayoutPropValue(entry, strapiBaseUrl));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+        key,
+        resolveLayoutPropValue(entry, strapiBaseUrl),
+      ]),
+    );
+  }
+  return value;
+};
+
+const mapLayoutNodes = (value: unknown, strapiBaseUrl: string): CmsLayoutNode[] =>
   Array.isArray(value)
     ? value
         .map((entry) => {
@@ -289,8 +317,11 @@ const mapLayoutNodes = (value: unknown): CmsLayoutNode[] =>
           if (!type) return null;
           return {
             type,
-            props: asRecord(decodeLayoutStorageValue(item.props)),
-            children: mapLayoutNodes(item.children),
+            props: resolveLayoutPropValue(
+              asRecord(decodeLayoutStorageValue(item.props)),
+              strapiBaseUrl,
+            ) as Record<string, unknown>,
+            children: mapLayoutNodes(item.children, strapiBaseUrl),
           };
         })
         .filter((item): item is CmsLayoutNode => Boolean(item))
@@ -838,7 +869,7 @@ export const mapCmsPage = (value: unknown, strapiBaseUrl: string): CmsPage | nul
           : readString(source.pageType) === "article"
             ? "article"
           : "standard",
-    layoutTree: mapLayoutNodes(source.layoutTree),
+    layoutTree: mapLayoutNodes(source.layoutTree, strapiBaseUrl),
     sections: Array.isArray(source.sections)
       ? source.sections
           .map((section) => mapSection(section, strapiBaseUrl))
@@ -884,8 +915,8 @@ export const mapCmsSiteSettings = (
     stickyHeader: source.stickyHeader !== false,
     headerAppearance: mapHeaderAppearance(source.headerAppearance),
     footerAppearance: mapFooterAppearance(source.footerAppearance),
-    headerLayout: mapLayoutNodes(source.headerLayout),
-    footerLayout: mapLayoutNodes(source.footerLayout),
+    headerLayout: mapLayoutNodes(source.headerLayout, strapiBaseUrl),
+    footerLayout: mapLayoutNodes(source.footerLayout, strapiBaseUrl),
     headerLinks: resolvedHeaderLinks,
     footerLinks: resolvedFooterLinks,
     socialLinks: mapSocialLinks(source.socialLinks),
