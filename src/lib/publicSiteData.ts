@@ -1,7 +1,7 @@
 import { getCountryCode } from "@/lib/countryFlags";
 import { getGameTypeLabel, normalizeGameTypeOrFallback } from "@/lib/gameTypes";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
-import { buildTournamentHref } from "@/lib/tournaments";
+import { buildCanonicalTournamentHref } from "@/lib/tournaments";
 
 const STRAPI_URL =
   process.env.NEXT_PUBLIC_STRAPI_URL || "https://app.billiardtoday.com";
@@ -474,7 +474,7 @@ const mapTournamentCard = (value: unknown): PublicTournamentCard | null => {
     eventDocumentId,
     tournamentSlug,
     href: eventDocumentId
-      ? buildTournamentHref(tournamentSlug || eventDocumentId, title, toNumber(entity.season))
+      ? buildCanonicalTournamentHref({ title, season: toNumber(entity.season) })
       : null,
   };
 };
@@ -612,11 +612,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
         gameType: readString(entity.game_type),
         tournamentTitle: readString(tournamentEntity?.title),
         updatedAt: readString(entity.updatedAt),
-        href: buildTournamentHref(
-          readString(tournamentEntity?.slug) || documentId,
-          title,
-          toNumber(entity.season),
-        ),
+        href: buildCanonicalTournamentHref({ title, season: toNumber(entity.season) }),
       } satisfies PublicTournamentEventCard;
     })
     .filter((row: PublicTournamentEventCard | null): row is PublicTournamentEventCard => Boolean(row));

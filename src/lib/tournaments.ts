@@ -443,6 +443,42 @@ export const buildTournamentHref = (
   embedded = false,
 ) => `${embedded ? "/embed" : ""}/tournaments/${buildTournamentSlug(canonicalId, title, season)}`;
 
+/**
+ * ΚΑΝΟΝΙΚΟ URL σελίδας διοργάνωσης — η ΜΟΝΗ σωστή πηγή για links προς διοργάνωση.
+ *
+ * Γιατί υπάρχει: η ίδια η σελίδα (`src/app/tournaments/[slug]/page.tsx`) δηλώνει κανονική τη
+ * ΣΥΝΤΟΜΗ μορφή (`τίτλος-χρονιά`) για κάθε bt-event και κρατά το `id--` μόνο για τα club
+ * tournaments (`source === "club_tournament"`). Οποιοσδήποτε σύνδεσμος χτίζεται με μη κενό
+ * canonicalId βγάζει τη μορφή `id--τίτλος-χρονιά`, που η σελίδα την κάνει 308 → ο crawler
+ * μαθαίνει λάθος διεύθυνση και η κανονική σελίδα μένει ασύνδετη (μετρημένο 10/2026:
+ * 402/409 URLs του sitemap οδηγούσαν σε redirect).
+ */
+export const buildCanonicalTournamentHref = ({
+  source,
+  canonicalId,
+  tournamentSlug,
+  eventDocumentId,
+  title,
+  season,
+  embedded = false,
+}: {
+  source?: "bt_event" | "club_tournament" | null;
+  canonicalId?: string | null;
+  tournamentSlug?: string | null;
+  eventDocumentId?: string | null;
+  title?: string | null;
+  season?: number | null;
+  embedded?: boolean;
+}) => {
+  const isClubTournament =
+    source === "club_tournament" ||
+    String(eventDocumentId || "").startsWith("club-tournament:");
+  const id = isClubTournament
+    ? slugify(String(canonicalId || tournamentSlug || eventDocumentId || ""))
+    : "";
+  return buildTournamentHref(id, String(title || ""), season, embedded);
+};
+
 export const extractTournamentDocumentId = (slug: string) =>
   String(slug || "").split("--")[0]?.trim() || "";
 

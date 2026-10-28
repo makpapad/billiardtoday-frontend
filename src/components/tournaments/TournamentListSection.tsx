@@ -14,7 +14,7 @@ import {
   getCmsSectionPaddingClass,
   getCmsSectionSurfaceStyle,
 } from "@/lib/cms/sectionStyles";
-import { buildTournamentHref } from "@/lib/tournaments";
+import { buildCanonicalTournamentHref, buildTournamentHref } from "@/lib/tournaments";
 
 type Tournament = {
   id: string;
@@ -247,13 +247,23 @@ export function TournamentListSection({
     title: string,
     season: number | null,
     tournamentSlug?: string | null,
-  ) =>
-    buildTournamentHref(
-      tournamentSlug || eventDocumentId,
+    source?: Tournament["source"],
+  ) => {
+    // Τα ομαδικά έχουν δικό τους route (/tournaments/team/…) — όταν το API δεν έχει δώσει
+    // έτοιμο href μένει η παλιά συμπεριφορά, ώστε να μην αλλάξει η ροή τους.
+    if (source === "team_tournament") {
+      return buildTournamentHref(tournamentSlug || eventDocumentId, title, season, embedded);
+    }
+
+    return buildCanonicalTournamentHref({
+      source: source === "club_tournament" ? "club_tournament" : "bt_event",
+      eventDocumentId,
+      tournamentSlug,
       title,
       season,
       embedded,
-    );
+    });
+  };
 
   const tournamentHrefForItem = (item: Tournament) =>
     item.href ||
@@ -262,6 +272,7 @@ export function TournamentListSection({
       item.title,
       item.season,
       resolveTournamentCanonicalId(item),
+      item.source,
     );
 
   const sectionRef = useRef<HTMLElement | null>(null);

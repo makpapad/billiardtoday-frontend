@@ -1,4 +1,4 @@
-import { buildTournamentHref } from "@/lib/tournaments";
+import { buildCanonicalTournamentHref } from "@/lib/tournaments";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const PRIMARY_STRAPI_URL =
@@ -132,7 +132,11 @@ const normalizeTournamentMeta = (tournament: Omit<RankingSeriesTournamentMeta, "
     title,
     href:
       tournament.btEventDocumentId && title
-        ? buildTournamentHref(tournament.btEventDocumentId, title, tournament.season)
+        ? buildCanonicalTournamentHref({
+            eventDocumentId: tournament.btEventDocumentId,
+            title,
+            season: tournament.season,
+          })
         : null,
   };
 };
