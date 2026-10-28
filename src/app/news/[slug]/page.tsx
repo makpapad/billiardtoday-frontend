@@ -110,13 +110,27 @@ export async function generateMetadata({
     path: `/news/${articlePage.slug}`,
   });
 
-  return {
+  // Ο τίτλος του άρθρου ΠΡΕΠΕΙ να είναι ο πραγματικός του τίτλος (και όχι ό,τι έτυχε να γραφτεί
+  // στο SEO metaTitle του CMS): αλλιώς η σελίδα δεν περιέχει πουθενά τη φράση με την οποία
+  // ψάχνει κάποιος το άρθρο — μετρημένο 10/2026, το «Ankara World Cup 2026: Myung Woo Cho Wins
+  // a 50-49 Classic» έβγαινε ως «…Cho Beats Jaspers 50-49» και δεν εμφανιζόταν πουθενά.
+  const articleTitle = String(articlePage.title || metadata.title || "");
+
+  const result: Metadata = {
     ...metadata,
+    title: articleTitle,
     openGraph: {
       ...metadata.openGraph,
       type: "article",
+      title: articleTitle,
+    },
+    twitter: {
+      ...metadata.twitter,
+      title: articleTitle,
     },
   };
+
+  return result;
 }
 
 export default async function NewsArticlePage({
