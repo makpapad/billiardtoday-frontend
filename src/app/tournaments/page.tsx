@@ -32,7 +32,11 @@ const buildFallbackTournamentsPage = () => ({
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, page] = await Promise.all([
     getCmsSiteSettings().catch(() => null),
-    getCmsPageBySlug("tournaments").catch(() => null),
+    // Χωρίς καταχώρηση στο CMS η σελίδα σερβίρει το fallback: ο τίτλος πρέπει να βγει από αυτό
+    // («Tournaments»), αλλιώς πέφτει στο defaultSeo του site και βγαίνει «Billiard Today | Billiard Today».
+    getCmsPageBySlug("tournaments")
+      .then((cmsPage) => cmsPage || buildFallbackTournamentsPage())
+      .catch(() => buildFallbackTournamentsPage()),
   ]);
 
   return buildCmsMetadata({
