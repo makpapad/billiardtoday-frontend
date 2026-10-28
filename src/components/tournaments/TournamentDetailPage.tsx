@@ -7156,7 +7156,7 @@ export function TournamentDetailPage({
               setSelectedStageDocumentId(stageDocumentId);
             }}
             showPublishedFinalResults={tournamentPanelMode === "finals"}
-            showTimetable
+            showTimetable={false}
             stageViewMode={overviewMode}
             koRankingRound={koRankingRound}
             onKoRankingRoundChange={handleKoRankingRoundChange}
