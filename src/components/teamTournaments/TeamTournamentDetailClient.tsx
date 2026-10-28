@@ -773,8 +773,6 @@ export function TeamTournamentDetailClient({
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <div className="flex flex-col gap-6">
-        <BackButton fallbackHref="/tournaments/team" />
-
         <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
             <div className="min-w-0 flex flex-col justify-between gap-8">
@@ -951,6 +949,8 @@ export function TeamTournamentDetailClient({
             </div>
           </div>
         </section>
+
+        <BackButton fallbackHref="/tournaments/team" />
 
         {!slugIsCanonical && canonicalSlug ? (
           <Link
