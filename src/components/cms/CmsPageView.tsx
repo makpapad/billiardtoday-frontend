@@ -8,9 +8,20 @@ type Props = {
   settings: CmsSiteSettings;
   appearance: CmsAppearance;
   showChrome?: boolean;
+  /**
+   * Ορατός τίτλος σελίδας (H1) πάνω από το περιεχόμενο. Χρησιμοποιείται από τα άρθρα ειδήσεων,
+   * που αλλιώς δεν δείχνουν πουθενά τον τίτλο τους. Όταν δίνεται, το αόρατο H1 δεν μπαίνει.
+   */
+  pageTitle?: string | null;
 };
 
-export function CmsPageView({ page, settings, appearance, showChrome = true }: Props) {
+export function CmsPageView({
+  page,
+  settings,
+  appearance,
+  showChrome = true,
+  pageTitle = null,
+}: Props) {
   const hasLayoutTree = page.layoutTree.length > 0;
   // Οι σελίδες με hero-section παίρνουν ήδη H1 (CmsSectionRenderer). Όσες δεν έχουν — π.χ. το
   // /tournaments (fallback χωρίς καταχώρηση CMS) και τα άρθρα ειδήσεων — έμεναν χωρίς κανένα H1,
@@ -34,7 +45,17 @@ export function CmsPageView({ page, settings, appearance, showChrome = true }: P
 
   return (
     <CmsPageShell settings={settings} appearance={appearance} showChrome={showChrome}>
-      {!hasHeroHeading && page.title ? <h1 className="sr-only">{page.title}</h1> : null}
+      {pageTitle ? (
+        <div className="px-4 pt-10 sm:px-6 sm:pt-12">
+          <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              {pageTitle}
+            </h1>
+          </div>
+        </div>
+      ) : !hasHeroHeading && page.title ? (
+        <h1 className="sr-only">{page.title}</h1>
+      ) : null}
       {hasLayoutTree ? (
         <div className="px-4 py-8 sm:px-6 sm:py-10">
           <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>

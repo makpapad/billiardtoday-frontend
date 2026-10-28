@@ -166,7 +166,7 @@ export default async function NewsArticlePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
-      <CmsPageView page={page} settings={settings} appearance={appearance} />
+      <CmsPageView page={page} settings={settings} appearance={appearance} pageTitle={page.title} />
     </>
   );
 }
