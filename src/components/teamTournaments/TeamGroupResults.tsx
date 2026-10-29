@@ -127,12 +127,14 @@ function GroupBox({
   const played = matches.filter(isCompletedMatch).length;
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-slate-200">
+    <div className="rounded-[14px] border border-slate-200">
+      {/* Κολλημένο ακριβώς κάτω από την κεφαλίδα της αγωνιστικής — σε τουρνουά με
+          πολλούς ομίλους ξέρεις σε ποιον όμιλο σκρολάρεις. */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="relative flex w-full items-center justify-center gap-2 bg-slate-50/80 px-8 py-2 text-center transition hover:bg-slate-100"
+        className="sticky top-[129px] z-10 flex w-full items-center justify-center gap-2 rounded-t-[14px] border-b border-slate-200 bg-slate-100/95 px-8 py-2 text-center backdrop-blur transition hover:bg-slate-200/90 lg:top-[144px]"
       >
         <span className="text-[12px] font-bold text-slate-900">{title}</span>
         <span className="text-[11px] font-semibold text-slate-500">
@@ -236,12 +238,18 @@ export function TeamGroupResults({
           rounds.map((entry) => (
             <section
               key={entry.round}
-              className="overflow-hidden rounded-[18px] border border-slate-200 bg-white"
+              className="rounded-[18px] border border-slate-200 bg-white"
             >
-              <header className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-[#ffc000] px-4 py-2 text-[11.5px] font-extrabold uppercase tracking-[0.06em] text-slate-950">
-                <span>Αγωνιστική {entry.round}</span>
+              {/* Η κεφαλίδα της αγωνιστικής μένει κολλημένη κάτω από το μενού όσο
+                  διαρκεί το box της — έτσι ξέρεις πάντα σε ποια αγωνιστική βρίσκεσαι
+                  όταν σκρολάρεις ανοιγμένους αγώνες. Χωρίς `overflow-hidden` στο
+                  section, αλλιώς το sticky δεν δουλεύει. */}
+              <header className="sticky top-[89px] z-20 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-t-[18px] border-b border-slate-950/15 bg-[#ffc000] px-4 py-2.5 text-[12.5px] font-extrabold uppercase tracking-[0.06em] text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.14)] lg:top-[104px]">
+                <span className="inline-flex items-center rounded-md bg-slate-950 px-2 py-0.5 text-[11.5px] font-extrabold tracking-[0.08em] text-[#ffc000]">
+                  Αγωνιστική {entry.round}
+                </span>
                 {entry.dateLabel ? (
-                  <span className="font-semibold text-slate-800/80">{entry.dateLabel}</span>
+                  <span className="font-semibold text-slate-900/80">{entry.dateLabel}</span>
                 ) : null}
                 <span className="ml-auto rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-white">
                   {entry.played} {entry.played === 1 ? "αγώνας" : "αγώνες"}
