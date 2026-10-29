@@ -96,8 +96,8 @@ const RoundHighlightsStrip = ({
     bestRun && {
       key: "run",
       matchKey: bestRun.matchKey,
-      label: "ΚΑΛΥΤΕΡΟ H.R.",
-      title: "Η μεγαλύτερη στεκιά (high run) της αγωνιστικής — κλικ για τον αγώνα",
+      label: "ΚΑΛΥΤΕΡΟ ΣΕΡΙ",
+      title: "Το μεγαλύτερο σέρι (σειρά πόντων) της αγωνιστικής — κλικ για τον αγώνα",
       name: bestRun.name,
       sub: bestRun.teamName,
       value: String(bestRun.run),

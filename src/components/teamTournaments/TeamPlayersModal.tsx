@@ -2,7 +2,7 @@
 
 /**
  * Modal «Αθλητές ομάδας» με τα στατιστικά του ομαδικού (πόντοι, στεκιές, Μ.Ο., best,
- * νίκες/ισοπαλίες/ήττες, μεγαλύτερη στεκιά), σε κατάταξη.
+ * νίκες/ισοπαλίες/ήττες, μεγαλύτερο σέρι), σε κατάταξη.
  *
  * Ανοίγει από δύο σημεία, με τα ίδια δεδομένα: την καρτέλα «Στατιστικά»
  * (TeamStatisticsPanel) και τη βαθμολογία ομίλου (GroupStandingsPanel) — κλικ στο όνομα
@@ -21,7 +21,7 @@ const playerHref = (row: PlayerStatRow): string | null =>
   playerProfileHref({ id: row.playerId, documentId: row.documentId }, row.name);
 
 /**
- * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → νίκες → μεγαλύτερη στεκιά → αγώνες.
+ * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → νίκες → μεγαλύτερο σέρι → αγώνες.
  * (Με ίδιο αριθμό αγώνων κερδίζει ο μέσος όρος, όπως στα φύλλα αγώνα.)
  */
 const rankTeamPlayers = (rows: PlayerStatRow[]): PlayerStatRow[] =>
@@ -100,7 +100,7 @@ export function TeamPlayersModal({
                 <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
                 <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
                 <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
+                <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +131,7 @@ export function TeamPlayersModal({
           </table>
         </div>
         <div className="border-t border-slate-200 px-5 py-2 text-[11px] text-slate-500">
-          Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερη στεκιά). Άνοιγμα προφίλ με κλικ στο όνομα.
+          Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερο σέρι). Άνοιγμα προφίλ με κλικ στο όνομα.
         </div>
       </div>
     </div>,

@@ -3,7 +3,7 @@
 /**
  * Μία γραμμή αποτελέσματος μέσα στο box της αγωνιστικής:
  *   ομάδες + σκορ, και με κλικ ανοίγουν τα αναλυτικά
- *   (στατιστικά ομάδων Π/ΣΤ/Στεκιά/Επιμ./Μ.Ο./Βαθ. + αγώνες ανά αθλητή).
+ *   (στατιστικά ομάδων Π/ΣΤ/Σέρι/Επιμ./Μ.Ο./Βαθ. + αγώνες ανά αθλητή).
  *
  * Το πλαίσιο της αγωνιστικής (και οι όμιλοι μέσα του) ζουν στο TeamGroupResults.
  */
@@ -105,14 +105,14 @@ export function TeamMatchRow({
   const fixtureOnly = !completed;
   const biathlon = summary?.config?.mode === "biathlon";
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
-  /** Οι ενδείξεις που παίρνει ο αθλητής αυτής της πλευράς (καλύτερος παίκτης / καλύτερο H.R.). */
+  /** Οι ενδείξεις που παίρνει ο αθλητής αυτής της πλευράς (καλύτερος παίκτης / καλύτερο σέρι). */
   const marksForPlayer = (player: TeamSetPlayer | null): string[] => {
     const key = playerIdentityKey(player, nameVariant);
     if (!key) return [];
     const marks: string[] = [];
     if (roundMarks?.bestPlayer?.playerKey === key) marks.push("ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ");
     if (roundMarks?.bestRun?.playerKey === key && roundMarks.bestRun.run > 0) {
-      marks.push(`H.R. ${roundMarks.bestRun.run}`);
+      marks.push(`ΣΕΡΙ ${roundMarks.bestRun.run}`);
     }
     return marks;
   };
@@ -259,7 +259,7 @@ export function TeamMatchRow({
                   </th>
                   <th title="Πόντοι" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Π</th>
                   <th title="Στεκιές" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤ</th>
-                  <th title="Μεγαλύτερη στεκιά" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤΕΚΙΑ</th>
+                  <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΕΡΙ</th>
                   <th title="Επιμέρους πόντοι αγώνων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Επιμ.</th>
                   <th title="Μέσος όρος" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Μ.Ο.</th>
                   <th title="Βαθμοί ομάδας" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Βαθ.</th>
@@ -318,7 +318,7 @@ export function TeamMatchRow({
               <table className="w-full border-collapse text-[11.8px]">
                 <thead>
                   <tr className="bg-[#f7c7ac] text-slate-950">
-                    <th title="Μεγαλύτερη στεκιά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
+                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
                     <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                     <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th className="px-2.5 py-1.5 text-right text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
@@ -328,7 +328,7 @@ export function TeamMatchRow({
                     <th className="px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
                     <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Μεγαλύτερη στεκιά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
+                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
                   </tr>
                 </thead>
                 <tbody>

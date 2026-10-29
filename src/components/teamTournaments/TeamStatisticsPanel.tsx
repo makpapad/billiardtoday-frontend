@@ -112,7 +112,7 @@ export function TeamStatisticsPanel({
                     <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
                     <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
                     <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                    <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
+                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,7 +164,7 @@ export function TeamStatisticsPanel({
                     <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                     <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
-                    <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
+                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
                     <th title="Βαθμοί" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
                   </tr>
                 </thead>
