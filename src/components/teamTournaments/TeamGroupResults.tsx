@@ -391,25 +391,28 @@ export function TeamGroupResults({
     [activeGroupKey, groups, multiGroup],
   );
 
+  /**
+   * Όλες οι αγωνιστικές — και οι παιγμένες και οι επόμενες (το πρόγραμμα υπάρχει από
+   * πριν). Οι παιγμένες δίνουν αποτελέσματα/στατιστικά, οι επόμενες μόνο τα ζευγάρια.
+   */
   const rounds = useMemo(() => {
     const byRound = new Map<number, Map<string, NormalizedTeamMatch[]>>();
     visibleGroups.forEach((group) => {
-      (matchesByGroupKey.get(group.groupKey) ?? [])
-        .filter(isCompletedMatch)
-        .forEach((match) => {
-          const round = match.round ?? 0;
-          const buckets = byRound.get(round) ?? new Map<string, NormalizedTeamMatch[]>();
-          const list = buckets.get(group.groupKey) ?? [];
-          list.push(match);
-          buckets.set(group.groupKey, list);
-          byRound.set(round, buckets);
-        });
+      (matchesByGroupKey.get(group.groupKey) ?? []).forEach((match) => {
+        const round = match.round ?? 0;
+        const buckets = byRound.get(round) ?? new Map<string, NormalizedTeamMatch[]>();
+        const list = buckets.get(group.groupKey) ?? [];
+        list.push(match);
+        buckets.set(group.groupKey, list);
+        byRound.set(round, buckets);
+      });
     });
 
     return Array.from(byRound.entries())
-      .sort((a, b) => b[0] - a[0])
+      .sort((a, b) => a[0] - b[0])
       .map(([round, buckets]) => {
         const all = Array.from(buckets.values()).flat();
+        const played = all.filter(isCompletedMatch).length;
         const dates = Array.from(
           new Set(
             all.map((match) => formatDate(match.matchDate)).filter((v): v is string => Boolean(v)),
@@ -418,7 +421,10 @@ export function TeamGroupResults({
         return {
           round,
           dateLabel: dates.length === 0 ? null : dates.length === 1 ? dates[0] : dates.join(" · "),
-          played: all.length,
+          played,
+          total: all.length,
+          /** Κίτρινη μπάλα = έχει παιχτεί (έστω ένας αγώνας με αποτέλεσμα). */
+          hasResults: played > 0,
           buckets: Array.from(buckets.entries())
             .map(([groupKey, matches]) => ({
               groupKey,
@@ -428,6 +434,24 @@ export function TeamGroupResults({
         };
       });
   }, [matchesByGroupKey, visibleGroups]);
+
+  /** Προεπιλογή: η τελευταία παιγμένη αγωνιστική — αλλιώς η πρώτη του προγράμματος. */
+  const defaultRound = useMemo(() => {
+    const playedRounds = rounds.filter((entry) => entry.hasResults);
+    if (playedRounds.length > 0) return playedRounds[playedRounds.length - 1].round;
+    return rounds.length > 0 ? rounds[0].round : null;
+  }, [rounds]);
+
+  /** Ποια αγωνιστική δείχνεται τώρα — μία τη φορά. */
+  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const activeRound = selectedRound ?? defaultRound;
+
+  // Αν αλλάξει όμιλος/δεδομένα και η επιλεγμένη αγωνιστική δεν υπάρχει πια → προεπιλογή.
+  useEffect(() => {
+    if (selectedRound !== null && !rounds.some((entry) => entry.round === selectedRound)) {
+      setSelectedRound(null);
+    }
+  }, [rounds, selectedRound]);
 
   /**
    * Ποιον αγώνα «διαβάζει» τώρα ο επισκέπτης: η πρώτη γραμμή αγώνα που έχει περάσει τη
@@ -555,13 +579,52 @@ export function TeamGroupResults({
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)]">
       <div ref={listRef} className="flex min-w-0 flex-col gap-3.5">
+        {rounds.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-500">
+              ΑΓΩΝΙΣΤΙΚΕΣ
+            </span>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              {rounds.map((entry) => {
+                const isActive = entry.round === activeRound;
+                return (
+                  <button
+                    key={entry.round}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setSelectedRound(entry.round)}
+                    title={
+                      entry.hasResults
+                        ? `Αγωνιστική ${entry.round} — έχει παιχτεί (${entry.played}/${entry.total} αγώνες)`
+                        : `Αγωνιστική ${entry.round} — δεν έχει παιχτεί ακόμη`
+                    }
+                    className={clsx(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11.5px] font-extrabold tabular-nums transition",
+                      entry.hasResults
+                        ? "bg-[#ffc000] text-slate-950 ring-1 ring-slate-950/70"
+                        : "bg-slate-950 text-white ring-1 ring-slate-950/70",
+                      isActive
+                        ? "ring-2 ring-sky-500 ring-offset-2 ring-offset-white"
+                        : "hover:scale-105",
+                    )}
+                  >
+                    {entry.round}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         {rounds.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
             Δεν υπάρχουν ακόμη αποτελέσματα. Οι αγώνες εμφανίζονται μόλις καταχωρηθούν.
           </div>
         ) : (
-          rounds.map((entry) => {
-            const roundMatches = entry.buckets.flatMap((bucket) => bucket.matches);
+          rounds
+            .filter((entry) => entry.round === activeRound)
+            .map((entry) => {
+              const roundMatches = entry.buckets.flatMap((bucket) => bucket.matches);
             const highlights = buildRoundHighlights(roundMatches, nameVariant, { biathlon });
             return (
             <section
@@ -579,8 +642,13 @@ export function TeamGroupResults({
                 {entry.dateLabel ? (
                   <span className="font-semibold text-slate-900/80">{entry.dateLabel}</span>
                 ) : null}
+                {!entry.hasResults ? (
+                  <span className="rounded-full bg-white/70 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-slate-700">
+                    ΔΕΝ ΕΧΕΙ ΠΑΙΧΤΕΙ
+                  </span>
+                ) : null}
                 <span className="ml-auto rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-white">
-                  {entry.played} {entry.played === 1 ? "αγώνας" : "αγώνες"}
+                  {entry.total} {entry.total === 1 ? "αγώνας" : "αγώνες"}
                 </span>
               </header>
 

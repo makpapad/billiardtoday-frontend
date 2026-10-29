@@ -101,6 +101,8 @@ export function TeamMatchRow({
     if (revealToken > 0) setOpen(true);
   }
   const completed = isCompletedMatch(match);
+  /** Χωρίς αποτέλεσμα δεν υπάρχει ανάλυση — η γραμμή μένει κλειστή (μόνο το ζευγάρι). */
+  const fixtureOnly = !completed;
   const biathlon = summary?.config?.mode === "biathlon";
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
   /** Οι ενδείξεις που παίρνει ο αθλητής αυτής της πλευράς (καλύτερος παίκτης / καλύτερο H.R.). */
@@ -180,18 +182,25 @@ export function TeamMatchRow({
           κινητό) όσο διαρκούν τα αναλυτικά — τη σπρώχνει έξω ο επόμενος αγώνας.
           Χρειάζεται αδιαφανές φόντο, αλλιώς φαίνονται τα νούμερα από κάτω. */}
       <div
-        role="button"
-        tabIndex={0}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            setOpen((v) => !v);
-          }
-        }}
+        role={fixtureOnly ? undefined : "button"}
+        tabIndex={fixtureOnly ? undefined : 0}
+        aria-expanded={fixtureOnly ? undefined : open}
+        onClick={fixtureOnly ? undefined : () => setOpen((v) => !v)}
+        onKeyDown={
+          fixtureOnly
+            ? undefined
+            : (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setOpen((v) => !v);
+                }
+              }
+        }
         className={clsx(
-          "sticky top-[131px] z-10 flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 lg:top-[146px]",
+          "sticky top-[131px] z-10 flex items-center gap-3 px-4 py-2.5 transition lg:top-[146px]",
+          fixtureOnly
+            ? "cursor-default"
+            : "cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60",
           emphasized
             ? "bg-amber-50 shadow-[inset_3px_0_0_0_#f59e0b]"
             : "bg-white",
@@ -227,17 +236,19 @@ export function TeamMatchRow({
             {statusLabel(match.status)}
           </span>
         ) : null}
-        <span
-          className={clsx(
-            "shrink-0 text-[11px] text-slate-400 transition-transform",
-            open && "rotate-180",
-          )}
-        >
-          ▾
-        </span>
+        {fixtureOnly ? null : (
+          <span
+            className={clsx(
+              "shrink-0 text-[11px] text-slate-400 transition-transform",
+              open && "rotate-180",
+            )}
+          >
+            ▾
+          </span>
+        )}
       </div>
 
-      {open ? (
+      {open && !fixtureOnly ? (
         <div className={clsx("pb-2", emphasized ? "bg-amber-50/70" : "bg-slate-50/60")}>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12.5px]">
