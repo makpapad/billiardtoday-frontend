@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { playerProfileHref } from "@/lib/playerNameVariant";
 import type { PlayerStatRow, TeamStatRow } from "@/lib/teamTournamentStats";
@@ -53,7 +54,9 @@ export function TeamPlayersModal({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -131,6 +134,7 @@ export function TeamPlayersModal({
           Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερη στεκιά). Άνοιγμα προφίλ με κλικ στο όνομα.
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
