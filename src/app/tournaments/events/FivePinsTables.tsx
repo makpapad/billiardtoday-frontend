@@ -16,6 +16,7 @@ import {
   hasPlayedStageMatch,
   getMatchOutcome,
   getMatchRowClass,
+  groupPlaceholderPlayerKeys,
 } from "./utils";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 
@@ -242,7 +243,11 @@ export function buildFivePinsStandings(
     }
   }
 
-  const standings = Array.from(byPlayerKey.values());
+  // Θέσεις αναμονής («Πρόκριση …») δεν είναι αθλητές: καμία γραμμή κατάταξης.
+  const placeholderKeys = groupPlaceholderPlayerKeys(group.matches);
+  const standings = Array.from(byPlayerKey.values()).filter(
+    (standing) => !placeholderKeys.has(standing.key),
+  );
   for (const standing of standings) {
     standing.pointsRatio = computeRatio(standing.pointsFor, standing.pointsAgainst);
   }

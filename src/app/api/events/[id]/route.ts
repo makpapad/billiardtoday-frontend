@@ -424,6 +424,8 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
             full_name: localName,
             full_name_en: localName,
             country: readString(match[`${role}_local_country`]) ?? null,
+            // `eoaa-slot:` = θέση αναμονής για πρόκριση, δεν είναι αθλητής.
+            placeholder: localKey.startsWith('eoaa-slot:'),
         }
     }
 
@@ -477,6 +479,8 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
 
     const rankedRows = Array.from(rankedByGroup.entries()).flatMap(([groupNumber, groupRows]) =>
         [...groupRows]
+            // Θέση αναμονής (π.χ. «Πρόκριση …») δεν είναι αθλητής: καμία γραμμή κατάταξης.
+            .filter((row) => asObject(row.player)?.placeholder !== true)
             .sort((a, b) => compareClubRuntimeStandingRows(a, b, { includeMatchPoints: true }))
             .map((row, index) => ({
                 ...row,

@@ -161,8 +161,28 @@ export const normalizeGroup = (
     };
   };
 
-  const player1 = normalizePlayer(normalized.player1 ?? localPlayer("player1"), `${normalized.id}-p1`);
-  const player2 = normalizePlayer(normalized.player2 ?? localPlayer("player2"), `${normalized.id}-p2`);
+  // Πλευρά αγώνα: σχέση player, αλλιώς τοπικό όνομα (local_name). Η θέση αναμονής
+  // (`eoaa-slot:…`) σημαίνεται ώστε να μη θεωρείται αθλητής (κατάταξη/συμμετέχοντες).
+  const normalizeSidePlayer = (
+    side: "player1" | "player2",
+    fallbackId: string,
+  ) => {
+    const localKey = (normalized as Record<string, unknown>)[
+      `${side}_local_key`
+    ];
+    const placeholder = isPlaceholderLocalKey(localKey);
+    const local = localPlayer(side);
+    const relationship = normalizePlayer(normalized[side] ?? local, fallbackId);
+    // Κενή σχέση (π.χ. θέση αναμονής): το εμφανιζόμενο όνομα είναι το local_name.
+    const resolved =
+      !relationship.name && local
+        ? normalizePlayer(local, fallbackId)
+        : relationship;
+    return { ...resolved, placeholder };
+  };
+
+  const player1 = normalizeSidePlayer("player1", `${normalized.id}-p1`);
+  const player2 = normalizeSidePlayer("player2", `${normalized.id}-p2`);
 
   return {
     id: normalized.id,
@@ -190,6 +210,7 @@ export const normalizeGroup = (
       highRun: toNumber(normalized.player1_high_run),
       highRun2: toNumber(normalized.player1_high_run_2),
       ffType: toNumber((normalized as Record<string, unknown>).ff_type_player1),
+      placeholder: player1.placeholder,
     },
     player2: {
       id: player2.id,
@@ -205,6 +226,7 @@ export const normalizeGroup = (
       highRun: toNumber(normalized.player2_high_run),
       highRun2: toNumber(normalized.player2_high_run_2),
       ffType: toNumber((normalized as Record<string, unknown>).ff_type_player2),
+      placeholder: player2.placeholder,
     },
     inningsDetail: normalized.inningsDetail,
     matchSheetJson: normalized.matchSheetJson,
@@ -502,13 +524,44 @@ export const isDynamicPlaceholderName = (
   return /^(Winner|Loser)_M\d+$/i.test(normalized) || /^[A-Z]+_Player_\d+$/i.test(normalized);
 };
 
+/**
+ * `eoaa-slot:<roundId>:<seat>` = θέση ομίλου που περιμένει πρόκριση (ΕΟΑΑ),
+ * σε αντίθεση με πραγματικό αθλητή (`eoaa-p:<id>` / `slot:<roundId>:<seat>`).
+ */
+export const PLACEHOLDER_LOCAL_KEY_PREFIX = "eoaa-slot:";
+
+export const isPlaceholderLocalKey = (value: unknown): boolean =>
+  typeof value === "string" && value.trim().startsWith(PLACEHOLDER_LOCAL_KEY_PREFIX);
+
 export const isDynamicPlaceholderPlayer = (
-  player: Pick<NormalizedGroupPlayer, "name" | "documentId">,
+  player: Pick<NormalizedGroupPlayer, "name" | "documentId"> & {
+    placeholder?: boolean;
+  },
 ): boolean => {
+  // Θέση αναμονής (π.χ. «Πρόκριση PPPPQ · θέση 13») δεν είναι αθλητής.
+  if (player.placeholder === true) return true;
   const name = String(player.name || "").trim();
   const documentId = String(player.documentId || "").trim();
   if (!name && !documentId) return true;
   return isDynamicPlaceholderName(name) || isDynamicPlaceholderName(documentId);
+};
+
+/**
+ * Κλειδιά των θέσεων αναμονής ενός ομίλου, όπως τα κλειδώνουν οι πίνακες
+ * κατάταξης (documentId ή όνομα+χώρα) — για να φιλτράρονται γραμμές που δεν
+ * ανήκουν σε αθλητή.
+ */
+export const groupPlaceholderPlayerKeys = (
+  matches: StageMatchGroup["matches"],
+): Set<string> => {
+  const keys = new Set<string>();
+  matches.forEach((match) => {
+    [match.top.player, match.bottom.player].forEach((player) => {
+      if (player.placeholder !== true) return;
+      keys.add(player.documentId || `${player.name}-${player.country || "xx"}`);
+    });
+  });
+  return keys;
 };
 
 export const hasPlayedStageMatch = (
@@ -750,7 +803,8 @@ export const buildGroupStandings = (
         position: "top" | "bottom",
         side: "player1" | "player2",
       ) => {
-        if (isDynamicPlaceholderPlayer(entry.player)) return;
+        // Θέση αναμονής (placeholder) ή «Winner_M…»: ποτέ γραμμή κατάταξης.
+        if (entry.player.placeholder === true || isDynamicPlaceholderPlayer(entry.player)) return;
 
         const key =
           entry.player.documentId ?? `${entry.player.name}-${position}`;

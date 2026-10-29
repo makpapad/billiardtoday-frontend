@@ -7,6 +7,7 @@ import {
   formatStageGroupCellLabel,
   formatTruncatedNumber,
   getMatchOutcome,
+  groupPlaceholderPlayerKeys,
   hasPlayedStageMatch,
 } from "./utils";
 
@@ -232,7 +233,11 @@ export function buildBiathlonStandings(group: StageMatchGroup): BiathlonStanding
     }
   });
 
-  const standings = Array.from(byPlayerKey.values());
+  // Θέσεις αναμονής («Πρόκριση …») δεν είναι αθλητές: καμία γραμμή κατάταξης.
+  const placeholderKeys = groupPlaceholderPlayerKeys(group.matches);
+  const standings = Array.from(byPlayerKey.values()).filter(
+    (standing) => !placeholderKeys.has(standing.key),
+  );
   const sortedByGroup = [...standings].sort((a, b) => {
     const posA = a.record.wins * 1000 + a.pointsFor;
     const posB = b.record.wins * 1000 + b.pointsFor;

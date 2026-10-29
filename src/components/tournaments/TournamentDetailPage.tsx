@@ -43,6 +43,7 @@ import {
   formatNumberValue,
   formatRecord,
   hasPlayedStageMatch,
+  isPlaceholderLocalKey,
   normalizeEntity,
   normalizeGroup,
   normalizeResult,
@@ -5069,11 +5070,22 @@ export function TournamentDetailPage({
       );
       const groups = toRelationArray(normalizedStage.groups);
       groups.forEach((group, groupIndex) => {
-        const normalizedGroup = normalizeEntity<{ player1?: unknown; player2?: unknown }>(
+        const normalizedGroup = normalizeEntity<{
+          player1?: unknown;
+          player2?: unknown;
+          player1_local_key?: unknown;
+          player2_local_key?: unknown;
+        }>(
           group,
           `participant-group-${groupIndex + 1}`,
         );
+        const sideLocalKeys = [
+          normalizedGroup.player1_local_key,
+          normalizedGroup.player2_local_key,
+        ];
         [normalizedGroup.player1, normalizedGroup.player2].forEach((player, playerIndex) => {
+          // Θέση αναμονής για πρόκριση (`eoaa-slot:…`) δεν είναι αθλητής.
+          if (isPlaceholderLocalKey(sideLocalKeys[playerIndex])) return;
           if (!player) return;
           const normalizedPlayer = normalizeEntity<{
             full_name?: unknown;

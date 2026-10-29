@@ -194,6 +194,8 @@ export type NormalizedGroupPlayer = {
   highRun2: number | null;
   // forfeit flag per player (null=no forfeit, 1=forfeit, 2=double-forfeit)
   ffType: number | null;
+  /** Θέση αναμονής για πρόκριση (local key `eoaa-slot:…`) — δεν είναι αθλητής: καμία γραμμή κατάταξης, καμία λίστα συμμετεχόντων. */
+  placeholder?: boolean;
 };
 
 export type NormalizedGroupMatch = {

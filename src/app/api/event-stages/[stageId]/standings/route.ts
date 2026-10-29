@@ -216,6 +216,8 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
             full_name: localName,
             full_name_en: localName,
             country: toText(match[`${role}_local_country`]) ?? null,
+            // `eoaa-slot:` = θέση αναμονής για πρόκριση, δεν είναι αθλητής.
+            placeholder: localKey.startsWith('eoaa-slot:'),
         }
     }
 
@@ -263,7 +265,10 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
     })
 
     const rankedRows = Array.from(groupedRows.entries()).flatMap(([groupNumber, groupRows]) =>
-        [...groupRows].sort((a, b) => compareGroupRows(a, b, { includeMatchPoints: true })).map((row, index) => ({
+        [...groupRows]
+            // Θέση αναμονής (π.χ. «Πρόκριση …») δεν είναι αθλητής: καμία γραμμή κατάταξης.
+            .filter((row) => (row.player as Record<string, unknown> | undefined)?.placeholder !== true)
+            .sort((a, b) => compareGroupRows(a, b, { includeMatchPoints: true })).map((row, index) => ({
             ...row,
             group_number: groupNumber,
             group_position: index + 1,
