@@ -127,7 +127,7 @@ const RoundHighlightsStrip = ({
             </span>
             <span
               className={clsx(
-                "flex min-w-[64px] shrink-0 items-center justify-center self-stretch rounded-[11px] px-2.5 text-[20px] font-extrabold leading-none tracking-tight tabular-nums",
+                "flex min-w-[64px] shrink-0 items-center justify-center self-stretch rounded-[11px] border border-slate-950/75 px-2.5 text-[20px] font-extrabold leading-none tracking-tight tabular-nums",
                 item.tone,
               )}
             >
