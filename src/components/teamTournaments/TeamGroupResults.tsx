@@ -60,7 +60,7 @@ const RoundHighlightsStrip = ({
     name: string;
     sub: string | null;
     value: string;
-    /** Χρώμα του μεγάλου νούμερου: γαλάζιο για μέσους όρους, κόκκινο για high run. */
+    /** Χρώμα του μπλοκ: μπλε = ομάδα, πράσινο = παίκτης, κόκκινο = high run. */
     tone: string;
   };
 
@@ -73,7 +73,7 @@ const RoundHighlightsStrip = ({
       name: bestTeam.name,
       sub: null,
       value: avgText(bestTeam.avg),
-      tone: "bg-cyan-500 text-slate-950",
+      tone: "bg-blue-600 text-white",
     },
     bestPlayer && {
       key: "player",
@@ -83,7 +83,7 @@ const RoundHighlightsStrip = ({
       name: bestPlayer.name,
       sub: bestPlayer.teamName,
       value: avgText(bestPlayer.avg),
-      tone: "bg-cyan-500 text-slate-950",
+      tone: "bg-emerald-600 text-white",
     },
     bestRun && {
       key: "run",
@@ -93,7 +93,7 @@ const RoundHighlightsStrip = ({
       name: bestRun.name,
       sub: bestRun.teamName,
       value: String(bestRun.run),
-      tone: "bg-red-500 text-slate-950",
+      tone: "bg-red-600 text-white",
     },
   ].filter(Boolean) as Item[];
 
@@ -109,12 +109,12 @@ const RoundHighlightsStrip = ({
             title={item.title}
             onClick={clickable ? () => onOpenMatch?.(item.matchKey) : undefined}
             className={clsx(
-              "flex min-w-[210px] flex-1 items-center gap-2.5 rounded-[14px] border border-slate-200 bg-white p-2.5 pl-3 text-left",
+              "flex min-w-[210px] flex-1 items-stretch gap-2.5 rounded-[14px] border border-slate-200 bg-white p-2.5 pl-3 text-left",
               clickable &&
                 "cursor-pointer transition hover:border-cyan-300 hover:shadow-[0_2px_10px_rgba(15,23,42,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60",
             )}
           >
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
               <span className="text-[9px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
                 {item.label}
               </span>
@@ -127,7 +127,7 @@ const RoundHighlightsStrip = ({
             </span>
             <span
               className={clsx(
-                "flex min-w-[62px] shrink-0 items-center justify-center rounded-[10px] px-2.5 py-2 text-[19px] font-extrabold leading-none tracking-tight tabular-nums",
+                "flex min-w-[74px] shrink-0 items-center justify-center self-stretch rounded-[11px] px-3 text-[21px] font-extrabold leading-none tracking-tight tabular-nums",
                 item.tone,
               )}
             >
