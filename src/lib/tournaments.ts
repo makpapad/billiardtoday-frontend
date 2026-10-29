@@ -46,6 +46,12 @@ export type TournamentEventSummary = {
    * το κλικ στο λογότυπο του τουρνουά. `null` όταν δεν ξέρουμε ποιος διοργανώνει.
    */
   organizerHref: string | null;
+  /**
+   * Επίπεδο ομοσπονδίας (`national` / `world` / `confederation`): αποφασίζει αν τα
+   * ονόματα αθλητών γράφονται στο εθνικό (`full_name`) ή στο διεθνές (`full_name_en`)
+   * όνομα — ίδιος κανόνας με τα ομαδικά (`nameVariantForFederationLevel`).
+   */
+  federationLevel: string | null;
   category: string | null;
   rankingSeriesDocumentId: string | null;
   rankingSeriesSlug: string | null;
@@ -393,6 +399,8 @@ const normalizeClubTournamentSummary = (
     organizerLogoUrl: readString(clubLogoSource.url),
     organizerLogoName: readString(clubLogoSource.name),
     organizerHref: readEntityHref("club", clubSource),
+    // Τα club tournaments δεν κρέμονται από ομοσπονδία στο summary — διεθνή ονόματα.
+    federationLevel: null,
     category: readString(tournament.category),
     rankingSeriesDocumentId: null,
     rankingSeriesSlug: null,
@@ -619,11 +627,13 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
       params.set("populate[tournament][populate][club][populate][federation][fields][1]", "slug");
       params.set("populate[tournament][populate][club][populate][federation][fields][2]", "documentId");
+      params.set("populate[tournament][populate][club][populate][federation][fields][3]", "level");
       params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
       params.set("populate[tournament][populate][organizer_federation][fields][1]", "slug");
       params.set("populate[tournament][populate][organizer_federation][fields][2]", "documentId");
+      params.set("populate[tournament][populate][organizer_federation][fields][3]", "level");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][series_entries][sort][0]", "order:asc");
@@ -750,6 +760,13 @@ const fetchTournamentEventSummaryById = async (
         : readString((tournamentClubSource as Record<string, unknown>).name) ??
           readString((organizerFederationSource as Record<string, unknown>).name) ??
           readString((federationSource as Record<string, unknown>).name),
+    // Επίπεδο ομοσπονδίας από την ίδια πηγή που δίνει όνομα/λογότυπο διοργανωτή.
+    federationLevel: readString(
+      ((organizerType === "federation" ? organizerFederationSource : federationSource) as Record<
+        string,
+        unknown
+      >).level,
+    ),
     organizerLogoUrl: readString((organizerLogoSource as Record<string, unknown>).url),
     organizerLogoName: readString((organizerLogoSource as Record<string, unknown>).name),
     // Το κλικ στο λογότυπο πάει στην αρχική του διοργανωτή — ίδια σειρά προτίμησης

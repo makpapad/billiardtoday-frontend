@@ -89,6 +89,8 @@ export const normalizeEntity = <T extends Record<string, unknown>>(
 export const normalizePlayer = (
   player: unknown,
   fallbackId: string,
+  /** Εθνική διοργάνωση: το κύριο όνομα είναι το `full_name` (εθνικό), όχι το `full_name_en`. */
+  preferNative = false,
 ): {
   id: number | null;
   name: string;
@@ -114,7 +116,7 @@ export const normalizePlayer = (
     typeof normalized.full_name === "string"
       ? repairUtf8Mojibake(normalized.full_name.trim())
       : "";
-  const name = nameEn || nativeName;
+  const name = preferNative ? nativeName || nameEn : nameEn || nativeName;
   const country =
     typeof (normalized as { country?: unknown }).country === "string"
       ? (normalized as { country?: string }).country?.trim() || null
@@ -135,7 +137,8 @@ export const normalizePlayer = (
   return {
     id: numericId && !Number.isNaN(numericId) ? numericId : null,
     name,
-    nativeName: nativeName || null,
+    // Δεύτερη γραμμή: η άλλη γλώσσα (σε εθνική διοργάνωση δείχνει το διεθνές όνομα).
+    nativeName: (preferNative ? nameEn : nativeName) || null,
     country,
     documentId: normalized.documentId ?? null,
   };
@@ -144,6 +147,7 @@ export const normalizePlayer = (
 export const normalizeGroup = (
   group: unknown,
   fallbackId: string,
+  preferNative = false,
 ): NormalizedGroupMatch => {
   const normalized = normalizeEntity<StrapiGroup>(group, fallbackId);
 
@@ -172,11 +176,11 @@ export const normalizeGroup = (
     ];
     const placeholder = isPlaceholderLocalKey(localKey);
     const local = localPlayer(side);
-    const relationship = normalizePlayer(normalized[side] ?? local, fallbackId);
+    const relationship = normalizePlayer(normalized[side] ?? local, fallbackId, preferNative);
     // Κενή σχέση (π.χ. θέση αναμονής): το εμφανιζόμενο όνομα είναι το local_name.
     const resolved =
       !relationship.name && local
-        ? normalizePlayer(local, fallbackId)
+        ? normalizePlayer(local, fallbackId, preferNative)
         : relationship;
     return { ...resolved, placeholder };
   };
@@ -236,6 +240,7 @@ export const normalizeGroup = (
 export const normalizeResult = (
   result: unknown,
   fallbackId: string,
+  preferNative = false,
 ): NormalizedStageResult => {
   const normalized = normalizeEntity<StrapiResult>(result, fallbackId);
   const normalizedRecord = normalized as typeof normalized & { source?: unknown };
@@ -260,7 +265,7 @@ export const normalizeResult = (
               : null,
         }
       : null;
-  const player = normalizePlayer(normalized.player ?? localPlayer, `${normalized.id}-player`);
+  const player = normalizePlayer(normalized.player ?? localPlayer, `${normalized.id}-player`, preferNative);
 
   return {
     id: normalized.id,
@@ -291,9 +296,10 @@ export const normalizeResult = (
 export const normalizeFinalResult = (
   result: unknown,
   fallbackId: string,
+  preferNative = false,
 ): NormalizedFinalResult => {
   const normalized = normalizeEntity<StrapiFinalResult>(result, fallbackId);
-  const player = normalizePlayer(normalized.player, `${normalized.id}-player`);
+  const player = normalizePlayer(normalized.player, `${normalized.id}-player`, preferNative);
 
   return {
     id: normalized.id,

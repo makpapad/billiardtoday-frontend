@@ -274,6 +274,11 @@ type TournamentEventsContentProps = {
   onLiveMatchOpen?: (sessionId: string) => void;
   /** Organizer logo + title/subtitle drawn on the KO bracket (header band + watermark). */
   bracketBranding?: BracketBrandingView | null;
+  /**
+   * Εθνική διοργάνωση → το κύριο όνομα αθλητή είναι το εθνικό (`full_name`).
+   * `null` = απόφαση από τίτλο/ruleset (παλιά συμπεριφορά).
+   */
+  preferNativeNames?: boolean | null;
 };
 
 type EventLiveSession = {
@@ -3242,6 +3247,7 @@ export function TournamentEventsContent({
   liveSessionsOverride = null,
   onLiveMatchOpen,
   bracketBranding = null,
+  preferNativeNames = null,
 }: TournamentEventsContentProps = {}) {
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -3507,6 +3513,42 @@ export function TournamentEventsContent({
     };
   }, [eventId, isLiveSessionsControlled]);
 
+  const eventRulesetKey = useMemo(() => {
+    const direct = eventData?.data?.ruleset_key;
+    if (typeof direct === "string" && direct.trim()) return direct.trim();
+    const tournament = eventData?.data?.tournament;
+    const tournamentRuleset =
+      tournament && typeof tournament === "object"
+        ? (tournament as { ruleset_key?: unknown }).ruleset_key
+        : null;
+    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
+      ? tournamentRuleset.trim()
+      : null;
+  }, [eventData]);
+  const tournamentRulesetKey = useMemo(() => {
+    const tournament = eventData?.data?.tournament;
+    const tournamentRuleset =
+      tournament && typeof tournament === "object"
+        ? (tournament as { ruleset_key?: unknown }).ruleset_key
+        : null;
+    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
+      ? tournamentRuleset.trim()
+      : null;
+  }, [eventData]);
+  /**
+   * Ονόματα αθλητών: σε εθνική διοργάνωση δείχνουμε το εθνικό όνομα (`full_name`) — ίδιος
+   * κανόνας με τα ομαδικά. Η προτίμηση έρχεται από το `federation.level` του summary·
+   * αν δεν δοθεί, αποφασίζει ο τίτλος/ruleset (παλιά συμπεριφορά).
+   */
+  const showNativePlayerNames = useMemo(() => {
+    if (typeof preferNativeNames === "boolean") return preferNativeNames;
+    return !shouldPreferEnglishOnlyNames({
+      title: eventData?.data?.title,
+      rulesetKey: eventRulesetKey,
+      tournamentRulesetKey,
+    });
+  }, [preferNativeNames, eventData?.data?.title, eventRulesetKey, tournamentRulesetKey]);
+
   const eventStages = useMemo<NormalizedEventStage[]>(() => {
     if (!eventData?.data?.event_stages) return [];
 
@@ -3540,7 +3582,11 @@ export function TournamentEventsContent({
 
         const groups = groupsRaw
           .map((group, groupIndex) =>
-            normalizeGroup(group, `${normalizedStage.id}-group-${groupIndex}`),
+            normalizeGroup(
+              group,
+              `${normalizedStage.id}-group-${groupIndex}`,
+              showNativePlayerNames,
+            ),
           )
           .sort((a, b) => {
             if (a.number !== null && b.number !== null)
@@ -3556,6 +3602,7 @@ export function TournamentEventsContent({
             normalizeResult(
               result,
               `${normalizedStage.id}-result-${resultIndex}`,
+              showNativePlayerNames,
             ),
           )
         );
@@ -3584,23 +3631,7 @@ export function TournamentEventsContent({
         if (b.order !== null) return 1;
         return a.id.localeCompare(b.id);
       });
-  }, [eventData]);
-  const eventHasIncompleteMatches = useMemo(
-    () => eventStagesHaveIncompleteMatches(eventStages),
-    [eventStages],
-  );
-  const eventRulesetKey = useMemo(() => {
-    const direct = eventData?.data?.ruleset_key;
-    if (typeof direct === "string" && direct.trim()) return direct.trim();
-    const tournament = eventData?.data?.tournament;
-    const tournamentRuleset =
-      tournament && typeof tournament === "object"
-        ? (tournament as { ruleset_key?: unknown }).ruleset_key
-        : null;
-    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
-      ? tournamentRuleset.trim()
-            : null;
-  }, [eventData]);
+  }, [eventData, showNativePlayerNames]);
   const entryStageByPlayerKey = useMemo(
     () => buildEntryStageByPlayerKey(eventStages),
     [eventStages],
@@ -3620,26 +3651,10 @@ export function TournamentEventsContent({
     () => resolveEntryTierRule(eventRulesetKey, entryFieldSize),
     [eventRulesetKey, entryFieldSize],
   );
-  const tournamentRulesetKey = useMemo(() => {
-    const tournament = eventData?.data?.tournament;
-    const tournamentRuleset =
-      tournament && typeof tournament === "object"
-        ? (tournament as { ruleset_key?: unknown }).ruleset_key
-        : null;
-    return typeof tournamentRuleset === "string" && tournamentRuleset.trim()
-      ? tournamentRuleset.trim()
-      : null;
-  }, [eventData]);
-  const showNativePlayerNames = useMemo(
-    () =>
-      !shouldPreferEnglishOnlyNames({
-        title: eventData?.data?.title,
-        rulesetKey: eventRulesetKey,
-        tournamentRulesetKey,
-      }),
-    [eventData?.data?.title, eventRulesetKey, tournamentRulesetKey],
+  const eventHasIncompleteMatches = useMemo(
+    () => eventStagesHaveIncompleteMatches(eventStages),
+    [eventStages],
   );
-
   const stageMatchGroups = useMemo<Record<string, StageMatchGroup[]>>(
     () => {
       const normalizedSlots = eventData?.data?.timetable_slots
@@ -3827,7 +3842,7 @@ export function TournamentEventsContent({
 
     const filteredResults = resultsArray
       .map((result, index) =>
-        normalizeFinalResult(result, `final-result-${index}`),
+        normalizeFinalResult(result, `final-result-${index}`, showNativePlayerNames),
       )
       .filter(hasMeaningfulFinalResult);
     // Published finals are the backend's single source of truth. Guard against

@@ -66,6 +66,7 @@ import {
   buildTournamentVenueLabel,
   formatTournamentDate,
 } from "@/lib/tournamentSeo";
+import { isNationalFederationLevel } from "@/lib/playerNameVariant";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -7174,6 +7175,7 @@ export function TournamentDetailPage({
             initialEventData={initialEventData}
             eventDataOverride={eventData}
             disableAutoRefresh
+            preferNativeNames={isNationalFederationLevel(summary.federationLevel)}
             preferredStageDocumentId={selectedStageDocumentId}
             preferredGroupParam={effectiveGroupParam}
             preferredMatchParam={effectiveMatchParam}
@@ -7855,3 +7857,4 @@ export function TournamentDetailPage({
     </div>
   );
 }
+
