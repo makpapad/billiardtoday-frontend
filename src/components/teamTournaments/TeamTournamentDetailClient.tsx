@@ -614,9 +614,17 @@ export function TeamTournamentDetailClient({
   const standingsByGroup = detail?.standingsByGroup ?? {};
   const rosters = detail?.rosters ?? {};
   const biathlon = summary?.config?.mode === "biathlon";
-  const organizerLogoUrl = eventSummary
-    ? resolveMediaUrl(eventSummary.organizerLogoUrl)
-    : null;
+  /**
+   * Ο διοργανωτής του hero: στα ομαδικά δεν υπάρχει πάντα event summary (τα πρωταθλήματα
+   * της ΕΟΑΑ δεν κρέμονται από bt-event), οπότε πέφτουμε στη διοργανώτρια ομοσπονδία του
+   * ίδιου του team-tournament — αλλιώς το λογότυπο έβγαινε «Logo coming soon».
+   */
+  const federation = summary?.federation ?? null;
+  const organizerLogoUrl = resolveMediaUrl(
+    eventSummary?.organizerLogoUrl ?? federation?.logoUrl ?? null,
+  );
+  const organizerHref = eventSummary?.organizerHref ?? federation?.href ?? null;
+  const organizerName = eventSummary?.organizerName ?? federation?.name ?? null;
 
   const seasonLabel = formatSeason(summary?.season ?? null);
   const venueMetaParts = useMemo(() => {
@@ -634,9 +642,26 @@ export function TeamTournamentDetailClient({
     return parts;
   }, [eventSummary, summary]);
 
+  /**
+   * Οι ημερομηνίες της διοργάνωσης: πρώτα ό,τι λέει το event summary (bt-event), αλλιώς
+   * από τους ίδιους τους αγώνες (πρώτη → τελευταία αγωνιστική). Χωρίς αυτό τα ομαδικά που
+   * δεν κρέμονται από bt-event (ΕΟΑΑ) έδειχναν «To be announced» ενώ έχουν ημερομηνίες.
+   */
+  const matchesSchedule = useMemo(() => {
+    const times = matches
+      .map((match) => (match.matchDate ? new Date(match.matchDate).getTime() : Number.NaN))
+      .filter((time) => Number.isFinite(time))
+      .sort((a, b) => a - b);
+    if (times.length === 0) return null;
+    return {
+      start: new Date(times[0]!).toISOString(),
+      end: new Date(times[times.length - 1]!).toISOString(),
+    };
+  }, [matches]);
+
   const scheduleLabel = useMemo(() => {
-    const start = eventSummary?.startDate;
-    const end = eventSummary?.endDate;
+    const start = eventSummary?.startDate ?? matchesSchedule?.start;
+    const end = eventSummary?.endDate ?? matchesSchedule?.end;
     if (!start && !end) return null;
     const format = (value: string) =>
       new Date(value).toLocaleDateString("el-GR", {
@@ -644,9 +669,12 @@ export function TeamTournamentDetailClient({
         month: "long",
         year: "numeric",
       });
-    if (start && end) return `${format(start)} - ${format(end)}`;
+    if (start && end) {
+      const sameDay = format(start) === format(end);
+      return sameDay ? format(start) : `${format(start)} - ${format(end)}`;
+    }
     return format(start ?? end ?? "");
-  }, [eventSummary]);
+  }, [eventSummary, matchesSchedule]);
 
   // Οι μάρκες φάσεων: τα στάδια του event όταν υπάρχουν, αλλιώς Qualifications /
   // Final Round (όπως τα έδειχνε πάντα η σελίδα) ώστε να μη χάνεται η εναλλαγή.
@@ -762,9 +790,9 @@ export function TeamTournamentDetailClient({
           value: summary?.teamSize ? `${summary.teamSize} players` : null,
         },
         { label: "Teams", value: summary?.teamCount ? String(summary.teamCount) : null },
-        { label: "Organiser", value: eventSummary?.organizerLogoName || null },
+        { label: "Organiser", value: organizerName },
       ].filter((item): item is { label: string; value: string } => Boolean(item.value)),
-    [eventSummary, scheduleLabel, summary],
+    [eventSummary, organizerName, scheduleLabel, summary],
   );
 
   return (
@@ -867,23 +895,15 @@ export function TeamTournamentDetailClient({
                 </div>
                 <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
                   {organizerLogoUrl ? (
-                    eventSummary?.organizerHref ? (
+                    organizerHref ? (
                       <Link
-                        href={eventSummary.organizerHref}
-                        title={
-                          eventSummary.organizerName
-                            ? `Back to ${eventSummary.organizerName}`
-                            : "Back to organiser"
-                        }
+                        href={organizerHref}
+                        title={organizerName ? `Back to ${organizerName}` : "Back to organiser"}
                         className="flex h-full w-full items-center justify-center rounded-xl transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                       >
                         <Image
                           src={organizerLogoUrl}
-                          alt={
-                            eventSummary?.organizerLogoName ||
-                            eventSummary?.tournamentTitle ||
-                            "Organizer logo"
-                          }
+                          alt={organizerName || "Organizer logo"}
                           width={320}
                           height={320}
                           className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
@@ -894,11 +914,7 @@ export function TeamTournamentDetailClient({
                       <div className="flex h-full w-full items-center justify-center">
                         <Image
                           src={organizerLogoUrl}
-                          alt={
-                            eventSummary?.organizerLogoName ||
-                            eventSummary?.tournamentTitle ||
-                            "Organizer logo"
-                          }
+                          alt={organizerName || "Organizer logo"}
                           width={320}
                           height={320}
                           className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
@@ -912,7 +928,7 @@ export function TeamTournamentDetailClient({
                         Organizer
                       </div>
                       <div className="mt-2 text-sm font-semibold text-white/80">
-                        {eventSummary?.organizerLogoName || "Logo coming soon"}
+                        {organizerName || "Logo coming soon"}
                       </div>
                     </div>
                   )}

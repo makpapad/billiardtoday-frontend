@@ -18,6 +18,16 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
+export type TeamTournamentFederation = {
+  documentId: string | null;
+  name: string | null;
+  slug: string | null;
+  /** Αρχική σελίδα της ομοσπονδίας (`/federations/<slug|documentId>`) για το λογότυπο του hero. */
+  href: string | null;
+  logoUrl: string | null;
+  level: string | null;
+};
+
 export type TeamTournamentSummary = {
   documentId: string;
   title: string;
@@ -32,6 +42,11 @@ export type TeamTournamentSummary = {
   teamCount: number;
   /** `federation.level` (national / confederation / world) — κρίνει ποιο όνομα αθλητή δείχνουμε. */
   federationLevel: string | null;
+  /**
+   * Η διοργανώτρια ομοσπονδία (όνομα + slug + λογότυπο) — τροφοδοτεί το λογότυπο και
+   * τον σύνδεσμο του hero στα ομαδικά, που δεν έχουν event summary (π.χ. ΕΟΑΑ).
+   */
+  federation: TeamTournamentFederation | null;
   /** national → εθνικό όνομα· διεθνείς διοργανώσεις → International Name. */
   nameVariant: NameVariant;
 };
@@ -293,6 +308,11 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
   // Το επίπεδο της ομοσπονδίας φτάνει από το populate του federation (level).
   const federation = flatten(entity.federation);
   const federationLevel = readString(federation.level) || null;
+  const federationSlug = readString(federation.slug);
+  const federationDocumentId = readString(federation.documentId);
+  const federationLogo = flatten(federation.logo);
+  const federationName = readString(federation.name);
+  const federationTarget = federationSlug ?? federationDocumentId;
 
   return {
     documentId: readString(entity.documentId) || "",
@@ -307,6 +327,17 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
     scoringConfig,
     teamCount: 0,
     federationLevel,
+    federation:
+      federationName || federationSlug || federationDocumentId || federationLogo.url
+        ? {
+            documentId: federationDocumentId,
+            name: federationName,
+            slug: federationSlug,
+            href: federationTarget ? `/federations/${federationTarget}` : null,
+            logoUrl: readString(federationLogo.url),
+            level: federationLevel,
+          }
+        : null,
     nameVariant: nameVariantForFederationLevel(federationLevel),
   };
 };
@@ -314,6 +345,10 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
 export const fetchTeamTournaments = async (): Promise<TeamTournamentSummary[]> => {
   const params = new URLSearchParams();
   params.append("populate[federation][fields][0]", "level");
+  params.append("populate[federation][fields][1]", "name");
+  params.append("populate[federation][fields][2]", "slug");
+  params.append("populate[federation][fields][3]", "documentId");
+  params.append("populate[federation][populate][logo][fields][0]", "url");
   params.set("pagination[pageSize]", "100");
   params.set("sort[0]", "title:asc");
   const json = await fetchPublic(`/api/team-tournaments?${params.toString()}`);
@@ -363,14 +398,23 @@ export const resolveTeamTournamentBySlug = async (
   return all.find((s) => buildTeamTournamentSlug(s) === cleanSlug) ?? null;
 };
 
-/** Το επίπεδο της ομοσπονδίας (national/confederation/world) — κρίνει το όνομα των αθλητών. */
-const FEDERATION_LEVEL_PARAM = "populate[federation][fields][0]=level";
+/**
+ * Το επίπεδο + όνομα/slug/λογότυπο της ομοσπονδίας (national/confederation/world) — κρίνει
+ * ποιο όνομα αθλητή δείχνουμε ΚΑΙ τροφοδοτεί το λογότυπο/σύνδεσμο του hero.
+ */
+const FEDERATION_SUMMARY_PARAMS = [
+  "populate[federation][fields][0]=level",
+  "populate[federation][fields][1]=name",
+  "populate[federation][fields][2]=slug",
+  "populate[federation][fields][3]=documentId",
+  "populate[federation][populate][logo][fields][0]=url",
+].join("&");
 
 export const fetchTeamTournamentByDocumentId = async (
   documentId: string,
 ): Promise<TeamTournamentSummary | null> => {
   if (!documentId) return null;
-  const path = `/api/team-tournaments/${documentId}?${FEDERATION_LEVEL_PARAM}`;
+  const path = `/api/team-tournaments/${documentId}?${FEDERATION_SUMMARY_PARAMS}`;
   // Ο δημόσιος ρόλος δεν βλέπει τη σχέση federation (γυρίζει null) — με το token του
   // server έρχεται το επίπεδο, που κρίνει αν δείχνουμε εθνικά ή διεθνή ονόματα αθλητών.
   const json = (await fetchPublic(path, { auth: true })) ?? (await fetchPublic(path));
