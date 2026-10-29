@@ -26,7 +26,7 @@ const playerHref = (row: PlayerStatRow): string | null =>
   playerProfileHref({ id: row.playerId, documentId: row.documentId }, row.name);
 
 /**
- * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → νίκες → μεγαλύτερη σειρά → αγώνες.
+ * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → νίκες → μεγαλύτερη στεκιά → αγώνες.
  * (Με ίδιο αριθμό αγώνων κερδίζει ο μέσος όρος, όπως στα φύλλα αγώνα.)
  */
 const rankTeamPlayers = (rows: PlayerStatRow[]): PlayerStatRow[] =>
@@ -94,7 +94,7 @@ function TeamPlayersModal({
             <thead>
               <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
                 <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Αθλητής</th>
+                <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
                 <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
                 <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
                 <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
@@ -103,7 +103,7 @@ function TeamPlayersModal({
                 <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
                 <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
                 <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                <th title="Μεγαλύτερη σειρά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
               </tr>
             </thead>
             <tbody>
@@ -134,7 +134,7 @@ function TeamPlayersModal({
           </table>
         </div>
         <div className="border-t border-slate-200 px-5 py-2 text-[11px] text-slate-500">
-          Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερη σειρά). Άνοιγμα προφίλ με κλικ στο όνομα.
+          Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερη στεκιά). Άνοιγμα προφίλ με κλικ στο όνομα.
         </div>
       </div>
     </div>
@@ -222,9 +222,9 @@ export function TeamStatisticsPanel({
                 <thead>
                   <tr className="bg-slate-50 text-slate-500">
                     <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Αθλητής</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
-                    <th title="Αγώνες που έπαιξε" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγώνες</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
+                    <th title="Αγώνες που έπαιξε" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΑΓΩΝΕΣ</th>
                     <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
                     <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
@@ -232,7 +232,7 @@ export function TeamStatisticsPanel({
                     <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
                     <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
                     <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                    <th title="Μεγαλύτερη σειρά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                    <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,13 +278,13 @@ export function TeamStatisticsPanel({
                 <thead>
                   <tr className="bg-slate-50 text-slate-500">
                     <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
                     <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
                     <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
                     <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                     <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
-                    <th title="Μεγαλύτερη σειρά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                    <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
                     <th title="Βαθμοί" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
                   </tr>
                 </thead>

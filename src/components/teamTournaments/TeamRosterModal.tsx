@@ -84,7 +84,7 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
               <thead>
                 <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
                   <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                  <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Αθλητής</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
                   <th
                     title="Ρόλος στη δήλωση: αρχηγός, αναπληρωματικός ή αθλητής"
                     className="w-24 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]"

@@ -844,6 +844,12 @@ export function TeamTournamentDetailClient({
                       <Users className="h-3.5 w-3.5" /> {summary?.teamCount ?? 0} teams
                     </span>
                   </div>
+                  {/* Σήμανση τύπου: ξεχωρίζει με μια ματιά τα ομαδικά από τα ατομικά τουρνουά. */}
+                  <div className="pt-1">
+                    <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10.5px] font-extrabold tracking-[0.22em] text-white/90">
+                      ΟΜΑΔΙΚΟ
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="w-full overflow-hidden pb-1">

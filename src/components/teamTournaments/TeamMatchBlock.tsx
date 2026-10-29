@@ -3,7 +3,7 @@
 /**
  * Μία γραμμή αποτελέσματος μέσα στο box της αγωνιστικής:
  *   ομάδες + σκορ, και με κλικ ανοίγουν τα αναλυτικά
- *   (στατιστικά ομάδων Π/ΣΤ/Σερί/Επιμ./Μ.Ο./Βαθ. + αγώνες ανά αθλητή).
+ *   (στατιστικά ομάδων Π/ΣΤ/Στεκιά/Επιμ./Μ.Ο./Βαθ. + αγώνες ανά αθλητή).
  *
  * Το πλαίσιο της αγωνιστικής (και οι όμιλοι μέσα του) ζουν στο TeamGroupResults.
  */
@@ -206,11 +206,11 @@ export function TeamMatchRow({
               <thead>
                 <tr className="bg-[#94dcf8] text-slate-950">
                   <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em]">
-                    Ομάδα
+                    ΟΜΑΔΑ
                   </th>
                   <th title="Πόντοι" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Π</th>
-                  <th title="Στάσεις (innings)" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤ</th>
-                  <th title="Μεγαλύτερη σειρά" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Σερί</th>
+                  <th title="Στεκιές" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤ</th>
+                  <th title="Μεγαλύτερη στεκιά" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤΕΚΙΑ</th>
                   <th title="Επιμέρους πόντοι αγώνων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Επιμ.</th>
                   <th title="Μέσος όρος" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Μ.Ο.</th>
                   <th title="Βαθμοί ομάδας" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Βαθ.</th>
@@ -262,17 +262,17 @@ export function TeamMatchRow({
               <table className="w-full border-collapse text-[11.8px]">
                 <thead>
                   <tr className="bg-[#f7c7ac] text-slate-950">
-                    <th title="Μεγαλύτερη σειρά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                    <th title="Μεγαλύτερη στεκιά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
                     <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Στάσεις" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th className="px-2.5 py-1.5 text-right text-[10px] font-bold uppercase tracking-[0.06em]">Όνομα</th>
-                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Πόντοι</th>
+                    <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                    <th className="px-2.5 py-1.5 text-right text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
+                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΠΟΝΤΟΙ</th>
                     <th className="w-2" />
-                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Πόντοι</th>
-                    <th className="px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Όνομα</th>
-                    <th title="Στάσεις" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΠΟΝΤΟΙ</th>
+                    <th className="px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
+                    <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Μεγαλύτερη σειρά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Σερί</th>
+                    <th title="Μεγαλύτερη στεκιά" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
                   </tr>
                 </thead>
                 <tbody>

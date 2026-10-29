@@ -65,7 +65,7 @@ export function GroupStandingsPanel({
           <thead>
             <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
               <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-              <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">Ομάδα</th>
+              <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
               <th title="Αγώνες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Α</th>
               <th title="Νίκες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
               <th title="Ισοπαλίες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ι</th>
