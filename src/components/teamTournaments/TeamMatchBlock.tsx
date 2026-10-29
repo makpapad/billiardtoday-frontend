@@ -131,7 +131,10 @@ export function TeamMatchRow({
 
   return (
     <div
-      className="border-t border-slate-100 first:border-t-0"
+      className={clsx(
+        "border-t border-slate-100 first:border-t-0",
+        emphasized && "bg-amber-50 shadow-[inset_3px_0_0_0_#f59e0b]",
+      )}
       data-bt-match-key={match.documentId || String(match.id ?? "")}
     >
       {/* Η γραμμή με τις δύο ομάδες + σκορ μένει κολλημένη ΚΑΤΩ από την κεφαλίδα της
@@ -197,7 +200,7 @@ export function TeamMatchRow({
       </div>
 
       {open ? (
-        <div className="bg-slate-50/60 pb-2">
+        <div className={clsx("pb-2", emphasized ? "bg-amber-50/70" : "bg-slate-50/60")}>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12.5px]">
               <thead>
@@ -217,7 +220,15 @@ export function TeamMatchRow({
                 {teams.map((team, index) => (
                   <tr
                     key={`${team.name}-${index}`}
-                    className={index === 0 ? "bg-[#eaf7fe]" : "bg-[#f5fcff]"}
+                    className={
+                      emphasized
+                        ? index === 0
+                          ? "bg-amber-100/70"
+                          : "bg-amber-50/80"
+                        : index === 0
+                          ? "bg-[#eaf7fe]"
+                          : "bg-[#f5fcff]"
+                    }
                   >
                     <th
                       scope="row"
@@ -279,7 +290,15 @@ export function TeamMatchRow({
                     return (
                       <tr
                         key={set.documentId || `${set.boardIndex}-${index}`}
-                        className={index % 2 === 0 ? "bg-[#f7fbff]" : "bg-white"}
+                        className={
+                          emphasized
+                            ? index % 2 === 0
+                              ? "bg-amber-100/50"
+                              : "bg-amber-50/60"
+                            : index % 2 === 0
+                              ? "bg-[#f7fbff]"
+                              : "bg-white"
+                        }
                       >
                         <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : set.homeHighRun ?? 0}</td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">
