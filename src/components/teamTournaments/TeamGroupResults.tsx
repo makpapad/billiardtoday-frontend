@@ -18,12 +18,19 @@ import {
 import type {
   ComputedStandingRow,
   NormalizedTeamMatch,
-  TeamEntity,
   TeamGroup,
   TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 import type { NameVariant } from "@/lib/playerNameVariant";
-import { buildRoundHighlights, type RoundHighlights } from "@/lib/teamTournamentStats";
+import {
+  buildRoundHighlights,
+  buildTeamTournamentStats,
+  type PlayerStatRow,
+  type RoundHighlights,
+  type TeamStatRow,
+  type TeamTournamentStats,
+} from "@/lib/teamTournamentStats";
+import { TeamPlayersModal } from "@/components/teamTournaments/TeamPlayersModal";
 
 const formatDate = (value: string | null): string | null => {
   if (!value) return null;
@@ -151,15 +158,15 @@ export function GroupStandingsPanel({
   highlightedTeams,
   highlightedTeamIds,
   qualifyingSpots = 4,
-  onOpenRoster,
+  stats = null,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
   /**
-   * Κλικ στο όνομα ομάδας στη βαθμολογία → το ίδιο modal με τις συνθέσεις
-   * («Αθλητές ομάδας») που ανοίγει και από τη Συμμετοχές/Στατιστικά.
+   * Στατιστικά του ομαδικού (ίδια πηγή με την καρτέλα «Στατιστικά»): κλικ στο όνομα
+   * ομάδας ανοίγει το modal με τους αθλητές που έχουν παίξει και τα στατιστικά τους.
    */
-  onOpenRoster?: (team: TeamEntity) => void;
+  stats?: TeamTournamentStats | null;
   /** Ονόματα ομάδων που παίζουν στους αγώνες που είναι τώρα στο viewport — τονίζονται. */
   highlightedTeams?: Set<string>;
   /** Ίδιο με `highlightedTeams`, αλλά με το id της ομάδας (ταίριασμα χωρίς ρίσκο ονόματος). */
@@ -170,6 +177,26 @@ export function GroupStandingsPanel({
    */
   qualifyingSpots?: number;
 }) {
+  /** Η ομάδα της οποίας οι αθλητές δείχνονται σε modal (null = κλειστό). */
+  const [selectedTeam, setSelectedTeam] = useState<TeamStatRow | null>(null);
+
+  /** Η γραμμή στατιστικών της ομάδας αυτής της γραμμής της βαθμολογίας (όταν έχει παίξει). */
+  const statsRowFor = (row: ComputedStandingRow): TeamStatRow | null => {
+    if (!stats) return null;
+    return (
+      stats.teams.find(
+        (item) => item.groupKey === group.groupKey && item.teamName === row.teamName,
+      ) ??
+      stats.teams.find((item) => item.teamName === row.teamName) ??
+      null
+    );
+  };
+
+  const playersOf = (row: TeamStatRow): PlayerStatRow[] =>
+    stats?.players.filter(
+      (item) => item.groupKey === row.groupKey && item.teamName === row.teamName,
+    ) ?? [];
+
   return (
     <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
       <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
@@ -201,14 +228,8 @@ export function GroupStandingsPanel({
                 (row.teamId !== null && (highlightedTeamIds?.has(row.teamId) ?? false)) ||
                 (highlightedTeams?.has(row.teamName) ?? false);
               const qualifies = index < qualifyingSpots;
-              /** Η ομάδα της γραμμής (για το modal των συνθέσεων). */
-              const teamEntity = onOpenRoster
-                ? group.teams.find(
-                    (item) =>
-                      (row.teamId !== null && item.id === row.teamId) ||
-                      item.name === row.teamName,
-                  ) ?? null
-                : null;
+              /** Η ομάδα της γραμμής, όταν υπάρχουν στατιστικά (δηλαδή έχει παίξει). */
+              const teamStats = statsRowFor(row);
               return (
                 <tr
                   key={row.key}
@@ -236,11 +257,11 @@ export function GroupStandingsPanel({
                       emphasized ? "text-slate-950" : "text-slate-900",
                     )}
                   >
-                    {onOpenRoster && teamEntity ? (
+                    {teamStats ? (
                       <button
                         type="button"
-                        title={`Σύνθεση: ${row.teamName}`}
-                        onClick={() => onOpenRoster(teamEntity)}
+                        title={`Στατιστικά αθλητών: ${row.teamName}`}
+                        onClick={() => setSelectedTeam(teamStats)}
                         className="cursor-pointer text-left underline decoration-slate-300 decoration-dotted underline-offset-[3px] transition hover:text-sky-700 hover:decoration-sky-500 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
                       >
                         {row.teamName}
@@ -268,8 +289,16 @@ export function GroupStandingsPanel({
         </table>
       </div>
       <div className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500">
-        Οι δύο πρώτοι προκρίνονται στην επόμενη φάση.
+        Οι {qualifyingSpots} πρώτοι προκρίνονται στην τελική φάση.
       </div>
+
+      {selectedTeam ? (
+        <TeamPlayersModal
+          team={selectedTeam}
+          players={playersOf(selectedTeam)}
+          onClose={() => setSelectedTeam(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -335,7 +364,6 @@ export function TeamGroupResults({
   matchesByGroupKey,
   standingsForGroup,
   summary,
-  onOpenRoster,
 }: {
   groups: TeamGroup[];
   /** «all» = όλοι οι όμιλοι (boxes ανά όμιλο) — αλλιώς ένας όμιλος (γραμμές ανά αγωνιστική). */
@@ -344,8 +372,6 @@ export function TeamGroupResults({
   matchesByGroupKey: Map<string, NormalizedTeamMatch[]>;
   standingsForGroup: (group: TeamGroup) => ComputedStandingRow[];
   summary: TeamTournamentSummary | null;
-  /** Κλικ σε ομάδα στη βαθμολογία → modal «Αθλητές ομάδας» (κοινό με τις Συμμετοχές). */
-  onOpenRoster?: (team: TeamEntity) => void;
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
@@ -508,6 +534,12 @@ export function TeamGroupResults({
     return map;
   }, [rounds]);
 
+  /** Στατιστικά όλων των αγώνων — ίδια πηγή με την καρτέλα «Στατιστικά» του ομαδικού. */
+  const stats = useMemo(
+    () => buildTeamTournamentStats(Array.from(matchesByGroupKey.values()).flat(), nameVariant),
+    [matchesByGroupKey, nameVariant],
+  );
+
   const highlightedTeams = useMemo(() => {
     if (!activeMatchKey) return undefined;
     const names = teamNamesByKey.get(activeMatchKey);
@@ -620,7 +652,7 @@ export function TeamGroupResults({
             rows={standingsForGroup(group)}
             highlightedTeams={highlightedTeams}
             highlightedTeamIds={highlightedTeamIds}
-            onOpenRoster={onOpenRoster}
+            stats={stats}
           />
         ))}
       </div>

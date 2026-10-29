@@ -1039,7 +1039,6 @@ export function TeamTournamentDetailClient({
                   resolveStandingRows(group, standingsByGroup[group.groupKey] ?? [])
                 }
                 summary={summary}
-                onOpenRoster={setRosterTeam}
               />
             )}
           </div>
