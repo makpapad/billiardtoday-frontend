@@ -6,7 +6,11 @@
  * Αθλητές:  Αγώνες | Π | ΣΤ | Μ.Ο. | Best (καλύτερος Μ.Ο. αγώνα) | Ν | ΙΣ | Η | Σερί
  */
 
-import type { NormalizedTeamMatch } from "@/lib/teamTournaments";
+import {
+  boardPointsOf,
+  isForfeitBoard,
+  type NormalizedTeamMatch,
+} from "@/lib/teamTournaments";
 import {
   pickPlayerName,
   playerIdentityKey,
@@ -228,4 +232,181 @@ export const buildTeamTournamentStats = (
     teams: teamList,
     players: playerList,
   };
+};
+
+/* ------------------------------------------------------------------ */
+/* «Καλύτεροι της αγωνιστικής» — κάτω από τους αγώνες κάθε γύρου       */
+/* ------------------------------------------------------------------ */
+
+export type RoundBestTeam = {
+  name: string;
+  boardFor: number;
+  boardAgainst: number;
+  boardDiff: number;
+  avg: number;
+};
+
+export type RoundBestPlayer = {
+  name: string;
+  playerId: number | null;
+  documentId: string | null;
+  teamName: string;
+  caroms: number;
+  innings: number;
+  avg: number;
+};
+
+export type RoundBestRun = {
+  name: string;
+  playerId: number | null;
+  documentId: string | null;
+  teamName: string;
+  run: number;
+};
+
+export type RoundHighlights = {
+  bestTeam: RoundBestTeam | null;
+  bestPlayer: RoundBestPlayer | null;
+  bestRun: RoundBestRun | null;
+};
+
+/**
+ * Τα τρία «καλύτερα» μιας αγωνιστικής, από τους ολοκληρωμένους αγώνες της:
+ *  - **καλύτερη ομάδα**: η μεγαλύτερη διαφορά επιμέρους πόντων (ισοπαλία → καλύτερος Μ.Ο.),
+ *  - **καλύτερος παίκτης**: ο μεγαλύτερος Μ.Ο. (πόντοι ÷ στεκιές) της αγωνιστικής,
+ *  - **καλύτερο H.R.**: η μεγαλύτερη στεκιά (high run) της αγωνιστικής.
+ * Άνευ αγώνα boards (2-0 χωρίς νούμερα) δεν μετράνε σε Μ.Ο./H.R.
+ */
+export const buildRoundHighlights = (
+  matches: NormalizedTeamMatch[],
+  /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
+  nameVariant: NameVariant = "international",
+): RoundHighlights => {
+  type TeamAgg = { name: string; boardFor: number; boardAgainst: number; caroms: number; innings: number };
+  type PlayerAgg = {
+    name: string;
+    playerId: number | null;
+    documentId: string | null;
+    teamName: string;
+    caroms: number;
+    innings: number;
+  };
+
+  const teamAgg = new Map<string, TeamAgg>();
+  const playerAgg = new Map<string, PlayerAgg>();
+  let bestRun: RoundBestRun | null = null;
+
+  const teamRow = (name: string): TeamAgg => {
+    let row = teamAgg.get(name);
+    if (!row) {
+      row = { name, boardFor: 0, boardAgainst: 0, caroms: 0, innings: 0 };
+      teamAgg.set(name, row);
+    }
+    return row;
+  };
+
+  for (const match of matches) {
+    if (!isCounted(match)) continue;
+    const home = teamRow(match.homeTeamName);
+    const away = teamRow(match.awayTeamName);
+    home.caroms += match.computed.homeCaromPoints;
+    home.innings += match.computed.homeTotalInnings;
+    away.caroms += match.computed.awayCaromPoints;
+    away.innings += match.computed.awayTotalInnings;
+
+    for (const set of match.sets) {
+      if (isForfeitBoard(set)) continue;
+      const bp = boardPointsOf(set);
+      home.boardFor += bp.home;
+      home.boardAgainst += bp.away;
+      away.boardFor += bp.away;
+      away.boardAgainst += bp.home;
+
+      const sides = [
+        {
+          player: set.homePlayer,
+          teamName: match.homeTeamName,
+          points: set.homePoints ?? 0,
+          innings: set.homeInnings ?? 0,
+          highRun: set.homeHighRun ?? 0,
+        },
+        {
+          player: set.awayPlayer,
+          teamName: match.awayTeamName,
+          points: set.awayPoints ?? 0,
+          innings: set.awayInnings ?? 0,
+          highRun: set.awayHighRun ?? 0,
+        },
+      ];
+
+      for (const side of sides) {
+        if (side.innings > 0 && side.points > 0) {
+          const key = playerIdentityKey(side.player, nameVariant) || `${side.teamName}|${pickPlayerName(side.player, nameVariant)}`;
+          const name = pickPlayerName(side.player, nameVariant);
+          if (name) {
+            let row = playerAgg.get(key);
+            if (!row) {
+              row = {
+                name,
+                playerId: side.player?.id ?? null,
+                documentId: side.player?.documentId ?? null,
+                teamName: side.teamName,
+                caroms: 0,
+                innings: 0,
+              };
+              playerAgg.set(key, row);
+            }
+            row.caroms += side.points;
+            row.innings += side.innings;
+          }
+        }
+        if (side.highRun > 0) {
+          const name = pickPlayerName(side.player, nameVariant);
+          if (name && (!bestRun || side.highRun > bestRun.run)) {
+            bestRun = {
+              name,
+              playerId: side.player?.id ?? null,
+              documentId: side.player?.documentId ?? null,
+              teamName: side.teamName,
+              run: side.highRun,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  let bestTeam: RoundBestTeam | null = null;
+  for (const row of teamAgg.values()) {
+    const avg = row.innings > 0 ? row.caroms / row.innings : 0;
+    const candidate: RoundBestTeam = {
+      name: row.name,
+      boardFor: row.boardFor,
+      boardAgainst: row.boardAgainst,
+      boardDiff: row.boardFor - row.boardAgainst,
+      avg,
+    };
+    if (
+      !bestTeam ||
+      candidate.boardDiff > bestTeam.boardDiff ||
+      (candidate.boardDiff === bestTeam.boardDiff && candidate.avg > bestTeam.avg)
+    ) {
+      bestTeam = candidate;
+    }
+  }
+
+  let bestPlayer: RoundBestPlayer | null = null;
+  for (const row of playerAgg.values()) {
+    const avg = row.innings > 0 ? row.caroms / row.innings : 0;
+    const candidate: RoundBestPlayer = { ...row, avg };
+    if (
+      !bestPlayer ||
+      candidate.avg > bestPlayer.avg ||
+      (candidate.avg === bestPlayer.avg && candidate.caroms > bestPlayer.caroms)
+    ) {
+      bestPlayer = candidate;
+    }
+  }
+
+  return { bestTeam, bestPlayer, bestRun };
 };

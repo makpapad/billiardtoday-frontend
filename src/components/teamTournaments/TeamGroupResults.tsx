@@ -21,6 +21,8 @@ import type {
   TeamGroup,
   TeamTournamentSummary,
 } from "@/lib/teamTournaments";
+import type { NameVariant } from "@/lib/playerNameVariant";
+import { buildRoundHighlights, type RoundHighlights } from "@/lib/teamTournamentStats";
 
 const formatDate = (value: string | null): string | null => {
   if (!value) return null;
@@ -34,6 +36,65 @@ const avgText = (value: number): string => (value > 0 ? value.toFixed(3) : "—"
 /** Κλειδί αγώνα — το ίδιο και στο `data-bt-match-key` της γραμμής (TeamMatchBlock). */
 const matchKeyOf = (match: NormalizedTeamMatch): string =>
   match.documentId || String(match.id ?? "");
+
+/* ------------------------------------------------------------------ */
+/* «Καλύτεροι της αγωνιστικής» — κάτω από τον τελευταίο αγώνα του γύρου */
+/* ------------------------------------------------------------------ */
+
+const RoundHighlightsStrip = ({ highlights }: { highlights: RoundHighlights }) => {
+  const { bestTeam, bestPlayer, bestRun } = highlights;
+  if (!bestTeam && !bestPlayer && !bestRun) return null;
+
+  const items = [
+    bestTeam
+      ? {
+          key: "team",
+          label: "Καλύτερη ομάδα",
+          title: "Η μεγαλύτερη διαφορά επιμέρους πόντων στην αγωνιστική",
+          value: bestTeam.name,
+          detail: `${bestTeam.boardFor} – ${bestTeam.boardAgainst}${
+            bestTeam.avg > 0 ? ` · Μ.Ο. ${avgText(bestTeam.avg)}` : ""
+          }`,
+        }
+      : null,
+    bestPlayer
+      ? {
+          key: "player",
+          label: "Καλύτερος παίκτης",
+          title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) στην αγωνιστική",
+          value: bestPlayer.name,
+          detail: `Μ.Ο. ${avgText(bestPlayer.avg)} · ${bestPlayer.teamName}`,
+        }
+      : null,
+    bestRun
+      ? {
+          key: "run",
+          label: "Καλύτερο H.R.",
+          title: "Η μεγαλύτερη στεκιά (high run) στην αγωνιστική",
+          value: bestRun.name,
+          detail: `${bestRun.run} · ${bestRun.teamName}`,
+        }
+      : null,
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  return (
+    <div className="flex flex-wrap items-stretch gap-2 rounded-b-[18px] border-t border-slate-200 bg-slate-50/80 px-3 py-2.5">
+      {items.map((item) => (
+        <div
+          key={item.key}
+          title={item.title}
+          className="flex min-w-[190px] flex-1 flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white px-3 py-2"
+        >
+          <span className="text-[9.5px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
+            {item.label}
+          </span>
+          <span className="truncate text-[12.5px] font-bold text-slate-900">{item.value}</span>
+          <span className="truncate text-[11px] text-slate-500">{item.detail}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /* ------------------------------------------------------------------ */
 /* Βαθμολογία ομίλου (δεξιά, σταθερή)                                  */
@@ -207,6 +268,7 @@ export function TeamGroupResults({
   summary: TeamTournamentSummary | null;
 }) {
   const multiGroup = groups.length > 1;
+  const nameVariant: NameVariant = summary?.nameVariant ?? "international";
   const listRef = useRef<HTMLDivElement | null>(null);
   /** Ο αγώνας στην κορυφή της λίστας τώρα (κάτω από τις κολλημένες κεφαλίδες). */
   const [activeMatchKey, setActiveMatchKey] = useState<string | null>(null);
@@ -404,6 +466,12 @@ export function TeamGroupResults({
                   ))}
                 </div>
               )}
+              <RoundHighlightsStrip
+                highlights={buildRoundHighlights(
+                  entry.buckets.flatMap((bucket) => bucket.matches),
+                  nameVariant,
+                )}
+              />
             </section>
           ))
         )}
