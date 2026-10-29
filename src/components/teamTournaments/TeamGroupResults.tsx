@@ -52,38 +52,50 @@ const RoundHighlightsStrip = ({
   const { bestTeam, bestPlayer, bestRun } = highlights;
   if (!bestTeam && !bestPlayer && !bestRun) return null;
 
-  const items = [
-    bestTeam
-      ? {
-          key: "team",
-          matchKey: bestTeam.matchKey,
-          label: "ΟΜΑΔΑ ΜΕ ΤΟΝ ΚΑΛΥΤΕΡΟ Μ.Ο.",
-          title: "Η ομάδα με τον μεγαλύτερο μέσο όρο στην αγωνιστική — κλικ για τον αγώνα της",
-          value: bestTeam.name,
-          detail: `Μ.Ο. ${avgText(bestTeam.avg)} · ${bestTeam.boardFor} – ${bestTeam.boardAgainst}`,
-        }
-      : null,
-    bestPlayer
-      ? {
-          key: "player",
-          matchKey: bestPlayer.matchKey,
-          label: "ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ",
-          title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) της αγωνιστικής — κλικ για τον αγώνα του",
-          value: bestPlayer.name,
-          detail: `Μ.Ο. ${avgText(bestPlayer.avg)} · ${bestPlayer.teamName}`,
-        }
-      : null,
-    bestRun
-      ? {
-          key: "run",
-          matchKey: bestRun.matchKey,
-          label: "ΚΑΛΥΤΕΡΟ H.R.",
-          title: "Η μεγαλύτερη στεκιά (high run) της αγωνιστικής — κλικ για τον αγώνα",
-          value: bestRun.name,
-          detail: `${bestRun.run} · ${bestRun.teamName}`,
-        }
-      : null,
-  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+  type Item = {
+    key: string;
+    matchKey: string;
+    label: string;
+    title: string;
+    name: string;
+    sub: string | null;
+    value: string;
+    /** Χρώμα του μεγάλου νούμερου: γαλάζιο για μέσους όρους, κόκκινο για high run. */
+    tone: string;
+  };
+
+  const items: Item[] = [
+    bestTeam && {
+      key: "team",
+      matchKey: bestTeam.matchKey,
+      label: "ΟΜΑΔΑ ΜΕ ΤΟΝ ΚΑΛΥΤΕΡΟ Μ.Ο.",
+      title: "Η ομάδα με τον μεγαλύτερο μέσο όρο στην αγωνιστική — κλικ για τον αγώνα της",
+      name: bestTeam.name,
+      sub: null,
+      value: avgText(bestTeam.avg),
+      tone: "bg-cyan-500 text-slate-950",
+    },
+    bestPlayer && {
+      key: "player",
+      matchKey: bestPlayer.matchKey,
+      label: "ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ",
+      title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) της αγωνιστικής — κλικ για τον αγώνα του",
+      name: bestPlayer.name,
+      sub: bestPlayer.teamName,
+      value: avgText(bestPlayer.avg),
+      tone: "bg-cyan-500 text-slate-950",
+    },
+    bestRun && {
+      key: "run",
+      matchKey: bestRun.matchKey,
+      label: "ΚΑΛΥΤΕΡΟ H.R.",
+      title: "Η μεγαλύτερη στεκιά (high run) της αγωνιστικής — κλικ για τον αγώνα",
+      name: bestRun.name,
+      sub: bestRun.teamName,
+      value: String(bestRun.run),
+      tone: "bg-red-500 text-slate-950",
+    },
+  ].filter(Boolean) as Item[];
 
   return (
     <div className="flex flex-wrap items-stretch gap-2 rounded-b-[18px] border-t border-slate-200 bg-slate-50/80 px-3 py-2.5">
@@ -97,16 +109,30 @@ const RoundHighlightsStrip = ({
             title={item.title}
             onClick={clickable ? () => onOpenMatch?.(item.matchKey) : undefined}
             className={clsx(
-              "flex min-w-[190px] flex-1 flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-left",
+              "flex min-w-[210px] flex-1 items-center gap-2.5 rounded-[14px] border border-slate-200 bg-white p-2.5 pl-3 text-left",
               clickable &&
-                "cursor-pointer transition hover:border-sky-300 hover:bg-sky-50/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60",
+                "cursor-pointer transition hover:border-cyan-300 hover:shadow-[0_2px_10px_rgba(15,23,42,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60",
             )}
           >
-            <span className="text-[9.5px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
-              {item.label}
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[9px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
+                {item.label}
+              </span>
+              <span className="truncate text-[12.5px] font-bold leading-tight text-slate-900">
+                {item.name}
+              </span>
+              {item.sub ? (
+                <span className="truncate text-[10.5px] leading-tight text-slate-500">{item.sub}</span>
+              ) : null}
             </span>
-            <span className="truncate text-[12.5px] font-bold text-slate-900">{item.value}</span>
-            <span className="truncate text-[11px] text-slate-500">{item.detail}</span>
+            <span
+              className={clsx(
+                "flex min-w-[62px] shrink-0 items-center justify-center rounded-[10px] px-2.5 py-2 text-[19px] font-extrabold leading-none tracking-tight tabular-nums",
+                item.tone,
+              )}
+            >
+              {item.value}
+            </span>
           </Tag>
         );
       })}
