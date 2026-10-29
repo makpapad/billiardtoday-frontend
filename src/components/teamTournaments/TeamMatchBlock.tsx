@@ -128,6 +128,10 @@ export function TeamMatchRow({
 
   return (
     <div className="border-t border-slate-100 first:border-t-0">
+      {/* Η γραμμή με τις δύο ομάδες + σκορ μένει κολλημένη ΚΑΤΩ από την κεφαλίδα της
+          αγωνιστικής (104px + 42px ύψος κεφαλίδας = 146px· 89px + 42px = 131px στο
+          κινητό) όσο διαρκούν τα αναλυτικά — τη σπρώχνει έξω ο επόμενος αγώνας.
+          Χρειάζεται αδιαφανές φόντο, αλλιώς φαίνονται τα νούμερα από κάτω. */}
       <div
         role="button"
         tabIndex={0}
@@ -139,7 +143,10 @@ export function TeamMatchRow({
             setOpen((v) => !v);
           }
         }}
-        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
+        className={clsx(
+          "sticky top-[131px] z-10 flex cursor-pointer items-center gap-3 bg-white px-4 py-2.5 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 lg:top-[146px]",
+          open && "border-b border-slate-200 shadow-[0_4px_10px_rgba(15,23,42,0.08)]",
+        )}
       >
         <span
           className={clsx(
