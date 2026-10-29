@@ -43,11 +43,14 @@ export function GroupStandingsPanel({
   group,
   rows,
   highlightedTeams,
+  highlightedTeamIds,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
   /** Ονόματα ομάδων που παίζουν στους αγώνες που είναι τώρα στο viewport — τονίζονται. */
   highlightedTeams?: Set<string>;
+  /** Ίδιο με `highlightedTeams`, αλλά με το id της ομάδας (ταίριασμα χωρίς ρίσκο ονόματος). */
+  highlightedTeamIds?: Set<number>;
 }) {
   return (
     <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
@@ -76,21 +79,22 @@ export function GroupStandingsPanel({
           <tbody>
             {rows.map((row, index) => {
               const diff = row.framesFor - row.framesAgainst;
-              const emphasized = highlightedTeams?.has(row.teamName) ?? false;
+              const emphasized =
+                (row.teamId !== null && (highlightedTeamIds?.has(row.teamId) ?? false)) ||
+                (highlightedTeams?.has(row.teamName) ?? false);
               return (
                 <tr
                   key={row.key}
                   className={clsx(
                     "border-t border-slate-100 transition-colors duration-200",
-                    index < 2 && "bg-sky-50/40",
-                    emphasized && "bg-amber-100/70",
+                    emphasized ? "bg-amber-100/70" : index < 2 && "bg-sky-50/40",
                   )}
                 >
                   <td
                     className={clsx(
                       "px-2 py-1.5 text-center",
                       emphasized
-                        ? "border-l-2 border-amber-500 font-extrabold text-amber-700"
+                        ? "font-extrabold text-amber-700 shadow-[inset_2px_0_0_0_#f59e0b]"
                         : index < 2
                           ? "font-extrabold text-sky-700"
                           : "text-slate-400",
@@ -315,12 +319,35 @@ export function TeamGroupResults({
     return map;
   }, [rounds]);
 
+  /** Ταυτότητες (id) των ομάδων κάθε αγώνα — πιο ασφαλές από το όνομα για το ταίριασμα. */
+  const teamIdsByKey = useMemo(() => {
+    const map = new Map<string, number[]>();
+    rounds.forEach((entry) =>
+      entry.buckets.forEach((bucket) =>
+        bucket.matches.forEach((match) => {
+          map.set(
+            matchKeyOf(match),
+            [match.homeTeamId, match.awayTeamId].filter(
+              (id): id is number => typeof id === "number",
+            ),
+          );
+        }),
+      ),
+    );
+    return map;
+  }, [rounds]);
+
   const highlightedTeams = useMemo(() => {
     if (!activeMatchKey) return undefined;
     const names = teamNamesByKey.get(activeMatchKey);
-    if (!names) return undefined;
-    return new Set(names.filter(Boolean));
+    return names ? new Set(names.filter(Boolean)) : undefined;
   }, [activeMatchKey, teamNamesByKey]);
+
+  const highlightedTeamIds = useMemo(() => {
+    if (!activeMatchKey) return undefined;
+    const ids = teamIdsByKey.get(activeMatchKey);
+    return ids && ids.length > 0 ? new Set(ids) : undefined;
+  }, [activeMatchKey, teamIdsByKey]);
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)]">
@@ -372,6 +399,7 @@ export function TeamGroupResults({
                       key={match.documentId || String(match.id)}
                       match={match}
                       summary={summary}
+                      emphasized={activeMatchKey !== null && activeMatchKey === matchKeyOf(match)}
                     />
                   ))}
                 </div>
@@ -409,6 +437,7 @@ export function TeamGroupResults({
             group={group}
             rows={standingsForGroup(group)}
             highlightedTeams={highlightedTeams}
+            highlightedTeamIds={highlightedTeamIds}
           />
         ))}
       </div>

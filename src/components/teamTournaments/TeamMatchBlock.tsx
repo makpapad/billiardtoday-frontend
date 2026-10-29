@@ -73,9 +73,12 @@ const SetPlayerName = ({
 export function TeamMatchRow({
   match,
   summary,
+  emphasized = false,
 }: {
   match: NormalizedTeamMatch;
   summary: TeamTournamentSummary | null;
+  /** Είναι ο αγώνας που κοιτάζει τώρα ο επισκέπτης — τονίζεται (και στη βαθμολογία δεξιά). */
+  emphasized?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const completed = isCompletedMatch(match);
@@ -147,7 +150,10 @@ export function TeamMatchRow({
           }
         }}
         className={clsx(
-          "sticky top-[131px] z-10 flex cursor-pointer items-center gap-3 bg-white px-4 py-2.5 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 lg:top-[146px]",
+          "sticky top-[131px] z-10 flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 lg:top-[146px]",
+          emphasized
+            ? "bg-amber-50 shadow-[inset_3px_0_0_0_#f59e0b]"
+            : "bg-white",
           open && "border-b border-slate-200 shadow-[0_4px_10px_rgba(15,23,42,0.08)]",
         )}
       >
