@@ -1156,6 +1156,12 @@ export function TeamTournamentDetailClient({
           </div>
         ) : null}
 
+        {/* Ένδειξη πηγής κάτω από ΟΛΑ τα αποτελέσματα (κάθε panel εκτός από το Info) —
+            στο Info μπαίνει πάνω από το «Team tournament overview». */}
+        {panel !== "info" && dataSourceCredit ? (
+          <DataSourceCredit source={dataSourceCredit} />
+        ) : null}
+
         {/* Info — τα στοιχεία της διοργάνωσης, όπως το «Tournament overview». */}
         {panel === "info" ? (
           <div className="flex flex-col gap-3">
