@@ -6,6 +6,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { Trophy, Users } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
+import { DataSourceCredit } from "@/components/DataSourceCredit";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import {
   type ComputedStandingRow,
@@ -18,6 +19,7 @@ import {
 import { TeamGroupResults } from "@/components/teamTournaments/TeamGroupResults";
 import { TeamRosterModal } from "@/components/teamTournaments/TeamRosterModal";
 import { TeamStatisticsPanel } from "@/components/teamTournaments/TeamStatisticsPanel";
+import { dataSourceCreditFor } from "@/lib/dataSource";
 import { TeamTimetablePanel } from "@/components/teamTournaments/TeamTimetablePanel";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
@@ -625,6 +627,9 @@ export function TeamTournamentDetailClient({
   );
   const organizerHref = eventSummary?.organizerHref ?? federation?.href ?? null;
   const organizerName = eventSummary?.organizerName ?? federation?.name ?? null;
+  // Ένδειξη πηγής δεδομένων («Source 3Cushion.gr» για τα ομαδικά της ΕΟΑΑ) — μπαίνει
+  // ακριβώς πάνω από το «Team tournament overview».
+  const dataSourceCredit = dataSourceCreditFor(federation);
 
   const seasonLabel = formatSeason(summary?.season ?? null);
   const venueMetaParts = useMemo(() => {
@@ -1153,43 +1158,48 @@ export function TeamTournamentDetailClient({
 
         {/* Info — τα στοιχεία της διοργάνωσης, όπως το «Tournament overview». */}
         {panel === "info" ? (
-          <details
-            open
-            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]"
-          >
-            <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8">
-              <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Team tournament overview
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
-              <div className="flex flex-wrap gap-2">
-                {overviewFacts.map((item) => (
-                  <span
-                    key={item.label}
-                    className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600"
+          <div className="flex flex-col gap-3">
+            {dataSourceCredit ? (
+              <DataSourceCredit source={dataSourceCredit} />
+            ) : null}
+            <details
+              open
+              className="rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]"
+            >
+              <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8">
+                <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Team tournament overview
+                </div>
+                <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {overviewFacts.map((item) => (
+                    <span
+                      key={item.label}
+                      className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600"
+                    >
+                      {item.label}: {item.value}
+                    </span>
+                  ))}
+                </div>
+              </summary>
+              <div className="border-t border-slate-200 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <Link
+                    href="/tournaments/team"
+                    className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
                   >
-                    {item.label}: {item.value}
-                  </span>
-                ))}
+                    All team tournaments →
+                  </Link>
+                  <Link
+                    href="/federations"
+                    className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
+                  >
+                    Federations directory →
+                  </Link>
+                </div>
               </div>
-            </summary>
-            <div className="border-t border-slate-200 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
-              <div className="flex flex-wrap gap-3 text-sm">
-                <Link
-                  href="/tournaments/team"
-                  className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
-                >
-                  All team tournaments →
-                </Link>
-                <Link
-                  href="/federations"
-                  className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
-                >
-                  Federations directory →
-                </Link>
-              </div>
-            </div>
-          </details>
+            </details>
+          </div>
         ) : null}
 
         {/* Κλικ σε ομάδα της καρτέλας «Συμμετοχές» → οι αθλητές που συμμετέχουν στην ομάδα. */}

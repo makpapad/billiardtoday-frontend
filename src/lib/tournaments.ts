@@ -30,6 +30,11 @@ export type TournamentEventSummary = {
   venueCountry: string | null;
   organizerType: string | null;
   /**
+   * Το slug της ομοσπονδίας που διοργανώνει (όταν διοργανώνει ομοσπονδία) — για την
+   * ένδειξη πηγής δεδομένων· `null` όταν διοργανώνει σύλλογος.
+   */
+  organizerFederationSlug: string | null;
+  /**
    * Όνομα διοργανωτή για εμφάνιση (π.χ. tooltip «Back to …») — η ομοσπονδία όταν
    * διοργανώνει ομοσπονδία, αλλιώς ο σύλλογος. ΠΟΤΕ το όνομα του αρχείου λογότυπου.
    */
@@ -382,6 +387,7 @@ const normalizeClubTournamentSummary = (
     venueCity: null,
     venueCountry: null,
     organizerType: "club",
+    organizerFederationSlug: null,
     organizerName:
       readString(clubSource.name) ?? readString(clubSource.title) ?? null,
     organizerLogoUrl: readString(clubLogoSource.url),
@@ -731,6 +737,11 @@ const fetchTournamentEventSummaryById = async (
     venueCity: readString((venueSource as Record<string, unknown>).city),
     venueCountry: readString((venueSource as Record<string, unknown>).country),
     organizerType,
+    organizerFederationSlug:
+      organizerType === "federation"
+        ? (readString((organizerFederationSource as Record<string, unknown>).slug) ??
+          readString((federationSource as Record<string, unknown>).slug))
+        : null,
     organizerName:
       organizerType === "federation"
         ? readString((organizerFederationSource as Record<string, unknown>).name) ??

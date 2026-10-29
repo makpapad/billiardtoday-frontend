@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
+import { DataSourceCredit } from "@/components/DataSourceCredit";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
@@ -23,6 +24,7 @@ import type { RankingSeriesData } from "@/lib/rankings";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref, buildTournamentSlug } from "@/lib/tournaments";
+import { dataSourceCreditFor } from "@/lib/dataSource";
 import type {
   EventApiResponse,
   GroupStanding,
@@ -1671,6 +1673,9 @@ export function TournamentDetailPage({
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const organizerName = summary.organizerName ?? null;
+  // Ένδειξη πηγής δεδομένων (π.χ. «Source 3Cushion.gr» για τις διοργανώσεις της ΕΟΑΑ):
+  // μπαίνει ακριβώς κάτω από τα αποτελέσματα, πάνω από το Tournament Overview.
+  const dataSourceCredit = dataSourceCreditFor({ slug: summary.organizerFederationSlug });
   // Το λογότυπο του διοργανωτή είναι σύνδεσμος προς την αρχική της ομοσπονδίας/συλλόγου
   // (όταν ξέρουμε ποιος διοργανώνει) — μία φορά ορίζεται, δύο φορές τυπώνεται.
   const organizerLogo = organizerLogoUrl ? (
@@ -7738,6 +7743,9 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-2">
         {mainContent}
       </div>
+      {dataSourceCredit ? (
+        <DataSourceCredit source={dataSourceCredit} className="mt-4" />
+      ) : null}
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">
           <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
