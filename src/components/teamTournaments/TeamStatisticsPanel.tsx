@@ -97,7 +97,7 @@ function TeamPlayersModal({
                 <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
                 <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
                 <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                 <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                 <th title="Καλύτερος μέσος όρος αγώνα" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Best</th>
                 <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
@@ -226,7 +226,7 @@ export function TeamStatisticsPanel({
                     <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
                     <th title="Αγώνες που έπαιξε" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΑΓΩΝΕΣ</th>
                     <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                    <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                    <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                     <th title="Καλύτερος μέσος όρος αγώνα" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Best</th>
                     <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
@@ -281,7 +281,7 @@ export function TeamStatisticsPanel({
                     <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
                     <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
                     <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                    <th title="Στεκιές (innings)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
+                    <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
                     <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
                     <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
                     <th title="Μεγαλύτερη στεκιά" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤΕΚΙΑ</th>
