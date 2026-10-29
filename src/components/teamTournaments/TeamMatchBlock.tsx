@@ -127,7 +127,10 @@ export function TeamMatchRow({
   const matchForfeit = match.sets.length > 0 && match.sets.every(isForfeitBoard);
 
   return (
-    <div className="border-t border-slate-100 first:border-t-0">
+    <div
+      className="border-t border-slate-100 first:border-t-0"
+      data-bt-match-key={match.documentId || String(match.id ?? "")}
+    >
       {/* Η γραμμή με τις δύο ομάδες + σκορ μένει κολλημένη ΚΑΤΩ από την κεφαλίδα της
           αγωνιστικής (104px + 42px ύψος κεφαλίδας = 146px· 89px + 42px = 131px στο
           κινητό) όσο διαρκούν τα αναλυτικά — τη σπρώχνει έξω ο επόμενος αγώνας.

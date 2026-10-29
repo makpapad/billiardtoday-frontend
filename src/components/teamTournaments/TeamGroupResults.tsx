@@ -9,7 +9,7 @@
  * Δεξιά μένει σταθερή η βαθμολογία, με pills ομίλων από πάνω.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import {
   TeamMatchRow,
@@ -31,6 +31,10 @@ const formatDate = (value: string | null): string | null => {
 
 const avgText = (value: number): string => (value > 0 ? value.toFixed(3) : "—");
 
+/** Κλειδί αγώνα — το ίδιο και στο `data-bt-match-key` της γραμμής (TeamMatchBlock). */
+const matchKeyOf = (match: NormalizedTeamMatch): string =>
+  match.documentId || String(match.id ?? "");
+
 /* ------------------------------------------------------------------ */
 /* Βαθμολογία ομίλου (δεξιά, σταθερή)                                  */
 /* ------------------------------------------------------------------ */
@@ -38,9 +42,12 @@ const avgText = (value: number): string => (value > 0 ? value.toFixed(3) : "—"
 export function GroupStandingsPanel({
   group,
   rows,
+  highlightedTeams,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
+  /** Ονόματα ομάδων που παίζουν στους αγώνες που είναι τώρα στο viewport — τονίζονται. */
+  highlightedTeams?: Set<string>;
 }) {
   return (
     <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
@@ -69,19 +76,34 @@ export function GroupStandingsPanel({
           <tbody>
             {rows.map((row, index) => {
               const diff = row.framesFor - row.framesAgainst;
+              const emphasized = highlightedTeams?.has(row.teamName) ?? false;
               return (
-                <tr key={row.key} className={clsx("border-t border-slate-100", index < 2 && "bg-sky-50/40")}>
+                <tr
+                  key={row.key}
+                  className={clsx(
+                    "border-t border-slate-100 transition-colors duration-200",
+                    index < 2 && "bg-sky-50/40",
+                    emphasized && "bg-amber-100/70",
+                  )}
+                >
                   <td
                     className={clsx(
                       "px-2 py-1.5 text-center",
-                      index < 2 ? "font-extrabold text-sky-700" : "text-slate-400",
+                      emphasized
+                        ? "border-l-2 border-amber-500 font-extrabold text-amber-700"
+                        : index < 2
+                          ? "font-extrabold text-sky-700"
+                          : "text-slate-400",
                     )}
                   >
                     {index + 1}
                   </td>
                   <th
                     scope="row"
-                    className="max-w-[190px] px-2 py-1.5 text-left text-[12px] font-bold leading-tight text-slate-900"
+                    className={clsx(
+                      "max-w-[190px] px-2 py-1.5 text-left text-[12px] font-bold leading-tight",
+                      emphasized ? "text-slate-950" : "text-slate-900",
+                    )}
                   >
                     {row.teamName}
                   </th>
@@ -181,6 +203,10 @@ export function TeamGroupResults({
   summary: TeamTournamentSummary | null;
 }) {
   const multiGroup = groups.length > 1;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  /** Ο αγώνας στην κορυφή της λίστας τώρα (κάτω από τις κολλημένες κεφαλίδες). */
+  const [activeMatchKey, setActiveMatchKey] = useState<string | null>(null);
+
   const visibleGroups = useMemo(
     () =>
       !multiGroup || activeGroupKey === "all"
@@ -227,9 +253,78 @@ export function TeamGroupResults({
       });
   }, [matchesByGroupKey, visibleGroups]);
 
+  /**
+   * Ποιον αγώνα «διαβάζει» τώρα ο επισκέπτης: η πρώτη γραμμή αγώνα που έχει περάσει τη
+   * γραμμή των κολλημένων κεφαλίδων (μενού + κεφαλίδα αγωνιστικής). Οι δύο ομάδες του
+   * τονίζονται στη βαθμολογία δεξιά, ώστε να βλέπεις πού βρίσκονται αυτοί που κοιτάς.
+   */
+  useEffect(() => {
+    const container = listRef.current;
+    if (!container) return;
+    let frame = 0;
+
+    const compute = () => {
+      frame = 0;
+      const rows = Array.from(
+        container.querySelectorAll<HTMLElement>("[data-bt-match-key]"),
+      );
+      if (rows.length === 0) {
+        setActiveMatchKey((prev) => (prev === null ? prev : null));
+        return;
+      }
+      const siteHeaderHeight = Math.round(
+        document.querySelector("header")?.getBoundingClientRect().height ?? 0,
+      );
+      const roundHeaderHeight = container.querySelector("header")?.offsetHeight ?? 0;
+      const line = siteHeaderHeight + roundHeaderHeight + 4;
+      const viewportBottom = window.innerHeight;
+      let next: string | null = null;
+      for (const row of rows) {
+        const rect = row.getBoundingClientRect();
+        if (rect.bottom <= line) continue;
+        if (rect.top > viewportBottom) break;
+        next = row.dataset.btMatchKey ?? null;
+        break;
+      }
+      setActiveMatchKey((prev) => (prev === next ? prev : next));
+    };
+
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(compute);
+    };
+
+    compute();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [rounds]);
+
+  const teamNamesByKey = useMemo(() => {
+    const map = new Map<string, string[]>();
+    rounds.forEach((entry) =>
+      entry.buckets.forEach((bucket) =>
+        bucket.matches.forEach((match) => {
+          map.set(matchKeyOf(match), [match.homeTeamName, match.awayTeamName]);
+        }),
+      ),
+    );
+    return map;
+  }, [rounds]);
+
+  const highlightedTeams = useMemo(() => {
+    if (!activeMatchKey) return undefined;
+    const names = teamNamesByKey.get(activeMatchKey);
+    if (!names) return undefined;
+    return new Set(names.filter(Boolean));
+  }, [activeMatchKey, teamNamesByKey]);
+
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)]">
-      <div className="flex min-w-0 flex-col gap-3.5">
+      <div ref={listRef} className="flex min-w-0 flex-col gap-3.5">
         {rounds.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
             Δεν υπάρχουν ακόμη αποτελέσματα. Οι αγώνες εμφανίζονται μόλις καταχωρηθούν.
@@ -313,6 +408,7 @@ export function TeamGroupResults({
             key={group.documentId || group.groupKey}
             group={group}
             rows={standingsForGroup(group)}
+            highlightedTeams={highlightedTeams}
           />
         ))}
       </div>
