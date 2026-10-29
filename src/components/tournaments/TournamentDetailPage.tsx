@@ -1670,6 +1670,19 @@ export function TournamentDetailPage({
     ],
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
+  const organizerName = summary.organizerName ?? null;
+  // Το λογότυπο του διοργανωτή είναι σύνδεσμος προς την αρχική της ομοσπονδίας/συλλόγου
+  // (όταν ξέρουμε ποιος διοργανώνει) — μία φορά ορίζεται, δύο φορές τυπώνεται.
+  const organizerLogo = organizerLogoUrl ? (
+    <Image
+      src={organizerLogoUrl}
+      alt={summary.organizerLogoName || summary.tournamentTitle || "Organizer logo"}
+      width={320}
+      height={320}
+      className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
+      unoptimized
+    />
+  ) : null;
   // KO bracket branding: organizer logo in the header band + a faint watermark
   // of the same logo behind the bracket (same look as the CEB print brackets).
   const bracketBranding = useMemo(
@@ -7587,16 +7600,19 @@ export function TournamentDetailPage({
               </div>
               <div className="flex min-h-[132px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:min-h-[148px]">
                 {organizerLogoUrl ? (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Image
-                      src={organizerLogoUrl}
-                      alt={summary.organizerLogoName || summary.tournamentTitle || "Organizer logo"}
-                      width={320}
-                      height={320}
-                      className="block h-full max-h-[124px] w-full max-w-full object-contain sm:max-h-[140px]"
-                      unoptimized
-                    />
-                  </div>
+                  summary.organizerHref ? (
+                    <Link
+                      href={summary.organizerHref}
+                      title={organizerName ? `Back to ${organizerName}` : "Back to organiser"}
+                      className="flex h-full w-full items-center justify-center rounded-xl transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    >
+                      {organizerLogo}
+                    </Link>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      {organizerLogo}
+                    </div>
+                  )
                 ) : (
                   <div className="text-center">
                     <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">

@@ -29,8 +29,18 @@ export type TournamentEventSummary = {
   venueCity: string | null;
   venueCountry: string | null;
   organizerType: string | null;
+  /**
+   * Όνομα διοργανωτή για εμφάνιση (π.χ. tooltip «Back to …») — η ομοσπονδία όταν
+   * διοργανώνει ομοσπονδία, αλλιώς ο σύλλογος. ΠΟΤΕ το όνομα του αρχείου λογότυπου.
+   */
+  organizerName: string | null;
   organizerLogoUrl: string | null;
   organizerLogoName: string | null;
+  /**
+   * Αρχική σελίδα του διοργανωτή (`/federations/<slug>` ή `/clubs/<slug>`) — εκεί πάει
+   * το κλικ στο λογότυπο του τουρνουά. `null` όταν δεν ξέρουμε ποιος διοργανώνει.
+   */
+  organizerHref: string | null;
   category: string | null;
   rankingSeriesDocumentId: string | null;
   rankingSeriesSlug: string | null;
@@ -266,6 +276,24 @@ const stripTrailingSeasonFromTitle = (
   return cleanTitle.replace(new RegExp(`(?:[\\s\\-(),/]+)?${cleanSeason}$`), "").trim();
 };
 
+/**
+ * Σύνδεσμος αρχικής σελίδας ομοσπονδίας/συλλόγου για το λογότυπο του διοργανωτή.
+ * Οι σελίδες `/federations/[id]` και `/clubs/[slug]` δέχονται slug Ή documentId και
+ * κάνουν redirect στο κανονικό slug, άρα αρκεί ό,τι έχει φτάσει από τη Strapi.
+ */
+const readEntityHref = (
+  kind: "federation" | "club",
+  ...sources: Array<Record<string, unknown> | null | undefined>
+): string | null => {
+  const base = kind === "federation" ? "/federations" : "/clubs";
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    const target = readString(source.slug) ?? readString(source.documentId);
+    if (target) return `${base}/${target}`;
+  }
+  return null;
+};
+
 const normalizeStage = (value: unknown, index: number): TournamentEventStageSummary => {
   const source =
     value && typeof value === "object" && "attributes" in (value as Record<string, unknown>)
@@ -354,8 +382,11 @@ const normalizeClubTournamentSummary = (
     venueCity: null,
     venueCountry: null,
     organizerType: "club",
+    organizerName:
+      readString(clubSource.name) ?? readString(clubSource.title) ?? null,
     organizerLogoUrl: readString(clubLogoSource.url),
     organizerLogoName: readString(clubLogoSource.name),
+    organizerHref: readEntityHref("club", clubSource),
     category: readString(tournament.category),
     rankingSeriesDocumentId: null,
     rankingSeriesSlug: null,
@@ -394,6 +425,7 @@ const fetchClubTournamentSummaryBySlug = async (
   params.set("populate[club][fields][1]", "name");
   params.set("populate[club][fields][2]", "city");
   params.set("populate[club][fields][3]", "country");
+  params.set("populate[club][fields][4]", "slug");
   params.set("populate[club][populate][logo][fields][0]", "url");
   params.set("populate[club][populate][logo][fields][1]", "name");
 
@@ -575,12 +607,17 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][populate][club][fields][2]", "city");
       params.set("populate[tournament][populate][club][fields][3]", "country");
       params.set("populate[tournament][populate][club][fields][0]", "documentId");
+      params.set("populate[tournament][populate][club][fields][4]", "slug");
       params.set("populate[tournament][populate][club][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][club][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][club][populate][federation][fields][0]", "name");
+      params.set("populate[tournament][populate][club][populate][federation][fields][1]", "slug");
+      params.set("populate[tournament][populate][club][populate][federation][fields][2]", "documentId");
       params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][club][populate][federation][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][organizer_federation][fields][0]", "name");
+      params.set("populate[tournament][populate][organizer_federation][fields][1]", "slug");
+      params.set("populate[tournament][populate][organizer_federation][fields][2]", "documentId");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][series_entries][sort][0]", "order:asc");
@@ -694,8 +731,24 @@ const fetchTournamentEventSummaryById = async (
     venueCity: readString((venueSource as Record<string, unknown>).city),
     venueCountry: readString((venueSource as Record<string, unknown>).country),
     organizerType,
+    organizerName:
+      organizerType === "federation"
+        ? readString((organizerFederationSource as Record<string, unknown>).name) ??
+          readString((federationSource as Record<string, unknown>).name) ??
+          readString((tournamentClubSource as Record<string, unknown>).name)
+        : readString((tournamentClubSource as Record<string, unknown>).name) ??
+          readString((organizerFederationSource as Record<string, unknown>).name) ??
+          readString((federationSource as Record<string, unknown>).name),
     organizerLogoUrl: readString((organizerLogoSource as Record<string, unknown>).url),
     organizerLogoName: readString((organizerLogoSource as Record<string, unknown>).name),
+    // Το κλικ στο λογότυπο πάει στην αρχική του διοργανωτή — ίδια σειρά προτίμησης
+    // με το λογότυπο (ομοσπονδία πρώτα όταν διοργανώνει ομοσπονδία).
+    organizerHref:
+      organizerType === "federation"
+        ? readEntityHref("federation", organizerFederationSource, federationSource) ??
+          readEntityHref("club", tournamentClubSource)
+        : readEntityHref("club", tournamentClubSource) ??
+          readEntityHref("federation", organizerFederationSource, federationSource),
     category: readString((tournamentSource as Record<string, unknown>).category),
     rankingSeriesDocumentId: readString((rankingSeriesSource as Record<string, unknown>).documentId),
     rankingSeriesSlug: readString((rankingSeriesSource as Record<string, unknown>).slug),
