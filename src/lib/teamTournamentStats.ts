@@ -240,6 +240,8 @@ export const buildTeamTournamentStats = (
 
 export type RoundBestTeam = {
   name: string;
+  /** Κλειδί του αγώνα όπου βγήκε το ρεκόρ — για άνοιγμα της γραμμής με κλικ. */
+  matchKey: string;
   boardFor: number;
   boardAgainst: number;
   boardDiff: number;
@@ -248,6 +250,9 @@ export type RoundBestTeam = {
 
 export type RoundBestPlayer = {
   name: string;
+  matchKey: string;
+  /** Κλειδί ταυτότητας αθλητή (`playerIdentityKey`) — για τονισμό της γραμμής του. */
+  playerKey: string;
   playerId: number | null;
   documentId: string | null;
   teamName: string;
@@ -258,6 +263,9 @@ export type RoundBestPlayer = {
 
 export type RoundBestRun = {
   name: string;
+  matchKey: string;
+  /** Κλειδί ταυτότητας αθλητή (`playerIdentityKey`) — για τονισμό της γραμμής του. */
+  playerKey: string;
   playerId: number | null;
   documentId: string | null;
   teamName: string;
@@ -272,7 +280,7 @@ export type RoundHighlights = {
 
 /**
  * Τα τρία «καλύτερα» μιας αγωνιστικής, από τους ολοκληρωμένους αγώνες της:
- *  - **καλύτερη ομάδα**: η μεγαλύτερη διαφορά επιμέρους πόντων (ισοπαλία → καλύτερος Μ.Ο.),
+ *  - **καλύτερη ομάδα**: ο μεγαλύτερος Μ.Ο. της αγωνιστικής (ισοπαλία → μεγαλύτερη διαφορά επιμέρους),
  *  - **καλύτερος παίκτης**: ο μεγαλύτερος Μ.Ο. (πόντοι ÷ στεκιές) της αγωνιστικής,
  *  - **καλύτερο H.R.**: η μεγαλύτερη στεκιά (high run) της αγωνιστικής.
  * Άνευ αγώνα boards (2-0 χωρίς νούμερα) δεν μετράνε σε Μ.Ο./H.R.
@@ -281,10 +289,24 @@ export const buildRoundHighlights = (
   matches: NormalizedTeamMatch[],
   /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
   nameVariant: NameVariant = "international",
+  /** Ίδιος υπολογισμός Μ.Ο. με τη βαθμολογία (`computeStandingsByGroup`). */
+  opts?: { biathlon?: boolean },
 ): RoundHighlights => {
-  type TeamAgg = { name: string; boardFor: number; boardAgainst: number; caroms: number; innings: number };
+  type TeamAgg = {
+    name: string;
+    boardFor: number;
+    boardAgainst: number;
+    /** Σύνολο πόνων των boards (ό,τι δίνει τη βαθμολογία). */
+    points: number;
+    /** Πόντοι καραμπόλας (biathlon: το board 2, x4) — για ίδιο Μ.Ο. με τη βαθμολογία. */
+    caroms: number;
+    innings: number;
+    matchKey: string;
+  };
   type PlayerAgg = {
     name: string;
+    matchKey: string;
+    playerKey: string;
     playerId: number | null;
     documentId: string | null;
     teamName: string;
@@ -296,10 +318,10 @@ export const buildRoundHighlights = (
   const playerAgg = new Map<string, PlayerAgg>();
   let bestRun: RoundBestRun | null = null;
 
-  const teamRow = (name: string): TeamAgg => {
+  const teamRow = (name: string, matchKey: string): TeamAgg => {
     let row = teamAgg.get(name);
     if (!row) {
-      row = { name, boardFor: 0, boardAgainst: 0, caroms: 0, innings: 0 };
+      row = { name, boardFor: 0, boardAgainst: 0, points: 0, caroms: 0, innings: 0, matchKey };
       teamAgg.set(name, row);
     }
     return row;
@@ -307,10 +329,13 @@ export const buildRoundHighlights = (
 
   for (const match of matches) {
     if (!isCounted(match)) continue;
-    const home = teamRow(match.homeTeamName);
-    const away = teamRow(match.awayTeamName);
+    const matchKey = match.documentId || String(match.id ?? "");
+    const home = teamRow(match.homeTeamName, matchKey);
+    const away = teamRow(match.awayTeamName, matchKey);
+    home.points += match.computed.homeTotalPoints;
     home.caroms += match.computed.homeCaromPoints;
     home.innings += match.computed.homeTotalInnings;
+    away.points += match.computed.awayTotalPoints;
     away.caroms += match.computed.awayCaromPoints;
     away.innings += match.computed.awayTotalInnings;
 
@@ -348,6 +373,8 @@ export const buildRoundHighlights = (
             if (!row) {
               row = {
                 name,
+                matchKey,
+                playerKey: key,
                 playerId: side.player?.id ?? null,
                 documentId: side.player?.documentId ?? null,
                 teamName: side.teamName,
@@ -365,6 +392,8 @@ export const buildRoundHighlights = (
           if (name && (!bestRun || side.highRun > bestRun.run)) {
             bestRun = {
               name,
+              matchKey,
+              playerKey: playerIdentityKey(side.player, nameVariant),
               playerId: side.player?.id ?? null,
               documentId: side.player?.documentId ?? null,
               teamName: side.teamName,
@@ -376,20 +405,26 @@ export const buildRoundHighlights = (
     }
   }
 
+  const biathlon = Boolean(opts?.biathlon);
   let bestTeam: RoundBestTeam | null = null;
   for (const row of teamAgg.values()) {
-    const avg = row.innings > 0 ? row.caroms / row.innings : 0;
+    // Ίδιος τύπος με τη βαθμολογία: 3C → πόντοι/στεκιές· biathlon → (πόντοι καραμπόλας/4)/στεκιές.
+    const avg =
+      row.innings > 0 ? (biathlon ? row.caroms / 4 / row.innings : row.points / row.innings) : 0;
+    if (avg <= 0) continue;
     const candidate: RoundBestTeam = {
       name: row.name,
+      matchKey: row.matchKey,
       boardFor: row.boardFor,
       boardAgainst: row.boardAgainst,
       boardDiff: row.boardFor - row.boardAgainst,
       avg,
     };
+    // Κριτήριο: ο μεγαλύτερος Μ.Ο. της αγωνιστικής — ισοπαλία κρίνει η διαφορά επιμέρους.
     if (
       !bestTeam ||
-      candidate.boardDiff > bestTeam.boardDiff ||
-      (candidate.boardDiff === bestTeam.boardDiff && candidate.avg > bestTeam.avg)
+      candidate.avg > bestTeam.avg ||
+      (candidate.avg === bestTeam.avg && candidate.boardDiff > bestTeam.boardDiff)
     ) {
       bestTeam = candidate;
     }
@@ -398,6 +433,7 @@ export const buildRoundHighlights = (
   let bestPlayer: RoundBestPlayer | null = null;
   for (const row of playerAgg.values()) {
     const avg = row.innings > 0 ? row.caroms / row.innings : 0;
+    if (avg <= 0) continue;
     const candidate: RoundBestPlayer = { ...row, avg };
     if (
       !bestPlayer ||

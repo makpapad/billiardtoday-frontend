@@ -11,6 +11,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import type { RoundHighlights } from "@/lib/teamTournamentStats";
+import { playerIdentityKey } from "@/lib/playerNameVariant";
 import {
   boardPointsOf,
   formatAvg,
@@ -74,16 +76,52 @@ export function TeamMatchRow({
   match,
   summary,
   emphasized = false,
+  revealToken = 0,
+  roundMarks = null,
 }: {
   match: NormalizedTeamMatch;
   summary: TeamTournamentSummary | null;
+  /**
+   * Τα «καλύτερα» της αγωνιστικής: οι αθλητές/ομάδες που τα πέτυχαν παίρνουν ένδειξη
+   * στη γραμμή τους μέσα στα αναλυτικά.
+   */
+  roundMarks?: RoundHighlights | null;
   /** Είναι ο αγώνας που κοιτάζει τώρα ο επισκέπτης — τονίζεται (και στη βαθμολογία δεξιά). */
   emphasized?: boolean;
+  /**
+   * Σήμα «άνοιξε αυτόν τον αγώνα» από τα «καλύτερα της αγωνιστικής»: κάθε αύξηση του
+   * token ανοίγει τη γραμμή (χωρίς να ξανακλείνει ό,τι άνοιξε ο χρήστης).
+   */
+  revealToken?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const [seenRevealToken, setSeenRevealToken] = useState(revealToken);
+  if (revealToken !== seenRevealToken) {
+    setSeenRevealToken(revealToken);
+    if (revealToken > 0) setOpen(true);
+  }
   const completed = isCompletedMatch(match);
   const biathlon = summary?.config?.mode === "biathlon";
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
+  /** Οι ενδείξεις που παίρνει ο αθλητής αυτής της πλευράς (καλύτερος παίκτης / καλύτερο H.R.). */
+  const marksForPlayer = (player: TeamSetPlayer | null): string[] => {
+    const key = playerIdentityKey(player, nameVariant);
+    if (!key) return [];
+    const marks: string[] = [];
+    if (roundMarks?.bestPlayer?.playerKey === key) marks.push("ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ");
+    if (roundMarks?.bestRun?.playerKey === key && roundMarks.bestRun.run > 0) {
+      marks.push(`H.R. ${roundMarks.bestRun.run}`);
+    }
+    return marks;
+  };
+  const markChip = (label: string) => (
+    <span
+      key={label}
+      className="ml-1.5 inline-flex shrink-0 items-center rounded px-1.5 py-[1px] text-[9px] font-extrabold tracking-[0.06em] text-sky-900 bg-sky-100 ring-1 ring-sky-200"
+    >
+      {label}
+    </span>
+  );
   const c = match.computed;
 
   const homePoints = c.homeTeamPoints;
@@ -217,7 +255,10 @@ export function TeamMatchRow({
                 </tr>
               </thead>
               <tbody>
-                {teams.map((team, index) => (
+                {teams.map((team, index) => {
+                  // Η ομάδα με τον καλύτερο Μ.Ο. της αγωνιστικής τονίζεται στη γραμμή της.
+                  const bestAvgTeam = roundMarks?.bestTeam?.name === team.name;
+                  return (
                   <tr
                     key={`${team.name}-${index}`}
                     className={
@@ -225,9 +266,11 @@ export function TeamMatchRow({
                         ? index === 0
                           ? "bg-amber-100/70"
                           : "bg-amber-50/80"
-                        : index === 0
-                          ? "bg-[#eaf7fe]"
-                          : "bg-[#f5fcff]"
+                        : bestAvgTeam
+                          ? "bg-sky-50/80"
+                          : index === 0
+                            ? "bg-[#eaf7fe]"
+                            : "bg-[#f5fcff]"
                     }
                   >
                     <th
@@ -238,6 +281,7 @@ export function TeamMatchRow({
                       )}
                     >
                       {team.name}
+                      {bestAvgTeam ? markChip("ΚΑΛΥΤΕΡΟΣ Μ.Ο.") : null}
                     </th>
                     <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.points : "—"}</td>
                     <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.innings : "—"}</td>
@@ -252,7 +296,8 @@ export function TeamMatchRow({
                       {completed ? team.leaguePoints : "—"}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -287,6 +332,9 @@ export function TeamMatchRow({
                     const homeInnings = set.homeInnings ?? 0;
                     const awayInnings = set.awayInnings ?? 0;
                     const caromBoard = Boolean(biathlon && set.boardIndex === 2);
+                    const homeMarks = marksForPlayer(set.homePlayer);
+                    const awayMarks = marksForPlayer(set.awayPlayer);
+                    const rowMarked = homeMarks.length > 0 || awayMarks.length > 0;
                     return (
                       <tr
                         key={set.documentId || `${set.boardIndex}-${index}`}
@@ -295,9 +343,11 @@ export function TeamMatchRow({
                             ? index % 2 === 0
                               ? "bg-amber-100/50"
                               : "bg-amber-50/60"
-                            : index % 2 === 0
-                              ? "bg-[#f7fbff]"
-                              : "bg-white"
+                            : rowMarked
+                              ? "bg-sky-50/70"
+                              : index % 2 === 0
+                                ? "bg-[#f7fbff]"
+                                : "bg-white"
                         }
                       >
                         <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : set.homeHighRun ?? 0}</td>
@@ -311,6 +361,7 @@ export function TeamMatchRow({
                             variant={nameVariant}
                             className={bp.home === 2 ? "font-bold text-slate-950" : "text-slate-700"}
                           />
+                          {homeMarks.map((label) => markChip(label))}
                         </td>
                         <td
                           className={clsx(
@@ -335,6 +386,7 @@ export function TeamMatchRow({
                             variant={nameVariant}
                             className={bp.away === 2 ? "font-bold text-slate-950" : "text-slate-700"}
                           />
+                          {awayMarks.map((label) => markChip(label))}
                         </td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">{forfeit ? "" : awayInnings}</td>
                         <td className="px-1.5 py-1.5 text-center text-slate-600">

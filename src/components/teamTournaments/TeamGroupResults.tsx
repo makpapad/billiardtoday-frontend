@@ -9,7 +9,7 @@
  * Δεξιά μένει σταθερή η βαθμολογία, με pills ομίλων από πάνω.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import {
   TeamMatchRow,
@@ -41,7 +41,14 @@ const matchKeyOf = (match: NormalizedTeamMatch): string =>
 /* «Καλύτεροι της αγωνιστικής» — κάτω από τον τελευταίο αγώνα του γύρου */
 /* ------------------------------------------------------------------ */
 
-const RoundHighlightsStrip = ({ highlights }: { highlights: RoundHighlights }) => {
+const RoundHighlightsStrip = ({
+  highlights,
+  onOpenMatch,
+}: {
+  highlights: RoundHighlights;
+  /** Κλικ σε κουτάκι → άνοιγμα της γραμμής του αγώνα όπου βγήκε το ρεκόρ. */
+  onOpenMatch?: (matchKey: string) => void;
+}) => {
   const { bestTeam, bestPlayer, bestRun } = highlights;
   if (!bestTeam && !bestPlayer && !bestRun) return null;
 
@@ -49,19 +56,19 @@ const RoundHighlightsStrip = ({ highlights }: { highlights: RoundHighlights }) =
     bestTeam
       ? {
           key: "team",
-          label: "Καλύτερη ομάδα",
-          title: "Η μεγαλύτερη διαφορά επιμέρους πόντων στην αγωνιστική",
+          matchKey: bestTeam.matchKey,
+          label: "ΟΜΑΔΑ ΜΕ ΤΟΝ ΚΑΛΥΤΕΡΟ Μ.Ο.",
+          title: "Η ομάδα με τον μεγαλύτερο μέσο όρο στην αγωνιστική — κλικ για τον αγώνα της",
           value: bestTeam.name,
-          detail: `${bestTeam.boardFor} – ${bestTeam.boardAgainst}${
-            bestTeam.avg > 0 ? ` · Μ.Ο. ${avgText(bestTeam.avg)}` : ""
-          }`,
+          detail: `Μ.Ο. ${avgText(bestTeam.avg)} · ${bestTeam.boardFor} – ${bestTeam.boardAgainst}`,
         }
       : null,
     bestPlayer
       ? {
           key: "player",
-          label: "Καλύτερος παίκτης",
-          title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) στην αγωνιστική",
+          matchKey: bestPlayer.matchKey,
+          label: "ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ",
+          title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) της αγωνιστικής — κλικ για τον αγώνα του",
           value: bestPlayer.name,
           detail: `Μ.Ο. ${avgText(bestPlayer.avg)} · ${bestPlayer.teamName}`,
         }
@@ -69,8 +76,9 @@ const RoundHighlightsStrip = ({ highlights }: { highlights: RoundHighlights }) =
     bestRun
       ? {
           key: "run",
-          label: "Καλύτερο H.R.",
-          title: "Η μεγαλύτερη στεκιά (high run) στην αγωνιστική",
+          matchKey: bestRun.matchKey,
+          label: "ΚΑΛΥΤΕΡΟ H.R.",
+          title: "Η μεγαλύτερη στεκιά (high run) της αγωνιστικής — κλικ για τον αγώνα",
           value: bestRun.name,
           detail: `${bestRun.run} · ${bestRun.teamName}`,
         }
@@ -79,19 +87,29 @@ const RoundHighlightsStrip = ({ highlights }: { highlights: RoundHighlights }) =
 
   return (
     <div className="flex flex-wrap items-stretch gap-2 rounded-b-[18px] border-t border-slate-200 bg-slate-50/80 px-3 py-2.5">
-      {items.map((item) => (
-        <div
-          key={item.key}
-          title={item.title}
-          className="flex min-w-[190px] flex-1 flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white px-3 py-2"
-        >
-          <span className="text-[9.5px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
-            {item.label}
-          </span>
-          <span className="truncate text-[12.5px] font-bold text-slate-900">{item.value}</span>
-          <span className="truncate text-[11px] text-slate-500">{item.detail}</span>
-        </div>
-      ))}
+      {items.map((item) => {
+        const clickable = Boolean(onOpenMatch && item.matchKey);
+        const Tag = clickable ? "button" : "div";
+        return (
+          <Tag
+            key={item.key}
+            type={clickable ? "button" : undefined}
+            title={item.title}
+            onClick={clickable ? () => onOpenMatch?.(item.matchKey) : undefined}
+            className={clsx(
+              "flex min-w-[190px] flex-1 flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-left",
+              clickable &&
+                "cursor-pointer transition hover:border-sky-300 hover:bg-sky-50/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60",
+            )}
+          >
+            <span className="text-[9.5px] font-extrabold tracking-[0.1em] text-slate-500 uppercase">
+              {item.label}
+            </span>
+            <span className="truncate text-[12.5px] font-bold text-slate-900">{item.value}</span>
+            <span className="truncate text-[11px] text-slate-500">{item.detail}</span>
+          </Tag>
+        );
+      })}
     </div>
   );
 };
@@ -105,6 +123,7 @@ export function GroupStandingsPanel({
   rows,
   highlightedTeams,
   highlightedTeamIds,
+  qualifyingSpots = 4,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
@@ -112,6 +131,11 @@ export function GroupStandingsPanel({
   highlightedTeams?: Set<string>;
   /** Ίδιο με `highlightedTeams`, αλλά με το id της ομάδας (ταίριασμα χωρίς ρίσκο ονόματος). */
   highlightedTeamIds?: Set<number>;
+  /**
+   * Πόσες θέσεις προκρίνονται στην τελική φάση — βάφονται πράσινες.
+   * ΠΡΟΣΩΡΙΝΟ: Α1/Α2 → οι 4 πρώτοι (μέχρι να οριστεί από τη διοργάνωση).
+   */
+  qualifyingSpots?: number;
 }) {
   return (
     <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
@@ -143,21 +167,22 @@ export function GroupStandingsPanel({
               const emphasized =
                 (row.teamId !== null && (highlightedTeamIds?.has(row.teamId) ?? false)) ||
                 (highlightedTeams?.has(row.teamName) ?? false);
+              const qualifies = index < qualifyingSpots;
               return (
                 <tr
                   key={row.key}
                   className={clsx(
                     "border-t border-slate-100 transition-colors duration-200",
-                    emphasized ? "bg-amber-100/70" : index < 2 && "bg-sky-50/40",
+                    emphasized ? "bg-amber-100/70" : qualifies && "bg-emerald-50/70",
                   )}
                 >
                   <td
                     className={clsx(
                       "px-2 py-1.5 text-center",
-                      emphasized
-                        ? "font-extrabold text-amber-700 shadow-[inset_2px_0_0_0_#f59e0b]"
-                        : index < 2
-                          ? "font-extrabold text-sky-700"
+                      qualifies
+                        ? "font-extrabold text-emerald-700 shadow-[inset_3px_0_0_0_#10b981]"
+                        : emphasized
+                          ? "font-extrabold text-amber-700 shadow-[inset_2px_0_0_0_#f59e0b]"
                           : "text-slate-400",
                     )}
                   >
@@ -269,6 +294,10 @@ export function TeamGroupResults({
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
+  const biathlon = summary?.config?.mode === "biathlon";
+  /** Αγώνας που ζητήθηκε από τα «καλύτερα της αγωνιστικής» — token ώστε να ξανανοίγει. */
+  const [revealTarget, setRevealTarget] = useState<{ key: string; token: number } | null>(null);
+  const revealTokenRef = useRef(0);
   const listRef = useRef<HTMLDivElement | null>(null);
   /** Ο αγώνας στην κορυφή της λίστας τώρα (κάτω από τις κολλημένες κεφαλίδες). */
   const [activeMatchKey, setActiveMatchKey] = useState<string | null>(null);
@@ -369,6 +398,31 @@ export function TeamGroupResults({
     };
   }, [rounds]);
 
+  /** Κλικ σε «καλύτερο»: άνοιγμα της γραμμής του αγώνα και κύλιση κάτω από τις κολλημένες κεφαλίδες. */
+  const revealMatch = useCallback((matchKey: string) => {
+    revealTokenRef.current += 1;
+    setRevealTarget({ key: matchKey, token: revealTokenRef.current });
+  }, []);
+
+  useEffect(() => {
+    if (!revealTarget) return;
+    const container = listRef.current;
+    if (!container) return;
+    const node = container.querySelector<HTMLElement>(
+      `[data-bt-match-key="${revealTarget.key.replace(/"/g, '\\"')}"]`,
+    );
+    if (!node) return;
+    const timer = window.setTimeout(() => {
+      const siteHeaderHeight = Math.round(
+        document.querySelector("header")?.getBoundingClientRect().height ?? 0,
+      );
+      const roundHeaderHeight = container.querySelector("header")?.offsetHeight ?? 42;
+      const top = node.getBoundingClientRect().top + window.scrollY - siteHeaderHeight - roundHeaderHeight - 2;
+      window.scrollTo({ top, behavior: "smooth" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [revealTarget]);
+
   const teamNamesByKey = useMemo(() => {
     const map = new Map<string, string[]>();
     rounds.forEach((entry) =>
@@ -419,7 +473,10 @@ export function TeamGroupResults({
             Δεν υπάρχουν ακόμη αποτελέσματα. Οι αγώνες εμφανίζονται μόλις καταχωρηθούν.
           </div>
         ) : (
-          rounds.map((entry) => (
+          rounds.map((entry) => {
+            const roundMatches = entry.buckets.flatMap((bucket) => bucket.matches);
+            const highlights = buildRoundHighlights(roundMatches, nameVariant, { biathlon });
+            return (
             <section
               key={entry.round}
               className="rounded-[18px] border border-slate-200 bg-white"
@@ -462,18 +519,20 @@ export function TeamGroupResults({
                       match={match}
                       summary={summary}
                       emphasized={activeMatchKey !== null && activeMatchKey === matchKeyOf(match)}
+                      revealToken={
+                        revealTarget && revealTarget.key === matchKeyOf(match)
+                          ? revealTarget.token
+                          : 0
+                      }
+                      roundMarks={highlights}
                     />
                   ))}
                 </div>
               )}
-              <RoundHighlightsStrip
-                highlights={buildRoundHighlights(
-                  entry.buckets.flatMap((bucket) => bucket.matches),
-                  nameVariant,
-                )}
-              />
+              <RoundHighlightsStrip highlights={highlights} onOpenMatch={revealMatch} />
             </section>
-          ))
+            );
+          })
         )}
       </div>
 
