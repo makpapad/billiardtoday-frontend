@@ -18,6 +18,7 @@ import {
 import type {
   ComputedStandingRow,
   NormalizedTeamMatch,
+  TeamEntity,
   TeamGroup,
   TeamTournamentSummary,
 } from "@/lib/teamTournaments";
@@ -150,9 +151,15 @@ export function GroupStandingsPanel({
   highlightedTeams,
   highlightedTeamIds,
   qualifyingSpots = 4,
+  onOpenRoster,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
+  /**
+   * Κλικ στο όνομα ομάδας στη βαθμολογία → το ίδιο modal με τις συνθέσεις
+   * («Αθλητές ομάδας») που ανοίγει και από τη Συμμετοχές/Στατιστικά.
+   */
+  onOpenRoster?: (team: TeamEntity) => void;
   /** Ονόματα ομάδων που παίζουν στους αγώνες που είναι τώρα στο viewport — τονίζονται. */
   highlightedTeams?: Set<string>;
   /** Ίδιο με `highlightedTeams`, αλλά με το id της ομάδας (ταίριασμα χωρίς ρίσκο ονόματος). */
@@ -194,6 +201,14 @@ export function GroupStandingsPanel({
                 (row.teamId !== null && (highlightedTeamIds?.has(row.teamId) ?? false)) ||
                 (highlightedTeams?.has(row.teamName) ?? false);
               const qualifies = index < qualifyingSpots;
+              /** Η ομάδα της γραμμής (για το modal των συνθέσεων). */
+              const teamEntity = onOpenRoster
+                ? group.teams.find(
+                    (item) =>
+                      (row.teamId !== null && item.id === row.teamId) ||
+                      item.name === row.teamName,
+                  ) ?? null
+                : null;
               return (
                 <tr
                   key={row.key}
@@ -221,7 +236,18 @@ export function GroupStandingsPanel({
                       emphasized ? "text-slate-950" : "text-slate-900",
                     )}
                   >
-                    {row.teamName}
+                    {onOpenRoster && teamEntity ? (
+                      <button
+                        type="button"
+                        title={`Σύνθεση: ${row.teamName}`}
+                        onClick={() => onOpenRoster(teamEntity)}
+                        className="cursor-pointer text-left underline decoration-slate-300 decoration-dotted underline-offset-[3px] transition hover:text-sky-700 hover:decoration-sky-500 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
+                      >
+                        {row.teamName}
+                      </button>
+                    ) : (
+                      row.teamName
+                    )}
                   </th>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.matchesPlayed}</td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.wins}</td>
@@ -309,6 +335,7 @@ export function TeamGroupResults({
   matchesByGroupKey,
   standingsForGroup,
   summary,
+  onOpenRoster,
 }: {
   groups: TeamGroup[];
   /** «all» = όλοι οι όμιλοι (boxes ανά όμιλο) — αλλιώς ένας όμιλος (γραμμές ανά αγωνιστική). */
@@ -317,6 +344,8 @@ export function TeamGroupResults({
   matchesByGroupKey: Map<string, NormalizedTeamMatch[]>;
   standingsForGroup: (group: TeamGroup) => ComputedStandingRow[];
   summary: TeamTournamentSummary | null;
+  /** Κλικ σε ομάδα στη βαθμολογία → modal «Αθλητές ομάδας» (κοινό με τις Συμμετοχές). */
+  onOpenRoster?: (team: TeamEntity) => void;
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
@@ -591,6 +620,7 @@ export function TeamGroupResults({
             rows={standingsForGroup(group)}
             highlightedTeams={highlightedTeams}
             highlightedTeamIds={highlightedTeamIds}
+            onOpenRoster={onOpenRoster}
           />
         ))}
       </div>
