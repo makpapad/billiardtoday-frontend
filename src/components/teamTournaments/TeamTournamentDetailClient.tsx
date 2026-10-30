@@ -99,10 +99,13 @@ function GroupStandingsTable({
   group,
   rows,
   biathlon = false,
+  qualifyingSpots = 0,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
   biathlon?: boolean;
+  /** Πόσες θέσεις του ομίλου περνούν στην τελική φάση (0 = χωρίς σήμανση). */
+  qualifyingSpots?: number;
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -140,10 +143,22 @@ function GroupStandingsTable({
               className={clsx(
                 "border-b border-gray-100 last:border-0 dark:border-gray-700/60",
                 index === 0 && "bg-amber-50/50 dark:bg-amber-400/5",
+                qualifyingSpots > 0 &&
+                  index < qualifyingSpots &&
+                  index !== 0 &&
+                  "bg-emerald-50/50 dark:bg-emerald-400/5",
               )}
             >
               <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
                 {index + 1}
+                {qualifyingSpots > 0 && index < qualifyingSpots ? (
+                  <span
+                    className="ml-1 text-[10px] text-emerald-600 dark:text-emerald-400"
+                    title={`Περνά στην τελική φάση (θέση ${index + 1} από ${qualifyingSpots})`}
+                  >
+                    ✔
+                  </span>
+                ) : null}
               </td>
               <td className="px-2 py-2.5 font-semibold text-gray-900 dark:text-gray-100">
                 {row.teamName}
@@ -200,6 +215,11 @@ function GroupStandingsTable({
           ))}
         </tbody>
       </table>
+      {qualifyingSpots > 0 ? (
+        <p className="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          Οι {qualifyingSpots} πρώτοι προκρίνονται στην τελική φάση.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -611,6 +631,9 @@ export function TeamTournamentDetailClient({
   const [rosterTeam, setRosterTeam] = useState<TeamEntity | null>(null);
 
   const summary = detail?.summary ?? null;
+  // Πόσες θέσεις κάθε ομίλου περνούν στην τελική φάση: από την εφαρμογή της ομοσπονδίας
+  // (`config.qualifyPerGroup`). Χωρίς αυτό, μένει η παλιά προεπιλογή (4) για να μη χαλάσει τίποτα.
+  const qualifyingSpots = summary?.qualifyPerGroup ?? 4;
   const groups = detail?.groups ?? [];
   const matches = detail?.matches ?? [];
   const standingsByGroup = detail?.standingsByGroup ?? {};
@@ -1035,6 +1058,7 @@ export function TeamTournamentDetailClient({
                 activeGroupKey={effectiveGroupKey}
                 onSelectGroup={setActiveGroupKey}
                 matchesByGroupKey={matchesByGroupKey}
+                qualifyingSpots={qualifyingSpots}
                 standingsForGroup={(group) =>
                   resolveStandingRows(group, standingsByGroup[group.groupKey] ?? [])
                 }
@@ -1051,6 +1075,7 @@ export function TeamTournamentDetailClient({
                 key={group.documentId || group.groupKey}
                 group={group}
                 biathlon={biathlon}
+                qualifyingSpots={qualifyingSpots}
                 rows={resolveStandingRows(
                   group,
                   standingsByGroup[group.groupKey] ?? [],

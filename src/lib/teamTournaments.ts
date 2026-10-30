@@ -40,6 +40,11 @@ export type TeamTournamentSummary = {
   config: Record<string, unknown> | null;
   scoringConfig: Record<string, unknown> | null;
   teamCount: number;
+  /**
+   * Πόσες ΟΜΑΔΕΣ περνούν από κάθε όμιλο στην τελική φάση (`config.qualifyPerGroup`, από την
+   * εφαρμογή της ομοσπονδίας). `null` = δεν το ξέρουμε → μένει η παλιά προεπιλογή (4).
+   */
+  qualifyPerGroup: number | null;
   /** `federation.level` (national / confederation / world) — κρίνει ποιο όνομα αθλητή δείχνουμε. */
   federationLevel: string | null;
   /**
@@ -326,6 +331,7 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
     config,
     scoringConfig,
     teamCount: 0,
+    qualifyPerGroup: toNumber(config.qualifyPerGroup) ?? null,
     federationLevel,
     federation:
       federationName || federationSlug || federationDocumentId || federationLogo.url

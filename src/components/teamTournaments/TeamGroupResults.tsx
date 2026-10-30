@@ -364,6 +364,7 @@ export function TeamGroupResults({
   matchesByGroupKey,
   standingsForGroup,
   summary,
+  qualifyingSpots = 4,
 }: {
   groups: TeamGroup[];
   /** «all» = όλοι οι όμιλοι (boxes ανά όμιλο) — αλλιώς ένας όμιλος (γραμμές ανά αγωνιστική). */
@@ -372,6 +373,8 @@ export function TeamGroupResults({
   matchesByGroupKey: Map<string, NormalizedTeamMatch[]>;
   standingsForGroup: (group: TeamGroup) => ComputedStandingRow[];
   summary: TeamTournamentSummary | null;
+  /** Πόσες θέσεις κάθε ομίλου προκρίνονται — από τη διοργάνωση (`config.qualifyPerGroup`). */
+  qualifyingSpots?: number;
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
@@ -720,6 +723,7 @@ export function TeamGroupResults({
             rows={standingsForGroup(group)}
             highlightedTeams={highlightedTeams}
             highlightedTeamIds={highlightedTeamIds}
+            qualifyingSpots={qualifyingSpots}
             stats={stats}
           />
         ))}
