@@ -354,6 +354,26 @@ const toFiniteNumber = (value: unknown, fallback = 0): number => {
     return Number.isFinite(num) ? num : fallback
 }
 
+/**
+ * Πόσο «γεμάτα» είναι τα αποθηκευμένα αποτελέσματα (bt-results) μιας φάσης.
+ * Η Strapi γράφει από μία γραμμή ανά συμμετέχοντα από την πρώτη δήλωση, με
+ * `final_position = NULL` και μηδενικά μέτρα — μέχρι ο calculator να τρέξει με
+ * αποτέλεσμα. Τέτοιες γραμμές δεν είναι κατάταξη: αν τις επιστρέφαμε, ο πίνακας
+ * ΚΑΤΑΤΑΞΗΣ άδειαζε (ο client κρατά μόνο τις «meaningful» γραμμές:
+ * final_position ή θετικό μέτρο). Γι' αυτό προτιμάμε τη computed κατάταξη από
+ * τους αγώνες, ακριβώς όπως κάνει και το `/api/events/[id]`.
+ */
+const hasMeaningfulStoredResults = (rows: Record<string, unknown>[]): boolean =>
+    rows.some(
+        (row) =>
+            toFiniteNumber(row.final_position, 0) > 0 ||
+            toFiniteNumber(row.match_points, 0) > 0 ||
+            toFiniteNumber(row.points, 0) > 0 ||
+            toFiniteNumber(row.innings, 0) > 0 ||
+            toFiniteNumber(row.high_run, 0) > 0 ||
+            toFiniteNumber(row.high_run_2, 0) > 0,
+    )
+
 const knockoutAverage = (row: Record<string, unknown>): number => {
     const explicitAverage = toFiniteNumber(row.average, Number.NaN)
     if (Number.isFinite(explicitAverage)) return explicitAverage
@@ -479,7 +499,10 @@ export async function GET(
 
         if (!isKnockout) {
             const storedResults = await fetchStoredStageResults(stageId)
-            if (storedResults) {
+            // Μηδενικές προδημοσιευμένες γραμμές (ο calculator δεν έχει τρέξει) δεν
+            // είναι κατάταξη — προχώρα στη computed κατάταξη από τους αγώνες, αλλιώς
+            // ο πίνακας ΚΑΤΑΤΑΞΗΣ αδειάζει μόλις ο client φορτώσει αυτή τη φάση.
+            if (storedResults && hasMeaningfulStoredResults(storedResults)) {
                 return NextResponse.json({
                     source: 'stored-results',
                     results: storedResults,
