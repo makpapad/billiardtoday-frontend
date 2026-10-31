@@ -15,6 +15,7 @@ import {
   getCmsSectionSurfaceStyle,
 } from "@/lib/cms/sectionStyles";
 import { buildCanonicalTournamentHref, buildTournamentHref } from "@/lib/tournaments";
+import { useTournamentListSeed } from "@/components/tournaments/TournamentListSeed";
 
 type Tournament = {
   id: string;
@@ -102,8 +103,18 @@ export function TournamentListSection({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const endpoint = source === "team" ? "/api/team-tournaments" : "/api/tournaments";
-  const [items, setItems] = useState<Tournament[]>([]);
-  const [pagination, setPagination] = useState(EMPTY_PAGINATION);
+  /**
+   * Server-rendered πρώτη σελίδα (βλ. TournamentListSeed). Χωρίς αυτό το HTML είχε
+   * «No tournaments found» και μηδέν συνδέσμους προς τα τουρνουά.
+   */
+  const seed = useTournamentListSeed();
+  const seedConsumedRef = useRef(Boolean(seed));
+  const [items, setItems] = useState<Tournament[]>(
+    () => (Array.isArray(seed?.data) ? (seed?.data as Tournament[]) : []),
+  );
+  const [pagination, setPagination] = useState(() =>
+    seed?.meta?.pagination ? { ...EMPTY_PAGINATION, ...seed.meta.pagination } : EMPTY_PAGINATION,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seasonInput, setSeasonInput] = useState("");
@@ -179,6 +190,20 @@ export function TournamentListSection({
 
   useEffect(() => {
     let mounted = true;
+
+    // Η πρώτη σελίδα ήρθε server-rendered: μη ξαναζητήσεις τα ίδια δεδομένα μόλις
+    // γίνει hydrate. Ξαναζητάμε μόνο όταν ο χρήστης αλλάξει σελίδα/φίλτρα.
+    if (seedConsumedRef.current) {
+      seedConsumedRef.current = false;
+      const isDefaultView =
+        currentPage === 1 &&
+        !debouncedSeason &&
+        !debouncedQuery &&
+        gameType === "all" &&
+        !clubSlug &&
+        !federationId;
+      if (isDefaultView) return;
+    }
 
     const fetchTournaments = async () => {
       setIsLoading(true);
