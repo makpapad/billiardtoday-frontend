@@ -22,6 +22,12 @@ export type PublicPlayerCard = {
   photoUrl: string | null;
   href: string;
   updatedAt?: string | null;
+  /**
+   * Συνολικοί αγώνες από το `career_stats.overall` της bt-player. Χρησιμοποιείται
+   * ΜΟΝΟ για την απόφαση index/noindex των προφίλ (βλ. lib/playerIndexability):
+   * ένα προφίλ με ελάχιστους αγώνες είναι σχεδόν πανομοιότυπο με χιλιάδες άλλα.
+   */
+  careerTotalMatches?: number | null;
 };
 
 export type PublicPlayerGameStats = {
@@ -248,6 +254,20 @@ const formatPlayerNameForSeo = (value: string) => {
   return [...rest, titleCaseToken(first)].join(" ");
 };
 
+/**
+ * Το `career_stats` της bt-player είναι { overall: { totalMatches, ... }, byGameType: {...} }.
+ * Επιστρέφει το overall.totalMatches (ή null όταν δεν υπάρχει) — ΜΗΝ μπερδεύεται με το
+ * `btr_matches`, που μετράει μόνο ό,τι μπαίνει στο BTR και μένει 0 σε παίκτες με δεκάδες αγώνες.
+ */
+const readCareerTotalMatches = (value: unknown): number | null => {
+  if (!value || typeof value !== "object") return null;
+  const overall = (value as { overall?: unknown }).overall;
+  if (!overall || typeof overall !== "object") return null;
+  const matches = (overall as { totalMatches?: unknown }).totalMatches;
+  const parsed = typeof matches === "number" ? matches : Number(matches);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
+
 const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
   const entity = unwrapEntity(value);
   if (!entity) return null;
@@ -279,6 +299,7 @@ const mapPlayerCard = (value: unknown): PublicPlayerCard | null => {
     photoUrl: resolveMediaUrl(entity.photo_main) || resolveMediaUrl(entity.photo_alt),
     href: buildPlayerHref(id, displayName),
     updatedAt: readString(entity.updatedAt),
+    careerTotalMatches: readCareerTotalMatches(entity.career_stats),
   };
 };
 
@@ -1148,6 +1169,9 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
   baseParams.set("fields[3]", "city");
   baseParams.set("fields[4]", "documentId");
   baseParams.set("fields[5]", "updatedAt");
+  // Για την απόφαση index/noindex του κάθε προφίλ (βλ. lib/playerIndexability):
+  // χωρίς αυτό, το sitemap θα ξαναφούσκωνε με χιλιάδες σχεδόν όμοιες σελίδες.
+  baseParams.set("fields[6]", "career_stats");
   baseParams.set("populate[club][fields][0]", "name");
   baseParams.set("populate[club][fields][1]", "slug");
   baseParams.set("populate[photo_main][fields][0]", "url");

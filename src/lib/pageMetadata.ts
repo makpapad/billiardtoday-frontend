@@ -6,11 +6,14 @@ export const buildPageMetadata = ({
   description,
   path,
   keywords,
+  robots,
 }: {
   title: string;
   description: string;
   path: `/${string}`;
   keywords?: string[];
+  /** Όταν δίνεται, μπαίνει ως `<meta name="robots">` (π.χ. noindex σε λεπτά προφίλ). */
+  robots?: Metadata["robots"];
 }): Metadata => {
   const image = buildDefaultOpenGraphImage(title);
   const url = `${SITE_URL}${path}`;
@@ -19,6 +22,7 @@ export const buildPageMetadata = ({
     title,
     description,
     keywords,
+    ...(robots ? { robots } : {}),
     alternates: {
       canonical: path,
     },

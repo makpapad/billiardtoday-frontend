@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getCountryLabel } from "@/lib/countryFlags";
 import { buildPageMetadata } from "@/lib/pageMetadata";
+import { isPlayerIndexable } from "@/lib/playerIndexability";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
 type Props = {
@@ -29,10 +30,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const statFragment = primaryStats
     ? `, including ${primaryStats.label} tournament records, averages, high runs, and match statistics`
     : ", with tournament history, match records, averages, high runs, and performance statistics";
+  // Λεπτά προφίλ (κάτω από PLAYER_INDEX_MIN_MATCHES) μένουν προσβάσιμα αλλά noindex,follow:
+  // μοιράζονται template με χιλιάδες άλλα και η Google τα έβλεπε ως «Alternate page with
+  // proper canonical tag» — σπαταλούσαν crawl budget χωρίς να φέρνουν επισκέψεις.
+  const indexable = isPlayerIndexable(player.careerTotalMatches);
   return buildPageMetadata({
     title: `${displayName} Billiard Player Profile`,
     description: `${displayName} billiard player profile${area}${statFragment} on Billiard Today.`,
     path: player.href as `/${string}`,
+    robots: indexable ? undefined : { index: false, follow: true },
     keywords: [
       displayName,
       `${displayName} billiard player`,
