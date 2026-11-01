@@ -1688,6 +1688,77 @@ function formatDateTimeForMatchCell(
   return `${dateLabel}\n${timeLabel}`;
 }
 
+/**
+ * ΗΜΕΡΑ του αγώνα σαν 'YYYY-MM-DD', στη ζώνη του τουρνουά.
+ *
+ * Ίδια λογική με το `formatDateTimeWithOffset` (ίδια ζώνη, ίδια DST συμπεριφορά), ώστε το
+ * «σήμερα» να μη διαφέρει από την ημερομηνία που βλέπει ο χρήστης στο κελί του αγώνα.
+ */
+function matchDayKey(
+  value: string | null | undefined,
+  offsetMinutes?: number | null,
+  timeZoneName?: string | null,
+): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    const raw = value.slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
+  }
+  if (timeZoneName) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZoneName,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(parsed);
+    const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    const year = part("year");
+    const month = part("month");
+    const day = part("day");
+    return year && month && day ? `${year}-${month}-${day}` : null;
+  }
+  if (offsetMinutes === null || offsetMinutes === undefined) {
+    const year = parsed.getFullYear();
+    const month = `${parsed.getMonth() + 1}`.padStart(2, "0");
+    const day = `${parsed.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  return new Date(parsed.getTime() + offsetMinutes * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+/** Η ΣΗΜΕΡΙΝΗ μέρα ('YYYY-MM-DD') όπως τη ζει ο επισκέπτης στη ζώνη του τουρνουά. */
+function todayDayKey(
+  offsetMinutes?: number | null,
+  timeZoneName?: string | null,
+): string {
+  const now = new Date();
+  if (timeZoneName) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZoneName,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(now);
+    const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    const year = part("year");
+    const month = part("month");
+    const day = part("day");
+    if (year && month && day) return `${year}-${month}-${day}`;
+  }
+  if (offsetMinutes === null || offsetMinutes === undefined) {
+    const year = now.getFullYear();
+    const month = `${now.getMonth() + 1}`.padStart(2, "0");
+    const day = `${now.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  return new Date(now.getTime() + offsetMinutes * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 function formatDateTimeWithOffset(
   value: string | null,
   offsetMinutes: number | null | undefined,
@@ -4541,6 +4612,58 @@ export function TournamentEventsContent({
     stageMatchGroups,
   ]);
 
+  /**
+   * «TODAY» — ποιοι όμιλοι παίζουν ΣΗΜΕΡΑ.
+   *
+   * Η ημέρα βγαίνει από την ώρα κάθε αγώνα (`match.dateTime`) στη ζώνη του τουρνουά — την ίδια
+   * που τυπώνει την ημερομηνία στο κελί του αγώνα. Υπολογίζεται ΜΟΝΟ στον browser (useEffect):
+   * αλλιώς το ρολόι του server θα αποφάσιζε τι είναι «σήμερα» για τον επισκέπτη.
+   */
+  const [todayDay, setTodayDay] = useState<string | null>(null);
+  const [todayFocus, setTodayFocus] = useState(false);
+
+  useEffect(() => {
+    const update = () => setTodayDay(todayDayKey(timezoneOffsetMinutes, timezoneName));
+    update();
+    // Η σελίδα μένει ανοιχτή όσο διαρκεί το τουρνουά — η μέρα αλλάζει και μόνη της.
+    const timer = window.setInterval(update, 5 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [timezoneOffsetMinutes, timezoneName]);
+
+  const todayGroupKeys = useMemo(() => {
+    const keys = new Set<string>();
+    if (!activeStage || !todayDay) return keys;
+    (stageMatchGroups[activeStage.id] ?? []).forEach((group) => {
+      // (α) Η ώρα πάνω στον αγώνα, όταν υπάρχει.
+      const fromMatches = group.matches.some(
+        (match) =>
+          matchDayKey(match.dateTime, timezoneOffsetMinutes, timezoneName) === todayDay,
+      );
+      // (β) Η ώρα από το ΧΡΟΝΟΔΙΑΓΡΑΜΜΑ: σε πολλές φάσεις οι αγώνες δεν κουβαλούν
+      //     ημερομηνία — το πρόγραμμα τη γράφει ανά θέση (τραπέζι/ώρα) και είναι η πηγή
+      //     που βλέπει ο χρήστης στο «Time table».
+      const timetableGroupSlots =
+        activeStage.documentId && group.number !== null
+          ? groupTimetableSlotsByStageGroup.get(
+              `${activeStage.documentId}::${group.number}`,
+            ) ?? []
+          : [];
+      const fromTimetable = timetableGroupSlots.some(
+        (slot) =>
+          matchDayKey(slot.dateTime, timezoneOffsetMinutes, timezoneName) === todayDay,
+      );
+      if (fromMatches || fromTimetable) keys.add(getGroupKey(activeStage, group));
+    });
+    return keys;
+  }, [
+    activeStage,
+    stageMatchGroups,
+    todayDay,
+    timezoneOffsetMinutes,
+    timezoneName,
+    groupTimetableSlotsByStageGroup,
+  ]);
+
   // Country flag strip above the group list: one flag per country that has at
   // least one player in the ACTIVE stage's groups (a two-letter code plus the
   // number of players, sorted by that number). Only group stages render it —
@@ -6455,6 +6578,31 @@ export function TournamentEventsContent({
                                           {stageDateRange}
                                         </div>
                                       )}
+                                      {/*
+                                        ΣΗΜΕΡΑ: ανοίγει μόνο τους ομίλους που παίζουν σήμερα (και
+                                        κλείνει τους άλλους). Ξανά κλικ → πίσω όπως ήταν. Το κουμπί
+                                        βγαίνει μόνο όταν υπάρχει όμιλος με αγώνα σήμερα.
+                                      */}
+                                      {todayGroupKeys.size > 0 ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setTodayFocus((prev) => !prev)}
+                                          aria-pressed={todayFocus}
+                                          title={
+                                            todayFocus
+                                              ? "Κλείσε τους σημερινούς ομίλους"
+                                              : `Άνοιξε τους ${todayGroupKeys.size} ομίλους που παίζουν σήμερα`
+                                          }
+                                          className={clsx(
+                                            "w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition",
+                                            todayFocus
+                                              ? "border-emerald-600 bg-emerald-600 text-white"
+                                              : "border-gray-300 bg-white text-gray-700 hover:border-emerald-500 hover:text-emerald-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-emerald-500 dark:hover:text-emerald-300",
+                                          )}
+                                        >
+                                          Today ({todayGroupKeys.size})
+                                        </button>
+                                      ) : null}
                                     </div>
                                     {showStageControls ? (
                                       <div
@@ -7059,7 +7207,14 @@ export function TournamentEventsContent({
                                               normalizedPlayerSearchQuery.length >
                                                 0 && hasSearchMatch
                                                 ? true
-                                                : expandedGroups.has(groupKey);
+                                                : todayFocus && todayGroupKeys.size > 0
+                                                  ? todayGroupKeys.has(groupKey)
+                                                  : expandedGroups.has(groupKey);
+                                            // Όμιλος που ΤΕΛΕΙΩΣΕ (όλοι οι αγώνες του έχουν
+                                            // αποτέλεσμα) — η κλειστή λωρίδα του γίνεται πράσινη.
+                                            const groupFinished =
+                                              group.matches.length > 0 &&
+                                              group.matches.every(hasPlayedStageMatch);
                                             const visibleMatches =
                                               normalizedPlayerSearchQuery.length >
                                                 0 &&
@@ -7487,9 +7642,11 @@ export function TournamentEventsContent({
                                                   className={clsx(
                                                     "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-800",
                                                     !isExpanded &&
-                                                      (groupIndex % 2 === 0
-                                                        ? "bg-gray-100/90 dark:bg-gray-800/60"
-                                                        : "bg-gray-200/85 dark:bg-gray-700/60"),
+                                                      (groupFinished
+                                                        ? "bg-emerald-200/80 dark:bg-emerald-900/45"
+                                                        : groupIndex % 2 === 0
+                                                          ? "bg-gray-100/90 dark:bg-gray-800/60"
+                                                          : "bg-gray-200/85 dark:bg-gray-700/60"),
                                                   )}
                                                 >
                                                   <div className="flex min-w-0 flex-1 items-center gap-1.5">
