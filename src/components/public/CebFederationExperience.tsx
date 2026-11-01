@@ -440,6 +440,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
         actionSlot={
           <div className="inline-flex flex-wrap gap-2">
             {([
+              ["network", "National federations"],
               ["tournaments", "Events"],
               ["rankings", "Rankings"],
               ["upcoming", "Upcoming"],
