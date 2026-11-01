@@ -140,6 +140,15 @@ function formatGroupDisplayLabel(
   return `Group ${suffix}`;
 }
 
+/**
+ * Σκέτος κωδικός ομίλου («A», «3», «B1»); Μόνο τότε χρειάζεται μπροστά η λέξη «Group».
+ * Ό,τι κουβαλά ήδη λέξη — «Όμιλος 1», «Group 2», «Poule 3» — χρησιμοποιείται όπως είναι, αλλιώς
+ * βγαίνει «Group Όμιλος 1».
+ */
+function isBareGroupLabel(label: string): boolean {
+  return /^[A-Za-z0-9]{1,3}$/.test(label);
+}
+
 function formatStageMatchLabel(
   stage: NormalizedEventStage,
   group: StageMatchGroup,
@@ -162,7 +171,7 @@ function formatStageMatchLabel(
       ? group.label.trim()
       : null;
   if (rawLabel) {
-    return /^group\s/i.test(rawLabel) ? rawLabel : `Group ${rawLabel}`;
+    return isBareGroupLabel(rawLabel) ? `Group ${rawLabel}` : rawLabel;
   }
 
   return formatGroupDisplayLabel(
