@@ -1729,6 +1729,16 @@ function matchDayKey(
     .slice(0, 10);
 }
 
+/**
+ * ΗΜΕΡΑ από ημερομηνία ΦΑΣΗΣ ('2026-11-01' ή ISO με ώρα): κρατά την ημερολογιακή ημερομηνία
+ * που έγραψε ο διοργανωτής, χωρίς μετατόπιση ζώνης (δεν είναι ώρα αγώνα).
+ */
+function dateValueDayKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const raw = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
+}
+
 /** Η ΣΗΜΕΡΙΝΗ μέρα ('YYYY-MM-DD') όπως τη ζει ο επισκέπτης στη ζώνη του τουρνουά. */
 function todayDayKey(
   offsetMinutes?: number | null,
@@ -4633,7 +4643,8 @@ export function TournamentEventsContent({
   const todayGroupKeys = useMemo(() => {
     const keys = new Set<string>();
     if (!activeStage || !todayDay) return keys;
-    (stageMatchGroups[activeStage.id] ?? []).forEach((group) => {
+    const stageGroups = stageMatchGroups[activeStage.id] ?? [];
+    stageGroups.forEach((group) => {
       // (α) Η ώρα πάνω στον αγώνα, όταν υπάρχει.
       const fromMatches = group.matches.some(
         (match) =>
@@ -4654,6 +4665,16 @@ export function TournamentEventsContent({
       );
       if (fromMatches || fromTimetable) keys.add(getGroupKey(activeStage, group));
     });
+    // (γ) Κανένας όμιλος δεν έχει γνωστή ημέρα (πρόγραμμα αδημοσίευτο): αν η ΙΔΙΑ η φάση
+    //     περιλαμβάνει τη σημερινή μέρα, τότε όλοι οι όμιλοί της παίζουν σήμερα — ίδια
+    //     λογική με την αυτόματη επιλογή φάσης της σελίδας.
+    if (keys.size === 0) {
+      const stageStart = dateValueDayKey(activeStage.startDate);
+      const stageEnd = dateValueDayKey(activeStage.endDate) ?? stageStart;
+      if (stageStart && stageEnd && todayDay >= stageStart && todayDay <= stageEnd) {
+        stageGroups.forEach((group) => keys.add(getGroupKey(activeStage, group)));
+      }
+    }
     return keys;
   }, [
     activeStage,
@@ -6581,28 +6602,34 @@ export function TournamentEventsContent({
                                       {/*
                                         ΣΗΜΕΡΑ: ανοίγει μόνο τους ομίλους που παίζουν σήμερα (και
                                         κλείνει τους άλλους). Ξανά κλικ → πίσω όπως ήταν. Το κουμπί
-                                        βγαίνει μόνο όταν υπάρχει όμιλος με αγώνα σήμερα.
+                                        φαίνεται πάντα δίπλα στην ημερομηνία της φάσης· όταν δεν
+                                        βγαίνει όμιλος για σήμερα, μένει ανενεργό και το λέει.
                                       */}
-                                      {todayGroupKeys.size > 0 ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => setTodayFocus((prev) => !prev)}
-                                          aria-pressed={todayFocus}
-                                          title={
-                                            todayFocus
+                                      <button
+                                        type="button"
+                                        disabled={todayGroupKeys.size === 0}
+                                        onClick={() => setTodayFocus((prev) => !prev)}
+                                        aria-pressed={
+                                          todayGroupKeys.size > 0 ? todayFocus : undefined
+                                        }
+                                        title={
+                                          todayGroupKeys.size === 0
+                                            ? "Δεν βρέθηκε πρόγραμμα για σήμερα σε αυτή τη φάση"
+                                            : todayFocus
                                               ? "Κλείσε τους σημερινούς ομίλους"
                                               : `Άνοιξε τους ${todayGroupKeys.size} ομίλους που παίζουν σήμερα`
-                                          }
-                                          className={clsx(
-                                            "w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition",
-                                            todayFocus
+                                        }
+                                        className={clsx(
+                                          "w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition",
+                                          todayGroupKeys.size === 0
+                                            ? "cursor-not-allowed border-dashed border-gray-300 bg-transparent text-gray-400 dark:border-gray-700 dark:text-gray-500"
+                                            : todayFocus
                                               ? "border-emerald-600 bg-emerald-600 text-white"
                                               : "border-gray-300 bg-white text-gray-700 hover:border-emerald-500 hover:text-emerald-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-emerald-500 dark:hover:text-emerald-300",
-                                          )}
-                                        >
-                                          Today ({todayGroupKeys.size})
-                                        </button>
-                                      ) : null}
+                                        )}
+                                      >
+                                        Today ({todayGroupKeys.size})
+                                      </button>
                                     </div>
                                     {showStageControls ? (
                                       <div
