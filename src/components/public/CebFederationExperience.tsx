@@ -473,10 +473,14 @@ export function CebFederationExperience({ federation, members, embedded = false 
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={() => setHeroView("network")}
+                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
+              >
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Affiliated federations</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{sortedMembers.length}</div>
-              </div>
+              </button>
               <button
                 type="button"
                 onClick={() => setHeroView("upcoming")}
