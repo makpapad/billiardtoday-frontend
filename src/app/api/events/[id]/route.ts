@@ -190,6 +190,10 @@ const groupNumberFromLabel = (value: unknown, fallback: number): number => {
 }
 
 const hasClubRuntimeMatchResult = (match: Record<string, unknown>): boolean =>
+    // Αγώνας με καταγεγραμμένους πόντους ματς (π.χ. 2-0) μετράει ΚΑΙ όταν δεν έχει καραμπόλες:
+    // είναι F.F. (0-0 με 2-0/0-2). Χωρίς αυτό, όποιος είχε μόνο F.F. έμενε εκτός κατάταξης.
+    (toNumber(match.player1_match_points) ?? 0) > 0 ||
+    (toNumber(match.player2_match_points) ?? 0) > 0 ||
     [
         'player1_points',
         'player2_points',
