@@ -2446,8 +2446,26 @@ function StageRankingTable({
         result,
       ]),
     );
+    // Γραμμές ΧΩΡΙΣ κανένα μέτρο (δεν αγωνίστηκαν / F.F.) ΔΕΝ πετιούνται όταν ο αθλητής είναι
+    // κανονικά κληρωμένος σε όμιλο της φάσης: ο πίνακας κατάταξης της φάσης πρέπει να δείχνει
+    // ΟΛΟΥΣ τους αθλητές των ομίλων (π.χ. 36 και όχι 32) — όπως τους δείχνει και η εφαρμογή ΕΟΑΑ.
+    // Ρητά ΔΕΝ μπαίνουν όσοι είναι δηλωμένοι στη φάση αλλά δεν κληρώθηκαν σε όμιλο.
+    const stageGroupPlayerNames = new Set<string>();
+    stageMatchGroups.forEach((group) => {
+      group.matches.forEach((match) => {
+        [match.top.player, match.bottom.player].forEach((player) => {
+          const nameKey = normalizeRankingPlayerName(player.name);
+          if (nameKey) stageGroupPlayerNames.add(nameKey);
+        });
+      });
+    });
+    const belongsToStageGroup = (result: NormalizedStageResult): boolean =>
+      stageGroupPlayerNames.size > 0 &&
+      stageGroupPlayerNames.has(normalizeRankingPlayerName(result.playerName));
     const results = applyStageResultCountries(
-      stage.results.filter(hasMeaningfulStageResult),
+      stage.results.filter(
+        (result) => hasMeaningfulStageResult(result) || belongsToStageGroup(result),
+      ),
       countryByPlayerKey,
     );
     const hasStoredStageStandings = results.some(
