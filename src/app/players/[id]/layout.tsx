@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getCountryLabel } from "@/lib/countryFlags";
 import { buildPageMetadata } from "@/lib/pageMetadata";
-import { isPlayerIndexable } from "@/lib/playerIndexability";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
 type Props = {
@@ -30,15 +29,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const statFragment = primaryStats
     ? `, including ${primaryStats.label} tournament records, averages, high runs, and match statistics`
     : ", with tournament history, match records, averages, high runs, and performance statistics";
-  // Λεπτά προφίλ (κάτω από PLAYER_INDEX_MIN_MATCHES) μένουν προσβάσιμα αλλά noindex,follow:
-  // μοιράζονται template με χιλιάδες άλλα και η Google τα έβλεπε ως «Alternate page with
-  // proper canonical tag» — σπαταλούσαν crawl budget χωρίς να φέρνουν επισκέψεις.
-  const indexable = isPlayerIndexable(player.careerTotalMatches);
+  // ΑΠΟΦΑΣΗ (02/11/2026): ΟΛΑ τα προφίλ αθλητών καταλογοποιούνται, χωρίς κατώφλι
+  // αγώνων. Ο προηγούμενος κανόνας (noindex κάτω από 10 αγώνες) έκρυβε 1.983 από
+  // τα 3.344 προφίλ — για ένα site που πουλάει ονόματα αθλητών αυτό είναι το κύριο
+  // search intent. Δεν επαναφέρουμε κατώφλι χωρίς ρητή απόφαση του χρήστη.
   return buildPageMetadata({
     title: `${displayName} Billiard Player Profile`,
     description: `${displayName} billiard player profile${area}${statFragment} on Billiard Today.`,
     path: player.href as `/${string}`,
-    robots: indexable ? undefined : { index: false, follow: true },
     keywords: [
       displayName,
       `${displayName} billiard player`,

@@ -3,7 +3,6 @@ import { getClubs, getFederations } from "@/lib/directory";
 import { listNewsArticles } from "@/lib/cms/news";
 import { buildTeamTournamentSlug, fetchTeamTournaments } from "@/lib/teamTournaments";
 import { listPlayers, listTournamentEvents } from "@/lib/publicSiteData";
-import { isPlayerIndexable } from "@/lib/playerIndexability";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
 import { cebEditionHref } from "@/lib/cebRanking";
 import { readCebRankingArchive, readCebRankingIndex } from "@/lib/cebRankingData";
@@ -142,7 +141,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ),
     ...players
-      .filter((player) => isPlayerIndexable(player.careerTotalMatches))
       .map((player) =>
         sitemapEntry(player.href, {
           changeFrequency: "monthly",
