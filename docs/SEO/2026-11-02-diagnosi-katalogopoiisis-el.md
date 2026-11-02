@@ -236,3 +236,24 @@ ssh root@138.201.29.162 'su - postgres -c "psql -d billiard_pg -tAc \"select cou
 
 **Sitemap μετά το deploy: 1.882 URLs — 1.881 × 200 + 1 × 308 (ομαδικό τουρνουά που ανακατευθύνεται σωστά) και 0 × 404.** Πριν: 3 × 404. Οι δύο στιγμιαίες 502 στο audit ήταν το παράθυρο του restart (ξαναμετρήθηκαν 200).
 
+---
+
+## 10. Φάση 4 — υποβολή sitemap και βάση μέτρησης (02/11/2026 11:50)
+
+- Το κλειδί του Search Console αποκτήθηκε με **δικαίωμα εγγραφής** (`webmasters`, έγκριση χρήστη). Το προηγούμενο (μόνο ανάγνωση) κρατήθηκε ως `token.json.bak-readonly`.
+- **Υποβολή sitemap: 204** (δεκτό), `isPending: true` — η Google θα το ξαναδιαβάσει (τελευταία ανάγνωση 31/10 με 3.795 URLs, πριν το φιλτράρισμα).
+- Σταθερή λίστα 10 σελίδων για σύγκριση, με log στο `D:\Projects\23-aiseo-studio\gsc\bt-index-log.jsonl` (`node monitor-index.mjs` προσθέτει νέο snapshot). Βάση 02/11:
+
+| Σελίδα | Κατάσταση Google |
+|---|---|
+| `/`, `/players`, `/tournaments`, `/news` | Submitted and indexed |
+| `/rankings/ceb` | Discovered — currently not indexed |
+| `/clubs/trisponto-billiard-club` | Crawled — currently not indexed |
+| `/federations/deutsche-billard-union` | URL is unknown to Google |
+| `/players/218-JASPERS-Dick` | URL is unknown to Google |
+| `/tournaments/world-cup-3-cushion-yanggu-2026` | URL is unknown to Google |
+| `/players/9-ATHANASIOU-Elen` | **Alternate page with proper canonical tag** — η Google το έχει ενώσει με το `/players/4324-RAY-Umut` (απόφαση από το crawl του **08/05/2026**, όταν οι σελίδες ήταν κενές) |
+
+Το τελευταίο δείχνει τον μηχανισμό που κρατά τα λεπτά προφίλ έξω: **δεν φταίει πλέον το `noindex`** (αφαιρέθηκε) αλλά το «διπλότυπο» που αποφάσισε η Google τον Μάιο. Η σελίδα δηλώνει πλέον τον εαυτό της ως canonical· το επόμενο crawl θα δείξει αν η απόφαση αντιστρέφεται. Αν όχι, το επόμενο βήμα δεν είναι τεχνικό αλλά περιεχόμενο (διακριτό κείμενο ανά προφίλ).
+
+
