@@ -10,6 +10,16 @@ const normalizedBasePath =
 const embedFrameAncestors =
   process.env.EMBED_ALLOWED_ORIGINS || "*"
 
+/**
+ * Παλιές διευθύνσεις του WordPress blog που προηγήθηκε του σημερινού site.
+ * Μετρήθηκε (02/11/2026, Wayback + live έλεγχος): 170 διευθύνσεις που η Google
+ * εξακολουθεί να επισκέπτεται έδιναν 404 — 14% του crawl πήγαινε σε νεκρές σελίδες.
+ * Κάθε κανόνας επαληθεύτηκε ότι σήμερα δίνει 404 (άρα δεν σκιάζει ζωντανή σελίδα),
+ * με εξαίρεση το `/handicap` (ζωντανή σελίδα) και το `/stats` (υπάρχον redirect) που
+ * έχουν μείνει έξω από τη λίστα.
+ */
+const legacyRedirects = require('./src/lib/legacy-redirects.json')
+
 const nextConfig = {
   // Root public site by default. Set NEXT_PUBLIC_BASE_PATH explicitly only if reverse-proxied.
   ...(normalizedBasePath ? { basePath: normalizedBasePath, assetPrefix: normalizedBasePath } : {}),
@@ -41,6 +51,25 @@ const nextConfig = {
   },
   
   // SEO and security headers.
+  async redirects() {
+    const permanent = 301
+    return [
+      // 1. Δομικά μοτίβα του παλιού WordPress (κατηγορίες/tags/συγγραφείς/αρχεία ημερομηνίας).
+      { source: '/category/:path*', destination: '/news', statusCode: permanent },
+      { source: '/tag/:path*', destination: '/news', statusCode: permanent },
+      { source: '/author/:path*', destination: '/', statusCode: permanent },
+      { source: '/feed', destination: '/news', statusCode: permanent },
+      { source: '/comments/feed', destination: '/news', statusCode: permanent },
+      { source: '/about', destination: '/', statusCode: permanent },
+      // 2. Οι συγκεκριμένες παλιές διευθύνσεις που ξέρουμε ονομαστικά (λίστα από το Wayback).
+      ...legacyRedirects.map(({ source, destination }) => ({
+        source,
+        destination,
+        statusCode: permanent,
+      })),
+    ]
+  },
+
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production'
     return [

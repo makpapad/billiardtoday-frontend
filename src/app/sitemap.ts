@@ -7,6 +7,7 @@ import { isPlayerIndexable } from "@/lib/playerIndexability";
 import { fetchRankingSeriesIndex } from "@/lib/rankings";
 import { cebEditionHref } from "@/lib/cebRanking";
 import { readCebRankingArchive, readCebRankingIndex } from "@/lib/cebRankingData";
+import { fetchPublishedTournamentDocumentIds } from "@/lib/publicTournamentIndex";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 
@@ -95,7 +96,7 @@ const cebRankingEntries = (): MetadataRoute.Sitemap => {
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [clubs, federations, players, tournamentEvents, rankingSeries, newsArticles, teamTournaments] =
+  const [clubs, federations, players, tournamentEvents, rankingSeries, newsArticles, teamTournaments, publishedTournamentIds] =
     await Promise.all([
       getClubs().catch(() => []),
       getFederations().catch(() => []),
@@ -104,7 +105,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       fetchRankingSeriesIndex().catch(() => []),
       listNewsArticles(500).catch(() => []),
       fetchTeamTournaments().catch(() => []),
+      // `null` = το self-fetch απέτυχε → δεν φιλτράρουμε (ίδια συμπεριφορά με πριν).
+      fetchPublishedTournamentDocumentIds().catch(() => null),
     ]);
+
+  /**
+   * Μόνο τα events που έχουν ΠΡΑΓΜΑΤΙΚΑ δημόσια σελίδα. Το `bt_events` περιέχει και
+   * club-runtime/δοκιμαστικά events των οποίων η σελίδα δίνει 404 — το sitemap τα
+   * δημοσίευε (3 επιβεβαιωμένα 404 στα 1.885 URLs, 02/11/2026).
+   */
+  const publicEvents = publishedTournamentIds
+    ? tournamentEvents.filter((event) => publishedTournamentIds.has(event.documentId))
+    : tournamentEvents;
 
   const entries = [
     // Σταθερές σελίδες: δεν έχουν πραγματικό updatedAt → χωρίς lastmod (ποτέ σημερινή ημερομηνία).
@@ -138,7 +150,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: toLastModified(player.updatedAt),
         }),
       ),
-    ...tournamentEvents
+    ...publicEvents
       .filter((event) => event.href)
       .map((event) =>
         sitemapEntry(event.href as string, {

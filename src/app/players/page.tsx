@@ -5,21 +5,51 @@ import { getPlayersTotalCount, listPlayers } from "@/lib/publicSiteData";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { SITE_URL } from "@/lib/socialMetadata";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Billiard Players Directory",
-  description:
-    "Search thousands of billiard player profiles on Billiard Today, with countries, clubs, tournament history, match records, averages, rankings, and performance statistics.",
-  path: "/players",
-  keywords: [
-    "billiard players",
-    "billiard player profiles",
-    "3 cushion players",
-    "carom billiards players",
-    "billiard rankings",
-    "billiard tournament history",
-    "Billiard Today players",
-  ],
-});
+const PLAYERS_DIRECTORY_TITLE = "Billiard Players Directory";
+const PLAYERS_DIRECTORY_DESCRIPTION =
+  "Search thousands of billiard player profiles on Billiard Today, with countries, clubs, tournament history, match records, averages, rankings, and performance statistics.";
+
+const PLAYERS_DIRECTORY_KEYWORDS = [
+  "billiard players",
+  "billiard player profiles",
+  "3 cushion players",
+  "carom billiards players",
+  "billiard rankings",
+  "billiard tournament history",
+  "Billiard Today players",
+];
+
+/**
+ * Κάθε σελίδα του καταλόγου δηλώνει ΤΟΝ ΕΑΥΤΟ ΤΗΣ ως canonical.
+ *
+ * ΓΙΑΤΙ: πριν, όλες οι σελίδες (και οι ~22 σελίδες και τα `?letter=`) έβγαζαν
+ * `canonical: /players` — δηλαδή δήλωναν «αντίγραφο της 1ης σελίδας». Ο crawler
+ * ακολουθεί τα links, αλλά το σήμα έλεγε «μην ξεχωρίσεις αυτές τις σελίδες».
+ */
+const playersCanonicalPath = (
+  params: Record<string, string | string[] | undefined>,
+): `/${string}` => {
+  const letter = readParam(params.letter).trim().toUpperCase().slice(0, 1);
+  const parsedPage = Number.parseInt(readParam(params.page, "1"), 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 1 ? parsedPage : 1;
+  const query = [
+    /^[A-Z]$/.test(letter) ? `letter=${letter}` : "",
+    page > 1 ? `page=${page}` : "",
+  ]
+    .filter(Boolean)
+    .join("&");
+  return (query ? `/players?${query}` : "/players") as `/${string}`;
+};
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = searchParams ? await searchParams : {};
+  return buildPageMetadata({
+    title: PLAYERS_DIRECTORY_TITLE,
+    description: PLAYERS_DIRECTORY_DESCRIPTION,
+    path: playersCanonicalPath(params),
+    keywords: PLAYERS_DIRECTORY_KEYWORDS,
+  });
+}
 
 /**
  * Ο κατάλογος είναι πλέον σελιδοποιημένος με ΠΡΑΓΜΑΤΙΚΑ links (πριν: 150 τυχαία
@@ -84,7 +114,7 @@ export default async function PlayersPage({ searchParams }: Props) {
     "@type": "CollectionPage",
     name: "Billiard Players Directory",
     url: `${SITE_URL}/players`,
-    description: metadata.description,
+    description: PLAYERS_DIRECTORY_DESCRIPTION,
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: pagePlayers.length,
