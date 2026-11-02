@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { TournamentSeoSection } from "@/components/public/TournamentSeoSection";
-import { getTournamentSeoData } from "@/lib/tournamentSeoServer";
+import { TournamentResultsSection } from "@/components/public/TournamentResultsSection";
+import {
+  getTournamentSeoData,
+  getTournamentSeoStages,
+  type TournamentSeoStage,
+} from "@/lib/tournamentSeoServer";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
@@ -91,7 +96,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
 
   // Server-rendered περιεχόμενο διοργάνωσης (συμμετέχοντες + τελική κατάταξη): η
   // σελίδα έβγαινε με ~1.600 χαρακτήρες κειμένου και κανένα link προς αθλητές.
-  const seoData = await getTournamentSeoData(summary.documentId);
+  // Παράλληλα (Promise.all) τα αποτελέσματα ανά φάση: οι καρτέλες MATCHES/RANKING
+  // ζωγραφίζονται με κλικ, άρα στο HTML δεν υπήρχε κανένας αγώνας. Ξεχωριστό query,
+  // ώστε αποτυχία του ενός να μη ρίχνει το άλλο.
+  const [seoData, seoStages] = await Promise.all([
+    getTournamentSeoData(summary.documentId),
+    getTournamentSeoStages(summary.documentId).catch(() => [] as TournamentSeoStage[]),
+  ]);
 
   return (
     <CmsPageShell settings={settings} appearance={appearance}>
@@ -122,6 +133,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         }
       />
       {seoData ? <TournamentSeoSection data={seoData} /> : null}
+      <TournamentResultsSection stages={seoStages} title={summary.title} />
     </CmsPageShell>
   );
 }
