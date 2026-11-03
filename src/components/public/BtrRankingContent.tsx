@@ -242,10 +242,10 @@ export function BtrRankingContent({
         </div>
 
         {rows.length > 0 ? (
-          <div className="overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-            <div className="overflow-x-auto">
+          <div className="overflow-clip rounded-[28px] border border-black/5 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+            <div className="max-xl:overflow-x-auto">
               <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-                <thead>
+                <thead className="sticky top-[97px] z-20 bg-white">
                   <tr className="border-b border-slate-100 bg-slate-50/80 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                     <th className="w-16 px-4 py-4 text-right">#</th>
                     <th className="px-4 py-4">Player</th>

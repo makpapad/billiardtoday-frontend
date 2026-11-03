@@ -6020,9 +6020,9 @@ export function TournamentEventsContent({
                             </div>
                           )}
                         </div>
-                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="max-xl:overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
                           <table className="min-w-full border-collapse text-sm">
-                            <thead className="bg-emerald-900 text-white">
+                            <thead className="sticky top-[97px] z-20 bg-emerald-900 text-white">
                               <tr>
                                 <th className="px-4 py-3 text-left font-semibold">
                                   #

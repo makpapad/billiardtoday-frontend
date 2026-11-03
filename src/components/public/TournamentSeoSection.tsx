@@ -28,9 +28,9 @@ export function TournamentSeoSection({ data }: { data: TournamentSeoData }) {
           <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             Final standings
           </h3>
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3 max-xl:overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-[97px] z-20 bg-white">
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="py-2 pr-3">Pos</th>
                   <th className="py-2 pr-3">Player</th>
