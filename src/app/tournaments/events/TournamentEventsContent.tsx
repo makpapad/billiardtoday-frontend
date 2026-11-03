@@ -2446,16 +2446,22 @@ function StageRankingTable({
         result,
       ]),
     );
-    // Γραμμές ΧΩΡΙΣ κανένα μέτρο (δεν αγωνίστηκαν / F.F.) ΔΕΝ πετιούνται όταν ο αθλητής είναι
-    // κανονικά κληρωμένος σε όμιλο της φάσης: ο πίνακας κατάταξης της φάσης πρέπει να δείχνει
-    // ΟΛΟΥΣ τους αθλητές των ομίλων (π.χ. 36 και όχι 32) — όπως τους δείχνει και η εφαρμογή ΕΟΑΑ.
-    // Ρητά ΔΕΝ μπαίνουν όσοι είναι δηλωμένοι στη φάση αλλά δεν κληρώθηκαν σε όμιλο.
+    // Γραμμές ΧΩΡΙΣ κανένα μέτρο: μπαίνουν ΜΟΝΟ αν ο αθλητής έχει έστω ένα παίγμενο ματς στη
+    // φάση — το F.F. μετράει ως παιγμένο (ffType) και πάει στο τέλος της κατάταξης, σωστά. Ομάδα
+    // που δεν έχει αρχίσει (κανένα ματς) ΔΕΝ μπαίνει: έπαιρνε θέση από το index και διπλώνε
+    // θέσεις (Master League, 1ο τουρνουά 2026-2027). Όσοι δηλώθηκαν αλλά δεν κληρώθηκαν μένουν έξω.
     const stageGroupPlayerNames = new Set<string>();
+    // Όσοι έχουν έστω ένα παιγμένο ματς στη φάση (το F.F. μετράει ως παιγμένο → ffType).
+    const stagePlayedPlayerNames = new Set<string>();
     stageMatchGroups.forEach((group) => {
       group.matches.forEach((match) => {
+        const matchPlayed = hasPlayedStageMatch(match);
         [match.top.player, match.bottom.player].forEach((player) => {
+          if (isDynamicPlaceholderPlayer(player)) return;
           const nameKey = normalizeRankingPlayerName(player.name);
-          if (nameKey) stageGroupPlayerNames.add(nameKey);
+          if (!nameKey) return;
+          stageGroupPlayerNames.add(nameKey);
+          if (matchPlayed) stagePlayedPlayerNames.add(nameKey);
         });
       });
     });
@@ -2464,7 +2470,10 @@ function StageRankingTable({
       stageGroupPlayerNames.has(normalizeRankingPlayerName(result.playerName));
     const results = applyStageResultCountries(
       stage.results.filter(
-        (result) => hasMeaningfulStageResult(result) || belongsToStageGroup(result),
+        (result) =>
+          hasMeaningfulStageResult(result) ||
+          (belongsToStageGroup(result) &&
+            stagePlayedPlayerNames.has(normalizeRankingPlayerName(result.playerName))),
       ),
       countryByPlayerKey,
     );
