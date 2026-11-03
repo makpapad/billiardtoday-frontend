@@ -117,6 +117,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ? tournamentEvents.filter((event) => publishedTournamentIds.has(event.documentId))
     : tournamentEvents;
 
+  /**
+   * Διπλές εγγραφές για την ΙΔΙΑ διοργάνωση (μετρημένο 02/11/2026, 403 σελίδες):
+   *
+   * - `/tournaments/european-championship-biathlon-national-teams-u21-2026` ΚΑΙ
+   *   `/tournaments/team/…-2026` — δύο URLs, δύο self-canonical, και τα δύο στο sitemap.
+   * - `/tournaments/diasyllogiko-v-katigoria-2025-2026-2024` — παλιό slug που κάνει 308
+   *   στο `/tournaments/team/…-2025`, το οποίο είναι επίσης μέσα.
+   *
+   * Κανόνας = ΑΚΡΙΒΩΣ αυτός που εφαρμόζει η σελίδα (`src/app/tournaments/[slug]/page.tsx`):
+   * event με `teamTournamentDocumentId` δίνει 308 στη σελίδα του ομαδικού — εκτός από τα
+   * biathlon, που μένουν σκόπιμα στο κλασικό module (η σελίδα ΔΕΝ ανακατευθύνεται). Άρα:
+   * τα μεν φεύγουν από το sitemap (το ομαδικό URL είναι ήδη εκεί), για τα δε φεύγει το
+   * URL του ομαδικού (το ατομικό είναι το σωστό).
+   *
+   * Ένα sitemap με redirect-ενδιάμεσους και διπλά URLs καίει crawl budget χωρίς λόγο.
+   */
+  const isBiathlonEvent = (event: { title: string; gameType: string | null }) =>
+    /biathlon/i.test(event.gameType ?? "") || /biathlon/i.test(event.title);
+
+  const eventsRedirectingToTeam = new Set(
+    publicEvents
+      .filter((event) => event.teamTournamentDocumentId && !isBiathlonEvent(event))
+      .map((event) => event.documentId),
+  );
+  const teamDocIdsCoveredByBiathlonEvent = new Set(
+    publicEvents
+      .filter((event) => event.teamTournamentDocumentId && isBiathlonEvent(event))
+      .map((event) => event.teamTournamentDocumentId as string),
+  );
+
   const entries = [
     // Σταθερές σελίδες: δεν έχουν πραγματικό updatedAt → χωρίς lastmod (ποτέ σημερινή ημερομηνία).
     ...staticRoutes.map((path) =>
@@ -149,7 +179,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }),
       ),
     ...publicEvents
-      .filter((event) => event.href)
+      .filter((event) => event.href && !eventsRedirectingToTeam.has(event.documentId))
       .map((event) =>
         sitemapEntry(event.href as string, {
           changeFrequency: event.endDate ? "monthly" : "daily",
@@ -164,12 +194,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ),
     // Οι σελίδες ομαδικών διοργανώσεων έλειπαν τελείως από το sitemap.
-    ...teamTournaments.map((teamTournament) =>
-      sitemapEntry(`/tournaments/team/${buildTeamTournamentSlug(teamTournament)}`, {
-        changeFrequency: "weekly",
-        priority: 0.6,
-      }),
-    ),
+    // Όπου το ίδιο event έχει και ατομική σελίδα με πλήρες περιεχόμενο (biathlon), μένει
+    // μόνο εκείνη — αλλιώς δύο URLs για μία διοργάνωση.
+    ...teamTournaments
+      .filter((teamTournament) => !teamDocIdsCoveredByBiathlonEvent.has(teamTournament.documentId))
+      .map((teamTournament) =>
+        sitemapEntry(`/tournaments/team/${buildTeamTournamentSlug(teamTournament)}`, {
+          changeFrequency: "weekly",
+          priority: 0.6,
+        }),
+      ),
     ...newsArticles.map((article) =>
       sitemapEntry(`/news/${article.slug}`, {
         changeFrequency: "monthly",

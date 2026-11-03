@@ -115,6 +115,12 @@ export type PublicTournamentEventCard = {
   endDate: string | null;
   gameType: string | null;
   tournamentTitle: string | null;
+  /**
+   * Όταν είναι συμπληρωμένο, η σελίδα `/tournaments/<slug>` κάνει 308 στη σελίδα του
+   * ομαδικού (`/tournaments/team/<slug>`) — άρα δεν πρέπει να μπει στο sitemap ως
+   * ατομικό URL (02/11/2026: 2 τέτοιες εγγραφές, η μία μάλιστα με παλιό slug).
+   */
+  teamTournamentDocumentId: string | null;
   href: string;
   updatedAt?: string | null;
 };
@@ -584,6 +590,8 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
   params.set("fields[6]", "updatedAt");
   params.set("populate[tournament][fields][0]", "title");
   params.set("populate[tournament][fields][1]", "slug");
+  // Χρειάζεται το sitemap: event που δείχνει σε ομαδικό redirect-άρει, δεν είναι δικό του URL.
+  params.set("populate[tournament][populate][team_tournament][fields][0]", "documentId");
 
   const json = await fetchStrapiJson(`/api/bt-events?${params.toString()}`, 60).catch(() => null);
   const rows = Array.isArray(json?.data) ? json.data : [];
@@ -601,6 +609,16 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
           : entity.tournament,
       );
 
+      const teamTournamentRaw =
+        tournamentEntity && typeof tournamentEntity === "object"
+          ? (tournamentEntity as Record<string, unknown>).team_tournament
+          : null;
+      const teamTournamentEntity = unwrapEntity(
+        teamTournamentRaw && typeof teamTournamentRaw === "object" && "data" in (teamTournamentRaw as Record<string, unknown>)
+          ? (teamTournamentRaw as { data?: unknown }).data
+          : teamTournamentRaw,
+      );
+
       return {
         id: toNumber(entity.id),
         documentId,
@@ -611,6 +629,7 @@ export const listTournamentEvents = async (limit = 6): Promise<PublicTournamentE
         endDate: readString(entity.end_date),
         gameType: readString(entity.game_type),
         tournamentTitle: readString(tournamentEntity?.title),
+        teamTournamentDocumentId: readString(teamTournamentEntity?.documentId) || null,
         updatedAt: readString(entity.updatedAt),
         href: buildCanonicalTournamentHref({ title, season: toNumber(entity.season) }),
       } satisfies PublicTournamentEventCard;
