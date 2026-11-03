@@ -2834,9 +2834,12 @@ function StageRankingTable({
           ) : null}
         </div>
       )}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Sticky κεφαλίδα: κολλάει κάτω από το sticky header της σελίδας (97px, z-30).
+          Το overflow-x-auto χαλάει το sticky, γι' αυτό μπαίνει μόνο κάτω από xl (όπου ο
+          πίνακας χωράει και δεν χρειάζεται οριζόντιο scroll). */}
+      <div className="max-xl:overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
-          <thead className="bg-blue-600 text-white">
+          <thead className="sticky top-[97px] z-20 bg-blue-600 text-white">
             <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
               <th className="px-4 py-2" />
               <th className="px-4 py-2" />

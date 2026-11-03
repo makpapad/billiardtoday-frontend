@@ -47,9 +47,9 @@ export default function GroupStandingsTable({
     const showHighRun2Column = !artistic && standings.some((player) => typeof player.highRun2 === 'number' && player.highRun2 > 0)
 
     return (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="max-xl:overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="min-w-full text-xs">
-                <thead className="bg-emerald-700 text-white">
+                <thead className="sticky top-[97px] z-20 bg-emerald-700 text-white">
                     <tr>
                         <th className="px-3 py-2 text-left font-medium w-56">Player</th>
                         <th className="px-2 py-2 text-center font-medium w-12" title="Position in the group">Pos</th>
