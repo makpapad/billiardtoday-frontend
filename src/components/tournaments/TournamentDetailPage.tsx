@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { DataSourceCredit } from "@/components/DataSourceCredit";
@@ -76,6 +77,9 @@ type Props = {
   preferredStageDocumentId?: string | null;
   preferredGroupParam?: string | null;
   preferredMatchParam?: string | null;
+  /** Server-rendered περιεχόμενο (τελική κατάταξη + συμμετέχοντες) που μπαίνει ΜΕΣΑ
+   * στο «Tournament Overview» — ένα ανοιγόμενο σημείο αντί για δύο κουτιά. */
+  seoSection?: ReactNode;
 };
 
 type TournamentLiveScreen = {
@@ -1617,6 +1621,7 @@ export function TournamentDetailPage({
   preferredStageDocumentId = null,
   preferredGroupParam = null,
   preferredMatchParam = null,
+  seoSection = null,
 }: Props) {
   const hasInfoDescription =
     typeof summary.description === "string" && summary.description.trim().length > 0;
@@ -7839,6 +7844,12 @@ export function TournamentDetailPage({
                 ))}
               </div>
             </div>
+
+            {/* Τα server-rendered τμήματα (τελική κατάταξη + συμμετέχοντες) ζουν μέσα
+                στο ίδιο ανοιγόμενο «Tournament Overview» αντί σε δεύτερο κουτί. */}
+            {seoSection ? (
+              <div className="mt-8 border-t border-slate-200 pt-6">{seoSection}</div>
+            ) : null}
           </div>
         </details>
       </section>

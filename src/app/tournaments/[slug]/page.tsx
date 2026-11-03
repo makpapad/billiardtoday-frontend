@@ -131,9 +131,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             ? resolvedSearchParams.match
             : null
         }
+        seoSection={
+          <>
+            {seoData ? <TournamentSeoSection data={seoData} /> : null}
+            <TournamentResultsSection stages={seoStages} title={summary.title} />
+          </>
+        }
       />
-      {seoData ? <TournamentSeoSection data={seoData} /> : null}
-      <TournamentResultsSection stages={seoStages} title={summary.title} />
     </CmsPageShell>
   );
 }
