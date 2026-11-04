@@ -4228,11 +4228,45 @@ export function TournamentDetailPage({
       return;
     }
 
-    const todayStage = findStageForToday(eventStages);
+    // Προτεραιότητα στη φάση που έχει ΟΝΤΩΣ πρόγραμμα σήμερα (timetable slots). Η ημερομηνία
+    // έναρξης/λήξης μιας φάσης μπορεί να καλύπτει τη σημερινή μέρα χωρίς να παίζεται τίποτα
+    // σήμερα (π.χ. φάση 3 ημερών) — γι' αυτό κοιτάμε πρώτα το χρονοδιάγραμμα.
+    const todayKey = getTodayDateKey();
+    const todaySlotStageDocumentId = (() => {
+      const slots = toRelationArray(eventData?.data?.timetable_slots);
+      for (const slot of slots) {
+        const normalized = slot as Record<string, unknown>;
+        const dateValue =
+          typeof normalized.date === "string"
+            ? normalized.date
+            : typeof normalized.date_time === "string"
+              ? normalized.date_time
+              : null;
+        const slotDay = normalizeDateKey(dateValue);
+        if (slotDay !== todayKey || normalized.is_visible === false) continue;
+        const stageRelation = normalized.stage as
+          | { documentId?: unknown }
+          | null
+          | undefined;
+        const stageDocumentId =
+          stageRelation && typeof stageRelation.documentId === "string"
+            ? stageRelation.documentId
+            : null;
+        if (stageDocumentId) return stageDocumentId;
+      }
+      return null;
+    })();
+
+    const todayStage = todaySlotStageDocumentId
+      ? eventStages.find(
+          (stage) => stage.documentId === todaySlotStageDocumentId,
+        ) ?? null
+      : findStageForToday(eventStages);
     if (todayStage?.documentId && todayStage.documentId !== selectedStageDocumentId) {
       setSelectedStageDocumentId(todayStage.documentId);
     }
   }, [
+    eventData,
     eventStages,
     preferredStageFromQuery,
     selectedStageDocumentId,

@@ -198,8 +198,20 @@ export const normalizeGroup = (
         : null,
     matchNumber: toNumber(normalized.match_number),
     round: typeof normalized.round === "string" ? normalized.round : null,
-    dateTime:
-      typeof normalized.date_time === "string" ? normalized.date_time : null,
+    // Η ώρα του αγώνα: `date_time` (ISO), αλλιώς `date` (+ `time` όταν υπάρχει) — το snapshot
+    // της ΕΟΑΑ στέλνει πλέον και τα δύο ξεχωριστά. Χωρίς κανένα από τα δύο, μένει null και η
+    // «μέρα» του αγώνα βγαίνει από το χρονοδιάγραμμα.
+    dateTime: (() => {
+      if (typeof normalized.date_time === "string" && normalized.date_time.trim()) {
+        return normalized.date_time;
+      }
+      const rawDate = (normalized as Record<string, unknown>).date;
+      if (typeof rawDate !== "string" || !rawDate.trim()) return null;
+      const rawTime = (normalized as Record<string, unknown>).time;
+      return typeof rawTime === "string" && /^\d{1,2}:\d{2}/.test(rawTime.trim())
+        ? `${rawDate.trim().slice(0, 10)}T${rawTime.trim()}`
+        : rawDate.trim();
+    })(),
     player1: {
       id: player1.id,
       name: player1.name,
