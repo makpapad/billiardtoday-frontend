@@ -415,7 +415,7 @@ export async function GET(
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: s(46),
+              gap: s(70),
               flex: 1,
             }}
           >
@@ -425,27 +425,27 @@ export async function GET(
               match.hasResult ? match.player1.points : null,
               winner === 2,
             )}
-            {match.hasResult ? null : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  fontSize: s(match.hasResult ? 62 : 96),
+                  fontWeight: 900,
+                  letterSpacing: s(8),
+                  color: match.hasResult
+                    ? "rgba(255,255,255,0.35)"
+                    : "rgba(255,255,255,0.55)",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    fontSize: s(96),
-                    fontWeight: 900,
-                    letterSpacing: s(8),
-                    color: "rgba(255,255,255,0.55)",
-                  }}
-                >
-                  VS
-                </div>
+                VS
               </div>
-            )}
+            </div>
             {nameBlock(
               match.player2,
               "left",
@@ -587,7 +587,23 @@ export async function GET(
             marginTop: s(120),
           }}
         >
-          {[match.player1, match.player2].map((player, index) => (
+          {[match.player1, match.player2].map((player, index) => [
+            index === 1 ? (
+              <div
+                key="vs-middle"
+                style={{
+                  display: "flex",
+                  fontSize: s(match.hasResult ? 54 : 96),
+                  fontWeight: 900,
+                  letterSpacing: s(6),
+                  color: match.hasResult
+                    ? "rgba(255,255,255,0.3)"
+                    : "rgba(255,255,255,0.55)",
+                }}
+              >
+                VS
+              </div>
+            ) : null,
             <div
               key={`${player.name}-${index}`}
               style={{
@@ -663,27 +679,9 @@ export async function GET(
                   {formatNumber(index === 0 ? match.player1.points : match.player2.points)}
                 </div>
               ) : null}
-            </div>
-          ))}
+            </div>,
+          ])}
         </div>
-
-        {/* result — πριν τον αγώνα δείχνει VS αντί για σκορ */}
-        {match.hasResult ? null : (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginTop: s(96),
-              fontSize: s(120),
-              fontWeight: 900,
-              letterSpacing: s(10),
-              color: "rgba(255,255,255,0.55)",
-            }}
-          >
-            VS
-          </div>
-        )}
 
         <div
           style={{
