@@ -61,6 +61,7 @@ export type CheckedRow = {
   umbId: string | null;
   points: number | null;
   matchStatus: "matched" | "ambiguous" | "not-found" | "manual";
+  eligibility?: "eligible" | "foreign" | "country-change" | "unverified" | null;
   note: string | null;
   player: number | null;
 };
@@ -68,7 +69,16 @@ export type CheckedRow = {
 export type CheckResult = {
   rows: CheckedRow[];
   problems: string[];
-  counts: { rows: number; matched: number; ambiguous: number; notFound: number; manual?: number };
+  counts: {
+    rows: number;
+    matched: number;
+    ambiguous: number;
+    notFound: number;
+    manual?: number;
+    foreign?: number;
+    countryChange?: number;
+    unverified?: number;
+  };
   outsideEdition: boolean;
   scale: number[] | null;
 };

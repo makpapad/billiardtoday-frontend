@@ -27,6 +27,12 @@ type GridRow = {
   matchedName: string | null;
   umbId: string;
   position: string;
+  /**
+   * Η ομοσπονδία δηλώνει ότι ο αθλητής άλλαξε χώρα (διπλό διαβατήριο, π.χ. FR → LUX).
+   * Χωρίς αυτό, ένα όνομα άλλης ομοσπονδίας μπλοκάρει την υποβολή — με αυτό περνά
+   * με σημαία «Country change» και το επιβεβαιώνει η CEB.
+   */
+  countryChange?: boolean;
 };
 
 type Message = { tone: "info" | "ok" | "bad"; text: string } | null;
@@ -255,20 +261,33 @@ export function FederationSubmitForm() {
     setCheck(null);
   }
 
-  function payloadRows() {
-    return positioned.map((row) => ({
+  function payloadRows(source: GridRow[] = positioned) {
+    return source.map((row) => ({
       position: Number(row.position),
       name: row.matchedName || row.name,
       umbId: row.umbId || null,
+      ...(row.countryChange ? { countryChange: true } : {}),
     }));
   }
 
-  async function runCheck() {
-    if (positioned.length === 0) {
+  /**
+   * Δήλωση αλλαγής χώρας σε μια γραμμή. Ο έλεγχος ξανατρέχει αμέσως (αν έχει ήδη γίνει
+   * ένας) ώστε η ένδειξη να περάσει από «Not eligible» σε «Country change» — η γραμμή
+   * κρατά τους πόντους της, μόνο η CEB την επιβεβαιώνει.
+   */
+  function setCountryChange(index: number, value: boolean) {
+    const next = rows.map((row, i) => (i === index ? { ...row, countryChange: value } : row));
+    setRows(next);
+    const positionedNext = next.filter((row) => row.position);
+    if (check && positionedNext.length > 0) void runCheck(positionedNext);
+  }
+
+  async function runCheck(source: GridRow[] = positioned) {
+    if (source.length === 0) {
       setNotice({ tone: "bad", text: "No positions filled yet." });
       return;
     }
-    if (positioned.some((row) => !sentName(row))) {
+    if (source.some((row) => !sentName(row))) {
       setNotice({ tone: "bad", text: "A row has no player name — fill it or remove the row." });
       return;
     }
@@ -276,7 +295,7 @@ export function FederationSubmitForm() {
     setNotice(null);
     const res = await portalFetch<CheckResult>("rows/check", {
       method: "POST",
-      body: { slug: SLUG, season, rows: payloadRows() },
+      body: { slug: SLUG, season, rows: payloadRows(source) },
     });
     setChecking(false);
     if (!res.ok || !res.data) {
@@ -404,7 +423,7 @@ export function FederationSubmitForm() {
               : "No positions filled yet — type a position in the grid below."}
           </span>
           <div className="row">
-            <button type="button" onClick={runCheck} disabled={checking || positioned.length === 0}>
+            <button type="button" onClick={() => void runCheck()} disabled={checking || positioned.length === 0}>
               {checking ? "Checking…" : "Check rows"}
             </button>
             <button
@@ -536,24 +555,34 @@ export function FederationSubmitForm() {
                   const points = row.position
                     ? result?.points ?? pointsForPosition(position, scale)
                     : 0;
+                  const ineligible = result?.eligibility === "foreign";
+                  const countryChange = result?.eligibility === "country-change";
                   const chipClass = !row.position
                     ? "plain"
-                    : result
-                      ? result.matchStatus === "matched"
-                        ? "ok"
-                        : "warn"
-                      : "plain";
+                    : ineligible
+                      ? "bad"
+                      : countryChange
+                        ? "warn"
+                        : result
+                          ? result.matchStatus === "matched"
+                            ? "ok"
+                            : "warn"
+                          : "plain";
                   const chipText = !row.position
                     ? "—"
-                    : result
-                      ? result.matchStatus === "matched"
-                        ? "Matched"
-                        : result.matchStatus === "ambiguous"
-                          ? "Check the name"
-                          : "We add the player"
-                      : row.umbId
-                        ? "Ready"
-                        : "By name";
+                    : ineligible
+                      ? "Not eligible"
+                      : countryChange
+                        ? "Country change"
+                        : result
+                          ? result.matchStatus === "matched"
+                            ? "Matched"
+                            : result.matchStatus === "ambiguous"
+                              ? "Check the name"
+                              : "We add the player"
+                          : row.umbId
+                            ? "Ready"
+                            : "By name";
                   return (
                     <tr
                       key={`${row.name}-${index}`}
@@ -634,6 +663,20 @@ export function FederationSubmitForm() {
                       </td>
                       <td>
                         <span className={`chip ${chipClass}`}>{chipText}</span>
+                        {(ineligible || countryChange) && (
+                          <label
+                            className="lock"
+                            style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}
+                            title="Ο αθλητής άλλαξε χώρα (διπλό διαβατήριο) — η CEB θα το επιβεβαιώσει"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(row.countryChange)}
+                              onChange={(event) => setCountryChange(index, event.target.checked)}
+                            />
+                            Changed country
+                          </label>
+                        )}
                       </td>
                       <td className="crefcell">
                         {isNew ? (
