@@ -6761,33 +6761,31 @@ export function TournamentEventsContent({
                                         αδειάζει.
                                       */}
                                       <div className="flex flex-wrap items-center gap-2">
+                                        {/*
+                                          Η μέρα του προγράμματος είναι κουμπί: δείχνει πάντα τη
+                                          σημερινή μέρα και με ένα κλικ γυρνά σε αυτήν. Ο παλιός
+                                          πτυσσόμενος κατάλογος ημερών αφαιρέθηκε.
+                                        */}
                                         {dayFilterActive && focusDay ? (
-                                          <span className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 dark:border-emerald-500/60 dark:bg-emerald-900/30 dark:text-emerald-200">
-                                            {focusDay === todayDay ? "Today" : formatDayKeyLabel(focusDay)}
-                                            {" · "}
-                                            {focusDayEntry?.matchCount ?? 0} matches
-                                          </span>
-                                        ) : null}
-                                        {eventDays.length > 0 ? (
-                                          <select
-                                            value={focusDay ?? ""}
-                                            onChange={(event) =>
-                                              setFocusDayOverride(event.target.value || null)
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setFocusDayOverride(todayDay ?? null)
                                             }
-                                            aria-label="Match day"
-                                            title="Δείξε τους αγώνες μιας ημέρας του προγράμματος"
-                                            className="h-8 w-fit rounded-full border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
+                                            title={
+                                              focusDay === todayDay
+                                                ? "Οι σημερινοί αγώνες"
+                                                : "Πίσω στους σημερινούς αγώνες"
+                                            }
+                                            className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-500/60 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
                                           >
-                                            <option value="">All days</option>
-                                            {eventDays.map((day) => (
-                                              <option key={day} value={day}>
-                                                {formatDayKeyLabel(day)}
-                                                {day === todayDay ? " (today)" : ""}
-                                                {" · "}
-                                                {eventDayIndex.get(day)?.matches ?? 0}
-                                              </option>
-                                            ))}
-                                          </select>
+                                            {focusDay === todayDay
+                                              ? "Today"
+                                              : formatDayKeyLabel(focusDay)}
+                                            {" ("}
+                                            {focusDayEntry?.matchCount ?? 0}
+                                            {")"}
+                                          </button>
                                         ) : null}
                                         {todayDay && eventDays.length > 0 && !todayHasMatches ? (
                                           <>
