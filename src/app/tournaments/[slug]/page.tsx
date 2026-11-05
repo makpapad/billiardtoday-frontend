@@ -41,10 +41,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     typeof resolvedSearchParams.group === "string"
       ? resolvedSearchParams.group
       : null;
+  const matchParam =
+    typeof resolvedSearchParams.match === "string"
+      ? resolvedSearchParams.match
+      : null;
 
   return buildTournamentShareMetadata(summary, {
     stage: stageParam,
     group: groupParam,
+    match: matchParam,
   });
 }
 

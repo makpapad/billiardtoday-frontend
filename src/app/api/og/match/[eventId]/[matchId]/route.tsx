@@ -259,7 +259,7 @@ export async function GET(
     </div>
   );
 
-  return new ImageResponse(
+  const imageResponse = new ImageResponse(
     (
       <div
         style={{
@@ -607,4 +607,29 @@ export async function GET(
     ),
     SIZE,
   );
+
+  // Το Facebook δεν δέχεται WebP ως og:image· JPEG είναι μικρότερο από PNG και
+  // 100% αποδεκτό από Facebook / X / WhatsApp / LinkedIn.
+  const pngBuffer = new Uint8Array(await imageResponse.arrayBuffer());
+  try {
+    const sharpModule = (await import("sharp")).default;
+    const jpegBuffer = new Uint8Array(
+      await sharpModule(Buffer.from(pngBuffer))
+        .jpeg({ quality: 90, mozjpeg: true })
+        .toBuffer(),
+    );
+    return new Response(jpegBuffer, {
+      headers: {
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "public, max-age=900, s-maxage=900",
+      },
+    });
+  } catch {
+    return new Response(pngBuffer, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=900, s-maxage=900",
+      },
+    });
+  }
 }

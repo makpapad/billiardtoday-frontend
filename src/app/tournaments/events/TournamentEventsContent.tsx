@@ -8655,6 +8655,13 @@ export function TournamentEventsContent({
                                                                                 ?.matchDocumentId ??
                                                                                 match.key,
                                                                             ),
+                                                                          )}?match=${encodeURIComponent(
+                                                                            String(
+                                                                              row
+                                                                                .sourceMatch
+                                                                                ?.matchDocumentId ??
+                                                                                match.key,
+                                                                            ),
                                                                           )}`}
                                                                           downloadName="billiardtoday-match.png"
                                                                           variant="light"

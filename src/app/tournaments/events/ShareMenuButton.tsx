@@ -261,9 +261,15 @@ export default function ShareMenuButton({
       const imageUrl = new URL(shareHref, window.location.origin);
       const group = imageUrl.searchParams.get("group");
       const stage = imageUrl.searchParams.get("stage");
-      if (!group && !stage) return pageUrl;
+      const match = imageUrl.searchParams.get("match");
+      if (!group && !stage && !match) return pageUrl;
+      const segments = imageUrl.pathname.split("/").filter(Boolean);
+      // /api/og/match/<eventId>/<matchId> → το eventId είναι το προτελευταίο
+      // τμήμα· για τις κάρτες τουρνουά/ομίλου είναι το τελευταίο.
       const eventRef =
-        imageUrl.pathname.split("/").filter(Boolean).pop() ?? null;
+        match && segments.length >= 2
+          ? segments[segments.length - 2]
+          : (segments[segments.length - 1] ?? null);
       const isEventsModulePage =
         target.pathname === "/tournaments/events" ||
         target.pathname.endsWith("/events");
@@ -273,6 +279,7 @@ export default function ShareMenuButton({
       }
       if (stage) target.searchParams.set("stage", stage);
       if (group) target.searchParams.set("group", group);
+      if (match) target.searchParams.set("match", match);
       return target.toString();
     } catch {
       return pageUrl;

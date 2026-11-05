@@ -15,6 +15,8 @@ const TOURNAMENT_OG_IMAGE_VERSION = "jpeg-20261105";
 // 20260907: bumped to v10 — ea22bab reverted the WebP route server-side and FB
 // cached the blank result under the old v9 URL; new URL forces a fresh scrape.
 const TOURNAMENT_GROUP_OG_VERSION = "v11-jpeg-20261105";
+/** Bump όταν αλλάζει η σχεδίαση της κάρτας αγώνα. */
+const TOURNAMENT_MATCH_OG_VERSION = "v1-20261105";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
@@ -24,6 +26,8 @@ export function buildTournamentShareMetadata(
     stage?: string | null;
     /** Group label/number to render the group share card for. */
     group?: string | null;
+    /** Match document id — η κάρτα του συγκεκριμένου αγώνα ως og:image. */
+    match?: string | null;
   },
 ): Metadata {
   if (!summary) {
@@ -50,9 +54,13 @@ export function buildTournamentShareMetadata(
       : hasStageContext
         ? `?stage=${encodeURIComponent(contextStage ?? "")}`
         : "";
-  const shareUrl = `${path}${contextQuery}`;
-  const ogImagePath =
-    slug === LONGONI_U21_SLUG
+  const matchContext = (options?.match ?? "").trim() || null;
+  const shareUrl = matchContext
+    ? `${path}?match=${encodeURIComponent(matchContext)}`
+    : `${path}${contextQuery}`;
+  const ogImagePath = matchContext
+    ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?v=${TOURNAMENT_MATCH_OG_VERSION}`
+    : slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
       : contextQuery
         ? `/api/og/tournament/${encodeURIComponent(slug)}${contextQuery}&v=${TOURNAMENT_GROUP_OG_VERSION}`
@@ -62,10 +70,7 @@ export function buildTournamentShareMetadata(
     width: 1200,
     height: 630,
     alt: hasGroupContext ? `${summary.title} · Group ${contextGroup}` : summary.title,
-    type:
-      slug === LONGONI_U21_SLUG
-        ? "image/jpeg"
-        : "image/webp",
+    type: "image/jpeg",
   });
 
   const ogTitle = hasGroupContext
