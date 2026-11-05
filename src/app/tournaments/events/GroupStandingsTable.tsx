@@ -49,7 +49,7 @@ export default function GroupStandingsTable({
     return (
         <div className="max-xl:overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="min-w-full text-xs">
-                <thead className="sticky top-[97px] z-20 bg-emerald-700 text-white">
+                <thead className="bg-emerald-700 text-white lg:sticky lg:top-[97px] lg:z-20">
                     <tr>
                         <th className="px-3 py-2 text-left font-medium w-56">Player</th>
                         <th className="px-2 py-2 text-center font-medium w-12" title="Position in the group">Pos</th>

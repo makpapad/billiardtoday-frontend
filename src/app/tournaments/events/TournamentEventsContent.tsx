@@ -2841,7 +2841,7 @@ function StageRankingTable({
           πίνακας χωράει και δεν χρειάζεται οριζόντιο scroll). */}
       <div className="max-xl:overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-[97px] z-20 bg-blue-600 text-white">
+          <thead className="bg-blue-600 text-white lg:sticky lg:top-[97px] lg:z-20">
             <tr className="bg-blue-700/95 text-[11px] uppercase tracking-wide text-blue-50">
               <th className="px-4 py-2" />
               <th className="px-4 py-2" />
@@ -2890,8 +2890,8 @@ function StageRankingTable({
                 <th className="px-4 py-3 text-center font-semibold">Group</th>
               )}
               {showGroupPositionColumn && (
-                <th className="px-4 py-3 text-center font-semibold">
-                  Pos in group
+                <th className="whitespace-nowrap px-4 py-3 text-center font-semibold" title="Position in group">
+                  Pos
                 </th>
               )}
               <th className="px-4 py-3 text-center font-semibold">MP</th>
@@ -6026,7 +6026,7 @@ export function TournamentEventsContent({
                         </div>
                         <div className="max-xl:overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
                           <table className="min-w-full border-collapse text-sm">
-                            <thead className="sticky top-[97px] z-20 bg-emerald-900 text-white">
+                            <thead className="bg-emerald-900 text-white lg:sticky lg:top-[97px] lg:z-20">
                               <tr>
                                 <th className="px-4 py-3 text-left font-semibold">
                                   #

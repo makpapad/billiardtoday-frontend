@@ -148,7 +148,7 @@ export function UmbRankingContent({ payload, pageSize, playerLinks, downloadHref
               </div>
               <div className="max-xl:overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                 <table className="w-full min-w-[640px] text-[12px]">
-                  <thead className="sticky top-[97px] z-20 bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500 lg:sticky lg:top-[97px] lg:z-20">
                     <tr>
                       <th className="px-3 py-2 text-left">Finish</th>
                       {FINISH_HEADERS.map((head) => (
@@ -290,7 +290,7 @@ export function UmbRankingContent({ payload, pageSize, playerLinks, downloadHref
         <div className="px-2 pb-2 pt-5 sm:px-4">
           <div className="overflow-x-auto lg:overflow-x-clip">
             <table className="w-full min-w-[900px] border-separate border-spacing-0 text-right tabular-nums">
-              <thead className="sticky top-[97px] z-20">
+              <thead className="lg:sticky lg:top-[97px] lg:z-20">
                 <tr className="bg-slate-900 text-[11px] font-semibold uppercase tracking-wide text-white">
                   <th className={`${headCell} w-10 rounded-tl-xl px-1.5 py-2.5 text-right`}>#</th>
                   <th className={`${headCell} px-2 py-2.5 text-left`}>Player</th>

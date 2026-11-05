@@ -30,7 +30,7 @@ export function TournamentSeoSection({ data }: { data: TournamentSeoData }) {
           </h3>
           <div className="mt-3 max-xl:overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
-              <thead className="sticky top-[97px] z-20 bg-white">
+              <thead className="bg-white lg:sticky lg:top-[97px] lg:z-20">
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="py-2 pr-3">Pos</th>
                   <th className="py-2 pr-3">Player</th>
