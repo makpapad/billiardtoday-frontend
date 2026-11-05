@@ -277,7 +277,8 @@ export async function GET(
         display: "flex",
         flexDirection: "column",
         alignItems: align === "right" ? "flex-end" : "flex-start",
-        width: s(330),
+        maxWidth: s(470),
+        flexShrink: 0,
         gap: s(10),
       }}
     >
@@ -413,7 +414,8 @@ export async function GET(
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "center",
+              gap: s(46),
               flex: 1,
             }}
           >
@@ -423,15 +425,14 @@ export async function GET(
               match.hasResult ? match.player1.points : null,
               winner === 2,
             )}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-              }}
-            >
-              {match.hasResult ? null : (
+            {match.hasResult ? null : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
@@ -443,8 +444,8 @@ export async function GET(
                 >
                   VS
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             {nameBlock(
               match.player2,
               "left",
