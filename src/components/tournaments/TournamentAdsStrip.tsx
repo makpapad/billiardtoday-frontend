@@ -41,10 +41,22 @@ const tournamentAds: TournamentAd[] = [
 
 /** Χορηγοί του Future of Billiards 2026 (Pulderbos). */
 export const futureOfBilliardsAds: TournamentAd[] = [
-  { src: "/img/logos/ads/1-aramith.jpg", alt: "Aramith" },
-  { src: "/img/logos/ads/2-Logoni.jpg", alt: "Longoni" },
-  { src: "/img/logos/ads/3-simonis.jpg", alt: "Simonis" },
-  { src: "/img/logos/ads/4-Verhoeven.jpg", alt: "Verhoeven" },
+  { src: "/img/logos/ads/1-aramith.jpg", alt: "Aramith", href: "https://aramith.com/" },
+  {
+    src: "/img/logos/ads/2-Logoni.jpg",
+    alt: "Longoni",
+    href: "https://www.longonicues.com/",
+  },
+  {
+    src: "/img/logos/ads/3-simonis.jpg",
+    alt: "Simonis",
+    href: "https://www.simoniscloth.com/",
+  },
+  {
+    src: "/img/logos/ads/4-Verhoeven.jpg",
+    alt: "Verhoeven",
+    href: "https://www.verhoeven-biljarts.be/",
+  },
 ];
 
 export function TournamentAdsStrip({
