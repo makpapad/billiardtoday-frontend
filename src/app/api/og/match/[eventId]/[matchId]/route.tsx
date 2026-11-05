@@ -276,6 +276,19 @@ export async function GET(
         gap: s(10),
       }}
     >
+      {player.flag ? (
+        <img
+          src={player.flag}
+          alt=""
+          width={s(64)}
+          height={s(44)}
+          style={{
+            objectFit: "cover",
+            borderRadius: s(4),
+            border: `${s(1)}px solid rgba(255,255,255,0.25)`,
+          }}
+        />
+      ) : null}
       <div
         style={{
           display: "flex",

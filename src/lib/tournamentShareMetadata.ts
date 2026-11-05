@@ -16,7 +16,7 @@ const TOURNAMENT_OG_IMAGE_VERSION = "jpeg-20261105";
 // cached the blank result under the old v9 URL; new URL forces a fresh scrape.
 const TOURNAMENT_GROUP_OG_VERSION = "v11-jpeg-20261105";
 /** Bump όταν αλλάζει η σχεδίαση της κάρτας αγώνα. */
-const TOURNAMENT_MATCH_OG_VERSION = "v2-wide-20261105";
+const TOURNAMENT_MATCH_OG_VERSION = "v3-flags-20261105";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
