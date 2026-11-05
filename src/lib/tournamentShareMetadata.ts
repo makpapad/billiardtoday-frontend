@@ -67,9 +67,14 @@ export function buildTournamentShareMetadata(
         : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
   const socialImage = buildOpenGraphImage({
     url: ogImagePath,
-    width: 1200,
-    height: 630,
-    alt: hasGroupContext ? `${summary.title} · Group ${contextGroup}` : summary.title,
+    // Η κάρτα αγώνα είναι κάθετη (1080×1350)· οι άλλες οριζόντιες (1200×630).
+    width: matchContext ? 1080 : 1200,
+    height: matchContext ? 1350 : 630,
+    alt: matchContext
+      ? `${summary.title} · match`
+      : hasGroupContext
+        ? `${summary.title} · Group ${contextGroup}`
+        : summary.title,
     type: "image/jpeg",
   });
 
