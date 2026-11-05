@@ -1750,25 +1750,27 @@ export async function GET(
   // Soften the default (immutable, 1y) ImageResponse cache header so social
   // crawlers re-fetch sooner; cache-bust via the &v= query param on changes.
   const pngBuffer = new Uint8Array(await imageResponse.arrayBuffer());
-  // WebP (q92) — roughly 5-8x smaller than the raw PNG at the same visual
-  // sharpness, so Facebook's crawler downloads it faster.
+  // JPEG (q90): το Facebook ΔΕΝ εμφανίζει WebP ως og:image (η προεπισκόπηση
+  // βγαίνει χωρίς φωτογραφία), οπότε σερβίρουμε JPEG — μικρότερο από PNG και
+  // 100% αποδεκτό από Facebook / X / WhatsApp / LinkedIn.
   let outBuffer: Uint8Array = pngBuffer;
   try {
     const sharpModule = (await import("sharp")).default;
     outBuffer = new Uint8Array(
       await sharpModule(Buffer.from(pngBuffer))
-        .webp({ quality: 92 })
+        .jpeg({ quality: 90, mozjpeg: true })
         .toBuffer(),
     );
   } catch {
     // sharp unavailable → serve the PNG as-is (type mismatch is handled by
     // sniffing below).
   }
-  const isWebp = outBuffer !== pngBuffer;
-  writePngCache(pngCacheKey, isWebp ? "image/webp" : "image/png", outBuffer);
+  const optimized = outBuffer !== pngBuffer;
+  const contentType = optimized ? "image/jpeg" : "image/png";
+  writePngCache(pngCacheKey, contentType, outBuffer);
   return new Response(outBuffer, {
     headers: {
-      "Content-Type": isWebp ? "image/webp" : "image/png",
+      "Content-Type": contentType,
       "Cache-Control": "public, max-age=900, s-maxage=900",
     },
   });

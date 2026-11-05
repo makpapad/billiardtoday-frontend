@@ -9,12 +9,12 @@ import { buildOpenGraphImage, toAbsoluteUrl } from "@/lib/socialMetadata";
 const LONGONI_U21_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 const LONGONI_U21_OG_IMAGE =
   "/img/og/longoni-next-gen-grand-prix-3-cushion-u21-2026.jpg";
-const TOURNAMENT_OG_IMAGE_VERSION = "powered-by-bt-no-organizer-logo-20260610";
+const TOURNAMENT_OG_IMAGE_VERSION = "jpeg-20261105";
 // Bump when the group share card design/data layout changes: Facebook caches
 // the og:image by URL, so a changed URL (new v) forces a fresh download.
 // 20260907: bumped to v10 — ea22bab reverted the WebP route server-side and FB
 // cached the blank result under the old v9 URL; new URL forces a fresh scrape.
-const TOURNAMENT_GROUP_OG_VERSION = "v10-webp-20260907";
+const TOURNAMENT_GROUP_OG_VERSION = "v11-jpeg-20261105";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
