@@ -28,6 +28,12 @@ export function buildTournamentShareMetadata(
     group?: string | null;
     /** Match document id — η κάρτα του συγκεκριμένου αγώνα ως og:image. */
     match?: string | null;
+    /**
+     * Αποτύπωμα του αποτελέσματος (π.χ. «25-18»). Μπαίνει στο URL της κάρτας ώστε
+     * μόλις καταχωρηθεί/αλλάξει σκορ να αλλάξει και το URL και το Facebook να
+     * ξανακατεβάσει την κάρτα με το αποτέλεσμα αντί για την παλιά «VS».
+     */
+    matchVersion?: string | null;
   },
 ): Metadata {
   if (!summary) {
@@ -59,7 +65,11 @@ export function buildTournamentShareMetadata(
     ? `${path}?match=${encodeURIComponent(matchContext)}`
     : `${path}${contextQuery}`;
   const ogImagePath = matchContext
-    ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?format=wide&v=${TOURNAMENT_MATCH_OG_VERSION}`
+    ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?format=wide&v=${TOURNAMENT_MATCH_OG_VERSION}${
+        options?.matchVersion
+          ? `&r=${encodeURIComponent(options.matchVersion)}`
+          : ""
+      }`
     : slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
       : contextQuery
@@ -112,4 +122,50 @@ export function buildTournamentShareMetadata(
         }
       : undefined,
   };
+}
+
+/**
+ * Αποτύπωμα του αποτελέσματος ενός αγώνα (π.χ. «25-18») για το URL της κάρτας.
+ *
+ * Χρησιμεύει στο cache του Facebook: μόλις καταχωρηθεί ή αλλάξει σκορ, αλλάζει
+ * και το URL της εικόνας, οπότε ο crawler κατεβάζει νέα κάρτα με το αποτέλεσμα
+ * αντί να δείχνει την παλιά «VS» έκδοση.
+ */
+export async function resolveMatchResultVersion(
+  eventId: string | null | undefined,
+  matchId: string | null | undefined,
+): Promise<string | null> {
+  if (!eventId || !matchId) return null;
+  const site =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "https://billiardtoday.com";
+  try {
+    const res = await fetch(
+      `${site}/api/events/${encodeURIComponent(eventId)}`,
+      { next: { revalidate: 60 } },
+    );
+    if (!res.ok) return null;
+    const payload = await res.json();
+    const stages: any[] = Array.isArray(payload?.data?.event_stages)
+      ? payload.data.event_stages
+      : [];
+    for (const stage of stages) {
+      const matches: any[] = Array.isArray(stage?.groups) ? stage.groups : [];
+      const hit = matches.find(
+        (m: any) =>
+          String(m?.documentId ?? "") === matchId ||
+          String(m?.id ?? "") === matchId,
+      );
+      if (!hit) continue;
+      const p1 = Number(hit?.player1_points ?? 0);
+      const p2 = Number(hit?.player2_points ?? 0);
+      const i1 = Number(hit?.player1_innings ?? 0);
+      const i2 = Number(hit?.player2_innings ?? 0);
+      if (p1 === 0 && p2 === 0) return "pre";
+      return `${p1}-${p2}-${i1}-${i2}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

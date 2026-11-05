@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
+import { buildTournamentShareMetadata, resolveMatchResultVersion } from "@/lib/tournamentShareMetadata";
 import { getTournamentEventSummary } from "@/lib/tournaments";
 
 import TournamentEventsPage from "./TournamentEventsContent";
@@ -33,7 +33,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   }
 
   const summary = await getTournamentEventSummary(eventId);
-  return buildTournamentShareMetadata(summary, { stage, group, match });
+  const matchVersion = await resolveMatchResultVersion(eventId, match);
+  return buildTournamentShareMetadata(summary, { stage, group, match, matchVersion });
 }
 
 export default function Page() {

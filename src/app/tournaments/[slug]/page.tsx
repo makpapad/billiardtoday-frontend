@@ -16,7 +16,10 @@ import {
   buildTeamTournamentSlug,
   fetchTeamTournamentByDocumentId,
 } from "@/lib/teamTournaments";
-import { buildTournamentShareMetadata } from "@/lib/tournamentShareMetadata";
+import {
+  buildTournamentShareMetadata,
+  resolveMatchResultVersion,
+} from "@/lib/tournamentShareMetadata";
 import { buildTournamentStructuredData } from "@/lib/tournamentStructuredData";
 
 type Props = {
@@ -46,10 +49,16 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       ? resolvedSearchParams.match
       : null;
 
+  const matchVersion = await resolveMatchResultVersion(
+    summary.documentId,
+    matchParam,
+  );
+
   return buildTournamentShareMetadata(summary, {
     stage: stageParam,
     group: groupParam,
     match: matchParam,
+    matchVersion,
   });
 }
 
