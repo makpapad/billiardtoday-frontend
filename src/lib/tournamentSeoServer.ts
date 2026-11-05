@@ -157,7 +157,10 @@ export const getTournamentSeoStages = async (
   params.set("populate[event_stages][fields][1]", "order");
   params.set("populate[event_stages][fields][2]", "stage_type");
   params.set("populate[event_stages][fields][3]", "documentId");
-  params.set("populate[event_stages][populate][groups][sort][0]", "match_number:asc");
+  // ΣΕΙΡΑ ΠΙΝΑΚΑ: πρώτα ΟΜΙΛΟΣ, μετά αγώνας μέσα στον όμιλο. Με μόνο `match_number` όλοι οι «1οι»
+  // αγώνες όλων των ομίλων εμφανίζονταν μαζί (1,1,1…, 2,2,2…, 3,3,3…) — ο πίνακας φαινόταν ανάποδα.
+  params.set("populate[event_stages][populate][groups][sort][0]", "number:asc");
+  params.set("populate[event_stages][populate][groups][sort][1]", "match_number:asc");
   const groupFields = [
     "match_number",
     "group_label",
