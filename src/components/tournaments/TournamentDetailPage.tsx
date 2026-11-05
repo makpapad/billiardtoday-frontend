@@ -7806,7 +7806,11 @@ export function TournamentDetailPage({
         <DataSourceCredit source={dataSourceCredit} className="mt-4" />
       ) : null}
       {showFobAds ? (
-        <TournamentAdsStrip ads={futureOfBilliardsAds} className="mt-6" />
+        <TournamentAdsStrip
+          ads={futureOfBilliardsAds}
+          className="mt-6"
+          showPoweredBy={false}
+        />
       ) : null}
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">

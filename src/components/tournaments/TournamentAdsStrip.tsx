@@ -50,15 +50,26 @@ export const futureOfBilliardsAds: TournamentAd[] = [
 export function TournamentAdsStrip({
   ads = tournamentAds,
   className = "mt-10",
+  showPoweredBy = true,
 }: {
   ads?: TournamentAd[];
   className?: string;
+  showPoweredBy?: boolean;
 }) {
+  // Με λίγους χορηγούς (π.χ. 4) η σειρά κεντράρεται αντί να απλώνεται σε 6 στήλες.
+  const centered = ads.length <= 4;
+
   return (
     <section className={`${className} bg-white/95 py-6`.trim()}>
       <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div
+            className={
+              centered
+                ? "flex flex-wrap items-center justify-center gap-4"
+                : "grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6"
+            }
+          >
             {ads.map((ad) => {
               const card = (
                 <>
@@ -73,9 +84,9 @@ export function TournamentAdsStrip({
                 </>
               );
               const cardClassName =
-                "flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md";
+                "flex h-20 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md";
 
-              return ad.href ? (
+              const rendered = ad.href ? (
                 <a
                   key={ad.src}
                   href={ad.href}
@@ -90,25 +101,35 @@ export function TournamentAdsStrip({
                   {card}
                 </div>
               );
+
+              return centered ? (
+                <div key={ad.src} className="w-full max-w-[240px] sm:w-[220px]">
+                  {rendered}
+                </div>
+              ) : (
+                rendered
+              );
             })}
           </div>
-          <div className="mt-5 flex justify-center border-t border-slate-100 pt-5">
-            <div
-              className="flex h-20 w-full max-w-[280px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-5 py-3"
-            >
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Powered by
-              </span>
-              <Image
-                src="/logo-billiardtoday-loading.png"
-                alt="Billiard Today"
-                width={562}
-                height={180}
-                className="max-h-11 w-full object-contain"
-                unoptimized
-              />
+          {showPoweredBy ? (
+            <div className="mt-5 flex justify-center border-t border-slate-100 pt-5">
+              <div
+                className="flex h-20 w-full max-w-[280px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-5 py-3"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Powered by
+                </span>
+                <Image
+                  src="/logo-billiardtoday-loading.png"
+                  alt="Billiard Today"
+                  width={562}
+                  height={180}
+                  className="max-h-11 w-full object-contain"
+                  unoptimized
+                />
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
     </section>
