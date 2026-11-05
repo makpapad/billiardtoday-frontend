@@ -6769,9 +6769,24 @@ export function TournamentEventsContent({
                                         {dayFilterActive && focusDay ? (
                                           <button
                                             type="button"
-                                            onClick={() =>
-                                              setFocusDayOverride(todayDay ?? null)
-                                            }
+                                            onClick={() => {
+                                              // Γύρνα στους σημερινούς αγώνες ΚΑΙ άνοιξε τους
+                                              // ομίλους που έχουν σημερινούς αγώνες.
+                                              setFocusDayOverride(todayDay ?? null);
+                                              const keys = todayDay
+                                                ? (activeStageDayIndex.get(todayDay)
+                                                      ?.groupKeys ?? null)
+                                                : null;
+                                              if (keys && keys.size > 0) {
+                                                setExpandedGroups((prev) => {
+                                                  const next = new Set(prev);
+                                                  keys.forEach((key) =>
+                                                    next.add(key),
+                                                  );
+                                                  return next;
+                                                });
+                                              }
+                                            }}
                                             title={
                                               focusDay === todayDay
                                                 ? "Οι σημερινοί αγώνες"
@@ -7421,15 +7436,14 @@ export function TournamentEventsContent({
                                                       ),
                                                   )
                                                 : matchingPlayerIds;
+                                            // Οι όμιλοι μένουν κλειστοί («μαζεμένοι») και ανοίγουν
+                                            // με κλικ στη λωρίδα τους ή με το κουμπί «Today (N)»,
+                                            // που ανοίγει όσους έχουν σημερινούς αγώνες.
                                             const isExpanded =
                                               normalizedPlayerSearchQuery.length >
                                                 0 && hasSearchMatch
                                                 ? true
-                                                : dayFilterActive &&
-                                                    focusGroupKeys &&
-                                                    focusGroupKeys.size > 0
-                                                  ? focusGroupKeys.has(groupKey)
-                                                  : expandedGroups.has(groupKey);
+                                                : expandedGroups.has(groupKey);
                                             // Όμιλος που ΤΕΛΕΙΩΣΕ (όλοι οι αγώνες του έχουν
                                             // αποτέλεσμα) — η κλειστή λωρίδα του γίνεται πράσινη.
                                             const groupFinished =
