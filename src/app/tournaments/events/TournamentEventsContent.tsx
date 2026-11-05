@@ -1709,8 +1709,6 @@ function matchDayKey(
   timeZoneName?: string | null,
 ): string | null {
   if (!value) return null;
-  // Ημερομηνία χωρίς ώρα (νέο πεδίο `date` στον αγώνα): είναι ήδη μέρα, χωρίς μετατόπιση ζώνης.
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return value.trim();
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
     const raw = value.slice(0, 10);
@@ -1778,19 +1776,6 @@ function todayDayKey(
   return new Date(now.getTime() + offsetMinutes * 60 * 1000)
     .toISOString()
     .slice(0, 10);
-}
-
-/** Ετικέτα ημέρας για τον επιλογέα: «Thu 05 Nov 2026» (χωρίς ζώνη — το day key είναι ήδη τοπικό). */
-function formatDayKeyLabel(dayKey: string): string {
-  const parsed = new Date(`${dayKey}T12:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return dayKey;
-  return parsed.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
 }
 
 function formatDateTimeWithOffset(
@@ -4677,23 +4662,14 @@ export function TournamentEventsContent({
   ]);
 
   /**
-   * «ΜΕΡΑ» — ποια μέρα του ΠΡΟΓΡΑΜΜΑΤΟΣ βλέπει ο χρήστης.
+   * «TODAY» — ποιοι όμιλοι παίζουν ΣΗΜΕΡΑ.
    *
-   * Στο άνοιγμα της διοργάνωσης δείχνεται ΜΟΝΟ η σημερινή μέρα: οι όμιλοι που έχουν αγώνα
-   * σήμερα και, μέσα τους, μόνο οι σημερινοί αγώνες. Η μέρα βγαίνει πρώτα από το
-   * ΧΡΟΝΟΔΙΑΓΡΑΜΜΑ (timetable slots: ημερομηνία/ώρα ανά θέση) και, όπου αυτό λείπει, από την
-   * ώρα του ίδιου του αγώνα — πάντα στη ζώνη του τουρνουά, την ίδια που τυπώνει την ημερομηνία
-   * στο κελί του αγώνα (`matchDayKey`).
-   * Χωρίς ΚΑΘΟΛΟΥ πρόγραμμα (κανένα slot, καμία ώρα αγώνα) δεν φιλτράρεται τίποτα: μένει η
-   * προηγούμενη συμπεριφορά (ολόκληρη η φάση).
-   * Η μέρα υπολογίζεται ΜΟΝΟ στον browser (useEffect): αλλιώς το ρολόι του server θα όριζε το
-   * «σήμερα» για τον επισκέπτη.
+   * Η ημέρα βγαίνει από την ώρα κάθε αγώνα (`match.dateTime`) στη ζώνη του τουρνουά — την ίδια
+   * που τυπώνει την ημερομηνία στο κελί του αγώνα. Υπολογίζεται ΜΟΝΟ στον browser (useEffect):
+   * αλλιώς το ρολόι του server θα αποφάσιζε τι είναι «σήμερα» για τον επισκέπτη.
    */
   const [todayDay, setTodayDay] = useState<string | null>(null);
-  // undefined = αυτόματα (σήμερα), null = όλη η φάση, 'YYYY-MM-DD' = συγκεκριμένη μέρα.
-  const [focusDayOverride, setFocusDayOverride] = useState<
-    string | null | undefined
-  >(undefined);
+  const [todayFocus, setTodayFocus] = useState(false);
 
   useEffect(() => {
     const update = () => setTodayDay(todayDayKey(timezoneOffsetMinutes, timezoneName));
@@ -4703,141 +4679,50 @@ export function TournamentEventsContent({
     return () => window.clearInterval(timer);
   }, [timezoneOffsetMinutes, timezoneName]);
 
-  /** Μέρα μιας θέσης προγράμματος: η ώρα αν υπάρχει, αλλιώς η ημερομηνία της. */
-  const timetableSlotDayKey = useCallback(
-    (slot: NormalizedTimetableSlot) =>
-      matchDayKey(slot.dateTime, timezoneOffsetMinutes, timezoneName) ??
-      dateValueDayKey(slot.date),
-    [timezoneOffsetMinutes, timezoneName],
-  );
-
-  /** Μέρες με αγώνες σε ΟΛΗ τη διοργάνωση (τροφοδοτεί τον επιλογέα ημέρας). */
-  const eventDayIndex = useMemo(() => {
-    const map = new Map<string, { matches: number; stageIds: Set<string> }>();
-    const add = (day: string | null, stageDocumentId: string | null | undefined) => {
-      if (!day) return;
-      const entry = map.get(day) ?? { matches: 0, stageIds: new Set<string>() };
-      entry.matches += 1;
-      if (stageDocumentId) entry.stageIds.add(stageDocumentId);
-      map.set(day, entry);
-    };
-    const stagesWithSlots = new Set<string>();
-    timetableSlots.forEach((slot) => {
-      if (slot.slotType !== "match") return;
-      if (slot.stageDocumentId) stagesWithSlots.add(slot.stageDocumentId);
-      add(timetableSlotDayKey(slot), slot.stageDocumentId);
-    });
-    // Φάσεις ΧΩΡΙΣ χρονοδιάγραμμα: η μέρα βγαίνει από την ώρα του ίδιου του αγώνα.
-    eventStages.forEach((stage) => {
-      if (stage.documentId && stagesWithSlots.has(stage.documentId)) return;
-      (stageMatchGroups[stage.id] ?? []).forEach((group) => {
-        group.matches.forEach((match) =>
-          add(
-            matchDayKey(match.dateTime, timezoneOffsetMinutes, timezoneName),
-            stage.documentId,
-          ),
-        );
-      });
-    });
-    return map;
-  }, [
-    eventStages,
-    stageMatchGroups,
-    timetableSlotDayKey,
-    timetableSlots,
-    timezoneOffsetMinutes,
-    timezoneName,
-  ]);
-
-  const eventDays = useMemo(
-    () => Array.from(eventDayIndex.keys()).sort(),
-    [eventDayIndex],
-  );
-
-  /** Μέρα → όμιλοι και πλήθος γραμμών αγώνων της ΕΝΕΡΓΗΣ φάσης. */
-  const activeStageDayIndex = useMemo(() => {
-    const map = new Map<string, { groupKeys: Set<string>; matchCount: number }>();
-    if (!activeStage) return map;
-    const groups = stageMatchGroups[activeStage.id] ?? [];
-    groups.forEach((group) => {
-      const groupKey = getGroupKey(activeStage, group);
-      const slots =
+  const todayGroupKeys = useMemo(() => {
+    const keys = new Set<string>();
+    if (!activeStage || !todayDay) return keys;
+    const stageGroups = stageMatchGroups[activeStage.id] ?? [];
+    stageGroups.forEach((group) => {
+      // (α) Η ώρα πάνω στον αγώνα, όταν υπάρχει.
+      const fromMatches = group.matches.some(
+        (match) =>
+          matchDayKey(match.dateTime, timezoneOffsetMinutes, timezoneName) === todayDay,
+      );
+      // (β) Η ώρα από το ΧΡΟΝΟΔΙΑΓΡΑΜΜΑ: σε πολλές φάσεις οι αγώνες δεν κουβαλούν
+      //     ημερομηνία — το πρόγραμμα τη γράφει ανά θέση (τραπέζι/ώρα) και είναι η πηγή
+      //     που βλέπει ο χρήστης στο «Time table».
+      const timetableGroupSlots =
         activeStage.documentId && group.number !== null
           ? groupTimetableSlotsByStageGroup.get(
               `${activeStage.documentId}::${group.number}`,
             ) ?? []
           : [];
-      const record = (day: string | null) => {
-        if (!day) return;
-        const entry =
-          map.get(day) ?? { groupKeys: new Set<string>(), matchCount: 0 };
-        entry.groupKeys.add(groupKey);
-        entry.matchCount += 1;
-        map.set(day, entry);
-      };
-      if (slots.length > 0) {
-        // Το τραπέζι του ομίλου χτίζεται από τις θέσεις του προγράμματος (μία γραμμή ανά θέση).
-        slots.forEach((slot) => record(timetableSlotDayKey(slot)));
-        return;
-      }
-      group.matches.forEach((match) =>
-        record(matchDayKey(match.dateTime, timezoneOffsetMinutes, timezoneName)),
+      const fromTimetable = timetableGroupSlots.some(
+        (slot) =>
+          matchDayKey(slot.dateTime, timezoneOffsetMinutes, timezoneName) === todayDay,
       );
+      if (fromMatches || fromTimetable) keys.add(getGroupKey(activeStage, group));
     });
-    return map;
+    // (γ) Κανένας όμιλος δεν έχει γνωστή ημέρα (πρόγραμμα αδημοσίευτο): αν η ΙΔΙΑ η φάση
+    //     περιλαμβάνει τη σημερινή μέρα, τότε όλοι οι όμιλοί της παίζουν σήμερα — ίδια
+    //     λογική με την αυτόματη επιλογή φάσης της σελίδας.
+    if (keys.size === 0) {
+      const stageStart = dateValueDayKey(activeStage.startDate);
+      const stageEnd = dateValueDayKey(activeStage.endDate) ?? stageStart;
+      if (stageStart && stageEnd && todayDay >= stageStart && todayDay <= stageEnd) {
+        stageGroups.forEach((group) => keys.add(getGroupKey(activeStage, group)));
+      }
+    }
+    return keys;
   }, [
     activeStage,
-    groupTimetableSlotsByStageGroup,
     stageMatchGroups,
-    timetableSlotDayKey,
+    todayDay,
     timezoneOffsetMinutes,
     timezoneName,
+    groupTimetableSlotsByStageGroup,
   ]);
-
-  const todayHasMatches = Boolean(todayDay && eventDayIndex.has(todayDay));
-  const autoFocusDay = todayHasMatches ? todayDay : null;
-  const focusDay = focusDayOverride !== undefined ? focusDayOverride : autoFocusDay;
-  const focusDayEntry = focusDay ? activeStageDayIndex.get(focusDay) : undefined;
-  // Το φίλτρο εφαρμόζεται μόνο όταν η επιλεγμένη μέρα έχει όντως αγώνες σε ΑΥΤΗ τη φάση —
-  // αλλιώς η σελίδα θα άδειαζε (π.χ. φάση που παίζει αύριο).
-  const dayFilterActive = Boolean(focusDay && focusDayEntry);
-
-  /** Η κοντινότερη μέρα με αγώνες (πρόταση όταν σήμερα δεν έχει). */
-  const nearestEventDay = useMemo(() => {
-    if (!todayDay || eventDays.length === 0) return null;
-    const next = eventDays.find((day) => day >= todayDay) ?? null;
-    const previous =
-      [...eventDays].reverse().find((day) => day < todayDay) ?? null;
-    const day = next ?? previous;
-    if (!day) return null;
-    return {
-      day,
-      matches: eventDayIndex.get(day)?.matches ?? 0,
-      isPast: day < todayDay,
-    };
-  }, [eventDayIndex, eventDays, todayDay]);
-
-  /** Όμιλοι που δείχνονται: με φίλτρο μέρας, μόνο όσοι έχουν γραμμή εκείνης της μέρας. */
-  const dayFilteredStageGroups = useMemo(() => {
-    if (!dayFilterActive || !focusDay || !activeStage) {
-      return filteredActiveStageGroups;
-    }
-    const keys = activeStageDayIndex.get(focusDay)?.groupKeys;
-    if (!keys || keys.size === 0) return filteredActiveStageGroups;
-    return filteredActiveStageGroups.filter((group) =>
-      keys.has(getGroupKey(activeStage, group)),
-    );
-  }, [
-    activeStage,
-    activeStageDayIndex,
-    dayFilterActive,
-    filteredActiveStageGroups,
-    focusDay,
-  ]);
-
-  const focusGroupKeys = focusDay
-    ? activeStageDayIndex.get(focusDay)?.groupKeys ?? null
-    : null;
 
   // Country flag strip above the group list: one flag per country that has at
   // least one player in the ACTIVE stage's groups (a two-letter code plus the
@@ -6754,88 +6639,36 @@ export function TournamentEventsContent({
                                         </div>
                                       )}
                                       {/*
-                                        ΜΕΡΑ ΠΡΟΓΡΑΜΜΑΤΟΣ: στο άνοιγμα δείχνεται μόνο η σημερινή
-                                        μέρα (όμιλοι + αγώνες της). Ο επιλογέας αλλάζει μέρα ή
-                                        γυρνά σε «All days». Όταν σήμερα δεν έχει αγώνες, το λέει
-                                        καθαρά και προτείνει την κοντινότερη μέρα — η σελίδα δεν
-                                        αδειάζει.
+                                        ΣΗΜΕΡΑ: ανοίγει μόνο τους ομίλους που παίζουν σήμερα (και
+                                        κλείνει τους άλλους). Ξανά κλικ → πίσω όπως ήταν. Το κουμπί
+                                        φαίνεται πάντα δίπλα στην ημερομηνία της φάσης· όταν δεν
+                                        βγαίνει όμιλος για σήμερα, μένει ανενεργό και το λέει.
                                       */}
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        {/*
-                                          Η μέρα του προγράμματος είναι κουμπί: δείχνει πάντα τη
-                                          σημερινή μέρα και με ένα κλικ γυρνά σε αυτήν. Ο παλιός
-                                          πτυσσόμενος κατάλογος ημερών αφαιρέθηκε.
-                                        */}
-                                        {dayFilterActive && focusDay ? (
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              // Γύρνα στους σημερινούς αγώνες ΚΑΙ άνοιξε τους
-                                              // ομίλους που έχουν σημερινούς αγώνες.
-                                              setFocusDayOverride(todayDay ?? null);
-                                              const keys = todayDay
-                                                ? (activeStageDayIndex.get(todayDay)
-                                                      ?.groupKeys ?? null)
-                                                : null;
-                                              if (keys && keys.size > 0) {
-                                                setExpandedGroups((prev) => {
-                                                  const next = new Set(prev);
-                                                  keys.forEach((key) =>
-                                                    next.add(key),
-                                                  );
-                                                  return next;
-                                                });
-                                              }
-                                            }}
-                                            title={
-                                              focusDay === todayDay
-                                                ? "Οι σημερινοί αγώνες"
-                                                : "Πίσω στους σημερινούς αγώνες"
-                                            }
-                                            className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-500/60 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-                                          >
-                                            {focusDay === todayDay
-                                              ? "Today"
-                                              : formatDayKeyLabel(focusDay)}
-                                            {" ("}
-                                            {focusDayEntry?.matchCount ?? 0}
-                                            {")"}
-                                          </button>
-                                        ) : null}
-                                        {todayDay && eventDays.length > 0 && !todayHasMatches ? (
-                                          <>
-                                            <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                                              No matches today
-                                            </span>
-                                            {nearestEventDay ? (
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  setFocusDayOverride(nearestEventDay.day)
-                                                }
-                                                className="w-fit rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
-                                              >
-                                                {nearestEventDay.isPast
-                                                  ? "Last match day"
-                                                  : "Next match day"}
-                                                {": "}
-                                                {formatDayKeyLabel(nearestEventDay.day)}
-                                                {" · "}
-                                                {nearestEventDay.matches}
-                                              </button>
-                                            ) : null}
-                                          </>
-                                        ) : null}
-                                        {focusDay && !dayFilterActive ? (
-                                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                                            No matches{" "}
-                                            {focusDay === todayDay
-                                              ? "today"
-                                              : formatDayKeyLabel(focusDay)}{" "}
-                                            in this phase — showing the whole phase
-                                          </span>
-                                        ) : null}
-                                      </div>
+                                      <button
+                                        type="button"
+                                        disabled={todayGroupKeys.size === 0}
+                                        onClick={() => setTodayFocus((prev) => !prev)}
+                                        aria-pressed={
+                                          todayGroupKeys.size > 0 ? todayFocus : undefined
+                                        }
+                                        title={
+                                          todayGroupKeys.size === 0
+                                            ? "Δεν βρέθηκε πρόγραμμα για σήμερα σε αυτή τη φάση"
+                                            : todayFocus
+                                              ? "Κλείσε τους σημερινούς ομίλους"
+                                              : `Άνοιξε τους ${todayGroupKeys.size} ομίλους που παίζουν σήμερα`
+                                        }
+                                        className={clsx(
+                                          "w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition",
+                                          todayGroupKeys.size === 0
+                                            ? "cursor-not-allowed border-dashed border-gray-300 bg-transparent text-gray-400 dark:border-gray-700 dark:text-gray-500"
+                                            : todayFocus
+                                              ? "border-emerald-600 bg-emerald-600 text-white"
+                                              : "border-gray-300 bg-white text-gray-700 hover:border-emerald-500 hover:text-emerald-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-emerald-500 dark:hover:text-emerald-300",
+                                        )}
+                                      >
+                                        Today ({todayGroupKeys.size})
+                                      </button>
                                     </div>
                                     {showStageControls ? (
                                       <div
@@ -7384,7 +7217,7 @@ export function TournamentEventsContent({
                                                 </div>
                                               </div>
                                             </div>
-                                            {dayFilteredStageGroups.map(
+                                            {filteredActiveStageGroups.map(
                                           (group, groupIndex) => {
                                             const groupKey = getGroupKey(
                                               stage,
@@ -7436,46 +7269,24 @@ export function TournamentEventsContent({
                                                       ),
                                                   )
                                                 : matchingPlayerIds;
-                                            // Οι όμιλοι μένουν κλειστοί («μαζεμένοι») και ανοίγουν
-                                            // με κλικ στη λωρίδα τους ή με το κουμπί «Today (N)»,
-                                            // που ανοίγει όσους έχουν σημερινούς αγώνες.
                                             const isExpanded =
                                               normalizedPlayerSearchQuery.length >
                                                 0 && hasSearchMatch
                                                 ? true
-                                                : expandedGroups.has(groupKey);
+                                                : todayFocus && todayGroupKeys.size > 0
+                                                  ? todayGroupKeys.has(groupKey)
+                                                  : expandedGroups.has(groupKey);
                                             // Όμιλος που ΤΕΛΕΙΩΣΕ (όλοι οι αγώνες του έχουν
                                             // αποτέλεσμα) — η κλειστή λωρίδα του γίνεται πράσινη.
                                             const groupFinished =
                                               group.matches.length > 0 &&
                                               group.matches.every(hasPlayedStageMatch);
-                                            // Όταν βλέπουμε μία μέρα, μέσα στον όμιλο μένουν
-                                            // ΜΟΝΟ οι αγώνες της (αν ο όμιλος έχει καθόλου ημερομηνίες).
-                                            const groupHasKnownDays = group.matches.some(
-                                              (match) =>
-                                                matchDayKey(
-                                                  match.dateTime,
-                                                  timezoneOffsetMinutes,
-                                                  timezoneName,
-                                                ) !== null,
-                                            );
-                                            const dayMatchedMatches =
-                                              dayFilterActive && focusDay && groupHasKnownDays
-                                                ? group.matches.filter(
-                                                    (match) =>
-                                                      matchDayKey(
-                                                        match.dateTime,
-                                                        timezoneOffsetMinutes,
-                                                        timezoneName,
-                                                      ) === focusDay,
-                                                  )
-                                                : group.matches;
                                             const visibleMatches =
                                               normalizedPlayerSearchQuery.length >
                                                 0 &&
                                               isLargeGroup &&
                                               hasSearchMatch
-                                                ? dayMatchedMatches.filter((match) =>
+                                                ? group.matches.filter((match) =>
                                                     [match.top.player, match.bottom.player].some(
                                                       (player) =>
                                                         matchingPlayerIds.has(
@@ -7484,7 +7295,7 @@ export function TournamentEventsContent({
                                                         ),
                                                     ),
                                                   )
-                                                : dayMatchedMatches;
+                                                : group.matches;
                                             const timetableGroupKey =
                                               stage.documentId &&
                                               group.number !== null
@@ -7496,15 +7307,6 @@ export function TournamentEventsContent({
                                                     timetableGroupKey,
                                                   ) ?? []
                                                 : [];
-                                            // Με φίλτρο μέρας το τραπέζι του ομίλου δείχνει
-                                            // μόνο τις θέσεις προγράμματος εκείνης της μέρας.
-                                            const groupTimetableSlotsForDay =
-                                              dayFilterActive && focusDay
-                                                ? timetableGroupSlots.filter(
-                                                    (slot) =>
-                                                      timetableSlotDayKey(slot) === focusDay,
-                                                  )
-                                                : timetableGroupSlots;
                                             const groupMatchByDocumentId =
                                               new Map(
                                                 group.matches
@@ -7687,8 +7489,8 @@ export function TournamentEventsContent({
                                               };
 
                                               const rows =
-                                                groupTimetableSlotsForDay.length > 0
-                                                  ? dedupeRowsByMatch(groupTimetableSlotsForDay.map(
+                                                timetableGroupSlots.length > 0
+                                                  ? dedupeRowsByMatch(timetableGroupSlots.map(
                                                       (slot) => {
                                                         const metadata =
                                                           slot.metadata ?? {};
