@@ -43,13 +43,13 @@ export function SiteHeader({
       <header
         className={`${sticky ? "sticky top-0" : ""} z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" aria-label={`${siteName} — Home`} title={siteName}>
               <img
                 src="/logo-billiardtoday.png"
                 alt={`${siteName} logo`}
-                className="h-14 w-auto object-contain sm:h-16"
+                className="h-10 w-auto object-contain sm:h-16"
               />
             </Link>
           </div>
@@ -124,7 +124,7 @@ export function SiteHeader({
             <button
               type="button"
               onClick={() => setMobileMenuOpen((current) => !current)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 md:hidden"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
             >
@@ -152,7 +152,7 @@ export function SiteHeader({
             aria-label="Close menu overlay"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute inset-x-3 top-20 rounded-[28px] border border-slate-200/80 bg-white/95 p-5 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+          <div className="absolute inset-x-3 top-16 rounded-[28px] border border-slate-200/80 bg-white/95 p-5 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Navigation</div>
               <button
