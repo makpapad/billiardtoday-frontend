@@ -266,7 +266,12 @@ export async function GET(
   const requestUrl = new URL(_request.url);
   const isWide = requestUrl.searchParams.get("format") === "wide";
 
-  const nameBlock = (player: PlayerView, align: "left" | "right") => (
+  const nameBlock = (
+    player: PlayerView,
+    align: "left" | "right",
+    score: number | null = null,
+    dim = false,
+  ) => (
     <div
       style={{
         display: "flex",
@@ -312,6 +317,20 @@ export async function GET(
       >
         {player.country ?? ""}
       </div>
+      {score !== null ? (
+        <div
+          style={{
+            display: "flex",
+            fontSize: s(104),
+            fontWeight: 900,
+            lineHeight: 0.9,
+            marginTop: s(6),
+            color: dim ? "rgba(255,255,255,0.5)" : "#ffffff",
+          }}
+        >
+          {formatNumber(score)}
+        </div>
+      ) : null}
     </div>
   );
 
@@ -398,52 +417,21 @@ export async function GET(
               flex: 1,
             }}
           >
-            {nameBlock(match.player1, "right")}
+            {nameBlock(
+              match.player1,
+              "right",
+              match.hasResult ? match.player1.points : null,
+              winner === 2,
+            )}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: s(22),
                 flex: 1,
               }}
             >
-              {match.hasResult ? (
-                <div style={{ display: "flex", alignItems: "center", gap: s(22) }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      fontSize: s(150),
-                      fontWeight: 900,
-                      lineHeight: 0.85,
-                      color: winner === 2 ? "rgba(255,255,255,0.5)" : "#ffffff",
-                    }}
-                  >
-                    {formatNumber(match.player1.points)}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      fontSize: s(80),
-                      fontWeight: 800,
-                      color: "rgba(255,255,255,0.35)",
-                    }}
-                  >
-                    –
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      fontSize: s(150),
-                      fontWeight: 900,
-                      lineHeight: 0.85,
-                      color: winner === 1 ? "rgba(255,255,255,0.5)" : "#ffffff",
-                    }}
-                  >
-                    {formatNumber(match.player2.points)}
-                  </div>
-                </div>
-              ) : (
+              {match.hasResult ? null : (
                 <div
                   style={{
                     display: "flex",
@@ -457,7 +445,12 @@ export async function GET(
                 </div>
               )}
             </div>
-            {nameBlock(match.player2, "left")}
+            {nameBlock(
+              match.player2,
+              "left",
+              match.hasResult ? match.player2.points : null,
+              winner === 1,
+            )}
           </div>
 
           <div
@@ -652,55 +645,29 @@ export async function GET(
                 )}
                 <div style={{ display: "flex" }}>{player.country || "—"}</div>
               </div>
+              {match.hasResult ? (
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(150),
+                    fontWeight: 900,
+                    lineHeight: 0.9,
+                    marginTop: s(40),
+                    color:
+                      (index === 0 ? winner === 2 : winner === 1)
+                        ? "rgba(255,255,255,0.55)"
+                        : "#ffffff",
+                  }}
+                >
+                  {formatNumber(index === 0 ? match.player1.points : match.player2.points)}
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
 
         {/* result — πριν τον αγώνα δείχνει VS αντί για σκορ */}
-        {match.hasResult ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: s(34),
-              marginTop: s(80),
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                fontSize: s(190),
-                fontWeight: 900,
-                lineHeight: 0.86,
-                color: winner === 2 ? "rgba(255,255,255,0.55)" : "#ffffff",
-              }}
-            >
-              {formatNumber(match.player1.points)}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: s(110),
-                fontWeight: 800,
-                color: "rgba(255,255,255,0.35)",
-              }}
-            >
-              –
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: s(190),
-                fontWeight: 900,
-                lineHeight: 0.86,
-                color: winner === 1 ? "rgba(255,255,255,0.55)" : "#ffffff",
-              }}
-            >
-              {formatNumber(match.player2.points)}
-            </div>
-          </div>
-        ) : (
+        {match.hasResult ? null : (
           <div
             style={{
               display: "flex",
