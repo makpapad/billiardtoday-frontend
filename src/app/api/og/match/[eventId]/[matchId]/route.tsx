@@ -429,7 +429,7 @@ export async function GET(
                       color: "rgba(255,255,255,0.35)",
                     }}
                   >
-                    :
+                    –
                   </div>
                   <div
                     style={{
@@ -686,7 +686,7 @@ export async function GET(
                 color: "rgba(255,255,255,0.35)",
               }}
             >
-              :
+              –
             </div>
             <div
               style={{
