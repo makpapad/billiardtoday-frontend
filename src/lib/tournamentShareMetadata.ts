@@ -16,7 +16,7 @@ const TOURNAMENT_OG_IMAGE_VERSION = "jpeg-20261105";
 // cached the blank result under the old v9 URL; new URL forces a fresh scrape.
 const TOURNAMENT_GROUP_OG_VERSION = "v11-jpeg-20261105";
 /** Bump όταν αλλάζει η σχεδίαση της κάρτας αγώνα. */
-const TOURNAMENT_MATCH_OG_VERSION = "v1-20261105";
+const TOURNAMENT_MATCH_OG_VERSION = "v2-wide-20261105";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
@@ -59,7 +59,7 @@ export function buildTournamentShareMetadata(
     ? `${path}?match=${encodeURIComponent(matchContext)}`
     : `${path}${contextQuery}`;
   const ogImagePath = matchContext
-    ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?v=${TOURNAMENT_MATCH_OG_VERSION}`
+    ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?format=wide&v=${TOURNAMENT_MATCH_OG_VERSION}`
     : slug === LONGONI_U21_SLUG
       ? LONGONI_U21_OG_IMAGE
       : contextQuery
@@ -67,9 +67,8 @@ export function buildTournamentShareMetadata(
         : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
   const socialImage = buildOpenGraphImage({
     url: ogImagePath,
-    // Η κάρτα αγώνα είναι κάθετη (1080×1350)· οι άλλες οριζόντιες (1200×630).
-    width: matchContext ? 1080 : 1200,
-    height: matchContext ? 1350 : 630,
+    width: 1200,
+    height: 630,
     alt: matchContext
       ? `${summary.title} · match`
       : hasGroupContext

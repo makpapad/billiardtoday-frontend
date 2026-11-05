@@ -14,6 +14,10 @@ export const revalidate = 60;
 const SCALE = 2;
 const CARD = { width: 1080, height: 1350 };
 const SIZE = { width: CARD.width * SCALE, height: CARD.height * SCALE };
+// Οριζόντια κάρτα (1.90:1) για προεπισκοπήσεις συνδέσμων: το Facebook/WhatsApp
+// κόβουν την κάθετη 4:5, οπότε το og:image θέλει landscape.
+const WIDE = { width: 1200, height: 630 };
+const WIDE_SIZE = { width: WIDE.width * SCALE, height: WIDE.height * SCALE };
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 /** Το λευκό λογότυπο (το loading είναι σκούρο). */
@@ -259,7 +263,248 @@ export async function GET(
     </div>
   );
 
-  const imageResponse = new ImageResponse(
+  const requestUrl = new URL(_request.url);
+  const isWide = requestUrl.searchParams.get("format") === "wide";
+
+  const nameBlock = (player: PlayerView, align: "left" | "right") => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: align === "right" ? "flex-end" : "flex-start",
+        width: s(330),
+        gap: s(10),
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          fontSize: s(46),
+          fontWeight: 900,
+          lineHeight: 1.05,
+          textAlign: align,
+          color: "#ffffff",
+        }}
+      >
+        {player.name}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontSize: s(22),
+          fontWeight: 700,
+          letterSpacing: s(2),
+          color: "rgba(255,255,255,0.65)",
+        }}
+      >
+        {player.country ?? ""}
+      </div>
+    </div>
+  );
+
+  const statLine = (player: PlayerView) =>
+    [
+      player.average ? `AVG ${player.average}` : null,
+      player.highRun !== null ? `HR ${formatNumber(player.highRun)}` : null,
+      player.innings !== null ? `INN ${formatNumber(player.innings)}` : null,
+      player.matchPoints !== null ? `MP ${formatNumber(player.matchPoints)}` : null,
+    ]
+      .filter(Boolean)
+      .join("   ·   ");
+
+  const renderWide = () =>
+    new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            padding: `${s(46)}px ${s(58)}px`,
+            background:
+              "linear-gradient(150deg, #0b1220 0%, #133055 55%, #1d4ed8 100%)",
+            color: "#ffffff",
+          }}
+        >
+          <img
+            src={WHITE_LOGO_URL}
+            alt=""
+            width={s(520)}
+            style={{
+              position: "absolute",
+              left: s(340),
+              top: s(96),
+              opacity: 0.06,
+              objectFit: "contain",
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(26),
+                fontWeight: 800,
+                letterSpacing: s(2),
+                color: "rgba(255,255,255,0.8)",
+                maxWidth: s(760),
+              }}
+            >
+              {match.eventTitle}
+            </div>
+            {chip ? (
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: s(22),
+                  fontWeight: 700,
+                  letterSpacing: s(1),
+                  color: "rgba(255,255,255,0.85)",
+                  border: `${s(1)}px solid rgba(255,255,255,0.3)`,
+                  borderRadius: s(999),
+                  padding: `${s(7)}px ${s(20)}px`,
+                }}
+              >
+                {chip}
+              </div>
+            ) : null}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flex: 1,
+            }}
+          >
+            {nameBlock(match.player1, "right")}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: s(22),
+                flex: 1,
+              }}
+            >
+              {match.hasResult ? (
+                <div style={{ display: "flex", alignItems: "center", gap: s(22) }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: s(150),
+                      fontWeight: 900,
+                      lineHeight: 0.85,
+                      color: winner === 2 ? "rgba(255,255,255,0.5)" : "#ffffff",
+                    }}
+                  >
+                    {formatNumber(match.player1.points)}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: s(80),
+                      fontWeight: 800,
+                      color: "rgba(255,255,255,0.35)",
+                    }}
+                  >
+                    :
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: s(150),
+                      fontWeight: 900,
+                      lineHeight: 0.85,
+                      color: winner === 1 ? "rgba(255,255,255,0.5)" : "#ffffff",
+                    }}
+                  >
+                    {formatNumber(match.player2.points)}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(96),
+                    fontWeight: 900,
+                    letterSpacing: s(8),
+                    color: "rgba(255,255,255,0.55)",
+                  }}
+                >
+                  VS
+                </div>
+              )}
+            </div>
+            {nameBlock(match.player2, "left")}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: s(8),
+              borderTop: `${s(1)}px solid rgba(255,255,255,0.18)`,
+              paddingTop: s(18),
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: s(24),
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.9)",
+              }}
+            >
+              <div style={{ display: "flex" }}>
+                {match.hasResult ? statLine(match.player1) : subtitleBits.join("  ·  ")}
+              </div>
+              <div style={{ display: "flex" }}>
+                {match.hasResult ? statLine(match.player2) : ""}
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                marginTop: s(10),
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: s(24),
+                  fontWeight: 700,
+                  letterSpacing: s(2),
+                  color: "rgba(255,255,255,0.6)",
+                }}
+              >
+                BILLIARD TODAY
+              </div>
+              <img
+                src={WHITE_LOGO_URL}
+                alt=""
+                width={s(230)}
+                style={{ objectFit: "contain", opacity: 0.95 }}
+              />
+            </div>
+          </div>
+        </div>
+      ),
+      WIDE_SIZE,
+    );
+
+  const tallCard = () => new ImageResponse(
     (
       <div
         style={{
@@ -607,6 +852,8 @@ export async function GET(
     ),
     SIZE,
   );
+
+  const imageResponse = isWide ? renderWide() : tallCard();
 
   // Το Facebook δεν δέχεται WebP ως og:image· JPEG είναι μικρότερο από PNG και
   // 100% αποδεκτό από Facebook / X / WhatsApp / LinkedIn.
