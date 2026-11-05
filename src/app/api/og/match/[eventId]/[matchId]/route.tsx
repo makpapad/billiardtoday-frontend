@@ -73,9 +73,32 @@ type MatchView = {
   groupLabel: string;
   matchNumber: number | null;
   targetPoints: number | null;
+  dateTime: string | null;
   player1: PlayerView;
   player2: PlayerView;
   hasResult: boolean;
+};
+
+/** Ημερομηνία/ώρα σε ώρα Βελγίου (το venue), για την κάρτα πριν τον αγώνα. */
+const formatMatchDateTime = (value: string | null): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const day = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Brussels",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  })
+    .format(date)
+    .toUpperCase();
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Brussels",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+  return `${day} · ${time}`;
 };
 
 const buildPlayer = (raw: any, prefix: "player1" | "player2"): PlayerView => {
@@ -132,6 +155,7 @@ const findMatch = (event: any, matchId: string): MatchView | null => {
       matchNumber: toNumber(hit?.match_number),
       targetPoints:
         toNumber(stage?.target_points) || toNumber(event?.target_points) || null,
+      dateTime: text(hit?.date_time) || null,
       player1,
       player2,
       hasResult,
@@ -202,7 +226,11 @@ export async function GET(
 
   const subtitleBits = [
     "3 Cushion",
-    match.player1.innings !== null ? `${formatNumber(match.player1.innings)} innings` : null,
+    match.hasResult
+      ? match.player1.innings !== null
+        ? `${formatNumber(match.player1.innings)} innings`
+        : null
+      : formatMatchDateTime(match.dateTime),
     match.targetPoints ? `first to ${formatNumber(match.targetPoints)} points` : null,
   ].filter(Boolean) as string[];
 
@@ -370,57 +398,66 @@ export async function GET(
           ))}
         </div>
 
-        {/* result */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: s(34),
-            marginTop: s(80),
-          }}
-        >
+        {/* result — πριν τον αγώνα δείχνει VS αντί για σκορ */}
+        {match.hasResult ? (
           <div
             style={{
               display: "flex",
-              fontSize: s(190),
+              alignItems: "center",
+              justifyContent: "center",
+              gap: s(34),
+              marginTop: s(80),
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(190),
+                fontWeight: 900,
+                lineHeight: 0.86,
+                color: winner === 2 ? "rgba(255,255,255,0.55)" : "#ffffff",
+              }}
+            >
+              {formatNumber(match.player1.points)}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(110),
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.35)",
+              }}
+            >
+              :
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(190),
+                fontWeight: 900,
+                lineHeight: 0.86,
+                color: winner === 1 ? "rgba(255,255,255,0.55)" : "#ffffff",
+              }}
+            >
+              {formatNumber(match.player2.points)}
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: s(96),
+              fontSize: s(120),
               fontWeight: 900,
-              lineHeight: 0.86,
-              color: match.hasResult
-                ? winner === 2
-                  ? "rgba(255,255,255,0.55)"
-                  : "#ffffff"
-                : "#ffffff",
+              letterSpacing: s(10),
+              color: "rgba(255,255,255,0.55)",
             }}
           >
-            {match.hasResult ? formatNumber(match.player1.points) : "–"}
+            VS
           </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: s(110),
-              fontWeight: 800,
-              color: "rgba(255,255,255,0.35)",
-            }}
-          >
-            :
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: s(190),
-              fontWeight: 900,
-              lineHeight: 0.86,
-              color: match.hasResult
-                ? winner === 1
-                  ? "rgba(255,255,255,0.55)"
-                  : "#ffffff"
-                : "#ffffff",
-            }}
-          >
-            {match.hasResult ? formatNumber(match.player2.points) : "–"}
-          </div>
-        </div>
+        )}
 
         <div
           style={{
@@ -437,7 +474,8 @@ export async function GET(
           {subtitleBits.join(" · ")}
         </div>
 
-        {/* statistics */}
+        {/* statistics — μόνο όταν υπάρχει αποτέλεσμα */}
+        {match.hasResult ? (
         <div
           style={{
             display: "flex",
@@ -519,6 +557,7 @@ export async function GET(
             </div>
           ))}
         </div>
+        ) : null}
 
         {/* footer */}
         <div

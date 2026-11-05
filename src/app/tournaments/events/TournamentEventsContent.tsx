@@ -8636,9 +8636,14 @@ export function TournamentEventsContent({
                                                                     rowSpan={2}
                                                                   >
                                                                     <div className="flex min-h-[72px] flex-col items-center justify-center gap-1.5">
-                                                                      {matchPlayed &&
-                                                                      eventData?.data
-                                                                        ?.documentId ? (
+                                                                      {eventData?.data
+                                                                        ?.documentId &&
+                                                                      !displayPlayers
+                                                                        .top
+                                                                        .placeholder &&
+                                                                      !displayPlayers
+                                                                        .bottom
+                                                                        .placeholder ? (
                                                                         <ShareMenuButton
                                                                           shareHref={`/api/og/match/${encodeURIComponent(
                                                                             eventData.data
