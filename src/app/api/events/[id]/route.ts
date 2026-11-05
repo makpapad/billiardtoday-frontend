@@ -429,7 +429,7 @@ const buildClubRuntimeStandingsFromMatches = (matches: Record<string, unknown>[]
             full_name_en: localName,
             country: readString(match[`${role}_local_country`]) ?? null,
             // `eoaa-slot:` = θέση αναμονής για πρόκριση, δεν είναι αθλητής.
-            placeholder: localKey.startsWith('eoaa-slot:'),
+            placeholder: localKey.startsWith('eoaa-slot:') || localKey.startsWith('eoaa-pos:'),
         }
     }
 

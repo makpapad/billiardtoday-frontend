@@ -543,13 +543,21 @@ export const isDynamicPlaceholderName = (
 };
 
 /**
- * `eoaa-slot:<roundId>:<seat>` = θέση ομίλου που περιμένει πρόκριση (ΕΟΑΑ),
+ * `eoaa-slot:<roundId>:<seat>` = θέση ομίλου που περιμένει πρόκριση (ΕΟΑΑ) και
+ * `eoaa-pos:<roundId>:<matchId>:<a|b>` = θέση μέσα στον όμιλο («Ηττημένος/Νικητής αγώνα 1»),
  * σε αντίθεση με πραγματικό αθλητή (`eoaa-p:<id>` / `slot:<roundId>:<seat>`).
  */
 export const PLACEHOLDER_LOCAL_KEY_PREFIX = "eoaa-slot:";
+export const POSITION_LOCAL_KEY_PREFIX = "eoaa-pos:";
 
-export const isPlaceholderLocalKey = (value: unknown): boolean =>
-  typeof value === "string" && value.trim().startsWith(PLACEHOLDER_LOCAL_KEY_PREFIX);
+export const isPlaceholderLocalKey = (value: unknown): boolean => {
+  if (typeof value !== "string") return false;
+  const key = value.trim();
+  return (
+    key.startsWith(PLACEHOLDER_LOCAL_KEY_PREFIX) ||
+    key.startsWith(POSITION_LOCAL_KEY_PREFIX)
+  );
+};
 
 export const isDynamicPlaceholderPlayer = (
   player: Pick<NormalizedGroupPlayer, "name" | "documentId"> & {

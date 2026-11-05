@@ -217,7 +217,7 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
             full_name_en: localName,
             country: toText(match[`${role}_local_country`]) ?? null,
             // `eoaa-slot:` = θέση αναμονής για πρόκριση, δεν είναι αθλητής.
-            placeholder: localKey.startsWith('eoaa-slot:'),
+            placeholder: localKey.startsWith('eoaa-slot:') || localKey.startsWith('eoaa-pos:'),
         }
     }
 
