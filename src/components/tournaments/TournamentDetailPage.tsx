@@ -55,7 +55,10 @@ import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
-import { TournamentAdsStrip } from "@/components/tournaments/TournamentAdsStrip";
+import {
+  TournamentAdsStrip,
+  futureOfBilliardsAds,
+} from "@/components/tournaments/TournamentAdsStrip";
 import { RichDescription } from "@/components/tournaments/RichDescription";
 import { toPlainText } from "@/lib/richText";
 import { buildExternalLiveTablesHref } from "@/lib/externalLiveTables";
@@ -180,6 +183,8 @@ const buildEventShellFromSummary = (
 
 const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
+/** Οι χορηγοί του Future of Billiards εμφανίζονται ΠΑΝΩ από το Tournament Overview. */
+const FOB_ADS_SLUG = "the-future-of-billiards-2026-pulderbos-2026";
 type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
 const ALL_TIMETABLE_PHASE_KEY = "all";
@@ -1636,6 +1641,7 @@ export function TournamentDetailPage({
     ? buildTournamentSlug("", summary.title, summary.season)
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
+  const showFobAds = tournamentContextSlug === FOB_ADS_SLUG;
   const externalLiveTablesHrefRaw =
     summary.externalLiveTablesHref ??
     buildExternalLiveTablesHref(summary.documentId, { table: 1 });
@@ -7798,6 +7804,9 @@ export function TournamentDetailPage({
       </div>
       {dataSourceCredit ? (
         <DataSourceCredit source={dataSourceCredit} className="mt-4" />
+      ) : null}
+      {showFobAds ? (
+        <TournamentAdsStrip ads={futureOfBilliardsAds} className="mt-6" />
       ) : null}
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">

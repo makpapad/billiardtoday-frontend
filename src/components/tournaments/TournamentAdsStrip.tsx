@@ -1,6 +1,12 @@
 import Image from "next/image";
 
-const tournamentAds = [
+export type TournamentAd = {
+  src: string;
+  alt: string;
+  href?: string;
+};
+
+const tournamentAds: TournamentAd[] = [
   {
     src: "/img/logos/ads/1-eoaa-transp-blue-in-white.webp",
     alt: "EOAA",
@@ -33,30 +39,58 @@ const tournamentAds = [
   },
 ];
 
-export function TournamentAdsStrip() {
+/** Χορηγοί του Future of Billiards 2026 (Pulderbos). */
+export const futureOfBilliardsAds: TournamentAd[] = [
+  { src: "/img/logos/ads/1-aramith.jpg", alt: "Aramith" },
+  { src: "/img/logos/ads/2-Logoni.jpg", alt: "Longoni" },
+  { src: "/img/logos/ads/3-simonis.jpg", alt: "Simonis" },
+  { src: "/img/logos/ads/4-Verhoeven.jpg", alt: "Verhoeven" },
+];
+
+export function TournamentAdsStrip({
+  ads = tournamentAds,
+  className = "mt-10",
+}: {
+  ads?: TournamentAd[];
+  className?: string;
+}) {
   return (
-    <section className="mt-10 bg-white/95 py-6">
+    <section className={`${className} bg-white/95 py-6`.trim()}>
       <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {tournamentAds.map((ad) => (
-              <a
-                key={ad.src}
-                href={ad.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-              >
-                <Image
-                  src={ad.src}
-                  alt={ad.alt}
-                  width={220}
-                  height={96}
-                  className="max-h-14 w-full object-contain"
-                  unoptimized
-                />
-              </a>
-            ))}
+            {ads.map((ad) => {
+              const card = (
+                <>
+                  <Image
+                    src={ad.src}
+                    alt={ad.alt}
+                    width={220}
+                    height={96}
+                    className="max-h-14 w-full object-contain"
+                    unoptimized
+                  />
+                </>
+              );
+              const cardClassName =
+                "flex h-20 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md";
+
+              return ad.href ? (
+                <a
+                  key={ad.src}
+                  href={ad.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cardClassName}
+                >
+                  {card}
+                </a>
+              ) : (
+                <div key={ad.src} className={cardClassName}>
+                  {card}
+                </div>
+              );
+            })}
           </div>
           <div className="mt-5 flex justify-center border-t border-slate-100 pt-5">
             <div

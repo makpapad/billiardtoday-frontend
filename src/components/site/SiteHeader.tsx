@@ -45,11 +45,13 @@ export function SiteHeader({
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <img
-              src="/logo-billiardtoday.png"
-              alt={`${siteName} logo`}
-              className="h-14 w-auto object-contain sm:h-16"
-            />
+            <Link href="/" aria-label={`${siteName} — Home`} title={siteName}>
+              <img
+                src="/logo-billiardtoday.png"
+                alt={`${siteName} logo`}
+                className="h-14 w-auto object-contain sm:h-16"
+              />
+            </Link>
           </div>
 
           <nav className="hidden items-center gap-6 md:flex">
