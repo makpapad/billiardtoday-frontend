@@ -50,7 +50,7 @@ export const futureOfBilliardsAds: TournamentAd[] = [
   {
     src: "/img/logos/ads/3-simonis.jpg",
     alt: "Simonis",
-    href: "https://www.simoniscloth.com/",
+    href: "https://iwansimonis.com/",
   },
   {
     src: "/img/logos/ads/4-Verhoeven.jpg",

@@ -2017,6 +2017,8 @@ function compareBracketRankedResults<T>(
 }
 
 const LONGONI_U21_2026_FINAL_ROUND_STAGE_ID = "lgbl18foiq4k54vwqn0706ol";
+/** Future of Billiards 2026 — Pulderbos (το event του tournament 536). */
+const FOB_EVENT_DOCUMENT_ID = "vyocu5hdyx3as17rlc9yaqot";
 const LONGONI_U21_2026_PENDING_FINAL_ORDER = [
   "MORALES Marcos",
   "GARCIA Toni",
@@ -4264,6 +4266,8 @@ export function TournamentEventsContent({
   /** CEB Artistic 2026-2027 (best of 5 sets of 7 figures). */
   const isArtisticSets = isArtisticSetsEvent(eventData);
   const isFivePinsFinalEvent = isFivePinsEvent(eventData);
+  /** Future of Billiards 2026: χωρίς κουμπί «Share» στις κάρτες των ομίλων. */
+  const hideGroupShare = eventData?.data?.documentId === FOB_EVENT_DOCUMENT_ID;
 
   const timetableSlots = useMemo<NormalizedTimetableSlot[]>(() => {
     if (!eventData?.data?.timetable_slots) return [];
@@ -7795,7 +7799,7 @@ export function TournamentEventsContent({
                                                       </div>
                                                     ) : null}
                                                   </div>
-                                                  {isExpanded ? (
+                                                  {isExpanded && !hideGroupShare ? (
                                                     <span
                                                       onClick={(event) =>
                                                         event.stopPropagation()
