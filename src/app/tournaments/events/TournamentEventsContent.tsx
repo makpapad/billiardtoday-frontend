@@ -8635,7 +8635,26 @@ export function TournamentEventsContent({
                                                                     className="bg-white px-4 py-2 text-center dark:bg-slate-950"
                                                                     rowSpan={2}
                                                                   >
-                                                                    <div className="flex min-h-[72px] items-center justify-center">
+                                                                    <div className="flex min-h-[72px] flex-col items-center justify-center gap-1.5">
+                                                                      {matchPlayed &&
+                                                                      eventData?.data
+                                                                        ?.documentId ? (
+                                                                        <ShareMenuButton
+                                                                          shareHref={`/api/og/match/${encodeURIComponent(
+                                                                            eventData.data
+                                                                              .documentId,
+                                                                          )}/${encodeURIComponent(
+                                                                            String(
+                                                                              row
+                                                                                .sourceMatch
+                                                                                ?.matchDocumentId ??
+                                                                                match.key,
+                                                                            ),
+                                                                          )}`}
+                                                                          downloadName="billiardtoday-match.png"
+                                                                          variant="light"
+                                                                        />
+                                                                      ) : null}
                                                                       {canOpenMatchSheet ? (
                                                                         <button
                                                                           type="button"
