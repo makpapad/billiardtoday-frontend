@@ -7905,43 +7905,69 @@ export function TournamentEventsContent({
                                                 <table className="min-w-full text-xs">
                                                   <thead className="bg-blue-600 text-white">
                                                     <tr>
-                                                      <th className="px-4 py-2 font-medium">
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium">
                                                         Player
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title="Date">
                                                         Date
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        Result
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title="Result">
+                                                        <span className="sm:hidden">Res</span>
+                                                        <span className="hidden sm:inline">Result</span>
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        Match Points
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title="Match Points">
+                                                        <span className="sm:hidden">MP</span>
+                                                        <span className="hidden sm:inline">Match Points</span>
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        Points
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title="Points (caroms)">
+                                                        <span className="sm:hidden">Pts</span>
+                                                        <span className="hidden sm:inline">Points</span>
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        {isArtisticEvent
-                                                          ? "Possible points"
-                                                          : "Innings"}
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title={isArtisticEvent ? "Possible points" : "Innings"}>
+                                                        {isArtisticEvent ? (
+                                                          <>
+                                                            <span className="sm:hidden">PP</span>
+                                                            <span className="hidden sm:inline">Possible points</span>
+                                                          </>
+                                                        ) : (
+                                                          <>
+                                                            <span className="sm:hidden">Inn</span>
+                                                            <span className="hidden sm:inline">Innings</span>
+                                                          </>
+                                                        )}
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        {isArtisticEvent
-                                                          ? "%"
-                                                          : "Average"}
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title={isArtisticEvent ? "Percentage" : "Average"}>
+                                                        {isArtisticEvent ? (
+                                                          "%"
+                                                        ) : (
+                                                          <>
+                                                            <span className="sm:hidden">Avg</span>
+                                                            <span className="hidden sm:inline">Average</span>
+                                                          </>
+                                                        )}
                                                       </th>
-                                                      <th className="px-4 py-2 font-medium">
-                                                        {isArtisticEvent
-                                                          ? "Best run"
-                                                          : "High Run"}
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title={isArtisticEvent ? "Best run" : "High Run"}>
+                                                        {isArtisticEvent ? (
+                                                          <>
+                                                            <span className="sm:hidden">BR</span>
+                                                            <span className="hidden sm:inline">Best run</span>
+                                                          </>
+                                                        ) : (
+                                                          <>
+                                                            <span className="sm:hidden">HR</span>
+                                                            <span className="hidden sm:inline">High Run</span>
+                                                          </>
+                                                        )}
                                                       </th>
                                                       {!isArtisticEvent && (
-                                                        <th className="px-4 py-2 font-medium">
-                                                          High Run 2
+                                                        <th className="whitespace-nowrap px-4 py-2 font-medium" title="High Run 2 (second-best run)">
+                                                          <span className="sm:hidden">HR2</span>
+                                                          <span className="hidden sm:inline">High Run 2</span>
                                                         </th>
                                                       )}
-                                                      <th className="px-4 py-2 font-medium">
-                                                        Match sheet
+                                                      <th className="whitespace-nowrap px-4 py-2 font-medium" title="Match sheet">
+                                                        <span className="sm:hidden">Sheet</span>
+                                                        <span className="hidden sm:inline">Match sheet</span>
                                                       </th>
                                                     </tr>
                                                   </thead>
