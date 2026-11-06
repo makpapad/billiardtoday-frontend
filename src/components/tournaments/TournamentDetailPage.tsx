@@ -53,6 +53,7 @@ import {
 } from "@/app/tournaments/events/utils";
 import { normalizeWebSocketUrl } from "@/hooks/useLiveScore";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { getCountryTimezone } from "@/lib/countryTimezones";
 import { normalizeMediaUrl } from "@/lib/liveSessions";
 import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import {
@@ -5307,6 +5308,16 @@ export function TournamentDetailPage({
     return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
   }, [eventData]);
 
+  /**
+   * Ζώνη ώρας της χώρας διεξαγωγής. Το time table ξεκινά ΠΑΝΤΑ από την ώρα του
+   * τόπου που γίνεται το τουρνουά (π.χ. Βέλγιο → Europe/Brussels) και όχι από
+   * αποθηκευμένο/λάθος GMT του event· ο χρήστης μπορεί μετά να διαλέξει τη δική του.
+   */
+  const venueTimezoneName = useMemo(() => {
+    const country = summary.venueCountry ?? summary.clubCountry ?? null;
+    return getCountryTimezone(country);
+  }, [summary.venueCountry, summary.clubCountry]);
+
   const timetableMatchNodeLabelByNumber = useMemo(() => {
     const next = new Map<number, string>();
     timetableSlots.forEach((slot) => {
@@ -5349,9 +5360,11 @@ export function TournamentDetailPage({
         }
       }
     }
-    // No stored choice: default to the event's IANA zone when available (DST-aware),
-    // otherwise its fixed offset.
-    if (eventTimezoneName) {
+    // Καμία αποθηκευμένη επιλογή: ξεκινάμε από τη ζώνη της χώρας διεξαγωγής
+    // (DST-aware), μετά από τη ζώνη του event, και τελευταία από το fixed offset.
+    if (venueTimezoneName) {
+      setSelectedTimezone({ kind: "zone", zoneName: venueTimezoneName });
+    } else if (eventTimezoneName) {
       setSelectedTimezone({ kind: "zone", zoneName: eventTimezoneName });
     } else if (eventTimezoneOffsetMinutes !== null) {
       setSelectedTimezone({
@@ -5359,7 +5372,12 @@ export function TournamentDetailPage({
         offsetMinutes: eventTimezoneOffsetMinutes,
       });
     }
-  }, [eventTimezoneName, eventTimezoneOffsetMinutes, summary.documentId]);
+  }, [
+    eventTimezoneName,
+    eventTimezoneOffsetMinutes,
+    venueTimezoneName,
+    summary.documentId,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -5374,6 +5392,20 @@ export function TournamentDetailPage({
 
   const timezoneOptions = useMemo(
     () => [
+      // Πρώτη επιλογή: η ώρα της χώρας όπου γίνεται το τουρνουά.
+      ...(venueTimezoneName
+        ? [
+            {
+              label: "Χώρα διεξαγωγής / Venue",
+              options: [
+                {
+                  value: `zone:${venueTimezoneName}`,
+                  label: venueTimezoneName,
+                },
+              ],
+            },
+          ]
+        : []),
       {
         label: "GMT (UTC)",
         options: Array.from({ length: 27 }, (_, index) => {
@@ -5416,13 +5448,15 @@ export function TournamentDetailPage({
           "Africa/Cairo",
           "Asia/Dubai",
           "Australia/Sydney",
-        ].map((zoneName) => ({
-          value: `zone:${zoneName}`,
-          label: zoneName,
-        })),
+        ]
+          .filter((zoneName) => zoneName !== venueTimezoneName)
+          .map((zoneName) => ({
+            value: `zone:${zoneName}`,
+            label: zoneName,
+          })),
       },
     ],
-    [],
+    [venueTimezoneName],
   );
 
   const selectedZoneName =
@@ -5431,7 +5465,9 @@ export function TournamentDetailPage({
     selectedTimezone?.kind === "offset" ? selectedTimezone.offsetMinutes : null;
   // User choice wins; with no choice the event's own zone/offset is used.
   const effectiveTimezoneName =
-    selectedTimezone === null ? eventTimezoneName : selectedZoneName;
+    selectedTimezone === null
+      ? (venueTimezoneName ?? eventTimezoneName)
+      : selectedZoneName;
   const effectiveTimezoneOffset =
     selectedTimezone === null ? eventTimezoneOffsetMinutes : selectedOffsetMinutes;
   const timezoneSelectValue =
