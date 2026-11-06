@@ -7778,7 +7778,7 @@ export function TournamentDetailPage({
                         className={
                           isSelected
                             ? "inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition"
-                            : "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
+                            : "inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/72 transition hover:bg-white/15 hover:text-white"
                         }
                       >
                         {label}
