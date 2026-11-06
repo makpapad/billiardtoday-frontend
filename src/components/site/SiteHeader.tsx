@@ -28,6 +28,10 @@ export function SiteHeader({
   sticky = true,
 }: SiteHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Στο κινητό/tablet το header κρατά μόνο τα εικονίδια CEB/UMB· όλα τα υπόλοιπα
+  // links πάνε στο hamburger menu, ώστε η μπάρα να μη στριμώχνεται οριζόντια.
+  const brandIcons = navItems.filter((item) => Boolean(item.iconSrc));
+  const navLinks = navItems.filter((item) => !item.iconSrc);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -54,8 +58,8 @@ export function SiteHeader({
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-6 md:flex">
-            {navItems.map((item) => (
+          <nav className="hidden items-center gap-6 lg:flex">
+            {[...navLinks, ...brandIcons].map((item) => (
               item.children && item.children.length > 0 ? (
                 <div key={`${item.label}-${item.href}`} className="group relative">
                   <button
@@ -105,6 +109,25 @@ export function SiteHeader({
           </nav>
 
           <div className="flex items-center gap-3">
+            {brandIcons.length > 0 ? (
+              <div className="flex items-center gap-2 lg:hidden">
+                {brandIcons.map((item) => (
+                  <Link
+                    key={`compact-${item.label}-${item.href}`}
+                    href={item.href}
+                    aria-label={item.iconAlt || item.label}
+                    title={item.label}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 transition hover:bg-white/10"
+                  >
+                    <img
+                      src={item.iconSrc}
+                      alt={item.iconAlt || item.label}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  </Link>
+                ))}
+              </div>
+            ) : null}
             {secondaryCta ? (
               <Link
                 href={secondaryCta.href}
@@ -124,7 +147,7 @@ export function SiteHeader({
             <button
               type="button"
               onClick={() => setMobileMenuOpen((current) => !current)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
             >
@@ -145,7 +168,7 @@ export function SiteHeader({
       </header>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-slate-950/72 backdrop-blur-sm"
