@@ -3390,6 +3390,8 @@ export function TournamentEventsContent({
   // opens every group that has a player from that country and marks those
   // players yellow — same marking the player search uses.
   const [countryFlagFilter, setCountryFlagFilter] = useState<string | null>(null);
+  /** Ξεχωριστό φίλτρο χώρας για τις τελικές κατατάξεις (δεν επηρεάζει τα στάδια). */
+  const [finalCountryFilter, setFinalCountryFilter] = useState<string | null>(null);
   // Group keys the flag strip opened itself (so clearing the selection can
   // close them again without touching groups the user opened by hand).
   const flagOpenedGroupKeysRef = useRef<string[]>([]);
@@ -4767,6 +4769,40 @@ export function TournamentEventsContent({
           left.label.localeCompare(right.label),
       );
   }, [activeStage, playerSeedByDocumentId, stageMatchGroups]);
+  /** Σημαίες από τους παίκτες των τελικών κατατάξεων, με πλήθος ανά χώρα. */
+  const finalCountryFlags = useMemo(() => {
+    const playerIdsByCountry = new Map<string, Set<string>>();
+    (publishedFinalResults ?? []).forEach((result) => {
+      const code = String(result.playerCountry ?? "").trim().toUpperCase();
+      if (!code || !getCountryFlagCdnUrl(code, 40)) return;
+      const playerKey = String(
+        result.playerId || `${result.playerName ?? ""}-${code}`,
+      );
+      const ids = playerIdsByCountry.get(code) ?? new Set<string>();
+      ids.add(playerKey);
+      playerIdsByCountry.set(code, ids);
+    });
+    return Array.from(playerIdsByCountry.entries())
+      .map(([code, ids]) => ({
+        code,
+        playerCount: ids.size,
+        label: getCountryLabel(code) ?? code,
+        flagUrl: getCountryFlagCdnUrl(code, 40) as string,
+      }))
+      .sort(
+        (left, right) =>
+          right.playerCount - left.playerCount ||
+          left.label.localeCompare(right.label),
+      );
+  }, [publishedFinalResults]);
+  const visibleFinalResults = useMemo(() => {
+    if (!finalCountryFilter) return publishedFinalResults ?? [];
+    return (publishedFinalResults ?? []).filter(
+      (result) =>
+        String(result.playerCountry ?? "").trim().toUpperCase() ===
+        finalCountryFilter,
+    );
+  }, [publishedFinalResults, finalCountryFilter]);
   const playerMatchesFlagCountry = useCallback(
     (player: { country?: string | null } | null | undefined) => {
       if (!countryFlagFilter) return false;
@@ -6048,6 +6084,66 @@ export function TournamentEventsContent({
                             </div>
                           )}
                         </div>
+                        {finalCountryFlags.length > 1 ? (
+                          <div className="flex flex-col items-start gap-y-1.5 px-1 sm:flex-row sm:flex-wrap sm:items-start sm:gap-x-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500 sm:pt-1.5">
+                              Country
+                            </span>
+                            <div className="flex w-full min-w-0 flex-wrap gap-1.5 sm:w-auto sm:flex-1 sm:pt-0.5">
+                              {finalCountryFlags.map((countryFlag) => {
+                                const isActive =
+                                  finalCountryFilter === countryFlag.code;
+                                return (
+                                  <button
+                                    key={countryFlag.code}
+                                    type="button"
+                                    aria-pressed={isActive}
+                                    title={`${countryFlag.label} — ${countryFlag.playerCount} ${
+                                      countryFlag.playerCount === 1
+                                        ? "player"
+                                        : "players"
+                                    }`}
+                                    onClick={() =>
+                                      setFinalCountryFilter(
+                                        isActive ? null : countryFlag.code,
+                                      )
+                                    }
+                                    className={clsx(
+                                      "relative flex h-6 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border transition",
+                                      isActive
+                                        ? "border-yellow-500 shadow-sm ring-2 ring-yellow-400/60"
+                                        : "border-gray-200 opacity-85 hover:opacity-100 hover:ring-2 hover:ring-blue-300/60 dark:border-gray-700",
+                                    )}
+                                  >
+                                    <img
+                                      src={countryFlag.flagUrl}
+                                      alt={countryFlag.label}
+                                      className="h-full w-full object-cover"
+                                      loading="lazy"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    {isActive ? (
+                                      <span className="absolute -bottom-px -right-px rounded-tl-md bg-yellow-500 px-1 text-[9px] font-bold leading-tight text-white">
+                                        {countryFlag.playerCount}
+                                      </span>
+                                    ) : null}
+                                  </button>
+                                );
+                              })}
+                              {finalCountryFilter ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setFinalCountryFilter(null)}
+                                  className="h-6 shrink-0 rounded-full border border-gray-200 px-2.5 text-[11px] font-semibold text-gray-500 transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                                  aria-label="Clear country selection"
+                                  title="Clear country selection"
+                                >
+                                  All ✕
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="max-xl:overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
                           <table className="min-w-full border-collapse text-sm">
                             <thead className="bg-emerald-900 text-white lg:sticky lg:top-[97px] lg:z-20">
@@ -6111,7 +6207,7 @@ export function TournamentEventsContent({
                               </tr>
                             </thead>
                             <tbody>
-                              {publishedFinalResults.map((result) => {
+                              {visibleFinalResults.map((result) => {
                                 const finalAverageValue = getFinalResultAverageValue(result);
                                 const highlightAverage =
                                   !isArtisticEvent &&
