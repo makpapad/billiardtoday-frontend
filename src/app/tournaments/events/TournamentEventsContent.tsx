@@ -4394,30 +4394,6 @@ export function TournamentEventsContent({
       ),
     [publishedFinalResults],
   );
-  const finalGeneralAverage = useMemo(() => {
-    const totals = publishedFinalResults.reduce(
-      (acc, result) => {
-        const points = result.caroms ?? result.points;
-        if (
-          typeof points !== "number" ||
-          !Number.isFinite(points) ||
-          typeof result.innings !== "number" ||
-          !Number.isFinite(result.innings) ||
-          result.innings <= 0
-        ) {
-          return acc;
-        }
-
-        return {
-          points: acc.points + points,
-          innings: acc.innings + result.innings,
-        };
-      },
-      { points: 0, innings: 0 },
-    );
-
-    return totals.innings > 0 ? totals.points / totals.innings : null;
-  }, [publishedFinalResults]);
   const finalStandingsHighlights = useMemo(
     () => ({
       average: getBestPositiveValue(
@@ -4803,6 +4779,30 @@ export function TournamentEventsContent({
         finalCountryFilter,
     );
   }, [publishedFinalResults, finalCountryFilter]);
+  /** Γενικός μέσος όρος: όλων των παικτών, ή μόνο της επιλεγμένης χώρας. */
+  const finalGeneralAverageForDisplay = useMemo(() => {
+    const source = finalCountryFilter ? visibleFinalResults : publishedFinalResults;
+    const totals = (source ?? []).reduce(
+      (acc, result) => {
+        const points = result.caroms ?? result.points;
+        if (
+          typeof points !== "number" ||
+          !Number.isFinite(points) ||
+          typeof result.innings !== "number" ||
+          !Number.isFinite(result.innings) ||
+          result.innings <= 0
+        ) {
+          return acc;
+        }
+        return {
+          points: acc.points + points,
+          innings: acc.innings + result.innings,
+        };
+      },
+      { points: 0, innings: 0 },
+    );
+    return totals.innings > 0 ? totals.points / totals.innings : null;
+  }, [finalCountryFilter, publishedFinalResults, visibleFinalResults]);
   const playerMatchesFlagCountry = useCallback(
     (player: { country?: string | null } | null | undefined) => {
       if (!countryFlagFilter) return false;
@@ -6071,15 +6071,21 @@ export function TournamentEventsContent({
                           <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                             Final standings
                           </div>
-                          {finalGeneralAverage !== null && (
+                          {finalGeneralAverageForDisplay !== null && (
                             <div className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900">
                               <span className="font-medium text-gray-500 dark:text-gray-400">
-                                {isArtisticEvent ? "Tournament General %" : "Tournament General AVG"}
+                                {finalCountryFilter
+                                  ? isArtisticEvent
+                                    ? "Country General %"
+                                    : "Country General AVG"
+                                  : isArtisticEvent
+                                    ? "Tournament General %"
+                                    : "Tournament General AVG"}
                               </span>
                               <span className="font-semibold text-gray-900 dark:text-gray-100">
                                 {isArtisticEvent
-                                  ? `${formatTruncatedAverage(finalGeneralAverage * 100)}%`
-                                  : formatTruncatedAverage(finalGeneralAverage)}
+                                  ? `${formatTruncatedAverage(finalGeneralAverageForDisplay * 100)}%`
+                                  : formatTruncatedAverage(finalGeneralAverageForDisplay)}
                               </span>
                             </div>
                           )}
