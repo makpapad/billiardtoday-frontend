@@ -28,10 +28,31 @@ export function SiteHeader({
   sticky = true,
 }: SiteHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Κινητό/tablet: κατεβαίνοντας κρύβεται το header, ανεβαίνοντας ξαναεμφανίζεται.
+  const [headerHidden, setHeaderHidden] = useState(false);
   // Στο κινητό/tablet το header κρατά μόνο τα εικονίδια CEB/UMB· όλα τα υπόλοιπα
   // links πάνε στο hamburger menu, ώστε η μπάρα να μη στριμώχνεται οριζόντια.
   const brandIcons = navItems.filter((item) => Boolean(item.iconSrc));
   const navLinks = navItems.filter((item) => !item.iconSrc);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const narrow = window.matchMedia("(max-width: 1023px)").matches;
+      if (!narrow || mobileMenuOpen || y < 80) {
+        setHeaderHidden(false);
+        lastY = y;
+        return;
+      }
+      if (y > lastY + 6) setHeaderHidden(true);
+      else if (y < lastY - 6) setHeaderHidden(false);
+      lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -45,7 +66,9 @@ export function SiteHeader({
   return (
     <>
       <header
-        className={`${sticky ? "sticky top-0" : ""} z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl`}
+        className={`${sticky ? "sticky top-0" : ""} z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl transition-transform duration-300 ${
+          headerHidden ? "-translate-y-full" : "translate-y-0"
+        }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center gap-3">
