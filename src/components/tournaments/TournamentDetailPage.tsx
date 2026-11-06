@@ -7708,11 +7708,11 @@ export function TournamentDetailPage({
                       className={
                         overviewMode === "results"
                           ? tournamentPanelMode === "finals"
-                            ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
-                            : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                            ? "rounded-full bg-white/20 inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
+                            : "rounded-full bg-white inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
                           : tournamentPanelMode === "finals"
-                            ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
-                            : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                            ? "rounded-full inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
+                            : "rounded-full inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
                       }
                       aria-pressed={overviewMode === "results"}
                     >
@@ -7735,11 +7735,11 @@ export function TournamentDetailPage({
                       className={
                         overviewMode === "ranks"
                           ? tournamentPanelMode === "finals"
-                            ? "rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
-                            : "rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
+                            ? "rounded-full bg-white/20 inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50 transition cursor-not-allowed"
+                            : "rounded-full bg-white inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
                           : tournamentPanelMode === "finals"
-                            ? "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
-                            : "rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
+                            ? "rounded-full inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 transition cursor-not-allowed"
+                            : "rounded-full inline-flex min-h-11 items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/68 transition hover:text-white"
                       }
                       aria-pressed={overviewMode === "ranks"}
                     >

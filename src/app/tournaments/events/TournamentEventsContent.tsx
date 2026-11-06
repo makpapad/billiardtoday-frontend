@@ -7722,7 +7722,14 @@ export function TournamentEventsContent({
                                                           : "bg-gray-200/85 dark:bg-gray-700/60"),
                                                   )}
                                                 >
-                                                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                  <div
+                                                    className={clsx(
+                                                      "flex min-w-0 flex-1 gap-1.5",
+                                                      compactGroupPreview
+                                                        ? "flex-col items-start"
+                                                        : "items-center",
+                                                    )}
+                                                  >
                                                     <svg
                                                       className={clsx(
                                                         "h-4 w-4 transition-transform",
@@ -7739,19 +7746,24 @@ export function TournamentEventsContent({
                                                         d="M9 5l7 7-7 7"
                                                       />
                                                     </svg>
-                                                    <div className="w-[92px] shrink-0 truncate font-semibold text-gray-700 dark:text-gray-200">
+                                                    <div
+                                                      className={clsx(
+                                                        "shrink-0 truncate font-semibold text-gray-700 dark:text-gray-200",
+                                                        compactGroupPreview ? "w-auto" : "w-[92px]",
+                                                      )}
+                                                    >
                                                       {formatStageMatchLabel(stage, group)}
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
                                                         className={clsx(
-                                                          "ml-5 min-w-0 flex-1 text-[11px] font-normal text-gray-500 dark:text-gray-300",
+                                                          "min-w-0 flex-1 text-[11px] font-normal text-gray-500 dark:text-gray-300",
                                                           // Στο κινητό οι στήλες (min 13ch) δεν χωρούν δίπλα στην
-                                                          // ετικέτα του ομίλου: γι' αυτό τυλίγουμε τα ονόματα αντί
-                                                          // να βγαίνουν έξω από την κάρτα (οριζόντιο scroll σελίδας).
+                                                          // ετικέτα του ομίλου: γι' αυτό τα ονόματα πάνε σε δική τους
+                                                          // σειρά, πλήρους πλάτους, και τυλίγονται.
                                                           compactGroupPreview
-                                                            ? "flex flex-wrap items-center gap-x-3 gap-y-1"
-                                                            : "grid items-center gap-x-7 gap-y-1.5",
+                                                            ? "flex w-full flex-wrap items-center gap-x-3 gap-y-1"
+                                                            : "ml-5 grid items-center gap-x-7 gap-y-1.5",
                                                         )}
                                                         style={
                                                           compactGroupPreview
