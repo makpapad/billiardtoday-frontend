@@ -62,3 +62,20 @@ a {
   padding-left: 1rem;
   color: rgb(71, 85, 105);
 }
+
+/* Οριζόντιο κινητό (landscape, κοντό ύψος): ίδιο gutter 8px με το κάθετο,
+   ώστε το περιεχόμενο να πιάνει όλο το πλάτος και να μη χάνεται χώρος
+   σε οθόνη με λίγο ύψος. Αγγίζει μόνο οριζόντιο padding μεσα στο <main>. */
+@media (orientation: landscape) and (max-height: 560px) {
+  main .sm\:px-4,
+  main .sm\:px-5,
+  main .sm\:px-6,
+  main .sm\:px-8,
+  main .md\:px-6,
+  main .md\:px-8,
+  main .lg\:px-8,
+  main .lg\:px-10 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
