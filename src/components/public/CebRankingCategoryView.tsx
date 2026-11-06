@@ -97,7 +97,7 @@ export function CebRankingCategoryView({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
       />
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-1 py-10 sm:px-6">
         <PresentationHero
           eyebrow={`CEB Official Ranking · ${cebCategoryShortLabel(payload)}`}
           title={cebRankingPageTitle(payload.title)}

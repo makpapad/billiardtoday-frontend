@@ -39,7 +39,7 @@ export default function CebRankingsPage() {
   }));
 
   return (
-    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-1 py-10 sm:px-6">
       <PresentationHero
         eyebrow="Rankings · CEB"
         title="CEB official rankings"
@@ -81,7 +81,7 @@ export default function CebRankingsPage() {
               <Link
                 key={entry.slug}
                 href={entry.href}
-                className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
+                className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2 sm:p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">

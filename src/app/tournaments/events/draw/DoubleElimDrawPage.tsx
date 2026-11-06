@@ -287,8 +287,8 @@ export default function DoubleElimDrawPage() {
   };
 
   return (
-    <div className="mx-auto w-full px-2 py-8 sm:px-4" style={{ maxWidth: "98vw" }}>
-      <div className="rounded-[28px] border border-slate-200 bg-white p-3 sm:p-6 shadow-sm">
+    <div className="mx-auto w-full px-1 py-8 sm:px-4" style={{ maxWidth: "98vw" }}>
+      <div className="rounded-[28px] border border-slate-200 bg-white p-2 sm:p-6 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="text-[11px] font-black uppercase tracking-[0.28em] text-sky-700">

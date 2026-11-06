@@ -3,7 +3,7 @@ import type { LandingBenefitsContent } from "@/components/landing/content";
 export function Benefits({ content }: { content: LandingBenefitsContent }) {
   return (
     <section id="benefits" className="bg-white py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-1 sm:px-6 lg:px-8">
         <div className="rounded-[32px] border border-slate-200 bg-slate-950 px-6 py-8 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:px-8 sm:py-10">
           <div className="max-w-3xl">
             <div className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
@@ -18,7 +18,7 @@ export function Benefits({ content }: { content: LandingBenefitsContent }) {
             {content.items.map((benefit) => (
               <article
                 key={benefit.value}
-                className="rounded-[28px] border border-white/10 bg-white/5 p-3 sm:p-6"
+                className="rounded-[28px] border border-white/10 bg-white/5 p-2 sm:p-6"
               >
                 <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-200">
                   {benefit.label}

@@ -115,7 +115,7 @@ export default async function FederationPage({ params }: Props) {
       key: "clubs",
       label: "Affiliated Clubs",
       content: (
-        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-1 py-8 sm:px-6">
           <FederationClubsSection federation={federation} />
         </div>
       ),
@@ -127,7 +127,7 @@ export default async function FederationPage({ params }: Props) {
       key: "rankings",
       label: "Rankings",
       content: (
-        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-1 py-8 sm:px-6">
           <FederationRankingsSection federationName={federation.name} series={rankingSeries} />
         </div>
       ),

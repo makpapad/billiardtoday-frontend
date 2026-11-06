@@ -18,7 +18,7 @@ export function LatestNews({ articles }: { articles: NewsArticleSummary[] }) {
 
   return (
     <section id="news" className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-1 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <div className="text-xs font-semibold uppercase tracking-[0.28em] text-red-700">

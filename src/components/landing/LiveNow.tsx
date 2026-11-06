@@ -64,7 +64,7 @@ export function LiveNow({ events }: { events: PublicTournamentEventCard[] }) {
 
   return (
     <section id="live-now" className="border-y border-slate-200 bg-slate-50 py-12 sm:py-16">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-1 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.28em] text-red-700">

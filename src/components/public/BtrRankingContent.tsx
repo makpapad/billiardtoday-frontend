@@ -163,7 +163,7 @@ export function BtrRankingContent({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-1 py-8 sm:px-6">
       <PresentationHero
         eyebrow="BTR Rating"
         title="The BilliardToday Rating — 3-cushion player leaderboard"

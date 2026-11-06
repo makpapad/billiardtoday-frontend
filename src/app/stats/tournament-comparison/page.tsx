@@ -190,7 +190,7 @@ export default function TournamentComparisonPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-5">
+      <section className="mx-auto max-w-7xl px-1 py-8 sm:px-5">
         <div className="grid gap-3 border border-zinc-400/70 bg-white/30 p-4 shadow-[0_16px_50px_rgba(39,39,42,0.08)] md:grid-cols-[1.5fr_1fr_1fr_auto]">
           <label>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">Tournament</span>

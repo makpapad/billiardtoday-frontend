@@ -18,7 +18,7 @@ const formatDate = (value: string | null) => {
 
 export function HomeFallbackPage({ tournaments, players, clubs, federations }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-1 py-8 sm:px-6">
       <PresentationHero
         eyebrow="Billiard Today"
         title="Public pages for tournaments, players, clubs, and federations"
@@ -46,7 +46,7 @@ export function HomeFallbackPage({ tournaments, players, clubs, federations }: P
             <Link
               key={item.documentId}
               href={item.href}
-              className="rounded-[28px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_70px_rgba(15,23,42,0.1)]"
+              className="rounded-[28px] border border-black/5 bg-white p-2 sm:p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_70px_rgba(15,23,42,0.1)]"
             >
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
                 {item.season ? `Season ${item.season}` : "Tournament"}
@@ -108,7 +108,7 @@ export function HomeFallbackPage({ tournaments, players, clubs, federations }: P
               <Link
                 key={club.documentId}
                 href={club.href}
-                className="block rounded-[24px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_14px_45px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
+                className="block rounded-[24px] border border-black/5 bg-white p-2 sm:p-5 shadow-[0_14px_45px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

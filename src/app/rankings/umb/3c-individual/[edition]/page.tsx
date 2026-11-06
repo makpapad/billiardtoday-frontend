@@ -99,7 +99,7 @@ export default async function UmbThreeCushionEditionPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
         />
       )}
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-1 py-10 sm:px-6">
         <PresentationHero
           eyebrow={`UMB Official Ranking · Individual · Edition ${payload.edition}`}
           title={`3-Cushion Individual — Edition ${payload.edition}`}

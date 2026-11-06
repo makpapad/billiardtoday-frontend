@@ -3168,7 +3168,7 @@ export default function PlayerProfileClient({
                     {/* Performance Chart */}
                     {selectedGameType !== 'all' &&
                         performanceData.length > 0 && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-6 border-2 border-gray-200 dark:border-gray-700 mb-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-2 sm:p-6 border-2 border-gray-200 dark:border-gray-700 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                                     {t('players.profile.performance.title')}
                                 </h3>

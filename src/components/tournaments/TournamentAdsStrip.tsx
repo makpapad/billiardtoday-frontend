@@ -73,7 +73,7 @@ export function TournamentAdsStrip({
 
   return (
     <section className={`${className} bg-white/95 py-6`.trim()}>
-      <div className="mx-auto w-full px-2 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
+      <div className="mx-auto w-full px-1 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
         <div className="rounded-lg border border-slate-200 bg-white p-2 sm:p-4 shadow-sm">
           <div
             className={

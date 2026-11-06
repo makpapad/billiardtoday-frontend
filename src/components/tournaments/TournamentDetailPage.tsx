@@ -7342,7 +7342,7 @@ export function TournamentDetailPage({
               </section>
             ) : null}
         {isLiveLoading && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-3 sm:p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-2 sm:p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Loading live scores...
           </div>
         ) : liveError && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
@@ -7350,7 +7350,7 @@ export function TournamentDetailPage({
             {liveError}
           </div>
         ) : liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-3 sm:p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-2 sm:p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Waiting for live scores...
           </div>
         ) : liveCards.length > 0 ? (
@@ -7621,11 +7621,11 @@ export function TournamentDetailPage({
 
   return (
     <div
-      className="mx-auto w-full px-2 py-8 sm:px-6"
+      className="mx-auto w-full px-1 py-8 sm:px-6"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
-        <div className="grid gap-8 px-3 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
+        <div className="grid gap-8 px-1 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
           <div className="min-w-0 flex flex-col justify-between gap-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
@@ -7660,7 +7660,7 @@ export function TournamentDetailPage({
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-3 sm:p-5 backdrop-blur-sm">
+          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-2 sm:p-5 backdrop-blur-sm">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-2 sm:p-4">
                 <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">

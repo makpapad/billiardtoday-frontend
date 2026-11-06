@@ -14,7 +14,7 @@ export function StatsSection({
   const paddingClass = getCmsSectionPaddingClass(section.paddingY);
 
   return (
-    <section className={`px-4 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
+    <section className={`px-1 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
       <div
         className={`mx-auto ${isBand ? "rounded-[30px] px-6 py-8 sm:px-10" : ""}`}
         style={{

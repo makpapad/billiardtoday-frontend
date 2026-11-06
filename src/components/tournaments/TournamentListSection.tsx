@@ -360,8 +360,8 @@ export function TournamentListSection({
   };
 
   const wrapperClass = embedded
-    ? "px-2 py-0 sm:px-6"
-    : `px-4 ${getCmsSectionPaddingClass(section.paddingY)} sm:px-6`;
+    ? "px-1 py-0 sm:px-6"
+    : `px-1 ${getCmsSectionPaddingClass(section.paddingY)} sm:px-6`;
 
   const panelClass = embedded
     ? "rounded-[24px] border border-black/5 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]"

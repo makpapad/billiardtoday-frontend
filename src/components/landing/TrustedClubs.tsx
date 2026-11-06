@@ -3,7 +3,7 @@ import type { LandingTrustedClubsContent } from "@/components/landing/content";
 export function TrustedClubs({ content }: { content: LandingTrustedClubsContent }) {
   return (
     <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-1 sm:px-6 lg:px-8">
         <div className="text-center">
           <div className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
             {content.eyebrow}

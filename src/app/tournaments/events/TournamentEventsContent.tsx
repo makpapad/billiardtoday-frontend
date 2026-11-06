@@ -5943,9 +5943,11 @@ export function TournamentEventsContent({
   return (
     <div
       className={
+        // Όταν το component ζωγραφίζεται μέσα σε page wrapper, ο δικός του wrapper
+        // είναι περιττός (διπλό max-width + διπλό padding) — `contents` τον εξαφανίζει.
         nestedInPage
-          ? "mx-auto w-full px-0 py-8 sm:px-4"
-          : "mx-auto w-full px-2 py-8 sm:px-4"
+          ? "contents"
+          : "mx-auto w-full px-1 py-8 sm:px-4"
       }
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
@@ -5954,7 +5956,15 @@ export function TournamentEventsContent({
         {showStandaloneTitle ? (
           <h1 className="text-2xl font-semibold">Tournament Events</h1>
         ) : null}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 sm:p-6">
+        <div
+          className={
+            // Μέσα στη σελίδα τουρνουά η εξωτερική κάρτα είναι περιττή (διπλό
+            // περίγραμμα + διπλό padding): μένει μόνο η εσωτερική.
+            nestedInPage
+              ? "p-0"
+              : "rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 sm:p-6"
+          }
+        >
           {isLoading && (
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Loading...
@@ -9206,7 +9216,7 @@ export function TournamentEventsContent({
 export default function TournamentEventsPage() {
   return (
     <Suspense
-      fallback={<div className="container mx-auto px-2 py-8 sm:px-4">Loading...</div>}
+      fallback={<div className="container mx-auto px-1 py-8 sm:px-4">Loading...</div>}
     >
       <TournamentEventsContent />
     </Suspense>

@@ -15,7 +15,7 @@ export function LogoStripSection({
   const paddingClass = getCmsSectionPaddingClass(section.paddingY);
 
   return (
-    <section className={`px-4 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
+    <section className={`px-1 ${paddingClass} sm:px-6`} style={getCmsSectionSurfaceStyle(section, appearance)}>
       <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
         {section.title ? (
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>

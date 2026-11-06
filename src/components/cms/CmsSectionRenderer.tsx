@@ -182,7 +182,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.columns === "2" ? section.cells.slice(0, 2) : section.columns === "4" ? section.cells.slice(0, 4) : section.cells.slice(0, 3);
 
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? <h2 className="mb-6 text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           <div className={`grid ${gridClass} ${gapClass}`}>
@@ -203,8 +203,8 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
     const isHighlight = section.theme === "highlight";
 
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
-        <article className="mx-auto h-full max-w-5xl rounded-[24px] border border-black/5 p-3 sm:p-5 shadow-[0_16px_60px_rgba(15,23,42,0.06)]" style={{ background: isHighlight ? `linear-gradient(180deg, ${tokens.surface}, #ffffff)` : "#ffffff" }}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+        <article className="mx-auto h-full max-w-5xl rounded-[24px] border border-black/5 p-2 sm:p-5 shadow-[0_16px_60px_rgba(15,23,42,0.06)]" style={{ background: isHighlight ? `linear-gradient(180deg, ${tokens.surface}, #ffffff)` : "#ffffff" }}>
           {section.image?.url ? <div className="mb-4 overflow-hidden rounded-2xl bg-slate-100"><img src={section.image.url} alt={section.alt || section.image.alternativeText || "Card image"} className="h-44 w-full object-cover" /></div> : null}
           <div className="space-y-3">
             {section.eyebrow ? <div className="inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ background: `${tokens.accent}22`, color: tokens.primary }}>{section.eyebrow}</div> : null}
@@ -224,7 +224,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.mobileContentWidth,
     );
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${heroContainer.className} grid gap-10 overflow-hidden border border-black/5 px-6 py-10 shadow-[0_24px_90px_rgba(15,23,42,0.12)] sm:px-10 sm:py-14 lg:grid-cols-[1.15fr_0.85fr]`} style={{ ...heroContainer.style, borderRadius: tokens.radius, background: `linear-gradient(135deg, ${tokens.surface}, #ffffff)` }}>
           <div className={`flex flex-col gap-6 ${resolveResponsiveContentAlignClass(section.contentAlign, section.mobileContentAlign)}`}>
             {section.eyebrow ? <div className="inline-flex rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]" style={{ background: `${tokens.accent}22`, color: tokens.primary }}>{section.eyebrow}</div> : null}
@@ -240,7 +240,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
           <div className="relative min-h-[280px]">
             <div className="absolute inset-0" style={{ borderRadius: tokens.radius, background: section.backgroundImage?.url ? `linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.28)), url(${section.backgroundImage.url}) center/cover` : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})` }} />
             <div className="absolute inset-5 rounded-[inherit] border border-white/20" />
-            <div className="absolute bottom-5 left-5 max-w-xs rounded-3xl bg-white/88 p-3 sm:p-5 backdrop-blur">
+            <div className="absolute bottom-5 left-5 max-w-xs rounded-3xl bg-white/88 p-2 sm:p-5 backdrop-blur">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live CMS</div>
               <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950" style={{ fontFamily: tokens.headingFont }}>Structured content and public data in one flow.</div>
             </div>
@@ -258,7 +258,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
     const visibleCells = section.cells.slice(0, 4);
 
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? <h2 className="mb-6 text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           <div className={`flex ${gapClass} ${directionClass} ${justifyClass} ${alignClass}`}>
@@ -287,7 +287,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.mobileContentWidth,
     );
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${textContainer.className} ${resolveResponsiveTextAlignClass(section.contentAlign, section.mobileContentAlign)}`} style={textContainer.style}>
           {section.title ? <h2 className={`mb-6 font-semibold tracking-tight ${resolveResponsiveSectionTitleClass(section.titleSize, section.mobileTitleSize)}`} style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           <div
@@ -305,7 +305,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
     const isFull = section.layout === "full";
     const isFullBleed = section.layout === "full-bleed";
     return (
-      <section className={isFull || isFullBleed ? sectionPaddingClass : `px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={isFull || isFullBleed ? sectionPaddingClass : `px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={isFullBleed ? "" : isFull ? "mx-auto" : "mx-auto"} style={isFullBleed ? undefined : isFull ? getCmsContainerStyle(appearance, "page") : getCmsContainerStyle(appearance, "content")}>
           <figure className="overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.08)]">
             <div className="bg-slate-100"><img src={section.image.url} alt={imageAlt} className={`w-full object-cover ${isFull || isFullBleed ? "max-h-[720px]" : "max-h-[560px]"}`} /></div>
@@ -319,7 +319,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
   if (section.__component === "cms.gallery-section") {
     const isMosaic = section.layout === "mosaic";
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
           {section.title ? <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           {section.subtitle ? <p className="mt-3 max-w-3xl text-base leading-8 text-slate-600">{section.subtitle}</p> : null}
@@ -339,7 +339,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
   if (section.__component === "cms.video-embed-section") {
     const isWide = section.layout === "wide";
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className="mx-auto" style={getCmsContainerStyle(appearance, isWide ? "page" : "content")}>
           {section.title ? <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           {section.subtitle ? <p className="mt-3 max-w-3xl text-base leading-8 text-slate-600">{section.subtitle}</p> : null}
@@ -358,7 +358,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.mobileContentWidth,
     );
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${splitContainer.className} grid gap-8 lg:grid-cols-2 lg:items-center`} style={splitContainer.style}>
           <div className={imageFirst ? "lg:order-1" : "lg:order-2"}><div className="overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.08)]">{section.image?.url ? <img src={section.image.url} alt={section.alt || section.image.alternativeText || "Section image"} className="h-[420px] w-full object-cover" /> : <div className="flex h-[420px] items-center justify-center bg-slate-100 text-sm text-slate-500">Image not set</div>}</div></div>
           <div className={`space-y-5 ${resolveResponsiveContentAlignClass(section.contentAlign, section.mobileContentAlign)} ${imageFirst ? "lg:order-2" : "lg:order-1"}`}>
@@ -379,13 +379,13 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.mobileContentWidth,
     );
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${featureContainer.className} ${resolveResponsiveTextAlignClass(section.contentAlign, section.mobileContentAlign)}`} style={featureContainer.style}>
           {section.title ? <h2 className={`font-semibold tracking-tight ${resolveResponsiveSectionTitleClass(section.titleSize, section.mobileTitleSize)}`} style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           {section.subtitle ? <p className={`mt-3 max-w-3xl text-slate-600 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)} ${(section.mobileContentAlign || section.contentAlign) === "center" ? "mx-auto" : ""}`}>{section.subtitle}</p> : null}
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {section.items.map((item) => (
-              <article key={`${item.title}-${item.iconName || "item"}`} className="rounded-[24px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
+              <article key={`${item.title}-${item.iconName || "item"}`} className="rounded-[24px] border border-black/5 bg-white p-2 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
                 <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-xs font-bold uppercase" style={{ background: `${tokens.primary}12`, color: tokens.primary }}>{(item.iconName || item.title).slice(0, 2)}</div>
                 <h3 className="text-xl font-semibold tracking-tight" style={{ fontFamily: tokens.headingFont }}>{item.title}</h3>
                 {item.description ? <p className={`mt-3 text-slate-600 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`}>{item.description}</p> : null}
@@ -412,7 +412,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
       section.mobileContentWidth,
     );
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className={`${ctaContainer.className} rounded-[28px] px-6 py-8 sm:px-10 sm:py-10`} style={{ ...ctaContainer.style, background: isSecondary ? `linear-gradient(135deg, ${tokens.surface}, #ffffff)` : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})`, color: isSecondary ? tokens.text : "#ffffff" }}>
           <div className={`flex flex-col gap-6 ${resolveResponsiveCtaLayoutClass(section.contentAlign, section.mobileContentAlign)}`}>
             <div className={`max-w-3xl ${(section.mobileContentAlign || section.contentAlign) === "center" ? "mx-auto" : ""}`}>
@@ -428,12 +428,12 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
 
   if (section.__component === "cms.faq-section") {
     return (
-      <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
+      <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
         <div className="mx-auto" style={getCmsContainerStyle(appearance, "text")}>
           {section.title ? <h2 className="mb-8 text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           <div className="space-y-4">
             {section.items.map((item, itemIndex) => (
-              <details key={`${item.question}-${itemIndex}`} className="rounded-[22px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+              <details key={`${item.question}-${itemIndex}`} className="rounded-[22px] border border-black/5 bg-white p-2 sm:p-5 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
                 <summary className="cursor-pointer list-none text-lg font-semibold tracking-tight text-slate-950">{item.question}</summary>
                 <div className="cms-richtext prose prose-slate mt-4 max-w-none text-sm" dangerouslySetInnerHTML={{ __html: item.answer }} />
               </details>
@@ -445,7 +445,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
   }
 
   return (
-    <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle} data-section-index={index}>
+    <section className={`px-1 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle} data-section-index={index}>
       <div className="mx-auto rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-6 text-sm text-slate-500" style={getCmsContainerStyle(appearance, "text")}>
         Unsupported CMS section.
       </div>

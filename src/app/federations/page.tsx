@@ -31,7 +31,7 @@ export default async function FederationsPage() {
           {federations.map((federation) => (
             <article
               key={federation.documentId}
-              className="rounded-[28px] border border-slate-200 bg-white p-3 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]"
+              className="rounded-[28px] border border-slate-200 bg-white p-2 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]"
             >
               {federation.country ? (
                 <div className="flex items-center gap-3">

@@ -34,7 +34,7 @@ export function FederationClubsSection({ federation, embedded = false }: Props) 
             <Link
               key={club.documentId}
               href={buildClubHref(club.slug, club.documentId, embedded)}
-              className="rounded-[26px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
+              className="rounded-[26px] border border-black/5 bg-white p-2 sm:p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
             >
               <div className="flex items-center gap-3">
                 <CountryFlag country={federation.country || null} />
@@ -45,7 +45,7 @@ export function FederationClubsSection({ federation, embedded = false }: Props) 
             </Link>
           ))
         ) : (
-          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-3 sm:p-6 text-sm text-slate-500">
+          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-2 sm:p-6 text-sm text-slate-500">
             No clubs connected to this federation yet.
           </div>
         )}

@@ -106,7 +106,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
   ).size;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-1 py-8 sm:px-6">
       <PresentationHero
         eyebrow="Billiard Players"
         title="Billiard player profiles, results, and performance history"
@@ -175,7 +175,7 @@ export function PlayersDirectoryContent({ players, totalPlayers }: Props) {
                 <Link
                   key={player.documentId}
                   href={player.href}
-                  className="group grid gap-4 rounded-[28px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+                  className="group grid gap-4 rounded-[28px] border border-black/5 bg-white p-2 sm:p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
                 >
                   <div className="flex items-start gap-4">
                     {player.photoUrl ? (
