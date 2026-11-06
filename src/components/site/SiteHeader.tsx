@@ -96,7 +96,7 @@ export function SiteHeader({
               <img
                 src="/logo-billiardtoday.png"
                 alt={`${siteName} logo`}
-                className="h-8 w-auto object-contain sm:h-16"
+                className="bt-header-logo h-8 w-auto object-contain sm:h-16"
               />
             </Link>
           </div>
@@ -160,7 +160,7 @@ export function SiteHeader({
                     href={item.href}
                     aria-label={item.iconAlt || item.label}
                     title={item.label}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 transition hover:bg-white/10"
+                    className="bt-header-icon inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 transition hover:bg-white/10"
                   >
                     <img
                       src={item.iconSrc}
@@ -190,7 +190,7 @@ export function SiteHeader({
             <button
               type="button"
               onClick={() => setMobileMenuOpen((current) => !current)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
+              className="bt-header-burger inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
             >
