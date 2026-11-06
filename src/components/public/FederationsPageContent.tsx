@@ -8,7 +8,7 @@ type Props = {
 
 export function FederationsPageContent({ federations }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
       <PresentationHero
         eyebrow="Federations"
         title="Federation public pages with club context"
@@ -23,7 +23,7 @@ export function FederationsPageContent({ federations }: Props) {
             <Link
               key={federation.documentId}
               href={federation.href}
-              className="rounded-[28px] border border-black/5 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+              className="rounded-[28px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
             >
               <div className="flex items-center gap-3">
                 <CountryFlag country={federation.country} className="h-5 w-7 rounded object-cover" />
@@ -38,7 +38,7 @@ export function FederationsPageContent({ federations }: Props) {
               {federation.parentName ? (
                 <div className="mt-2 text-sm text-slate-500">Parent: {federation.parentName}</div>
               ) : null}
-              <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="mt-6 rounded-2xl bg-slate-50 p-2 sm:p-4 text-sm text-slate-600">
                 <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Connected clubs</div>
                 <div className="mt-2 text-lg font-semibold text-slate-950">{federation.clubCount}</div>
               </div>

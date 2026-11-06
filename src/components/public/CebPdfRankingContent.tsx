@@ -47,7 +47,7 @@ export function CebPdfRankingContent({ category, embedded = false, campaign = "c
           { label: "Official PDF (CEB)", href: officialHref, variant: "secondary", newTab: true },
         ]}
         asideHeader={
-          <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
+          <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-2 sm:p-4">
             {embedded ? (
               <a href="/embed/rankings/ceb" className="inline-flex" aria-label="CEB rankings on BilliardToday">
                 <Image
@@ -74,7 +74,7 @@ export function CebPdfRankingContent({ category, embedded = false, campaign = "c
         meta={meta}
       />
 
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl space-y-4">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">

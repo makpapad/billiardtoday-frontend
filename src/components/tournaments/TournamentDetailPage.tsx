@@ -6096,7 +6096,7 @@ export function TournamentDetailPage({
   const mainContent =
     activeView === "tournament" ? (
       tournamentPanelMode === "participants" ? (
-        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <section className="rounded-[32px] border border-slate-200 bg-white p-3 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -6246,7 +6246,7 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : tournamentPanelMode === "info" ? (
-        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <section className="rounded-[32px] border border-slate-200 bg-white p-3 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4">
             <div>
               <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -6297,7 +6297,7 @@ export function TournamentDetailPage({
         </section>
       ) : tournamentPanelMode === "gallery" ? (
         <>
-        <section className="rounded-[32px] border border-slate-200 bg-white px-6 py-10 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-8 sm:py-12">
+        <section className="rounded-[32px] border border-slate-200 bg-white px-3 py-10 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:px-8 sm:py-12">
           <div className="flex flex-col gap-8">
             <div className={hasGalleryContent ? "max-w-3xl" : "mx-auto max-w-2xl text-center"}>
               <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -6913,7 +6913,7 @@ export function TournamentDetailPage({
         ) : null}
         </>
       ) : tournamentPanelMode === "timetable" ? (
-        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <section className="rounded-[32px] border border-slate-200 bg-white p-3 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4">
             <div>
               <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -6922,30 +6922,6 @@ export function TournamentDetailPage({
               <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                 Tournament schedule
               </h2>
-            </div>
-            <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 p-1">
-              <button
-                type="button"
-                onClick={() => setTimetableViewMode("matches")}
-                className={
-                  timetableViewMode === "matches"
-                    ? "inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
-                    : "inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
-                }
-              >
-                Matches
-              </button>
-              <button
-                type="button"
-                onClick={() => setTimetableViewMode("training")}
-                className={
-                  timetableViewMode === "training"
-                    ? "inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
-                    : "inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
-                }
-              >
-                Training
-              </button>
             </div>
             {timetableViewMode === "matches" && timetablePhaseTabs.length > 1 ? (
               <div className="-mx-1 overflow-x-auto pb-1">
@@ -6979,7 +6955,7 @@ export function TournamentDetailPage({
                 </div>
               </div>
             ) : null}
-            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
+            <div className="grid grid-cols-[minmax(0,1fr)_30%] gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
               <input
                 type="search"
                 value={timetableSearchQuery}
@@ -7006,6 +6982,30 @@ export function TournamentDetailPage({
                   </optgroup>
                 ))}
               </select>
+            </div>
+            <div className="w-fit rounded-full border border-slate-200 bg-slate-50 p-0.5">
+              <button
+                type="button"
+                onClick={() => setTimetableViewMode("matches")}
+                className={
+                  timetableViewMode === "matches"
+                    ? "inline-flex items-center rounded-full bg-slate-950 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+                    : "inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                }
+              >
+                Matches
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimetableViewMode("training")}
+                className={
+                  timetableViewMode === "training"
+                    ? "inline-flex items-center rounded-full bg-slate-950 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+                    : "inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                }
+              >
+                Training
+              </button>
             </div>
             {!hasLoadedFullEventData && (isEventDataLoading || !eventDataLoadFailed) ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
@@ -7219,6 +7219,7 @@ export function TournamentDetailPage({
             eventIdOverride={summary.documentId}
             initialEventData={initialEventData}
             eventDataOverride={eventData}
+            nestedInPage
             disableAutoRefresh
             preferNativeNames={isNationalFederationLevel(summary.federationLevel)}
             preferredStageDocumentId={selectedStageDocumentId}
@@ -7341,7 +7342,7 @@ export function TournamentDetailPage({
               </section>
             ) : null}
         {isLiveLoading && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-3 sm:p-6 text-sm text-slate-500 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Loading live scores...
           </div>
         ) : liveError && liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
@@ -7349,7 +7350,7 @@ export function TournamentDetailPage({
             {liveError}
           </div>
         ) : liveCards.length === 0 && externalLiveTableSessions.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-3 sm:p-6 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             Waiting for live scores...
           </div>
         ) : liveCards.length > 0 ? (
@@ -7552,13 +7553,79 @@ export function TournamentDetailPage({
       </section>
     );
 
+  // Στο κινητό η σειρά εικονιδίων (Live / Tournament / …) πάει ΚΑΤΩ από την
+  // κάρτα πληροφοριών· από `lg` και πάνω μένει μέσα στην πρώτη στήλη όπως πριν.
+  const heroMenuRow = (
+    <div className="flex max-w-full flex-nowrap items-center gap-2">
+      <HeroMenuButton
+        label="Live"
+        iconSrc="/icons%20webp/live3.webp"
+        active={activeView === "live"}
+        onClick={switchToLive}
+        href={externalLiveTablesHref}
+        badge={showLiveBadge ? liveViewerCount : null}
+      />
+      <HeroMenuButton
+        label="Tournament"
+        iconSrc="/icons%20webp/Tournament1.webp"
+        active={activeView === "tournament" && tournamentPanelMode === "stages"}
+        onClick={switchToTournament}
+      />
+      <HeroMenuButton
+        label="Time Table"
+        iconSrc="/icons%20webp/schedule1.webp"
+        active={activeView === "tournament" && tournamentPanelMode === "timetable"}
+        onClick={() => {
+          setTournamentPanelMode("timetable");
+          setActiveView("tournament");
+        }}
+      />
+      <HeroMenuButton
+        label="Final standings"
+        iconSrc="/icons%20webp/finalrank1.webp"
+        active={activeView === "tournament" && tournamentPanelMode === "finals"}
+        onClick={openFinalStandings}
+      />
+      <HeroMenuButton
+        label="Photo gallery"
+        iconSrc="/icons%20webp/photo%20gallery1.webp"
+        active={activeView === "tournament" && tournamentPanelMode === "gallery"}
+        onClick={() => {
+          setTournamentPanelMode("gallery");
+          setActiveView("tournament");
+        }}
+      />
+      <HeroMenuButton
+        label="Participants"
+        iconSrc="/icons%20webp/participants1.webp"
+        active={activeView === "tournament" && tournamentPanelMode === "participants"}
+        onClick={() => {
+          setTournamentPanelMode("participants");
+          setActiveView("tournament");
+        }}
+      />
+      {hasInfoDescription ? (
+        <HeroMenuButton
+          label="Info"
+          iconSrc="/icons%20webp/info.webp"
+          active={activeView === "tournament" && tournamentPanelMode === "info"}
+          onClick={() => {
+            setTournamentPanelMode("info");
+            setActiveView("tournament");
+          }}
+        />
+      ) : null}
+    </div>
+  );
+
+
   return (
     <div
-      className="mx-auto w-full px-4 py-8 sm:px-6"
+      className="mx-auto w-full px-2 py-8 sm:px-6"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
-        <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
+        <div className="grid gap-8 px-3 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
           <div className="min-w-0 flex flex-col justify-between gap-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
@@ -7588,73 +7655,14 @@ export function TournamentDetailPage({
                 </p>
               </div>
             </div>
-            <div className="w-full overflow-hidden pb-1">
-              <div className="flex max-w-full flex-nowrap items-center gap-2">
-                <HeroMenuButton
-                  label="Live"
-                  iconSrc="/icons%20webp/live3.webp"
-                  active={activeView === "live"}
-                  onClick={switchToLive}
-                  href={externalLiveTablesHref}
-                  badge={showLiveBadge ? liveViewerCount : null}
-                />
-                <HeroMenuButton
-                  label="Tournament"
-                  iconSrc="/icons%20webp/Tournament1.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "stages"}
-                  onClick={switchToTournament}
-                />
-                <HeroMenuButton
-                  label="Time Table"
-                  iconSrc="/icons%20webp/schedule1.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "timetable"}
-                  onClick={() => {
-                    setTournamentPanelMode("timetable");
-                    setActiveView("tournament");
-                  }}
-                />
-                <HeroMenuButton
-                  label="Final standings"
-                  iconSrc="/icons%20webp/finalrank1.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "finals"}
-                  onClick={openFinalStandings}
-                />
-                <HeroMenuButton
-                  label="Photo gallery"
-                  iconSrc="/icons%20webp/photo%20gallery1.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "gallery"}
-                  onClick={() => {
-                    setTournamentPanelMode("gallery");
-                    setActiveView("tournament");
-                  }}
-                />
-                <HeroMenuButton
-                  label="Participants"
-                  iconSrc="/icons%20webp/participants1.webp"
-                  active={activeView === "tournament" && tournamentPanelMode === "participants"}
-                  onClick={() => {
-                    setTournamentPanelMode("participants");
-                    setActiveView("tournament");
-                  }}
-                />
-                {hasInfoDescription ? (
-                  <HeroMenuButton
-                    label="Info"
-                    iconSrc="/icons%20webp/info.webp"
-                    active={activeView === "tournament" && tournamentPanelMode === "info"}
-                    onClick={() => {
-                      setTournamentPanelMode("info");
-                      setActiveView("tournament");
-                    }}
-                  />
-                ) : null}
-              </div>
+            <div className="hidden w-full overflow-hidden pb-1 lg:block">
+              {heroMenuRow}
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-3 sm:p-5 backdrop-blur-sm">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-2 sm:p-4">
                 <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
                   Schedule
                 </div>
@@ -7690,7 +7698,7 @@ export function TournamentDetailPage({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-2 sm:p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-[11px] uppercase tracking-[0.18em] text-white/55">
                   Stage overview
@@ -7793,6 +7801,9 @@ export function TournamentDetailPage({
                 </div>
               ) : null}
             </div>
+          </div>
+          <div className="w-full overflow-hidden pb-1 lg:hidden">
+            {heroMenuRow}
           </div>
         </div>
       </section>

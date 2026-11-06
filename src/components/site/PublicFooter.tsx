@@ -79,7 +79,7 @@ export function PublicFooter({
             <Link
               key={link.href}
               href={link.href}
-              className="block text-sm text-slate-200 transition hover:text-white"
+              className="inline-flex min-h-9 items-center text-sm text-slate-200 transition hover:text-white"
             >
               {link.label}
             </Link>
@@ -96,7 +96,7 @@ export function PublicFooter({
             <Link
               key={link.href}
               href={link.href}
-              className="block text-sm text-slate-200 transition hover:text-white"
+              className="inline-flex min-h-9 items-center text-sm text-slate-200 transition hover:text-white"
             >
               {link.label}
             </Link>

@@ -68,7 +68,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
     : "grid gap-4 lg:grid-cols-[2fr_1fr]";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-8 px-4 py-10 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-8 px-2 py-10 sm:px-6">
       <section className="rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#082f49_100%)] px-6 py-8 text-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] sm:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-4">
@@ -96,7 +96,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
       <section className={leaderboardSectionClassName}>
         {useInlineTournamentCards ? (
           <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)]">
-            <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+            <section className="rounded-[32px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
                 Counted events
               </div>
@@ -105,7 +105,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                   <Link
                     key={tournament.key}
                     href={tournament.href!}
-                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
+                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2 sm:p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -137,7 +137,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-3 sm:p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
                 Sorting
               </div>
@@ -153,7 +153,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
           </div>
         ) : null}
 
-        <div className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="mb-5 flex flex-col gap-2">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
               Leaderboard
@@ -236,7 +236,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
 
         {!useInlineTournamentCards ? (
           <div className="space-y-4">
-            <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+            <section className="rounded-[32px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
                 Counted events
               </div>
@@ -245,7 +245,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
                   <Link
                     key={tournament.key}
                     href={tournament.href!}
-                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
+                    className="block rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2 sm:p-4 transition hover:border-sky-200 hover:bg-sky-50/30"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -277,7 +277,7 @@ export function RankingSeriesContent({ data, embedded = false }: RankingSeriesCo
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+            <section className="rounded-[32px] border border-black/5 bg-slate-950 p-3 sm:p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
                 Sorting
               </div>

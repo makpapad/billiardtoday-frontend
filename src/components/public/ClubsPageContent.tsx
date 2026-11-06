@@ -8,7 +8,7 @@ type Props = {
 
 export function ClubsPageContent({ clubs }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
       <PresentationHero
         eyebrow="Clubs"
         title="Club pages built from structured Strapi data"
@@ -31,7 +31,7 @@ export function ClubsPageContent({ clubs }: Props) {
             <Link
               key={club.documentId}
               href={club.href}
-              className="rounded-[28px] border border-black/5 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+              className="rounded-[28px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>

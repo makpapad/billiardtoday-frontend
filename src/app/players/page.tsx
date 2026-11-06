@@ -136,7 +136,7 @@ export default async function PlayersPage({ searchParams }: Props) {
         }}
       />
       <PlayersDirectoryContent players={pagePlayers} totalPlayers={totalPlayers} />
-      <div className="mx-auto w-full max-w-[1320px] px-4 pb-14 sm:px-6">
+      <div className="mx-auto w-full max-w-[1320px] px-2 pb-14 sm:px-6">
         <PlayerLetterNav letters={letters} activeLetter={activeLetter} />
         <PlayerPagination page={page} pageCount={pageCount} letter={activeLetter} />
       </div>

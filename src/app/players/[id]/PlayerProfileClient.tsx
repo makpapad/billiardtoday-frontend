@@ -1351,8 +1351,8 @@ export default function PlayerProfileClient({
     if (isLoading) {
         if (hasServerSummary) {
             return (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pb-10 dark:from-gray-900 dark:to-gray-800">
-                    <div className="mx-auto max-w-6xl rounded-xl border border-blue-100 bg-white/80 px-4 py-4 text-sm text-gray-600 shadow-sm dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-2 pb-10 sm:px-4 dark:from-gray-900 dark:to-gray-800">
+                    <div className="mx-auto max-w-6xl rounded-xl border border-blue-100 bg-white/80 px-2 py-4 sm:px-4 text-sm text-gray-600 shadow-sm dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300">
                         Loading detailed tournament history and match filters...
                     </div>
                 </div>
@@ -2151,7 +2151,7 @@ export default function PlayerProfileClient({
                 )}
 
                 {!hasServerSummary && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-2 sm:p-6 md:p-8 mb-6 md:mb-8">
                     <div className="flex items-start gap-3 sm:gap-4 md:gap-6">
                         {/* Player Photo */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
@@ -2497,7 +2497,7 @@ export default function PlayerProfileClient({
                         </button>
                     </div>
                     {selectedGameType !== 'all' && activeStatBreakdown && (
-                        <div className="mt-4 rounded-2xl bg-white dark:bg-gray-800 shadow-xl p-4 sm:p-6">
+                        <div className="mt-4 rounded-2xl bg-white dark:bg-gray-800 shadow-xl p-2 sm:p-6">
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                                     {activeStatBreakdownTitle} ({detailedStatMatches.length})
@@ -2664,7 +2664,7 @@ export default function PlayerProfileClient({
                 </div>
 
                 {/* Tournament History */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-2 sm:p-6 md:p-8">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
                             {t('players.profile.history.title')}
@@ -3168,7 +3168,7 @@ export default function PlayerProfileClient({
                     {/* Performance Chart */}
                     {selectedGameType !== 'all' &&
                         performanceData.length > 0 && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-gray-200 dark:border-gray-700 mb-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-6 border-2 border-gray-200 dark:border-gray-700 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                                     {t('players.profile.performance.title')}
                                 </h3>
@@ -3303,7 +3303,7 @@ export default function PlayerProfileClient({
                                         </div>
 
                                         {/* Tournament Stats */}
-                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center bg-white/10 rounded-lg p-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center bg-white/10 rounded-lg p-2 sm:p-4">
                                             <div>
                                                 <div className="text-2xl font-bold">{participation.totalMatches}</div>
                                                 <div className="text-xs text-blue-100">{t('players.profile.stats.matches')}</div>
@@ -3461,7 +3461,7 @@ export default function PlayerProfileClient({
                                         ) : (
                                             <div className="space-y-4">
                                                 {participation.finals.length > 0 ? (
-                                                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                                                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 sm:p-4 dark:border-amber-800 dark:bg-amber-900/20">
                                                         <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                                                             Final standings
                                                         </div>
@@ -3479,7 +3479,7 @@ export default function PlayerProfileClient({
                                                 ) : null}
 
                                                 {participation.stageResults.length > 0 ? (
-                                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 sm:p-4 dark:border-blue-800 dark:bg-blue-900/20">
                                                         <div className="text-sm font-semibold text-blue-800 dark:text-blue-200">
                                                             Stage results
                                                         </div>

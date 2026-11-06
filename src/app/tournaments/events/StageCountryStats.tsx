@@ -100,12 +100,12 @@ export default function StageCountryStats({
     >
       {/* Header row: label + flag chips on the left, column titles above the numbers */}
       <div className="grid grid-cols-[minmax(0,1fr)_3rem_3rem_3.5rem] items-center gap-x-2 px-3 pb-1 pt-3 sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_5rem] sm:gap-x-6 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
+        <div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
+          <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-[11px]">
             By country
           </span>
           {stats.length > 1 ? (
-            <span className="flex min-w-0 items-center gap-1.5 overflow-x-auto pl-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <span className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto pl-0 sm:w-auto sm:pl-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {stats.map((stat, index) => {
                 const isSelected = selectedCountryId === stat.id;
                 const isCurrent = index === safeActive;

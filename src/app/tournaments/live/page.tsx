@@ -122,7 +122,7 @@ function LiveTournamentsContent() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Live Tournaments</h1>
@@ -151,7 +151,7 @@ function LiveTournamentsContent() {
       {/* Live Score Display */}
       {showScores && selectedScreens.size > 0 && (
         <div className="bg-gray-100 border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Live Score Display</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {getSelectedScreens().map((screen) => (
@@ -168,7 +168,7 @@ function LiveTournamentsContent() {
       )}
 
       {/* Tournament Screens */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6">
         {liveScreensData.map((tournament) => (
           <div key={tournament.tournamentId} className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">

@@ -27,7 +27,7 @@ function TournamentCard({ tournament }: { tournament: TeamTournamentSummary }) {
   return (
     <Link
       href={`/tournaments/team/${slug}`}
-      className="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-cyan-500/60 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-cyan-400/60"
+      className="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-5 transition-colors hover:border-cyan-500/60 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-cyan-400/60"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -62,7 +62,7 @@ export default async function TeamTournamentsPage() {
 
   return (
     <div
-      className="mx-auto w-full px-4 py-8"
+      className="mx-auto w-full px-2 py-8 sm:px-4"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <div className="flex flex-col gap-4">
@@ -75,7 +75,7 @@ export default async function TeamTournamentsPage() {
         </p>
 
         {tournaments.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+          <div className="rounded-xl border border-gray-200 bg-white p-3 sm:p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
             No team tournaments found yet.
           </div>
         ) : (

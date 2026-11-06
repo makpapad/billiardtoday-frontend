@@ -78,7 +78,7 @@ export function TournamentCountdownModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="tournament-countdown-title"
-        className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-8"
+        className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-3 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-8"
       >
         <div className="flex items-start justify-between gap-4">
           <div>

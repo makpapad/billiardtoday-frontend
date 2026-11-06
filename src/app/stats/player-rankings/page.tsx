@@ -90,7 +90,7 @@ export default function PlayerRankingsPage() {
   return (
     <main className="min-h-screen bg-[#f4f0e6] text-zinc-950">
       <section className="border-b border-zinc-300 bg-black text-white">
-        <div className="mx-auto max-w-7xl px-5 py-12">
+        <div className="mx-auto max-w-7xl px-2 py-12 sm:px-5">
           <div className="text-sm font-semibold uppercase tracking-[0.28em] text-red-500">Stats</div>
           <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -106,7 +106,7 @@ export default function PlayerRankingsPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-8">
+      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-5">
         <div className="grid gap-3 border border-zinc-400/70 bg-white/30 p-4 shadow-[0_16px_50px_rgba(39,39,42,0.08)] md:grid-cols-5">
           {filterControls.map((control) => (
             <label key={control.label} className="block">
@@ -133,7 +133,7 @@ export default function PlayerRankingsPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-14 lg:grid-cols-[280px_1fr]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-2 pb-14 sm:px-5 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-4">
           {[
             { label: "Selected Metric", value: metrics.find((item) => item.value === metric)?.label || metric, icon: Trophy },

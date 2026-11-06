@@ -20,7 +20,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 const card =
-  "rounded-[28px] border border-black/5 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-8";
+  "rounded-[28px] border border-black/5 bg-white p-3 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-8";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-2xl font-semibold tracking-tight text-slate-950">{children}</h2>
@@ -42,7 +42,7 @@ export default async function BtrMethodologyPage() {
     coverage.ranked > 0 ? Math.round((coverage.provisional / coverage.ranked) * 100) : 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
       <PresentationHero
         eyebrow="BTR Rating"
         title="How the BTR works, and how far you should trust it"
@@ -97,21 +97,21 @@ export default async function BtrMethodologyPage() {
             result, the strength of the opponent, and how well you played.
           </P>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-5">
+            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-3 sm:p-5">
               <H3>1. The result</H3>
               <P>
                 Win, draw or loss. A three-cushion match can be drawn when the innings limit is
                 reached with both players on the same points.
               </P>
             </div>
-            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-5">
+            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-3 sm:p-5">
               <H3>2. The opponent</H3>
               <P>
                 Beating a stronger player earns more than beating a weaker one, and losing to a
                 stronger player costs less.
               </P>
             </div>
-            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-5">
+            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 p-3 sm:p-5">
               <H3>3. Your performance</H3>
               <P>
                 Your average per inning is compared with what is normal for a player at your level,
@@ -119,7 +119,7 @@ export default async function BtrMethodologyPage() {
               </P>
             </div>
           </div>
-          <div className="rounded-[20px] border border-sky-100 bg-sky-50/60 p-5">
+          <div className="rounded-[20px] border border-sky-100 bg-sky-50/60 p-3 sm:p-5">
             <H3>A worked example</H3>
             <P>
               A 1800-rated player beats an 1800-rated opponent. That is exactly what the rating
@@ -234,7 +234,7 @@ export default async function BtrMethodologyPage() {
               </tbody>
             </table>
           </div>
-          <div className="rounded-[20px] border border-amber-100 bg-amber-50/60 p-5">
+          <div className="rounded-[20px] border border-amber-100 bg-amber-50/60 p-3 sm:p-5">
             <H3>The asymmetry, stated plainly</H3>
             <P>
               We have nationwide domestic results for Greece and no other country. Every player
@@ -266,7 +266,7 @@ export default async function BtrMethodologyPage() {
             marks the weakest cases with an asterisk.
           </P>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-5">
+            <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-3 sm:p-5">
               <div className="text-2xl font-semibold tabular-nums text-emerald-800">
                 {num(coverage.solid)}
               </div>
@@ -275,7 +275,7 @@ export default async function BtrMethodologyPage() {
                 Enough recent matches behind them for the number to mean what it says.
               </P>
             </div>
-            <div className="rounded-[20px] border border-amber-100 bg-amber-50/60 p-5">
+            <div className="rounded-[20px] border border-amber-100 bg-amber-50/60 p-3 sm:p-5">
               <div className="text-2xl font-semibold tabular-nums text-amber-800">
                 {num(coverage.provisional)}
               </div>
@@ -285,7 +285,7 @@ export default async function BtrMethodologyPage() {
                 ranking claim.
               </P>
             </div>
-            <div className="rounded-[20px] border border-slate-200 bg-slate-50/60 p-5">
+            <div className="rounded-[20px] border border-slate-200 bg-slate-50/60 p-3 sm:p-5">
               <div className="text-2xl font-semibold tabular-nums text-slate-800">
                 {provisionalShare}%
               </div>

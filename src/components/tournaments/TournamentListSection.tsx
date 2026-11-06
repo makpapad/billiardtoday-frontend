@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CmsAppearance, CmsTournamentListSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
-import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
 import {
   TournamentCollection,
   tournamentStatus,
@@ -134,7 +133,8 @@ export function TournamentListSection({
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [debouncedSeason, setDebouncedSeason] = useState(initialSeason);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [view, setView] = useTournamentView(section.layout === "cards" ? "cards" : "table");
+  // Η λίστα τουρνουά εμφανίζεται πάντα σε κάρτες (boxes)· το switch λίστα/κάρτες αφαιρέθηκε.
+  const [view] = useState<"table" | "cards">("cards");
   const useTitleLink =
     (embedded ||
       pathname === "/tournaments" ||
@@ -348,7 +348,7 @@ export function TournamentListSection({
   };
 
   const wrapperClass = embedded
-    ? "px-4 py-0 sm:px-6"
+    ? "px-2 py-0 sm:px-6"
     : `px-4 ${getCmsSectionPaddingClass(section.paddingY)} sm:px-6`;
 
   const panelClass = embedded
@@ -385,10 +385,7 @@ export function TournamentListSection({
             className="mb-6 flex flex-col flex-wrap gap-3 sm:flex-row sm:items-end"
             style={{ alignItems: "flex-end" }}
           >
-            <div
-              className="w-full sm:flex-none"
-              style={{ width: "220px", maxWidth: "100%", flex: "0 0 220px" }}
-            >
+            <div className="w-full sm:w-[220px] sm:flex-none">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Season
               </label>
@@ -416,10 +413,8 @@ export function TournamentListSection({
                 ) : null}
               </div>
             </div>
-            <div
-              className="w-full sm:flex-none"
-              style={{ width: "320px", maxWidth: "100%", flex: "0 0 320px" }}
-            >
+            <div className="grid w-full grid-cols-[minmax(0,1fr)_30%] items-end gap-3 sm:contents">
+            <div className="w-full min-w-0 sm:w-[320px] sm:flex-none">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Title or Game Type
               </label>
@@ -448,10 +443,7 @@ export function TournamentListSection({
               </div>
             </div>
             {gameTypeOptions.length > 0 ? (
-              <div
-                className="w-full sm:flex-none"
-                style={{ width: "200px", maxWidth: "100%", flex: "0 0 200px" }}
-              >
+              <div className="w-full sm:w-[200px] sm:flex-none">
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   Game type
                 </label>
@@ -473,12 +465,7 @@ export function TournamentListSection({
                 </select>
               </div>
             ) : null}
-          </div>
-        ) : null}
-
-        {allowViewToggle ? (
-          <div className="mb-4 flex justify-end">
-            <TournamentViewToggle mode={view} onChange={setView} />
+            </div>
           </div>
         ) : null}
 

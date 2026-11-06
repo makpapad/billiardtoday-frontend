@@ -421,7 +421,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
   const extendedBoardMembers = CEB_BOARD_MEMBERS.slice(6);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-2 py-8 sm:px-6">
       <PresentationHero
         eyebrow="European Confederation"
         title={federation.name}
@@ -465,7 +465,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
         }
         aside={
           <div className="grid gap-4">
-            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-sm">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-white/10 p-3 sm:p-6 backdrop-blur-sm">
               <img
                 src={cebLogoUrl}
                 alt={federation.logo?.name || `${federation.name} logo`}
@@ -476,7 +476,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               <button
                 type="button"
                 onClick={() => setHeroView("network")}
-                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
+                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-3 sm:p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
               >
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Affiliated federations</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{sortedMembers.length}</div>
@@ -484,7 +484,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               <button
                 type="button"
                 onClick={() => setHeroView("upcoming")}
-                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
+                className="rounded-[24px] border border-white/10 bg-slate-950/25 p-3 sm:p-5 text-center backdrop-blur-sm transition hover:bg-slate-950/35"
               >
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Upcoming Events</div>
               </button>
@@ -494,7 +494,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       />
 
       {heroView === "network" ? (
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <SectionHeading
           eyebrow="Interactive map"
           title="National federations"
@@ -575,7 +575,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-[28px] border border-sky-100 bg-sky-50/70 p-5">
+            <div className="rounded-[28px] border border-sky-100 bg-sky-50/70 p-3 sm:p-5">
               <div className="flex items-center gap-3">
                 <CountryFlag country={selectedFederation?.country || null} className="h-7 w-10 rounded-md object-cover" />
                 <div>
@@ -588,11 +588,11 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 </div>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-[22px] border border-white/70 bg-white p-4 text-center">
+                <div className="rounded-[22px] border border-white/70 bg-white p-2 sm:p-4 text-center">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Clubs</div>
                   <div className="mt-2 text-3xl font-semibold text-slate-950">{selectedFederation?.clubCount || 0}</div>
                 </div>
-                <div className="rounded-[22px] border border-white/70 bg-white p-4 text-center">
+                <div className="rounded-[22px] border border-white/70 bg-white p-2 sm:p-4 text-center">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Level</div>
                   <div className="mt-2 text-lg font-semibold capitalize text-slate-950">{selectedFederation?.level || "national"}</div>
                 </div>
@@ -602,9 +602,9 @@ export function CebFederationExperience({ federation, members, embedded = false 
             {selectedFederationLogoUrl ? (
               <div
                 key={`${selectedFederation?.documentId || "federation"}-${selectedFederationLogoUrl}`}
-                className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]"
+                className="rounded-[28px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]"
               >
-                <div className="flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6">
+                <div className="flex min-h-[164px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-3 sm:p-6">
                   <img
                     key={selectedFederationLogoUrl}
                     src={selectedFederationLogoUrl}
@@ -615,7 +615,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               </div>
             ) : null}
 
-            <div className="rounded-[28px] border border-black/5 bg-slate-950 p-5 text-white shadow-[0_18px_60px_rgba(15,23,42,0.12)]">
+            <div className="rounded-[28px] border border-black/5 bg-slate-950 p-3 sm:p-5 text-white shadow-[0_18px_60px_rgba(15,23,42,0.12)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">How it works</div>
               <p className="mt-3 text-sm leading-7 text-white/75">
                 The map is a federation selector. Each click swaps the profile panel below without leaving the CEB page.
@@ -627,7 +627,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       ) : null}
 
       {heroView === "tournaments" ? (
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Official calendar</div>
@@ -704,7 +704,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       ) : null}
 
       {heroView === "rankings" ? (
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="mb-6 space-y-2">
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Official rankings</div>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
@@ -721,7 +721,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               <Link
                 key={series.slug}
                 href={`${embedded ? "/embed" : ""}/rankings/${series.slug}`}
-                className="rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
+                className="rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
               >
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                   Ranking Series
@@ -743,7 +743,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       ) : null}
 
       {heroView === "upcoming" ? (
-      <section className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,#ffffff_0%,#f3f8ff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,#ffffff_0%,#f3f8ff_100%)] p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Upcoming events</div>
@@ -753,12 +753,12 @@ export function CebFederationExperience({ federation, members, embedded = false 
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[24px] border border-sky-100 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[24px] border border-sky-100 bg-white/90 p-3 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Schedule</div>
               <div className="mt-2 text-lg font-semibold text-slate-950">Upcoming + Live</div>
               <div className="mt-1 text-sm text-slate-500">Completed tournaments stay in the full calendar only.</div>
             </div>
-            <div className="rounded-[24px] border border-slate-200 bg-slate-950 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.12)]">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-950 p-3 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.12)]">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Navigation</div>
               <button
                 type="button"
@@ -778,7 +778,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
         ) : upcomingCalendarGroups.length > 0 ? (
           <div className="space-y-8">
             {upcomingCalendarGroups.map((group) => (
-              <div key={group.key} className="rounded-[28px] border border-slate-200/80 bg-white/92 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.05)] sm:p-6">
+              <div key={group.key} className="rounded-[28px] border border-slate-200/80 bg-white/92 p-3 shadow-[0_16px_48px_rgba(15,23,42,0.05)] sm:p-6">
                 <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Month</div>
@@ -796,7 +796,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                       <Link
                         key={item.documentId}
                         href={buildCanonicalTournamentHref({ title: item.title, season: item.season, embedded })}
-                        className="grid gap-4 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:grid-cols-[90px_1fr]"
+                        className="grid gap-4 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:grid-cols-[90px_1fr]"
                       >
                         <div className="flex min-h-[90px] flex-col items-center justify-center rounded-[22px] bg-slate-950 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">{calendarDate.month}</div>
@@ -838,7 +838,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       {heroView === "board" ? (
         <section
           id="ceb-board-members"
-          className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,rgba(248,250,252,0.96)_0%,rgba(239,246,255,0.96)_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8"
+          className="rounded-[32px] border border-black/5 bg-[linear-gradient(180deg,rgba(248,250,252,0.96)_0%,rgba(239,246,255,0.96)_100%)] p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8"
         >
           <SectionHeading
             eyebrow="Leadership"
@@ -907,7 +907,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
               {extendedBoardMembers.map((member) => (
                 <article
                   key={`${member.role}-${member.name}`}
-                  className="flex gap-4 rounded-[26px] border border-white/70 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)]"
+                  className="flex gap-4 rounded-[26px] border border-white/70 bg-white p-2 sm:p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)]"
                 >
                   <img
                     src={member.imageUrl}
@@ -934,7 +934,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
       ) : null}
 
       {heroView === "network" && selectedFederation ? (
-        <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Federation profile</div>
@@ -983,7 +983,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                 return (
                   <div
                     key={key}
-                    className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+                    className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-3 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
                   >
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
                     <div className="mt-3 text-sm leading-7 text-slate-800">{value}</div>
@@ -1007,7 +1007,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                       <Link
                         key={item.documentId}
                         href={buildCanonicalTournamentHref({ title: item.title, season: item.season, embedded })}
-                        className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
+                        className="rounded-[26px] border border-slate-200 bg-white p-3 sm:p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -1045,7 +1045,7 @@ export function CebFederationExperience({ federation, members, embedded = false 
                     <Link
                       key={club.documentId}
                       href={buildClubHref(club.slug, club.documentId, embedded)}
-                      className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
+                      className="rounded-[26px] border border-slate-200 bg-white p-3 sm:p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30"
                     >
                       <div className="flex items-center gap-3">
                         <CountryFlag country={selectedFederation.country || null} className="h-5 w-7 rounded object-cover" />

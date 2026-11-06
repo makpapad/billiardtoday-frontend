@@ -31,7 +31,7 @@ export default function UmbRankingsPage() {
   const upcoming = index?.upcoming ?? [];
 
   return (
-    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
       <PresentationHero
         eyebrow="Rankings · UMB"
         title="UMB official rankings"
@@ -45,7 +45,7 @@ export default function UmbRankingsPage() {
           },
         ]}
         asideHeader={
-          <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
+          <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-2 sm:p-4">
             <Image
               src="/img/logo/umb.jpg"
               alt="UMB — Union Mondiale de Billard"
@@ -64,7 +64,7 @@ export default function UmbRankingsPage() {
         ]}
       />
 
-      <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+      <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <SectionHeading
           eyebrow="Published"
           title="UMB ranking lists available now"
@@ -76,7 +76,7 @@ export default function UmbRankingsPage() {
             <Link
               key={entry.slug}
               href={entry.href}
-              className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
+              className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 sm:p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_48px_rgba(15,23,42,0.08)]"
             >
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                 {entry.discipline} · {entry.categoryLabel}
@@ -102,7 +102,7 @@ export default function UmbRankingsPage() {
       </section>
 
       {upcoming.length > 0 ? (
-        <section className="rounded-[32px] border border-black/5 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <section className="rounded-[32px] border border-black/5 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <SectionHeading
             eyebrow="Coming next"
             title="The rest of the UMB ranking lists"

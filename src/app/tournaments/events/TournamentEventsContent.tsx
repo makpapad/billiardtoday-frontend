@@ -277,6 +277,12 @@ type TournamentEventsContentProps = {
   onKoRankingRoundChange?: (round: KoRankingRound) => void;
   embeddedOverride?: boolean;
   showStandaloneTitle?: boolean;
+  /**
+   * Το component ζωγραφίζεται μέσα σε άλλο page wrapper (π.χ. TournamentDetailPage).
+   * Τότε το δικό του οριζόντιο padding διπλασιάζει το gutter στο κινητό, οπότε
+   * μηδενίζεται κάτω από `sm` και μένει ίδιο από `sm` και πάνω.
+   */
+  nestedInPage?: boolean;
   showEventHeader?: boolean;
   emptyStateMessage?: string;
   liveSessionsOverride?: EventLiveSession[] | null;
@@ -3364,6 +3370,7 @@ export function TournamentEventsContent({
   onKoRankingRoundChange,
   embeddedOverride,
   showStandaloneTitle = true,
+  nestedInPage = false,
   showEventHeader = true,
   emptyStateMessage = "Select a tournament event from the list to view its stages.",
   liveSessionsOverride = null,
@@ -5935,7 +5942,11 @@ export function TournamentEventsContent({
   // Route 5-pins events to the dedicated 5-pins UI (sets-based scoring).
   return (
     <div
-      className="mx-auto w-full px-4 py-8"
+      className={
+        nestedInPage
+          ? "mx-auto w-full px-0 py-8 sm:px-4"
+          : "mx-auto w-full px-2 py-8 sm:px-4"
+      }
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <style>{liveBadgeAnimation}</style>
@@ -5943,7 +5954,7 @@ export function TournamentEventsContent({
         {showStandaloneTitle ? (
           <h1 className="text-2xl font-semibold">Tournament Events</h1>
         ) : null}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 sm:p-6">
           {isLoading && (
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Loading...
@@ -5972,7 +5983,7 @@ export function TournamentEventsContent({
             (eventStages.length > 0 ||
               showVisiblePublishedFinalResults) && (
               <div className="flex flex-col gap-4">
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 sm:p-4 shadow-sm">
                   {showEventHeader ? (
                     <div className="mb-4 flex flex-col gap-1">
                       <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
@@ -6640,6 +6651,7 @@ export function TournamentEventsContent({
                                         Matches -{" "}
                                         {stage.title || stage.order || ""}
                                       </div>
+                                      <div className="flex items-center justify-between gap-3 lg:justify-start">
                                       {stageDateRange && (
                                         <div className="text-sm text-gray-500 dark:text-gray-400">
                                           {stageDateRange}
@@ -6676,13 +6688,14 @@ export function TournamentEventsContent({
                                       >
                                         Today ({todayGroupKeys.size})
                                       </button>
+                                      </div>
                                     </div>
                                     {showStageControls ? (
                                       <div
                                         className={clsx(
                                           "grid items-center gap-3 lg:min-w-[28rem]",
                                           showCompactFilters
-                                            ? "md:grid-cols-[minmax(0,1fr)_8rem]"
+                                            ? "grid-cols-[minmax(0,1fr)_30%] lg:grid-cols-[minmax(0,1fr)_8rem]"
                                             : "grid-cols-1",
                                         )}
                                       >
@@ -6950,7 +6963,7 @@ export function TournamentEventsContent({
                                                               </button>
                                                               {isExpanded ? (
                                                                 <div className="border-t border-slate-200 px-5 pb-5 dark:border-slate-800">
-                                                                  <div className="mx-auto mt-4 w-[95%] max-w-[1600px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+                                                                  <div className="mx-auto mt-4 w-[95%] max-w-[1600px] min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-4 dark:border-gray-700 dark:bg-gray-900">
                                                                     <div className={`${detailsGridClass} text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}>
                                                                       <div>Player</div>
                                                                       <div className="text-center">Winner</div>
@@ -7724,10 +7737,12 @@ export function TournamentEventsContent({
                                                 >
                                                   <div
                                                     className={clsx(
-                                                      "flex min-w-0 flex-1 gap-1.5",
+                                                      "flex min-w-0 flex-1 items-center gap-1.5",
+                                                      // Κινητό: βελάκι + ετικέτα ομίλου στην ίδια γραμμή,
+                                                      // οι παίκτες πάνε από κάτω σε δική τους σειρά (w-full).
                                                       compactGroupPreview
-                                                        ? "flex-col items-start"
-                                                        : "items-center",
+                                                        ? "flex-wrap gap-x-1.5 gap-y-1"
+                                                        : "",
                                                     )}
                                                   >
                                                     <svg
@@ -9165,7 +9180,7 @@ export function TournamentEventsContent({
 export default function TournamentEventsPage() {
   return (
     <Suspense
-      fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}
+      fallback={<div className="container mx-auto px-2 py-8 sm:px-4">Loading...</div>}
     >
       <TournamentEventsContent />
     </Suspense>

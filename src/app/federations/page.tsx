@@ -16,7 +16,7 @@ export default async function FederationsPage() {
   );
 
   return (
-    <section className="px-4 py-12 sm:px-6 sm:py-16">
+    <section className="px-2 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -31,7 +31,7 @@ export default async function FederationsPage() {
           {federations.map((federation) => (
             <article
               key={federation.documentId}
-              className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]"
+              className="rounded-[28px] border border-slate-200 bg-white p-3 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]"
             >
               {federation.country ? (
                 <div className="flex items-center gap-3">

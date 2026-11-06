@@ -48,7 +48,7 @@ export function CebPlayerRankingCard({ ranking, playerLabel }: Props) {
   return (
     <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pb-2 pt-6 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-7">
+        <div className="rounded-2xl bg-white p-3 shadow-xl dark:bg-gray-800 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">

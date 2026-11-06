@@ -58,7 +58,7 @@ export default function UmbThreeCushionIndividualPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
       />
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
         <PresentationHero
           eyebrow="UMB Official Ranking · Individual"
           title="3-Cushion Individual — World Events Ranking"
@@ -69,7 +69,7 @@ export default function UmbThreeCushionIndividualPage() {
             { label: "Official PDF (UMB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
           asideHeader={
-            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-2 sm:p-4">
               <Image
                 src="/img/logo/umb.jpg"
                 alt="UMB — Union Mondiale de Billard"

@@ -42,7 +42,7 @@ export function TeamTournamentSeoSection({ detail }: { detail: TeamTournamentDet
   return (
     <section className="bg-gradient-to-br from-slate-50 to-blue-50 px-4 pb-10 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-6xl">
-        <details className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-7">
+        <details className="rounded-2xl bg-white p-3 shadow-xl dark:bg-gray-800 sm:p-7">
           <summary className="cursor-pointer list-none text-base font-semibold text-gray-950 dark:text-white">
             Teams &amp; squads — {detail.summary?.title ?? "Team tournament"} ({squads.length} teams,{" "}
             {playerCount} players)

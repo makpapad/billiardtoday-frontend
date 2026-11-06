@@ -73,12 +73,12 @@ export function TournamentAdsStrip({
 
   return (
     <section className={`${className} bg-white/95 py-6`.trim()}>
-      <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mx-auto w-full px-2 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
+        <div className="rounded-lg border border-slate-200 bg-white p-2 sm:p-4 shadow-sm">
           <div
             className={
               centered
-                ? "flex flex-wrap items-center justify-center gap-4"
+                ? "grid grid-cols-2 items-center gap-4 sm:flex sm:flex-wrap sm:justify-center"
                 : "grid grid-cols-2 items-center gap-4 sm:grid-cols-3 lg:grid-cols-6"
             }
           >

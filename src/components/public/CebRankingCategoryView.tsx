@@ -97,7 +97,7 @@ export function CebRankingCategoryView({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
       />
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-2 py-10 sm:px-6">
         <PresentationHero
           eyebrow={`CEB Official Ranking · ${cebCategoryShortLabel(payload)}`}
           title={cebRankingPageTitle(payload.title)}
@@ -112,7 +112,7 @@ export function CebRankingCategoryView({
             { label: "Official PDF (CEB)", href: payload.sourceUrl, variant: "secondary", newTab: true },
           ]}
           asideHeader={
-            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-4">
+            <div className="flex min-h-[180px] items-center justify-center rounded-[28px] border border-white/10 bg-slate-950/25 p-2 sm:p-4">
               {embedded ? (
                 <a
                   href={toEmbedHref(`/rankings/ceb/${slug}`)}

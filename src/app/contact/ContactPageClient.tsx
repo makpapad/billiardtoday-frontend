@@ -92,7 +92,7 @@ export function ContactPageClient() {
   }, [siteKey]);
 
   return (
-    <main className="flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#e0f2fe_32%,#fefce8_100%)] px-4 py-10 text-slate-950">
+    <main className="flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#e0f2fe_32%,#fefce8_100%)] px-2 py-10 text-slate-950 sm:px-4">
       {siteKey ? (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"

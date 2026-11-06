@@ -36,7 +36,7 @@ export function PlayerArchiveSection({
   return (
     <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pb-10 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-6xl">
-        <details className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-7">
+        <details className="rounded-2xl bg-white p-3 shadow-xl dark:bg-gray-800 sm:p-7">
           <summary className="cursor-pointer list-none text-base font-semibold text-gray-950 dark:text-white">
             Tournament archive &amp; match results — {playerLabel}
           </summary>
@@ -56,7 +56,7 @@ export function PlayerArchiveSection({
                   {(byYear.get(year) ?? []).map((item) => (
                     <article
                       key={item.id}
-                      className="rounded-xl border border-gray-100 p-4 dark:border-gray-700"
+                      className="rounded-xl border border-gray-100 p-2 sm:p-4 dark:border-gray-700"
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <h4 className="text-sm font-semibold text-gray-950 dark:text-white">

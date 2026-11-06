@@ -99,7 +99,7 @@ export function TournamentResultsSection({
   return (
     <section className="bg-gradient-to-br from-slate-50 to-blue-50 px-4 pb-12 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-7">
+        <div className="rounded-2xl bg-white p-3 shadow-xl dark:bg-gray-800 sm:p-7">
           <h2 className="text-base font-semibold text-gray-950 dark:text-white">
             Match results by stage — {title}
           </h2>

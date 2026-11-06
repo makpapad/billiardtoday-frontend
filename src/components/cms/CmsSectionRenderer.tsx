@@ -204,7 +204,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
 
     return (
       <section className={`px-4 ${sectionPaddingClass} sm:px-6`} style={sectionSurfaceStyle}>
-        <article className="mx-auto h-full max-w-5xl rounded-[24px] border border-black/5 p-5 shadow-[0_16px_60px_rgba(15,23,42,0.06)]" style={{ background: isHighlight ? `linear-gradient(180deg, ${tokens.surface}, #ffffff)` : "#ffffff" }}>
+        <article className="mx-auto h-full max-w-5xl rounded-[24px] border border-black/5 p-3 sm:p-5 shadow-[0_16px_60px_rgba(15,23,42,0.06)]" style={{ background: isHighlight ? `linear-gradient(180deg, ${tokens.surface}, #ffffff)` : "#ffffff" }}>
           {section.image?.url ? <div className="mb-4 overflow-hidden rounded-2xl bg-slate-100"><img src={section.image.url} alt={section.alt || section.image.alternativeText || "Card image"} className="h-44 w-full object-cover" /></div> : null}
           <div className="space-y-3">
             {section.eyebrow ? <div className="inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ background: `${tokens.accent}22`, color: tokens.primary }}>{section.eyebrow}</div> : null}
@@ -240,7 +240,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
           <div className="relative min-h-[280px]">
             <div className="absolute inset-0" style={{ borderRadius: tokens.radius, background: section.backgroundImage?.url ? `linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.28)), url(${section.backgroundImage.url}) center/cover` : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})` }} />
             <div className="absolute inset-5 rounded-[inherit] border border-white/20" />
-            <div className="absolute bottom-5 left-5 max-w-xs rounded-3xl bg-white/88 p-5 backdrop-blur">
+            <div className="absolute bottom-5 left-5 max-w-xs rounded-3xl bg-white/88 p-3 sm:p-5 backdrop-blur">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live CMS</div>
               <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950" style={{ fontFamily: tokens.headingFont }}>Structured content and public data in one flow.</div>
             </div>
@@ -385,7 +385,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
           {section.subtitle ? <p className={`mt-3 max-w-3xl text-slate-600 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)} ${(section.mobileContentAlign || section.contentAlign) === "center" ? "mx-auto" : ""}`}>{section.subtitle}</p> : null}
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {section.items.map((item) => (
-              <article key={`${item.title}-${item.iconName || "item"}`} className="rounded-[24px] border border-black/5 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
+              <article key={`${item.title}-${item.iconName || "item"}`} className="rounded-[24px] border border-black/5 bg-white p-3 sm:p-6 shadow-[0_16px_60px_rgba(15,23,42,0.06)]">
                 <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-xs font-bold uppercase" style={{ background: `${tokens.primary}12`, color: tokens.primary }}>{(item.iconName || item.title).slice(0, 2)}</div>
                 <h3 className="text-xl font-semibold tracking-tight" style={{ fontFamily: tokens.headingFont }}>{item.title}</h3>
                 {item.description ? <p className={`mt-3 text-slate-600 ${resolveResponsiveBodyTextClass(section.bodySize, section.mobileBodySize)}`}>{item.description}</p> : null}
@@ -433,7 +433,7 @@ export function CmsSectionRenderer({ section, appearance, index, embedded = fals
           {section.title ? <h2 className="mb-8 text-3xl font-semibold tracking-tight sm:text-4xl" style={{ fontFamily: tokens.headingFont }}>{section.title}</h2> : null}
           <div className="space-y-4">
             {section.items.map((item, itemIndex) => (
-              <details key={`${item.question}-${itemIndex}`} className="rounded-[22px] border border-black/5 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
+              <details key={`${item.question}-${itemIndex}`} className="rounded-[22px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
                 <summary className="cursor-pointer list-none text-lg font-semibold tracking-tight text-slate-950">{item.question}</summary>
                 <div className="cms-richtext prose prose-slate mt-4 max-w-none text-sm" dangerouslySetInnerHTML={{ __html: item.answer }} />
               </details>

@@ -6,7 +6,7 @@ const icons = [MonitorSmartphone, Trophy, RadioTower];
 export function Hero({ content }: { content: LandingHeroContent }) {
   return (
     <section className="border-b border-white/10 bg-slate-950 pb-20 pt-16 sm:pb-24 sm:pt-20">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-12 px-2 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8">
         <div className="space-y-8">
           <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
             {content.eyebrow}
@@ -69,7 +69,7 @@ export function Hero({ content }: { content: LandingHeroContent }) {
 
             <div className="grid gap-4 p-6">
               <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
-                <div className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950 p-5">
+                <div className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950 p-3 sm:p-5">
                   <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#183ec9] shadow-[0_18px_50px_rgba(8,47,73,0.3)]">
                     <img
                       src="/img/others/live-score.webp"
@@ -98,7 +98,7 @@ export function Hero({ content }: { content: LandingHeroContent }) {
                     return (
                       <div
                         key={item.title}
-                        className="rounded-[24px] border border-white/10 bg-white/5 p-4"
+                        className="rounded-[24px] border border-white/10 bg-white/5 p-2 sm:p-4"
                       >
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/15 text-cyan-200">
                           <Icon className="h-5 w-5" />

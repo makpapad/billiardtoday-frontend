@@ -145,7 +145,7 @@ function Card({ item }: { item: TournamentCollectionItem }) {
     </>
   );
   const className =
-    "block rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30";
+    "block rounded-[26px] border border-slate-200 bg-white p-3 sm:p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] transition hover:border-sky-200 hover:bg-sky-50/30";
 
   return (
     <li className="list-none">

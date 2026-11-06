@@ -46,7 +46,7 @@ type Props = {
 /** Δύο εικονίδια — λίστα ή κάρτες — για την εμφάνιση των τουρνουά. */
 export function TournamentViewToggle({ mode, onChange, className = "" }: Props) {
   const buttonClass = (active: boolean) =>
-    `inline-flex h-8 w-8 items-center justify-center rounded-full transition ${
+    `inline-flex h-11 w-11 items-center justify-center rounded-full transition ${
       active
         ? "bg-sky-600 text-white shadow-sm"
         : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-gray-300 dark:hover:bg-gray-700"

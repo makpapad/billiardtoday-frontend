@@ -102,7 +102,7 @@ export function FederationHeroMenu({
     <div
       role="tablist"
       aria-label="Federation sections"
-      className="flex flex-wrap items-center gap-2"
+      className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
     >
       {tabs.map((tab) => {
         const isActive = tab.key === active;
@@ -114,9 +114,11 @@ export function FederationHeroMenu({
             aria-selected={isActive}
             onClick={() => select(tab.key)}
             className={
-              isActive
-                ? "rounded-full bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 transition"
-                : "rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:bg-white/15 hover:text-white"
+              `inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition sm:px-4 sm:tracking-[0.16em] ${
+                isActive
+                  ? "bg-white text-slate-950"
+                  : "border border-white/15 bg-white/10 text-white/72 hover:bg-white/15 hover:text-white"
+              }`
             }
           >
             {tab.label}

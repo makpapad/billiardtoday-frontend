@@ -59,9 +59,9 @@ export function PresentationHero({ eyebrow, title, description, actions = [], ac
         {aside ? (
           <div>{aside}</div>
         ) : (
-          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">{asideHeader}
+          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-3 sm:p-5 backdrop-blur-sm">{asideHeader}
             {meta.map((item, index) => (
-              <div key={`${item}-${index}`} className="rounded-2xl border border-white/10 bg-slate-950/25 p-4 text-sm text-white/85">
+              <div key={`${item}-${index}`} className="rounded-2xl border border-white/10 bg-slate-950/25 p-2 sm:p-4 text-sm text-white/85">
                 {item}
               </div>
             ))}

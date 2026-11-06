@@ -47,7 +47,7 @@ export default async function ClubPage({ params }: Props) {
 
   return (
     <>
-      <section className="px-4 py-12 sm:px-6 sm:py-16">
+      <section className="px-2 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <PresentationHero
             eyebrow={club.federation?.name || "Club"}
@@ -63,7 +63,7 @@ export default async function ClubPage({ params }: Props) {
             meta={[]}
             aside={
               <div className="grid gap-4">
-                <div className="flex min-h-[180px] items-center gap-5 rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-sm">
+                <div className="flex min-h-[180px] items-center gap-5 rounded-[28px] border border-white/10 bg-white/10 p-3 sm:p-6 backdrop-blur-sm">
                   <div className="flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/15 bg-slate-950/30 text-3xl font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                     {club.name
                       .split(/\s+/)
@@ -95,13 +95,13 @@ export default async function ClubPage({ params }: Props) {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
+                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-3 sm:p-5 text-center backdrop-blur-sm">
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">City</div>
                     <div className="mt-3 text-2xl font-semibold text-white">
                       {club.city || "Pending"}
                     </div>
                   </div>
-                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-center backdrop-blur-sm">
+                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-3 sm:p-5 text-center backdrop-blur-sm">
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Federation</div>
                     <div className="mt-3 text-2xl font-semibold text-white">
                       {club.federation?.name || "Independent"}
@@ -109,7 +109,7 @@ export default async function ClubPage({ params }: Props) {
                   </div>
                 </div>
                 {(club.contactEmail || club.contactPhone || club.address) ? (
-                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-5 text-sm text-white/78 backdrop-blur-sm">
+                  <div className="rounded-[24px] border border-white/10 bg-slate-950/25 p-3 sm:p-5 text-sm text-white/78 backdrop-blur-sm">
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Contact</div>
                     <div className="mt-3 space-y-2">
                       {club.address ? <div>{club.address}</div> : null}
@@ -127,7 +127,7 @@ export default async function ClubPage({ params }: Props) {
       {clubPlayers.length > 0 ? (
         <section className="px-4 pb-4 sm:px-6">
           <div className="mx-auto max-w-7xl">
-            <div className="rounded-[26px] border border-black/5 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-8">
+            <div className="rounded-[26px] border border-black/5 bg-white p-3 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:p-8">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
                   Players at {club.name}

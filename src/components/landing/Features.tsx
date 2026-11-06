@@ -11,7 +11,7 @@ const iconMap = {
 export function Features({ content }: { content: LandingFeaturesContent }) {
   return (
     <section id="features" className="bg-slate-50 py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
           <div className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-700">
             {content.eyebrow}

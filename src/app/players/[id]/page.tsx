@@ -99,7 +99,7 @@ export default async function PlayerProfilePage({ params }: Props) {
         />
       ) : null}
       {summary ? (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pt-8 dark:from-gray-900 dark:to-gray-800">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-2 pt-8 sm:px-4 dark:from-gray-900 dark:to-gray-800">
           <div className="mx-auto max-w-6xl">
             <PlayerBackButton />
           </div>

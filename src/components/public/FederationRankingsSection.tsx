@@ -33,7 +33,7 @@ export function FederationRankingsSection({ federationName, series, embedded = f
             <Link
               key={item.documentId || item.slug}
               href={`${base}/rankings/${item.slug}`}
-              className="flex flex-col gap-3 rounded-[26px] border border-black/5 bg-white p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
+              className="flex flex-col gap-3 rounded-[26px] border border-black/5 bg-white p-3 sm:p-5 shadow-[0_16px_46px_rgba(15,23,42,0.05)] transition hover:border-sky-200"
             >
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                 {item.season ? `Season ${item.season}` : "Ranking"}
@@ -49,7 +49,7 @@ export function FederationRankingsSection({ federationName, series, embedded = f
           ))}
         </div>
       ) : (
-        <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+        <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-3 sm:p-6 text-sm text-slate-500">
           No ranking lists published for this federation yet.
         </div>
       )}

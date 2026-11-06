@@ -41,9 +41,9 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
     : [];
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 pt-10 dark:from-gray-900 dark:to-gray-800">
+    <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-2 pt-10 sm:px-4 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-7 md:p-8">
+        <div className="rounded-2xl bg-white p-3 shadow-xl dark:bg-gray-800 sm:p-7 md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="flex min-w-0 flex-1 items-start gap-4">
               <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 sm:h-24 sm:w-24">

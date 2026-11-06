@@ -57,7 +57,7 @@ export function CmsPageView({
         <h1 className="sr-only">{page.title}</h1>
       ) : null}
       {hasLayoutTree ? (
-        <div className="px-4 py-8 sm:px-6 sm:py-10">
+        <div className="px-2 py-8 sm:px-6 sm:py-10">
           <div className="mx-auto" style={getCmsContainerStyle(appearance, "page")}>
             <CmsLayoutRenderer
               nodes={page.layoutTree}
