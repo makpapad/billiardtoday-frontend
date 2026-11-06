@@ -51,24 +51,24 @@ export default function GroupStandingsTable({
             <table className="min-w-full text-xs">
                 <thead className="bg-emerald-700 text-white lg:sticky lg:top-[97px] lg:z-20">
                     <tr>
-                        <th className="px-3 py-2 text-left font-medium w-56">Player</th>
-                        <th className="px-2 py-2 text-center font-medium w-12" title="Position in the group">Pos</th>
+                        <th className="px-3 py-2 text-left font-medium w-56 whitespace-nowrap">Player</th>
+                        <th className="px-2 py-2 text-center font-medium w-12 whitespace-nowrap" title="Position in the group">Pos</th>
                         {showStageRankColumn && (
-                            <th className="px-2 py-2 text-center font-medium w-12" title="Current ranking position in the stage">Rank</th>
+                            <th className="px-2 py-2 text-center font-medium w-12 whitespace-nowrap" title="Current ranking position in the stage"><span className="sm:hidden">Rk</span><span className="hidden sm:inline">Rank</span></th>
                         )}
-                        <th className="px-2 py-2 text-center font-medium w-14" title="Matches won / lost">Rec</th>
-                        <th className="px-2 py-2 text-center font-medium w-14" title="Match points">MP</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="Matches won / lost">Rec</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="Match points">MP</th>
                         {setCounts && (
-                            <th className="px-2 py-2 text-center font-medium w-16" title="Sets won - lost (best of 5)">Sets</th>
+                            <th className="px-2 py-2 text-center font-medium w-16 whitespace-nowrap" title="Sets won - lost (best of 5)">Sets</th>
                         )}
-                        <th className="px-2 py-2 text-center font-medium w-14" title="Points (caroms)">Pts</th>
-                        <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Possible points' : 'Innings'}>{artistic ? 'Poss. pts' : 'Inn'}</th>
-                        <th className="px-2 py-2 text-center font-medium w-14" title={artistic ? 'Percentage' : 'General average'}>{artistic ? '%' : 'Avg'}</th>
-                        <th className="px-2 py-2 text-center font-medium w-14" title="High run">{artistic ? 'Best run' : 'HR'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="Points (caroms)">Pts</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title={artistic ? 'Possible points' : 'Innings'}>{artistic ? <><span className="sm:hidden">PP</span><span className="hidden sm:inline">Poss. pts</span></> : 'Inn'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title={artistic ? 'Percentage' : 'General average'}>{artistic ? '%' : 'Avg'}</th>
+                        <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="High run">{artistic ? <><span className="sm:hidden">BR</span><span className="hidden sm:inline">Best run</span></> : 'HR'}</th>
                         {showBestAverageColumn && (
-                            <th className="px-2 py-2 text-center font-medium w-14" title="Best average">{artistic ? 'Best game' : 'Best Avg'}</th>
+                            <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="Best average">{artistic ? <><span className="sm:hidden">BG</span><span className="hidden sm:inline">Best game</span></> : <><span className="sm:hidden">BAvg</span><span className="hidden sm:inline">Best Avg</span></>}</th>
                         )}
-                        {showHighRun2Column && <th className="px-2 py-2 text-center font-medium w-14" title="Second-best high run">HR2</th>}
+                        {showHighRun2Column && <th className="px-2 py-2 text-center font-medium w-14 whitespace-nowrap" title="Second-best high run">HR2</th>}
                     </tr>
                 </thead>
                 <tbody>

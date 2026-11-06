@@ -124,9 +124,9 @@ export function TournamentResultsSection({
                       <tr>
                         <th title="Match number">#</th>
                         <th title="Group">Grp</th>
-                        <th>Player 1</th>
-                        <th title="Score">Score</th>
-                        <th>Player 2</th>
+                        <th className="whitespace-nowrap"><span className="sm:hidden">P1</span><span className="hidden sm:inline">Player 1</span></th>
+                        <th className="whitespace-nowrap" title="Score">Score</th>
+                        <th className="whitespace-nowrap"><span className="sm:hidden">P2</span><span className="hidden sm:inline">Player 2</span></th>
                         <th title="Innings (player 1 / player 2) · high run">Inn</th>
                         <th title="Match points (player 1 / player 2)">MP</th>
                       </tr>

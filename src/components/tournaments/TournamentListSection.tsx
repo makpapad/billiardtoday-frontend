@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CmsAppearance, CmsTournamentListSection } from "@/lib/cms/types";
 import { getCmsContainerStyle } from "@/lib/cms/layout";
+import { TournamentViewToggle, useTournamentView } from "@/components/tournaments/TournamentViewToggle";
 import {
   TournamentCollection,
   tournamentStatus,
@@ -133,8 +134,19 @@ export function TournamentListSection({
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [debouncedSeason, setDebouncedSeason] = useState(initialSeason);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  // Η λίστα τουρνουά εμφανίζεται πάντα σε κάρτες (boxes)· το switch λίστα/κάρτες αφαιρέθηκε.
-  const [view] = useState<"table" | "cards">("cards");
+  // Προεπιλογή: κάρτες. Το switch λίστα/κάρτες εμφανίζεται μόνο από sm και πάνω·
+  // στο κινητό η λίστα είναι πάντα κάρτες.
+  const [view, setView] = useTournamentView("cards");
+  const [isNarrowViewport, setIsNarrowViewport] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsNarrowViewport(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  const effectiveView: "table" | "cards" = isNarrowViewport ? "cards" : view;
   const useTitleLink =
     (embedded ||
       pathname === "/tournaments" ||
@@ -469,6 +481,12 @@ export function TournamentListSection({
           </div>
         ) : null}
 
+        {allowViewToggle ? (
+          <div className="mb-4 hidden justify-end sm:flex">
+            <TournamentViewToggle mode={view} onChange={setView} />
+          </div>
+        ) : null}
+
         {isLoading && items.length === 0 ? (
           <div
             className={`${panelClass} px-6 py-10 text-center text-sm text-slate-500`}
@@ -489,7 +507,7 @@ export function TournamentListSection({
           </div>
         ) : (
           <TournamentCollection
-            view={view}
+            view={effectiveView}
             items={items.map((item) => {
               const openable = canOpenTournament(item);
               const href = useTitleLink && openable ? tournamentHrefForItem(item) : null;
