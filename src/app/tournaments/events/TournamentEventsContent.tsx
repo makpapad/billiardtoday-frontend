@@ -4954,6 +4954,9 @@ export function TournamentEventsContent({
       ? Math.min(maxPlayers, previewColumnCount)
       : maxPlayers;
   }, [filteredActiveStageGroups, previewColumnCount]);
+  // Στο κινητό (<640px, previewColumnCount === 1) το preview του ομίλου δεν χωράει
+  // στήλες δίπλα στην ετικέτα: τα ονόματα τυλίγονται σε σειρές.
+  const compactGroupPreview = previewColumnCount === 1;
   const liveSessionByMatchKey = useMemo(() => {
     const map = new Map<string, EventLiveSession>();
     effectiveLiveSessions.forEach((session) => {
@@ -7741,12 +7744,24 @@ export function TournamentEventsContent({
                                                     </div>
                                                     {!isExpanded ? (
                                                       <div
-                                                        className="ml-5 grid min-w-0 flex-1 items-center gap-x-7 gap-y-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-300"
-                                                        style={{
-                                                          gridTemplateColumns:
-                                                            previewGridTemplateColumns ||
-                                                            `repeat(${Math.max(Math.min(previewPlayers.length, previewColumnCount), 1)}, minmax(0, 1fr))`,
-                                                        }}
+                                                        className={clsx(
+                                                          "ml-5 min-w-0 flex-1 text-[11px] font-normal text-gray-500 dark:text-gray-300",
+                                                          // Στο κινητό οι στήλες (min 13ch) δεν χωρούν δίπλα στην
+                                                          // ετικέτα του ομίλου: γι' αυτό τυλίγουμε τα ονόματα αντί
+                                                          // να βγαίνουν έξω από την κάρτα (οριζόντιο scroll σελίδας).
+                                                          compactGroupPreview
+                                                            ? "flex flex-wrap items-center gap-x-3 gap-y-1"
+                                                            : "grid items-center gap-x-7 gap-y-1.5",
+                                                        )}
+                                                        style={
+                                                          compactGroupPreview
+                                                            ? undefined
+                                                            : {
+                                                                gridTemplateColumns:
+                                                                  previewGridTemplateColumns ||
+                                                                  `repeat(${Math.max(Math.min(previewPlayers.length, previewColumnCount), 1)}, minmax(0, 1fr))`,
+                                                              }
+                                                        }
                                                       >
                                                         {previewPlayers.map((player) => (
                                                           (() => {

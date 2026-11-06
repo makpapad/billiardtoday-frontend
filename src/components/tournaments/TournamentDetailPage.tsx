@@ -6929,8 +6929,8 @@ export function TournamentDetailPage({
                 onClick={() => setTimetableViewMode("matches")}
                 className={
                   timetableViewMode === "matches"
-                    ? "rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
-                    : "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                    ? "inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+                    : "inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
                 }
               >
                 Matches
@@ -6940,8 +6940,8 @@ export function TournamentDetailPage({
                 onClick={() => setTimetableViewMode("training")}
                 className={
                   timetableViewMode === "training"
-                    ? "rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
-                    : "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
+                    ? "inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+                    : "inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:text-slate-950"
                 }
               >
                 Training
@@ -6959,8 +6959,8 @@ export function TournamentDetailPage({
                         onClick={() => setActiveTimetablePhaseKey(tab.key)}
                         className={
                           isActive
-                            ? "inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm"
-                            : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                            ? "inline-flex min-h-11 items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                            : "inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
                         }
                       >
                         <span>{tab.label}</span>
