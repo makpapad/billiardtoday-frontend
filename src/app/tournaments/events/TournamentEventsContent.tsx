@@ -7122,11 +7122,11 @@ export function TournamentEventsContent({
                                     ) : (
                                       <div className="flex flex-col gap-3">
                                         {activeStageCountryFlags.length > 1 ? (
-                                          <div className="flex flex-wrap items-start gap-x-2 gap-y-1.5 px-2.5">
-                                            <span className="pt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                                          <div className="flex flex-col items-start gap-y-1.5 px-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:gap-x-2">
+                                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500 sm:pt-1.5">
                                               Country
                                             </span>
-                                            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 pt-0.5">
+                                            <div className="flex w-full min-w-0 flex-wrap gap-1.5 sm:w-auto sm:flex-1 sm:pt-0.5">
                                               {activeStageCountryFlags.map(
                                                 (countryFlag) => {
                                                   const isActive =
