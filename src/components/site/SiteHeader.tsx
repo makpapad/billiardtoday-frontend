@@ -54,6 +54,26 @@ export function SiteHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, [mobileMenuOpen]);
 
+  // Χειρονομία: όταν το header είναι κρυμμένο, ένα σύρσιμο προς τα κάτω το ξαναφέρνει.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let startY = 0;
+    const onTouchStart = (event: TouchEvent) => {
+      startY = event.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (!headerHidden) return;
+      const currentY = event.touches[0]?.clientY ?? 0;
+      if (currentY - startY > 24) setHeaderHidden(false);
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [headerHidden]);
+
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const previousOverflow = document.body.style.overflow;
