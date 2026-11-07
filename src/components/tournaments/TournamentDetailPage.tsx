@@ -84,6 +84,12 @@ type Props = {
   /** Server-rendered περιεχόμενο (τελική κατάταξη + συμμετέχοντες) που μπαίνει ΜΕΣΑ
    * στο «Tournament Overview» — ένα ανοιγόμενο σημείο αντί για δύο κουτιά. */
   seoSection?: ReactNode;
+  /** Server-rendered «Tournament news»: ζει ΕΞΩ από το ανοιγόμενο «Tournament Overview»
+   *  (ορατό χωρίς κλικ), γιατί το κουμπί 📰 του hero δείχνει με anchor στο #tournament-news. */
+  newsSection?: ReactNode;
+  /** Πόσα άρθρα αναφέρουν τη διοργάνωση. >0 → εμφανίζεται το 📰 κουμπί στο hero
+   *  που πάει στο server-rendered τμήμα «Tournament news» (#tournament-news). */
+  relatedNewsCount?: number;
 };
 
 type TournamentLiveScreen = {
@@ -1628,6 +1634,8 @@ export function TournamentDetailPage({
   preferredGroupParam = null,
   preferredMatchParam = null,
   seoSection = null,
+  newsSection = null,
+  relatedNewsCount = 0,
 }: Props) {
   const hasInfoDescription =
     typeof summary.description === "string" && summary.description.trim().length > 0;
@@ -7609,6 +7617,17 @@ export function TournamentDetailPage({
           setActiveView("tournament");
         }}
       />
+      {relatedNewsCount > 0 ? (
+        /* Άρθρα για τη διοργάνωση: emoji αντί εικονιδίου (δεν υπάρχει news icon στο
+           /icons webp) — ίδιο μέγεθος/πλαίσιο με τα υπόλοιπα κουμπιά του hero. */
+        <HeroMenuButton
+          label="News"
+          emoji="📰"
+          active={false}
+          onClick={() => undefined}
+          href="#tournament-news"
+        />
+      ) : null}
       <HeroMenuButton
         label="Participants"
         iconSrc="/icons%20webp/participants1.webp"
@@ -7925,6 +7944,9 @@ export function TournamentDetailPage({
           </div>
         </details>
       </section>
+      {/* Άρθρα που αναφέρουν τη διοργάνωση: ορατά χωρίς κλικ, ώστε το κουμπί 📰 του hero
+          να έχει πού να οδηγήσει και ο crawler να βλέπει το link και προς τις δύο κατευθύνσεις. */}
+      {newsSection}
       {showTournamentAds ? <TournamentAdsStrip /> : null}
       {showBackToTopButton ? (
         <button

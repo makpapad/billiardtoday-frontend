@@ -87,6 +87,59 @@ export const listNewsArticles = async (limit = 12): Promise<NewsArticleSummary[]
     .map(toSummary);
 };
 
+/**
+ * Άρθρα που αναφέρονται σε μία διοργάνωση.
+ *
+ * ΓΙΑΤΙ ΕΤΣΙ: το άρθρο δείχνει τη διοργάνωση με κανονικό σύνδεσμο μέσα στο κείμενό του
+ * (`/tournaments/<slug>`), αλλά η διοργάνωση δεν έδειχνε ΠΟΤΕ το άρθρο — μία κατεύθυνση
+ * μόνο, χωρίς αμοιβαίο link για τον crawler. Δεν υπάρχει relation `page.event` στο schema,
+ * άρα η σύνδεση βγαίνει από το ίδιο το περιεχόμενο (layoutTree + sections), που είναι και
+ * το μόνο που ξέρει τι λέει το άρθρο. Έτσι δουλεύει και για τα άρθρα που υπάρχουν ήδη,
+ * χωρίς migration και χωρίς να ξαναγραφτεί τίποτα.
+ */
+export const findNewsArticlesForTournament = async (
+  tournamentSlug: string,
+  limit = 6,
+): Promise<NewsArticleSummary[]> => {
+  const cleanSlug = String(tournamentSlug || "").trim().replace(/^\/+/, "");
+  if (!cleanSlug) return [];
+  const needle = `/tournaments/${cleanSlug}`;
+
+  const params = new URLSearchParams();
+  params.set("filters[pageType][$eq]", "article");
+  params.set("pagination[page]", "1");
+  params.set("pagination[pageSize]", "200");
+  params.set("sort[0]", "publishedAt:desc");
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "slug");
+  params.set("fields[2]", "summary");
+  params.set("fields[3]", "pageType");
+  params.set("fields[4]", "publishedAt");
+  params.set("fields[5]", "updatedAt");
+  params.set("fields[6]", "layoutTree");
+  params.set("populate[coverImage][populate]", "*");
+  params.set("populate[sections][populate]", "*");
+
+  let json: { data?: unknown[] };
+  try {
+    json = await fetchJson(`/api/pages?${params.toString()}`);
+  } catch {
+    return [];
+  }
+
+  const rows = Array.isArray(json?.data) ? json.data : [];
+  return rows
+    .map((row: unknown) => mapCmsPage(row, STRAPI_URL))
+    .filter((page: CmsPage | null): page is CmsPage => Boolean(page && page.pageType === "article"))
+    .filter((page) => {
+      const haystack = JSON.stringify([page.layoutTree ?? null, page.sections ?? null]);
+      // Το slug μπορεί να εμφανιστεί και ως απόλυτο URL· το needle ταιριάζει και στις δύο.
+      return haystack.includes(needle);
+    })
+    .slice(0, Math.max(1, limit))
+    .map(toSummary);
+};
+
 export const getNewsArticleBySlug = async (slug: string): Promise<CmsPage | null> => {
   const cleanSlug = String(slug || "").trim().replace(/^\/+/, "");
   if (!cleanSlug) return null;

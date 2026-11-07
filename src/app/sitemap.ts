@@ -99,7 +99,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await Promise.all([
       getClubs().catch(() => []),
       getFederations().catch(() => []),
-      listPlayers(50000).catch(() => []),
+      // `withMatchCount`: το sitemap δημοσιεύει αθλητές ΜΟΝΟ με αγώνες (βλ. φίλτρο πιο κάτω).
+      listPlayers(50000, { withMatchCount: true }).catch(() => []),
       listTournamentEvents(1000).catch(() => []),
       fetchRankingSeriesIndex().catch(() => []),
       listNewsArticles(500).catch(() => []),
@@ -170,7 +171,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: toLastModified(federation.updatedAt),
       }),
     ),
+    // Αθλητές: ΟΛΟΙ όσοι έχουν έστω έναν αγώνα. Εκτός μένουν μόνο τα προφίλ με ΜΗΔΕΝ
+    // αγώνες (231 από 3.276, μετρημένο 07/11/2026) — σελίδες χωρίς κανένα περιεχόμενο,
+    // που μέσα σε ένα sitemap 3.800 URLs ρίχνουν την εμπιστοσύνη σε ολόκληρο το αρχείο.
+    // Αν το `matchCount` λείπει (αποτυχία του query), ΔΕΝ φιλτράρουμε — ποτέ άδειο τμήμα.
     ...players
+      .filter((player) => {
+        const count = player.matchCount;
+        if (count === undefined || count === null) return true;
+        return count > 0;
+      })
       .map((player) =>
         sitemapEntry(player.href, {
           changeFrequency: "monthly",

@@ -3,6 +3,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { TournamentSeoSection } from "@/components/public/TournamentSeoSection";
 import { TournamentResultsSection } from "@/components/public/TournamentResultsSection";
+import { TournamentNewsSection } from "@/components/public/TournamentNewsSection";
+import { findNewsArticlesForTournament } from "@/lib/cms/news";
 import {
   getTournamentSeoData,
   getTournamentSeoStages,
@@ -113,9 +115,12 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   // Παράλληλα (Promise.all) τα αποτελέσματα ανά φάση: οι καρτέλες MATCHES/RANKING
   // ζωγραφίζονται με κλικ, άρα στο HTML δεν υπήρχε κανένας αγώνας. Ξεχωριστό query,
   // ώστε αποτυχία του ενός να μη ρίχνει το άλλο.
-  const [seoData, seoStages] = await Promise.all([
+  const [seoData, seoStages, relatedNews] = await Promise.all([
     getTournamentSeoData(summary.documentId),
     getTournamentSeoStages(summary.documentId).catch(() => [] as TournamentSeoStage[]),
+    // Άρθρα που αναφέρουν αυτή τη διοργάνωση: η σελίδα τουρνουά δεν έδειχνε κανένα,
+    // ενώ τα άρθρα έδειχναν το τουρνουά. Το link είναι αμοιβαίο τώρα.
+    findNewsArticlesForTournament(canonicalSlug).catch(() => []),
   ]);
 
   return (
@@ -145,12 +150,14 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             ? resolvedSearchParams.match
             : null
         }
+        relatedNewsCount={relatedNews.length}
         seoSection={
           <>
             {seoData ? <TournamentSeoSection data={seoData} /> : null}
             <TournamentResultsSection stages={seoStages} title={summary.title} />
           </>
         }
+        newsSection={<TournamentNewsSection articles={relatedNews} />}
       />
     </CmsPageShell>
   );

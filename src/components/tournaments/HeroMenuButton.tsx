@@ -11,7 +11,10 @@ import Link from "next/link";
 
 export type HeroMenuButtonProps = {
   label: string;
-  iconSrc: string;
+  /** Εικονίδιο από `/public/icons webp`. Προαιρετικό όταν δίνεται `emoji`. */
+  iconSrc?: string;
+  /** Εναλλακτικό του εικονιδίου: emoji (π.χ. 📰 για τα άρθρα της διοργάνωσης). */
+  emoji?: string;
   active: boolean;
   onClick: () => void;
   href?: string | null;
@@ -21,6 +24,7 @@ export type HeroMenuButtonProps = {
 export function HeroMenuButton({
   label,
   iconSrc,
+  emoji,
   active,
   onClick,
   href,
@@ -33,16 +37,27 @@ export function HeroMenuButton({
   }`;
   const content = (
     <>
-      <Image
-        src={iconSrc}
-        alt={label}
-        width={56}
-        height={56}
-        className={`h-[44px] w-[44px] object-contain transition duration-200 sm:h-[50px] sm:w-[50px] ${
-          active ? "scale-105" : "opacity-95 group-hover:scale-105"
-        }`}
-        unoptimized
-      />
+      {iconSrc ? (
+        <Image
+          src={iconSrc}
+          alt={label}
+          width={56}
+          height={56}
+          className={`h-[44px] w-[44px] object-contain transition duration-200 sm:h-[50px] sm:w-[50px] ${
+            active ? "scale-105" : "opacity-95 group-hover:scale-105"
+          }`}
+          unoptimized
+        />
+      ) : (
+        <span
+          aria-hidden
+          className={`select-none text-[30px] leading-none transition duration-200 sm:text-[34px] ${
+            active ? "scale-105" : "opacity-95 group-hover:scale-105"
+          }`}
+        >
+          {emoji}
+        </span>
+      )}
       {badge != null && badge !== '' ? (
         <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white shadow-[0_2px_6px_rgba(239,68,68,0.5)] animate-pulse">
           {badge}

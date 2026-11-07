@@ -22,6 +22,8 @@ export type PublicPlayerCard = {
   photoUrl: string | null;
   href: string;
   updatedAt?: string | null;
+  /** Αγώνες καριέρας (career_stats.overall.totalMatches). null = δεν ζητήθηκε. */
+  matchCount?: number | null;
 };
 
 export type PublicPlayerGameStats = {
@@ -1154,7 +1156,10 @@ export const getPublicPlayerProfileSummary = async (
   };
 };
 
-export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> => {
+export const listPlayers = async (
+  limit = 100000,
+  options: { withMatchCount?: boolean } = {},
+): Promise<PublicPlayerCard[]> => {
   const pageSize = 1000;
   const maxTotal = Math.max(0, Number.isFinite(limit) ? Number(limit) : 0);
   const hardCap = 50000;
@@ -1167,6 +1172,11 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
   baseParams.set("fields[3]", "city");
   baseParams.set("fields[4]", "documentId");
   baseParams.set("fields[5]", "updatedAt");
+  if (options.withMatchCount) {
+    // Μόνο το sitemap το ζητάει: το career_stats είναι μεγάλο (≈3,8 MB/1000 αθλητές)
+    // και ο κατάλογος /players δεν το χρειάζεται.
+    baseParams.set("fields[6]", "career_stats");
+  }
   baseParams.set("populate[club][fields][0]", "name");
   baseParams.set("populate[club][fields][1]", "slug");
   baseParams.set("populate[photo_main][fields][0]", "url");
@@ -1206,7 +1216,15 @@ export const listPlayers = async (limit = 100000): Promise<PublicPlayerCard[]> =
 
   const sliced = maxTotal > 0 ? allRows.slice(0, Math.min(maxTotal, hardCap)) : allRows.slice(0, hardCap);
   return sliced
-    .map(mapPlayerCard)
+    .map((row: unknown) => {
+      const card = mapPlayerCard(row);
+      if (!card || !options.withMatchCount) return card;
+      const entity = unwrapEntity(row);
+      const overall = (entity?.career_stats as { overall?: { totalMatches?: unknown } } | null)?.overall;
+      const count = Number(overall?.totalMatches);
+      card.matchCount = Number.isFinite(count) ? count : 0;
+      return card;
+    })
     .filter((row: PublicPlayerCard | null): row is PublicPlayerCard => Boolean(row))
     .filter(
       (row: PublicPlayerCard) =>
