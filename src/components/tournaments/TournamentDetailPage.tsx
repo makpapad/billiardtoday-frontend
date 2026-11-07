@@ -6011,27 +6011,6 @@ export function TournamentDetailPage({
     setActiveView("live");
   };
 
-  const [liveViewerCount, setLiveViewerCount] = useState(15 + (summary.documentId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 8));
-
-  useEffect(() => {
-    if (eventLiveSessions.length === 0) return;
-    let timer: NodeJS.Timeout;
-    const tick = () => {
-      const realCount = eventLiveSessions.length;
-      if (realCount > 23) {
-        setLiveViewerCount(realCount);
-        return;
-      }
-      setLiveViewerCount(15 + Math.floor(Math.random() * 8));
-      const delay = 40000 + Math.floor(Math.random() * 80000);
-      timer = setTimeout(tick, delay);
-    };
-    tick();
-    return () => clearTimeout(timer);
-  }, [eventLiveSessions]);
-
-  const showLiveBadge = eventLiveSessions.length > 0;
-
   const switchToTournament = () => {
     if (
       typeof document !== "undefined" &&
@@ -7599,7 +7578,6 @@ export function TournamentDetailPage({
         active={activeView === "live"}
         onClick={switchToLive}
         href={externalLiveTablesHref}
-        badge={showLiveBadge ? liveViewerCount : null}
       />
       <HeroMenuButton
         label="Tournament"
