@@ -4401,6 +4401,8 @@ export function TournamentDetailPage({
         const match = normalized.match
           ? normalizeEntity<{
               number?: unknown;
+              group_label?: unknown;
+              round?: unknown;
               player1?: unknown;
               player2?: unknown;
             }>(normalized.match, `${normalized.id}-match`)
@@ -4487,6 +4489,17 @@ export function TournamentDetailPage({
           typeof (normalized.metadata as Record<string, unknown>).linkedMatchDocumentId === "string"
             ? ((normalized.metadata as Record<string, unknown>).linkedMatchDocumentId as string)
             : null;
+        // Placement stages ("Ranking 9-22") store their pair label (9-10, 11-12…)
+        // in group_label, not in `number`: the Group column must show that label
+        // instead of turning the match index into a group letter.
+        const matchGroupLabel =
+          typeof match?.group_label === "string" && match.group_label.trim()
+            ? match.group_label.trim()
+            : null;
+        const matchRound =
+          typeof match?.round === "string" && match.round.trim()
+            ? match.round.trim().toLowerCase()
+            : null;
         const resolvedTrainingPlayer =
           normalized.slot_type === "training"
             ? timetableTrainingPlayers.resolve(
@@ -4564,6 +4577,8 @@ export function TournamentDetailPage({
           matchPlayer2Country:
             player2Country,
           matchDocumentId: match?.documentId ?? linkedMatchDocumentId,
+          matchGroupLabel,
+          matchRound,
         } satisfies NormalizedTimetableSlot;
       })
       .filter((slot) => slot.isVisible);
@@ -7211,14 +7226,16 @@ export function TournamentDetailPage({
                             {timetableViewMode === "matches" ? (
                               <>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
-                                  {slot.groupNumber !== null
-                                    ? formatGroupDisplayLabel(
-                                        slot.groupNumber,
-                                        stageLabelModeByDocumentId.get(
-                                          slot.stageDocumentId ?? "",
-                                        ) ?? "letters",
-                                      )
-                                    : "-"}
+                                  {slot.matchRound === "placement" && slot.matchGroupLabel
+                                    ? slot.matchGroupLabel
+                                    : slot.groupNumber !== null
+                                      ? formatGroupDisplayLabel(
+                                          slot.groupNumber,
+                                          stageLabelModeByDocumentId.get(
+                                            slot.stageDocumentId ?? "",
+                                          ) ?? "letters",
+                                        )
+                                      : "-"}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap text-center align-middle">
                                   {slot.matchNumber !== null ? `Match ${slot.matchNumber}` : "-"}

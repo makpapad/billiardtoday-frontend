@@ -1154,6 +1154,8 @@ export async function GET(
             queryParams.set('populate[timetable_slots][populate][stage][fields][1]', 'title')
             queryParams.set('populate[timetable_slots][populate][match][fields][0]', 'documentId')
             queryParams.set('populate[timetable_slots][populate][match][fields][1]', 'number')
+            queryParams.set('populate[timetable_slots][populate][match][fields][2]', 'group_label')
+            queryParams.set('populate[timetable_slots][populate][match][fields][3]', 'round')
             queryParams.set('populate[timetable_slots][populate][match][populate][player1][fields][0]', 'full_name')
             queryParams.set('populate[timetable_slots][populate][match][populate][player1][fields][1]', 'full_name_en')
             queryParams.set('populate[timetable_slots][populate][match][populate][player1][fields][2]', 'documentId')
