@@ -122,14 +122,81 @@ export const buildTournamentOverviewParagraphs = (
   return [sourceDescription, opening, coverage, followAlong].filter(Boolean);
 };
 
+/**
+ * Meta description: μία γραμμή, ≤158 χαρακτήρες, κομμένη σε λέξη.
+ * ΧΩΡΙΣ αυτό, μόλις η διοργάνωση αποκτήσει `description`, το meta γινόταν
+ * ολόκληρη η πρώτη παράγραφος (1.400+ χαρακτήρες, με αλλαγές γραμμής).
+ */
+const clampMetaDescription = (value: string, max = 158) => {
+  const clean = cleanText(value).replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  if (clean.length <= max) return clean;
+  const slice = clean.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > 60 ? slice.slice(0, lastSpace) : slice;
+  return `${cut.replace(/[\s,;:.\-–]+$/, "")}.`;
+};
+
+/** «2-8 November 2026» όταν ίδιος μήνας, «29 October - 3 November 2026» όταν όχι. */
+const compactDateRange = (
+  start: string | null | undefined,
+  end: string | null | undefined,
+  locale = "en-US",
+) => {
+  // Οι ημερομηνίες του summary έρχονται ως «2026-11-01T22:00:00.000Z» (μεσάνυχτα Αθήνας
+  // σε UTC) ή ως σκέτο «2026-11-02». Γι' αυτό μορφοποιούμε ΡΗΤΑ σε Europe/Athens — ίδια
+  // σύμβαση με την υπόλοιπη σελίδα. Με UTC έβγαινε 1-7 Nov αντί 2-8 Nov.
+  const parse = (value: string | null | undefined) => {
+    if (!value) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const TZ = "Europe/Athens";
+  const parts = (d: Date) => {
+    const f = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+    const map = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
+    return { y: Number(map.year), m: Number(map.month), d: Number(map.day) };
+  };
+  const a = parse(start);
+  const b = parse(end);
+  const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) =>
+    d.toLocaleDateString(locale, { ...opts, timeZone: TZ });
+  if (a && b) {
+    const pa = parts(a);
+    const pb = parts(b);
+    if (pa.y === pb.y && pa.m === pb.m) {
+      return `${pa.d}-${pb.d} ${fmt(b, { month: "long", year: "numeric" })}`;
+    }
+    if (pa.y === pb.y) {
+      return `${fmt(a, { day: "numeric", month: "long" })} - ${fmt(b, { day: "numeric", month: "long", year: "numeric" })}`;
+    }
+    return `${fmt(a, { day: "numeric", month: "long", year: "numeric" })} - ${fmt(b, { day: "numeric", month: "long", year: "numeric" })}`;
+  }
+  return a ? fmt(a, { day: "numeric", month: "long", year: "numeric" }) : null;
+};
+
+/**
+ * Meta description από ΔΕΔΟΜΕΝΑ, όχι από κολόβωμα κειμένου:
+ * «<τίτλος>, 2-8 November 2026 at <γήπεδο>, <πόλη>, <χώρα>. Live results, draw and
+ * stage-by-stage scores.» Μία γραμμή, ≤158 χαρακτήρες, πάντα ολοκληρωμένη πρόταση.
+ */
 export const buildTournamentDescription = (
   summary: TournamentEventSummary,
   locale = "en-US",
 ) => {
   const title = buildTournamentTitle(summary);
-  const overviewParagraphs = buildTournamentOverviewParagraphs(summary, locale);
-  const lead = overviewParagraphs[0] || "";
-  const fallback = overviewParagraphs[1] || "";
-
-  return cleanText(lead) || cleanText(fallback) || `${title} tournament page with schedule and results.`;
+  const range = compactDateRange(summary.startDate, summary.endDate, locale);
+  const venue = cleanText(summary.venueName || summary.clubName);
+  const place = [summary.venueCity || summary.clubCity, summary.venueCountry || summary.clubCountry]
+    .map((value) => cleanText(value))
+    .filter(Boolean)
+    .join(", ");
+  const where = venue
+    ? ` at ${venue}${place ? `, ${place}` : ""}`
+    : place
+      ? ` in ${place}`
+      : "";
+  const core = `${title}${range ? `, ${range}` : ""}${where}.`;
+  const tail = " Live results, draw and stage-by-stage scores.";
+  return clampMetaDescription(`${core}${tail}`, 158) || core;
 };
