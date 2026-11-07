@@ -143,24 +143,31 @@ const compactDateRange = (
   end: string | null | undefined,
   locale = "en-US",
 ) => {
-  // Οι ημερομηνίες έρχονται ως «2026-11-02T00:00:00.000Z» ή «2026-11-02» και παριστάνουν
-  // ΗΜΕΡΟΛΟΓΙΑΚΗ ημερομηνία. Το `new Date()` + τοπική ζώνη γυρνούσε μία μέρα πίσω
-  // (2 Nov → 1 Nov), γι' αυτό κρατάμε μόνο το YYYY-MM-DD και το χτίζουμε σε UTC.
+  // Οι ημερομηνίες του summary έρχονται ως «2026-11-01T22:00:00.000Z» (μεσάνυχτα Αθήνας
+  // σε UTC) ή ως σκέτο «2026-11-02». Γι' αυτό μορφοποιούμε ΡΗΤΑ σε Europe/Athens — ίδια
+  // σύμβαση με την υπόλοιπη σελίδα. Με UTC έβγαινε 1-7 Nov αντί 2-8 Nov.
   const parse = (value: string | null | undefined) => {
     if (!value) return null;
-    const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return null;
-    return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const TZ = "Europe/Athens";
+  const parts = (d: Date) => {
+    const f = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+    const map = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
+    return { y: Number(map.year), m: Number(map.month), d: Number(map.day) };
   };
   const a = parse(start);
   const b = parse(end);
   const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) =>
-    d.toLocaleDateString(locale, { ...opts, timeZone: "UTC" });
+    d.toLocaleDateString(locale, { ...opts, timeZone: TZ });
   if (a && b) {
-    if (a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth()) {
-      return `${a.getUTCDate()}-${b.getUTCDate()} ${fmt(b, { month: "long", year: "numeric" })}`;
+    const pa = parts(a);
+    const pb = parts(b);
+    if (pa.y === pb.y && pa.m === pb.m) {
+      return `${pa.d}-${pb.d} ${fmt(b, { month: "long", year: "numeric" })}`;
     }
-    if (a.getUTCFullYear() === b.getUTCFullYear()) {
+    if (pa.y === pb.y) {
       return `${fmt(a, { day: "numeric", month: "long" })} - ${fmt(b, { day: "numeric", month: "long", year: "numeric" })}`;
     }
     return `${fmt(a, { day: "numeric", month: "long", year: "numeric" })} - ${fmt(b, { day: "numeric", month: "long", year: "numeric" })}`;
