@@ -122,14 +122,37 @@ export const buildTournamentOverviewParagraphs = (
   return [sourceDescription, opening, coverage, followAlong].filter(Boolean);
 };
 
+/**
+ * Meta description: μία γραμμή, ≤158 χαρακτήρες, κομμένη σε λέξη.
+ * ΧΩΡΙΣ αυτό, μόλις η διοργάνωση αποκτήσει `description`, το meta γινόταν
+ * ολόκληρη η πρώτη παράγραφος (1.400+ χαρακτήρες, με αλλαγές γραμμής).
+ */
+const clampMetaDescription = (value: string, max = 158) => {
+  const clean = cleanText(value).replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  if (clean.length <= max) return clean;
+  const slice = clean.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > 60 ? slice.slice(0, lastSpace) : slice;
+  return `${cut.replace(/[\s,;:.\-–]+$/, "")}.`;
+};
+
 export const buildTournamentDescription = (
   summary: TournamentEventSummary,
   locale = "en-US",
 ) => {
   const title = buildTournamentTitle(summary);
   const overviewParagraphs = buildTournamentOverviewParagraphs(summary, locale);
-  const lead = overviewParagraphs[0] || "";
-  const fallback = overviewParagraphs[1] || "";
+  // [0] = περιγραφή διοργάνωσης (αν υπάρχει), [1] = αυτόματη σύνοψη με ημερομηνίες/γήπεδο.
+  // Για το meta προτιμάμε τη σύνοψη: λέει πότε/πού, που είναι το ζητούμενο στο SERP.
+  const generated = overviewParagraphs[1] || "";
+  const sourceText = overviewParagraphs[0] || "";
+  const lead = clampMetaDescription(generated || sourceText);
+  const fallback = clampMetaDescription(sourceText);
 
-  return cleanText(lead) || cleanText(fallback) || `${title} tournament page with schedule and results.`;
+  return (
+    lead ||
+    fallback ||
+    `${title} tournament page with schedule and results.`
+  );
 };
