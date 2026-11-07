@@ -143,10 +143,14 @@ const compactDateRange = (
   end: string | null | undefined,
   locale = "en-US",
 ) => {
+  // Οι ημερομηνίες έρχονται ως «2026-11-02T00:00:00.000Z» ή «2026-11-02» και παριστάνουν
+  // ΗΜΕΡΟΛΟΓΙΑΚΗ ημερομηνία. Το `new Date()` + τοπική ζώνη γυρνούσε μία μέρα πίσω
+  // (2 Nov → 1 Nov), γι' αυτό κρατάμε μόνο το YYYY-MM-DD και το χτίζουμε σε UTC.
   const parse = (value: string | null | undefined) => {
     if (!value) return null;
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d;
+    const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
   };
   const a = parse(start);
   const b = parse(end);
