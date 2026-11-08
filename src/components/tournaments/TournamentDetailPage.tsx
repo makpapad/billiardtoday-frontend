@@ -971,10 +971,54 @@ const buildSessionPairKeys = (session: EventLiveSession) => {
   return keys;
 };
 
-const resolveLiveSessionTableLabel = (session: EventLiveSession) => {
+const normalizeTableNameKey = (value: string | null | undefined) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const formatTableLabel = (value: string) => {
+  const label = value.replace(/\s+/g, " ").trim();
+  if (!label) return null;
+  return /^\d+$/.test(label) ? `Table ${label}` : label;
+};
+
+/**
+ * Το τραπέζι του live ματς. Σειρά προτεραιότητας:
+ * 1. το `tableNumber` της συνεδρίας (σπάνια συμπληρωμένο),
+ * 2. το πρόγραμμα: το slot που είναι δεμένο με το ίδιο ζευγάρι στην ίδια φάση,
+ * 3. το `screenIdentifier` (`...-S1-...`) — τελευταία λύση, γιατί το `-S1-`
+ *    δείχνει σετ οθονών και δύο διαφορετικά τραπέζια μπορεί να βγουν ίδια.
+ */
+const resolveLiveSessionTableLabel = (
+  session: EventLiveSession,
+  timetableSlots?: NormalizedTimetableSlot[],
+) => {
   const explicitTable = String(session.tableNumber ?? "").replace(/\s+/g, " ").trim();
   if (explicitTable) {
     return /^\d+$/.test(explicitTable) ? `Table ${explicitTable}` : explicitTable;
+  }
+
+  const player1 = normalizeTableNameKey(session.player1Name);
+  const player2 = normalizeTableNameKey(session.player2Name);
+  if (player1 && player2 && Array.isArray(timetableSlots) && timetableSlots.length > 0) {
+    const slot = timetableSlots.find((candidate) => {
+      const left = normalizeTableNameKey(candidate.matchPlayer1Name);
+      const right = normalizeTableNameKey(candidate.matchPlayer2Name);
+      if (!left || !right || !candidate.tableLabel) return false;
+      const samePair =
+        (left === player1 && right === player2) || (left === player2 && right === player1);
+      if (!samePair) return false;
+      return (
+        !session.eventStageId ||
+        !candidate.stageDocumentId ||
+        candidate.stageDocumentId === session.eventStageId
+      );
+    });
+    const slotLabel = slot?.tableLabel ? formatTableLabel(slot.tableLabel) : null;
+    if (slotLabel) return slotLabel;
   }
 
   const screenIdentifier = String(session.screenIdentifier ?? session.screenId ?? "").trim();
@@ -7397,7 +7441,7 @@ export function TournamentDetailPage({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
-              const tableLabel = resolveLiveSessionTableLabel(session);
+              const tableLabel = resolveLiveSessionTableLabel(session, timetableSlots);
               const photoFallback =
                 apiPhotoFallbackBySessionId.get(
                   String(
