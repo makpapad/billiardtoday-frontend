@@ -310,6 +310,7 @@ const fetchStageMeta = async (stageId: string): Promise<Record<string, unknown> 
     url.searchParams.set('fields[0]', 'id')
     url.searchParams.set('fields[1]', 'documentId')
     url.searchParams.set('fields[2]', 'stage_type')
+    url.searchParams.set('fields[3]', 'bracket_config')
     url.searchParams.set('pagination[limit]', '1')
 
     const res = await fetchWithOptionalAuth(url.toString())
@@ -482,6 +483,33 @@ export async function GET(
 
         const stageMeta = await fetchStageMeta(stageId)
         const isKnockout = isKnockoutStageType(stageMeta?.stage_type)
+        // Φάση κατάταξης («Ranking 9-22»): η κατάταξη βγαίνει από τα ζευγάρια
+        // της, οπότε ρωτάμε πάντα το Strapi — οι αποθηκευμένες γραμμές θα έμεναν
+        // παγωμένες μετά το πρώτο ζευγάρι.
+        const isPlacement = (() => {
+            const raw = stageMeta?.bracket_config
+            const config =
+                raw && typeof raw === 'object'
+                    ? (raw as Record<string, unknown>)
+                    : typeof raw === 'string'
+                        ? (() => {
+                              try {
+                                  const parsed = JSON.parse(raw)
+                                  return parsed && typeof parsed === 'object'
+                                      ? (parsed as Record<string, unknown>)
+                                      : null
+                              } catch {
+                                  return null
+                              }
+                          })()
+                        : null
+            if (!config) return false
+            return (
+                config.placement === true ||
+                config.stage_role === 'placement' ||
+                config.mode === 'placement_by_rank'
+            )
+        })()
         const round = req.nextUrl.searchParams.get('round') || null
         const mode = req.nextUrl.searchParams.get('mode') || null
 
@@ -503,7 +531,7 @@ export async function GET(
             }
         }
 
-        if (!isKnockout) {
+        if (!isKnockout && !isPlacement) {
             const storedResults = await fetchStoredStageResults(stageId)
             // Μηδενικές προδημοσιευμένες γραμμές (ο calculator δεν έχει τρέξει) δεν
             // είναι κατάταξη — προχώρα στη computed κατάταξη από τους αγώνες, αλλιώς
