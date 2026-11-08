@@ -5693,8 +5693,13 @@ export function TournamentEventsContent({
 
   const selectedBracketShowsTieBreak =
     selectedBracketMatch !== null &&
-    (typeof selectedBracketMatch.match.tieBreak1 === "number" ||
-      typeof selectedBracketMatch.match.tieBreak2 === "number");
+    // Το T.B. υπάρχει μόνο όταν παίχτηκε πραγματικά tie-break. Μηδενικά από
+    // παλιές καταχωρήσεις (π.χ. σε φάση με άνισες στεκιές) δεν πρέπει να
+    // εμφανίζουν τη στήλη.
+    ((typeof selectedBracketMatch.match.tieBreak1 === "number" &&
+      selectedBracketMatch.match.tieBreak1 > 0) ||
+      (typeof selectedBracketMatch.match.tieBreak2 === "number" &&
+        selectedBracketMatch.match.tieBreak2 > 0));
   const selectedBracketDetailsGridClass = selectedBracketShowsTieBreak
     ? "grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3"
     : "grid min-w-[800px] grid-cols-[minmax(180px,1.6fr)_repeat(7,minmax(56px,0.75fr))] items-center gap-3";
