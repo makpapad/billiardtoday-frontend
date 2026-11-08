@@ -111,6 +111,14 @@ function isBracketStage(stage: NormalizedEventStage | null | undefined): boolean
   });
 }
 
+function isPlacementStage(stage: NormalizedEventStage | null | undefined): boolean {
+  if (!stage) return false;
+  if ((stage.stageType ?? "").trim().toLowerCase() === "placement") return true;
+  return stage.groups.some(
+    (match) => (match.round ?? "").trim().toLowerCase() === "placement",
+  );
+}
+
 function toGroupLetter(value: number | null | undefined): string | null {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 1) return null;
   let current = Math.floor(value);
@@ -2599,7 +2607,7 @@ function StageRankingTable({
     koRankingRound,
     eventRulesetKey,
   ]);
-  const showStageGroupColumns = !isBracketStage(stage);
+  const showStageGroupColumns = !isBracketStage(stage) && !isPlacementStage(stage);
   const fivePins = isFivePinsRuleset(eventRulesetKey) || fivePinsProp;
   const showGroupColumn =
     showStageGroupColumns &&
@@ -2799,6 +2807,7 @@ function StageRankingTable({
   visibleResults.forEach((result) => {
     if (
       isBracketStage(stage) ||
+      isPlacementStage(stage) ||
       result.groupPosition === null ||
       groupCountForRankSlots <= 0
     ) {
@@ -2967,7 +2976,7 @@ function StageRankingTable({
                 : "-";
             const metricTooltip = stageMetricTooltipByResultId.get(result.id);
             const slottedDisplayRank = displayRankByResultId.get(result.id);
-            const displayRank = isBracketStage(stage)
+            const displayRank = isBracketStage(stage) || isPlacementStage(stage)
               ? result.finalPosition
               : eventRankIsProvisional
                 ? slottedDisplayRank ?? index + 1
