@@ -486,7 +486,13 @@ export async function GET(
         const mode = req.nextUrl.searchParams.get('mode') || null
 
         if (isKnockout && !round && !mode) {
-            const storedResults = await fetchStoredStageResults(stageId)
+            // Καμία κατάταξη πριν παιχτεί έστω ένας αγώνας: οι αποθηκευμένες
+            // γραμμές τέτοιας φάσης είναι η σειρά της κλήρωσης με μηδενικά, που
+            // δεν είναι βαθμολογία. Μόλις μπει αποτέλεσμα, ισχύει ως έχει.
+            const stageMatches = await fetchStageMatches(stageId)
+            const hasPlayedMatch =
+                Array.isArray(stageMatches) && stageMatches.some((match) => hasMatchResult(match))
+            const storedResults = hasPlayedMatch ? await fetchStoredStageResults(stageId) : null
             if (storedResults) {
                 return NextResponse.json({
                     source: 'stored-results',
