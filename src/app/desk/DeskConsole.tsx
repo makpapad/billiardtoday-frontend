@@ -189,8 +189,8 @@ export default function DeskConsole({
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.highRun },
-                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.highRun },
+                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.highRun, run: next.p1.run, liveRun: 0 },
+                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.highRun, run: next.p2.run, liveRun: 0 },
               ],
               inningsDetail: next.detail,
               finish,

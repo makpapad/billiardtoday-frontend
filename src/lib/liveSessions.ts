@@ -271,8 +271,19 @@ export function normalizeLiveSessionRow(row: UnknownRecord) {
   const attrs = unwrapStrapiNode(row?.attributes) || row;
   const club = unwrapStrapiNode(attrs?.club) || {};
   const players = Array.isArray(attrs?.players) ? attrs.players : [];
-  const playerA = players[0] || {};
-  const playerB = players[1] || {};
+  /* Εφεδρικά από τις στήλες, όταν το session δεν έχει json «players» (π.χ. γραμμένο από το desk). */
+  const playerA = players[0] || {
+    name: attrs?.player1Name ?? null,
+    points: attrs?.player_1_points ?? null,
+    innings: attrs?.player_1_innings ?? null,
+    hr: attrs?.player_1_high_run ?? null,
+  };
+  const playerB = players[1] || {
+    name: attrs?.player2Name ?? null,
+    points: attrs?.player_2_points ?? null,
+    innings: attrs?.player_2_innings ?? null,
+    hr: attrs?.player_2_high_run ?? null,
+  };
   const sessionId = String(row?.documentId || row?.id || attrs?.documentId || attrs?.id || "");
   const inningsA = Number(playerA?.innings ?? attrs?.inningsA ?? attrs?.innings ?? 0);
   const inningsB = Number(playerB?.innings ?? attrs?.inningsB ?? attrs?.innings ?? 0);
