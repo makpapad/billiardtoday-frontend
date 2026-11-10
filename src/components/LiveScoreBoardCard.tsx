@@ -358,14 +358,20 @@ export function LiveScoreBoardCard({
   };
 
   const DEFAULT_SEGMENTS = 40;
-  const maxSegments = Math.max(1, Math.min(timerTotal ?? DEFAULT_SEGMENTS, 60));
-  const totalLogical = Math.max(timerTotal ?? DEFAULT_SEGMENTS, 1);
-  const clampedProgress = Math.min(Math.max(timerProgress ?? 0, 0), totalLogical);
+  /* Όταν ο πίνακας δεν έχει ρολόι βολών (π.χ. γραμμένος από το desk) το 0 δεν πρέπει
+     να μετράει ως «έληξε» — γι' αυτό έβγαινε κόκκινο. */
+  const hasShotClock = Number(timerTotal ?? 0) > 0;
+  const effectiveTotal = hasShotClock ? Number(timerTotal) : 0;
+  const maxSegments = Math.max(1, Math.min(effectiveTotal || DEFAULT_SEGMENTS, 60));
+  const totalLogical = Math.max(effectiveTotal || DEFAULT_SEGMENTS, 1);
+  const clampedProgress = hasShotClock
+    ? Math.min(Math.max(timerProgress ?? 0, 0), totalLogical)
+    : 0;
   const remainingSegments = Math.max(totalLogical - clampedProgress, 0);
   const remainingRatio = totalLogical > 0 ? remainingSegments / totalLogical : 0;
   const filledSegments = Math.round(remainingRatio * maxSegments);
   const timerLabel = remainingSegments < 100 ? remainingSegments.toString().padStart(2, "0") : remainingSegments.toString();
-  const timerCritical = remainingSegments <= 10;
+  const timerCritical = hasShotClock && remainingSegments <= 10;
   const timerActive = Boolean(timerRunning);
   const renderFlagBadge = ({ name, country }: { name?: string; country?: string | null }) => {
     const initial = (name || "").trim().slice(0, 1).toUpperCase() || "P";
@@ -776,9 +782,7 @@ export function LiveScoreBoardCard({
               </button>
             </div>
           </div>
-          <div className="px-1">
-            <TimerBar />
-          </div>
+          <div className="px-1">{hasShotClock ? <TimerBar /> : null}</div>
           <div className="grid grid-cols-[40px_minmax(0,1fr)_52px] gap-1.5">
             <div className="flex justify-center">
               <TimeoutDots used={timeoutsUsed2} max={maxTimeouts2} />
@@ -849,7 +853,7 @@ export function LiveScoreBoardCard({
             className="row-start-3 row-end-4 col-start-2 col-end-4 flex items-center px-1"
             style={{ paddingRight: desktopScoreReserve }}
           >
-            <TimerBar />
+            {hasShotClock ? <TimerBar /> : null}
           </div>
           <div
             className="row-start-4 row-end-5 col-start-2 col-end-4 flex items-center px-1"

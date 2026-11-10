@@ -22,6 +22,8 @@ export type Match = {
   player1?: string | null;
   player2?: string | null;
   done?: boolean;
+  /** Σε ποιο τραπέζι παίζεται τώρα (null/undefined = ελεύθερος). */
+  openOn?: string | null;
 };
 
 type Side = { points: number; run: number; hr: number; hr2: number; innings: number };
@@ -124,6 +126,33 @@ export default function DeskConsole({
   const [publicOpen, setPublicOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const saveTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+  /* Τα ανοιχτά τραπέζια δεν χάνονται με ανανέωση σελίδας. */
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("desk.tables.v1");
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { tables?: TableState[]; selected?: number };
+      if (Array.isArray(saved.tables) && saved.tables.some((t) => t?.sessionId)) {
+        setTables(saved.tables.map((t) => ({ ...t, history: [] })));
+        if (saved.selected) setSelected(saved.selected);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const payload = {
+        selected,
+        tables: tables.map((t) => ({ ...t, history: [], saving: false, buffer: "" })),
+      };
+      window.localStorage.setItem("desk.tables.v1", JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
+  }, [tables, selected]);
   const live = useRef<DeskLivePublisher | null>(null);
 
   useEffect(() => {
@@ -796,7 +825,9 @@ export default function DeskConsole({
           <div className="picker-list">
             {(() => {
               const counters = new Map<number, number>();
-              return matches.map((match) => {
+              /* Ό,τι έχει ήδη ανοίξει σε τραπέζι δεν ξαναεμφανίζεται. */
+              const playable = matches.filter((match) => !match.openOn);
+              return playable.map((match) => {
                 const key = Number(match.groupNumber ?? 0);
                 const seq = (counters.get(key) ?? 0) + 1;
                 counters.set(key, seq);
