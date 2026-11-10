@@ -606,6 +606,20 @@ export default function DeskConsole({
                           publishLive(next);
                           pushLog(`T${table.no} · Live on`);
                         } else {
+                          if (next.sessionId && next.screenId && next.match) {
+                            live.current?.stop({
+                              screenId: next.screenId,
+                              sessionId: next.sessionId,
+                              names: [
+                                next.match.player1 || "Player A",
+                                next.match.player2 || "Player B",
+                              ],
+                              points: [next.p1.points, next.p2.points],
+                              innings: [next.p1.innings, next.p2.innings],
+                              highRuns: [next.p1.hr, next.p2.hr],
+                              active: next.active,
+                            });
+                          }
                           pushLog(`T${table.no} · Live off`);
                         }
                       }}

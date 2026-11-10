@@ -149,6 +149,32 @@ export class DeskLivePublisher {
     this.queue.set(state.screenId, [...(this.queue.get(state.screenId) || []), message].slice(-5));
   }
 
+  /** Σβήνει τον αγώνα από το Live (η οθόνη «κλείνει») χωρίς να σβήσει το session. */
+  stop(state: DeskLiveState) {
+    const message = JSON.stringify({
+      type: "score:update",
+      screenId: state.screenId,
+      sessionId: state.sessionId,
+      clientId: `desk-${state.screenId}`,
+      ts: Date.now(),
+      ended: true,
+      isPublic: false,
+      players: [],
+    });
+    const socket = this.socketFor(state.screenId);
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      try {
+        socket.send(message);
+      } catch {
+        this.queue.set(state.screenId, [...(this.queue.get(state.screenId) || []), message]);
+      }
+    } else {
+      this.queue.set(state.screenId, [...(this.queue.get(state.screenId) || []), message].slice(-5));
+    }
+    const screenId = state.screenId;
+    setTimeout(() => this.close(screenId), 1500);
+  }
+
   close(screenId?: string) {
     if (screenId) {
       const socket = this.sockets.get(screenId);
