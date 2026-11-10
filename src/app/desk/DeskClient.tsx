@@ -19,6 +19,7 @@ type Me = {
 type Match = {
   documentId: string;
   matchNumber?: number | null;
+  groupNumber?: number | null;
   groupLabel?: string | null;
   player1?: string | null;
   player2?: string | null;
@@ -73,7 +74,8 @@ function playerName(match: Match, side: 1 | 2): string {
 }
 
 function matchLabel(match: Match): string {
-  return `Αγώνας ${match.matchNumber ?? match.documentId}`;
+  const group = match.groupNumber ? `Όμιλος ${match.groupNumber} · ` : "";
+  return `${group}Αγώνας ${match.matchNumber ?? match.documentId}`;
 }
 
 /* ------------------------------------------------------------------ */
