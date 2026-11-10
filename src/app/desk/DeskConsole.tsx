@@ -25,6 +25,8 @@ export type Match = {
 };
 
 type Side = { points: number; innings: number; highRun: number; run: number };
+type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
+
 type TableState = {
   no: number;
   match: Match | null;
@@ -41,6 +43,8 @@ type TableState = {
   p2: Side;
   openedAt: number | null;
   history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
+  /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
+  detail: InningEntry[];
 };
 
 const MAX_TABLES = 8;
@@ -62,6 +66,7 @@ function emptyTable(no: number): TableState {
     p2: { points: 0, innings: 0, highRun: 0, run: 0 },
     openedAt: null,
     history: [],
+    detail: [],
   };
 }
 
@@ -136,6 +141,7 @@ export default function DeskConsole({
       highRuns: [table.p1.highRun, table.p2.highRun],
       runs: [table.p1.run, table.p2.run],
       liveRuns,
+      inningsDetail: table.detail,
       active: table.active,
     };
     live.current?.send(state);
@@ -186,6 +192,7 @@ export default function DeskConsole({
                 { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.highRun },
                 { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.highRun },
               ],
+              inningsDetail: next.detail,
               finish,
             }),
           });
@@ -292,11 +299,11 @@ export default function DeskConsole({
     const next = withHistory({
       ...current,
       [key]: { ...side, points: side.points + 1, run: side.run + 1, highRun: Math.max(side.highRun, side.run + 1) },
-      buffer: entryMode === "point" ? String(side.highRun + 1) : current.buffer,
+      buffer: "",
     });
     pushLog(`T${current.no} · +1 ${current.active === 0 ? current.match?.player1 : current.match?.player2}`);
     pushScore(next);
-  }, [current, entryMode, pushScore, pushLog]);
+  }, [current, pushScore, pushLog]);
 
   const enterInning = useCallback(() => {
     if (!current?.sessionId || current.finished) return;
@@ -305,8 +312,19 @@ export default function DeskConsole({
     const otherKey = current.active === 0 ? "p2" : "p1";
     const side = current[key];
     const other = current[otherKey];
+    const sideKey = current.active === 0 ? "player1" : "player2";
+    const inningNo = Math.max(1, side.innings);
+    const previous = current.detail.find((row) => row.inning === inningNo) ?? { inning: inningNo };
+    const entry = {
+      ...previous,
+      [sideKey]: { pt: value, tot: side.points + value },
+    };
+    const detail = [...current.detail.filter((row) => row.inning !== inningNo), entry].sort(
+      (a, b) => a.inning - b.inning,
+    );
     const next = withHistory({
       ...current,
+      detail,
       [key]: {
         points: side.points + value,
         /* Η στεκιά έχει ήδη μετρηθεί όταν ξεκίνησε ο παίκτης. */
@@ -645,9 +663,13 @@ export default function DeskConsole({
                 </>
               )}
             </div>
-            <div className={`val${(entryMode === "point" ? current?.p1.highRun : current?.buffer) ? "" : " empty"}`}>
+            <div className={`val${(entryMode === "point"
+                ? current?.active === 0
+                  ? current?.p1.run
+                  : current?.p2.run
+                : current?.buffer) ? "" : " empty"}`}>
               {entryMode === "point"
-                ? (current?.active === 0 ? current?.p1.highRun : current?.p2.highRun) || "–"
+                ? (current?.active === 0 ? current?.p1.run : current?.p2.run) || "–"
                 : current?.buffer || "–"}
             </div>
           </div>

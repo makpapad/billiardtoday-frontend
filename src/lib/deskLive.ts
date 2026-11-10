@@ -40,6 +40,8 @@ export type DeskLiveState = {
   /** Το σερί που γράφεται αυτή τη στιγμή — εμφανίζεται ζωντανά πριν πατηθεί ENTER. */
   liveRuns?: [number, number];
   targetPoints?: number | null;
+  /** Φύλλο αγώνα (σερί ανά στεκιά) — το Live το δείχνει στη ροή του αγώνα. */
+  inningsDetail?: Array<{ inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } }>;
   active: 0 | 1;
   isPublic?: boolean;
 };
@@ -112,6 +114,7 @@ export class DeskLivePublisher {
         player2: state.liveRuns?.[1] ?? 0,
       },
       targetPoints: state.targetPoints ?? null,
+      inningsDetail: state.inningsDetail ?? [],
       players: [
         {
           id: 1,

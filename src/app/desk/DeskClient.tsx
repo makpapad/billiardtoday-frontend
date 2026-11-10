@@ -29,6 +29,7 @@ type Match = {
 };
 
 type Side = { points: number; innings: number; highRun: number; run: number };
+type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
 type TableState = {
   sessionId: string;
   screenIdentifier: string;
@@ -41,6 +42,7 @@ type TableState = {
   buffer: string;
   finished: boolean;
   saving: boolean;
+  detail: InningEntry[];
   error: string | null;
 };
 
@@ -227,6 +229,7 @@ export default function DeskClient() {
         setTable({
           sessionId,
           screenIdentifier: opened.data.screenIdentifier,
+          detail: [],
           mode: opened.data.mode,
           matchLabel: matchLabel(match),
           names: [playerName(match, 1), playerName(match, 2)],
@@ -263,6 +266,7 @@ export default function DeskClient() {
       names: [next.names[0] || "Player A", next.names[1] || "Player B"],
       points: [next.p1.points, next.p2.points],
       runs: [next.p1.run, next.p2.run],
+      inningsDetail: next.detail,
       liveRuns: [next.active === 0 ? Number(next.buffer || 0) : 0, next.active === 1 ? Number(next.buffer || 0) : 0],
       innings: [next.p1.innings, next.p2.innings],
       highRuns: [next.p1.highRun, next.p2.highRun],
@@ -285,6 +289,7 @@ export default function DeskClient() {
                 { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.highRun },
                 { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.highRun },
               ],
+              inningsDetail: next.detail,
               finish,
             }),
           });
@@ -327,8 +332,16 @@ export default function DeskClient() {
     const otherKey = table.active === 0 ? "p2" : "p1";
     const side = table[key];
     const other = table[otherKey];
+    const sideKey = table.active === 0 ? "player1" : "player2";
+    const inningNo = Math.max(1, side.innings);
+    const previous = table.detail.find((row) => row.inning === inningNo) ?? { inning: inningNo };
+    const entry = { ...previous, [sideKey]: { pt: value, tot: side.points + value } };
+    const detail = [...table.detail.filter((row) => row.inning !== inningNo), entry].sort(
+      (a, b) => a.inning - b.inning,
+    );
     const next: TableState = {
       ...table,
+      detail,
       [key]: { points: side.points + value, innings: side.innings, highRun: Math.max(side.highRun, value), run: value },
       [otherKey]: { ...other, innings: other.innings + 1, run: 0 },
       active: table.active === 0 ? 1 : 0,
