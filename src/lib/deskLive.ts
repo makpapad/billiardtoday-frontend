@@ -35,6 +35,11 @@ export type DeskLiveState = {
   points: [number, number];
   innings: [number, number];
   highRuns: [number, number];
+  /** Το σερί της τελευταίας στεκιάς κάθε παίκτη (ό,τι δείχνει το Live ως “run”). */
+  runs?: [number, number];
+  /** Το σερί που γράφεται αυτή τη στιγμή — εμφανίζεται ζωντανά πριν πατηθεί ENTER. */
+  liveRuns?: [number, number];
+  targetPoints?: number | null;
   active: 0 | 1;
   isPublic?: boolean;
 };
@@ -43,6 +48,23 @@ export type DeskLiveState = {
 export class DeskLivePublisher {
   private sockets = new Map<string, WebSocket>();
   private queue = new Map<string, string[]>();
+  private heartbeats = new Map<string, ReturnType<typeof setInterval>>();
+
+  /** Η φυσική οθόνη δηλώνει «παρών» με hello + heartbeat κάθε 45s — το ίδιο κάνει το desk. */
+  private presence(screenId: string) {
+    if (this.heartbeats.has(screenId)) return;
+    const beat = () => {
+      const socket = this.sockets.get(screenId);
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      try {
+        socket.send(JSON.stringify({ type: "scoreboard_heartbeat", screenId }));
+      } catch {
+        /* ignore */
+      }
+    };
+    const timer = setInterval(beat, 45000);
+    this.heartbeats.set(screenId, timer);
+  }
 
   private socketFor(screenId: string): WebSocket | null {
     const existing = this.sockets.get(screenId);
@@ -51,6 +73,12 @@ export class DeskLivePublisher {
     if (!url) return null;
     const socket = new WebSocket(url);
     socket.onopen = () => {
+      try {
+        socket.send(JSON.stringify({ type: "scoreboard_hello", screenId }));
+      } catch {
+        /* ignore */
+      }
+      this.presence(screenId);
       const pending = this.queue.get(screenId) || [];
       pending.forEach((message) => {
         try {
@@ -79,25 +107,29 @@ export class DeskLivePublisher {
       isPublic: state.isPublic !== false,
       clubId: state.clubId ?? null,
       clubName: state.clubName ?? null,
-      liveRun: { player1: 0, player2: 0 },
+      liveRun: {
+        player1: state.liveRuns?.[0] ?? 0,
+        player2: state.liveRuns?.[1] ?? 0,
+      },
+      targetPoints: state.targetPoints ?? null,
       players: [
         {
           id: 1,
           name: state.names[0],
           points: state.points[0],
-          run: state.highRuns[0],
+          run: state.runs?.[0] ?? 0,
           innings: Math.max(1, state.innings[0]),
           hr: state.highRuns[0],
-          liveRun: 0,
+          liveRun: state.liveRuns?.[0] ?? 0,
         },
         {
           id: 2,
           name: state.names[1],
           points: state.points[1],
-          run: state.highRuns[1],
+          run: state.runs?.[1] ?? 0,
           innings: Math.max(1, state.innings[1]),
           hr: state.highRuns[1],
-          liveRun: 0,
+          liveRun: state.liveRuns?.[1] ?? 0,
         },
       ],
     };
@@ -122,6 +154,9 @@ export class DeskLivePublisher {
       } catch {
         /* ignore */
       }
+      const timer = this.heartbeats.get(screenId);
+      if (timer) clearInterval(timer);
+      this.heartbeats.delete(screenId);
       this.sockets.delete(screenId);
       this.queue.delete(screenId);
       return;
@@ -133,6 +168,8 @@ export class DeskLivePublisher {
         /* ignore */
       }
     });
+    this.heartbeats.forEach((timer) => clearInterval(timer));
+    this.heartbeats.clear();
     this.sockets.clear();
     this.queue.clear();
   }

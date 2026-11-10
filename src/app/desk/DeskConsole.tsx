@@ -24,7 +24,7 @@ export type Match = {
   done?: boolean;
 };
 
-type Side = { points: number; innings: number; highRun: number };
+type Side = { points: number; innings: number; highRun: number; run: number };
 type TableState = {
   no: number;
   match: Match | null;
@@ -58,8 +58,8 @@ function emptyTable(no: number): TableState {
     saving: false,
     active: 0,
     buffer: "",
-    p1: { points: 0, innings: 0, highRun: 0 },
-    p2: { points: 0, innings: 0, highRun: 0 },
+    p1: { points: 0, innings: 0, highRun: 0, run: 0 },
+    p2: { points: 0, innings: 0, highRun: 0, run: 0 },
     openedAt: null,
     history: [],
   };
@@ -124,7 +124,7 @@ export default function DeskConsole({
   }, []);
 
   /** Το Live δεν παίρνει σκορ από το Strapi — θέλει το ίδιο μήνυμα με τη φυσική οθόνη. */
-  const publishLive = useCallback((table: TableState) => {
+  const publishLive = useCallback((table: TableState, liveRuns?: [number, number]) => {
     if (!table.sessionId || !table.screenId || !table.match) return;
     const state: DeskLiveState = {
       screenId: table.screenId,
@@ -134,6 +134,8 @@ export default function DeskConsole({
       points: [table.p1.points, table.p2.points],
       innings: [table.p1.innings, table.p2.innings],
       highRuns: [table.p1.highRun, table.p2.highRun],
+      runs: [table.p1.run, table.p2.run],
+      liveRuns,
       active: table.active,
     };
     live.current?.send(state);
@@ -198,6 +200,23 @@ export default function DeskConsole({
     [token, publishLive],
   );
 
+  /** Ό,τι γράφεται στο πληκτρολόγιο φαίνεται ζωντανά στο Live (liveRun), όπως στη φυσική οθόνη. */
+  const updateBuffer = useCallback(
+    (mutate: (value: string) => string) => {
+      setTables((prev) =>
+        prev.map((t) => {
+          if (t.no !== selected) return t;
+          const next: TableState = { ...t, buffer: mutate(t.buffer).slice(0, 3) };
+          const liveRuns: [number, number] = [0, 0];
+          liveRuns[next.active === 0 ? 0 : 1] = Number(next.buffer || 0);
+          publishLive(next, liveRuns);
+          return next;
+        }),
+      );
+    },
+    [selected, publishLive],
+  );
+
   const withHistory = (table: TableState): TableState => ({
     ...table,
     history: [
@@ -238,7 +257,7 @@ export default function DeskConsole({
                   ...emptyTable(tableNo),
                   match,
                   /* Η στεκιά γράφεται πριν τους πόντους: ο 1ος παίκτης ξεκινά την 1η. */
-                  p1: { points: 0, innings: 1, highRun: 0 },
+                  p1: { points: 0, innings: 1, highRun: 0, run: 0 },
                   sessionId,
                   screenId: opened.data.screenIdentifier,
                   mode: opened.data.mode,
@@ -255,7 +274,7 @@ export default function DeskConsole({
           match,
           sessionId,
           screenId: opened.data.screenIdentifier,
-          p1: { points: 0, innings: 1, highRun: 0 },
+          p1: { points: 0, innings: 1, highRun: 0, run: 0 },
         });
         pushLog(`T${tableNo} · ${match.player1} vs ${match.player2} — άνοιξε`);
       } catch (err) {
@@ -272,7 +291,7 @@ export default function DeskConsole({
     const side = current[key];
     const next = withHistory({
       ...current,
-      [key]: { ...side, points: side.points + 1, highRun: Math.max(side.highRun, 1) },
+      [key]: { ...side, points: side.points + 1, run: side.run + 1, highRun: Math.max(side.highRun, side.run + 1) },
       buffer: entryMode === "point" ? String(side.highRun + 1) : current.buffer,
     });
     pushLog(`T${current.no} · +1 ${current.active === 0 ? current.match?.player1 : current.match?.player2}`);
@@ -293,9 +312,10 @@ export default function DeskConsole({
         /* Η στεκιά έχει ήδη μετρηθεί όταν ξεκίνησε ο παίκτης. */
         innings: side.innings,
         highRun: Math.max(side.highRun, value),
+        run: value,
       },
       /* Ο επόμενος ξεκινά νέα στεκιά — μετριέται τώρα, πριν τους πόντους του. */
-      [otherKey]: { ...other, innings: other.innings + 1 },
+      [otherKey]: { ...other, innings: other.innings + 1, run: 0 },
       active: current.active === 0 ? 1 : 0,
       buffer: "",
     });
@@ -309,7 +329,7 @@ export default function DeskConsole({
     const other = current[otherKey];
     const next = withHistory({
       ...current,
-      [otherKey]: { ...other, innings: other.innings + 1 },
+      [otherKey]: { ...other, innings: other.innings + 1, run: 0 },
       active: current.active === 0 ? 1 : 0,
       buffer: "",
     });
@@ -363,9 +383,7 @@ export default function DeskConsole({
     const onKey = (e: KeyboardEvent) => {
       if (!current?.sessionId) return;
       if (/^[0-9]$/.test(e.key)) {
-        setTables((prev) =>
-          prev.map((t) => (t.no === current.no ? { ...t, buffer: (t.buffer + e.key).slice(0, 3) } : t)),
-        );
+        updateBuffer((value) => value + e.key);
         return;
       }
       if (e.key === "Enter") {
@@ -646,11 +664,7 @@ export default function DeskConsole({
               <button
                 key={k}
                 type="button"
-                onClick={() =>
-                  setTables((prev) =>
-                    prev.map((t) => (t.no === current?.no ? { ...t, buffer: (t.buffer + k).slice(0, 3) } : t)),
-                  )
-                }
+                onClick={() => updateBuffer((value) => value + k)}
               >
                 {k}
               </button>
@@ -658,17 +672,13 @@ export default function DeskConsole({
             <button
               type="button"
               className="del"
-              onClick={() => setTables((prev) => prev.map((t) => (t.no === current?.no ? { ...t, buffer: t.buffer.slice(0, -1) } : t)))}
+              onClick={() => updateBuffer((value) => value.slice(0, -1))}
             >
               ⌫
             </button>
             <button
               type="button"
-              onClick={() =>
-                setTables((prev) =>
-                  prev.map((t) => (t.no === current?.no ? { ...t, buffer: (t.buffer + "0").slice(0, 3) } : t)),
-                )
-              }
+              onClick={() => updateBuffer((value) => value + "0")}
             >
               0
             </button>

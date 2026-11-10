@@ -28,7 +28,7 @@ type Match = {
   done?: boolean;
 };
 
-type Side = { points: number; innings: number; highRun: number };
+type Side = { points: number; innings: number; highRun: number; run: number };
 type TableState = {
   sessionId: string;
   screenIdentifier: string;
@@ -231,8 +231,8 @@ export default function DeskClient() {
           matchLabel: matchLabel(match),
           names: [playerName(match, 1), playerName(match, 2)],
           /* Η στεκιά γράφεται πριν τους πόντους. */
-          p1: { points: 0, innings: 1, highRun: 0 },
-          p2: { points: 0, innings: 0, highRun: 0 },
+          p1: { points: 0, innings: 1, highRun: 0, run: 0 },
+          p2: { points: 0, innings: 0, highRun: 0, run: 0 },
           active: 0,
           buffer: "",
           finished: false,
@@ -262,6 +262,8 @@ export default function DeskClient() {
       sessionId: next.sessionId,
       names: [next.names[0] || "Player A", next.names[1] || "Player B"],
       points: [next.p1.points, next.p2.points],
+      runs: [next.p1.run, next.p2.run],
+      liveRuns: [next.active === 0 ? Number(next.buffer || 0) : 0, next.active === 1 ? Number(next.buffer || 0) : 0],
       innings: [next.p1.innings, next.p2.innings],
       highRuns: [next.p1.highRun, next.p2.highRun],
       active: next.active,
@@ -305,7 +307,7 @@ export default function DeskClient() {
     const side = table[key];
     const next: TableState = {
       ...table,
-      [key]: { ...side, points: side.points + 1, highRun: Math.max(side.highRun, 1) },
+      [key]: { ...side, points: side.points + 1, run: side.run + 1, highRun: Math.max(side.highRun, side.run + 1) },
     };
     pushScore(next);
   }, [table, pushScore]);
@@ -327,8 +329,8 @@ export default function DeskClient() {
     const other = table[otherKey];
     const next: TableState = {
       ...table,
-      [key]: { points: side.points + value, innings: side.innings, highRun: Math.max(side.highRun, value) },
-      [otherKey]: { ...other, innings: other.innings + 1 },
+      [key]: { points: side.points + value, innings: side.innings, highRun: Math.max(side.highRun, value), run: value },
+      [otherKey]: { ...other, innings: other.innings + 1, run: 0 },
       active: table.active === 0 ? 1 : 0,
       buffer: "",
     };
