@@ -73,9 +73,10 @@ function playerName(match: Match, side: 1 | 2): string {
   return (value || (side === 1 ? "Παίκτης 1" : "Παίκτης 2")).trim();
 }
 
-function matchLabel(match: Match): string {
+function matchLabel(match: Match, seq?: number): string {
   const group = match.groupNumber ? `Όμιλος ${match.groupNumber} · ` : "";
-  return `${group}Αγώνας ${match.matchNumber ?? match.documentId}`;
+  const no = match.matchNumber ?? seq ?? null;
+  return no ? `${group}Αγώνας ${no}` : group.replace(/ · $/, "");
 }
 
 /* ------------------------------------------------------------------ */
@@ -174,6 +175,16 @@ export default function DeskClient() {
       .then((res) => setMatches(Array.isArray(res?.data) ? res.data : []))
       .catch(() => setMatches([]));
   }, [stageId, token]);
+
+  const numberedMatches = useMemo(() => {
+    const counters = new Map<number, number>();
+    return matches.map((match) => {
+      const key = Number(match.groupNumber ?? 0);
+      const next = (counters.get(key) ?? 0) + 1;
+      counters.set(key, next);
+      return { match, seq: next };
+    });
+  }, [matches]);
 
   const currentEvent = useMemo(
     () => schedule?.events?.find((ev) => ev.documentId === eventId) || null,
@@ -566,14 +577,14 @@ export default function DeskClient() {
           {matches.length === 0 ? (
             <p className="text-xs text-slate-500">Δεν υπάρχουν αγώνες σε αυτή τη φάση.</p>
           ) : (
-            matches.map((match) => (
+            numberedMatches.map(({ match, seq }) => (
               <div
                 key={match.documentId}
                 className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900 px-3 py-3"
               >
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                    {matchLabel(match)}
+                    {matchLabel(match, seq)}
                   </p>
                   <p className="text-sm">
                     {playerName(match, 1)} <span className="text-slate-500">vs</span>{" "}
