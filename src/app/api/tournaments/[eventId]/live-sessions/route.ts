@@ -98,7 +98,11 @@ export async function GET(
 
     const json = await response.json().catch(() => ({ data: [] }));
     const rows = Array.isArray(json?.data) ? json.data : [];
-    return NextResponse.json({ data: rows.map((row: RawSession) => normalizeSession(row)) });
+    const normalized = rows
+      .map((row: RawSession) => normalizeSession(row))
+      /* Ό,τι έκλεισε ο χειριστής από το desk δεν εμφανίζεται στο Live. */
+      .filter((row: Record<string, unknown>) => row.isPublic !== false);
+    return NextResponse.json({ data: normalized });
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message || "Failed to fetch tournament live sessions" },

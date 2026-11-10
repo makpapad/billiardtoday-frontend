@@ -631,6 +631,15 @@ export default function DeskConsole({
                         setSelected(table.no);
                         const next: TableState = { ...table, liveOn: !table.liveOn };
                         setTables((prev) => prev.map((t) => (t.no === table.no ? next : t)));
+                        if (next.sessionId) {
+                          void api(
+                            `/api/desk/tables/${encodeURIComponent(next.sessionId)}/visibility`,
+                            token,
+                            { method: "POST", body: JSON.stringify({ isPublic: next.liveOn }) },
+                          ).catch(() => {
+                            /* αν αποτύχει, το Live κρύβεται μόνο προσωρινά */
+                          });
+                        }
                         if (next.liveOn) {
                           publishLive(next);
                           pushLog(`T${table.no} · Live on`);
