@@ -9,8 +9,10 @@ import { FederationDetailContent } from "@/components/public/FederationDetailCon
 import { FederationClubsSection } from "@/components/public/FederationClubsSection";
 import { FederationRankingsSection } from "@/components/public/FederationRankingsSection";
 import { FederationHeroMenu, FederationPanels, type FederationTab } from "@/components/public/FederationPageTabs";
+import { FederationSeoSection } from "@/components/public/FederationSeoSection";
 import {
   countFederationPublishedEvents,
+  fetchFederationEventLinks,
   fetchFederationRankingSeries,
   fetchFederationTeamTournaments,
 } from "@/lib/federationPageData";
@@ -101,10 +103,13 @@ export default async function FederationPage({ params }: Props) {
 
   // Κάθε καρτέλα εμφανίζεται μόνο όταν έχει περιεχόμενο — ένα κουμπί που οδηγεί
   // στο «τίποτα» είναι χειρότερο από την απουσία του.
-  const [rankingSeries, teamTournaments, individualCount] = await Promise.all([
+  const [rankingSeries, teamTournaments, individualCount, eventLinks] = await Promise.all([
     fetchFederationRankingSeries(federation.slug),
     fetchFederationTeamTournaments(federation.documentId),
     countFederationPublishedEvents(federation.documentId),
+    // Server-rendered σύνδεσμοι: οι καρτέλες φορτώνουν με JS, άρα χωρίς αυτούς το HTML
+    // της ομοσπονδίας δεν είχε κανέναν σύνδεσμο προς διοργάνωση ή σύλλογο.
+    fetchFederationEventLinks(federation.documentId).catch(() => []),
   ]);
 
   const clubCount = Array.isArray(federation.clubs) ? federation.clubs.length : 0;
@@ -209,6 +214,16 @@ export default async function FederationPage({ params }: Props) {
       ) : (
         tabs[0]?.content
       )}
+
+      <FederationSeoSection
+        federationName={federation.name}
+        events={eventLinks}
+        clubs={(federation.clubs ?? []).map((club) => ({
+          name: club.name,
+          slug: club.slug ?? null,
+          documentId: club.documentId,
+        }))}
+      />
     </>
   );
 }

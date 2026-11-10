@@ -9,6 +9,7 @@
 import { fetchRankingSeriesIndex, type RankingSeriesIndexItem } from "@/lib/rankings";
 import { slugifyTeamTournamentSlug } from "@/lib/teamTournaments";
 import { isDraftTournament } from "@/lib/tournamentPublication";
+import { buildCanonicalTournamentHref } from "@/lib/tournaments";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const PRIMARY_STRAPI_URL =
@@ -83,6 +84,65 @@ export const countFederationPublishedEvents = async (
 
   const json = await fetchStrapi(`/api/bt-events?${params.toString()}`);
   return readRows(json).filter((row) => !isDraftTournament(row)).length;
+};
+
+export type FederationEventLink = {
+  documentId: string;
+  title: string;
+  /** Έτοιμος σύνδεσμος προς τη σελίδα της διοργάνωσης. */
+  href: string;
+  startDate: string | null;
+  endDate: string | null;
+  gameType: string | null;
+  season: number | null;
+};
+
+/**
+ * Τα δημοσιευμένα events της ομοσπονδίας ως έτοιμοι σύνδεσμοι, για το server-rendered
+ * μπλοκ της σελίδας. Η καρτέλα «Individual» φορτώνει τη λίστα με JS, οπότε χωρίς αυτό
+ * το HTML της ομοσπονδίας δεν είχε ΟΥΤΕ ΕΝΑΝ σύνδεσμο — μετρήθηκε 10/11/2026 σε τέσσερις
+ * ομοσπονδίες: 0 τουρνουά, 0 σύλλογοι, 949-1.054 χαρακτήρες κειμένου.
+ */
+export const fetchFederationEventLinks = async (
+  federationDocumentId: string,
+  limit = 120,
+): Promise<FederationEventLink[]> => {
+  if (!federationDocumentId) return [];
+
+  const params = new URLSearchParams();
+  params.set("pagination[pageSize]", String(Math.min(Math.max(limit, 1), 500)));
+  params.set("sort[0]", "start_date:desc");
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "season");
+  params.set("fields[2]", "start_date");
+  params.set("fields[3]", "end_date");
+  params.set("fields[4]", "game_type");
+  params.set("fields[5]", "documentId");
+  params.set("populate[tournament][fields][0]", "format_definition");
+  params.set(
+    "filters[tournament][organizer_federation][documentId][$eq]",
+    federationDocumentId,
+  );
+
+  const json = await fetchStrapi(`/api/bt-events?${params.toString()}`);
+
+  return readRows(json)
+    .filter((row) => !isDraftTournament(row))
+    .map((row) => {
+      const title = readString(row.title);
+      if (!title) return null;
+      const season = toNumber(row.season);
+      return {
+        documentId: readString(row.documentId) ?? "",
+        title,
+        href: buildCanonicalTournamentHref({ title, season }),
+        startDate: readString(row.start_date),
+        endDate: readString(row.end_date),
+        gameType: readString(row.game_type),
+        season,
+      } satisfies FederationEventLink;
+    })
+    .filter((item): item is FederationEventLink => Boolean(item));
 };
 
 /** Οι σειρές κατάταξης που ανήκουν σε αυτή την ομοσπονδία. */
