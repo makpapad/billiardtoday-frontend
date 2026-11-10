@@ -1,0 +1,196 @@
+/* Event Desk — κονσόλα desktop.
+   Το CSS προέρχεται από το εγκεκριμένο mockup (concepts/event-desk.html) και είναι
+   scoped κάτω από .bt-desk ώστε να μην αγγίζει το υπόλοιπο site. */
+
+.bt-desk *{box-sizing:border-box;margin:0;padding:0}
+  .bt-desk{
+    --bg:#0a0d12; --panel:#111721; --panel2:#161d29; --line:#1f2937;
+    --fg:#e8eef6; --muted:#8b98a9; --accent:#22c55e; --accent-dim:#14532d;
+    --amber:#f59e0b; --red:#ef4444; --blue:#60a5fa;
+    --r:10px;
+  }
+  .bt-desk{
+    height:100dvh;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--fg); -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .bt-desk .num{font-family:'Bebas Neue',sans-serif; letter-spacing:.04em; font-variant-numeric:tabular-nums}
+
+  /* ---------- top bar ---------- */
+  .bt-desk header.topbar{
+    display:flex; align-items:center; gap:16px; padding:10px 16px;
+    background:var(--panel); border-bottom:1px solid var(--line); flex:0 0 auto;
+  }
+  .bt-desk .brand{display:flex; align-items:center; gap:9px; font-weight:700; font-size:14px; letter-spacing:.02em}
+  .bt-desk .ball{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#fff8,#22c55e 45%,#0b3d1f);box-shadow:inset 0 0 0 1px #ffffff22}
+  .bt-desk .event{display:flex; flex-direction:column; line-height:1.15; padding-left:14px; border-left:1px solid var(--line); margin-left:2px}
+  .bt-desk .event b{font-size:13.5px}
+  .bt-desk .event span{font-size:11.5px; color:var(--muted)}
+  .bt-desk .grow{flex:1}
+  .bt-desk .pill{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted);
+        background:var(--panel2); border:1px solid var(--line); padding:5px 9px; border-radius:999px; white-space:nowrap}
+  .bt-desk .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px #22c55e22}
+  .bt-desk .dot.off{background:var(--red); box-shadow:0 0 0 3px #ef444422}
+  .bt-desk button{font-family:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel2);
+         color:var(--fg); border-radius:8px; font-size:12.5px; padding:7px 11px; transition:.12s}
+  .bt-desk button:hover{border-color:#334155; background:#1b2431}
+  .bt-desk button.primary{background:var(--accent); color:#04170b; border-color:var(--accent); font-weight:700}
+  .bt-desk button.primary:hover{filter:brightness(1.08)}
+  .bt-desk button.ghost{background:transparent}
+
+  /* ---------- layout ---------- */
+  .bt-desk .body{flex:1; display:flex; min-height:0}
+  .bt-desk .tables{flex:1; padding:14px; overflow:auto}
+  .bt-desk .grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start}
+  .bt-desk .gridlen-1{grid-template-columns:minmax(0,1fr); max-width:660px}
+  .bt-desk .gridlen-5, .bt-desk .gridlen-6{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bt-desk .gridlen-7, .bt-desk .gridlen-8{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:1180px){.gridlen-5,.gridlen-6,.gridlen-7,.gridlen-8{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  /* ---------- card ---------- */
+  .bt-desk .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); overflow:hidden;
+        display:flex; flex-direction:column; transition:.14s; cursor:pointer; position:relative}
+  .bt-desk .card:hover{border-color:#2c3a4d}
+  .bt-desk .card.sel{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 8px 26px -14px #22c55e88}
+  .bt-desk .chead{display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:7px 11px; border-bottom:1px solid var(--line); background:var(--panel2)}
+  .bt-desk .chead-main{display:flex; align-items:center; gap:8px}
+  .bt-desk .chead-sub{display:flex; align-items:center; gap:7px; font-size:9.5px; color:var(--muted); letter-spacing:.04em}
+  .bt-desk .sid{display:inline-flex; align-items:center; gap:5px; font-family:ui-monospace,monospace; font-size:9.5px}
+  .bt-desk .dotg{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px #22c55e22}
+  .bt-desk .dotg.off{background:var(--amber); box-shadow:0 0 0 2px #f59e0b22}
+  .bt-desk .seg{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-left:6px}
+  .bt-desk .seg button{border:0; border-radius:0; background:transparent; color:var(--muted); font-size:10.5px;
+             padding:4px 11px; letter-spacing:.02em}
+  .bt-desk .seg button:hover{background:#1b2431; color:var(--fg)}
+  .bt-desk .seg button.on{background:#0f2e1b; color:#4ade80; font-weight:700}
+  .bt-desk .seg button.on.direct{background:#1f2937; color:#e2e8f0}
+  .bt-desk .chead-sub .lbl2{font-size:9.5px; letter-spacing:.08em; color:#5c6b7d; text-transform:uppercase}
+  .bt-desk .tno{font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--fg)}
+  .bt-desk .cmeta{font-size:10.5px; color:var(--muted); letter-spacing:.01em}
+  .bt-desk .chip{margin-left:auto; font-size:10px; font-weight:700; letter-spacing:.06em; padding:3px 7px; border-radius:5px; white-space:nowrap}
+  .bt-desk .chip.live{background:#0f2e1b; color:#4ade80; border:1px solid #1d5c36}
+  .bt-desk .chip.pause{background:#2e2408; color:#fbbf24; border:1px solid #5c4410}
+  .bt-desk .chip.done{background:#1b2431; color:var(--muted); border:1px solid var(--line)}
+
+  .bt-desk .prow{display:grid; grid-template-columns:14px 1fr auto; align-items:center; gap:8px; padding:8px 11px; position:relative}
+  .bt-desk .prow + .prow{border-top:1px solid #161d29}
+  .bt-desk .prow.act{background:linear-gradient(90deg,#22c55e14,#22c55e00)}
+  .bt-desk .bar{width:3px; height:26px; border-radius:2px; background:#25313f}
+  .bt-desk .prow.act .bar{background:var(--accent)}
+  .bt-desk .pinfo{min-width:0}
+  .bt-desk .pname{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bt-desk .prow.act .pname{color:#fff}
+  .bt-desk .pstats{display:flex; gap:12px; margin-top:2px}
+  .bt-desk .st{display:flex; flex-direction:column; line-height:1}
+  .bt-desk .st b{font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.04em; color:#cbd5e1; font-weight:400}
+  .bt-desk .st span{font-size:9px; color:var(--muted); letter-spacing:.05em; margin-top:1px}
+  .bt-desk .sc{display:flex; align-items:baseline; gap:7px}
+  .bt-desk .sc .pts{font-family:'Bebas Neue',sans-serif; font-size:34px; line-height:.85; letter-spacing:.02em}
+  .bt-desk .prow.act .pts{color:#4ade80}
+  .bt-desk .sc .run{font-family:'Bebas Neue',sans-serif; font-size:15px; color:var(--muted); background:#0e141c;
+           border:1px solid var(--line); border-radius:5px; padding:2px 5px}
+  .bt-desk .prow.act .run{color:#86efac; border-color:#1d5c36; background:#0f2e1b}
+
+  .bt-desk .cfoot{display:flex; align-items:center; gap:6px; padding:7px 10px; border-top:1px solid var(--line); background:#0d1319}
+  .bt-desk .timer{font-family:'Bebas Neue',sans-serif; font-size:14px; color:var(--muted); letter-spacing:.08em; min-width:42px}
+  .bt-desk .cfoot button{padding:5px 8px; font-size:11px}
+  .bt-desk .cfoot .save{margin-left:auto; background:var(--accent-dim); border-color:#1d5c36; color:#86efac; font-weight:700}
+
+  .bt-desk .winner{position:absolute; inset:0; background:#0a0d12ee; display:flex; flex-direction:column;
+          align-items:center; justify-content:center; gap:4px; backdrop-filter:blur(2px)}
+  .bt-desk .winner b{font-size:15px}
+  .bt-desk .winner span{font-size:11.5px; color:var(--muted)}
+
+  /* ---------- keypad panel ---------- */
+  .bt-desk .desk{width:352px; flex:0 0 352px; background:var(--panel); border-left:1px solid var(--line);
+        display:flex; flex-direction:column; min-height:0}
+  .bt-desk .desk-head{padding:11px 14px; border-bottom:1px solid var(--line)}
+  .bt-desk .desk-head .k{font-size:10px; letter-spacing:.12em; color:var(--muted)}
+  .bt-desk .desk-head .t{font-size:15px; font-weight:700; margin-top:3px}
+  .bt-desk .desk-head .p{font-size:12px; color:#86efac; margin-top:2px}
+  .bt-desk .desk-head .src{font-size:10.5px; color:var(--muted); margin-top:5px; letter-spacing:.02em}
+  .bt-desk .modes{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:9px 14px; border-bottom:1px solid var(--line)}
+  .bt-desk .modes button{font-size:11.5px; padding:7px 4px; color:var(--muted)}
+  .bt-desk .modes button.on{background:#0f2e1b; border-color:#1d5c36; color:#86efac; font-weight:700}
+  .bt-desk .pointpad{display:none; grid-template-columns:1fr; gap:8px; padding:12px 14px}
+  .bt-desk .pointpad button{font-size:15px; font-weight:700; padding:16px 0}
+  #plus1{background:var(--accent); color:#04170b; border-color:var(--accent); font-size:19px}
+  #plus1:active{transform:scale(.985)}
+  #endInn{background:var(--panel2); color:#cbd5e1}
+  .bt-desk .seg.locked button{opacity:.55}
+  .bt-desk .modehint{font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#7c8798; margin:2px 0 0}
+  .bt-desk.mode-point .keys{display:none}
+  .bt-desk.mode-point .pointpad{display:grid}
+  .bt-desk.mode-point #qVoid{display:none}
+  .bt-desk.mode-point .quick{grid-template-columns:1fr 1fr}
+  .bt-desk.mode-point .quick button{font-size:10.5px; padding:8px 3px}
+  /* στην πόντος-πόντος το run που χτίζεται είναι το κύριο νούμερο */
+  .bt-desk.mode-point .prow.act .run{color:#fbbf24; border-color:#5c4410; background:#2e2408; font-size:17px}
+  .bt-desk .display{padding:12px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); background:#0d1319}
+  .bt-desk .display .lbl{font-size:10px; letter-spacing:.1em; color:var(--muted); line-height:1.35}
+  .bt-desk .display .val{margin-left:auto; font-family:'Bebas Neue',sans-serif; font-size:44px; line-height:.8;
+                color:var(--accent); min-width:64px; text-align:right}
+  .bt-desk .display .val.empty{color:#25313f}
+  .bt-desk .keys{display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:12px 14px}
+  .bt-desk .keys button{font-family:'Bebas Neue',sans-serif; font-size:24px; padding:11px 0; letter-spacing:.04em}
+  .bt-desk .keys .enter{font-family:'Inter',sans-serif; font-size:12.5px; font-weight:700; background:var(--accent); color:#04170b; border-color:var(--accent)}
+  .bt-desk .keys .del{font-size:19px; color:var(--muted)}
+  .bt-desk .quick{display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:0 14px 12px}
+  .bt-desk .quick button{font-size:10.5px; padding:8px 4px}
+  .bt-desk .log{flex:1; overflow:auto; padding:10px 14px 14px; border-top:1px solid var(--line); min-height:60px}
+  .bt-desk .log h4{font-size:10px; letter-spacing:.12em; color:var(--muted); margin-bottom:7px; font-weight:600}
+  .bt-desk .log div{font-size:11.5px; color:#b6c2d1; padding:4px 0; border-bottom:1px dashed #16202c; display:flex; gap:8px}
+  .bt-desk .log div em{color:var(--muted); font-style:normal; margin-left:auto; font-family:'Bebas Neue',sans-serif; letter-spacing:.06em; font-size:12px}
+  .bt-desk .hint{padding:9px 14px; border-top:1px solid var(--line); font-size:10.5px; color:var(--muted); line-height:1.6}
+  .bt-desk .kbd{display:inline-block; background:#1b2431; border:1px solid #2b3949; border-bottom-width:2px;
+       border-radius:4px; padding:0 4px; font-size:10px; color:#cbd5e1; font-family:ui-monospace,monospace}
+
+  /* ---------- άδειο τραπέζι ---------- */
+  .bt-desk .emptycard{border-style:dashed}
+  .bt-desk .emptybody{display:flex; flex-direction:column; align-items:center; gap:9px; padding:22px 12px; color:var(--muted); font-size:12px}
+  .bt-desk .pickbtn{background:#0f2e1b; border-color:#1d5c36; color:#86efac; font-weight:700; padding:8px 14px}
+
+  /* ---------- επιλογή αγώνα ---------- */
+  .bt-desk .picker{position:fixed; inset:0; background:#04060899; backdrop-filter:blur(2px); z-index:60; display:none}
+  .bt-desk .picker.on{display:flex; align-items:center; justify-content:center}
+  .bt-desk .picker-box{width:min(680px,92vw); max-height:82vh; background:var(--panel); border:1px solid var(--line);
+              border-radius:12px; display:flex; flex-direction:column; overflow:hidden}
+  .bt-desk .picker-head{display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line)}
+  .bt-desk .picker-head b{font-size:14px}
+  .bt-desk .picker-head .sub{font-size:11px; color:var(--muted); margin-top:2px}
+  .bt-desk .picker-list{overflow:auto}
+  .bt-desk .mrow{display:grid; grid-template-columns:52px 1fr auto; align-items:center; gap:10px; padding:10px 16px;
+        border-bottom:1px solid #161d29; cursor:pointer}
+  .bt-desk .mrow:hover{background:#161d29}
+  .bt-desk .mrow .g{font-size:10px; letter-spacing:.1em; color:var(--muted)}
+  .bt-desk .mrow .p{font-size:13px; font-weight:600}
+  .bt-desk .mrow .p small{display:block; font-weight:400; color:var(--muted); font-size:11px; margin-top:2px}
+  .bt-desk .mrow button{font-size:11px; padding:6px 10px}
+
+  /* ---------- public overlay ---------- */
+  .bt-desk .overlay{position:fixed; inset:0; background:#05070a; z-index:50; display:none; flex-direction:column}
+  .bt-desk .overlay.on{display:flex}
+  .bt-desk .ov-top{display:flex; align-items:center; padding:14px 22px; border-bottom:1px solid var(--line)}
+  .bt-desk .ov-top h2{font-size:15px; font-weight:700}
+  .bt-desk .ov-top span{font-size:12px; color:var(--muted); margin-left:10px}
+  .bt-desk .ov-grid{flex:1; display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:22px}
+  .bt-desk .ov-card{border:1px solid #1a2432; border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:center;
+           background:linear-gradient(160deg,#0d1420,#080b11)}
+  .bt-desk .ov-card .h{font-size:11px; letter-spacing:.16em; color:var(--muted); margin-bottom:14px; display:flex}
+  .bt-desk .ov-row{display:flex; align-items:baseline; gap:10px; padding:6px 0}
+  .bt-desk .ov-row .n{font-size:19px; font-weight:600}
+  .bt-desk .ov-row .s{margin-left:auto; font-family:'Bebas Neue',sans-serif; font-size:52px; line-height:.8}
+  .bt-desk .ov-row.act .s{color:#4ade80}
+  .bt-desk .ov-row .i{font-family:'Bebas Neue',sans-serif; font-size:15px; color:var(--muted); width:38px; text-align:right}
+  .bt-desk .ov-foot{font-size:11px; color:#4b5563; padding:12px 22px; border-top:1px solid #131b26}
+
+  .bt-desk .mockbadge{position:fixed; right:12px; bottom:10px; z-index:80; font-size:10px; letter-spacing:.14em;
+             color:#6b7787; background:#0d1319cc; border:1px solid #1c2532; padding:4px 8px; border-radius:5px}
+
+  @media (max-width:900px){
+    .bt-desk .body{flex-direction:column}
+    .bt-desk .desk{width:auto; flex:0 0 auto; border-left:none; border-top:1px solid var(--line); max-height:52%}
+    .bt-desk .grid{grid-template-columns:1fr}
+  }
+  .bt-desk .mockbadge{display:none}

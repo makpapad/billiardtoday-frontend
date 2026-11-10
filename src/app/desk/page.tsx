@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import DeskClient from "./DeskClient";
+import DeskShell from "./DeskShell";
 
 export const metadata: Metadata = {
   title: "Event Desk",
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function DeskPage() {
-  return <DeskClient />;
+  return <DeskShell />;
 }
