@@ -1,0 +1,18 @@
+Good morning Stefano, thank you for reaching out — good to be in touch.
+
+I'm Maki, from BilliardToday (Avraam is my formal name — everyone calls me Maki). We've built the federation ranking portal: each federation gets its own account to enter and submit its national 3-cushion ranking, and the pages are made to be embedded in the CEB site as iframes, as agreed. We also noticed that the v16 file picked up the GUSTAFSSON correction we had flagged — thank you, that keeps us on the same page.
+
+Sweden's submission is done end to end (73 players), so we're ready for the other federations.
+
+Two things would help us take the next step:
+
+1. The CEB domain or subdomain where the portal will be embedded — so we can prepare the iframe and whitelist it.
+
+2. Accounts: will CEB create the federation logins and hand them to us, or would you prefer a template from us for the handover?
+
+One small thing: while checking our list against v16 we found three players to confirm (Goksu, Refassi Badreddine, Refassi Abdelghani). I'll send them in a short note so the ranking matches one hundred percent.
+
+Looking forward to working together.
+
+Maki
+BilliardToday

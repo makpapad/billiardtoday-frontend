@@ -10,8 +10,10 @@ rows wrongly), so the words layer is the ground truth.
 import json, re, sys
 import pymupdf
 
-doc = pymupdf.open("ceb16.pdf")
-json_rows = {r["rank"]: r for r in json.load(open("ceb16_clean.json", encoding="utf-8"))}
+IN = sys.argv[1] if len(sys.argv) > 1 else "ceb16.pdf"
+CLEAN = sys.argv[2] if len(sys.argv) > 2 else "ceb16_clean.json"
+doc = pymupdf.open(IN)
+json_rows = {r["rank"]: r for r in json.load(open(CLEAN, encoding="utf-8"))}
 
 rebuilt = {}
 for pi in range(doc.page_count):

@@ -1,0 +1,24 @@
+A short follow-up on two points.
+
+1) Three players
+
+While checking our list against your v16 file, three players are in our list but not in v16:
+
+- GOKSU Volkan (TR) — 2 points, position 458
+- REFASSI Badreddine (FR) — 2 points, position 459
+- REFASSI Abdelghani (FR) — 0 points, position 1465 (he was in your previous file)
+
+Can you confirm whether they should stay in the list or be removed? We prefer to run this by you rather than decide on our own.
+
+Also, the other way round: HENDRIKSEN Rene appears in v16 as (DK), while we have him as (CH). Same person with two licences, or a correction on one side?
+
+2) Absolute ties
+
+For players with identical points and an identical event-by-event breakdown, we checked how v16 orders them: it is not alphabetical. In all 54 cases where both players are in the previous edition, the order follows the previous edition's positions exactly. Is that the intended rule, and what do you use for a player who was not in the previous edition?
+
+One case we could not explain either way: around position 164, PRASSAS Konstantinos is above SAEIJS Alain and GOREN Mehmet, although his Ankara 2026 column is lower than theirs. If that is a manual adjustment, all good — we just want the portal to order ties exactly as CEB does.
+
+Once we have your answer on these two points, our list and v16 will be fully aligned.
+
+Maki
+BilliardToday

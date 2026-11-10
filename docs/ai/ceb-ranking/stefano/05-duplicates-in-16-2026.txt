@@ -1,0 +1,22 @@
+One more thing while I'm here — about the latest edition (16/2026) of the 3-Cushion Individual ranking. While checking it, I noticed a few players who appear twice, each in two different positions:
+
+ANDERSEN Thomas - 50, 565
+ESCUDEIRO Jose - 105, 1082
+PINTO Vitor - 325, 1382
+PALHARES Paulo - 444, 1084
+RIO Manuel - 449, 1085
+CARDOSO Jose - 474, 1083
+GAYRET Emin - 488, 489
+OZDEMIR Fadil - 856, 858
+VAZ Carlos - 938, 940
+OZDEMIR Bulent - 970, 1405
+LEB Balazs - 1065, 1332
+JOSE Torrisco Enrique - 1237, 1257
+FACQUET Vincent - 1262, 1280
+DERELI Ferhat - 1400, 1454
+
+One of them actually moves the points: GAYRET Emin (488 and 489) has 2 points on both rows, so he's counted twice in the total.
+
+Could you take a look and remove the duplicates when you update the ranking?
+
+Thanks!

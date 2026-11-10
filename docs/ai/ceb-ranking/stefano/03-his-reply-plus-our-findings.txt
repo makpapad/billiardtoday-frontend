@@ -1,0 +1,28 @@
+Thank you Makis — and no worries, these things happen with a list that is maintained by hand.
+
+To make the fix easier, here is everything we found. It all comes from our own computed list; your v16 was used only as a cross-check.
+
+RANKING ORDER
+Points first, then the event-by-event breakdown — compared from the most recent World Cup backwards, then the national championships, with the European Championship last. This fits most of the tie groups in v16, but not all of them.
+
+ABSOLUTE TIES (same points and same event breakdown)
+These are not alphabetical: only 16 of 55 such groups in v16 are alphabetical. We could not find the rule that orders them. The best guess we have — the positions the players held in the previous list — fits 54 of 54 such groups when compared with the previous publication of this ranking, but only 50 of 54 when compared with the previous edition (v15). How do you order these? We want our list to match yours exactly.
+
+One thing we noticed in v15: six pairs share the same rank number (for example 1267 appears twice, for SIX Jean Paul and DE QUEIROS Jose). Should our list show these players in the same position as well?
+
+ONE GROUP WE COULD NOT REPRODUCE
+Around position 164: PRASSAS Konstantinos is above SAEIJS Alain and GOREN Mehmet. Could you confirm that this is correct?
+
+IN OUR LIST, NOT IN v16
+- GOKSU Volkan (TR) — 2 points, position 458 (from the World Cup in Porto, 2026)
+- REFASSI Badreddine (FR) — 2 points, position 459 (also from Porto 2026)
+- REFASSI Abdelghani (FR) — 0 points, position 707
+All three were in the previous publication of your list (positions 458, 459 and 707), so we kept them.
+
+IN v16, NOT IN OUR LIST
+- HENDRIKSEN Rene — he appears twice in v16: position 1150 as (CH) and position 1218 as (DK). We have him once, as (CH). Should our list keep two rows as well?
+
+Send me the corrected file when it is out and we will re-run the full check and confirm one hundred percent alignment.
+
+Maki
+BilliardToday

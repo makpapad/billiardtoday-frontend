@@ -1,0 +1,26 @@
+Hi Stefano,
+
+Thank you — and I agree with your sequence completely: the Board first, the federations after. Nothing has to be undone that way.
+
+On finishing the whole ranking page before going to the Board: that is exactly what I would do, and the page is already built for it. 3-cushion individual is live today, and the remaining lists are already on it as "coming next":
+
+- 3-Cushion Ladies
+- 3-Cushion National Teams
+- Ladies National Teams
+- 5-Pins National Teams
+- Artistic — Individual
+- Artistic — National Teams
+- Cadre 47/2 · Cadre 71/2 · 1-Cushion
+- Longoni Next Gen U21 (4 seasons) · Next Gen 5-Pins
+
+If those are filled in, you walk into the Board with a complete ranking section instead of one list, and the President has something real to promote at launch. Replacing the CEB ranking page afterwards is a small technical step: a new "Rankings" menu item on eurobillard.org that loads the BilliardToday page inside the CEB site — one source of truth, nothing maintained twice. The page is already in a light blue/white style close to the CEB identity, so it sits naturally inside your site; if you want, I can fine-tune it to your exact blue and logo so it feels native.
+
+To build the remaining lists I need the same thing I have been working from: the official source you publish for each ranking — the PDF on the CEB website is perfect. Send me one and I will build that list, so you can see the result list by list and show the Board the real page.
+
+One more thing, and it is the clearest picture of what the platform does. When your V17 went up this morning, I ran the published PDF through the ranking engine, which compares it line by line with the ranking it calculates itself. The first version of the file was missing the last line of your Excel (CELIK Sabir, −4), so its total read 6,980 instead of 6,976. The version now on the site matches completely: 1,468 lines, every position and every column identical, total 6,976 — including the new Luxembourg entry (Soares Alberto, 13 points, position 124). Nobody compared spreadsheets by hand.
+
+About the federation test: I agree, let us keep it where you put it — after the Board. The only new piece for the federations is the login and a short instruction sheet; I will prepare both, so when the moment comes the CEB does not have to explain anything from scratch.
+
+Your email is noted (stefano.malacrita@eurobillard.org). Your review access will be ready before we start anything, and you can change the password yourself at any time.
+
+Makis

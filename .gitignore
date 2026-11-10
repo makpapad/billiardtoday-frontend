@@ -53,3 +53,7 @@ theme/
 
 # local Hermes workspace (plans/state)
 .hermes/
+
+# python scratch (analysis scripts under docs/ai)
+__pycache__/
+*.pyc

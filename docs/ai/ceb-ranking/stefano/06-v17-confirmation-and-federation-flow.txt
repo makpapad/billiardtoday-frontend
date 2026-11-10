@@ -1,0 +1,34 @@
+Hi Stefano,
+
+Thank you, the LUX file and V17 arrived — and I checked them against the platform.
+
+Good news: your V17 matches exactly what the platform produces from the Luxembourg national ranking. No differences.
+
+What I checked:
+- The FLAB 3-cushion national championship ranking gives 40 / 27 / 19 / 19 / 13 / 13 points for positions 1 to 6 (Tempelers, Guidez, Hamm, Drye, Soares, Biver) — exactly the values now in column C of V17.
+- All LUX points were removed from column B, and the players no longer in the national ranking lost their national points (Goedert and Da Silva to 0; Pallucca keeps only his European Championship points), exactly as you did.
+- Total moves from 6,989 to 6,976 (−13). New entry: Soares Alberto, 13 points, position 124 — a new player, so he has no UMB ID yet. Everything lines up.
+
+How the process works — and where the platform can take over
+
+Instead of updating the Excel by hand each time, the federations can enter their own national ranking directly:
+
+1. The federation enters its ranking. The Luxembourg federation logs in at
+   https://billiardtoday.com/federation/login
+   and enters its national championship ranking for the season (category: 3-cushion individual) — the same list you sent me. The link is not in the website menu yet; I will add it.
+2. You get an email. As soon as the federation submits, an automatic email goes to the CEB with the submission and a link to the review page. (While I test it, the emails come to my address.)
+3. The submission is checked and approved. The review page is
+   https://admin.billiardtoday.com/admin/ranking-review
+   it shows the submission, the positions and the points the platform would give. Once approved, the platform recalculates and publishes the new version (V17) automatically at
+   https://billiardtoday.com/rankings/ceb/3c-individual
+   If something is wrong, the submission can be rejected with a short note and the federation receives an email explaining what to correct.
+   Your access to this page is being set up — I only need your email address for it (see below), and I will send you the login details as soon as it is ready. After your first login you can change the password yourself, at any time, from your account page (Account → Profile).
+
+This is a good opportunity to test the whole process live with Luxembourg: I can run it in parallel with your Excel.
+
+One thing I still need before the test:
+- Your email address. I need it for your login on the review page, and later it will be the address that receives the CEB notifications.
+
+Shall I run the whole process once with the Luxembourg ranking and send you the result, so you can see what the platform produces?
+
+Makis

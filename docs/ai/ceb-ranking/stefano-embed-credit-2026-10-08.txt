@@ -1,0 +1,136 @@
+===========================================================
+ΣΗΜΕΙΩΜΑ ΓΙΑ ΜΕΝΑ (μην το στείλεις στον Στέφανο)
+===========================================================
+Τι είναι: το κείμενο + ο κώδικας για αύριο.
+
+ΒΡΗΚΑ ΠΟΥ ΤΟ ΠΕΡΑΣΕ: https://www.eurobillard.org/pages/new-rankings-64.html
+(η σελίδα «New Rankings» τους — το iframe κάθεται μέσα στο <div class="title_page">, τυλιγμένο
+σε <p>). Αυτή η σελίδα ΔΕΝ έχει κανένα λινκ προς εμάς σήμερα — μόνο το πλαίσιο.
+
+ΤΙ ΕΚΑΝΕ Ο EDITOR ΤΟΥΣ (ελέγχθηκε στο ζωντανό HTML):
+  - Κρατάει ΟΛΑ τα attributes (height, loading, referrerpolicy, style, title, width σώθηκαν
+    ολόκληρα· τα ξαναέγραψε με αλφαβητική σειρά = περνά από parser). Άρα η γραμμή credit με
+    το λογότυπο και το λινκ περνάει σίγουρα.
+  - ΑΜΦΙΒΟΛΙΑ: τέτοιοι editors συνήθως ΠΕΤΑΝΕ τα <style> blocks. Το style="border:0" που
+    σώθηκε είναι attribute, όχι <style> — δεν αποδεικνύει τίποτα.
+    => Στέλνουμε την ΚΥΡΙΑ εκδοχή (μαύρο popup με <style>). Μόλις το περάσει, ελέγχω τη σελίδα·
+       αν λείπει το <style>, του στέλνεις την ΕΦΕΔΡΙΚΗ του τέλους (ίδιο λεκτικό, απλό tooltip
+       με title, χωρίς <style>).
+
+ΤΙ ΑΛΛΑΖΕΙ ΣΤΟΝ ΚΩΔΙΚΑ ΣΕ ΣΧΕΣΗ ΜΕ Ο,ΤΙ ΕΧΕΙ ΤΩΡΑ:
+  - height 1400 (όπως το έχει τώρα) — μένει.
+  - title: έλεγε "…CEB 3-Cushion Individual — European Ranking (BilliardToday)" ενώ το src
+    δείχνει όλες τις λίστες → διορθώνεται σε "CEB official rankings (BilliardToday)".
+  - Προστίθεται η γραμμή credit ΚΑΤΩ από το iframe (αυτό είναι το λινκ προς εμάς).
+- text-align:center στη γραμμή credit: το /global/css/ceb.css τους έχει `p{text-align:justify}` → η γραμμή
+    κολλούσε τέρμα δεξιά. Inline style κερδίζει (κανένα !important στο CSS τους). Ελέγχθηκε 08/10.
+
+ΣΗΜΕΙΩΣΗ: η σελίδα new-rankings-64 είναι ΔΟΚΙΜΑΣΤΙΚΗ, όχι η κανονική (δεν έχει sitemap/canonical·
+άρα το λινκ εκεί μετράει ελάχιστα σήμερα). Αυτό που έχει σημασία: όταν ο κώδικας πάει στην
+ΚΑΝΟΝΙΚΗ σελίδα των κατατάξεων, να πάει μαζί και η γραμμή credit — γι' αυτό το λέει και το μήνυμα.
+
+ΠΟΥ/ΠΟΙΟΣ (έλεγχος 08/10): το site φιλοξενείται σε server της Atiweb (γαλλική εταιρεία —
+reverse DNS aws.atiweb.fr, IP 3.65.187.126) στο AWS Frankfurt· DNS και email στο OVH
+(ns14.ovh.net, mx0-4.mail.ovh.net). Το footer τους γράφει «Réalisation Atiweb» και έχει
+«Private area» στο /bo/ — από εκεί μπαίνει ο Stefano και περνάει τον κώδικα. Αν χρειαστεί
+αλλαγή στο template (π.χ. πέφτει το <style>), ο τεχνικός είναι η Atiweb (atiweb.fr).
+
+ΤΟ ΠΑΝΕΛ ΤΟΥΣ (έλεγχος με άδεια, μόνο ανάγνωση — δεν άνοιξα φόρμα επεξεργασίας):
+  - «Atiweb edit CMS v 3.7.0» στο /bo/. Μενού: Content → Pages → «NEW Rankings»
+    (detail-page.html?id=64, Αγγλικά). Εκεί μέσα, στο πεδίο κειμένου, κάθεται το iframe
+    που πέρασε με το χέρι.
+  - Ο editor είναι CKEDITOR με config.allowedContent = true → ΔΕΝ φιλτράρει τίποτα, και
+    έχει κουμπί «Source». Άρα το <style> block ΔΕΝ πέφτει (η εφεδρική μένει ως δίχτυ αν
+    το κόψει το server-side save — το ελέγχω σε 30'' μόλις το περάσει).
+  - Στην εκδοχή προς τον Στέφανο λέμε ρητά: «press the Source button in the editor first».
+
+Ό,τι είναι κάτω από τη γραμμή «COPY-PASTE» το στέλνεις όπως είναι.
+
+===========================================================
+COPY-PASTE (αγγλικά, για τον Στέφανο)
+===========================================================
+
+Two things, both short.
+
+1) Two more lists are live on BilliardToday, with the official CEB data:
+
+   https://billiardtoday.com/rankings/ceb/3c-national-teams
+   https://billiardtoday.com/rankings/ceb/3c-ladies-national-teams
+
+   The 3-Cushion National Teams list follows your rule (fewer points is better, only the
+   last five editions count) and the wording of the rule is printed under the table. The
+   Ladies list uses the points exactly as they are in your sheet. The remaining lists
+   (Longoni Next Gen, 5-Pins and Artistic national teams) follow.
+
+2) On the "New Rankings" page, please replace the embed code with the one below.
+
+   Why: inside the frame, every link back to us is a link of our own page, so it is worth
+   nothing for us. What counts is the line BELOW the frame, on your page — that is a real
+   link from your site to ours. So I removed that link from inside the frame and I am
+   sending it to you as part of the code.
+
+   Two things to keep exactly as they are:
+   - the line must stay OUTSIDE the frame (below it, on your page);
+   - the small <style> block must stay with it — without it the popup does not appear.
+     If your page editor refuses the <style> block, tell me and I will send you the simple
+     version instead (same line, no small style block).
+
+   When this page goes on your site for real, please use the same code there too, so the line
+   below the frame stays with the ranking.
+
+   To do it: open the page in your admin, press the Source button of the editor first, then
+   replace the whole block with this.
+
+   THE CODE (all lists):
+
+--------------------------------- 8< ---------------------------------
+<iframe src="https://billiardtoday.com/embed/rankings/ceb" width="100%" height="1400" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="CEB official rankings (BilliardToday)"></iframe>
+<style>
+.btt-credit{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font:13px/1.5 -apple-system,'Segoe UI',system-ui,sans-serif;color:#334155}
+.btt-credit img{display:block;height:20px;width:auto}
+.btt-tip{position:relative;display:inline-flex}
+.btt-tip>span{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:#111826;color:#fff;font:11.5px/1 system-ui,sans-serif;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .12s;pointer-events:none}
+.btt-tip:hover>span{opacity:1}
+</style>
+<p style="margin:8px 0 0;text-align:center">
+  <a class="btt-credit" href="https://billiardtoday.com/rankings/ceb" target="_blank" rel="noopener">
+    Live CEB rankings by
+    <span class="btt-tip">
+      <img src="https://billiardtoday.com/img/logo/logo-billiardtoday-light-trim.png" alt="BilliardToday">
+      <span>BilliardToday — official CEB rankings</span>
+    </span>
+  </a>
+</p>
+--------------------------------- 8< ---------------------------------
+
+   For a single list, the same code with
+   /embed/rankings/ceb/3c-national-teams (or any list name) instead of /embed/rankings/ceb —
+   the <style> and the credit line stay exactly the same.
+
+--------------------------------- ΠΡΟΑΙΡΕΤΙΚΟ ---------------------------------
+Αν θέλεις, πρόσθεσε και το παρακάτω (ζητάει κανονικό λινκ από τη σελίδα τους):
+
+One more thing, if it is easy on your side: a normal link on your ranking page (or in a
+news item) pointing to https://billiardtoday.com/rankings/ceb would help us a lot — that is
+what counts for Google, more than the embed itself.
+--------------------------------- ΤΕΛΟΣ ΠΡΟΑΙΡΕΤΙΚΟΥ ------------------------
+
+===========================================================
+ΕΦΕΔΡΙΚΗ ΕΚΔΟΧΗ (μόνο αν ο editor τους πετάξει το <style>)
+===========================================================
+Αν λείπει το <style> στη σελίδα τους, αντικαθιστούμε το κομμάτι ΚΑΤΩ από το iframe με αυτό
+(ίδιο λεκτικό, ίδιο λογότυπο, χωρίς <style> — το popup το βγάζει ο browser μέσω title):
+
+<p style="margin:8px 0 0;text-align:center;font:13px/1.5 -apple-system,'Segoe UI',system-ui,sans-serif">
+  <a href="https://billiardtoday.com/rankings/ceb" target="_blank" rel="noopener"
+     style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#334155">
+    Live CEB rankings by
+    <img src="https://billiardtoday.com/img/logo/logo-billiardtoday-light-trim.png"
+         alt="BilliardToday" title="BilliardToday — official CEB rankings"
+         style="display:block;height:20px;width:auto">
+  </a>
+</p>
+
+Κείμενο για τότε (αγγλικά): «Your editor dropped the small style block, so here is the same
+line without it. The popup now comes from the browser itself — same look under the frame,
+same link.»

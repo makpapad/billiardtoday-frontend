@@ -1,7 +1,11 @@
 import collections, json, re
 import pymupdf
 
-doc = pymupdf.open("ceb16.pdf")
+import sys
+
+IN = sys.argv[1] if len(sys.argv) > 1 else "ceb16.pdf"
+OUT = sys.argv[2] if len(sys.argv) > 2 else "ceb16_clean.json"
+doc = pymupdf.open(IN)
 COLX = {"A": 388, "B": 404, "C": 420, "D": 436, "E": 452, "F": 468,
         "G": 484, "H": 500, "I": 516, "J": 530}
 
@@ -77,8 +81,8 @@ print("rows with PP:", sum(1 for r in rows if r["PP"]), [(r["rank"], r["name"], 
 print("rows with suspension date:", [(r["rank"], r["name"], r["fed"], r["dates"]) for r in rows if r["dates"]])
 print("players per event column:", {c: sum(1 for r in rows if c in r["ev"]) for c in "ABCDEFGHIJ"})
 print("top fed counts:", collections.Counter(r["fed"] for r in rows).most_common(12))
-json.dump(rows, open("ceb16_clean.json", "w", encoding="utf-8"), ensure_ascii=False)
-print("saved ceb16_clean.json")
+json.dump(rows, open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
+print("saved " + OUT)
 
 # ---- suspension highlighting: text color of the name span for flagged rows ----
 flagged = {976: "KASIDOKOSTAS", 1469: "YUKSEL"}

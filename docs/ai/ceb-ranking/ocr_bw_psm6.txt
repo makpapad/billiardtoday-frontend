@@ -1,0 +1,31 @@
+6
+
+(ENE SVENSKA
+BILJARDFORBUNDET
+Results Swedish Championship 3C 2026
+|Position | UMB-ID |Name | Average|
+| 1 0223 David Pennor 1,399]
+| 2 0150 ——- Torbjérn Blomdah| 1,97|
+| 3. 0438 — Henryk Kalita 0,978|
+| 3. 3062S Yiikseel Polat 0,909]
+[5-8 0197 Nalle Olsson 1,335
+[5-8 2914. Alf Alvberger 0,904|
+[5-8 0287 Bosse Gustafsson 0,81 |
+[5-8 2915 Jesper Johansson 0,706|
+|9-16 2740 _—-Ratcha Alievski 0,737|
+|9-16 3395 Mio Svensson 0,705|
+|9-16 2382 Manuel Orellana 0,667|
+|9-16 2746 Ken Hultqvist 0,615
+|9-16 2921 Peter Akesson 0,599]
+|9-16 2918 Mark Jenabpour 0,558|
+|9-16 2920 Goran Espe 0,595|
+|9-16 2928 Andreas Lagemyr 0,476
+17-24 3547. Adrian Weiss 0,755|
+|17-24 3246 Mustafa Kasemi 0,57|
+17-24 2926 Mats Lohmander 0,53|
+|17-24 2923 Olle Nisslert 0,502|
+17-24 3548 Emad Tavakolizadeh 0,5|
+|17-24 2929 Uldis Martinovs 0,49]
+17-24 2748 Polyzois Arvanitidis 0,468|
+
+© Excel @

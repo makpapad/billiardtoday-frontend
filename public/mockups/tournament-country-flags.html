@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BilliardToday — σημαίες χωρών πάνω από τα Groups (mockup)</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#111827; --muted:#6b7280; --muted2:#9ca3af;
+    --line:#e5e7eb; --chip:#f3f4f6; --rowa:#f3f4f6; --rowb:#e5e7eb;
+    --yellow:#ca8a04; --brand:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:18px 18px 40px;background:var(--bg);color:var(--fg);
+       font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:15px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:12px;margin:0 0 14px}
+  .stages{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .stage{padding:6px 14px;border-radius:999px;border:1px solid var(--line);font-weight:600;font-size:12px;color:var(--muted)}
+  .stage.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .panel{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+
+  /* ---------- NEW: country flag strip ---------- */
+  .flagsrow{display:flex;align-items:flex-start;gap:10px;padding:4px 2px 10px;border-bottom:1px dashed var(--line);margin-bottom:8px}
+  .flaglabel{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);padding-top:6px;white-space:nowrap}
+  .flags{display:flex;flex-wrap:wrap;gap:6px;min-width:0;flex:1}
+  .flagbtn{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:24px;padding:0;
+           border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+  .flagbtn img{width:30px;height:20px;object-fit:cover;border-radius:3px;display:block}
+  .flagbtn:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.15);border-color:var(--brand)}
+  .flagbtn .n{position:absolute;right:-5px;bottom:-6px;min-width:14px;height:14px;padding:0 3px;border-radius:999px;
+              background:var(--brand);color:#fff;font-size:9px;font-weight:700;line-height:14px;text-align:center;display:none}
+  .flagbtn.on{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(202,138,4,.35)}
+  .flagbtn.on .n{display:block;background:var(--yellow)}
+  .clear{border:1px solid var(--line);background:var(--chip);border-radius:999px;font-size:11px;font-weight:700;
+         padding:4px 10px;cursor:pointer;color:var(--muted);white-space:nowrap;height:24px}
+  .clear[disabled]{opacity:.4;cursor:default}
+  .hint{font-size:11px;color:var(--muted);margin:0 0 12px;padding:7px 10px;background:var(--chip);border-radius:8px}
+
+  /* ---------- existing header ---------- */
+  .grphead{display:grid;align-items:center;gap:0 28px;padding:0 10px 4px;color:var(--muted2)}
+  .grphead .g{width:92px;font-weight:700;font-size:12px}
+  .grphead .cols{display:grid;gap:0 28px;margin-left:20px}
+  .grphead .cols div{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+
+  .row{display:grid;align-items:center;gap:0 28px;margin:3px 0;border-radius:10px;padding:7px 10px;cursor:pointer}
+  .row.collapsed{background:var(--rowa)}
+  .row.collapsed.odd{background:var(--rowb)}
+  .row .name{width:92px;font-weight:600;color:#374151;display:flex;align-items:center;gap:6px}
+  .row .cols{display:grid;gap:4px 28px;margin-left:20px;font-size:11px;color:var(--muted)}
+  .p{display:flex;align-items:center;gap:7px;min-width:0}
+  .p img{width:22px;height:16px;border-radius:2px;object-fit:cover}
+  .p span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .hl{color:var(--yellow)}
+  .chev{width:14px;height:14px;transition:transform .15s;flex:none}
+  .open .chev{transform:rotate(90deg)}
+  .matchbox{margin:0 0 10px 26px}
+  .mtable{width:100%;border-collapse:collapse;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:12px}
+  .mtable th{background:var(--brand);color:#fff;font-weight:500;text-align:left;padding:6px 10px}
+  .mtable td{padding:6px 10px;border-top:1px solid var(--line);color:#4b5563}
+  .empty{color:var(--muted);font-size:12px;padding:6px 2px}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0b0f19;--fg:#e5e7eb;--muted:#9ca3af;--muted2:#6b7280;--line:#1f2937;--chip:#111827;--rowa:#111827;--rowb:#1f2937}
+    .flagbtn{background:#0b0f19}
+    .row .name{color:#d1d5db}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tournament groups — σημαίες χωρών</h1>
+  <p class="sub">Mockup με <b>πραγματικά δεδομένα</b> από Blois 2026 · Qualification (16 groups × 3 παίκτες, 24 χώρες). Πάτησε σημαίες.</p>
+
+  <div class="stages">
+    <div class="stage on">Qualification</div>
+    <div class="stage">Main Tournament</div>
+  </div>
+
+  <p class="hint" id="hint">Πάτησε μια σημαία → μένουν ανοιχτά μόνο τα groups που έχουν παίκτη από τη χώρα, τα ονόματα μαρκάρονται <b style="color:var(--yellow)">κίτρινα</b> (όπως στο search). Ξανά στην ίδια σημαία → καθαρίζει.</p>
+
+  <div class="panel">
+    <!-- NEW -->
+    <div class="flagsrow">
+      <div class="flaglabel">Χώρα</div>
+      <div class="flags" id="flags"></div>
+      <button class="clear" id="clear" disabled>Όλες ✕</button>
+    </div>
+
+    <!-- existing -->
+    <div class="grphead" id="grphead">
+      <div class="g">Groups</div>
+      <div class="cols" id="headcols"></div>
+    </div>
+
+    <div id="groups"></div>
+  </div>
+</div>
+
+<script>
+const GROUPS = [{"label":"A","players":[{"name":"ROMERO Merlin","country":"VE"},{"name":"PANAIA Maxime","country":"FR"},{"name":"CAUDRON Frederic","country":"BE"}],"matches":[{"p1":"ROMERO Merlin","c1":"VE","p2":"PANAIA Maxime","c2":"FR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"CAUDRON Frederic","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"CAUDRON Frederic","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"B","players":[{"name":"VILLANUEVA William","country":"VE"},{"name":"MORALES Daniel","country":"CO"},{"name":"CHO Myung Woo","country":"KR"}],"matches":[{"p1":"VILLANUEVA William","c1":"VE","p2":"MORALES Daniel","c2":"CO","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"CHO Myung Woo","c1":"KR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"CHO Myung Woo","c1":"KR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"C","players":[{"name":"LOWE Tom","country":"DE"},{"name":"SOUMAGNE Pierre","country":"FR"},{"name":"MERCKX Eddy","country":"BE"}],"matches":[{"p1":"LOWE Tom","c1":"DE","p2":"SOUMAGNE Pierre","c2":"FR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"MERCKX Eddy","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"MERCKX Eddy","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"D","players":[{"name":"ABU Tayeh Mashhour","country":"JO"},{"name":"SON JUN Hyuk","country":"KR"},{"name":"SIDHOM Sameh","country":"EG"}],"matches":[{"p1":"ABU Tayeh Mashhour","c1":"JO","p2":"SON JUN Hyuk","c2":"KR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"SIDHOM Sameh","c1":"EG","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"SIDHOM Sameh","c1":"EG","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"E","players":[{"name":"SOARES Jose Miguel","country":"PT"},{"name":"TELLEZ Erick","country":"CR"},{"name":"HORN Martin","country":"DE"}],"matches":[{"p1":"SOARES Jose Miguel","c1":"PT","p2":"TELLEZ Erick","c2":"CR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"HORN Martin","c1":"DE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"HORN Martin","c1":"DE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"F","players":[{"name":"ABDIN Mohamed","country":"EG"},{"name":"NOVAK Radek","country":"CZ"},{"name":"ZANETTI Marco","country":"IT"}],"matches":[{"p1":"ABDIN Mohamed","c1":"EG","p2":"NOVAK Radek","c2":"CZ","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"ZANETTI Marco","c1":"IT","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"ZANETTI Marco","c1":"IT","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"G","players":[{"name":"ΣΕΛΕΒΕΝΤΑΣ Δημητριος","country":"GR"},{"name":"VAN Erp Jean","country":"NL"},{"name":"KARAKURT Berkay","country":"TR"}],"matches":[{"p1":"ΣΕΛΕΒΕΝΤΑΣ Δημητριος","c1":"GR","p2":"VAN Erp Jean","c2":"NL","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"KARAKURT Berkay","c1":"TR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"KARAKURT Berkay","c1":"TR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"H","players":[{"name":"FORTHOMME Roland","country":"BE"},{"name":"ITAI Atsunobu","country":"JP"},{"name":"TASDEMIR Tayfun","country":"TR"}],"matches":[{"p1":"FORTHOMME Roland","c1":"BE","p2":"ITAI Atsunobu","c2":"JP","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"TASDEMIR Tayfun","c1":"TR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"TASDEMIR Tayfun","c1":"TR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"I","players":[{"name":"DEVOGELAERE Mikael","country":"FR"},{"name":"BEHZAT Cetin","country":"CH"},{"name":"BAO Phuong Vinh","country":"VN"}],"matches":[{"p1":"DEVOGELAERE Mikael","c1":"FR","p2":"BEHZAT Cetin","c2":"CH","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"BAO Phuong Vinh","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"BAO Phuong Vinh","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"J","players":[{"name":"CATANO Huberney","country":"CO"},{"name":"THAI Hong Chiem","country":"VN"},{"name":"CEULEMANS Peter","country":"BE"}],"matches":[{"p1":"CATANO Huberney","c1":"CO","p2":"THAI Hong Chiem","c2":"VN","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"CEULEMANS Peter","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"CEULEMANS Peter","c1":"BE","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"K","players":[{"name":"BLOMDAHL Torbjörn","country":"SE"},{"name":"KNUDSEN Thomas","country":"DK"},{"name":"JASPERS Dick","country":"NL"}],"matches":[{"p1":"BLOMDAHL Torbjörn","c1":"SE","p2":"KNUDSEN Thomas","c2":"DK","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"JASPERS Dick","c1":"NL","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"JASPERS Dick","c1":"NL","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"L","players":[{"name":"KAHOFER Arnim","country":"AT"},{"name":"MUNOZ Raymundo","country":"MX"},{"name":"TRAN Thanh Luc","country":"VN"}],"matches":[{"p1":"KAHOFER Arnim","c1":"AT","p2":"MUNOZ Raymundo","c2":"MX","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"TRAN Thanh Luc","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"TRAN Thanh Luc","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"M","players":[{"name":"PIEDRABUENA Pedro","country":"US"},{"name":"SALAZAR Alexander","country":"CO"},{"name":"KIM Haeng Jik","country":"KR"}],"matches":[{"p1":"PIEDRABUENA Pedro","c1":"US","p2":"SALAZAR Alexander","c2":"CO","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"KIM Haeng Jik","c1":"KR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"KIM Haeng Jik","c1":"KR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"N","players":[{"name":"KIRAZ Tolgahan","country":"TR"},{"name":"JEONG YE SUNG","country":"KR"},{"name":"HOFMAN Glenn","country":"NL"}],"matches":[{"p1":"KIRAZ Tolgahan","c1":"TR","p2":"JEONG YE SUNG","c2":"KR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"HOFMAN Glenn","c1":"NL","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"HOFMAN Glenn","c1":"NL","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"O","players":[{"name":"LEGAZPI Ruben","country":"ES"},{"name":"CHAU Hong Thai","country":"VN"},{"name":"BURY Jeremy","country":"FR"}],"matches":[{"p1":"LEGAZPI Ruben","c1":"ES","p2":"CHAU Hong Thai","c2":"VN","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"BURY Jeremy","c1":"FR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"BURY Jeremy","c1":"FR","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]},{"label":"P","players":[{"name":"HEO Jung Han","country":"KR"},{"name":"SONG Yun Do","country":"KR"},{"name":"TRAN Quyet Chien","country":"VN"}],"matches":[{"p1":"HEO Jung Han","c1":"KR","p2":"SONG Yun Do","c2":"KR","pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":1},{"p1":"TRAN Quyet Chien","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":2},{"p1":"TRAN Quyet Chien","c1":"VN","p2":null,"c2":null,"pts1":null,"pts2":null,"inn1":null,"inn2":null,"mp1":null,"mp2":null,"n":3}]}];
+const NAMES = {"VE":"Venezuela","FR":"France","BE":"Belgium","CO":"Colombia","KR":"South Korea","DE":"Germany","JO":"Jordan","EG":"Egypt","PT":"Portugal","CR":"Costa Rica","CZ":"Czechia","IT":"Italy","GR":"Greece","NL":"Netherlands","TR":"Türkiye","JP":"Japan","CH":"Switzerland","VN":"Vietnam","SE":"Sweden","DK":"Denmark","AT":"Austria","MX":"Mexico","US":"United States","ES":"Spain"};
+
+const flag = (c) => c ? ('https://flagcdn.com/w40/' + c.toLowerCase() + '.png') : null;
+const maxPlayers = Math.max(...GROUPS.map(g => g.players.length));
+const cols = 'repeat(' + maxPlayers + ', minmax(0,1fr))';
+document.getElementById('headcols').style.gridTemplateColumns = cols;
+document.getElementById('grphead').style.gridTemplateColumns = '92px minmax(0,1fr)';
+document.getElementById('headcols').innerHTML = Array.from({length:maxPlayers},(_,i)=>'<div>Player ' + (i+1) + '</div>').join('');
+
+// country counts (like the real page would compute from the active stage)
+const counts = {};
+GROUPS.forEach(g => g.players.forEach(p => { if(p.country) counts[p.country] = (counts[p.country]||0)+1; }));
+const COUNTRY = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] || (NAMES[a]||a).localeCompare(NAMES[b]||b));
+
+let selected = null;
+const expanded = new Set();
+
+function render(){
+  const flagsEl = document.getElementById('flags');
+  flagsEl.innerHTML = COUNTRY.map(c =>
+    '<button class="flagbtn' + (selected===c?' on':'') + '" data-c="' + c + '" title="' +
+    (NAMES[c]||c) + ' — ' + counts[c] + ' ' + (counts[c]===1?'player':'players') + '">' +
+    '<img src="' + flag(c) + '" alt="' + (NAMES[c]||c) + '" />' +
+    '<span class="n">' + counts[c] + '</span></button>').join('');
+  document.getElementById('clear').disabled = !selected;
+
+  const visible = selected ? GROUPS.filter(g => g.players.some(p => p.country===selected)) : GROUPS;
+  const host = document.getElementById('groups');
+  if(!visible.length){ host.innerHTML = '<div class="empty">No players found.</div>'; return; }
+
+  host.innerHTML = visible.map((g, idx) => {
+    const isOpen = expanded.has(g.label);
+    const players = g.players.map(p =>
+      '<div class="p"><img src="' + flag(p.country) + '" alt="' + p.country + '" />' +
+      '<span class="' + (p.country===selected?'hl':'') + '">' + p.name + '</span></div>').join('');
+    const rows = isOpen ? pairings(g).map(m =>
+        '<tr><td>' + m[0].name + '</td><td>' + (NAMES[m[0].country]||m[0].country) + '</td><td>-</td>' +
+        '<td>' + m[1].name + '</td><td>' + (NAMES[m[1].country]||m[1].country) + '</td><td>-</td></tr>').join('')
+      : '';
+    const matches = isOpen ? '<div class="matchbox"><table class="mtable"><thead><tr><th>Player</th><th>Country</th><th>Pts</th><th>Opponent</th><th>Country</th><th>Pts</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '';
+    return '<div class="row ' + (isOpen ? 'open' : 'collapsed ' + (idx%2?'odd':'')) + '" data-g="' + g.label + '">' +
+      '<div class="name"><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>Group ' + g.label + '</div>' +
+      '<div class="cols" style="grid-template-columns:' + cols + '">' + players + '</div></div>' + matches;
+  }).join('');
+}
+
+function pairings(g){
+  const out = [];
+  for(let i=0;i<g.players.length;i++) for(let j=i+1;j<g.players.length;j++) out.push([g.players[i], g.players[j]]);
+  return out;
+}
+
+document.getElementById('flags').addEventListener('click', (e) => {
+  const btn = e.target.closest('.flagbtn'); if(!btn) return;
+  const c = btn.dataset.c;
+  selected = (selected===c) ? null : c;
+  expanded.clear();
+  if(selected) GROUPS.filter(g=>g.players.some(p=>p.country===selected)).forEach(g=>expanded.add(g.label));
+  render();
+});
+document.getElementById('clear').addEventListener('click', () => { selected = null; expanded.clear(); render(); });
+document.getElementById('groups').addEventListener('click', (e) => {
+  const row = e.target.closest('.row'); if(!row) return;
+  const k = row.dataset.g;
+  expanded.has(k) ? expanded.delete(k) : expanded.add(k);
+  render();
+});
+render();
+</script>
+</body>
+</html>
