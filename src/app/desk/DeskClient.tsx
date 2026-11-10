@@ -28,7 +28,7 @@ type Match = {
   done?: boolean;
 };
 
-type Side = { points: number; innings: number; highRun: number; run: number };
+type Side = { points: number; run: number; hr: number; hr2: number };
 type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
 type TableState = {
   sessionId: string;
@@ -43,6 +43,8 @@ type TableState = {
   finished: boolean;
   saving: boolean;
   detail: InningEntry[];
+  /** Κοινή στεκιά αγώνα (μετράει όταν κλείνει η σειρά του 2ου). */
+  innings: number;
   error: string | null;
 };
 
@@ -234,8 +236,9 @@ export default function DeskClient() {
           matchLabel: matchLabel(match),
           names: [playerName(match, 1), playerName(match, 2)],
           /* Η στεκιά γράφεται πριν τους πόντους. */
-          p1: { points: 0, innings: 1, highRun: 0, run: 0 },
-          p2: { points: 0, innings: 0, highRun: 0, run: 0 },
+          p1: { points: 0, run: 0, hr: 0, hr2: 0 },
+          p2: { points: 0, run: 0, hr: 0, hr2: 0 },
+          innings: 1,
           active: 0,
           buffer: "",
           finished: false,
@@ -268,8 +271,8 @@ export default function DeskClient() {
       runs: [next.p1.run, next.p2.run],
       inningsDetail: next.detail,
       liveRuns: [next.active === 0 ? Number(next.buffer || 0) : 0, next.active === 1 ? Number(next.buffer || 0) : 0],
-      innings: [next.p1.innings, next.p2.innings],
-      highRuns: [next.p1.highRun, next.p2.highRun],
+      innings: [next.innings, next.innings],
+      highRuns: [next.p1.hr, next.p2.hr],
       active: next.active,
     });
   }, []);
@@ -286,8 +289,8 @@ export default function DeskClient() {
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.highRun, run: next.p1.run, liveRun: 0 },
-                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.highRun, run: next.p2.run, liveRun: 0 },
+                { points: next.p1.points, innings: next.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
+                { points: next.p2.points, innings: next.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
               ],
               inningsDetail: next.detail,
               finish,
@@ -312,7 +315,7 @@ export default function DeskClient() {
     const side = table[key];
     const next: TableState = {
       ...table,
-      [key]: { ...side, points: side.points + 1, run: side.run + 1, highRun: Math.max(side.highRun, side.run + 1) },
+      [key]: { ...side, points: side.points + 1, run: side.run + 1 },
     };
     pushScore(next);
   }, [table, pushScore]);
@@ -325,43 +328,42 @@ export default function DeskClient() {
     [table],
   );
 
-  const enterInning = useCallback(() => {
-    if (!table || table.finished) return;
-    const value = Number(table.buffer || 0);
-    const key = table.active === 0 ? "p1" : "p2";
-    const otherKey = table.active === 0 ? "p2" : "p1";
+  /** Κλείσιμο σειράς όπως στο scoreboard: HR/HR2 από το σερί, σερί → 0, αλλαγή, στεκιά +1 μετά τον 2ο. */
+  const closeTurn = useCallback((table: TableState, runValue: number, sidePoints: number): TableState => {
+    const idx = table.active;
+    const key = idx === 0 ? "p1" : "p2";
     const side = table[key];
-    const other = table[otherKey];
-    const sideKey = table.active === 0 ? "player1" : "player2";
-    const inningNo = Math.max(1, side.innings);
-    const previous = table.detail.find((row) => row.inning === inningNo) ?? { inning: inningNo };
-    const entry = { ...previous, [sideKey]: { pt: value, tot: side.points + value } };
-    const detail = [...table.detail.filter((row) => row.inning !== inningNo), entry].sort(
+    const prevHr = side.hr ?? 0;
+    const prevHr2 = side.hr2 ?? 0;
+    const nextHr = runValue >= prevHr ? runValue : prevHr;
+    const nextHr2 = runValue >= prevHr ? prevHr : runValue > prevHr2 ? runValue : prevHr2;
+    const sideKey = idx === 0 ? "player1" : "player2";
+    const previous = table.detail.find((row) => row.inning === table.innings) ?? { inning: table.innings };
+    const entry = { ...previous, [sideKey]: { pt: runValue, tot: sidePoints } };
+    const detail = [...table.detail.filter((row) => row.inning !== table.innings), entry].sort(
       (a, b) => a.inning - b.inning,
     );
-    const next: TableState = {
+    return {
       ...table,
       detail,
-      [key]: { points: side.points + value, innings: side.innings, highRun: Math.max(side.highRun, value), run: value },
-      [otherKey]: { ...other, innings: other.innings + 1, run: 0 },
-      active: table.active === 0 ? 1 : 0,
+      [key]: { ...side, points: sidePoints, run: 0, hr: nextHr, hr2: nextHr2 },
+      active: idx === 0 ? 1 : 0,
+      innings: idx === 1 ? table.innings + 1 : table.innings,
       buffer: "",
     };
-    pushScore(next);
-  }, [table, pushScore]);
+  }, []);
 
-  const endInning = useCallback(() => {
-    if (!table || table.finished) return;
-    const otherKey = table.active === 0 ? "p2" : "p1";
-    const other = table[otherKey];
-    const next: TableState = {
-      ...table,
-      [otherKey]: { ...other, innings: other.innings + 1 },
-      active: table.active === 0 ? 1 : 0,
-      buffer: "",
-    };
-    pushScore(next);
-  }, [table, pushScore]);
+  const commitTurn = useCallback(
+    (typedValue?: number) => {
+      if (!table || table.finished) return;
+      const side = table.active === 0 ? table.p1 : table.p2;
+      const typed = Math.max(0, Math.trunc(Number(typedValue ?? table.buffer) || 0));
+      const run = typed > 0 ? typed : side.run;
+      const points = typed > 0 ? side.points + typed : side.points;
+      pushScore(closeTurn(table, run, points));
+    },
+    [table, closeTurn, pushScore],
+  );
 
   const endGame = useCallback(() => {
     if (!table || table.finished) return;
@@ -452,7 +454,7 @@ export default function DeskClient() {
                   <span className="flex items-baseline gap-3 font-mono">
                     <span className="text-2xl font-bold">{side.points}</span>
                     <span className="text-[11px] text-slate-400">
-                      Inn {side.innings} · HR {side.highRun}
+                      Inn {table.innings} · HR {side.hr}
                     </span>
                   </span>
                 </button>
@@ -465,7 +467,7 @@ export default function DeskClient() {
               {mode === "total" ? "Πόντοι στην παρτίδα" : "Τρέχον σερί"}
             </span>
             <span className="font-mono text-xl font-bold text-emerald-400">
-              {mode === "total" ? table.buffer || "–" : activeSide.highRun}
+              {mode === "total" ? table.buffer || "–" : activeSide.run}
             </span>
           </div>
 
@@ -499,14 +501,14 @@ export default function DeskClient() {
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={enterInning}
+              onClick={() => commitTurn()}
               className="rounded-xl bg-emerald-600 py-4 text-sm font-semibold text-white active:bg-emerald-700"
             >
               Enter inning
             </button>
             <button
               type="button"
-              onClick={endInning}
+              onClick={() => commitTurn(0)}
               className="rounded-xl border border-slate-600 bg-slate-800 py-4 text-sm font-semibold active:bg-slate-700"
             >
               End inning (0)
