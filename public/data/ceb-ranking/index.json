@@ -1,6 +1,6 @@
 {
  "sourcePage": "https://www.eurobillard.org/pages/rankings-42.html",
- "generatedAt": "2026-11-05T13:00:00Z",
+ "generatedAt": "2026-11-10T10:00:00Z",
  "available": [
   {
    "slug": "3c-individual",
@@ -20,13 +20,13 @@
    "title": "3-Cushion Ladies",
    "discipline": "3-Cushion",
    "categoryLabel": "Ladies",
-   "edition": "13/2026",
-   "updatedAt": "2026-10-08",
-   "players": 206,
+   "edition": "14/2026",
+   "updatedAt": "2026-11-08",
+   "players": 212,
    "federations": 11,
    "suspended": 0,
    "href": "/rankings/ceb/3c-ladies",
-   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v13.pdf"
+   "sourceUrl": "https://www.eurobillard.org/medias/rankings/ceb-ladies-rank-2026-v14.pdf"
   },
   {
    "slug": "artistic-individual",
