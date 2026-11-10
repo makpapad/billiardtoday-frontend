@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DeskLivePublisher } from "@/lib/deskLive";
 
 /* ------------------------------------------------------------------ */
 /* Τύποι                                                              */
@@ -229,7 +230,8 @@ export default function DeskClient() {
           mode: opened.data.mode,
           matchLabel: matchLabel(match),
           names: [playerName(match, 1), playerName(match, 2)],
-          p1: { points: 0, innings: 0, highRun: 0 },
+          /* Η στεκιά γράφεται πριν τους πόντους. */
+          p1: { points: 0, innings: 1, highRun: 0 },
           p2: { points: 0, innings: 0, highRun: 0 },
           active: 0,
           buffer: "",
@@ -247,9 +249,29 @@ export default function DeskClient() {
   );
 
   /* --- αποστολή σκορ --- */
+  const live = useRef<DeskLivePublisher | null>(null);
+  useEffect(() => {
+    if (!live.current) live.current = new DeskLivePublisher();
+    return () => live.current?.close();
+  }, []);
+
+  const publishLive = useCallback((next: TableState) => {
+    if (!next.sessionId || !next.screenIdentifier) return;
+    live.current?.send({
+      screenId: next.screenIdentifier,
+      sessionId: next.sessionId,
+      names: [next.names[0] || "Player A", next.names[1] || "Player B"],
+      points: [next.p1.points, next.p2.points],
+      innings: [next.p1.innings, next.p2.innings],
+      highRuns: [next.p1.highRun, next.p2.highRun],
+      active: next.active,
+    });
+  }, []);
+
   const pushScore = useCallback(
     (next: TableState, finish = false) => {
       if (!token) return;
+      publishLive(next);
       setTable({ ...next, saving: true });
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(async () => {
@@ -274,7 +296,7 @@ export default function DeskClient() {
         }
       }, 250);
     },
-    [token],
+    [token, publishLive],
   );
 
   const addPoint = useCallback(() => {
@@ -300,14 +322,13 @@ export default function DeskClient() {
     if (!table || table.finished) return;
     const value = Number(table.buffer || 0);
     const key = table.active === 0 ? "p1" : "p2";
+    const otherKey = table.active === 0 ? "p2" : "p1";
     const side = table[key];
+    const other = table[otherKey];
     const next: TableState = {
       ...table,
-      [key]: {
-        points: side.points + value,
-        innings: side.innings + 1,
-        highRun: Math.max(side.highRun, value),
-      },
+      [key]: { points: side.points + value, innings: side.innings, highRun: Math.max(side.highRun, value) },
+      [otherKey]: { ...other, innings: other.innings + 1 },
       active: table.active === 0 ? 1 : 0,
       buffer: "",
     };
@@ -316,11 +337,11 @@ export default function DeskClient() {
 
   const endInning = useCallback(() => {
     if (!table || table.finished) return;
-    const key = table.active === 0 ? "p1" : "p2";
-    const side = table[key];
+    const otherKey = table.active === 0 ? "p2" : "p1";
+    const other = table[otherKey];
     const next: TableState = {
       ...table,
-      [key]: { ...side, innings: side.innings + 1 },
+      [otherKey]: { ...other, innings: other.innings + 1 },
       active: table.active === 0 ? 1 : 0,
       buffer: "",
     };

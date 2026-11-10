@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DeskLivePublisher, type DeskLiveState } from "@/lib/deskLive";
 import "./desk-console.css";
 
 /* ------------------------------------------------------------------ */
@@ -115,6 +116,28 @@ export default function DeskConsole({
   const [publicOpen, setPublicOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const saveTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const live = useRef<DeskLivePublisher | null>(null);
+
+  useEffect(() => {
+    if (!live.current) live.current = new DeskLivePublisher();
+    return () => live.current?.close();
+  }, []);
+
+  /** Το Live δεν παίρνει σκορ από το Strapi — θέλει το ίδιο μήνυμα με τη φυσική οθόνη. */
+  const publishLive = useCallback((table: TableState) => {
+    if (!table.sessionId || !table.screenId || !table.match) return;
+    const state: DeskLiveState = {
+      screenId: table.screenId,
+      sessionId: table.sessionId,
+      clubId: null,
+      names: [table.match.player1 || "Player A", table.match.player2 || "Player B"],
+      points: [table.p1.points, table.p2.points],
+      innings: [table.p1.innings, table.p2.innings],
+      highRuns: [table.p1.highRun, table.p2.highRun],
+      active: table.active,
+    };
+    live.current?.send(state);
+  }, []);
 
   const event = useMemo(
     () => schedule.events?.find((ev) => ev.documentId === eventId) || null,
@@ -147,6 +170,7 @@ export default function DeskConsole({
     (next: TableState, finish = false) => {
       setTables((prev) => prev.map((t) => (t.no === next.no ? next : t)));
       if (!next.sessionId) return;
+      publishLive(next);
       const marked: TableState = { ...next, saving: true };
       setTables((prev) => prev.map((t) => (t.no === next.no ? marked : t)));
       const timer = saveTimers.current[next.no];
@@ -171,7 +195,7 @@ export default function DeskConsole({
         }
       }, 250);
     },
-    [token],
+    [token, publishLive],
   );
 
   const withHistory = (table: TableState): TableState => ({
@@ -213,6 +237,8 @@ export default function DeskConsole({
               ? {
                   ...emptyTable(tableNo),
                   match,
+                  /* Η στεκιά γράφεται πριν τους πόντους: ο 1ος παίκτης ξεκινά την 1η. */
+                  p1: { points: 0, innings: 1, highRun: 0 },
                   sessionId,
                   screenId: opened.data.screenIdentifier,
                   mode: opened.data.mode,
@@ -224,12 +250,19 @@ export default function DeskConsole({
         );
         setSelected(tableNo);
         setPickForTable(null);
+        publishLive({
+          ...emptyTable(tableNo),
+          match,
+          sessionId,
+          screenId: opened.data.screenIdentifier,
+          p1: { points: 0, innings: 1, highRun: 0 },
+        });
         pushLog(`T${tableNo} · ${match.player1} vs ${match.player2} — άνοιξε`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Το τραπέζι δεν άνοιξε");
       }
     },
-    [token, stageId, event, stage, pushLog],
+    [token, stageId, event, stage, pushLog, publishLive],
   );
 
   /* --- ενέργειες σκορ --- */
@@ -250,14 +283,19 @@ export default function DeskConsole({
     if (!current?.sessionId || current.finished) return;
     const value = Number(current.buffer || 0);
     const key = current.active === 0 ? "p1" : "p2";
+    const otherKey = current.active === 0 ? "p2" : "p1";
     const side = current[key];
+    const other = current[otherKey];
     const next = withHistory({
       ...current,
       [key]: {
         points: side.points + value,
-        innings: side.innings + 1,
+        /* Η στεκιά έχει ήδη μετρηθεί όταν ξεκίνησε ο παίκτης. */
+        innings: side.innings,
         highRun: Math.max(side.highRun, value),
       },
+      /* Ο επόμενος ξεκινά νέα στεκιά — μετριέται τώρα, πριν τους πόντους του. */
+      [otherKey]: { ...other, innings: other.innings + 1 },
       active: current.active === 0 ? 1 : 0,
       buffer: "",
     });
@@ -267,11 +305,11 @@ export default function DeskConsole({
 
   const skipInning = useCallback(() => {
     if (!current?.sessionId || current.finished) return;
-    const key = current.active === 0 ? "p1" : "p2";
-    const side = current[key];
+    const otherKey = current.active === 0 ? "p2" : "p1";
+    const other = current[otherKey];
     const next = withHistory({
       ...current,
-      [key]: { ...side, innings: side.innings + 1 },
+      [otherKey]: { ...other, innings: other.innings + 1 },
       active: current.active === 0 ? 1 : 0,
       buffer: "",
     });
