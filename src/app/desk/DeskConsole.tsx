@@ -24,7 +24,7 @@ export type Match = {
   done?: boolean;
 };
 
-type Side = { points: number; run: number; hr: number; hr2: number };
+type Side = { points: number; run: number; hr: number; hr2: number; innings: number };
 type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
 
 type TableState = {
@@ -41,10 +41,10 @@ type TableState = {
   buffer: string;
   p1: Side;
   p2: Side;
-  /** Κοινή στεκιά αγώνα — όπως στο scoreboard: μετράει όταν κλείνει η σειρά του 2ου. */
-  innings: number;
+  /** Το Live γράφει μόνο όταν ανάψει το κουμπί — μέχρι τότε δεν στέλνεται τίποτα. */
+  liveOn: boolean;
   openedAt: number | null;
-  history: Array<{ p1: Side; p2: Side; active: 0 | 1; innings: number }>;
+  history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
   /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
   detail: InningEntry[];
 };
@@ -64,9 +64,9 @@ function emptyTable(no: number): TableState {
     saving: false,
     active: 0,
     buffer: "",
-    p1: { points: 0, run: 0, hr: 0, hr2: 0 },
-    p2: { points: 0, run: 0, hr: 0, hr2: 0 },
-    innings: 1,
+    p1: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
+    p2: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
+    liveOn: false,
     openedAt: null,
     history: [],
     detail: [],
@@ -134,13 +134,14 @@ export default function DeskConsole({
   /** Το Live δεν παίρνει σκορ από το Strapi — θέλει το ίδιο μήνυμα με τη φυσική οθόνη. */
   const publishLive = useCallback((table: TableState, liveRuns?: [number, number]) => {
     if (!table.sessionId || !table.screenId || !table.match) return;
+    if (!table.liveOn) return;
     const state: DeskLiveState = {
       screenId: table.screenId,
       sessionId: table.sessionId,
       clubId: null,
       names: [table.match.player1 || "Player A", table.match.player2 || "Player B"],
       points: [table.p1.points, table.p2.points],
-      innings: [table.innings, table.innings],
+      innings: [table.p1.innings, table.p2.innings],
       highRuns: [table.p1.hr, table.p2.hr],
       runs: [table.p1.run, table.p2.run],
       liveRuns,
@@ -192,8 +193,8 @@ export default function DeskConsole({
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
-                { points: next.p2.points, innings: next.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
+                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
+                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
               ],
               inningsDetail: next.detail,
               finish,
@@ -230,7 +231,7 @@ export default function DeskConsole({
   const withHistory = (table: TableState): TableState => ({
     ...table,
     history: [
-      { p1: { ...table.p1 }, p2: { ...table.p2 }, active: table.active, innings: table.innings },
+      { p1: { ...table.p1 }, p2: { ...table.p2 }, active: table.active },
       ...table.history,
     ].slice(0, 20),
   });
@@ -266,6 +267,7 @@ export default function DeskConsole({
               ? {
                   ...emptyTable(tableNo),
                   match,
+                  p1: { points: 0, run: 0, hr: 0, hr2: 0, innings: 1 },
                   sessionId,
                   screenId: opened.data.screenIdentifier,
                   mode: opened.data.mode,
@@ -291,64 +293,64 @@ export default function DeskConsole({
     [token, stageId, event, stage, pushLog, publishLive],
   );
 
-  /* --- ενέργειες σκορ (ίδια λογική με το scoreboard) ---
-     - σερί: ό,τι γράφεται στο πληκτρολόγιο (ή ό,τι μαζεύεται με +1)
-     - κλείσιμο σειράς: HR = καλύτερο σερί, HR2 = δεύτερο καλύτερο, σερί → 0, αλλαγή παίκτη
-     - η στεκιά μετράει όταν κλείνει η σειρά του 2ου παίκτη                                                     */
-  const closeTurn = useCallback(
-    (table: TableState, runValue: number, sidePoints: number): TableState => {
-      const idx = table.active;
-      const key = idx === 0 ? "p1" : "p2";
-      const side = table[key];
-      const prevHr = side.hr ?? 0;
-      const prevHr2 = side.hr2 ?? 0;
-      const nextHr = runValue >= prevHr ? runValue : prevHr;
-      const nextHr2 = runValue >= prevHr ? prevHr : runValue > prevHr2 ? runValue : prevHr2;
-      const sideKey = idx === 0 ? "player1" : "player2";
-      const previous = table.detail.find((row) => row.inning === table.innings) ?? { inning: table.innings };
-      const entry = { ...previous, [sideKey]: { pt: runValue, tot: sidePoints } };
-      const detail = [...table.detail.filter((row) => row.inning !== table.innings), entry].sort(
-        (a, b) => a.inning - b.inning,
-      );
-      return {
-        ...table,
-        detail,
-        [key]: { ...side, points: sidePoints, run: 0, hr: nextHr, hr2: nextHr2 },
-        active: idx === 0 ? 1 : 0,
-        innings: idx === 1 ? table.innings + 1 : table.innings,
-        buffer: "",
-      };
-    },
-    [],
-  );
+  /* --- ενέργειες σκορ (ροή όπως το χάρτινο φύλλο) ---
+     - ο 1ος παίκτης ξεκινά με στεκιά 1, ο 2ος με 0· όταν αλλάζει η σειρά, ο επόμενος παίρνει στεκιά
+     - οι πόντοι γράφονται στο ΣΕΡΙ (run), όχι στο σκορ
+     - με ENTER το σερί περνά στους πόντους και αλλάζει η σειρά                                  */
+  const pendingRun = useCallback((table: TableState): number => {
+    const typed = Math.max(0, Math.trunc(Number(table.buffer) || 0));
+    if (table.buffer !== "") return typed;
+    const side = table.active === 0 ? table.p1 : table.p2;
+    return side.run;
+  }, []);
 
-  /** Κλείσιμο σειράς: το πληκτρολόγιο γράφει το σερί, το ENTER το περνά στο σκορ. */
-  const commitTurn = useCallback(
-    (typedValue?: number) => {
-      if (!current?.sessionId || current.finished) return;
-      const idx = current.active;
-      const key = idx === 0 ? "p1" : "p2";
-      const side = current[key];
-      const typed = Math.max(0, Math.trunc(Number(typedValue ?? current.buffer) || 0));
-      const run = typed > 0 ? typed : side.run;
-      const points = typed > 0 ? side.points + typed : side.points;
-      const next = withHistory(closeTurn(current, run, points));
-      pushLog(`T${current.no} · ${run} πόντοι — αλλαγή παίκτη`);
-      pushScore(next);
-    },
-    [current, withHistory, closeTurn, pushScore, pushLog],
-  );
+  const closeTurn = useCallback((table: TableState, runValue: number): TableState => {
+    const idx = table.active;
+    const key = idx === 0 ? "p1" : "p2";
+    const otherKey = idx === 0 ? "p2" : "p1";
+    const side = table[key];
+    const other = table[otherKey];
+    const prevHr = side.hr ?? 0;
+    const prevHr2 = side.hr2 ?? 0;
+    const nextHr = runValue >= prevHr ? runValue : prevHr;
+    const nextHr2 = runValue >= prevHr ? prevHr : runValue > prevHr2 ? runValue : prevHr2;
+    const sideKey = idx === 0 ? "player1" : "player2";
+    const inningNo = Math.max(1, side.innings);
+    const previous = table.detail.find((row) => row.inning === inningNo) ?? { inning: inningNo };
+    const entry = { ...previous, [sideKey]: { pt: runValue, tot: side.points + runValue } };
+    const detail = [...table.detail.filter((row) => row.inning !== inningNo), entry].sort(
+      (a, b) => a.inning - b.inning,
+    );
+    return {
+      ...table,
+      detail,
+      [key]: { ...side, points: side.points + runValue, run: 0, hr: nextHr, hr2: nextHr2 },
+      /* ο επόμενος ξεκινά τη δική του στεκιά */
+      [otherKey]: { ...other, innings: Math.max(1, other.innings + 1) },
+      active: idx === 0 ? 1 : 0,
+      buffer: "",
+    };
+  }, []);
+
+  const commitTurn = useCallback(() => {
+    if (!current?.sessionId || current.finished) return;
+    const run = pendingRun(current);
+    const next = withHistory(closeTurn(current, run));
+    pushLog(`T${current.no} · ${run} πόντοι στο σκορ — αλλαγή σειράς`);
+    pushScore(next);
+  }, [current, pendingRun, withHistory, closeTurn, pushScore, pushLog]);
 
   const addPoint = useCallback(() => {
     if (!current?.sessionId || current.finished) return;
     const key = current.active === 0 ? "p1" : "p2";
     const side = current[key];
+    const typed = Math.max(0, Math.trunc(Number(current.buffer) || 0));
     const next = withHistory({
       ...current,
-      [key]: { ...side, points: side.points + 1, run: side.run + 1 },
+      [key]: { ...side, run: (current.buffer !== "" ? typed : side.run) + 1 },
       buffer: "",
     });
-    pushLog(`T${current.no} · +1 ${current.active === 0 ? current.match?.player1 : current.match?.player2}`);
+    pushLog(`T${current.no} · +1 στο σερί`);
     pushScore(next);
   }, [current, pushScore, pushLog, withHistory]);
 
@@ -360,7 +362,6 @@ export default function DeskConsole({
       p1: last.p1,
       p2: last.p2,
       active: last.active,
-      innings: last.innings,
       buffer: "",
       history: rest,
     };
@@ -416,7 +417,7 @@ export default function DeskConsole({
       }
       if (e.key === " ") {
         e.preventDefault();
-        commitTurn(0);
+        commitTurn();
         return;
       }
       if (e.key.toLowerCase() === "u") undo();
@@ -567,7 +568,7 @@ export default function DeskConsole({
                           <div className="pname">{name}</div>
                           <div className="pstats">
                             <div className="st">
-                              <b>{table.innings}</b>
+                              <b>{side.innings}</b>
                               <span>INN</span>
                             </div>
                             <div className="st">
@@ -590,6 +591,25 @@ export default function DeskConsole({
                         ? `${String(Math.floor((Date.now() - table.openedAt) / 60000)).padStart(2, "0")}′`
                         : "—"}
                     </span>
+                    <button
+                      type="button"
+                      className={`livebtn${table.liveOn ? " on" : ""}`}
+                      title={table.liveOn ? "Το Live δείχνει τον αγώνα" : "Άναψε το Live για να φαίνεται ο αγώνας"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelected(table.no);
+                        const next: TableState = { ...table, liveOn: !table.liveOn };
+                        setTables((prev) => prev.map((t) => (t.no === table.no ? next : t)));
+                        if (next.liveOn) {
+                          publishLive(next);
+                          pushLog(`T${table.no} · Live on`);
+                        } else {
+                          pushLog(`T${table.no} · Live off`);
+                        }
+                      }}
+                    >
+                      {table.liveOn ? "LIVE ●" : "LIVE"}
+                    </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); setSelected(table.no); }}>
                       Χειριστήριο
                     </button>
@@ -668,14 +688,8 @@ export default function DeskConsole({
                 </>
               )}
             </div>
-            <div className={`val${(entryMode === "point"
-                ? current?.active === 0
-                  ? current?.p1.run
-                  : current?.p2.run
-                : current?.buffer) ? "" : " empty"}`}>
-              {entryMode === "point"
-                ? (current?.active === 0 ? current?.p1.run : current?.p2.run) || "–"
-                : current?.buffer || "–"}
+            <div className={`val${current && pendingRun(current) > 0 ? "" : " empty"}`}>
+              {current ? pendingRun(current) || "–" : "–"}
             </div>
           </div>
           <div className="pointpad">
@@ -714,7 +728,7 @@ export default function DeskConsole({
             </button>
           </div>
           <div className="quick">
-            <button type="button" id="qVoid" onClick={() => commitTurn(0)}>
+            <button type="button" id="qVoid" onClick={() => commitTurn()}>
               Inning without points (Space)
             </button>
             <button type="button" id="qUndo" onClick={undo}>
@@ -869,12 +883,12 @@ export default function DeskConsole({
                 </div>
                 <div className={`ov-row${t.active === 0 ? " act" : ""}`}>
                   <span className="n">{t.match?.player1}</span>
-                  <span className="i">{t.innings}</span>
+                  <span className="i">{t.p1.innings}</span>
                   <span className="s">{t.p1.points}</span>
                 </div>
                 <div className={`ov-row${t.active === 1 ? " act" : ""}`}>
                   <span className="n">{t.match?.player2}</span>
-                  <span className="i">{t.innings}</span>
+                  <span className="i">{t.p2.innings}</span>
                   <span className="s">{t.p2.points}</span>
                 </div>
               </div>

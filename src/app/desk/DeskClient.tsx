@@ -28,7 +28,7 @@ type Match = {
   done?: boolean;
 };
 
-type Side = { points: number; run: number; hr: number; hr2: number };
+type Side = { points: number; run: number; hr: number; hr2: number; innings: number };
 type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
 type TableState = {
   sessionId: string;
@@ -43,8 +43,8 @@ type TableState = {
   finished: boolean;
   saving: boolean;
   detail: InningEntry[];
-  /** Κοινή στεκιά αγώνα (μετράει όταν κλείνει η σειρά του 2ου). */
-  innings: number;
+  /** Το Live γράφει μόνο όταν ανάψει. */
+  liveOn: boolean;
   error: string | null;
 };
 
@@ -236,9 +236,9 @@ export default function DeskClient() {
           matchLabel: matchLabel(match),
           names: [playerName(match, 1), playerName(match, 2)],
           /* Η στεκιά γράφεται πριν τους πόντους. */
-          p1: { points: 0, run: 0, hr: 0, hr2: 0 },
-          p2: { points: 0, run: 0, hr: 0, hr2: 0 },
-          innings: 1,
+          p1: { points: 0, run: 0, hr: 0, hr2: 0, innings: 1 },
+          p2: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
+          liveOn: false,
           active: 0,
           buffer: "",
           finished: false,
@@ -263,6 +263,7 @@ export default function DeskClient() {
 
   const publishLive = useCallback((next: TableState) => {
     if (!next.sessionId || !next.screenIdentifier) return;
+    if (!next.liveOn) return;
     live.current?.send({
       screenId: next.screenIdentifier,
       sessionId: next.sessionId,
@@ -271,7 +272,7 @@ export default function DeskClient() {
       runs: [next.p1.run, next.p2.run],
       inningsDetail: next.detail,
       liveRuns: [next.active === 0 ? Number(next.buffer || 0) : 0, next.active === 1 ? Number(next.buffer || 0) : 0],
-      innings: [next.innings, next.innings],
+      innings: [next.p1.innings, next.p2.innings],
       highRuns: [next.p1.hr, next.p2.hr],
       active: next.active,
     });
@@ -289,8 +290,8 @@ export default function DeskClient() {
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
-                { points: next.p2.points, innings: next.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
+                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
+                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
               ],
               inningsDetail: next.detail,
               finish,
@@ -309,13 +310,54 @@ export default function DeskClient() {
     [token, publishLive],
   );
 
+  const pendingRun = useCallback((state: TableState): number => {
+    const typed = Math.max(0, Math.trunc(Number(state.buffer) || 0));
+    if (state.buffer !== "") return typed;
+    const side = state.active === 0 ? state.p1 : state.p2;
+    return side.run;
+  }, []);
+
+  const closeTurn = useCallback((state: TableState, runValue: number): TableState => {
+    const idx = state.active;
+    const key = idx === 0 ? "p1" : "p2";
+    const otherKey = idx === 0 ? "p2" : "p1";
+    const side = state[key];
+    const other = state[otherKey];
+    const prevHr = side.hr ?? 0;
+    const prevHr2 = side.hr2 ?? 0;
+    const nextHr = runValue >= prevHr ? runValue : prevHr;
+    const nextHr2 = runValue >= prevHr ? prevHr : runValue > prevHr2 ? runValue : prevHr2;
+    const sideKey = idx === 0 ? "player1" : "player2";
+    const inningNo = Math.max(1, side.innings);
+    const previous = state.detail.find((row) => row.inning === inningNo) ?? { inning: inningNo };
+    const entry = { ...previous, [sideKey]: { pt: runValue, tot: side.points + runValue } };
+    const detail = [...state.detail.filter((row) => row.inning !== inningNo), entry].sort(
+      (a, b) => a.inning - b.inning,
+    );
+    return {
+      ...state,
+      detail,
+      [key]: { ...side, points: side.points + runValue, run: 0, hr: nextHr, hr2: nextHr2 },
+      [otherKey]: { ...other, innings: Math.max(1, other.innings + 1) },
+      active: idx === 0 ? 1 : 0,
+      buffer: "",
+    };
+  }, []);
+
+  const commitTurn = useCallback(() => {
+    if (!table || table.finished) return;
+    pushScore(closeTurn(table, pendingRun(table)));
+  }, [table, pendingRun, closeTurn, pushScore]);
+
   const addPoint = useCallback(() => {
     if (!table || table.finished) return;
     const key = table.active === 0 ? "p1" : "p2";
     const side = table[key];
+    const typed = Math.max(0, Math.trunc(Number(table.buffer) || 0));
     const next: TableState = {
       ...table,
-      [key]: { ...side, points: side.points + 1, run: side.run + 1 },
+      [key]: { ...side, run: (table.buffer !== "" ? typed : side.run) + 1 },
+      buffer: "",
     };
     pushScore(next);
   }, [table, pushScore]);
@@ -326,43 +368,6 @@ export default function DeskClient() {
       setTable({ ...table, buffer: (table.buffer + digit).slice(0, 3) });
     },
     [table],
-  );
-
-  /** Κλείσιμο σειράς όπως στο scoreboard: HR/HR2 από το σερί, σερί → 0, αλλαγή, στεκιά +1 μετά τον 2ο. */
-  const closeTurn = useCallback((table: TableState, runValue: number, sidePoints: number): TableState => {
-    const idx = table.active;
-    const key = idx === 0 ? "p1" : "p2";
-    const side = table[key];
-    const prevHr = side.hr ?? 0;
-    const prevHr2 = side.hr2 ?? 0;
-    const nextHr = runValue >= prevHr ? runValue : prevHr;
-    const nextHr2 = runValue >= prevHr ? prevHr : runValue > prevHr2 ? runValue : prevHr2;
-    const sideKey = idx === 0 ? "player1" : "player2";
-    const previous = table.detail.find((row) => row.inning === table.innings) ?? { inning: table.innings };
-    const entry = { ...previous, [sideKey]: { pt: runValue, tot: sidePoints } };
-    const detail = [...table.detail.filter((row) => row.inning !== table.innings), entry].sort(
-      (a, b) => a.inning - b.inning,
-    );
-    return {
-      ...table,
-      detail,
-      [key]: { ...side, points: sidePoints, run: 0, hr: nextHr, hr2: nextHr2 },
-      active: idx === 0 ? 1 : 0,
-      innings: idx === 1 ? table.innings + 1 : table.innings,
-      buffer: "",
-    };
-  }, []);
-
-  const commitTurn = useCallback(
-    (typedValue?: number) => {
-      if (!table || table.finished) return;
-      const side = table.active === 0 ? table.p1 : table.p2;
-      const typed = Math.max(0, Math.trunc(Number(typedValue ?? table.buffer) || 0));
-      const run = typed > 0 ? typed : side.run;
-      const points = typed > 0 ? side.points + typed : side.points;
-      pushScore(closeTurn(table, run, points));
-    },
-    [table, closeTurn, pushScore],
   );
 
   const endGame = useCallback(() => {
@@ -454,7 +459,7 @@ export default function DeskClient() {
                   <span className="flex items-baseline gap-3 font-mono">
                     <span className="text-2xl font-bold">{side.points}</span>
                     <span className="text-[11px] text-slate-400">
-                      Inn {table.innings} · HR {side.hr}
+                      Inn {side.innings} · HR {side.hr}
                     </span>
                   </span>
                 </button>
@@ -467,7 +472,7 @@ export default function DeskClient() {
               {mode === "total" ? "Πόντοι στην παρτίδα" : "Τρέχον σερί"}
             </span>
             <span className="font-mono text-xl font-bold text-emerald-400">
-              {mode === "total" ? table.buffer || "–" : activeSide.run}
+              {mode === "total" ? pendingRun(table) || "–" : pendingRun(table) || "–"}
             </span>
           </div>
 
@@ -508,7 +513,7 @@ export default function DeskClient() {
             </button>
             <button
               type="button"
-              onClick={() => commitTurn(0)}
+              onClick={() => commitTurn()}
               className="rounded-xl border border-slate-600 bg-slate-800 py-4 text-sm font-semibold active:bg-slate-700"
             >
               End inning (0)
