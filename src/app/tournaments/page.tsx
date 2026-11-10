@@ -4,6 +4,8 @@ import { TournamentListSeedProvider } from "@/components/tournaments/TournamentL
 import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsAppearance, getCmsPageBySlug, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getTournamentListSeed } from "@/lib/tournamentListSeed";
+import { fetchPublishedTournamentLinks, fetchPublishedTeamTournamentLinks } from "@/lib/publicTournamentIndex";
+import { TournamentIndexSection } from "@/components/public/TournamentIndexSection";
 import type { CmsSection } from "@/lib/cms/types";
 
 const buildFallbackTournamentsPage = () => ({
@@ -77,10 +79,25 @@ export default async function TournamentsPage() {
    * found») και τα 400+ τουρνουά δεν είχαν κανένα εσωτερικό link.
    */
   const seed = await getTournamentListSeed(resolveListPageSize(page.sections));
+  /**
+   * Πλήρης κατάλογος: η λίστα αποδίδει server-side μόνο την πρώτη σελίδα (20 από 401),
+   * οπότε οι υπόλοιπες δεν είχαν κανέναν εσωτερικό σύνδεσμο. Μπαίνει σε κλειστό
+   * `<details>` — οπτικά κρυμμένο, πλήρες στο HTML.
+   */
+  const [allTournaments, teamTournaments] = await Promise.all([
+    fetchPublishedTournamentLinks().catch(() => null),
+    fetchPublishedTeamTournamentLinks().catch(() => []),
+  ]);
 
   return (
-    <TournamentListSeedProvider seed={seed}>
-      <CmsPageView page={page} settings={settings} appearance={appearance} />
-    </TournamentListSeedProvider>
+    <>
+      <TournamentListSeedProvider seed={seed}>
+        <CmsPageView page={page} settings={settings} appearance={appearance} />
+      </TournamentListSeedProvider>
+
+      {allTournaments ? (
+        <TournamentIndexSection items={allTournaments} teamItems={teamTournaments} />
+      ) : null}
+    </>
   );
 }

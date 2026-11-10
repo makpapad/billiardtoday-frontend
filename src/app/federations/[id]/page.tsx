@@ -218,6 +218,13 @@ export default async function FederationPage({ params }: Props) {
       <FederationSeoSection
         federationName={federation.name}
         events={eventLinks}
+        teamEvents={teamTournaments.map((item) => ({
+          documentId: item.documentId,
+          title: item.title,
+          href: item.href,
+          startDate: item.startDate,
+          endDate: item.endDate,
+        }))}
         clubs={(federation.clubs ?? []).map((club) => ({
           name: club.name,
           slug: club.slug ?? null,

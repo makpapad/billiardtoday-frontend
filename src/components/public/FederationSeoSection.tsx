@@ -29,30 +29,39 @@ const formatDate = (value: string | null): string => {
   }).format(parsed);
 };
 
-const formatRange = (event: FederationEventLink): string => {
-  const start = formatDate(event.startDate);
-  const end = formatDate(event.endDate);
+const formatRange = (item: {
+  startDate: string | null;
+  endDate: string | null;
+  season?: number | null;
+}): string => {
+  const start = formatDate(item.startDate);
+  const end = formatDate(item.endDate);
   if (start && end && start !== end) return `${start} — ${end}`;
   if (start) return start;
   if (end) return end;
-  return event.season ? `Season ${event.season}` : "";
+  return item.season ? `Season ${item.season}` : "";
 };
 
 export function FederationSeoSection({
   federationName,
   events,
+  teamEvents = [],
   clubs,
 }: {
   federationName: string;
   events: FederationEventLink[];
+  teamEvents?: Array<{ documentId: string; title: string; href: string; startDate: string | null; endDate: string | null }>;
   clubs: ClubLink[];
 }) {
   const usableClubs = clubs.filter((club) => Boolean(club.slug || club.documentId));
-  if (events.length === 0 && usableClubs.length === 0) return null;
+  if (events.length === 0 && usableClubs.length === 0 && teamEvents.length === 0) return null;
 
   // Μόνο ό,τι υπάρχει: «0 tournaments · 3 clubs» διαβάζεται σαν σφάλμα.
   const counts = [
     events.length > 0 ? `${events.length} ${events.length === 1 ? "tournament" : "tournaments"}` : null,
+    teamEvents.length > 0
+      ? `${teamEvents.length} team ${teamEvents.length === 1 ? "competition" : "competitions"}`
+      : null,
     usableClubs.length > 0
       ? `${usableClubs.length} ${usableClubs.length === 1 ? "club" : "clubs"}`
       : null,
@@ -82,6 +91,30 @@ export function FederationSeoSection({
                         className="font-medium text-slate-900 underline decoration-dotted hover:text-sky-700"
                       >
                         {event.title}
+                      </Link>
+                      {range ? <span className="text-slate-500"> · {range}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
+          {teamEvents.length > 0 ? (
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Team competitions ({teamEvents.length})
+              </h3>
+              <ul className="mt-3 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+                {teamEvents.map((item) => {
+                  const range = formatRange({ startDate: item.startDate, endDate: item.endDate });
+                  return (
+                    <li key={item.documentId || item.href} className="text-slate-700">
+                      <Link
+                        href={item.href}
+                        className="font-medium text-slate-900 underline decoration-dotted hover:text-sky-700"
+                      >
+                        {item.title}
                       </Link>
                       {range ? <span className="text-slate-500"> · {range}</span> : null}
                     </li>

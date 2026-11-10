@@ -72,3 +72,70 @@ export const fetchPublishedTournamentDocumentIds = async (): Promise<Set<string>
 
   return ids.size > 0 ? ids : null;
 };
+
+export type PublicTournamentLink = {
+  documentId: string;
+  title: string;
+  href: string;
+  startDate: string | null;
+  endDate: string | null;
+  gameType: string | null;
+};
+
+/**
+ * Όλες οι δημοσιευμένες διοργανώσεις ως έτοιμοι σύνδεσμοι — για server-rendered κατάλογο.
+ *
+ * ΓΙΑΤΙ: η λίστα `/tournaments` σερβίρει server-side ΜΟΝΟ την πρώτη σελίδα (20 από 401,
+ * μετρημένο 10/11/2026), οπότε οι υπόλοιπες 381 είχαν εσωτερικό σύνδεσμο μόνο μέσω
+ * pagination που θέλει JavaScript.
+ *
+ * Ίδια πηγή με το sitemap (`listTournamentEvents` + το σύνολο των δημοσιευμένων), με τον
+ * ΙΔΙΟ κανόνα απόκρυψης: event που κάνει 308 στη σελίδα του ομαδικού δεν μπαίνει εδώ —
+ * το ομαδικό URL είναι το σωστό (εξαίρεση τα biathlon, που μένουν στο κλασικό module).
+ */
+export const fetchPublishedTournamentLinks = async (
+  limit = 600,
+): Promise<PublicTournamentLink[] | null> => {
+  const { listTournamentEvents } = await import("@/lib/publicSiteData");
+  const [events, publishedIds] = await Promise.all([
+    listTournamentEvents(limit).catch(() => null),
+    fetchPublishedTournamentDocumentIds(),
+  ]);
+  if (!events) return null;
+
+  const isBiathlon = (event: { title: string; gameType: string | null }) =>
+    /biathlon/i.test(event.gameType ?? "") || /biathlon/i.test(event.title);
+
+  return events
+    .filter((event) => Boolean(event.href))
+    .filter((event) => !publishedIds || publishedIds.has(event.documentId))
+    .filter((event) => !(event.teamTournamentDocumentId && !isBiathlon(event)))
+    .map((event) => ({
+      documentId: event.documentId,
+      title: event.title,
+      href: event.href as string,
+      startDate: event.startDate ?? null,
+      endDate: event.endDate ?? null,
+      gameType: event.gameType ?? null,
+    }));
+};
+
+/** Τα ομαδικά πρωταθλήματα ως έτοιμοι σύνδεσμοι (ίδιο slug με τη σελίδα τους). */
+export const fetchPublishedTeamTournamentLinks = async (): Promise<
+  PublicTournamentLink[]
+> => {
+  const { buildTeamTournamentSlug, fetchTeamTournaments } = await import(
+    "@/lib/teamTournaments"
+  );
+  const teamTournaments = await fetchTeamTournaments().catch(() => []);
+  return teamTournaments
+    .map((tournament) => ({
+      documentId: tournament.documentId,
+      title: tournament.title,
+      href: `/tournaments/team/${buildTeamTournamentSlug(tournament)}`,
+      startDate: null,
+      endDate: null,
+      gameType: null,
+    }))
+    .filter((item) => Boolean(item.documentId) && Boolean(item.title));
+};
