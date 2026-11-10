@@ -61,6 +61,14 @@ const nextConfig = {
       { source: '/feed', destination: '/news', statusCode: permanent },
       { source: '/comments/feed', destination: '/news', statusCode: permanent },
       { source: '/about', destination: '/', statusCode: permanent },
+      // Υπολείμματα WordPress που ζητά ακόμη ο Googlebot (μετρήθηκαν στα logs της 10/11/2026).
+      { source: '/blog', destination: '/news', statusCode: permanent },
+      { source: '/blog/:path*', destination: '/news', statusCode: permanent },
+      { source: '/press', destination: '/news', statusCode: permanent },
+      { source: '/site', destination: '/', statusCode: permanent },
+      // Παλιές διευθύνσεις sitemap (WordPress/Yoast) → το πραγματικό sitemap.
+      { source: '/sitemap.html', destination: '/sitemap.xml', statusCode: permanent },
+      { source: '/sitemap_index.xml', destination: '/sitemap.xml', statusCode: permanent },
       // 2. Οι συγκεκριμένες παλιές διευθύνσεις που ξέρουμε ονομαστικά (λίστα από το Wayback).
       ...legacyRedirects.map(({ source, destination }) => ({
         source,
