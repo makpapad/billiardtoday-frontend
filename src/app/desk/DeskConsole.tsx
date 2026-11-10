@@ -579,7 +579,9 @@ export default function DeskConsole({
                         </div>
                         <div className="sc">
                           <span className="pts">{side.points}</span>
-                          <span className="run">{side.run}</span>
+                          <span className="run">
+                            {table.active === idx && !table.finished ? pendingRun(table) : side.run}
+                          </span>
                         </div>
                       </div>
                     );
