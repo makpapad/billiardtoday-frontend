@@ -8,6 +8,10 @@ import { requireClubByIdentifier } from "@/lib/directory";
 import { listClubPlayers } from "@/lib/publicSiteData";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
+// ISR: το HTML σερβίρεται από cache (πριν: no-store σε κάθε αίτημα).
+// Τα live σκορ ανανεώνονται client-side, δεν εξαρτώνται από αυτό το cache.
+export const revalidate = 3600;
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -27,7 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const club = await requireClubByIdentifier(slug);
 
   return buildPageMetadata({
-    title: club.name,
+    // Το template προσθέτει « | Billiard Today» (17 χαρ.)· με μακριά ονόματα συλλόγων
+    // το title έφτανε τα 89 (μετρημένο 11/11/2026). Πάνω από 45 χαρ. μένει χωρίς brand.
+    title: club.name.length > 45 ? { absolute: club.name } : club.name,
     description: buildClubDescription(club),
     path: `/clubs/${club.slug}`,
   });

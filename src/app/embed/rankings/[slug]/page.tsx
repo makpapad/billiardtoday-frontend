@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { RankingSeriesContent } from "@/app/rankings/[slug]/page";
 import { getRankingSeriesData } from "@/lib/rankings";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

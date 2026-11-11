@@ -6,6 +6,8 @@ import { CebFederationExperience } from "@/components/public/CebFederationExperi
 import { CEB_MEMBER_SLUGS } from "@/components/public/cebFederationMapData";
 import { FederationDetailContent } from "@/components/public/FederationDetailContent";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ id: string }>;
 };

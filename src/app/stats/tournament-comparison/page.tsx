@@ -75,6 +75,16 @@ function chartDomain(metric: string, stages: StageRow[]) {
 }
 
 export default function TournamentComparisonPage() {
+  // Το page διαβάζει `useSearchParams()`· χωρίς Suspense το static prerender του
+  // Next σκάει (το έκρυβε το force-dynamic του root layout, που αφαιρέθηκε).
+  return (
+    <React.Suspense fallback={null}>
+      <TournamentComparisonContent />
+    </React.Suspense>
+  );
+}
+
+function TournamentComparisonContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();

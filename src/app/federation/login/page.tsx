@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { FederationSignIn } from "./FederationSignIn";
 
+// Ζωντανά δεδομένα σε κάθε αίτημα — δεν επιτρέπεται στατικό HTML.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   ...buildPageMetadata({
     title: "Federation sign in — national ranking submission",

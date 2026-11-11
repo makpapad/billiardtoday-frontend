@@ -3,6 +3,8 @@ import { CmsPageView } from "@/components/cms/CmsPageView";
 import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsAppearance, getCmsPageBySlug, getCmsSiteSettings } from "@/lib/cms/strapi";
 
+export const dynamic = "force-dynamic";
+
 const buildFallbackTournamentsPage = () => ({
   id: "cms-tournaments-embed-fallback",
   title: "Tournaments",

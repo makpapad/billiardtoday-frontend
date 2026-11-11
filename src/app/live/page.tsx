@@ -5,8 +5,11 @@ import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getClubs } from "@/lib/directory";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
+// Ζωντανά δεδομένα σε κάθε αίτημα — δεν επιτρέπεται στατικό HTML.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildPageMetadata({
-  title: "Live",
+  title: "Live Billiard Scoreboards & Streaming",
   description: "Open live billiard scoreboard hubs and follow active or pending club sessions in real time.",
   path: "/live",
 });

@@ -5,7 +5,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { RichDescription } from "@/components/tournaments/RichDescription";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Rankings",
+  title: "3-Cushion Rankings & Standings (CEB, UMB, BTR)",
   description: "Official billiard ranking lists and circuit standings built from published tournament results.",
   path: "/rankings",
 });

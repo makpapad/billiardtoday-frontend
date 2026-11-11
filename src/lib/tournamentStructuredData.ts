@@ -59,11 +59,17 @@ export function buildTournamentStructuredData(summary: TournamentEventSummary) {
   const locationName = buildLocationName(summary);
   const locationAddress = buildAddress(summary);
   const organizerName =
+    cleanText(summary.organizerName) ||
     cleanText(
       summary.organizerType === "federation"
         ? summary.rankingSeriesTitle
         : summary.clubName,
-    ) || "Billiard Today";
+    ) ||
+    "Billiard Today";
+  // Ο πραγματικός διοργανωτής (ομοσπονδία ή σύλλογος), όχι το SITE_URL.
+  const organizerUrl = summary.organizerHref
+    ? absoluteUrl(summary.organizerHref)
+    : undefined;
 
   const sportsEvent = {
     "@context": "https://schema.org",
@@ -74,17 +80,15 @@ export function buildTournamentStructuredData(summary: TournamentEventSummary) {
     ...(summary.startDate ? { startDate: summary.startDate } : {}),
     ...(summary.endDate ? { endDate: summary.endDate } : {}),
     sport: summary.gameType || "Billiards",
-    eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+    // Πραγματικοί αγώνες σε φυσικό χώρο: το OnlineEventAttendanceMode ήταν λάθος και
+    // η Google απέρριπτε το Event (μετρημένο live 11/11/2026).
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     organizer: {
       "@type": "Organization",
       name: organizerName,
-      url: SITE_URL,
+      ...(organizerUrl ? { url: organizerUrl } : {}),
     },
-    performer: {
-      "@type": "Organization",
-      name: "Billiard Today",
-      url: SITE_URL,
-    },
+    // ΧΩΡΙΣ performer: το «Billiard Today» ως performer ήταν παραπλανητικό — δεν αγωνίζεται.
     ...(locationName
       ? {
           location: {

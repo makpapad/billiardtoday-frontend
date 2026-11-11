@@ -10,6 +10,10 @@ import { getPlayerHistoryForServer } from "@/lib/playerHistoryServer";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
 
+// Ζωντανό render: το κύριο component διαβάζει `useSearchParams()`, άρα σε static/ISR
+// το HTML θα έβγαινε κενό (CSR bailout). Το SEO περιεχόμενο χάνεται — μένει dynamic.
+
+
 type Props = {
   params: Promise<{ id: string }>;
 };

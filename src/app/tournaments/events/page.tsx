@@ -5,6 +5,8 @@ import { getTournamentEventSummary } from "@/lib/tournaments";
 
 import TournamentEventsPage from "./TournamentEventsContent";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getClubs } from "@/lib/directory";
 
+// Ζωντανά δεδομένα σε κάθε αίτημα — δεν επιτρέπεται στατικό HTML.
+export const dynamic = "force-dynamic";
+
 export default async function EmbedLivePage() {
   const clubs = await getClubs();
 

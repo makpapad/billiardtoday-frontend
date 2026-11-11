@@ -13,7 +13,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/account/",
+          // ΧΩΡΙΣ κάθετο: το «/account/» άφηνε το /account crawlable (200, canonical→αρχική).
+          "/account",
           "/account-access/",
           "/admin/",
           "/api/",

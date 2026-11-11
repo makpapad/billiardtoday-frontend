@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getServerEnv } from "@/lib/serverEnv";
 
 const IS_PRODUCTION = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production";
+const IS_DEVELOPMENT = !IS_PRODUCTION;
 const PRIMARY_STRAPI_URL =
   getServerEnv("STRAPI_API_URL") ||
   (IS_PRODUCTION ? "http://127.0.0.1:1337" : getServerEnv("NEXT_PUBLIC_STRAPI_URL")) ||
@@ -289,7 +290,11 @@ const fetchStrapiJson = async (path: string) => {
     const url = `${baseUrl}${path}`;
     const doFetch = async (useAuth: boolean) =>
       fetch(url, {
-        cache: "no-store",
+        // Ήταν `no-store` και έκανε ΟΛΗ τη σελίδα dynamic (no-store header, πλήρες render
+        // σε κάθε crawl) για δεδομένα που αλλάζουν σπάνια: σύλλογοι/ομοσπονδίες.
+        // Μετρημένο 11/11/2026: /clubs, /clubs/[slug], /federations, /federations/[id].
+        next: IS_DEVELOPMENT ? undefined : { revalidate: 300 },
+        cache: IS_DEVELOPMENT ? "no-store" : undefined,
         headers: useAuth ? buildHeaders() : {},
         signal: AbortSignal.timeout(STRAPI_FETCH_TIMEOUT_MS),
       });

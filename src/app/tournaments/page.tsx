@@ -8,6 +8,8 @@ import { fetchPublishedTournamentLinks, fetchPublishedTeamTournamentLinks } from
 import { TournamentIndexSection } from "@/components/public/TournamentIndexSection";
 import type { CmsSection } from "@/lib/cms/types";
 
+export const dynamic = "force-dynamic";
+
 const buildFallbackTournamentsPage = () => ({
   id: "cms-tournaments-fallback",
   title: "Tournaments",

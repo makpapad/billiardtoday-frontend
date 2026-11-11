@@ -10,6 +10,10 @@ import {
 import { resolveTournamentEventSummary } from "@/lib/tournaments";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
+// Ζωντανό render: το κύριο component διαβάζει `useSearchParams()`, άρα σε static/ISR
+// το HTML θα έβγαινε κενό (CSR bailout). Το SEO περιεχόμενο χάνεται — μένει dynamic.
+
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

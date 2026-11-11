@@ -18,6 +18,10 @@ import {
 } from "@/lib/federationPageData";
 import { buildDefaultOpenGraphImage, buildOpenGraphImage, SITE_URL } from "@/lib/socialMetadata";
 
+// ISR: το HTML σερβίρεται από cache (πριν: no-store σε κάθε αίτημα).
+// Τα live σκορ ανανεώνονται client-side, δεν εξαρτώνται από αυτό το cache.
+export const revalidate = 300;
+
 type Props = {
   params: Promise<{ id: string }>;
 };

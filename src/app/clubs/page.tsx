@@ -4,7 +4,7 @@ import { getClubs } from "@/lib/directory";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Clubs",
+  title: "Billiard Clubs Directory — Find Clubs & Venues",
   description: "Browse billiard clubs, venues, live scoreboard hubs, and published tournament activity.",
   path: "/clubs",
 });

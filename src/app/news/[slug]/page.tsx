@@ -5,6 +5,11 @@ import { buildCmsMetadata } from "@/lib/cms/metadata";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
 import { getNewsArticleBySlug } from "@/lib/cms/news";
 import { toPlainText } from "@/lib/richText";
+import { SITE_URL } from "@/lib/socialMetadata";
+
+// ISR: το HTML σερβίρεται από cache (πριν: no-store σε κάθε αίτημα).
+// Τα live σκορ ανανεώνονται client-side, δεν εξαρτώνται από αυτό το cache.
+export const revalidate = 300;
 
 type Params = {
   slug: string;
@@ -70,15 +75,39 @@ export default async function NewsArticlePage({
     notFound();
   }
 
+  /**
+   * Η Google απορρίπτει Article όπου `dateModified` < `datePublished` — και ζωντανά
+   * συνέβαινε (…07.077Z πριν το …07.110Z). Κρατάμε τη νωρίτερη ως δημοσίευση.
+   */
+  const publishedAt = page.publishedAt || page.updatedAt || undefined;
+  const modifiedRaw = page.updatedAt || page.publishedAt || undefined;
+  const dateModified =
+    publishedAt && modifiedRaw && modifiedRaw < publishedAt ? publishedAt : modifiedRaw;
+
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: page.title,
     description: toPlainText(page.summary) || undefined,
-    datePublished: page.publishedAt || undefined,
-    dateModified: page.updatedAt || undefined,
+    datePublished: publishedAt,
+    dateModified: dateModified,
     image: page.coverImage?.url ? [page.coverImage.url] : undefined,
-    mainEntityOfPage: `https://billiardtoday.com/news/${page.slug}`,
+    mainEntityOfPage: `${SITE_URL}/news/${page.slug}`,
+    author: {
+      "@type": "Organization",
+      name: "Billiard Today",
+      url: SITE_URL,
+    },
+    // Χωρίς publisher η Google δεν δίνει Article rich result.
+    publisher: {
+      "@type": "Organization",
+      name: "Billiard Today",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo-billiardtoday.png`,
+      },
+    },
   };
 
   return (

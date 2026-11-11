@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getFederations } from "@/lib/directory";
 
+export const dynamic = "force-dynamic";
+
 export default async function EmbedFederationsPage() {
   const federations = await getFederations();
 

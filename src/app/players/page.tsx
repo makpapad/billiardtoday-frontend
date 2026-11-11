@@ -43,9 +43,26 @@ const playersCanonicalPath = (
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = searchParams ? await searchParams : {};
+  /**
+   * 21 σελίδες καταλόγου είχαν ΟΛΕΣ το ίδιο title/description (μετρημένο 11/11/2026).
+   * Το `?page=` και το `?letter=` μπαίνουν πλέον στον τίτλο ώστε κάθε σελίδα να είναι
+   * μοναδική — το canonical μένει το ίδιο (self-canonical ανά σελίδα).
+   */
+  const letter = readParam(params.letter).trim().toUpperCase().slice(0, 1);
+  const parsedPage = Number.parseInt(readParam(params.page, "1"), 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 1 ? parsedPage : 1;
+  const suffix = [
+    /^[A-Z]$/.test(letter) ? `Surnames ${letter}` : "",
+    page > 1 ? `Page ${page}` : "",
+  ]
+    .filter(Boolean)
+    .join(" — ");
+
   return buildPageMetadata({
-    title: PLAYERS_DIRECTORY_TITLE,
-    description: PLAYERS_DIRECTORY_DESCRIPTION,
+    title: suffix ? `${PLAYERS_DIRECTORY_TITLE} — ${suffix}` : PLAYERS_DIRECTORY_TITLE,
+    description: suffix
+      ? `${PLAYERS_DIRECTORY_DESCRIPTION} ${suffix}.`
+      : PLAYERS_DIRECTORY_DESCRIPTION,
     path: playersCanonicalPath(params),
     keywords: PLAYERS_DIRECTORY_KEYWORDS,
   });

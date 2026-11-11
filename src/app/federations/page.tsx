@@ -5,7 +5,7 @@ import { CountryFlag } from "@/components/public/PresentationBlocks";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Federations",
+  title: "Billiard Federations (UMB, CEB & National)",
   description: "Browse billiard federations and organizers with public profiles, clubs, and official tournament pages.",
   path: "/federations",
 });

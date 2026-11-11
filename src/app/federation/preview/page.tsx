@@ -3,6 +3,9 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { FederationSubmissionPreview } from "./FederationSubmissionPreview";
 import data from "./players-gr.json";
 
+// Ζωντανά δεδομένα σε κάθε αίτημα — δεν επιτρέπεται στατικό HTML.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   ...buildPageMetadata({
     title: "National ranking submission — federation preview",

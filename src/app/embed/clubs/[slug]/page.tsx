@@ -4,6 +4,8 @@ import { TournamentListSection } from "@/components/tournaments/TournamentListSe
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

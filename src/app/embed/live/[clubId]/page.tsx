@@ -3,6 +3,9 @@ import { LiveClubView } from "@/components/live/LiveClubView";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
 
+// Ζωντανά δεδομένα σε κάθε αίτημα — δεν επιτρέπεται στατικό HTML.
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ clubId: string }>;
 };

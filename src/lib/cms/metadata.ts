@@ -53,7 +53,8 @@ export const buildCmsMetadata = ({
     alternates: canonicalUrl ? { canonical: canonicalUrl } : undefined,
     openGraph: {
       type: "website",
-      locale: "el_GR",
+      // Αγγλόφωνο site — το el_GR ήταν λάθος σήμα σε κάθε σελίδα CMS.
+      locale: "en_US",
       siteName: settings?.siteName || "Billiard Today",
       title,
       description,
