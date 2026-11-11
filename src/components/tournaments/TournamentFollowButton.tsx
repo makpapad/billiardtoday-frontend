@@ -6,7 +6,9 @@ import { Bell, BellRing, Check, Loader2, Search, X } from "lucide-react";
 import {
   disablePushAlerts,
   enablePushAlerts,
+  iosPushHint,
   pushSupported,
+  type IosPushHint,
   type PushSubscriptionPayload,
 } from "@/lib/webPush";
 
@@ -206,12 +208,14 @@ function TournamentFollowDialog({
     activeEvents.length > 0;
 
   const [pushSupportedState, setPushSupportedState] = useState(false);
+  const [iosHint, setIosHint] = useState<IosPushHint>(null);
   const [pushState, setPushState] = useState<"idle" | "on" | "denied" | "error">("idle");
   const [pushSubscriptionPayload, setPushSubscriptionPayload] =
     useState<PushSubscriptionPayload | null>(null);
 
   useEffect(() => {
     setPushSupportedState(pushSupported());
+    setIosHint(iosPushHint());
   }, []);
 
   const handlePushToggle = async (next: boolean) => {
@@ -497,6 +501,31 @@ function TournamentFollowDialog({
                       work.
                     </p>
                   ) : null}
+                </div>
+              ) : null}
+              {!pushSupportedState && iosHint ? (
+                <div className="mb-4 rounded-xl border border-[#E7EBF0] bg-[#F0F9FF] p-3.5">
+                  <p className="flex items-start gap-2 text-[13.5px] font-semibold text-[#1F2937]">
+                    <span aria-hidden>📱</span>
+                    {iosHint === "needs-install"
+                      ? "Notifications on iPhone need one extra step"
+                      : "Notifications need iOS 16.4 or newer"}
+                  </p>
+                  <p className="mt-1.5 pl-6 text-[12.5px] leading-relaxed text-[#475569]">
+                    {iosHint === "needs-install" ? (
+                      <>
+                        Open this page in Safari, tap <strong>Share</strong> →{" "}
+                        <strong>Add to Home Screen</strong>, then open Billiard Today from the new
+                        icon. iPhone only delivers notifications to sites that live on the Home
+                        Screen.
+                      </>
+                    ) : (
+                      <>
+                        Your iPhone is older than the version that supports web notifications. Email
+                        alerts work on every phone — turn them on below.
+                      </>
+                    )}
+                  </p>
                 </div>
               ) : null}
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#64748B]">

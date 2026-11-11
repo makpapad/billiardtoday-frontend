@@ -26,6 +26,40 @@ export function pushSupported(): boolean {
   );
 }
 
+/**
+ * Το iPhone/iPad ΔΕΝ έχει Push API μέσα στο Safari — μόνο όταν το site έχει προστεθεί
+ * στην αρχική οθόνη (iOS 16.4+). Χωρίς αυτόν τον έλεγχο το κουτάκι «Also notify this
+ * device» απλώς εξαφανίζεται και ο χρήστης δεν μαθαίνει ποτέ γιατί.
+ */
+export type IosPushHint = "needs-install" | "unsupported-ios" | null;
+
+export function isIosDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const iPhoneOrIPad = /iPad|iPhone|iPod/.test(ua);
+  // Τα iPad από iPadOS 13 δηλώνονται ως Mac — ξεχωρίζουν από το touch.
+  const iPadDesktopMode = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return iPhoneOrIPad || iPadDesktopMode;
+}
+
+export function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const iosStandalone = (navigator as unknown as { standalone?: boolean }).standalone;
+  return (
+    iosStandalone === true ||
+    window.matchMedia?.("(display-mode: standalone)").matches === true
+  );
+}
+
+export function iosPushHint(): IosPushHint {
+  if (!isIosDevice()) return null;
+  if (isStandalone()) {
+    // Εγκατεστημένο: το push δουλεύει από iOS 16.4 και μετά (PushManager υπάρχει).
+    return pushSupported() ? null : "unsupported-ios";
+  }
+  return "needs-install";
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
