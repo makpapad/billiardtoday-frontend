@@ -120,6 +120,7 @@ function TournamentFollowDialog({
   const [playerQuery, setPlayerQuery] = useState("");
   const [selectedPlayer, setSelectedPlayer] = useState<Participant | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [successStatus, setSuccessStatus] = useState<"pending" | "already_confirmed">("pending");
   const [message, setMessage] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement | null>(null);
 
@@ -219,11 +220,13 @@ function TournamentFollowDialog({
 
       const payload = (await response.json().catch(() => ({}))) as {
         ok?: boolean;
+        status?: string;
         message?: string;
         error?: string;
       };
 
       if (response.ok && payload.ok) {
+        setSuccessStatus(payload.status === "already_confirmed" ? "already_confirmed" : "pending");
         setStatus("success");
         onSubscribed();
         return;
@@ -288,10 +291,22 @@ function TournamentFollowDialog({
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
               <Check aria-hidden className="h-7 w-7" strokeWidth={2.2} />
             </span>
-            <h3 className="mt-5 text-[17px] font-semibold text-[#1F2937]">Almost done</h3>
+            <h3 className="mt-5 text-[17px] font-semibold text-[#1F2937]">
+              {successStatus === "already_confirmed" ? "You are already signed up" : "Almost done"}
+            </h3>
             <p className="mx-auto mt-2 max-w-[380px] text-[13.5px] leading-relaxed text-[#64748B]">
-              We sent a confirmation link to <strong className="text-[#1F2937]">{email.trim()}</strong>.
-              Click it and you will start receiving alerts for this tournament.
+              {successStatus === "already_confirmed" ? (
+                <>
+                  <strong className="text-[#1F2937]">{email.trim()}</strong> already receives alerts
+                  for this tournament. Nothing else to do.
+                </>
+              ) : (
+                <>
+                  We sent a confirmation link to{" "}
+                  <strong className="text-[#1F2937]">{email.trim()}</strong>. Click it and you will
+                  start receiving alerts for this tournament.
+                </>
+              )}
             </p>
             <button
               type="button"
