@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, BellRing, Check, Loader2, Search, X } from "lucide-react";
+import {
+  disablePushAlerts,
+  enablePushAlerts,
+  pushSupported,
+  type PushSubscriptionPayload,
+} from "@/lib/webPush";
 
 /**
  * «Follow this tournament» — κουμπί στο hero της διοργάνωσης + φόρμα εγγραφής.
@@ -199,6 +205,32 @@ function TournamentFollowDialog({
     /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) &&
     activeEvents.length > 0;
 
+  const [pushSupportedState, setPushSupportedState] = useState(false);
+  const [pushState, setPushState] = useState<"idle" | "on" | "denied" | "error">("idle");
+  const [pushSubscriptionPayload, setPushSubscriptionPayload] =
+    useState<PushSubscriptionPayload | null>(null);
+
+  useEffect(() => {
+    setPushSupportedState(pushSupported());
+  }, []);
+
+  const handlePushToggle = async (next: boolean) => {
+    if (!next) {
+      setPushState("idle");
+      setPushSubscriptionPayload(null);
+      await disablePushAlerts();
+      return;
+    }
+    const result = await enablePushAlerts();
+    if (result.ok) {
+      setPushSubscriptionPayload(result.subscription);
+      setPushState("on");
+      return;
+    }
+    setPushSubscriptionPayload(null);
+    setPushState(result.reason === "denied" ? "denied" : "error");
+  };
+
   const handleSubmit = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
     submitEvent.preventDefault();
     if (!canSubmit) return;
@@ -215,6 +247,7 @@ function TournamentFollowDialog({
           playerDocumentId: selectedPlayer?.documentId ?? null,
           events: activeEvents,
           consent: true,
+          pushSubscription: pushSubscriptionPayload,
         }),
       });
 
@@ -430,6 +463,42 @@ function TournamentFollowDialog({
             </div>
 
             <div className="mt-5 border-t border-[#E7EBF0] pt-4">
+              {pushSupportedState ? (
+                <div className="mb-4">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={pushState === "on"}
+                      onChange={(changeEvent) => {
+                        void handlePushToggle(changeEvent.target.checked);
+                      }}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#0284C7] focus:ring-[#0284C7]"
+                    />
+                    <span>
+                      <span className="block text-[14px] font-semibold text-[#1F2937]">
+                        Also notify this device
+                      </span>
+                      <span className="mt-0.5 block text-[12.5px] leading-snug text-[#64748B]">
+                        {pushState === "on"
+                          ? "Notifications are on for this browser."
+                          : "Instant alerts on this phone or computer, without waiting for email."}
+                      </span>
+                    </span>
+                  </label>
+                  {pushState === "denied" ? (
+                    <p className="mt-1.5 pl-7 text-[12px] leading-snug text-amber-700">
+                      Your browser blocked notifications. You can allow them in the site settings —
+                      email alerts still work.
+                    </p>
+                  ) : null}
+                  {pushState === "error" ? (
+                    <p className="mt-1.5 pl-7 text-[12px] leading-snug text-amber-700">
+                      Notifications could not be switched on in this browser. Email alerts still
+                      work.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#64748B]">
                 What you&apos;ll receive
               </p>

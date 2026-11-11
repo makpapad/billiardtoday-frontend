@@ -27,7 +27,25 @@ type FollowPayload = {
   playerDocumentId?: unknown;
   events?: unknown;
   consent?: unknown;
+  pushSubscription?: unknown;
 };
+
+function readPushSubscription(value: unknown): {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+} | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const endpoint = typeof record.endpoint === "string" ? record.endpoint.trim() : "";
+  const keys =
+    record.keys && typeof record.keys === "object"
+      ? (record.keys as Record<string, unknown>)
+      : null;
+  const p256dh = typeof keys?.p256dh === "string" ? keys.p256dh.trim() : "";
+  const auth = typeof keys?.auth === "string" ? keys.auth.trim() : "";
+  if (!endpoint.startsWith("https://") || !p256dh || !auth) return null;
+  return { endpoint, keys: { p256dh, auth } };
+}
 
 export async function POST(request: Request) {
   let body: FollowPayload;
@@ -70,6 +88,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const pushSubscription = readPushSubscription(body.pushSubscription);
     const response = await fetch(`${SERVER_API_URL}/api/tournament-subscriptions/subscribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -79,6 +98,7 @@ export async function POST(request: Request) {
         playerDocumentId,
         events,
         source: "tournament_page",
+        ...(pushSubscription ? { pushSubscription } : {}),
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
