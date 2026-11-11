@@ -9,6 +9,7 @@ import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { DataSourceCredit } from "@/components/DataSourceCredit";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
+import { TournamentFollowButton } from "@/components/tournaments/TournamentFollowButton";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
   LiveStatsHighlightModal,
@@ -7709,6 +7710,11 @@ export function TournamentDetailPage({
           }}
         />
       ) : null}
+      {/* Ειδοποιήσεις: ΤΕΛΕΥΤΑΙΟ κουμπί, ώστε η σειρά των υπόλοιπων να μη μετακινηθεί. */}
+      <TournamentFollowButton
+        eventDocumentId={summary.documentId}
+        tournamentTitle={summary.title || "this tournament"}
+      />
     </div>
   );
 
