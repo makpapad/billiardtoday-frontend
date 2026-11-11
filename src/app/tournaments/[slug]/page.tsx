@@ -71,6 +71,21 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function TournamentPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
+  /**
+   * Η διόρθωση του slug (παλιό → canonical) ΔΕΝ πρέπει να πετάει το query string:
+   * ένα link από email (?panel=finals|timetable) αλλιώς χάνει την καρτέλα του στη
+   * μέση της διαδρομής και προσγειώνει στην πρώτη καρτέλα.
+   */
+  const queryString = new URLSearchParams(
+    Object.entries(resolvedSearchParams).flatMap(([key, value]) =>
+      value == null
+        ? []
+        : Array.isArray(value)
+          ? value.map((item) => [key, item] as [string, string])
+          : [[key, value] as [string, string]],
+    ),
+  ).toString();
+  const withQuery = (path: string) => (queryString ? `${path}?${queryString}` : path);
   const [summary, settings, appearance] = await Promise.all([
     resolveTournamentEventSummary(slug),
     getCmsSiteSettings(),
@@ -95,7 +110,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
       summary.teamTournamentDocumentId,
     );
     if (teamSummary) {
-      permanentRedirect(`/tournaments/team/${buildTeamTournamentSlug(teamSummary)}`);
+      permanentRedirect(withQuery(`/tournaments/team/${buildTeamTournamentSlug(teamSummary)}`));
     }
   }
 
@@ -107,7 +122,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     summary.season,
   );
   if (slug !== canonicalSlug) {
-    permanentRedirect(`/tournaments/${canonicalSlug}`);
+    permanentRedirect(withQuery(`/tournaments/${canonicalSlug}`));
   }
 
   const initialSeriesData = summary.rankingSeriesSlug
