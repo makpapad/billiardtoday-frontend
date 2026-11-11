@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SERVER_API_URL } from "@/lib/api";
 
 /**
  * Εγγραφή σε ειδοποιήσεις ΜΙΑΣ διοργάνωσης («Follow this tournament»).
@@ -68,12 +69,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "NEXT_MATCH_NEEDS_PLAYER" }, { status: 400 });
   }
 
-  return NextResponse.json(
-    {
-      ok: false,
-      code: "NOT_CONFIGURED",
-      message: "Tournament alerts are not live yet.",
-    },
-    { status: 503 },
-  );
+  try {
+    const response = await fetch(`${SERVER_API_URL}/api/tournament-subscriptions/subscribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        eventDocumentId,
+        playerDocumentId,
+        events,
+        source: "tournament_page",
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      status?: string;
+      message?: string;
+      error?: { message?: string } | string;
+    };
+
+    if (!response.ok) {
+      const message =
+        typeof payload.error === "string"
+          ? payload.error
+          : payload.error?.message || payload.message;
+      return NextResponse.json(
+        { ok: false, error: "SUBSCRIBE_FAILED", message: message || "Sign-up failed." },
+        { status: response.status === 404 ? 404 : 400 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      status: payload.status ?? "pending",
+      message: payload.message ?? "Check your inbox to confirm.",
+    });
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: "NETWORK", message: "Network error. Please try again." },
+      { status: 502 },
+    );
+  }
 }
