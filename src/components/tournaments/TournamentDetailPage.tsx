@@ -1891,6 +1891,29 @@ export function TournamentDetailPage({
   >(null);
   const [showBackToTopButton, setShowBackToTopButton] = useState(false);
   const searchParams = useSearchParams();
+  /**
+   * Deep link από τα email ειδοποιήσεων: `?panel=finals` ανοίγει την τελική
+   * κατάταξη, `?panel=timetable` το πρόγραμμα. Εφαρμόζεται ΜΙΑ φορά μετά το
+   * hydration (το `useSearchParams` είναι null στο πρώτο render) και δεν
+   * ξαναεπιβάλλεται, ώστε να μη «μαχαιρώνει» ό,τι πατάει μετά ο χρήστης.
+   */
+  const panelFromQuery = useMemo(() => {
+    const raw = (searchParams?.get("panel") ?? searchParams?.get("tab") ?? "").toLowerCase();
+    const allowed = ["stages", "finals", "gallery", "timetable", "participants", "info"] as const;
+    if (raw === "results" || raw === "matches") return "stages" as const;
+    if (raw === "standings" || raw === "ranking") return "finals" as const;
+    if (raw === "schedule" || raw === "programme" || raw === "program") return "timetable" as const;
+    return (allowed as readonly string[]).includes(raw)
+      ? (raw as (typeof allowed)[number])
+      : null;
+  }, [searchParams]);
+  const appliedPanelQueryRef = useRef(false);
+  useEffect(() => {
+    if (appliedPanelQueryRef.current || !panelFromQuery) return;
+    appliedPanelQueryRef.current = true;
+    setTournamentPanelMode(panelFromQuery);
+    setActiveView("tournament");
+  }, [panelFromQuery]);
   const preferredStageFromQuery =
     preferredStageDocumentId ??
     stageFromLocation ??
