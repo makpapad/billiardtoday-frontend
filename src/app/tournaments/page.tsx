@@ -31,7 +31,10 @@ const buildFallbackTournamentsPage = () => ({
       emptyStateText: "No tournaments found.",
     },
   ],
-  seo: null,
+  // Το `title` παραπάνω είναι το ορατό H1 («Tournaments»). Ο <title> της σελίδας
+  // βγαίνει από εδώ: χωρίς αυτό έβγαινε «Tournaments | Billiard Today» (28 χαρ.,
+  // μηδέν keywords). Το template προσθέτει 17 χαρ., άρα κρατάμε τον τίτλο ≤43.
+  seo: { metaTitle: "Billiard Tournaments, Draws & Results" },
   updatedAt: null,
   publishedAt: null,
 });

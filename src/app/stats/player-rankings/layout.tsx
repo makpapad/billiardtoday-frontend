@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Player Lab",
+  // «Player Lab» έβγαινε 27 χαρ. με το template — μηδέν keywords για αναζήτηση.
+  title: "Player Rankings & Performance Lab",
   description: "Explore billiard player rankings by highest run, average, wins, losses, and tournament participation.",
   path: "/stats/player-rankings",
 });

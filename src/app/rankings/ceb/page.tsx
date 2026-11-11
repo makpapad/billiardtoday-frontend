@@ -12,7 +12,8 @@ export const revalidate = 300;
 const CEB_RANKINGS_URL = "https://www.eurobillard.org/pages/rankings-42.html";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "CEB Official Rankings — European Billiards Standings",
+  // Ήταν 52 χαρ. + 17 του template = 69, κόβονταν στο Google. Κρατάμε ≤43.
+  title: "CEB Official Rankings & Standings",
   description:
     "The official ranking lists of the Confédération Européenne de Billard (CEB) on BilliardToday: 3-cushion individual and ladies, national teams, artistic, cadre, 1-cushion and youth circuits — each with the point breakdown of every counting tournament.",
   path: "/rankings/ceb",
