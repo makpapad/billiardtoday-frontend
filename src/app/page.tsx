@@ -23,17 +23,35 @@ import { fetchPublishedTournamentDocumentIds } from "@/lib/publicTournamentIndex
  */
 export const revalidate = 300;
 
+/**
+ * Ο τίτλος της αρχικής ερχόταν από το CMS ως σκέτο «Billiard Today» (14 χαρακτήρες,
+ * μηδέν keywords — μετρημένο live 11/11/2026). Όταν το CMS δεν δίνει ουσιαστικό τίτλο,
+ * επιβάλλουμε τον στοχευμένο· μόλις κάποιος γράψει σωστό τίτλο στο CMS, αυτός κερδίζει.
+ */
+const HOME_FALLBACK_TITLE = "Live Billiard Scores, Tournaments & Rankings | Billiard Today";
+
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, page] = await Promise.all([
     getCmsSiteSettings().catch(() => null),
     getCmsPageBySlug("home").catch(() => null),
   ]);
 
-  return buildCmsMetadata({
+  const meta = buildCmsMetadata({
     page,
     settings,
     path: "/",
   });
+
+  const cmsTitle = typeof meta.title === "string" ? meta.title : "";
+  const meaningful = cmsTitle.replace(/\s*\|\s*Billiard Today\s*$/i, "").trim();
+  if (meaningful.length >= 20) return meta;
+
+  return {
+    ...meta,
+    title: { absolute: HOME_FALLBACK_TITLE },
+    openGraph: { ...(meta.openGraph ?? {}), title: HOME_FALLBACK_TITLE },
+    twitter: { ...(meta.twitter ?? {}), title: HOME_FALLBACK_TITLE },
+  };
 }
 
 export default async function HomePage() {

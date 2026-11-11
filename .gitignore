@@ -57,3 +57,10 @@ theme/
 # python scratch (analysis scripts under docs/ai)
 __pycache__/
 *.pyc
+
+# Προσωρινά αρχεία που είχαν μπει κατά λάθος (7,1 MB) — audit 11/11
+/a.json
+/club*.json
+/clubs.json
+/cp*.json
+/lier9.json
