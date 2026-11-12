@@ -1057,6 +1057,10 @@ export async function GET(
             queryParams.set('populate[event_stages][populate][groups][fields][28]', 'player2_local_key')
             queryParams.set('populate[event_stages][populate][groups][fields][29]', 'player2_local_name')
             queryParams.set('populate[event_stages][populate][groups][fields][30]', 'player2_local_country')
+            // ΘΕΣΗ ΣΤΟ ΦΥΛΛΟ (ΑΘΛΗΤΗΣ 1/2/3): χρειάζεται στη σελίδα για να δείχνει τη σειρά της
+            // κλήρωσης όσο ο όμιλος δεν έχει αποτέλεσμα (αντί για αλφαβητικά).
+            queryParams.set('populate[event_stages][populate][groups][fields][31]', 'player1_draw_position')
+            queryParams.set('populate[event_stages][populate][groups][fields][32]', 'player2_draw_position')
 
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][0]', 'full_name')
             queryParams.set('populate[event_stages][populate][groups][populate][player1][fields][1]', 'documentId')

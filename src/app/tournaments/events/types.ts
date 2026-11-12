@@ -192,6 +192,12 @@ export type NormalizedGroupPlayer = {
   innings: number | null;
   highRun: number | null;
   highRun2: number | null;
+  /**
+   * ΘΕΣΗ ΣΤΟ ΦΥΛΛΟ ΤΟΥ ΟΜΙΛΟΥ (1, 2, 3 — «ΑΘΛΗΤΗΣ 1/2/3»). Δεν είναι κατάταξη· η κατάταξη βγαίνει
+   * από τα αποτελέσματα. Χρησιμοποιείται ΜΟΝΟ όσο ο όμιλος δεν έχει κριθεί, αντί να πέφτουμε
+   * στο επώνυμο (αλφαβητικά). null = δεν το ξέρουμε (παλιά δεδομένα / τουρνουά εκτός εφαρμογής).
+   */
+  drawPosition: number | null;
   // forfeit flag per player (null=no forfeit, 1=forfeit, 2=double-forfeit)
   ffType: number | null;
   /** Θέση αναμονής για πρόκριση (local key `eoaa-slot:…`) — δεν είναι αθλητής: καμία γραμμή κατάταξης, καμία λίστα συμμετεχόντων. */
@@ -343,6 +349,11 @@ export type GroupStanding = {
   bestAverage: number | null;
   highRun: number | null;
   highRun2: number | null;
+  /**
+   * ΘΕΣΗ ΣΤΟ ΦΥΛΛΟ ΤΟΥ ΟΜΙΛΟΥ (1, 2, 3). Τελευταίο κριτήριο ισοπαλίας αντί για το επώνυμο: όσο ο
+   * όμιλος δεν έχει κριθεί, ο χειριστής περιμένει τη σειρά της κλήρωσης, όχι αλφαβητική.
+   */
+  drawPosition?: number | null;
   /** Sets won / lost — populated for set-scored rulesets (CEB Artistic 2026-2027, 5-pins) */
   setsWon?: number;
   setsLost?: number;

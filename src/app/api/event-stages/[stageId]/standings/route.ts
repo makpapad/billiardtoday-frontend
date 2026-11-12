@@ -160,7 +160,19 @@ const compareGroupRows = (
     const highRun2Diff = toFiniteNumber(b.high_run_2) - toFiniteNumber(a.high_run_2)
     if (highRun2Diff !== 0) return highRun2Diff
 
-    return toFiniteNumber(b.points) - toFiniteNumber(a.points)
+    const pointsDiff = toFiniteNumber(b.points) - toFiniteNumber(a.points)
+    if (pointsDiff !== 0) return pointsDiff
+
+    /*
+     * ΘΕΣΗ ΣΤΟ ΦΥΛΛΟ (ΑΘΛΗΤΗΣ 1/2/3): μόνο όταν όλα τα αγωνιστικά είναι ίσα — δηλαδή πρακτικά πριν
+     * παιχτεί ο όμιλος. Χωρίς αυτό η σειρά ήταν «ό,τι ήρθε πρώτο». Αν η εφαρμογή δεν το έχει στείλει
+     * (τουρνουά εκτός εφαρμογής), μένει 0 και δεν αλλάζει τίποτα.
+     */
+    const drawA = toFiniteNumber(a.draw_position, 0)
+    const drawB = toFiniteNumber(b.draw_position, 0)
+    if (drawA > 0 && drawB > 0 && drawA !== drawB) return drawA - drawB
+
+    return 0
 }
 
 const hasUnequalGroupSizes = (rows: Record<string, unknown>[]) => {
@@ -193,6 +205,7 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
                 high_run_2: 0,
                 group_number: groupNumber,
                 group_position: 0,
+                draw_position: 0,
                 final_position: null,
                 source: 'computed-stage-results',
                 player,
@@ -234,6 +247,10 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
         const p2Innings = toFiniteNumber(match.player2_innings)
         const p1Average = p1Innings > 0 ? Math.trunc((p1Points / p1Innings) * 1000) / 1000 : 0
         const p2Average = p2Innings > 0 ? Math.trunc((p2Points / p2Innings) * 1000) / 1000 : 0
+
+        // Θέση φύλλου (1/2/3) — γράφεται μία φορά ανά αθλητή, όχι αθροιστικά.
+        if (!toFiniteNumber(p1.draw_position)) p1.draw_position = toFiniteNumber(match.player1_draw_position)
+        if (!toFiniteNumber(p2.draw_position)) p2.draw_position = toFiniteNumber(match.player2_draw_position)
 
         p1.match_points = toFiniteNumber(p1.match_points) + matchPointsForSide(match, 1)
         p1.points = toFiniteNumber(p1.points) + p1Points

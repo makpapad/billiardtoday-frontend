@@ -7533,6 +7533,7 @@ export function TournamentEventsContent({
                                                 highRun: null,
                                                 highRun2: null,
                                                 matchPoints: null,
+                                                drawPosition: null,
                                                 ffType: null,
                                               });
 

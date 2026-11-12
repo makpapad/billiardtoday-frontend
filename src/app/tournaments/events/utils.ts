@@ -225,6 +225,7 @@ export const normalizeGroup = (
       innings: toNumber(normalized.player1_innings),
       highRun: toNumber(normalized.player1_high_run),
       highRun2: toNumber(normalized.player1_high_run_2),
+      drawPosition: toNumber((normalized as Record<string, unknown>).player1_draw_position),
       ffType: toNumber((normalized as Record<string, unknown>).ff_type_player1),
       placeholder: player1.placeholder,
     },
@@ -241,6 +242,7 @@ export const normalizeGroup = (
       innings: toNumber(normalized.player2_innings),
       highRun: toNumber(normalized.player2_high_run),
       highRun2: toNumber(normalized.player2_high_run_2),
+      drawPosition: toNumber((normalized as Record<string, unknown>).player2_draw_position),
       ffType: toNumber((normalized as Record<string, unknown>).ff_type_player2),
       placeholder: player2.placeholder,
     },
@@ -618,6 +620,20 @@ export type BuildGroupStandingsOptions = {
   entryTierRule?: EntryTierRule | null;
 };
 
+/**
+ * ΣΕΙΡΑ ΦΥΛΛΟΥ ΟΤΑΝ ΔΕΝ ΥΠΑΡΧΕΙ ΑΠΟΤΕΛΕΣΜΑ.
+ *
+ * Όταν όλα τα κριτήρια (πόντοι, μ.ό., σερί) είναι ίσα — δηλαδή πριν παιχτεί ο όμιλος — η σειρά
+ * έπεφτε στο επώνυμο, δηλαδή αλφαβητικά, ενώ ο χειριστής περιμένει τη σειρά της κλήρωσης
+ * (ΑΘΛΗΤΗΣ 1/2/3). Αν η εφαρμογή έχει στείλει θέση, κερδίζει αυτή· αλλιώς επώνυμο όπως πριν.
+ */
+const compareDrawThenName = (a: GroupStanding, b: GroupStanding): number => {
+  const drawA = typeof a.drawPosition === "number" ? a.drawPosition : null;
+  const drawB = typeof b.drawPosition === "number" ? b.drawPosition : null;
+  if (drawA !== null && drawB !== null && drawA !== drawB) return drawA - drawB;
+  return a.playerName.localeCompare(b.playerName);
+};
+
 export const buildGroupStandings = (
   matches: StageMatchGroup["matches"],
   options?: BuildGroupStandingsOptions,
@@ -668,7 +684,7 @@ export const buildGroupStandings = (
       if (highRunA !== highRunB) return highRunB - highRunA;
     }
 
-    return a.playerName.localeCompare(b.playerName);
+    return compareDrawThenName(a, b);
   };
   /**
    * CEB Artistic 2026-2027 order: match points -> sets won -> sets lost -> % ->
@@ -853,6 +869,10 @@ export const buildGroupStandings = (
                     setsWon: 0,
                     setsLost: 0,
                     place: 0,
+                    drawPosition:
+                      typeof entry.player.drawPosition === "number"
+                        ? entry.player.drawPosition
+                        : null,
                     entryStage: entryStageByPlayerKey
                       ? lookupEntryStageForPlayer(entryStageByPlayerKey, entry.player)
                       : undefined,
@@ -971,7 +991,7 @@ export const buildGroupStandings = (
         const highRun2A = a.highRun2 ?? -1;
         const highRun2B = b.highRun2 ?? -1;
         if (highRun2A !== highRun2B) return highRun2B - highRun2A;
-        return a.playerName.localeCompare(b.playerName);
+        return compareDrawThenName(a, b);
       });
 
   return sortedStandings.map((standing, index) => ({
