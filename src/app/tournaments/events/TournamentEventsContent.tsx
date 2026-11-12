@@ -1387,6 +1387,17 @@ function getGroupPreviewPlayers(
         ]),
     ).values(),
   ).sort((left, right) => {
+    /*
+     * ΣΕΙΡΑ ΦΥΛΛΟΥ («ΑΘΛΗΤΗΣ 1/2/3»): όσο ο όμιλος δεν έχει αποτέλεσμα, η κάρτα έπεφτε στο επώνυμο,
+     * δηλαδή αλφαβητικά. Αν η εφαρμογή έχει στείλει θέση, κερδίζει αυτή — και στα δύο ονόματα χρειάζεται,
+     * αλλιώς πάμε στα seeds/επώνυμο όπως πριν (τουρνουά εκτός εφαρμογής, παλιά δεδομένα).
+     */
+    const leftDraw = typeof left.drawPosition === "number" ? left.drawPosition : null;
+    const rightDraw = typeof right.drawPosition === "number" ? right.drawPosition : null;
+    if (leftDraw !== null && rightDraw !== null && leftDraw !== rightDraw) {
+      return leftDraw - rightDraw;
+    }
+
     const leftSeed =
       left.documentId && playerSeedByDocumentId
         ? playerSeedByDocumentId.get(left.documentId) ?? null
