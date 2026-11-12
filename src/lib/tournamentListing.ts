@@ -37,6 +37,113 @@ function toPositiveInt(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ * ΗΜΕΡΟΜΗΝΙΑ ΣΤΟ SMART SEARCH — «12/11», «12/11/2026», «2026-11-12», «12/11-14/11».
+ *
+ * Πριν από αυτό το «12/11» έσπαγε σε «12» και «11» και ψαχνόταν ως λέξη στον τίτλο, δηλαδή
+ * δεν έβρισκε τίποτα. Εδώ η ημερομηνία βγαίνει από το κείμενο ΠΡΙΝ το σπάσιμο και γίνεται
+ * φίλτρο «το τουρνουά παίζεται εκείνη τη μέρα» (αρχή ≤ μέρα ≤ τέλος).
+ *
+ * Χωρίς έτος («12/11») ψάχνουμε στο τρέχον και στο προηγούμενο έτος — οι σεζόν του μπιλιάρδου
+ * ξεκινούν το φθινόπωρο, άρα μια ημερομηνία μπορεί να ανήκει σε δύο χρονιές.
+ */
+type DateWindow = { from: string; to: string };
+
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+const toIsoDay = (year: number, month: number, day: number): string | null => {
+  if (!Number.isFinite(year) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return `${year}-${pad2(month)}-${pad2(day)}`;
+};
+
+const parseDay = (raw: string, fallbackYear: number | null): { year: number | null; month: number; day: number } | null => {
+  const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) {
+    const year = Number(iso[1]);
+    const month = Number(iso[2]);
+    const day = Number(iso[3]);
+    return toIsoDay(year, month, day) ? { year, month, day } : null;
+  }
+  const dmy = raw.match(/^(\d{1,2})[\/.](\d{1,2})(?:[\/.](\d{2,4}))?$/);
+  if (!dmy) return null;
+  const day = Number(dmy[1]);
+  const month = Number(dmy[2]);
+  const yearPart = dmy[3] ? Number(dmy[3]) : fallbackYear;
+  const year = yearPart !== null && yearPart < 100 ? 2000 + yearPart : yearPart;
+  if (year !== null && !toIsoDay(year, month, day)) return null;
+  if (year === null && (month < 1 || month > 12 || day < 1 || day > 31)) return null;
+  return { year, month, day };
+};
+
+export const extractDateSearch = (
+  input: string | null,
+): { windows: DateWindow[]; rest: string } | null => {
+  if (!input) return null;
+  const text = input.trim();
+  if (!text) return null;
+
+  // 1) ΔΙΑΣΤΗΜΑ: «12/11-14/11», «12/11/2026 - 14/11/2026», «2026-11-12..2026-11-14»
+  const range = text.match(
+    /(\d{1,2}[\/.]\d{1,2}(?:[\/.]\d{2,4})?|\d{4}-\d{1,2}-\d{1,2})\s*(?:-|–|έως|to|\.\.)\s*(\d{1,2}[\/.]\d{1,2}(?:[\/.]\d{2,4})?|\d{4}-\d{1,2}-\d{1,2})/i,
+  );
+  if (range) {
+    const left = parseDay(range[1], null);
+    const right = parseDay(range[2], null);
+    const fromYear = left?.year ?? right?.year ?? null;
+    const start = left ? (left.year === null ? { ...left, year: fromYear } : left) : null;
+    const end = right ? (right.year === null ? { ...right, year: fromYear } : right) : null;
+    if (start && end) {
+      const years = start.year !== null ? [start.year] : defaultYears();
+      const windows: DateWindow[] = [];
+      for (const year of years) {
+        const from = toIsoDay(year, start.month, start.day);
+        const to = toIsoDay(year, end.month, end.day);
+        if (from && to) windows.push({ from, to });
+      }
+      if (windows.length) return { windows, rest: text.replace(range[0], ' ').trim() };
+    }
+  }
+
+  // 2) ΜΙΑ ΜΕΡΑ: «12/11», «12.11.2026», «2026-11-12»
+  const single = text.match(/(\d{1,2}[\/.]\d{1,2}(?:[\/.]\d{2,4})?|\d{4}-\d{1,2}-\d{1,2})/);
+  if (single) {
+    const day = parseDay(single[1], null);
+    if (day) {
+      const years = day.year !== null ? [day.year] : defaultYears();
+      const windows: DateWindow[] = [];
+      for (const year of years) {
+        const iso = toIsoDay(year, day.month, day.day);
+        if (iso) windows.push({ from: iso, to: iso });
+      }
+      if (windows.length) return { windows, rest: text.replace(single[0], ' ').trim() };
+    }
+  }
+
+  return null;
+};
+
+/** Έτη για ημερομηνία χωρίς έτος: φέτος και πέρυσι (οι σεζόν ξεκινούν το φθινόπωρο). */
+const defaultYears = (): number[] => {
+  const now = new Date().getFullYear();
+  return [now, now - 1];
+};
+
+/** Γράφει τα όρια ημερομηνίας στο query του Strapi (επικάλυψη με το διάστημα του τουρνουά). */
+export const applyDateSearch = (
+  params: URLSearchParams,
+  andIndex: number,
+  windows: DateWindow[],
+): number => {
+  if (windows.length === 0) return andIndex;
+  windows.forEach((window, index) => {
+    params.set(`filters[$and][${andIndex}][$or][${index}][start_date][$lte]`, `${window.to}T23:59:59`);
+    params.set(`filters[$and][${andIndex}][$or][${index}][end_date][$gte]`, `${window.from}T00:00:00`);
+  });
+  return andIndex + 1;
+};
+
 function tokenizeSearch(input: string | null): string[] {
   if (!input) return [];
   return input
@@ -167,7 +274,9 @@ export async function getTournamentList(
 
     if (clubSlug && !federationId) {
       const pageSizeForMerge = 500;
-      const searchTokens = tokenizeSearch(search).map(normalizeToken);
+      // Η ημερομηνία βγαίνει από το κείμενο πριν το σπάσιμο σε λέξεις («12/11 master»).
+      const dateSearch = extractDateSearch(search);
+      const searchTokens = tokenizeSearch(dateSearch?.rest ?? search).map(normalizeToken);
 
       const eventParams = new URLSearchParams();
       eventParams.set("pagination[page]", "1");
@@ -204,6 +313,8 @@ export async function getTournamentList(
         );
         eventAndIndex++;
       }
+      // Ημερομηνία και στο πρώτο σκέλος (events του συλλόγου).
+      eventAndIndex = applyDateSearch(eventParams, eventAndIndex, dateSearch?.windows ?? []);
       if (season) {
         eventParams.set("filters[season][$eq]", season);
       }
@@ -235,6 +346,7 @@ export async function getTournamentList(
         );
         tournamentAndIndex++;
       }
+      tournamentAndIndex = applyDateSearch(tournamentParams, tournamentAndIndex, dateSearch?.windows ?? []);
 
       const fetchFromStrapi = async (path: string, useAuth: boolean) => {
         const headers: HeadersInit = {};
@@ -313,7 +425,8 @@ export async function getTournamentList(
     if (season) {
       queryParams.set("filters[season][$eq]", season);
     }
-    const searchTokens = tokenizeSearch(search).map(normalizeToken);
+    const dateSearch = extractDateSearch(search);
+    const searchTokens = tokenizeSearch(dateSearch?.rest ?? search).map(normalizeToken);
     let andIndex = 0;
     for (const token of searchTokens) {
       // keyword only, ignore as filter token
@@ -336,6 +449,8 @@ export async function getTournamentList(
       );
       andIndex++;
     }
+    // «12/11» ή «12/11-14/11»: μόνο τουρνουά που παίζονται μέσα σε αυτό το διάστημα.
+    andIndex = applyDateSearch(queryParams, andIndex, dateSearch?.windows ?? []);
     if (clubSlug) {
       queryParams.set("filters[tournament][club][slug][$eq]", clubSlug);
     }

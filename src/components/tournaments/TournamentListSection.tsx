@@ -435,7 +435,7 @@ export function TournamentListSection({
                   type="text"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="e.g. 3 cushion"
+                  placeholder="e.g. 3 cushion or 12/11"
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                 />
                 {searchInput ? (
