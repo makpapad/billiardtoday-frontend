@@ -30,12 +30,17 @@ export const TOURNAMENT_DATE_LOCALE = "en-GB";
 
 export function formatTournamentDate(value?: string | null): string | null {
   if (!value) return null;
-  const date = new Date(value);
+  // Ημερολογιακή μέρα, όχι στιγμή: η λήξη «23:59:59Z» δεν πρέπει να γίνεται επόμενη μέρα.
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const date = dateOnly
+    ? new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])))
+    : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString(TOURNAMENT_DATE_LOCALE, {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    ...(dateOnly ? { timeZone: "UTC" } : {}),
   });
 }
 

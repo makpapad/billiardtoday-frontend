@@ -30,17 +30,29 @@ export const buildTournamentLocationLabel = (summary: TournamentEventSummary) =>
     .filter(Boolean)
     .join(", ");
 
+/**
+ * Η ημερομηνία διοργάνωσης είναι ΗΜΕΡΟΛΟΓΙΑΚΗ, όχι στιγμή στον χρόνο.
+ *
+ * Οι διοργανώσεις λήγουν στις «23:59:59» της τελευταίας μέρας (π.χ. 2026-11-16T23:59:59Z).
+ * Αν τη μετατρέψουμε στη ζώνη του browser, στην Ελλάδα γίνεται 17/11 01:59 — και η λήξη
+ * τυπώνεται μία μέρα μετά. Παίρνουμε λοιπόν το κομμάτι ημερομηνίας (YYYY-MM-DD) και το
+ * μορφοποιούμε σε UTC, ώστε καμία ζώνη να μη μετακινεί τη μέρα.
+ */
 export const formatTournamentDate = (
   value: string | null,
   locale = "en-US",
 ) => {
   if (!value) return null;
-  const parsed = new Date(value);
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const parsed = dateOnly
+    ? new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])))
+    : new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
+    ...(dateOnly ? { timeZone: "UTC" } : {}),
   });
 };
 
