@@ -1734,6 +1734,9 @@ function matchDayKey(
   timeZoneName?: string | null,
 ): string | null {
   if (!value) return null;
+  // Ρολόι διοργανωτή («2026-11-14T16:00»): η ημερομηνία είναι ήδη η δική του — καμία ζώνη.
+  const naiveDay = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(:\d{2})?$/.exec(value.trim());
+  if (naiveDay) return naiveDay[1];
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
     const raw = value.slice(0, 10);
@@ -1803,12 +1806,37 @@ function todayDayKey(
     .slice(0, 10);
 }
 
+/**
+ * ΡΟΛΟΪ ΔΙΟΡΓΑΝΩΤΗ, όχι στιγμιότυπο UTC.
+ *
+ * Το πρόγραμμα γράφεται στο φύλλο ως τοπική ώρα («Σάββατο 16:00»). Όταν η γραμμή κουβαλά
+ * `date`+`time` (ή σκέτη ώρα χωρίς ζώνη, «2026-11-14T16:00»), δείχνουμε ΑΚΡΙΒΩΣ αυτό που
+ * δήλωσε ο διοργανωτής. Αλλιώς μια ζώνη με θερινή/χειμερινή ώρα (Ελλάδα: +3 το καλοκαίρι,
+ * +2 τον Νοέμβριο) μετακινούσε τους αγώνες μία ώρα νωρίτερα (16:00 → 15:00).
+ */
+const NAIVE_WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/;
+
+function declaredWallClock(
+  date: string | null | undefined,
+  time: string | null | undefined,
+): { date: string; time: string } | null {
+  const iso = String(date ?? "").trim().slice(0, 10);
+  const hhmm = String(time ?? "").trim().slice(0, 5);
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!day || !/^\d{2}:\d{2}$/.test(hhmm)) return null;
+  return { date: `${day[3]}/${day[2]}/${day[1]}`, time: hhmm };
+}
+
 function formatDateTimeWithOffset(
   value: string | null,
   offsetMinutes: number | null | undefined,
   timeZoneName?: string | null,
 ): { date: string; time: string } | null {
   if (!value) return null;
+  const wall = NAIVE_WALL_CLOCK.exec(value.trim());
+  if (wall) {
+    return { date: `${wall[3]}/${wall[2]}/${wall[1]}`, time: `${wall[4]}:${wall[5]}` };
+  }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   if (timeZoneName) {
@@ -3816,7 +3844,13 @@ export function TournamentEventsContent({
       const autoScheduledMatchIdsByStage = new Map<string, Set<string>>();
       const slotByMatchDocumentId = new Map<
         string,
-        { slotOrder: number | null; dateTime: string | null; matchNumber: number | null }
+        {
+          slotOrder: number | null;
+          dateTime: string | null;
+          matchNumber: number | null;
+          /** Ρολόι διοργανωτή («2026-11-14T16:00») — κερδίζει το `date_time` στην εμφάνιση. */
+          declared: string | null;
+        }
       >();
 
       normalizedSlots.forEach((slot) => {
@@ -3834,10 +3868,12 @@ export function TournamentEventsContent({
           existing.add(slot.matchDocumentId);
           autoScheduledMatchIdsByStage.set(slot.stageDocumentId, existing);
         }
+        const declaredWhen = declaredWallClock(slot.date, slot.time);
         slotByMatchDocumentId.set(slot.matchDocumentId, {
           slotOrder: slot.slotOrder,
           dateTime: slot.dateTime,
           matchNumber: slot.matchNumber,
+          declared: declaredWhen ? `${slot.date.slice(0, 10)}T${declaredWhen.time}` : null,
         });
       });
 
@@ -3891,8 +3927,8 @@ export function TournamentEventsContent({
               const slot = match.matchDocumentId
                 ? slotByMatchDocumentId.get(match.matchDocumentId)
                 : undefined;
-              return slot?.dateTime
-                ? { ...match, dateTime: slot.dateTime }
+              return slot
+                ? { ...match, dateTime: slot.declared ?? slot.dateTime ?? match.dateTime }
                 : match;
             }),
           }));
@@ -6449,11 +6485,13 @@ export function TournamentEventsContent({
                             <tbody>
                               {filteredTimetableSlots.map((slot) => {
                                 const parsedDateTime = slot.dateTime ? new Date(slot.dateTime) : null;
-                                const shiftedSlotDateTime = formatDateTimeWithOffset(
-                                  slot.dateTime,
-                                  timezoneOffsetMinutes,
-                                  timezoneName,
-                                );
+                                const shiftedSlotDateTime =
+                                  declaredWallClock(slot.date, slot.time) ??
+                                  formatDateTimeWithOffset(
+                                    slot.dateTime,
+                                    timezoneOffsetMinutes,
+                                    timezoneName,
+                                  );
                                 const dateLabel =
                                   shiftedSlotDateTime
                                     ? shiftedSlotDateTime.date
