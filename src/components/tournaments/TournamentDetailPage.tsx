@@ -1512,12 +1512,33 @@ type TimezoneSelection =
 
 const publicTimezoneStorageKey = (eventId: string | number | null | undefined) =>
   `bt-public-timezone-offset-minutes.${eventId ?? "global"}`;
+/**
+ * ΡΟΛΟΪ ΔΙΟΡΓΑΝΩΤΗ. Η γραμμή του προγράμματος κουβαλά `date`+`time` όπως τα δήλωσε το φύλλο
+ * («Σάββατο 16:00») — αυτό δείχνουμε. Αλλιώς το `date_time` (στιγμιότυπο με ρητό +03:00)
+ * περνούσε από ζώνη με θερινή/χειμερινή ώρα και τον Νοέμβριο (Ελλάδα +02:00) έβγαινε 15:00.
+ */
+const NAIVE_WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/;
+
+const declaredWallClock = (
+  date: string | null | undefined,
+  time: string | null | undefined,
+): { date: string; time: string } | null => {
+  const iso = String(date ?? "").trim().slice(0, 10);
+  const hhmm = String(time ?? "").trim().slice(0, 5);
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!day || !/^\d{2}:\d{2}$/.test(hhmm)) return null;
+  return { date: `${day[3]}/${day[2]}/${day[1]}`, time: hhmm };
+};
+
 const formatDateTimeWithOffset = (
   dateTime: string | null,
   offsetMinutes: number | null,
   timeZoneName?: string | null,
 ) => {
   if (!dateTime) return null;
+  // Ρολόι διοργανωτή («2026-11-14T16:00», χωρίς ζώνη): δεν μετατοπίζεται.
+  const wall = NAIVE_WALL_CLOCK.exec(dateTime.trim());
+  if (wall) return { date: `${wall[3]}/${wall[2]}/${wall[1]}`, time: `${wall[4]}:${wall[5]}` };
   const parsed = new Date(dateTime);
   if (Number.isNaN(parsed.getTime())) return null;
   if (timeZoneName) {
@@ -7151,11 +7172,13 @@ export function TournamentDetailPage({
                     </thead>
                     <tbody>
                       {visibleTimetableSlots.map((slot) => {
-                        const shiftedDateTime = formatDateTimeWithOffset(
-                          slot.dateTime,
-                          effectiveTimezoneOffset ?? 180,
-                          effectiveTimezoneName,
-                        );
+                        const shiftedDateTime =
+                          declaredWallClock(slot.date, slot.time) ??
+                          formatDateTimeWithOffset(
+                            slot.dateTime,
+                            effectiveTimezoneOffset ?? 180,
+                            effectiveTimezoneName,
+                          );
                         const dateLabel = shiftedDateTime?.date || slot.date || "-";
                         const timeLabel = shiftedDateTime?.time || slot.time || "-";
                         const placeholderLabel =
