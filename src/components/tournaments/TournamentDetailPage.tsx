@@ -73,6 +73,7 @@ import {
   formatTournamentDate,
 } from "@/lib/tournamentSeo";
 import { isNationalFederationLevel } from "@/lib/playerNameVariant";
+import { dayInWindows, extractDateSearch, isoDayOf } from "@/lib/dateSearch";
 
 type Props = {
   summary: TournamentEventSummary;
@@ -1893,6 +1894,15 @@ export function TournamentDetailPage({
     ALL_TIMETABLE_PHASE_KEY,
   );
   const [timetableSearchQuery, setTimetableSearchQuery] = useState("");
+  /**
+   * Το ΚΕΙΜΕΝΟ της αναζήτησης χωρίς την ημερομηνία: όταν γράφεις «12/11», το μαρκάρισμα (highlight)
+   * θα έψαχνε κατά λέξη «12/11» μέσα στα ονόματα, δεν θα έβρισκε τίποτα και θα φαινόταν σαν να μη
+   * δούλεψε το φίλτρο. Η ημερομηνία φιλτράρει γραμμές, το κείμενο μαρκάρει.
+   */
+  const timetableTextQuery = useMemo(
+    () => extractDateSearch(timetableSearchQuery)?.rest ?? timetableSearchQuery,
+    [timetableSearchQuery],
+  );
   const [selectedGalleryImageIndex, setSelectedGalleryImageIndex] = useState<
     number | null
   >(null);
@@ -5674,10 +5684,22 @@ export function TournamentDetailPage({
   }, [timetablePhaseTabs, timetableViewMode]);
 
   const visibleTimetableSlots = useMemo(() => {
-    const trimmedQuery = normalizeLookupText(timetableSearchQuery);
+    /*
+     * ΗΜΕΡΟΜΗΝΙΑ ΣΤΟ TIME TABLE: «12/11» ή «12/11-14/11» κρατά μόνο τις γραμμές εκείνης της
+     * μέρας/διαστήματος. Ό,τι άλλο γράφει ο χρήστης συνεχίζει να ψάχνεται ως κείμενο, άρα
+     * «12/11 Παπαδόπουλος» δουλεύει κανονικά.
+     */
+    const dateSearch = extractDateSearch(timetableSearchQuery);
+    const trimmedQuery = normalizeLookupText(dateSearch ? dateSearch.rest : timetableSearchQuery);
+    const matchesDate = (slot: { date?: string | null; dateTime?: string | null }): boolean => {
+      if (!dateSearch) return true;
+      const day = isoDayOf(slot.date) ?? isoDayOf(slot.dateTime);
+      return dayInWindows(day, dateSearch.windows);
+    };
     if (timetableViewMode === "training") {
       return timetableSlots.filter((slot) => {
         if (slot.slotType !== "training") return false;
+        if (!matchesDate(slot)) return false;
         if (!trimmedQuery) return true;
         const haystack = [
           slot.title,
@@ -5696,6 +5718,7 @@ export function TournamentDetailPage({
     }
     return timetableSlots.filter((slot) => {
       if (slot.slotType === "training") return false;
+      if (!matchesDate(slot)) return false;
       if (
         activeTimetablePhaseKey !== ALL_TIMETABLE_PHASE_KEY &&
         getTimetablePhaseKey(slot) !== activeTimetablePhaseKey
@@ -7090,7 +7113,7 @@ export function TournamentDetailPage({
                 placeholder={
                   timetableViewMode === "training"
                     ? "Search training slots..."
-                    : "Search player, group (e.g. g1) or match..."
+                    : "Search player, group (e.g. g1), match or date (12/11, 12/11-14/11)..."
                 }
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white"
               />
@@ -7264,12 +7287,12 @@ export function TournamentDetailPage({
                                         />
                                       ) : null}
                                     </span>
-                                    <span className="text-center">{highlightText(slot.trainingPlayerName, timetableSearchQuery)}</span>
+                                    <span className="text-center">{highlightText(slot.trainingPlayerName, timetableTextQuery)}</span>
                                   </span>
                                 ) : hasPlayerGrid ? (
                                   <div className="grid w-full min-w-[28rem] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                     <span className={`flex items-center justify-end gap-2 text-right ${leftResolved ? "font-semibold text-slate-950" : "font-medium text-slate-500"}`}>
-                                      <span>{highlightText(leftLabel || "", timetableSearchQuery)}</span>
+                                      <span>{highlightText(leftLabel || "", timetableTextQuery)}</span>
                                       {matchPlayer1Flag ? (
                                         <img
                                           src={matchPlayer1Flag}
@@ -7293,14 +7316,14 @@ export function TournamentDetailPage({
                                           referrerPolicy="no-referrer"
                                         />
                                       ) : null}
-                                      <span>{highlightText(rightLabel || "", timetableSearchQuery)}</span>
+                                      <span>{highlightText(rightLabel || "", timetableTextQuery)}</span>
                                     </span>
                                   </div>
                                 ) : publicMatchLabel ? (
                                   <span className="w-full text-center font-medium text-slate-500">
                                     {highlightText(
                                       publicMatchLabel,
-                                      timetableSearchQuery,
+                                      timetableTextQuery,
                                     )}
                                   </span>
                                 ) : null}
@@ -7308,7 +7331,7 @@ export function TournamentDetailPage({
                                   <span className="text-xs text-slate-500">
                                     {highlightText(
                                       toPlainText(slot.description),
-                                      timetableSearchQuery,
+                                      timetableTextQuery,
                                     )}
                                   </span>
                                 ) : null}
