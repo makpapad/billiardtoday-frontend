@@ -37,6 +37,7 @@ import type {
   CmsSiteSettings,
   CmsSocialLink,
   CmsSection,
+  CmsTournamentRef,
 } from "@/lib/cms/types";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { sanitizeCmsHtml } from "@/lib/cms/sanitize";
@@ -847,6 +848,14 @@ const mapSection = (value: unknown, strapiBaseUrl: string): CmsSection | null =>
   return null;
 };
 
+const mapTournamentRef = (value: unknown): CmsTournamentRef | null => {
+  const source = unwrapEntity(value);
+  const id = readString(source.documentId) || readString(source.id);
+  const slug = readString(source.slug);
+  if (!id || !slug) return null;
+  return { id, title: readString(source.title) || slug, slug };
+};
+
 export const mapCmsPage = (value: unknown, strapiBaseUrl: string): CmsPage | null => {
   const source = unwrapEntity(value);
   const id = readString(source.documentId) || readString(source.id);
@@ -870,6 +879,8 @@ export const mapCmsPage = (value: unknown, strapiBaseUrl: string): CmsPage | nul
             ? "article"
           : "standard",
     layoutTree: mapLayoutNodes(source.layoutTree, strapiBaseUrl),
+    showInNews: source.showInNews !== false,
+    tournament: mapTournamentRef(source.tournament),
     sections: Array.isArray(source.sections)
       ? source.sections
           .map((section) => mapSection(section, strapiBaseUrl))

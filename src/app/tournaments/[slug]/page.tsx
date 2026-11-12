@@ -137,9 +137,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const [seoData, seoStages, relatedNews] = await Promise.all([
     getTournamentSeoData(summary.documentId),
     getTournamentSeoStages(summary.documentId).catch(() => [] as TournamentSeoStage[]),
-    // Άρθρα που αναφέρουν αυτή τη διοργάνωση: η σελίδα τουρνουά δεν έδειχνε κανένα,
-    // ενώ τα άρθρα έδειχναν το τουρνουά. Το link είναι αμοιβαίο τώρα.
-    findNewsArticlesForTournament(canonicalSlug).catch(() => []),
+    // Άρθρα που ανήκουν σε αυτή τη διοργάνωση: πρώτα η σχέση `page.tournament` (ό,τι
+    // διαλέγει ο χειριστής στο admin), μετά τα παλιά άρθρα που απλώς αναφέρουν το
+    // `/tournaments/<slug>` στο κείμενό τους — ένωση, ώστε κανένα να μη χαθεί.
+    findNewsArticlesForTournament({
+      tournamentSlug: summary.tournamentSlug,
+      publicSlug: canonicalSlug,
+    }).catch(() => []),
   ]);
 
   return (

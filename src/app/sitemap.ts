@@ -26,6 +26,7 @@ const staticRoutes = [
   "/handicap",
   "/contact",
   "/news",
+  "/news/tournaments",
   "/live",
   "/manual",
   "/privacy-policy",

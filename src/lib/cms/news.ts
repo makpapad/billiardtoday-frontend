@@ -1,5 +1,5 @@
 import { mapCmsPage } from "@/lib/cms/mappers";
-import type { CmsPage } from "@/lib/cms/types";
+import type { CmsPage, CmsTournamentRef } from "@/lib/cms/types";
 import { getServerEnv } from "@/lib/serverEnv";
 
 const IS_PRODUCTION = (getServerEnv("NODE_ENV") || process.env.NODE_ENV) === "production";
@@ -22,6 +22,8 @@ export type NewsArticleSummary = {
   coverImage?: CmsPage["coverImage"];
   publishedAt?: string | null;
   updatedAt?: string | null;
+  /** Το τουρνουά του άρθρου (σχέση `page.tournament`), όταν υπάρχει. */
+  tournament?: CmsTournamentRef | null;
 };
 
 const buildHeaders = (): HeadersInit => {
@@ -62,13 +64,19 @@ const toSummary = (page: CmsPage): NewsArticleSummary => ({
   coverImage: page.coverImage,
   publishedAt: page.publishedAt,
   updatedAt: page.updatedAt,
+  tournament: page.tournament ?? null,
 });
 
-export const listNewsArticles = async (limit = 12): Promise<NewsArticleSummary[]> => {
-  const params = new URLSearchParams();
+/**
+ * Κοινά πεδία για λίστες άρθρων. Το `showInNews` ζητείται πάντα και το φιλτράρουμε
+ * στον κώδικα: τα άρθρα που γράφτηκαν πριν υπάρξει το πεδίο έχουν `null`, και ένα
+ * `filters[showInNews][$ne]=false` στο Strapi θα τα έκρυβε ΟΛΑ (SQL: `NULL != false`
+ * δεν είναι true).
+ */
+const applyArticleListParams = (params: URLSearchParams, pageSize: number) => {
   params.set("filters[pageType][$eq]", "article");
   params.set("pagination[page]", "1");
-  params.set("pagination[pageSize]", String(Math.max(1, Math.min(limit, 50))));
+  params.set("pagination[pageSize]", String(Math.max(1, Math.min(pageSize, 200))));
   params.set("sort[0]", "publishedAt:desc");
   params.set("sort[1]", "updatedAt:desc");
   params.set("fields[0]", "title");
@@ -77,67 +85,113 @@ export const listNewsArticles = async (limit = 12): Promise<NewsArticleSummary[]
   params.set("fields[3]", "pageType");
   params.set("fields[4]", "publishedAt");
   params.set("fields[5]", "updatedAt");
+  params.set("fields[6]", "showInNews");
   params.set("populate[coverImage][populate]", "*");
+  params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[tournament][fields][1]", "slug");
+};
+
+const readArticleRows = (json: { data?: unknown[] }): CmsPage[] =>
+  (Array.isArray(json?.data) ? json.data : [])
+    .map((row: unknown) => mapCmsPage(row, STRAPI_URL))
+    .filter((page: CmsPage | null): page is CmsPage => Boolean(page && page.pageType === "article"));
+
+export const listNewsArticles = async (limit = 12): Promise<NewsArticleSummary[]> => {
+  const params = new URLSearchParams();
+  applyArticleListParams(params, limit);
 
   const json = await fetchJson(`/api/pages?${params.toString()}`);
-  const rows = Array.isArray(json?.data) ? json.data : [];
-  return rows
-    .map((row: unknown) => mapCmsPage(row, STRAPI_URL))
-    .filter((page: CmsPage | null): page is CmsPage => Boolean(page && page.pageType === "article"))
+  return readArticleRows(json)
+    .filter((page) => page.showInNews !== false)
+    .slice(0, Math.max(1, limit))
+    .map(toSummary);
+};
+
+/**
+ * Άρθρα που ανήκουν σε διοργάνωση (σχέση `page.tournament`) — η πηγή της σελίδας
+ * αρχείου `/news/tournaments`. Έρχονται με το τουρνουά μαζί, ώστε η σελίδα να τα
+ * ομαδοποιεί χωρίς δεύτερο query.
+ */
+export const listTournamentNewsArticles = async (
+  limit = 200,
+): Promise<NewsArticleSummary[]> => {
+  const params = new URLSearchParams();
+  applyArticleListParams(params, limit);
+
+  const json = await fetchJson(`/api/pages?${params.toString()}`);
+  return readArticleRows(json)
+    .filter((page) => Boolean(page.tournament) && page.showInNews !== false)
+    .slice(0, Math.max(1, limit))
     .map(toSummary);
 };
 
 /**
  * Άρθρα που αναφέρονται σε μία διοργάνωση.
  *
- * ΓΙΑΤΙ ΕΤΣΙ: το άρθρο δείχνει τη διοργάνωση με κανονικό σύνδεσμο μέσα στο κείμενό του
- * (`/tournaments/<slug>`), αλλά η διοργάνωση δεν έδειχνε ΠΟΤΕ το άρθρο — μία κατεύθυνση
- * μόνο, χωρίς αμοιβαίο link για τον crawler. Δεν υπάρχει relation `page.event` στο schema,
- * άρα η σύνδεση βγαίνει από το ίδιο το περιεχόμενο (layoutTree + sections), που είναι και
- * το μόνο που ξέρει τι λέει το άρθρο. Έτσι δουλεύει και για τα άρθρα που υπάρχουν ήδη,
- * χωρίς migration και χωρίς να ξαναγραφτεί τίποτα.
+ * ΔΥΟ ΔΡΟΜΟΙ, ΕΝΩΜΕΝΟΙ:
+ * 1. Η σχέση `page.tournament` — ό,τι διαλέγει ο χειριστής στο admin. Ο σωστός τρόπος.
+ * 2. Το παλιό: το άρθρο αναφέρει `/tournaments/<slug>` μέσα στο κείμενό του. Μένει για
+ *    τα άρθρα που γράφτηκαν πριν υπάρξει η σχέση, ώστε κανένα δεν χάνεται.
+ *
+ * Το `tournamentSlug` είναι το slug της εγγραφής `tournament` στο Strapi (μπορεί να έχει
+ * τυχαία κατάληξη, π.χ. `…-mw0r7dtl`) και ΔΕΝ είναι το δημόσιο URL· το δημόσιο
+ * (`…-pulderbos-2026`) δίνεται χωριστά ως `publicSlug` για τον έλεγχο στο κείμενο.
  */
 export const findNewsArticlesForTournament = async (
-  tournamentSlug: string,
+  {
+    tournamentSlug,
+    publicSlug,
+  }: { tournamentSlug?: string | null; publicSlug?: string | null },
   limit = 6,
 ): Promise<NewsArticleSummary[]> => {
-  const cleanSlug = String(tournamentSlug || "").trim().replace(/^\/+/, "");
-  if (!cleanSlug) return [];
-  const needle = `/tournaments/${cleanSlug}`;
+  const cleanTournamentSlug = String(tournamentSlug || "").trim();
+  const cleanPublicSlug = String(publicSlug || "").trim().replace(/^\/+/, "");
+  if (!cleanTournamentSlug && !cleanPublicSlug) return [];
 
-  const params = new URLSearchParams();
-  params.set("filters[pageType][$eq]", "article");
-  params.set("pagination[page]", "1");
-  params.set("pagination[pageSize]", "200");
-  params.set("sort[0]", "publishedAt:desc");
-  params.set("fields[0]", "title");
-  params.set("fields[1]", "slug");
-  params.set("fields[2]", "summary");
-  params.set("fields[3]", "pageType");
-  params.set("fields[4]", "publishedAt");
-  params.set("fields[5]", "updatedAt");
-  params.set("fields[6]", "layoutTree");
-  params.set("populate[coverImage][populate]", "*");
-  params.set("populate[sections][populate]", "*");
+  const byRelation = (async (): Promise<NewsArticleSummary[]> => {
+    if (!cleanTournamentSlug) return [];
+    const params = new URLSearchParams();
+    applyArticleListParams(params, 50);
+    params.set("filters[tournament][slug][$eq]", cleanTournamentSlug);
+    try {
+      const json = await fetchJson(`/api/pages?${params.toString()}`);
+      return readArticleRows(json).map(toSummary);
+    } catch {
+      return [];
+    }
+  })();
 
-  let json: { data?: unknown[] };
-  try {
-    json = await fetchJson(`/api/pages?${params.toString()}`);
-  } catch {
-    return [];
+  const byBodyLink = (async (): Promise<NewsArticleSummary[]> => {
+    if (!cleanPublicSlug) return [];
+    const needle = `/tournaments/${cleanPublicSlug}`;
+    const params = new URLSearchParams();
+    applyArticleListParams(params, 200);
+    params.set("fields[7]", "layoutTree");
+    params.set("populate[sections][populate]", "*");
+    try {
+      const json = await fetchJson(`/api/pages?${params.toString()}`);
+      return readArticleRows(json)
+        .filter((page) => {
+          const haystack = JSON.stringify([page.layoutTree ?? null, page.sections ?? null]);
+          // Το slug μπορεί να εμφανιστεί και ως απόλυτο URL· το needle ταιριάζει και στις δύο.
+          return haystack.includes(needle);
+        })
+        .map(toSummary);
+    } catch {
+      return [];
+    }
+  })();
+
+  const [relationArticles, bodyArticles] = await Promise.all([byRelation, byBodyLink]);
+
+  const merged = new Map<string, NewsArticleSummary>();
+  for (const article of [...relationArticles, ...bodyArticles]) {
+    if (!merged.has(article.id)) merged.set(article.id, article);
   }
 
-  const rows = Array.isArray(json?.data) ? json.data : [];
-  return rows
-    .map((row: unknown) => mapCmsPage(row, STRAPI_URL))
-    .filter((page: CmsPage | null): page is CmsPage => Boolean(page && page.pageType === "article"))
-    .filter((page) => {
-      const haystack = JSON.stringify([page.layoutTree ?? null, page.sections ?? null]);
-      // Το slug μπορεί να εμφανιστεί και ως απόλυτο URL· το needle ταιριάζει και στις δύο.
-      return haystack.includes(needle);
-    })
-    .slice(0, Math.max(1, limit))
-    .map(toSummary);
+  return [...merged.values()]
+    .sort((a, b) => String(b.publishedAt || "").localeCompare(String(a.publishedAt || "")))
+    .slice(0, Math.max(1, limit));
 };
 
 export const getNewsArticleBySlug = async (slug: string): Promise<CmsPage | null> => {
@@ -152,6 +206,8 @@ export const getNewsArticleBySlug = async (slug: string): Promise<CmsPage | null
   params.set("populate[sections][populate]", "*");
   params.set("populate[seo][populate]", "*");
   params.set("populate[coverImage][populate]", "*");
+  params.set("populate[tournament][fields][0]", "title");
+  params.set("populate[tournament][fields][1]", "slug");
 
   const json = await fetchJson(`/api/pages?${params.toString()}`);
   const row = Array.isArray(json?.data) ? json.data[0] : null;

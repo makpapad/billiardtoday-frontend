@@ -367,6 +367,12 @@ export type CmsSection =
   | CmsCtaBannerSection
   | CmsFaqSection;
 
+export type CmsTournamentRef = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
 export type CmsPage = {
   id: string;
   title: string;
@@ -374,6 +380,10 @@ export type CmsPage = {
   summary?: string | null;
   coverImage?: CmsMedia | null;
   pageType: "landing" | "standard" | "legal" | "article";
+  /** false = το άρθρο ΔΕΝ μπαίνει στη λίστα /news (π.χ. μόνο στη σελίδα τουρνουά). */
+  showInNews?: boolean;
+  /** Το τουρνουά που αφορά το άρθρο (σχέση `page.tournament` στο Strapi). */
+  tournament?: CmsTournamentRef | null;
   layoutTree: CmsLayoutNode[];
   sections: CmsSection[];
   seo?: CmsSeo | null;

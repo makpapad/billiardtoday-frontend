@@ -86,6 +86,15 @@ export default async function NewsIndexPage() {
               No news articles have been published yet.
             </div>
           )}
+
+          <div className="mt-12 border-t border-slate-300 pt-6">
+            <Link
+              href="/news/tournaments"
+              className="inline-flex text-sm font-semibold text-red-700 hover:underline"
+            >
+              Tournament news archive →
+            </Link>
+          </div>
         </div>
       </main>
     </CmsPageShell>
