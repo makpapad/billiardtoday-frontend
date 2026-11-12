@@ -97,3 +97,11 @@ a {
     width: 2rem !important;
   }
 }
+
+/* Πεδίο αναζήτησης: ΕΝΑ Χ (το δικό μας). Το WebKit προσθέτει δικό του κουμπί καθαρισμού. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}

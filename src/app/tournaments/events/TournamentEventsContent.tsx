@@ -80,6 +80,7 @@ import {
 import { isArtisticSetsEvent } from "./artisticSets";
 import { ArtisticSetsGroupMatchesTable } from "./ArtisticSetsTables";
 import { getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
+import { dayInWindows, extractDateSearch } from "@/lib/dateSearch";
 import type { LiveScoreChartInningDetailEntry } from "@/components/live/LiveSheetScoreChart";
 
 const BRACKET_STAGE_TYPES = new Set([
@@ -4622,9 +4623,20 @@ export function TournamentEventsContent({
       .replace(/\s+/g, " ")
       .trim();
   }, []);
+  /**
+   * ΗΜΕΡΟΜΗΝΙΑ ΣΤΗΝ ΑΝΑΖΗΤΗΣΗ — «13/11» ή «12/11-14/11» φιλτράρει με ΗΜΕΡΑ, όχι με κείμενο.
+   * Το υπόλοιπο κείμενο («13/11 Παπαδόπουλος») συνεχίζει να ψάχνει ονόματα/ομίλους.
+   */
+  const playerDateSearch = useMemo(
+    () => extractDateSearch(playerSearchQuery),
+    [playerSearchQuery],
+  );
+  const playerSearchText = playerDateSearch
+    ? playerDateSearch.rest
+    : playerSearchQuery;
   const normalizedPlayerSearchQuery = useMemo(
-    () => normalizeLiveName(playerSearchQuery),
-    [normalizeLiveName, playerSearchQuery],
+    () => normalizeLiveName(playerSearchText),
+    [normalizeLiveName, playerSearchText],
   );
   const playerSearchTerms = useMemo(
     () =>
@@ -4682,25 +4694,58 @@ export function TournamentEventsContent({
     },
     [normalizeLiveName],
   );
+  /** Παίζει ο όμιλος μέσα στις ημερομηνίες που πληκτρολόγησε ο χρήστης; */
+  const groupPlaysInDateSearch = useCallback(
+    (group: (typeof stageMatchGroups)[string][number]) => {
+      if (!playerDateSearch) return true;
+      const inWindow = (value: string | null | undefined) => {
+        const key = matchDayKey(value, timezoneOffsetMinutes, timezoneName);
+        return Boolean(key) && dayInWindows(key as string, playerDateSearch.windows);
+      };
+      if (group.matches.some((match) => inWindow(match.dateTime))) return true;
+      const slots =
+        activeStage?.documentId && group.number !== null
+          ? groupTimetableSlotsByStageGroup.get(
+              `${activeStage.documentId}::${group.number}`,
+            ) ?? []
+          : [];
+      return slots.some((slot) => inWindow(slot.dateTime));
+    },
+    [
+      activeStage,
+      groupTimetableSlotsByStageGroup,
+      matchDayKey,
+      playerDateSearch,
+      timezoneName,
+      timezoneOffsetMinutes,
+    ],
+  );
+
   const filteredActiveStageGroups = useMemo(() => {
     if (!activeStage) return [];
 
     const groups = stageMatchGroups[activeStage.id] ?? [];
-    if (!normalizedPlayerSearchQuery) return groups;
-    if (playerSearchTerms.length === 0) return groups;
+    const byDate = playerDateSearch
+      ? groups.filter(groupPlaysInDateSearch)
+      : groups;
+    if (!normalizedPlayerSearchQuery) return byDate;
+    if (playerSearchTerms.length === 0) return byDate;
 
-    return groups.filter((group) =>
-      groupMatchesSearch(group, playerSearchTerms) ||
-      group.matches.some((match) =>
-        [match.top.player, match.bottom.player].some((player) => {
-          return playerMatchesSearch(player, playerSearchTerms);
-        }),
-      ),
+    return byDate.filter(
+      (group) =>
+        groupMatchesSearch(group, playerSearchTerms) ||
+        group.matches.some((match) =>
+          [match.top.player, match.bottom.player].some((player) => {
+            return playerMatchesSearch(player, playerSearchTerms);
+          }),
+        ),
     );
   }, [
     activeStage,
     groupMatchesSearch,
+    groupPlaysInDateSearch,
     normalizedPlayerSearchQuery,
+    playerDateSearch,
     playerMatchesSearch,
     playerSearchTerms,
     stageMatchGroups,
@@ -5005,15 +5050,29 @@ export function TournamentEventsContent({
     [normalizeLiveName],
   );
   const filteredTimetableSlots = useMemo(() => {
+    const byDate = playerDateSearch
+      ? timetableSlots.filter((slot) => {
+          const key = matchDayKey(
+            slot.dateTime,
+            timezoneOffsetMinutes,
+            timezoneName,
+          );
+          return Boolean(key) && dayInWindows(key as string, playerDateSearch.windows);
+        })
+      : timetableSlots;
     if (!normalizedPlayerSearchQuery || playerSearchTerms.length === 0) {
-      return timetableSlots;
+      return byDate;
     }
-    return timetableSlots.filter((slot) =>
+    return byDate.filter((slot) =>
       timetableSlotMatchesSearch(slot, playerSearchTerms),
     );
   }, [
+    matchDayKey,
     normalizedPlayerSearchQuery,
+    playerDateSearch,
     playerSearchTerms,
+    timezoneName,
+    timezoneOffsetMinutes,
     timetableSlotMatchesSearch,
     timetableSlots,
   ]);
@@ -6886,8 +6945,8 @@ export function TournamentEventsContent({
                                               }
                                               placeholder={
                                                 stageUsesBracketView
-                                                  ? "Search player or match..."
-                                                  : "Search player or group (e.g. g1)..."
+                                                  ? "Search player, match or date (13/11)..."
+                                                  : "Search player, group (e.g. g1) or date (13/11)..."
                                               }
                                               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40"
                                             />
@@ -7368,7 +7427,11 @@ export function TournamentEventsContent({
                                         {filteredActiveStageGroups.length ===
                                         0 ? (
                                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                                            No players found.
+                                            {playerDateSearch
+                                              ? playerDateSearch.rest
+                                                ? "No groups found."
+                                                : `No groups play on ${playerSearchQuery.trim()}.`
+                                              : "No players found."}
                                           </div>
                                         ) : (
                                           <>
