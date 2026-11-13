@@ -104,7 +104,13 @@ export class DeskLivePublisher {
       ts: Date.now(),
       keyboardMode: "total",
       activePlayer: state.active + 1,
-      isRunning: false,
+      /*
+       * Ο αγώνας ΠΑΙΖΕΤΑΙ όσο το desk γράφει. Με `false` το Live θεωρούσε τη
+       * συνεδρία «pending» (το φίλτρο των καρτών θέλει isRunning ή in_progress)
+       * και η κάρτα εξαφανιζόταν σε κάθε πόντο, μέχρι το επόμενο refresh 20".
+       * Ρολόι βολών δεν συνεπάγεται: η μπάρα κρύβεται όταν δεν υπάρχει χρόνος.
+       */
+      isRunning: true,
       innings: Math.max(state.innings[0], state.innings[1]),
       isPublic: state.isPublic !== false,
       clubId: state.clubId ?? null,

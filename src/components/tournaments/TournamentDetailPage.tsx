@@ -2433,7 +2433,7 @@ export function TournamentDetailPage({
       });
       setEventLiveSessions(nextSessions);
     } catch {
-      setEventLiveSessions([]);
+      /* Προσωρινή αποτυχία δεν σβήνει τις κάρτες — μένει η τελευταία γνωστή εικόνα. */
     }
   }, [summary.documentId]);
 
