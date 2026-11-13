@@ -60,6 +60,7 @@ import { normalizeLiveVideoEntries } from "@/lib/liveVideos";
 import {
   TournamentAdsStrip,
   futureOfBilliardsAds,
+  masterLeagueAds,
 } from "@/components/tournaments/TournamentAdsStrip";
 import { RichDescription } from "@/components/tournaments/RichDescription";
 import { toPlainText } from "@/lib/richText";
@@ -194,6 +195,7 @@ const GENERAL_SECTION_KEY = "general";
 const TOURNAMENT_ADS_SLUG = "longoni-next-gen-grand-prix-3-cushion-u21-2026";
 /** Οι χορηγοί του Future of Billiards εμφανίζονται ΠΑΝΩ από το Tournament Overview. */
 const FOB_ADS_SLUG = "the-future-of-billiards-2026-pulderbos-2026";
+const MASTER_LEAGUE_ADS_SLUG = "master-league-1o-toyrnoya-2026-2027-2026";
 type KoRankingRound = "opening-final" | "r16-final" | "r32" | "r16" | "qf" | "sf" | "final";
 const GALLERY_IMAGE_BATCH_SIZE = 12;
 const ALL_TIMETABLE_PHASE_KEY = "all";
@@ -1718,6 +1720,7 @@ export function TournamentDetailPage({
     : null;
   const showTournamentAds = tournamentContextSlug === TOURNAMENT_ADS_SLUG;
   const showFobAds = tournamentContextSlug === FOB_ADS_SLUG;
+  const showMasterLeagueAds = tournamentContextSlug === MASTER_LEAGUE_ADS_SLUG;
   const externalLiveTablesHrefRaw =
     summary.externalLiveTablesHref ??
     buildExternalLiveTablesHref(summary.documentId, { table: 1 });
@@ -7988,6 +7991,13 @@ export function TournamentDetailPage({
       {showFobAds ? (
         <TournamentAdsStrip
           ads={futureOfBilliardsAds}
+          className="mt-6"
+          showPoweredBy={false}
+        />
+      ) : null}
+      {showMasterLeagueAds ? (
+        <TournamentAdsStrip
+          ads={masterLeagueAds}
           className="mt-6"
           showPoweredBy={false}
         />

@@ -39,6 +39,14 @@ const tournamentAds: TournamentAd[] = [
   },
 ];
 
+/** Χορηγοί του Master League — 1ο Τουρνουά 2026-2027 (Κοράλλι, Simonis, Aramith, Σιβισσίδης). */
+export const masterLeagueAds: TournamentAd[] = [
+  { src: "/img/logos/ads/2-Koralli_Logo_EST.webp", alt: "Koralli", href: "https://www.facebook.com/KoralliBilliardClubCafe" },
+  { src: "/img/logos/ads/3-simonis.jpg", alt: "Simonis", href: "https://iwansimonis.com/" },
+  { src: "/img/logos/ads/1-aramith.jpg", alt: "Aramith", href: "https://aramith.com/" },
+  { src: "/img/logos/ads/3-sivis.webp", alt: "Sivissidis", href: "https://sivissidis.gr/" },
+];
+
 /** Χορηγοί του Future of Billiards 2026 (Pulderbos). */
 export const futureOfBilliardsAds: TournamentAd[] = [
   { src: "/img/logos/ads/1-aramith.jpg", alt: "Aramith", href: "https://aramith.com/" },
