@@ -110,15 +110,11 @@ export default async function PlayerProfilePage({ params }: Props) {
           </div>
         </div>
       ) : null}
-      {summary ? <PlayerInstantSummary summary={summary} /> : null}
-      {summary && history && history.items.length > 0 ? (
-        <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 dark:from-gray-900 dark:to-gray-800">
-          <div className="mx-auto max-w-6xl pb-6">
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-              {buildPlayerBio(summary, history)}
-            </p>
-          </div>
-        </section>
+      {summary ? (
+        <PlayerInstantSummary
+          summary={summary}
+          bio={summary && history && history.items.length > 0 ? buildPlayerBio(summary, history) : undefined}
+        />
       ) : null}
       {cebRankings.map((cebRanking) => (
         <CebPlayerRankingCard

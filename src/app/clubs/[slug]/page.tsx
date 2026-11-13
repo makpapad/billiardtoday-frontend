@@ -129,17 +129,13 @@ export default async function ClubPage({ params }: Props) {
             }
           />
         </div>
-      </section>
 
-      {club.city || club.country || club.federation?.name ? (
-        <section className="px-4 dark:from-gray-900 dark:to-gray-800">
-          <div className="mx-auto max-w-7xl pb-6">
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-              {buildClubBio(club, clubPlayers.length)}
-            </p>
-          </div>
-        </section>
-      ) : null}
+        <div className="mx-auto max-w-7xl pb-6 px-2 sm:px-6">
+          <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+            {buildClubBio(club, clubPlayers.length)}
+          </p>
+        </div>
+      </section>
 
       {clubPlayers.length > 0 ? (
         <section className="px-4 pb-4 sm:px-6">

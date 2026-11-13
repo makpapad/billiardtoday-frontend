@@ -4,6 +4,7 @@ import type { PublicPlayerProfileSummary } from "@/lib/publicSiteData";
 
 type PlayerInstantSummaryProps = {
   summary: PublicPlayerProfileSummary;
+  bio?: string;
 };
 
 const formatInteger = (value: number | null | undefined) =>
@@ -21,7 +22,7 @@ const formatPercent = (value: number | null | undefined) =>
     ? `${value.toFixed(1)}%`
     : "-";
 
-export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
+export function PlayerInstantSummary({ summary, bio }: PlayerInstantSummaryProps) {
   const primaryStats = summary.primaryGameStats;
   const countryLabel = getCountryLabel(summary.country);
   const flagPath = getCountryFlagPath(summary.country);
@@ -137,6 +138,12 @@ export function PlayerInstantSummary({ summary }: PlayerInstantSummaryProps) {
               Tournament history, match records, averages, high runs, and head-to-head data are available in the archive below.
             </p>
           )}
+
+          {bio ? (
+            <p className="mt-5 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              {bio}
+            </p>
+          ) : null}
         </div>
       </div>
     </section>
