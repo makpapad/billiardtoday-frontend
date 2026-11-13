@@ -61,7 +61,7 @@ export function buildPlayerBio(
   const location = [city, country].filter(Boolean).join(", ");
   const origin = location ? ` from ${location}` : "";
   // Αν η χώρα είναι όνομα (π.χ. "Sweden", "Italy") αντί για επίθετο ("Swedish", "Italian"),
-  // μετατρέπουμε. Μικρή λίστα — τα περισσότερα δεδομένα είναι ήδη επίθετο (π.χ. "Greek").
+  // ή κωδικός ISO (π.χ. "GR", "NL"), μετατρέπουμε.
   const NATIONALITY_MAP: Record<string, string> = {
     Sweden: "Swedish", Netherlands: "Dutch", Italy: "Italian",
     Spain: "Spanish", France: "French", Germany: "German",
@@ -78,6 +78,18 @@ export function buildPlayerBio(
     India: "Indian", Australia: "Australian", Canada: "Canadian",
     USA: "American", "United States": "American",
     Greece: "Greek", Cyprus: "Cypriot",
+    // ISO 3166-1 alpha-2 codes (χρησιμοποιούνται από τα δεδομένα Strapi αθλητών)
+    GR: "Greek", NL: "Dutch", BE: "Belgian", DE: "German",
+    FR: "French", ES: "Spanish", IT: "Italian", PT: "Portuguese",
+    TR: "Turkish", DK: "Danish", NO: "Norwegian", FI: "Finnish",
+    SE: "Swedish", AT: "Austrian", CH: "Swiss", CZ: "Czech",
+    SK: "Slovak", HU: "Hungarian", PL: "Polish", RO: "Romanian",
+    BG: "Bulgarian", RS: "Serbian", HR: "Croatian", SI: "Slovenian",
+    RU: "Russian", JP: "Japanese", KR: "Korean", CN: "Chinese",
+    VN: "Vietnamese", EG: "Egyptian", MA: "Moroccan", TN: "Tunisian",
+    AR: "Argentine", CO: "Colombian", BR: "Brazilian", QA: "Qatari",
+    IR: "Iranian", IN: "Indian", AU: "Australian", CA: "Canadian",
+    US: "American", CY: "Cypriot",
   };
   const nat = country ? (NATIONALITY_MAP[country] || country) : "";
   const article = nat && /^[aeiou]/i.test(nat) ? "n" : "";
