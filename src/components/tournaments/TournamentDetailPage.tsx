@@ -2992,7 +2992,12 @@ export function TournamentDetailPage({
         }
 
         if (payload.type !== "score:update") return;
-        if (eventLiveSessions.length > 0) return;
+        /*
+         * ΚΑΙ όταν ο αγώνας υπάρχει στη λίστα (από το API), τα ζωντανά μηνύματα
+         * περνούν: το σερί που γράφεται στο πληκτρολόγιο (liveRun) υπάρχει ΜΟΝΟ
+         * εκεί, το API το ξέρει μετά το Enter. Το merge δίνει προτεραιότητα στο
+         * ζωντανό μήνυμα, άρα το σκορ φαίνεται αμέσως και όχι σε 20".
+         */
         if (payload.ended === true) {
           const endedSessionId = String(payload.sessionId ?? "");
           const endedScreenId = String(payload.screenId ?? "");
@@ -4011,13 +4016,26 @@ export function TournamentDetailPage({
    */
   const filteredEventLiveSessions = useMemo(() => eventLiveSessions, [eventLiveSessions]);
   const filteredWsLiveSessionsByPair = useMemo(() => {
+    const identity = (session: EventLiveSession) =>
+      [
+        session.documentId,
+        session.sessionId,
+        session.id,
+        session.screenId,
+        session.screenIdentifier,
+      ]
+        .map((value) => String(value || "").trim())
+        .some((value) => value.length > 0 && allowedEventSessionKeys.has(value));
+    /* Πρώτα με ταυτότητα (ίδια συνεδρία με το API) — τα ονόματα μπορεί να διαφέρουν λίγο. */
+    const byIdentity = filteredWsLiveSessions.filter(identity);
+    if (byIdentity.length > 0) return byIdentity;
     if (allowedEventPairKeys.size === 0) return filteredWsLiveSessions;
     return filteredWsLiveSessions.filter((session) =>
       Array.from(buildSessionPairKeys(session)).some((key) =>
         allowedEventPairKeys.has(key),
       ),
     );
-  }, [allowedEventPairKeys, filteredWsLiveSessions]);
+  }, [allowedEventPairKeys, allowedEventSessionKeys, filteredWsLiveSessions]);
   const mergedEventLiveSessions = useMemo(
     () =>
       mergeLiveSessions(

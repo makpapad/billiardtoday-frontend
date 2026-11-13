@@ -50,6 +50,8 @@ type TableState = {
   history: Array<{ p1: Side; p2: Side; active: 0 | 1; detail: InningEntry[] }>;
   /** Το Live γράφει μόνο όταν ανάψει. */
   liveOn: boolean;
+  /** Ποια πλευρά του ΑΓΩΝΑ είναι ο κάθε παίκτης (1/2) — αλλάζει με το Swap. */
+  sides: [1 | 2, 1 | 2];
   error: string | null;
 };
 
@@ -315,6 +317,7 @@ export default function DeskClient() {
           p1: { points: 0, run: 0, hr: 0, hr2: 0, innings: 1 },
           p2: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
           liveOn: false,
+          sides: [1, 2],
           history: [],
           active: 0,
           buffer: "",
@@ -439,8 +442,8 @@ export default function DeskClient() {
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
-                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
+                { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
+                { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
               ],
               inningsDetail: next.detail,
               finish,
@@ -480,6 +483,7 @@ export default function DeskClient() {
       names: [table.names[1], table.names[0]],
       p1: table.p2,
       p2: table.p1,
+      sides: [table.sides[1], table.sides[0]],
       active: table.active === 0 ? 1 : 0,
       detail: table.detail.map((row) => ({
         inning: row.inning,
@@ -546,7 +550,9 @@ export default function DeskClient() {
   const pressDigit = useCallback(
     (digit: string) => {
       if (!table || table.finished) return;
-      setTable({ ...table, buffer: (table.buffer + digit).slice(0, 3) });
+      const next: TableState = { ...table, buffer: (table.buffer + digit).slice(0, 3) };
+      setTable(next);
+      publishLive(next);
     },
     [table],
   );

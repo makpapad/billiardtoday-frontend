@@ -45,6 +45,8 @@ type TableState = {
   p2: Side;
   /** Το Live γράφει μόνο όταν ανάψει το κουμπί — μέχρι τότε δεν στέλνεται τίποτα. */
   liveOn: boolean;
+  /** Ποια πλευρά του ΑΓΩΝΑ είναι ο κάθε παίκτης (1/2). */
+  sides: [1 | 2, 1 | 2];
   openedAt: number | null;
   history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
   /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
@@ -71,6 +73,7 @@ function emptyTable(no: number): TableState {
     liveOn: false,
     openedAt: null,
     history: [],
+    sides: [1, 2],
     detail: [],
   };
 }
@@ -222,8 +225,8 @@ export default function DeskConsole({
             method: "POST",
             body: JSON.stringify({
               players: [
-                { points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: 0 },
-                { points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: 0 },
+                { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
+                { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
               ],
               inningsDetail: next.detail,
               finish,
