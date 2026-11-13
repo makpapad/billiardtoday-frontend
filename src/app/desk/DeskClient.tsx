@@ -325,6 +325,8 @@ export default function DeskClient() {
         setTable(openedTable);
         setActiveId(sessionId);
         setTableNo(tableNo + 1);
+        /* Ο αγώνας δεν ξαναδιαλέγεται από τη λίστα μέχρι να κλείσει το τραπέζι. */
+        setMatches((prev) => prev.filter((row) => row.documentId !== match.documentId));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Το τραπέζι δεν άνοιξε");
       } finally {
