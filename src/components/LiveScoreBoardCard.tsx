@@ -476,9 +476,7 @@ export function LiveScoreBoardCard({
         <div
           className={`${
             compact ? "text-[17px]" : dense ? "text-[14px]" : "text-[22px]"
-          } font-black tabular-nums leading-none ${
-            isActive ? "animate-pulse" : ""
-          }`}
+          } font-black tabular-nums leading-none`}
         >
           {run ?? 0}
         </div>
