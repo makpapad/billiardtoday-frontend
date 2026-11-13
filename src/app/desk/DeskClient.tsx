@@ -43,6 +43,7 @@ type TableState = {
   finished: boolean;
   saving: boolean;
   detail: InningEntry[];
+  history: Array<{ p1: Side; p2: Side; active: 0 | 1; detail: InningEntry[] }>;
   /** Το Live γράφει μόνο όταν ανάψει. */
   liveOn: boolean;
   error: string | null;
@@ -239,6 +240,7 @@ export default function DeskClient() {
           p1: { points: 0, run: 0, hr: 0, hr2: 0, innings: 1 },
           p2: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
           liveOn: false,
+          history: [],
           active: 0,
           buffer: "",
           finished: false,
@@ -278,6 +280,48 @@ export default function DeskClient() {
     });
   }, []);
 
+  const withHistory = useCallback(
+    (next: TableState): TableState => {
+      if (!table) return next;
+      return {
+        ...next,
+        history: [
+          { p1: { ...table.p1 }, p2: { ...table.p2 }, active: table.active, detail: table.detail },
+          ...table.history,
+        ].slice(0, 20),
+      };
+    },
+    [table],
+  );
+
+
+  const toggleLive = useCallback(() => {
+    if (!table) return;
+    const next: TableState = { ...table, liveOn: !table.liveOn };
+    setTable(next);
+    if (next.sessionId) {
+      void api(`/api/desk/tables/${encodeURIComponent(next.sessionId)}/visibility`, token, {
+        method: "POST",
+        body: JSON.stringify({ isPublic: next.liveOn }),
+      }).catch(() => {
+        /* αν αποτύχει, μένει μόνο η τοπική κατάσταση */
+      });
+    }
+    if (next.liveOn) {
+      publishLive(next);
+    } else if (next.sessionId && next.screenIdentifier) {
+      live.current?.stop({
+        screenId: next.screenIdentifier,
+        sessionId: next.sessionId,
+        names: [next.names[0] || "Player A", next.names[1] || "Player B"],
+        points: [next.p1.points, next.p2.points],
+        innings: [next.p1.innings, next.p2.innings],
+        highRuns: [next.p1.hr, next.p2.hr],
+        active: next.active,
+      });
+    }
+  }, [table, token, publishLive]);
+
   const pushScore = useCallback(
     (next: TableState, finish = false) => {
       if (!token) return;
@@ -309,6 +353,20 @@ export default function DeskClient() {
     },
     [token, publishLive],
   );
+
+  const undo = useCallback(() => {
+    if (!table || table.history.length === 0) return;
+    const [last, ...rest] = table.history;
+    pushScore({
+      ...table,
+      p1: last.p1,
+      p2: last.p2,
+      active: last.active,
+      detail: last.detail,
+      buffer: "",
+      history: rest,
+    });
+  }, [table, pushScore, withHistory]);
 
   const pendingRun = useCallback((state: TableState): number => {
     const typed = Math.max(0, Math.trunc(Number(state.buffer) || 0));
@@ -346,8 +404,8 @@ export default function DeskClient() {
 
   const commitTurn = useCallback(() => {
     if (!table || table.finished) return;
-    pushScore(closeTurn(table, pendingRun(table)));
-  }, [table, pendingRun, closeTurn, pushScore]);
+    pushScore(withHistory(closeTurn(table, pendingRun(table))));
+  }, [table, pendingRun, closeTurn, pushScore, withHistory]);
 
   const addPoint = useCallback(() => {
     if (!table || table.finished) return;
@@ -359,7 +417,7 @@ export default function DeskClient() {
       [key]: { ...side, run: (table.buffer !== "" ? typed : side.run) + 1 },
       buffer: "",
     };
-    pushScore(next);
+    pushScore(withHistory(next));
   }, [table, pushScore]);
 
   const pressDigit = useCallback(
@@ -517,6 +575,28 @@ export default function DeskClient() {
               className="rounded-xl border border-slate-600 bg-slate-800 py-4 text-sm font-semibold active:bg-slate-700"
             >
               End inning (0)
+            </button>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={toggleLive}
+              className={`rounded-xl border py-3 text-[11px] font-semibold uppercase tracking-wider ${
+                table.liveOn
+                  ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+                  : "border-slate-700 bg-slate-900 text-slate-300"
+              }`}
+            >
+              {table.liveOn ? "Live ●" : "Live"}
+            </button>
+            <button
+              type="button"
+              onClick={undo}
+              disabled={table.history.length === 0}
+              className="rounded-xl border border-slate-700 bg-slate-900 py-3 text-[11px] uppercase tracking-wider text-slate-300 disabled:opacity-40"
+            >
+              Undo
             </button>
           </div>
 
