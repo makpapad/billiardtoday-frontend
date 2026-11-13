@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { buildTournamentSlug, type TournamentEventSummary } from "@/lib/tournaments";
 import {
   buildTournamentDescription,
-  buildTournamentTitle,
+  buildTournamentSeoTitle,
 } from "@/lib/tournamentSeo";
 import { buildOpenGraphImage, toAbsoluteUrl } from "@/lib/socialMetadata";
 
@@ -43,7 +43,7 @@ export function buildTournamentShareMetadata(
   }
 
   const slug = buildTournamentSlug("", summary.title, summary.season);
-  const title = buildTournamentTitle(summary);
+  const seoTitle = buildTournamentSeoTitle(summary);
   const description = buildTournamentDescription(summary);
   const path = `${options?.embedded ? "/embed" : ""}/tournaments/${slug}`;
   const canonicalPath = `/tournaments/${slug}`;
@@ -88,8 +88,8 @@ export function buildTournamentShareMetadata(
   });
 
   const ogTitle = hasGroupContext
-    ? `${title} · Group ${contextGroup}`
-    : title;
+    ? `${seoTitle} · Group ${contextGroup}`
+    : seoTitle;
   const ogDescription = hasGroupContext
     ? `${description} Group ${contextGroup} results and standings.`
     : description;

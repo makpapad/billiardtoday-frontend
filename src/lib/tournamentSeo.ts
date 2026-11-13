@@ -21,6 +21,52 @@ export const appendSeasonIfMissing = (
 export const buildTournamentTitle = (summary: TournamentEventSummary) =>
   appendSeasonIfMissing(summary.title, summary.season);
 
+/**
+ * Τίτλος για το <title>/og:title ΜΟΝΟ — όχι για το περιεχόμενο της σελίδας.
+ *
+ * Ο σκέτος τίτλος («World Cup 3-Cushion, Yanggu 2026») έβγαινε θέση 1 για
+ * αναζητήσεις τύπου «live 3-cushion scores / results / who won» αλλά με CTR 2%:
+ * το snippet δεν έλεγε ΠΟΥΘΕΝΑ ότι η σελίδα έχει ζωντανά σκορ. Εδώ προσθέτουμε
+ * την υπόσχεση («Live Scores») και κρατάμε το σύνολο ≤60 χαρακτήρες μαζί με το
+ * template « | Billiard Today» του root layout.
+ */
+const SITE_TITLE_SUFFIX = " | Billiard Today";
+/**
+ * 62 = 45 χαρακτήρες ορατοί + « | Billiard Today». Το όριο της Google είναι
+ * κατά προσέγγιση 600px (~58-62 χαρακτήρες στο default font), οπότε στα 62
+ * κόβεται μόνο το τέλος του brand — ποτέ οι λέξεις-κλειδιά.
+ */
+const SEO_TITLE_MAX = 62;
+/** Από το πλουσιότερο στο φτωχότερο — παίρνουμε το πρώτο που χωράει. */
+const SEO_TITLE_KEYWORDS = [
+  "Live Scores & Results",
+  "Live Scores & Standings",
+  "Live Scores",
+];
+
+const trimToWord = (value: string, max: number) => {
+  const clean = cleanText(value).replace(/\s+/g, " ");
+  if (clean.length <= max) return clean;
+  const slice = clean.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > 12 ? slice.slice(0, lastSpace) : slice;
+  return cut.replace(/[\s,;:.\-–—/]+$/, "");
+};
+
+export const buildTournamentSeoTitle = (summary: TournamentEventSummary) => {
+  const base = appendSeasonIfMissing(summary.title, summary.season);
+  if (!base) return base;
+
+  const budget = SEO_TITLE_MAX - SITE_TITLE_SUFFIX.length;
+  for (const keyword of SEO_TITLE_KEYWORDS) {
+    if (base.length + 2 + keyword.length <= budget) return `${base}: ${keyword}`;
+  }
+
+  const shortest = SEO_TITLE_KEYWORDS[SEO_TITLE_KEYWORDS.length - 1];
+  const trimmed = trimToWord(base, budget - 2 - shortest.length);
+  return trimmed ? `${trimmed}: ${shortest}` : base;
+};
+
 export const buildTournamentVenueLabel = (summary: TournamentEventSummary) =>
   cleanText(summary.venueName || summary.clubName);
 
@@ -188,9 +234,13 @@ const compactDateRange = (
 };
 
 /**
- * Meta description από ΔΕΔΟΜΕΝΑ, όχι από κολόβωμα κειμένου:
- * «<τίτλος>, 2-8 November 2026 at <γήπεδο>, <πόλη>, <χώρα>. Live results, draw and
- * stage-by-stage scores.» Μία γραμμή, ≤158 χαρακτήρες, πάντα ολοκληρωμένη πρόταση.
+ * Meta description από ΔΕΔΟΜΕΝΑ, όχι από κολόβωμα κειμένου.
+ *
+ * Πριν: «<τίτλος>, 2-8 November 2026 at <γήπεδο>, <πόλη>, <χώρα>. Live results,
+ * draw and stage-by-stage scores.» — περιέγραφε τη διοργάνωση αλλά όχι την
+ * ΑΠΑΝΤΗΣΗ που ψάχνει ο χρήστης (σκορ, κατάταξη, ποιος κέρδισε). Τώρα ξεκινά με
+ * το τι βρίσκει κανείς στη σελίδα και κρατά ≤158 χαρακτήρες, ολοκληρωμένη
+ * πρόταση, χωρίς κολόβωμα στη μέση λέξης.
  */
 export const buildTournamentDescription = (
   summary: TournamentEventSummary,
@@ -208,7 +258,21 @@ export const buildTournamentDescription = (
     : place
       ? ` in ${place}`
       : "";
-  const core = `${title}${range ? `, ${range}` : ""}${where}.`;
-  const tail = " Live results, draw and stage-by-stage scores.";
-  return clampMetaDescription(`${core}${tail}`, 158) || core;
+  const lead = `Live scores, results and standings: ${title}${range ? `, ${range}` : ""}`;
+  const tail = "Schedule, group tables, who won and final ranking, updated live.";
+
+  // Από το πλουσιότερο στο φτωχότερο: κρατάμε το «who won» όσο χωράει.
+  const candidates = [
+    `${lead}${where}. ${tail}`,
+    `${lead}. ${tail}`,
+    `${lead}. Schedule, group tables and who won, updated live.`,
+    `${lead}. Who won, schedule and standings, updated live.`,
+    `${lead}.`,
+  ];
+
+  for (const candidate of candidates) {
+    const clean = cleanText(candidate).replace(/\s+/g, " ").trim();
+    if (clean.length <= 158) return clean;
+  }
+  return clampMetaDescription(candidates[candidates.length - 1], 158);
 };
