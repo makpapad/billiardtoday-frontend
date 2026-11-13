@@ -64,3 +64,7 @@ __pycache__/
 /clubs.json
 /cp*.json
 /lier9.json
+
+# logs από tsc batches (παράγονται από scripts ελέγχου)
+.tsc-dates.log
+.tsc-groups.log
