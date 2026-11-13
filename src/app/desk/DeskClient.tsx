@@ -26,6 +26,7 @@ type Match = {
   player2?: string | null;
   points?: [number | null, number | null];
   done?: boolean;
+  openOn?: string | null;
 };
 
 type Side = { points: number; run: number; hr: number; hr2: number; innings: number };
@@ -184,7 +185,8 @@ export default function DeskClient() {
 
   const numberedMatches = useMemo(() => {
     const counters = new Map<number, number>();
-    return matches.map((match) => {
+    /* Ό,τι παίζεται ήδη σε τραπέζι δεν ξαναεμφανίζεται στη λίστα. */
+    return matches.filter((match) => !match.openOn).map((match) => {
       const key = Number(match.groupNumber ?? 0);
       const next = (counters.get(key) ?? 0) + 1;
       counters.set(key, next);
