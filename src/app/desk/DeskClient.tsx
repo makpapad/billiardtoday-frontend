@@ -471,6 +471,24 @@ export default function DeskClient() {
     });
   }, [table, pushScore, withHistory]);
 
+  const swapPlayers = useCallback(() => {
+    if (!table || table.finished) return;
+    const next: TableState = {
+      ...table,
+      names: [table.names[1], table.names[0]],
+      p1: table.p2,
+      p2: table.p1,
+      active: table.active === 0 ? 1 : 0,
+      detail: table.detail.map((row) => ({
+        inning: row.inning,
+        player1: row.player2,
+        player2: row.player1,
+      })),
+      buffer: "",
+    };
+    pushScore(withHistory(next));
+  }, [table, pushScore, withHistory]);
+
   const pendingRun = useCallback((state: TableState): number => {
     const typed = Math.max(0, Math.trunc(Number(state.buffer) || 0));
     if (state.buffer !== "") return typed;
@@ -690,7 +708,7 @@ export default function DeskClient() {
             </button>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={toggleLive}
@@ -709,6 +727,14 @@ export default function DeskClient() {
               className="rounded-xl border border-slate-700 bg-slate-900 py-3 text-[11px] uppercase tracking-wider text-slate-300 disabled:opacity-40"
             >
               Undo
+            </button>
+            <button
+              type="button"
+              onClick={swapPlayers}
+              disabled={table.finished}
+              className="rounded-xl border border-slate-700 bg-slate-900 py-3 text-[11px] uppercase tracking-wider text-slate-300 disabled:opacity-40"
+            >
+              Swap
             </button>
           </div>
 
