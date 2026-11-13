@@ -3121,7 +3121,12 @@ export function TournamentDetailPage({
             playerBCountry:
               typeof playerB.country === "string" ? playerB.country : null,
             progress: Number(payload.progress ?? 0) || 0,
-            totalBlocks: 40,
+            /*
+             * Το desk (screenId DESK-…) δεν έχει ρολόι βολών. Με σταθερό 40 η
+             * μπάρα εμφανιζόταν στο μήνυμα και εξαφανιζόταν στο refresh κάθε 20"
+             * (flash). Οι φυσικές οθόνες κρατούν τη συμπεριφορά τους.
+             */
+            totalBlocks: /^DESK-/i.test(screenId) ? 0 : 40,
             isRunning: Boolean(payload.isRunning),
             inningsDetail: liveInningsDetail,
             current,
