@@ -47,6 +47,9 @@ type TableState = {
   liveOn: boolean;
   /** Ποια πλευρά του ΑΓΩΝΑ είναι ο κάθε παίκτης (1/2). */
   sides: [1 | 2, 1 | 2];
+  /** Σε πόσους πόντους παίζεται (από τη φάση) και αν μετράνε ίσες στεκιές. */
+  targetPoints: number | null;
+  equalInnings: boolean;
   openedAt: number | null;
   history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
   /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
@@ -85,6 +88,8 @@ function emptyTable(no: number): TableState {
     openedAt: null,
     history: [],
     sides: [1, 2],
+    targetPoints: null,
+    equalInnings: false,
     detail: [],
   };
 }
@@ -285,7 +290,13 @@ export default function DeskConsole({
       setError(null);
       try {
         const opened = await api<{
-          data: { sessionId: string; screenIdentifier: string; mode: "direct" | "screen" };
+          data: {
+            sessionId: string;
+            screenIdentifier: string;
+            mode: "direct" | "screen";
+            targetPoints?: number | null;
+            equalInnings?: boolean;
+          };
         }>("/api/desk/tables/open", token, {
           method: "POST",
           body: JSON.stringify({
@@ -314,6 +325,8 @@ export default function DeskConsole({
                   sessionId,
                   screenId: opened.data.screenIdentifier,
                   mode: opened.data.mode,
+                  targetPoints: opened.data.targetPoints ?? null,
+                  equalInnings: opened.data.equalInnings === true,
                   online: true,
                   openedAt: Date.now(),
                 }

@@ -52,6 +52,9 @@ type TableState = {
   liveOn: boolean;
   /** Ποια πλευρά του ΑΓΩΝΑ είναι ο κάθε παίκτης (1/2) — αλλάζει με το Swap. */
   sides: [1 | 2, 1 | 2];
+  /** Σε πόσους πόντους παίζεται (από τη φάση) και αν μετράνε ίσες στεκιές. */
+  targetPoints: number | null;
+  equalInnings: boolean;
   error: string | null;
 };
 
@@ -292,7 +295,13 @@ export default function DeskClient() {
       setError(null);
       try {
         const opened = await api<{
-          data: { sessionId: string; screenIdentifier: string; mode: "direct" | "screen" };
+          data: {
+            sessionId: string;
+            screenIdentifier: string;
+            mode: "direct" | "screen";
+            targetPoints?: number | null;
+            equalInnings?: boolean;
+          };
         }>("/api/desk/tables/open", token, {
           method: "POST",
           body: JSON.stringify({
@@ -330,6 +339,8 @@ export default function DeskClient() {
           p2: { points: 0, run: 0, hr: 0, hr2: 0, innings: 0 },
           liveOn: false,
           sides: [1, 2],
+          targetPoints: opened.data.targetPoints ?? null,
+          equalInnings: opened.data.equalInnings === true,
           history: [],
           active: 0,
           buffer: "",
@@ -636,6 +647,8 @@ export default function DeskClient() {
           <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-slate-400">
             <span>
               {table.matchLabel} · Τραπέζι {table.tableNo}
+              {table.targetPoints ? ` · ${table.targetPoints} πόντοι` : ""}
+              {table.equalInnings ? " · ίσες στεκιές" : ""}
             </span>
             <span className={table.mode === "screen" ? "text-sky-400" : "text-emerald-400"}>
               {table.mode === "screen" ? `screen ${table.screenIdentifier}` : "direct"}
