@@ -767,6 +767,7 @@ export default function PlayerProfileClient({
         string[]
     >([])
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+    const [expandedTournamentId, setExpandedTournamentId] = useState<string | null>(null)
     const [activeStatBreakdown, setActiveStatBreakdown] =
         useState<StatBreakdownKey | null>(null)
     const [yearsToShow, setYearsToShow] = useState(3) // Show last 3 years initially
@@ -3262,7 +3263,10 @@ export default function PlayerProfileClient({
                                     className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                                 >
                                     {/* Tournament Header */}
-                                    <div className={`bg-gradient-to-r ${getPositionGradient(participation.position)} p-6 text-white`}>
+                                    <div
+                                        className={`bg-gradient-to-r ${getPositionGradient(participation.position)} p-6 text-white cursor-pointer select-none transition-opacity hover:opacity-90`}
+                                        onClick={() => setExpandedTournamentId(expandedTournamentId === participation.id ? null : participation.id)}
+                                    >
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
                                                 <h3 className="text-2xl font-bold flex items-center gap-2">
@@ -3271,6 +3275,7 @@ export default function PlayerProfileClient({
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 hover:text-blue-100 transition-colors"
+                                                        onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <span>{participation.tournament}</span>
                                                         <svg
@@ -3299,6 +3304,18 @@ export default function PlayerProfileClient({
                                                     {participation.position}
                                                 </div>
                                                 <div className="text-sm text-blue-100">{t('players.profile.history.tournament.positionLabel')}</div>
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className={`mx-auto mt-1 h-4 w-4 transition-transform ${expandedTournamentId === participation.id ? 'rotate-180' : ''}`}
+                                                    aria-hidden="true"
+                                                >
+                                                    <path d="m6 9 6 6 6-6" />
+                                                </svg>
                                             </div>
                                         </div>
 
@@ -3328,7 +3345,8 @@ export default function PlayerProfileClient({
                                     </div>
 
                                     {/* Matches List */}
-                                    <div className="p-6 bg-white dark:bg-gray-800">
+                                    {expandedTournamentId === participation.id && (
+                                    <div className="border-t border-white/20 p-6 bg-white dark:bg-gray-800">
                                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                                             {t('players.profile.history.tournament.detailsTitle').replace(
                                                 '{count}',
@@ -3511,6 +3529,7 @@ export default function PlayerProfileClient({
                                             </div>
                                         )}
                                     </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
