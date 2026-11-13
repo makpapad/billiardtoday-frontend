@@ -32,6 +32,9 @@ type Match = {
 type Side = { points: number; run: number; hr: number; hr2: number; innings: number };
 type InningEntry = { inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } };
 type TableState = {
+  /** ταυτότητα τραπεζιού μέσα στη λίστα (= sessionId) */
+  id: string;
+  tableNo: number;
   sessionId: string;
   screenIdentifier: string;
   mode: "direct" | "screen";
@@ -51,6 +54,7 @@ type TableState = {
 };
 
 const TOKEN_KEY = "desk.token";
+const TABLES_KEY = "desk.tables.mobile.v1";
 
 /* ------------------------------------------------------------------ */
 /* Μικρά βοηθήματα                                                    */
@@ -86,6 +90,47 @@ function matchLabel(match: Match, seq?: number): string {
   return no ? `${group}Αγώνας ${no}` : group.replace(/ · $/, "");
 }
 
+function TableChips({
+  tables,
+  activeId,
+  onPick,
+  onNew,
+}: {
+  tables: TableState[];
+  activeId: string | null;
+  onPick: (id: string) => void;
+  onNew: () => void;
+}) {
+  if (tables.length === 0) return null;
+  return (
+    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+      {tables.map((row) => (
+        <button
+          key={row.id}
+          type="button"
+          onClick={() => onPick(row.id)}
+          className={`shrink-0 rounded-lg border px-3 py-2 text-[11px] font-semibold ${
+            row.id === activeId
+              ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+              : "border-slate-700 bg-slate-900 text-slate-300"
+          }`}
+        >
+          Τραπέζι {row.tableNo}
+          {row.liveOn ? " ●" : ""}
+          {row.finished ? " ✓" : ""}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={onNew}
+        className="shrink-0 rounded-lg border border-dashed border-slate-600 px-3 py-2 text-[11px] text-slate-300"
+      >
+        + Νέο
+      </button>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Σελίδα                                                             */
 /* ------------------------------------------------------------------ */
@@ -102,7 +147,32 @@ export default function DeskClient() {
   const [stageId, setStageId] = useState<string>("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [tableNo, setTableNo] = useState<number>(1);
-  const [table, setTable] = useState<TableState | null>(null);
+  const [tables, setTables] = useState<TableState[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const table = useMemo(
+    () => tables.find((row) => row.id === activeId) ?? null,
+    [tables, activeId],
+  );
+  /* Ίδιο συμβόλαιο με πριν (τιμή ή updater), αλλά πάνω σε λίστα τραπεζιών. */
+  const setTable = useCallback(
+    (next: TableState | null | ((prev: TableState | null) => TableState | null)) => {
+      setTables((prev) => {
+        if (typeof next === "function") {
+          const current = prev.find((row) => row.id === activeId) ?? null;
+          const value = next(current);
+          if (!value) return prev.filter((row) => row.id !== activeId);
+          return prev.some((row) => row.id === value.id)
+            ? prev.map((row) => (row.id === value.id ? value : row))
+            : [...prev, value];
+        }
+        if (!next) return prev.filter((row) => row.id !== activeId);
+        return prev.some((row) => row.id === next.id)
+          ? prev.map((row) => (row.id === next.id ? next : row))
+          : [...prev, next];
+      });
+    },
+    [activeId],
+  );
   const [mode, setMode] = useState<"point" | "total">("total");
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -139,7 +209,8 @@ export default function DeskClient() {
     setToken(null);
     setMe(null);
     setSchedule(null);
-    setTable(null);
+    setTables([]);
+    setActiveId(null);
     setMatches([]);
   }, []);
 
@@ -231,7 +302,9 @@ export default function DeskClient() {
           body: JSON.stringify({}),
         });
 
-        setTable({
+        const openedTable: TableState = {
+          id: sessionId,
+          tableNo,
           sessionId,
           screenIdentifier: opened.data.screenIdentifier,
           detail: [],
@@ -248,7 +321,10 @@ export default function DeskClient() {
           finished: false,
           saving: false,
           error: null,
-        });
+        };
+        setTable(openedTable);
+        setActiveId(sessionId);
+        setTableNo(tableNo + 1);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Το τραπέζι δεν άνοιξε");
       } finally {
@@ -257,6 +333,31 @@ export default function DeskClient() {
     },
     [token, stageId, tableNo, currentEvent],
   );
+
+  /* --- διατήρηση ανοιχτών τραπεζιών --- */
+  useEffect(() => {
+    if (!token) return;
+    try {
+      window.localStorage.setItem(TABLES_KEY, JSON.stringify({ tables, activeId }));
+    } catch {
+      /* χωρίς localStorage μένει μόνο η τρέχουσα συνεδρία */
+    }
+  }, [tables, activeId, token]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(TABLES_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { tables?: TableState[]; activeId?: string | null };
+      if (Array.isArray(parsed?.tables) && parsed.tables.length > 0) {
+        setTables(parsed.tables.map((row) => ({ ...row, saving: false, buffer: "" })));
+        setActiveId(parsed.activeId || parsed.tables[0].id);
+        setTableNo(Math.max(...parsed.tables.map((row) => Number(row.tableNo) || 1)) + 1);
+      }
+    } catch {
+      /* αγνόησε χαλασμένο cache */
+    }
+  }, []);
 
   /* --- αποστολή σκορ --- */
   const live = useRef<DeskLivePublisher | null>(null);
@@ -446,8 +547,10 @@ export default function DeskClient() {
     } catch {
       /* το τραπέζι ελευθερώνεται ούτως ή άλλως μετά το end game */
     }
+    const rest = tables.filter((row) => row.id !== table.sessionId);
     setTable(null);
-  }, [table, token]);
+    setActiveId(rest.length > 0 ? rest[0].id : null);
+  }, [table, tables, token]);
 
   /* ------------------------------------------------------------------ */
   /* Οθόνη                                                              */
@@ -494,12 +597,19 @@ export default function DeskClient() {
         <div className="mx-auto w-full max-w-md">
           <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-slate-400">
             <span>
-              {table.matchLabel} · Τραπέζι {tableNo}
+              {table.matchLabel} · Τραπέζι {table.tableNo}
             </span>
             <span className={table.mode === "screen" ? "text-sky-400" : "text-emerald-400"}>
               {table.mode === "screen" ? `screen ${table.screenIdentifier}` : "direct"}
             </span>
           </div>
+
+          <TableChips
+            tables={tables}
+            activeId={activeId}
+            onPick={(id) => setActiveId(id)}
+            onNew={() => setActiveId(null)}
+          />
 
           <div className="mt-2 space-y-2">
             {([0, 1] as const).map((idx) => {
@@ -646,6 +756,13 @@ export default function DeskClient() {
             Έξοδος
           </button>
         </div>
+
+        <TableChips
+          tables={tables}
+          activeId={activeId}
+          onPick={(id) => setActiveId(id)}
+          onNew={() => setActiveId(null)}
+        />
 
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="text-[11px] uppercase tracking-wider text-slate-400">
