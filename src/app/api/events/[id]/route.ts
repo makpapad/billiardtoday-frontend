@@ -890,8 +890,6 @@ const mapStageResultToFinalResult = (
             typeof row.qualification_type === 'string' ? row.qualification_type : null,
         local_player_key: row.local_player_key ?? null,
         local_player_name: row.local_player_name ?? null,
-        group_number: toNumber(row.group_number),
-        group_position: toNumber(row.group_position),
         player: row.player,
         source: row.source ?? 'stage-standings',
     }
@@ -1267,12 +1265,53 @@ export async function GET(
                         const computedGroupStandings = !isKnockoutStageType(stage.stage_type)
                             ? buildClubRuntimeStandingsFromMatches(stageGroups)
                             : []
+                        /*
+                         * ΠΡΟΚΡΙΣΗ: η κατάταξη υπολογίζεται εδώ από τους αγώνες, οπότε χάνονταν
+                         * τα `qualified`/`qualification_type` που έχει γράψει η διαχείριση και η
+                         * σελίδα δεν μπορούσε να χρωματίσει ποιοι περνούν πρώτοι/δεύτεροι.
+                         * Τα ξανακολλάμε από τις αποθηκευμένες γραμμές κατάταξης (liveStandings).
+                         */
+                        const qualificationByPlayer = new Map<
+                            string,
+                            { qualified: boolean | null; qualificationType: string | null; localPlayerName: string | null }
+                        >()
+                        for (const row of liveStandings ?? []) {
+                            const player = asObject(row.player)
+                            const docId = typeof player?.documentId === 'string' ? player.documentId : null
+                            const localKey = typeof row.local_player_key === 'string' ? row.local_player_key : null
+                            const key = docId ? `doc:${docId}` : localKey ? `local:${localKey}` : null
+                            if (!key) continue
+                            qualificationByPlayer.set(key, {
+                                qualified: typeof row.qualified === 'boolean' ? row.qualified : null,
+                                qualificationType:
+                                    typeof row.qualification_type === 'string' ? row.qualification_type : null,
+                                localPlayerName: typeof row.local_player_name === 'string' ? row.local_player_name : null,
+                            })
+                        }
+                        const withQualification = computedGroupStandings.map((standing) => {
+                            const player = asObject((standing as Record<string, unknown>).player)
+                            const docId = typeof player?.documentId === 'string' ? player.documentId : null
+                            const localKey =
+                                typeof (standing as Record<string, unknown>).local_player_key === 'string'
+                                    ? ((standing as Record<string, unknown>).local_player_key as string)
+                                    : null
+                            const key = docId ? `doc:${docId}` : localKey ? `local:${localKey}` : null
+                            const extra = key ? qualificationByPlayer.get(key) : undefined
+                            if (!extra) return standing
+                            return {
+                                ...standing,
+                                qualified: extra.qualified,
+                                qualification_type: extra.qualificationType,
+                                local_player_name:
+                                    (standing as Record<string, unknown>).local_player_name ?? extra.localPlayerName,
+                            }
+                        })
 
                         return {
                             ...stage,
                             ...(mergedGroups ? { groups: mergedGroups } : {}),
-                            ...(computedGroupStandings.length > 0
-                                ? { results: computedGroupStandings }
+                            ...(withQualification.length > 0
+                                ? { results: withQualification }
                                 : liveStandings
                                   ? { results: liveStandings }
                                   : {}),
