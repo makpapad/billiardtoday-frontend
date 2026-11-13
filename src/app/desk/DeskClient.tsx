@@ -133,6 +133,18 @@ function TableChips({
   );
 }
 
+
+/** Ίσες στεκιές στο τέλος: η τελευταία αλλαγή σειράς χρεώνει στεκιά σε όποιον
+ *  ΔΕΝ θα ξαναπαίξει. Όταν ο αγώνας κλείνει, κανείς δεν παίζει άλλη στεκιά,
+ *  άρα και οι δύο μένουν με όσες συμπληρώθηκαν (π.χ. 33/33, όχι 34/33). */
+function equalizeInnings<T extends { p1: { innings: number }; p2: { innings: number } }>(table: T): T {
+  const a = table.p1.innings;
+  const b = table.p2.innings;
+  if (Math.abs(a - b) !== 1) return table;
+  const value = Math.min(a, b);
+  return { ...table, p1: { ...table.p1, innings: value }, p2: { ...table.p2, innings: value } };
+}
+
 /* ------------------------------------------------------------------ */
 /* Σελίδα                                                             */
 /* ------------------------------------------------------------------ */
@@ -559,7 +571,7 @@ export default function DeskClient() {
 
   const endGame = useCallback(() => {
     if (!table || table.finished) return;
-    const next: TableState = { ...table, finished: true, buffer: "" };
+    const next: TableState = equalizeInnings({ ...table, finished: true, buffer: "" });
     pushScore(next, true);
   }, [table, pushScore]);
 
