@@ -60,9 +60,28 @@ export function buildPlayerBio(
   // 1. Ταυτότητα
   const location = [city, country].filter(Boolean).join(", ");
   const origin = location ? ` from ${location}` : "";
-  // "a" vs "an" για χώρες: Greek → "a Greek", Italian → "an Italian"
-  const article = country && /^[aeiou]/i.test(country) ? "n" : "";
-  sentences.push(`${seoName} is a${article} ${country || ""} billiard player${origin}.`);
+  // Αν η χώρα είναι όνομα (π.χ. "Sweden", "Italy") αντί για επίθετο ("Swedish", "Italian"),
+  // μετατρέπουμε. Μικρή λίστα — τα περισσότερα δεδομένα είναι ήδη επίθετο (π.χ. "Greek").
+  const NATIONALITY_MAP: Record<string, string> = {
+    Sweden: "Swedish", Netherlands: "Dutch", Italy: "Italian",
+    Spain: "Spanish", France: "French", Germany: "German",
+    Turkey: "Turkish", Belgium: "Belgian", Portugal: "Portuguese",
+    Denmark: "Danish", Norway: "Norwegian", Finland: "Finnish",
+    Poland: "Polish", Czech: "Czech", Switzerland: "Swiss",
+    Austria: "Austrian", Hungary: "Hungarian", Croatia: "Croatian",
+    Serbia: "Serbian", Romania: "Romanian", Bulgaria: "Bulgarian",
+    Russia: "Russian", Japan: "Japanese", Korea: "Korean",
+    China: "Chinese", Vietnam: "Vietnamese", Taiwan: "Taiwanese",
+    Egypt: "Egyptian", Morocco: "Moroccan", Tunisia: "Tunisian",
+    Argentina: "Argentine", Colombia: "Colombian", Brazil: "Brazilian",
+    Jamaica: "Jamaican", Qatar: "Qatari", Iran: "Iranian",
+    India: "Indian", Australia: "Australian", Canada: "Canadian",
+    USA: "American", "United States": "American",
+    Greece: "Greek", Cyprus: "Cypriot",
+  };
+  const nat = country ? (NATIONALITY_MAP[country] || country) : "";
+  const article = nat && /^[aeiou]/i.test(nat) ? "n" : "";
+  sentences.push(`${seoName} is a${article} ${nat} billiard player${origin}.`);
 
   // 2. Αγώνισμα / ειδικότητα
   const validStats = careerStatsByGameType.filter(hasRealStats).slice(0, 3);
