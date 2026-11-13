@@ -883,6 +883,15 @@ const mapStageResultToFinalResult = (
         high_run_2: toNumber(row.high_run_2),
         sets_won: toNumber(row.sets_won),
         sets_lost: toNumber(row.sets_lost),
+        // ΠΡΟΚΡΙΣΗ: χωρίς αυτά η κατάταξη της φάσης δεν μπορεί να ξεχωρίσει χρώμα για
+        // όσους περνούν πρώτοι (νικητές ομίλων) και όσους περνούν ως καλύτεροι δεύτεροι.
+        qualified: typeof row.qualified === 'boolean' ? row.qualified : null,
+        qualification_type:
+            typeof row.qualification_type === 'string' ? row.qualification_type : null,
+        local_player_key: row.local_player_key ?? null,
+        local_player_name: row.local_player_name ?? null,
+        group_number: toNumber(row.group_number),
+        group_position: toNumber(row.group_position),
         player: row.player,
         source: row.source ?? 'stage-standings',
     }
