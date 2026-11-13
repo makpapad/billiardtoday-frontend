@@ -22,19 +22,21 @@ function formatPositions(items: PlayerHistoryParticipation[]): string {
 
   if (tops.length === 1) {
     const place = tops[0]!.position;
-    const ordinal =
-      place === "1" ? "winner" : place === "2" ? "runner-up" : `3rd place`;
-    return `Their best tournament result was ${ordinal} at ${tops[0]!.tournament}${tops[0]!.year ? ` (${tops[0]!.year})` : ""}.`;
+    const verb =
+      place === "1" ? "winner" : place === "2" ? "runner-up" : "3rd place";
+    return `His best tournament result was ${verb} at ${tops[0]!.tournament}${tops[0]!.year ? ` (${tops[0]!.year})` : ""}.`;
   }
 
-  const labels = tops.map((t) => {
+  const parts = tops.map((t) => {
     const place = t.position;
-    const ordinal =
-      place === "1" ? "won" : place === "2" ? "finished runner-up at" : `finished 3rd at`;
-    return `${ordinal} ${t.tournament}${t.year ? ` (${t.year})` : ""}`;
+    const verb =
+      place === "1" ? "won" : place === "2" ? "was runner-up at" : "placed 3rd at";
+    return `${verb} ${t.tournament}${t.year ? ` (${t.year})` : ""}`;
   });
 
-  return `They ${labels.join(", ")}.`;
+  const allParts = parts;
+  const last = allParts.pop();
+  return `He ${allParts.join(", ")}${allParts.length > 0 ? ", and " : ""}${last}.`;
 }
 
 function formatGameTypeLabel(label: string): string {
@@ -103,14 +105,14 @@ export function buildPlayerBio(
     const rest = labels.slice(1);
 
     if (rest.length === 0) {
-      sentences.push(`Specialising in ${primary}, they have competed in ${validStats[0]!.totalMatches} matches across ${validStats[0]!.eventCount ?? "numerous"} tournaments${archiveStartYear ? `, spanning from ${archiveStartYear} to ${archiveEndYear ?? "the present"}` : ""}.`);
+      sentences.push(`Specialising in ${primary}, he has competed in ${validStats[0]!.totalMatches} matches across ${validStats[0]!.eventCount ?? "numerous"} tournaments${archiveStartYear ? `, spanning from ${archiveStartYear} to ${archiveEndYear ?? "the present"}` : ""}.`);
     } else {
       const allLabels = [primary!, ...rest];
       const last = allLabels.pop();
-      sentences.push(`Competing in ${allLabels.join(", ")} and ${last}, they have logged ${validStats.reduce((sum, s) => sum + s.totalMatches, 0)} matches over ${validStats.reduce((sum, s) => sum + (s.eventCount ?? 0), 0)} tournaments${archiveStartYear ? ` (${archiveStartYear}–${archiveEndYear ?? "present"})` : ""}.`);
+      sentences.push(`Competing in ${allLabels.join(", ")} and ${last}, he has logged ${validStats.reduce((sum, s) => sum + s.totalMatches, 0)} matches over ${validStats.reduce((sum, s) => sum + (s.eventCount ?? 0), 0)} tournaments${archiveStartYear ? ` (${archiveStartYear}–${archiveEndYear ?? "present"})` : ""}.`);
     }
   } else {
-    sentences.push(`They have competed in ${history?.totalCount ?? 0} tournaments${archiveStartYear ? ` from ${archiveStartYear} to ${archiveEndYear ?? "the present"}` : ""}.`);
+    sentences.push(`He has competed in ${history?.totalCount ?? 0} tournaments${archiveStartYear ? ` from ${archiveStartYear} to ${archiveEndYear ?? "the present"}` : ""}.`);
   }
 
   // 3. Στατιστικά (πρωτεύον έπαρμα)
@@ -133,7 +135,7 @@ export function buildPlayerBio(
     if (statsBits.length > 0) {
       const allBits = statsBits;
       const bitEnd = allBits.pop();
-      sentences.push(`In their primary discipline, they have recorded ${allBits.join(", ")}${allBits.length > 0 ? ", and " : ""}${bitEnd}.`);
+      sentences.push(`In his primary discipline, he has recorded ${allBits.join(", ")}${allBits.length > 0 ? ", and " : ""}${bitEnd}.`);
     }
   }
 
@@ -145,7 +147,7 @@ export function buildPlayerBio(
 
   // 5. Σύλλογος
   if (clubName) {
-    sentences.push(`They are affiliated with ${clubName}.`);
+    sentences.push(`He is affiliated with ${clubName}.`);
   }
 
   // 6. Τρέχοντα suits
@@ -159,7 +161,7 @@ export function buildPlayerBio(
     const recentLosses = recentMatches.filter((m) => m.result === "L").length;
     const recentTotal = recentWins + recentLosses;
     if (recentTotal >= 2) {
-      sentences.push(`In recent matches, they hold ${recentWins} wins and ${recentLosses} losses.`);
+      sentences.push(`In recent matches, he holds ${recentWins} wins and ${recentLosses} losses.`);
     }
   }
 
