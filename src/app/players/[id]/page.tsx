@@ -8,6 +8,7 @@ import { readCebPlayerRankings } from "@/lib/cebRankingData";
 import { readUmbPlayerRanking } from "@/lib/umbRankingData";
 import { getPlayerHistoryForServer } from "@/lib/playerHistoryServer";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
+import { buildPlayerBio } from "@/lib/playerBio";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
 
 // Ζωντανό render: το κύριο component διαβάζει `useSearchParams()`, άρα σε static/ISR
@@ -90,7 +91,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   const umbRanking = readUmbPlayerRanking(id);
   // Server-rendered αρχείο αγώνων: το ιστορικό φόρτωνε μόνο client-side, άρα το
   // HTML είχε ~1.500 χαρακτήρες και τίποτα από αγώνες/αντιπάλους/σκορ.
-  const history = await getPlayerHistoryForServer(id, 25);
+  const history = await getPlayerHistoryForServer(id, 200);
 
   return (
     <>
@@ -110,6 +111,15 @@ export default async function PlayerProfilePage({ params }: Props) {
         </div>
       ) : null}
       {summary ? <PlayerInstantSummary summary={summary} /> : null}
+      {summary && history && history.items.length > 0 ? (
+        <section className="bg-gradient-to-br from-blue-50 to-indigo-50 px-4 dark:from-gray-900 dark:to-gray-800">
+          <div className="mx-auto max-w-6xl pb-6">
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              {buildPlayerBio(summary, history)}
+            </p>
+          </div>
+        </section>
+      ) : null}
       {cebRankings.map((cebRanking) => (
         <CebPlayerRankingCard
           key={cebRanking.rankingSlug}

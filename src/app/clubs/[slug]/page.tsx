@@ -7,6 +7,7 @@ import { getCmsAppearance } from "@/lib/cms/strapi";
 import { requireClubByIdentifier } from "@/lib/directory";
 import { listClubPlayers } from "@/lib/publicSiteData";
 import { buildPageMetadata } from "@/lib/pageMetadata";
+import { buildClubBio } from "@/lib/clubBio";
 
 // ISR: το HTML σερβίρεται από cache (πριν: no-store σε κάθε αίτημα).
 // Τα live σκορ ανανεώνονται client-side, δεν εξαρτώνται από αυτό το cache.
@@ -129,6 +130,16 @@ export default async function ClubPage({ params }: Props) {
           />
         </div>
       </section>
+
+      {club.city || club.country || club.federation?.name ? (
+        <section className="px-4 dark:from-gray-900 dark:to-gray-800">
+          <div className="mx-auto max-w-7xl pb-6">
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              {buildClubBio(club, clubPlayers.length)}
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       {clubPlayers.length > 0 ? (
         <section className="px-4 pb-4 sm:px-6">
