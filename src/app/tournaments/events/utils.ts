@@ -626,7 +626,56 @@ export type BuildGroupStandingsOptions = {
  * Όταν όλα τα κριτήρια (πόντοι, μ.ό., σερί) είναι ίσα — δηλαδή πριν παιχτεί ο όμιλος — η σειρά
  * έπεφτε στο επώνυμο, δηλαδή αλφαβητικά, ενώ ο χειριστής περιμένει τη σειρά της κλήρωσης
  * (ΑΘΛΗΤΗΣ 1/2/3). Αν η εφαρμογή έχει στείλει θέση, κερδίζει αυτή· αλλιώς επώνυμο όπως πριν.
+ *
+ * ΣΕΙΡΑ ΦΥΛΛΟΥ ΟΤΑΝ Η ΕΦΑΡΜΟΓΗ ΔΕΝ ΕΣΤΕΙΛΕ ΘΕΣΕΙΣ.
+ *
+ * Αν μια δημοσίευση φτάσει χωρίς `player1/2_draw_position` (π.χ. από παλιότερη έκδοση της
+ * εφαρμογής), η σειρά έπεφτε στο επώνυμο — αλφαβητικά. Η δομή όμως των αγώνων κρύβει τη σειρά:
+ * ο παίκτης που περιμένει (θέση 1) παίζει στους αγώνες 2 και 3, ενώ ο 1ος αγώνας έχει τις
+ * θέσεις 2 και 3. Τη βγάζουμε από εκεί, ώστε η σειρά να μένει σωστή και χωρίς τις θέσεις.
  */
+const deriveMissingDrawPositions = (
+  standings: GroupStanding[],
+  matches: StageMatchGroup["matches"],
+): GroupStanding[] => {
+  if (!standings.some((standing) => typeof standing.drawPosition !== "number")) {
+    return standings;
+  }
+  const ordered = [...matches].sort(
+    (a, b) => (a.matchNumber ?? 0) - (b.matchNumber ?? 0),
+  );
+  const firstMatch = ordered.find(
+    (match) =>
+      match.top.player.name &&
+      match.bottom.player.name &&
+      !match.top.player.placeholder &&
+      !match.bottom.player.placeholder,
+  );
+  if (!firstMatch) return standings;
+  const firstSide = firstMatch.top.player.name;
+  const secondSide = firstMatch.bottom.player.name;
+  const waiting = new Set<string>();
+  for (const match of ordered) {
+    if (match === firstMatch) continue;
+    for (const side of [match.top, match.bottom]) {
+      const name = side.player.name;
+      if (!name || side.player.placeholder) continue;
+      if (name !== firstSide && name !== secondSide) waiting.add(name);
+    }
+  }
+  if (waiting.size !== 1) return standings;
+  const positions = new Map<string, number>([
+    [firstSide, 2],
+    [secondSide, 3],
+    [[...waiting][0], 1],
+  ]);
+  return standings.map((standing) =>
+    typeof standing.drawPosition === "number"
+      ? standing
+      : { ...standing, drawPosition: positions.get(standing.playerName) ?? null },
+  );
+};
+
 const compareDrawThenName = (a: GroupStanding, b: GroupStanding): number => {
   const drawA = typeof a.drawPosition === "number" ? a.drawPosition : null;
   const drawB = typeof b.drawPosition === "number" ? b.drawPosition : null;
@@ -952,7 +1001,8 @@ export const buildGroupStandings = (
     {},
   );
 
-  const standings = Object.values(players).map((standing) => {
+  const standings = deriveMissingDrawPositions(
+    Object.values(players).map((standing) => {
     const averageValue =
       standing.totalInnings > 0
         ? truncateTo3Decimals(standing.totalPoints / standing.totalInnings)
@@ -967,7 +1017,9 @@ export const buildGroupStandings = (
       highRun: bestHighRun,
       highRun2: bestHighRun2,
     };
-  });
+    }),
+    matches,
+  );
 
   const sortedStandings = artistic
     ? resolveArtisticDirectComparison(
