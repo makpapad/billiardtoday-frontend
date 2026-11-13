@@ -4003,14 +4003,13 @@ export function TournamentDetailPage({
         .some((value) => value.length > 0 && allowedEventSessionKeys.has(value)),
     );
   }, [allowedEventSessionKeys, eventLiveSessions.length, wsLiveSessions]);
-  const filteredEventLiveSessions = useMemo(() => {
-    if (allowedEventPairKeys.size === 0) return eventLiveSessions;
-    return eventLiveSessions.filter((session) =>
-      Array.from(buildSessionPairKeys(session)).some((key) =>
-        allowedEventPairKeys.has(key),
-      ),
-    );
-  }, [allowedEventPairKeys, eventLiveSessions]);
+  /*
+   * Οι συνεδρίες έρχονται ΗΔΗ φιλτραρισμένες ανά διοργάνωση από το API
+   * (/api/tournaments/:id/live-sessions), άρα δεν ξαναφιλτράρονται με ζεύγος
+   * ονομάτων: μια μικρή διαφορά στο όνομα του παίκτη (π.χ. «Διονυσης» έναντι
+   * «Διονυσιος Παναγιωτης») έκρυβε τελείως έναν ζωντανό αγώνα.
+   */
+  const filteredEventLiveSessions = useMemo(() => eventLiveSessions, [eventLiveSessions]);
   const filteredWsLiveSessionsByPair = useMemo(() => {
     if (allowedEventPairKeys.size === 0) return filteredWsLiveSessions;
     return filteredWsLiveSessions.filter((session) =>
