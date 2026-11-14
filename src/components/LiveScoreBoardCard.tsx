@@ -44,6 +44,8 @@ interface LiveScoreBoardCardProps {
   maxTimeouts1?: number;
   timeoutsUsed2?: number;
   maxTimeouts2?: number;
+  /** false = κρύψε τα μπαλάκια timeouts (εικονικές οθόνες desk που δεν τα κρατούν). */
+  showTimeouts?: boolean;
   inningsCount?: number;
   gameDurationSeconds?: number;
   expanded?: boolean;
@@ -73,6 +75,7 @@ export function LiveScoreBoardCard({
   maxTimeouts1,
   timeoutsUsed2,
   maxTimeouts2,
+  showTimeouts = true,
   inningsCount,
   gameDurationSeconds,
   expanded,
@@ -405,6 +408,8 @@ export function LiveScoreBoardCard({
     used?: number;
     max?: number;
   }) => {
+    /* Εικονικές οθόνες desk: δεν κρατούν timeouts, μη δείχνεις μπαλάκια. */
+    if (showTimeouts === false) return null;
     const normalizedMax = Math.max(0, max || 0) || 3;
     const consumed = Math.min(Math.max(used || 0, 0), normalizedMax);
     return (

@@ -7903,6 +7903,13 @@ export function TournamentDetailPage({
                       maxTimeouts1={state.maxTimeoutsA}
                       timeoutsUsed2={state.timeoutsB}
                       maxTimeouts2={state.maxTimeoutsB}
+                      showTimeouts={
+                        !/^DESK-/i.test(
+                          String(
+                            session.screenId ?? session.screenIdentifier ?? "",
+                          ).trim(),
+                        )
+                      }
                       inningsCount={state.inningsCount}
                       gameDurationSeconds={state.gameDurationSeconds}
                       player1={{
