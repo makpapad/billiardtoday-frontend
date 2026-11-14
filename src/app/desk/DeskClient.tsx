@@ -388,11 +388,29 @@ export default function DeskClient() {
         setTables(parsed.tables.map((row) => ({ ...row, saving: false, buffer: "" })));
         setActiveId(parsed.activeId || parsed.tables[0].id);
         setTableNo(Math.max(...parsed.tables.map((row) => Number(row.tableNo) || 1)) + 1);
+        /*
+         * Το τραπέζι ισχύει μόνο όσο υπάρχει η session· αν σβήστηκε στο μεταξύ
+         * (καθάρισμα από το admin) φεύγει, αλλιώς ο αγώνας δεν ξαναμπαίνει.
+         */
+        parsed.tables
+          .filter((row) => row?.sessionId)
+          .forEach((row) => {
+            void api(`/api/desk/tables/${encodeURIComponent(String(row.sessionId))}/claim`, token, {
+              method: "POST",
+              body: JSON.stringify({}),
+            }).catch((err) => {
+              const message = err instanceof Error ? err.message : "";
+              if (/δεν βρέθηκε/i.test(message)) {
+                setTables((prev) => prev.filter((item) => item.id !== row.id));
+                setActiveId((prev) => (prev === row.id ? null : prev));
+              }
+            });
+          });
       }
     } catch {
       /* αγνόησε χαλασμένο cache */
     }
-  }, []);
+  }, [token]);
 
   /* --- αποστολή σκορ --- */
   const live = useRef<DeskLivePublisher | null>(null);
@@ -481,11 +499,13 @@ export default function DeskClient() {
           });
           setTable((prev) => (prev ? { ...prev, saving: false, error: null } : prev));
         } catch (err) {
-          setTable((prev) =>
-            prev
-              ? { ...prev, saving: false, error: err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε" }
-              : prev,
-          );
+          const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
+          /* Η session σβήστηκε (π.χ. καθάρισμα από το admin): φεύγει το τραπέζι. */
+          if (/δεν βρέθηκε/i.test(message)) {
+            setTable(null);
+            return;
+          }
+          setTable((prev) => (prev ? { ...prev, saving: false, error: message } : prev));
         }
       }, 250);
     },

@@ -156,10 +156,28 @@ export default function DeskConsole({
         setTables(saved.tables.map((t) => ({ ...t, history: [] })));
         if (saved.selected) setSelected(saved.selected);
       }
+      /*
+       * Το τραπέζι ισχύει μόνο όσο υπάρχει η session. Αν σβήστηκε στο μεταξύ
+       * (καθάρισμα από το admin), το desk κρατούσε φάντασμα και ο αγώνας δεν
+       * μπορούσε να ξαναμπεί στη θέση του — ούτε με refresh.
+       */
+      saved.tables
+        ?.filter((t) => t?.sessionId)
+        .forEach((table) => {
+          void api(`/api/desk/tables/${encodeURIComponent(String(table.sessionId))}/claim`, token, {
+            method: "POST",
+            body: JSON.stringify({}),
+          }).catch((err) => {
+            const message = err instanceof Error ? err.message : "";
+            if (/δεν βρέθηκε/i.test(message)) {
+              setTables((prev) => prev.map((row) => (row.no === table.no ? emptyTable(row.no) : row)));
+            }
+          });
+        });
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     try {
@@ -252,6 +270,11 @@ export default function DeskConsole({
         } catch (err) {
           const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
           setError(message);
+          /* Η session σβήστηκε (π.χ. καθάρισμα από το admin): ελευθερώνουμε το τραπέζι. */
+          if (/δεν βρέθηκε/i.test(message)) {
+            setTables((prev) => prev.map((t) => (t.no === next.no ? emptyTable(next.no) : t)));
+            return;
+          }
           setTables((prev) => prev.map((t) => (t.no === next.no ? { ...t, saving: false } : t)));
         }
       }, 250);
