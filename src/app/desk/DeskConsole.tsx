@@ -901,11 +901,13 @@ export default function DeskConsole({
               {current?.paused ? "Resume table" : "Pause table"}
             </button>
           </div>
-          <DeskMatchControls
-            value={current?.tools ?? emptyDeskTools}
-            onChange={updateTools}
-            disabled={!current?.sessionId || Boolean(current?.finished)}
-          />
+          <div className="matchtools">
+            <DeskMatchControls
+              value={current?.tools ?? emptyDeskTools}
+              onChange={updateTools}
+              disabled={!current?.sessionId || Boolean(current?.finished)}
+            />
+          </div>
           <div className="hint">
             type the run + <span className="kbd">⏎</span> to enter · <span className="kbd">U</span> undo ·{" "}
             <span className="kbd">Space</span> inning without points

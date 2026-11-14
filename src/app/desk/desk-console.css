@@ -104,7 +104,9 @@
 
   /* ---------- keypad panel ---------- */
   .bt-desk .desk{width:352px; flex:0 0 352px; background:var(--panel); border-left:1px solid var(--line);
-        display:flex; flex-direction:column; min-height:0}
+        display:flex; flex-direction:column; min-height:0; overflow-y:auto}
+  /* Ρολόι/timeouts: δικό του block, δεν επιτρέπεται να «φύγει» κάτω από την οθόνη. */
+  .bt-desk .matchtools{flex:0 0 auto; padding:10px 14px; border-top:1px solid var(--line)}
   .bt-desk .desk-head{padding:11px 14px; border-bottom:1px solid var(--line)}
   .bt-desk .desk-head .k{font-size:10px; letter-spacing:.12em; color:var(--muted)}
   .bt-desk .desk-head .t{font-size:15px; font-weight:700; margin-top:3px}
