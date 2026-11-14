@@ -46,6 +46,30 @@
   .bt-desk .grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr));
         grid-auto-rows:minmax(0,1fr); align-content:stretch; min-height:100%}
   .bt-desk .gridlen-1{grid-template-columns:minmax(0,1fr)}
+  /* 1-2 τραπέζια: τα γράμματα μεγαλώνουν μαζί με τον χώρο (όχι κενό πάνω-κάτω). */
+  .bt-desk .gridlen-1 .pname{font-size:clamp(20px,2.1vw,34px)}
+  .bt-desk .gridlen-1 .sc .pts{font-size:clamp(52px,6vw,104px)}
+  .bt-desk .gridlen-1 .sc .run{font-size:clamp(17px,1.7vw,28px); padding:4px 8px}
+  .bt-desk .gridlen-1 .st b{font-size:clamp(15px,1.4vw,22px)}
+  .bt-desk .gridlen-1 .st span{font-size:clamp(9px,.85vw,12px)}
+  .bt-desk .gridlen-1 .bar{width:5px; height:clamp(40px,6vh,84px)}
+  .bt-desk .gridlen-1 .tno{font-size:13px}
+  .bt-desk .gridlen-1 .cmeta{font-size:12px}
+  .bt-desk .gridlen-1 .emptybody{font-size:clamp(13px,1.2vw,18px)}
+  .bt-desk .gridlen-1 .pickbtn{font-size:15px; padding:12px 22px}
+  .bt-desk .gridlen-1 .cfoot{padding:10px 14px}
+  .bt-desk .gridlen-1 .cfoot .timer{font-size:20px; min-width:56px}
+  .bt-desk .gridlen-1 .cfoot button{font-size:13px; padding:8px 14px}
+  .bt-desk .gridlen-1 .winner b{font-size:22px}
+  .bt-desk .gridlen-1 .winner span{font-size:16px}
+
+  .bt-desk .gridlen-2 .pname{font-size:clamp(16px,1.5vw,24px)}
+  .bt-desk .gridlen-2 .sc .pts{font-size:clamp(40px,4vw,64px)}
+  .bt-desk .gridlen-2 .sc .run{font-size:clamp(14px,1.2vw,20px)}
+  .bt-desk .gridlen-2 .st b{font-size:clamp(13px,1.1vw,17px)}
+  .bt-desk .gridlen-2 .bar{height:clamp(30px,4vh,54px)}
+  .bt-desk .gridlen-2 .emptybody{font-size:clamp(12px,1vw,15px)}
+
   .bt-desk .gridlen-5, .bt-desk .gridlen-6{grid-template-columns:repeat(3,minmax(0,1fr))}
   .bt-desk .gridlen-7, .bt-desk .gridlen-8{grid-template-columns:repeat(4,minmax(0,1fr))}
   @media (max-width:1180px){.gridlen-5,.gridlen-6,.gridlen-7,.gridlen-8{grid-template-columns:repeat(2,minmax(0,1fr))}}
