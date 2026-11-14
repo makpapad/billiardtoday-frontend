@@ -385,7 +385,7 @@ export default function DeskClient() {
          * φέρνουμε το σκορ που είναι στη βάση αντί να ξεκινήσουμε από 0-0.
          */
         try {
-          const list = await api<{ data: Array<{ sessionId: string; isPublic?: boolean; view?: { order?: number[] | null; active?: number | null } | null; players?: Array<{ points?: number; innings?: number; hr?: number; name?: string | null }> }> }>(
+          const list = await api<{ data: Array<{ sessionId: string; isPublic?: boolean; view?: { order?: number[] | null; active?: number | null } | null; players?: Array<{ points?: number; innings?: number; hr?: number; run?: number; name?: string | null }> }> }>(
             "/api/desk/tables",
             token,
           );
