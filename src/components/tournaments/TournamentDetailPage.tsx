@@ -1371,7 +1371,16 @@ const mergeLiveSessions = (
     const wsIsTyping =
       (Number(session.state?.liveRunA ?? 0) || 0) > 0 ||
       (Number(session.state?.liveRunB ?? 0) || 0) > 0;
-    const apiIsAhead = !wsIsTyping && progressOf(existing) > progressOf(session);
+    /*
+     * Εικονική οθόνη desk: η σειρά των παικτών αλλάζει με το Swap, άρα το API
+     * (που κρατά σταθερή τη σειρά των πλευρών του αγώνα) δεν μπορεί να κρίνει
+     * «ποιος είναι μπροστά» — κερδίζει πάντα το ζωντανό μήνυμα, αλλιώς στεκιές
+     * και σκορ έμεναν στον παίκτη που ήταν πρώτος πριν το swap.
+     */
+    const apiIsAhead =
+      !/^DESK-/i.test(String(key)) &&
+      !wsIsTyping &&
+      progressOf(existing) > progressOf(session);
     /*
      * `run`/`liveRun` ΔΕΝ παίρνονται από το API: είναι η κατάσταση του σερί
      * που γράφεται ΕΚΕΙΝΗ τη στιγμή στο desk και τη στέλνει το WS. Στη βάση
