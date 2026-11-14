@@ -418,6 +418,8 @@ type TournamentParticipantRow = {
   id: string;
   documentId: string | null;
   name: string;
+  /** Το όνομα στη γλώσσα του αθλητή (`full_name`), όταν διαφέρει από το international. */
+  nameNative: string | null;
   country: string | null;
   photoUrl: string | null;
   birthDate: string | null;
@@ -428,6 +430,38 @@ type TournamentParticipantRow = {
 };
 
 type GroupLabelMode = "numbers" | "letters";
+
+/**
+ * Αναζήτηση συμμετοχών: αγνοεί τόνους/κεφαλαία/τελικό σίγμα και ψάχνει ταυτόχρονα
+ * στο native όνομα, στο international και στη χώρα (και στα ελληνικά→λατινικά).
+ */
+const SEARCH_GREEK_TO_LATIN: Record<string, string> = {
+  α: "a", β: "v", γ: "g", δ: "d", ε: "e", ζ: "z", η: "i", θ: "th", ι: "i", κ: "k",
+  λ: "l", μ: "m", ν: "n", ξ: "x", ο: "o", π: "p", ρ: "r", σ: "s", ς: "s", τ: "t",
+  υ: "y", φ: "f", χ: "ch", ψ: "ps", ω: "o",
+};
+
+const foldSearchText = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ς/gi, "σ")
+    .toLowerCase();
+
+const transliterateSearchText = (value: unknown) =>
+  foldSearchText(value)
+    .split("")
+    .map((char) => SEARCH_GREEK_TO_LATIN[char] ?? char)
+    .join("");
+
+const buildParticipantSearchHaystack = (row: TournamentParticipantRow) =>
+  [
+    foldSearchText(row.name),
+    foldSearchText(row.nameNative),
+    transliterateSearchText(row.name),
+    transliterateSearchText(row.nameNative),
+    foldSearchText(row.country),
+  ].join(" | ");
 
 const appendReturnToLiveHref = (href: string | null, returnPath: string | null) => {
   if (!href || !returnPath) return href;
@@ -2036,6 +2070,7 @@ export function TournamentDetailPage({
   }, [preferredStageFromQuery]);
   const [participantAgeDirection, setParticipantAgeDirection] = useState<"asc" | "desc">("asc");
   const [participantRankingDirection, setParticipantRankingDirection] = useState<"asc" | "desc">("asc");
+  const [participantSearchQuery, setParticipantSearchQuery] = useState("");
   const [highlightedLiveSessionId, setHighlightedLiveSessionId] = useState<
     string | null
   >(null);
@@ -5224,12 +5259,15 @@ export function TournamentDetailPage({
           birth_date?: unknown;
         }>(player, `participant-${index + 1}`);
 
+        const nativeName =
+          typeof normalized.full_name === "string" && normalized.full_name.trim()
+            ? normalized.full_name.trim()
+            : null;
+
         const name =
           typeof normalized.full_name_en === "string" && normalized.full_name_en.trim()
             ? normalized.full_name_en.trim()
-            : typeof normalized.full_name === "string" && normalized.full_name.trim()
-              ? normalized.full_name.trim()
-              : `Player ${index + 1}`;
+            : nativeName ?? `Player ${index + 1}`;
 
         const country =
           typeof normalized.country === "string" && normalized.country.trim()
@@ -5243,6 +5281,7 @@ export function TournamentDetailPage({
           id: normalized.id,
           documentId: normalized.documentId ?? null,
           name,
+          nameNative: nativeName,
           country,
           photoUrl,
           birthDate: normalizeDateOnly(normalized.birth_date),
@@ -5288,12 +5327,14 @@ export function TournamentDetailPage({
             birth_date?: unknown;
           }>(player, `derived-participant-${groupIndex + 1}-${playerIndex + 1}`);
           if (uniquePlayers.has(normalizedPlayer.id)) return;
+          const nativeName =
+            typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
+              ? normalizedPlayer.full_name.trim()
+              : null;
           const name =
             typeof normalizedPlayer.full_name_en === "string" && normalizedPlayer.full_name_en.trim()
               ? normalizedPlayer.full_name_en.trim()
-              : typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
-                ? normalizedPlayer.full_name.trim()
-                : `Player ${uniquePlayers.size + 1}`;
+              : nativeName ?? `Player ${uniquePlayers.size + 1}`;
           const country =
             typeof normalizedPlayer.country === "string" && normalizedPlayer.country.trim()
               ? normalizedPlayer.country.trim()
@@ -5308,6 +5349,7 @@ export function TournamentDetailPage({
             id: normalizedPlayer.id,
             documentId: normalizedPlayer.documentId ?? null,
             name,
+            nameNative: nativeName,
             country,
             photoUrl,
             birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
@@ -5338,12 +5380,14 @@ export function TournamentDetailPage({
           birth_date?: unknown;
         }>(normalizedResult.player, `derived-result-player-${resultIndex + 1}`);
         if (uniquePlayers.has(normalizedPlayer.id)) return;
+        const nativeName =
+          typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
+            ? normalizedPlayer.full_name.trim()
+            : null;
         const name =
           typeof normalizedPlayer.full_name_en === "string" && normalizedPlayer.full_name_en.trim()
             ? normalizedPlayer.full_name_en.trim()
-            : typeof normalizedPlayer.full_name === "string" && normalizedPlayer.full_name.trim()
-              ? normalizedPlayer.full_name.trim()
-              : `Player ${uniquePlayers.size + 1}`;
+            : nativeName ?? `Player ${uniquePlayers.size + 1}`;
         const country =
           typeof normalizedPlayer.country === "string" && normalizedPlayer.country.trim()
             ? normalizedPlayer.country.trim()
@@ -5359,6 +5403,7 @@ export function TournamentDetailPage({
           id: normalizedPlayer.id,
           documentId: normalizedPlayer.documentId ?? null,
           name,
+          nameNative: nativeName,
           country,
           photoUrl,
           birthDate: normalizeDateOnly(normalizedPlayer.birth_date),
@@ -5384,8 +5429,24 @@ export function TournamentDetailPage({
     });
   }, [seriesLeaderboardByPlayerId, tournamentParticipants]);
 
+  const participantSearchTokens = useMemo(
+    () => foldSearchText(participantSearchQuery).split(/\s+/).filter(Boolean),
+    [participantSearchQuery],
+  );
+
+  const searchedTournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
+    if (participantSearchTokens.length === 0) return participantsWithSeriesData;
+    return participantsWithSeriesData.filter((row) => {
+      const haystack = buildParticipantSearchHaystack(row);
+      return participantSearchTokens.every(
+        (token) =>
+          haystack.includes(token) || haystack.includes(transliterateSearchText(token)),
+      );
+    });
+  }, [participantSearchTokens, participantsWithSeriesData]);
+
   const visibleTournamentParticipants = useMemo<TournamentParticipantRow[]>(() => {
-    const rows = [...participantsWithSeriesData];
+    const rows = [...searchedTournamentParticipants];
 
     if (participantSortMode === "age") {
       rows.sort((left, right) => {
@@ -5429,7 +5490,12 @@ export function TournamentDetailPage({
 
     rows.sort((left, right) => left.registrationOrder - right.registrationOrder);
     return rows;
-  }, [participantAgeDirection, participantRankingDirection, participantSortMode, participantsWithSeriesData]);
+  }, [
+    participantAgeDirection,
+    participantRankingDirection,
+    participantSortMode,
+    searchedTournamentParticipants,
+  ]);
 
   const eventTimezoneName = useMemo(() => {
     const raw =
@@ -6320,9 +6386,63 @@ export function TournamentDetailPage({
                 </div>
               ) : null}
             </div>
-            {visibleTournamentParticipants.length === 0 ? (
+            {participantsWithSeriesData.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative min-w-0 flex-1 sm:max-w-sm">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-3.5-3.5" />
+                  </svg>
+                  <input
+                    type="search"
+                    value={participantSearchQuery}
+                    onChange={(event) => setParticipantSearchQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setParticipantSearchQuery("");
+                    }}
+                    placeholder="Search player or country"
+                    aria-label="Search participants"
+                    className="min-h-11 w-full rounded-full border border-slate-200 bg-white pl-11 pr-10 text-sm font-semibold text-slate-900 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+                  />
+                  {participantSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setParticipantSearchQuery("")}
+                      aria-label="Clear search"
+                      className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600 transition hover:bg-slate-200"
+                    >
+                      ✕
+                    </button>
+                  ) : null}
+                </div>
+                {participantSearchTokens.length > 0 ? (
+                  <span className="text-xs font-semibold text-slate-500">
+                    {searchedTournamentParticipants.length} of {participantsWithSeriesData.length}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            {participantsWithSeriesData.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
                 No participants have been published yet.
+              </div>
+            ) : visibleTournamentParticipants.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+                No player matches “{participantSearchQuery.trim()}”.{" "}
+                <button
+                  type="button"
+                  onClick={() => setParticipantSearchQuery("")}
+                  className="font-semibold text-cyan-700 underline-offset-2 transition hover:underline"
+                >
+                  Clear search
+                </button>
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-slate-200">
