@@ -3645,8 +3645,12 @@ export function TournamentDetailPage({
                           : null,
                       progress:
                         Number(sessionObj.progress ?? baseSession?.state?.progress ?? 0) || 0,
-                      totalBlocks:
-                        Number(sessionObj.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
+                      /* Εικονική οθόνη desk: δεν έχει ρολόι βολών. Με το 40 (default των
+                         φυσικών οθονών) η μπάρα χρόνου πεταγόταν σε κάθε SESSION_UPDATED
+                         και εξαφανιζόταν στο επόμενο score:update — «αναβοσβήνει». */
+                      totalBlocks: /^DESK-/i.test(lifecycleScreenId || screenId)
+                        ? 0
+                        : Number(sessionObj.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
                       isRunning: lifecycleIsRunning,
                       timeoutsA:
                         Number(
@@ -4006,8 +4010,10 @@ export function TournamentDetailPage({
                           ? playerB.photo_main
                           : baseSession?.state?.playerBPhotoMainUrl ?? null,
                     progress: Number(payload.progress ?? 0) || 0,
-                    totalBlocks:
-                      Number(payload.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
+                    /* Εικονική οθόνη desk: χωρίς ρολόι βολών (βλ. παραπάνω). */
+                    totalBlocks: /^DESK-/i.test(screenId)
+                      ? 0
+                      : Number(payload.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
                     isRunning: scoreUpdateIsRunning,
                     timeoutsA:
                       Number(
