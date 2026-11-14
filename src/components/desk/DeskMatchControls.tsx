@@ -40,13 +40,65 @@ const BTN =
 const BTN_ON =
   "rounded-md border border-emerald-600 bg-emerald-600/20 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-300 transition-colors hover:bg-emerald-600/30 disabled:cursor-not-allowed disabled:opacity-35";
 
-export function DeskMatchControls({ value, onChange, disabled = false }: Props) {
+/** Το κουμπί on/off για ρολόι + timeouts (μπαίνει στη γραμμή των quick κουμπιών). */
+export function DeskToolsToggle({ value, onChange, disabled = false }: Props) {
+  const enabled = value.clockVisible || value.timeoutsVisible;
+  const remaining = Math.max(0, Math.min(value.clockRemaining, value.clockTotal));
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() =>
+        onChange(
+          enabled
+            ? {
+                clockVisible: false,
+                clockRunning: false,
+                clockRemaining: value.clockTotal,
+                timeoutsVisible: false,
+                timeoutsA: 0,
+                timeoutsB: 0,
+              }
+            : {
+                clockVisible: true,
+                timeoutsVisible: true,
+                clockRemaining: remaining > 0 ? remaining : value.clockTotal,
+              },
+        )
+      }
+      className={
+        enabled
+          ? "w-full rounded-md border border-emerald-600 bg-emerald-600/20 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+          : "w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-300 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+      }
+    >
+      {enabled ? "Χρόνος ● ON" : "Χρόνος OFF"}
+    </button>
+  );
+}
+
+export function DeskMatchControls({
+  value,
+  onChange,
+  disabled = false,
+  hideMaster = false,
+}: Props & { hideMaster?: boolean }) {
   const remaining = Math.max(0, Math.min(value.clockRemaining, value.clockTotal));
   const critical = value.clockVisible && remaining <= 10;
   const off = disabled || !value.clockVisible;
+  /* Ένα κουμπί: ανάβει/σβήνει ρολόι ΚΑΙ timeouts μαζί — στο Live φαίνονται μόνο τότε. */
+  const enabled = value.clockVisible || value.timeoutsVisible;
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
+      {hideMaster ? null : (
+        <div className="flex items-center gap-2">
+          <DeskToolsToggle value={value} onChange={onChange} disabled={disabled} />
+        </div>
+      )}
+
+      {enabled ? (
+        <>
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
           Ρολόι
@@ -106,71 +158,37 @@ export function DeskMatchControls({ value, onChange, disabled = false }: Props) 
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
           Timeouts
         </span>
-        {value.timeoutsVisible ? (
-          <>
-            {(["A", "B"] as const).map((side) => {
-              const used = side === "A" ? value.timeoutsA : value.timeoutsB;
-              const key = side === "A" ? "timeoutsA" : "timeoutsB";
-              return (
-                <span key={side} className="flex items-center gap-1">
-                  <span className="text-[11px] font-bold text-slate-400">{side}</span>
-                  <button
-                    type="button"
-                    className={BTN}
-                    disabled={disabled || used <= 0}
-                    onClick={() => onChange({ [key]: Math.max(0, used - 1) })}
-                  >
-                    −
-                  </button>
-                  <b className="min-w-[26px] text-center text-[12px] tabular-nums text-slate-100">
-                    {used}/{value.timeoutsMax}
-                  </b>
-                  <button
-                    type="button"
-                    className={BTN}
-                    disabled={disabled || used >= value.timeoutsMax}
-                    onClick={() =>
-                      onChange({ [key]: Math.min(value.timeoutsMax, used + 1) })
-                    }
-                  >
-                    +
-                  </button>
-                </span>
-              );
-            })}
-            <button
-              type="button"
-              className={`${BTN} ml-auto`}
-              disabled={disabled}
-              onClick={() =>
-                onChange({ timeoutsVisible: false, timeoutsA: 0, timeoutsB: 0 })
-              }
-            >
-              Κλείσιμο
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            className={`${BTN} ml-auto`}
-            disabled={disabled}
-            onClick={() =>
-              /* Timeouts χωρίς ρολόι δεν έχουν νόημα: ανάβουν μαζί. */
-              onChange({
-                timeoutsVisible: true,
-                clockVisible: true,
-                clockRemaining: value.clockVisible
-                  ? remaining > 0
-                    ? remaining
-                    : value.clockTotal
-                  : value.clockTotal,
-              })
-            }
-          >
-            Ενεργοποίηση
-          </button>
-        )}
+        {(["A", "B"] as const).map((side) => {
+          const used = side === "A" ? value.timeoutsA : value.timeoutsB;
+          const key = side === "A" ? "timeoutsA" : "timeoutsB";
+          return (
+            <span key={side} className="flex items-center gap-1">
+              <span className="text-[11px] font-bold text-slate-400">{side}</span>
+              <button
+                type="button"
+                className={BTN}
+                disabled={disabled || used <= 0}
+                onClick={() => onChange({ [key]: Math.max(0, used - 1) })}
+              >
+                −
+              </button>
+              <b className="min-w-[26px] text-center text-[12px] tabular-nums text-slate-100">
+                {used}/{value.timeoutsMax}
+              </b>
+              <button
+                type="button"
+                className={BTN}
+                disabled={disabled || used >= value.timeoutsMax}
+                onClick={() => onChange({ [key]: Math.min(value.timeoutsMax, used + 1) })}
+              >
+                +
+              </button>
+            </span>
+          );
+        })}
       </div>
+        </>
+      ) : null}
     </div>
   );
 }

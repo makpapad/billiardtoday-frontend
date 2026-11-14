@@ -3137,6 +3137,10 @@ export function TournamentDetailPage({
                     timeoutsB: liveSnapshot.state.timeoutsB,
                     maxTimeoutsA: liveSnapshot.state.maxTimeoutsA,
                     maxTimeoutsB: liveSnapshot.state.maxTimeoutsB,
+                    /* Το Swap του desk αλλάζει πλευρές: τα ονόματα του Strapi μένουν
+                       τα παλιά, άρα κρατάμε ό,τι ήρθε ζωντανά. */
+                    playerAName: liveSnapshot.state.playerAName,
+                    playerBName: liveSnapshot.state.playerBName,
                     isRunning:
                       liveSnapshot.state.isRunning ?? lifecycleStatus === "in_progress",
                   }

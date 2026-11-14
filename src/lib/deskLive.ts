@@ -142,6 +142,8 @@ export class DeskLivePublisher {
           innings: state.innings[0],
           hr: state.highRuns[0],
           liveRun: state.liveRuns?.[0] ?? 0,
+          timeoutsUsed: state.timeoutsUsed?.[0] ?? 0,
+          maxTimeouts: state.maxTimeouts?.[0] ?? 0,
         },
         {
           id: 2,
@@ -151,6 +153,8 @@ export class DeskLivePublisher {
           innings: state.innings[1],
           hr: state.highRuns[1],
           liveRun: state.liveRuns?.[1] ?? 0,
+          timeoutsUsed: state.timeoutsUsed?.[1] ?? 0,
+          maxTimeouts: state.maxTimeouts?.[1] ?? 0,
         },
       ],
     };

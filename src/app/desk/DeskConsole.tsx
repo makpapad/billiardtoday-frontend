@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DeskLivePublisher, type DeskLiveState } from "@/lib/deskLive";
 import {
   DeskMatchControls,
+  DeskToolsToggle,
   emptyDeskTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
@@ -143,7 +144,7 @@ export default function DeskConsole({
 }) {
   const [tables, setTables] = useState<TableState[]>([1, 2, 3, 4].map(emptyTable));
   const [selected, setSelected] = useState(1);
-  const [entryMode, setEntryMode] = useState<"total" | "point">("total");
+
   const [log, setLog] = useState<Array<{ text: string; at: string }>>([]);
   const [eventId, setEventId] = useState<string>(schedule.events?.[0]?.documentId || "");
   const [stageId, setStageId] = useState<string>(schedule.events?.[0]?.stages?.[0]?.documentId || "");
@@ -591,8 +592,7 @@ export default function DeskConsole({
         return;
       }
       if (e.key === "Enter") {
-        if (entryMode === "point") addPoint();
-        else commitTurn();
+        commitTurn();
         return;
       }
       if (e.key === " ") {
@@ -604,7 +604,7 @@ export default function DeskConsole({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, entryMode, addPoint, commitTurn, undo]);
+  }, [current, addPoint, commitTurn, undo]);
 
   const addTable = () => {
     if (tables.length >= MAX_TABLES) return;
@@ -621,7 +621,7 @@ export default function DeskConsole({
   }, [eventId, stageId]);
 
   return (
-    <div className={`bt-desk${entryMode === "point" ? " mode-point" : ""}`}>
+    <div className="bt-desk">
       <header className="topbar">
         <div className="brand">
           <span className="ball" /> BILLIARD TODAY
@@ -835,49 +835,15 @@ export default function DeskConsole({
             <div className="p">{activeName || "—"}</div>
             <div className="src">{current?.match ? `${matchTitle(current.match)} · ${current.screenId || ""}` : "—"}</div>
           </div>
-          <div className="modes">
-            <button
-              type="button"
-              className={entryMode === "total" ? "on" : ""}
-              onClick={() => setEntryMode("total")}
-            >
-              Inning total
-            </button>
-            <button
-              type="button"
-              className={entryMode === "point" ? "on" : ""}
-              onClick={() => setEntryMode("point")}
-            >
-              Point by point
-            </button>
-          </div>
           <div className="display">
             <div className="lbl">
-              {entryMode === "point" ? (
-                <>
-                  CURRENT
-                  <br />
-                  RUN
-                </>
-              ) : (
-                <>
-                  POINTS
-                  <br />
-                  IN INNING
-                </>
-              )}
+              CURRENT
+              <br />
+              RUN
             </div>
             <div className={`val${current && pendingRun(current) > 0 ? "" : " empty"}`}>
               {current ? pendingRun(current) || "–" : "–"}
             </div>
-          </div>
-          <div className="pointpad">
-            <button type="button" id="plus1" onClick={addPoint}>
-              +1 POINT
-            </button>
-            <button type="button" id="endInn" onClick={() => commitTurn()}>
-              END INNING ⏎
-            </button>
           </div>
           <div className="keys">
             {[1, 3, 5].map((n) => (
@@ -898,18 +864,23 @@ export default function DeskConsole({
             <button type="button" id="qUndo" onClick={undo}>
               Undo (U)
             </button>
-            <button type="button" id="qPause" onClick={togglePause}>
-              {current?.paused ? "Resume table" : "Pause table"}
-            </button>
             <button type="button" id="qSwap" onClick={swapPlayers}>
               Swap players
             </button>
+            <div id="qClock">
+              <DeskToolsToggle
+                value={current?.tools ?? emptyDeskTools}
+                onChange={updateTools}
+                disabled={!current?.sessionId || Boolean(current?.finished)}
+              />
+            </div>
           </div>
           <div className="matchtools">
             <DeskMatchControls
               value={current?.tools ?? emptyDeskTools}
               onChange={updateTools}
               disabled={!current?.sessionId || Boolean(current?.finished)}
+              hideMaster
             />
           </div>
           <div className="hint">

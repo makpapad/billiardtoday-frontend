@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DeskLivePublisher } from "@/lib/deskLive";
 import {
   DeskMatchControls,
+  DeskToolsToggle,
   emptyDeskTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
@@ -788,15 +789,16 @@ export default function DeskClient() {
               value={table.tools ?? emptyDeskTools}
               onChange={updateTools}
               disabled={Boolean(table.finished)}
+              hideMaster
             />
           </div>
 
           <div className="mt-3 flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
             <span className="text-[10px] uppercase tracking-wider text-slate-400">
-              {mode === "total" ? "Πόντοι στην παρτίδα" : "Τρέχον σερί"}
+              Τρέχον σερί
             </span>
             <span className="font-mono text-xl font-bold text-emerald-400">
-              {mode === "total" ? pendingRun(table) || "–" : pendingRun(table) || "–"}
+              {pendingRun(table) || "–"}
             </span>
           </div>
 
@@ -854,13 +856,11 @@ export default function DeskClient() {
           </div>
 
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setMode(mode === "total" ? "point" : "total")}
-              className="rounded-xl border border-slate-700 bg-slate-900 py-3 text-[11px] uppercase tracking-wider text-slate-300"
-            >
-              {mode === "total" ? "Inning total" : "Point by point"}
-            </button>
+            <DeskToolsToggle
+              value={table.tools ?? emptyDeskTools}
+              onChange={updateTools}
+              disabled={Boolean(table.finished)}
+            />
             <button
               type="button"
               onClick={endGame}
