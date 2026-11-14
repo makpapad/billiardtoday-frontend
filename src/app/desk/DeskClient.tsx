@@ -327,13 +327,6 @@ export default function DeskClient() {
           method: "POST",
           body: JSON.stringify({}),
         });
-        /* Ο αγώνας φαίνεται στο Live μόνο όταν ανάψει το LIVE (όχι με το άνοιγμα). */
-        await api(`/api/desk/tables/${encodeURIComponent(sessionId)}/visibility`, token, {
-          method: "POST",
-          body: JSON.stringify({ isPublic: false }),
-        }).catch(() => {
-          /* αν αποτύχει, το Live θα δείξει τον αγώνα με το πρώτο γράψιμο */
-        });
 
         const openedTable: TableState = {
           id: sessionId,
