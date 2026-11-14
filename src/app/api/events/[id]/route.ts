@@ -937,43 +937,19 @@ const matchHasResult = (match: Record<string, unknown>): boolean =>
 const applyDrawSheetOrderToStages = (data: Record<string, unknown>): void => {
     const stages = asArray(data.event_stages)
     for (const stage of stages) {
+        const results = asArray(stage.results)
         const matches = asArray(stage.groups)
-        if (matches.length === 0) continue
+        if (results.length === 0 || matches.length === 0) continue
+        if (matches.some((match) => matchHasResult(match))) continue
 
         const order = drawSheetOrderFromMatches(matches)
         if (order.size === 0) continue
 
-        // Ποιοι όμιλοι έχουν έστω ένα αποτέλεσμα: εκεί ισχύει η κατάταξη, δεν αγγίζουμε.
-        const playedGroups = new Set<number>()
-        for (const match of matches) {
-            if (!matchHasResult(match)) continue
-            playedGroups.add(toNumber(match.number) ?? toNumber(match.group_number) ?? 1)
-        }
-
-        // Σφραγίζουμε τη θέση φύλλου στις πλευρές των αγώνων, ώστε η κάρτα του ομίλου
-        // να τη δει ακόμη κι όταν δεν υπάρχουν καθόλου αποθηκευμένες γραμμές κατάταξης.
-        for (const match of matches) {
-            const groupNumber = toNumber(match.number) ?? toNumber(match.group_number) ?? 1
-            if (playedGroups.has(groupNumber)) continue
-            const groupOrder = order.get(groupNumber)
-            if (!groupOrder) continue
-            for (const side of ['player1', 'player2'] as const) {
-                const player = asObject(match[side])
-                if (!player) continue
-                const docId = typeof player.documentId === 'string' ? player.documentId : null
-                const derived = docId ? groupOrder.get(docId) : undefined
-                if (derived === undefined) continue
-                match[side] = { ...player, drawPosition: derived }
-            }
-        }
-
-        const results = asArray(stage.results)
-        if (results.length === 0) continue
-
         const rankOf = (row: Record<string, unknown>): number => {
             const groupNumber = toNumber(row.group_number) ?? 1
             const player = asObject(row.player)
-            const docId = typeof player?.documentId === 'string' ? player.documentId : null
+            const docId =
+                typeof player?.documentId === 'string' ? player.documentId : null
             const groupOrder = order.get(groupNumber)
             const derived = docId && groupOrder ? groupOrder.get(docId) : undefined
             if (derived !== undefined) return derived
@@ -983,10 +959,6 @@ const applyDrawSheetOrderToStages = (data: Record<string, unknown>): void => {
         const sorted = [...results].sort((a, b) => {
             const groupDiff = (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
             if (groupDiff !== 0) return groupDiff
-            const playedDiff =
-                Number(playedGroups.has(toNumber(a.group_number) ?? 1)) -
-                Number(playedGroups.has(toNumber(b.group_number) ?? 1))
-            if (playedDiff !== 0) return playedDiff
             return rankOf(a) - rankOf(b)
         })
 
@@ -995,7 +967,6 @@ const applyDrawSheetOrderToStages = (data: Record<string, unknown>): void => {
             const groupNumber = toNumber(row.group_number) ?? 1
             const position = (nextPosition.get(groupNumber) ?? 0) + 1
             nextPosition.set(groupNumber, position)
-            if (playedGroups.has(groupNumber)) return row
             const rank = rankOf(row)
             return {
                 ...row,
