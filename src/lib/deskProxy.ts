@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { SERVER_API_URL } from "@/lib/api";
-import { purgeEventPayloadCache } from "@/lib/eventPayloadCache";
+import {
+  purgeEventPayloadCache,
+  purgeEventPayloadCacheThrottled,
+} from "@/lib/eventPayloadCache";
 
 /**
  * Κοινό πέρασμα προς το Event Desk / club portal στο Strapi.
@@ -35,10 +38,19 @@ export async function forwardToDeskApi(
     );
   }
 
-  // Κάθε εγγραφή του desk (άνοιγμα τραπεζιού, claim, σκορ) καθαρίζει το cached
-  // payload του event, ώστε η αλλαγή να φανεί στην πρώτη επόμενη φόρτωση σελίδας.
+  /*
+   * Οι εγγραφές του desk καθαρίζουν το cached payload του event ώστε η αλλαγή να
+   * φαίνεται αμέσως:
+   *  - άνοιγμα/claim/release τραπεζιού → άμεσο καθάρισμα
+   *  - καταχώρηση πόντων → καθάρισμα με όριο (10΄΄), για να μη ξαναχτίζεται το
+   *    payload σε κάθε πόντο· τα ζωντανά σκορ έτσι κι αλλιώς έρχονται από websocket.
+   */
   if (method === "POST" && res.ok) {
-    purgeEventPayloadCache()
+    if (target.includes("/score")) {
+      purgeEventPayloadCacheThrottled(10_000)
+    } else {
+      purgeEventPayloadCache()
+    }
   }
 
   const text = await res.text();

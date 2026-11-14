@@ -40,6 +40,19 @@ export const writeCachedEventPayload = (documentId: string, payload: unknown): v
     cache.set(documentId, { at: Date.now(), payload })
 }
 
+let lastPurgeAt = 0
+
+/**
+ * Άδειασμα με περιορισμό συχνότητας (π.χ. σε κάθε πόντο του desk): δεν καθαρίζει
+ * πιο συχνά από `minIntervalMs`, ώστε να μη χτίζεται το payload σε κάθε καταχώρηση.
+ */
+export const purgeEventPayloadCacheThrottled = (minIntervalMs: number): void => {
+    const now = Date.now()
+    if (now - lastPurgeAt < minIntervalMs) return
+    lastPurgeAt = now
+    cache.clear()
+}
+
 /** Άδειασμα μετά από εγγραφή (desk / admin / scoreboard) ώστε η αλλαγή να φανεί αμέσως. */
 export const purgeEventPayloadCache = (documentId?: string): void => {
     if (documentId) {
