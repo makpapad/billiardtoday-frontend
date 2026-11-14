@@ -649,7 +649,8 @@ export function LiveVideoDrawer({
   );
 
   const selectedCount = selectedSessions.length;
-  const panelWidthClass = "w-full xl:w-[420px]";
+  /* Το πάνελ μπαίνει κάτω από τις κάρτες → παίρνει όλο το πλάτος. */
+  const panelWidthClass = "w-full";
 
   const setSessionVideo = React.useCallback((sessionId: string, videoId: string) => {
     setFocusedSessionId(sessionId);

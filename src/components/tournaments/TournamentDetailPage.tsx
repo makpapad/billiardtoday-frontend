@@ -7781,14 +7781,8 @@ export function TournamentDetailPage({
       )
     ) : (
       <section ref={liveContentRef} className="space-y-6">
-        <div
-          className={`flex flex-col gap-6 ${
-            videoDrawerOpen
-              ? "xl:mx-auto xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start"
-              : ""
-          }`}
-          style={videoDrawerShellStyle}
-        >
+        {/* Δοκιμή: το πάνελ (φύλλο αγώνα) κάτω από τις κάρτες, όχι δεξιά. */}
+        <div className="flex flex-col gap-6" style={videoDrawerShellStyle}>
           <div className="min-w-0 flex-1">
             {externalLiveTableSessions.length > 0 ? (
               <section className="mb-6 space-y-4">
@@ -8020,7 +8014,7 @@ export function TournamentDetailPage({
                         videoDrawerSelectedSessionIds.includes(session.sessionId) ||
                         (!isWideDesktop && mobileVideoDrawerSessionId === session.sessionId)
                       }
-                      compactExpandedLayout={isWideDesktop && videoDrawerOpen}
+                      compactExpandedLayout={false}
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
                       }
@@ -8033,7 +8027,7 @@ export function TournamentDetailPage({
         ) : null}
           </div>
           {videoDrawerOpen && isWideDesktop ? (
-            <div className="hidden w-full shrink-0 xl:sticky xl:top-6 xl:block">
+            <div className="w-full shrink-0">
               <LiveVideoDrawer
                 open={videoDrawerOpen}
                 sessions={tournamentVideoSessions}
