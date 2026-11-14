@@ -206,8 +206,8 @@ const attachPlayerPhotos = async (
         query.set('pagination[pageSize]', String(chunk.length))
         try {
             const response = await fetch(`${STRAPI_URL}/api/bt-players?${query.toString()}`, {
-                // Οι φωτογραφίες αλλάζουν σπάνια: 1 ώρα cache.
-                next: { revalidate: 3600, tags: ['players-photos'] },
+                // Οι φωτογραφίες αλλάζουν σπάνια αλλά όχι ποτέ: 10 λεπτά cache.
+                next: { revalidate: 600, tags: ['players-photos'] },
                 headers,
             })
             if (!response.ok) continue
@@ -813,7 +813,7 @@ const fetchStageStandings = async (
         'populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country'
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?${standingsQuery}`
     let res = await fetch(directUrl, {
-        next: { revalidate: 60, tags: [`event-stage:${stageId}`] },
+        next: { revalidate: 15, tags: [`event-stage:${stageId}`] },
         headers,
     })
 
@@ -861,7 +861,7 @@ const fetchStageMatches = async (
 ): Promise<Record<string, unknown>[] | null> => {
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/matches`
     let res = await fetch(directUrl, {
-        next: { revalidate: 60, tags: [`event-stage:${stageId}`] },
+        next: { revalidate: 15, tags: [`event-stage:${stageId}`] },
         headers,
     })
 
@@ -1086,7 +1086,7 @@ const fetchAutomaticFinalResultsPreview = async (
  * τις κλήσεις στη Strapi, αλλά η συγχώνευση εκατοντάδων αγώνων ξανατρέχει σε κάθε
  * επίσκεψη (~0,7΄΄). Εδώ κρατάμε το ΕΤΟΙΜΟ αποτέλεσμα, με όριο εγγραφών για ασφάλεια.
  */
-const EVENT_PAYLOAD_TTL_MS = 60_000
+const EVENT_PAYLOAD_TTL_MS = 15_000
 const EVENT_PAYLOAD_MAX_ENTRIES = 40
 const eventPayloadCache = new Map<string, { at: number; payload: unknown }>()
 
@@ -1338,8 +1338,9 @@ export async function GET(
         let url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
         let res = await fetch(url, {
             // Cache δεδομένων (όχι σελίδας): ίδιο payload για όλους τους επισκέπτες.
-            // 60΄΄ σημαίνει το πολύ 1 κλήση/λεπτό αντί για 1 ανά επίσκεψη· bust με tag.
-            next: { revalidate: 60, tags: [`event:${documentId}`] },
+            // 15΄΄ = το αργότερο 15 δευτερόλεπτα πίσω από μια αλλαγή σε πίνακες/αγώνες,
+            // πολύ λιγότερες κλήσεις από 1 ανά επίσκεψη· bust με tag.
+            next: { revalidate: 15, tags: [`event:${documentId}`] },
             headers,
         })
 
