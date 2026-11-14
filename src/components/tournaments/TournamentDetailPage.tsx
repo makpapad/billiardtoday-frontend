@@ -3133,6 +3133,10 @@ export function TournamentDetailPage({
                     current: liveSnapshot.state.current,
                     progress: liveSnapshot.state.progress,
                     totalBlocks: liveSnapshot.state.totalBlocks,
+                    timeoutsA: liveSnapshot.state.timeoutsA,
+                    timeoutsB: liveSnapshot.state.timeoutsB,
+                    maxTimeoutsA: liveSnapshot.state.maxTimeoutsA,
+                    maxTimeoutsB: liveSnapshot.state.maxTimeoutsB,
                     isRunning:
                       liveSnapshot.state.isRunning ?? lifecycleStatus === "in_progress",
                   }
@@ -3667,9 +3671,10 @@ export function TournamentDetailPage({
                       /* Εικονική οθόνη desk: δεν έχει ρολόι βολών. Με το 40 (default των
                          φυσικών οθονών) η μπάρα χρόνου πεταγόταν σε κάθε SESSION_UPDATED
                          και εξαφανιζόταν στο επόμενο score:update — «αναβοσβήνει». */
-                      totalBlocks: /^DESK-/i.test(lifecycleScreenId || screenId)
-                        ? 0
-                        : Number(sessionObj.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
+                      /* Το 40 είναι default ΦΥΣΙΚΗΣ οθόνης. Το desk στέλνει το δικό του
+                         `totalBlocks` (0 = κλειστό)· αν δεν έχει σταλεί, 0 = χωρίς μπάρα. */
+                      totalBlocks:
+                        Number(sessionObj.totalBlocks ?? baseSession?.state?.totalBlocks ?? 0) || 0,
                       isRunning: lifecycleIsRunning,
                       timeoutsA:
                         Number(
@@ -3685,20 +3690,21 @@ export function TournamentDetailPage({
                             baseSession?.state?.timeoutsB ??
                             0,
                         ) || 0,
+                      /* 0 = «δεν κρατούνται timeouts» (desk) — όχι 3, αλλιώς γεμίζει μπαλάκια. */
                       maxTimeoutsA:
                         Number(
                           sessionObj.player1_max_timeouts ??
                             sessionObj.maxTimeoutsA ??
                             baseSession?.state?.maxTimeoutsA ??
-                            3,
-                        ) || 3,
+                            0,
+                        ) || 0,
                       maxTimeoutsB:
                         Number(
                           sessionObj.player2_max_timeouts ??
                             sessionObj.maxTimeoutsB ??
                             baseSession?.state?.maxTimeoutsB ??
-                            3,
-                        ) || 3,
+                            0,
+                        ) || 0,
                       avgFormattedA:
                         typeof sessionObj.player1_avg_formatted === "string"
                           ? sessionObj.player1_avg_formatted
@@ -4029,9 +4035,10 @@ export function TournamentDetailPage({
                           ? playerB.photo_main
                           : baseSession?.state?.playerBPhotoMainUrl ?? null,
                     progress: Number(payload.progress ?? 0) || 0,
-                    /* Εικονική οθόνη desk: χωρίς ρολόι βολών (βλ. παραπάνω). */
+                    /* Ό,τι στέλνει η πηγή: το desk δίνει totalBlocks μόνο όταν ανάψει
+                       το χρονόμετρο (0 = κρυφό)· οι φυσικές οθόνες 40 όπως πριν. */
                     totalBlocks: /^DESK-/i.test(screenId)
-                      ? 0
+                      ? Number(payload.totalBlocks ?? 0) || 0
                       : Number(payload.totalBlocks ?? baseSession?.state?.totalBlocks ?? 40) || 40,
                     isRunning: scoreUpdateIsRunning,
                     timeoutsA:
@@ -4048,18 +4055,19 @@ export function TournamentDetailPage({
                           baseSession?.state?.timeoutsB ??
                           0,
                       ) || 0,
+                    /* Το desk στέλνει maxTimeouts 0 όταν είναι κρυμμένα → κανένα μπαλάκι. */
                     maxTimeoutsA:
                       Number(
                         playerA.maxTimeouts ??
                           baseSession?.state?.maxTimeoutsA ??
-                          3,
-                      ) || 3,
+                          0,
+                      ) || 0,
                     maxTimeoutsB:
                       Number(
                         playerB.maxTimeouts ??
                           baseSession?.state?.maxTimeoutsB ??
-                          3,
-                      ) || 3,
+                          0,
+                      ) || 0,
                     targetPointsA:
                       typeof playerA.targetPoints === "number"
                         ? playerA.targetPoints
@@ -7904,11 +7912,9 @@ export function TournamentDetailPage({
                       timeoutsUsed2={state.timeoutsB}
                       maxTimeouts2={state.maxTimeoutsB}
                       showTimeouts={
-                        !/^DESK-/i.test(
-                          String(
-                            session.screenId ?? session.screenIdentifier ?? "",
-                          ).trim(),
-                        )
+                        Number(
+                          state.maxTimeoutsA ?? state.maxTimeoutsB ?? 0,
+                        ) > 0
                       }
                       inningsCount={state.inningsCount}
                       gameDurationSeconds={state.gameDurationSeconds}

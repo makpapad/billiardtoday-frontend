@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DeskLivePublisher } from "@/lib/deskLive";
+import {
+  DeskMatchControls,
+  emptyDeskTools,
+  type DeskToolsValue,
+} from "@/components/desk/DeskMatchControls";
 
 /* ------------------------------------------------------------------ */
 /* Τύποι                                                              */
@@ -56,6 +61,8 @@ type TableState = {
   targetPoints: number | null;
   equalInnings: boolean;
   error: string | null;
+  /** Ρολόι βολών + timeouts: ό,τι δείχνει εδώ πάει ζωντανά στο Live. */
+  tools: DeskToolsValue;
 };
 
 const TOKEN_KEY = "desk.token";
@@ -345,6 +352,7 @@ export default function DeskClient() {
           targetPoints: opened.data.targetPoints ?? null,
           equalInnings: opened.data.equalInnings === true,
           history: [],
+          tools: { ...emptyDeskTools },
           active: 0,
           buffer: "",
           finished: false,
@@ -381,7 +389,15 @@ export default function DeskClient() {
       if (!raw) return;
       const parsed = JSON.parse(raw) as { tables?: TableState[]; activeId?: string | null };
       if (Array.isArray(parsed?.tables) && parsed.tables.length > 0) {
-        setTables(parsed.tables.map((row) => ({ ...row, saving: false, buffer: "" })));
+        setTables(
+          parsed.tables.map((row) => ({
+            ...row,
+            saving: false,
+            buffer: "",
+            /* Παλιά αποθηκευμένα τραπέζια δεν έχουν `tools`. */
+            tools: { ...emptyDeskTools, ...(row?.tools ?? {}) },
+          })),
+        );
         setActiveId(parsed.activeId || parsed.tables[0].id);
         setTableNo(Math.max(...parsed.tables.map((row) => Number(row.tableNo) || 1)) + 1);
         /*
@@ -429,8 +445,53 @@ export default function DeskClient() {
       innings: [next.p1.innings, next.p2.innings],
       highRuns: [next.p1.hr, next.p2.hr],
       active: next.active,
+      /* Ρολόι: κρυφό όταν δεν είναι αναμμένο (0). */
+      totalBlocks: next.tools.clockVisible ? next.tools.clockTotal : 0,
+      progress: next.tools.clockVisible
+        ? Math.max(0, next.tools.clockTotal - next.tools.clockRemaining)
+        : 0,
+      timeoutsUsed: [next.tools.timeoutsA, next.tools.timeoutsB],
+      maxTimeouts: [
+        next.tools.timeoutsVisible ? next.tools.timeoutsMax : 0,
+        next.tools.timeoutsVisible ? next.tools.timeoutsMax : 0,
+      ],
     });
   }, []);
+
+  /** Ρολόι/timeouts: ίδιο μονοπάτι με το σκορ. */
+  const updateTools = useCallback(
+    (patch: Partial<DeskToolsValue>) => {
+      if (!table) return;
+      const next: TableState = { ...table, tools: { ...table.tools, ...patch } };
+      setTable(next);
+      publishLive(next);
+    },
+    [table, publishLive],
+  );
+
+  /* Κάθε δευτερόλεπτο: κατεβάζει το ρολόι και το στέλνει στο Live. */
+  const tableRef = useRef<TableState | null>(null);
+  useEffect(() => {
+    tableRef.current = table;
+  }, [table]);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const currentTable = tableRef.current;
+      if (!currentTable?.tools?.clockVisible || !currentTable.tools.clockRunning) return;
+      const remaining = Math.max(0, currentTable.tools.clockRemaining - 1);
+      const next: TableState = {
+        ...currentTable,
+        tools: {
+          ...currentTable.tools,
+          clockRemaining: remaining,
+          clockRunning: remaining > 0,
+        },
+      };
+      setTable(next);
+      publishLive(next);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [publishLive]);
 
   const withHistory = useCallback(
     (next: TableState): TableState => {
@@ -709,6 +770,14 @@ export default function DeskClient() {
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-3">
+            <DeskMatchControls
+              value={table.tools ?? emptyDeskTools}
+              onChange={updateTools}
+              disabled={Boolean(table.finished)}
+            />
           </div>
 
           <div className="mt-3 flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">

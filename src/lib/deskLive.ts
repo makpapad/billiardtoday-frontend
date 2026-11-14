@@ -44,6 +44,12 @@ export type DeskLiveState = {
   inningsDetail?: Array<{ inning: number; player1?: { pt: number; tot: number }; player2?: { pt: number; tot: number } }>;
   active: 0 | 1;
   isPublic?: boolean;
+  /** Ρολόι βολών: 0/undefined = κρυφό. `progress` = δευτερόλεπτα που πέρασαν. */
+  totalBlocks?: number;
+  progress?: number;
+  /** Timeouts: όριο 0 = κρυφά (μπαλάκια). */
+  timeoutsUsed?: [number, number];
+  maxTimeouts?: [number, number];
 };
 
 /** Μία σύνδεση ανά εικονική οθόνη (τραπέζι) — όπως ακριβώς κάνει το tablet της οθόνης. */
@@ -115,6 +121,12 @@ export class DeskLivePublisher {
       isPublic: state.isPublic !== false,
       clubId: state.clubId ?? null,
       clubName: state.clubName ?? null,
+      totalBlocks: state.totalBlocks ?? 0,
+      progress: state.progress ?? 0,
+      timeoutsUsed1: state.timeoutsUsed?.[0] ?? 0,
+      timeoutsUsed2: state.timeoutsUsed?.[1] ?? 0,
+      maxTimeouts1: state.maxTimeouts?.[0] ?? 0,
+      maxTimeouts2: state.maxTimeouts?.[1] ?? 0,
       liveRun: {
         player1: state.liveRuns?.[0] ?? 0,
         player2: state.liveRuns?.[1] ?? 0,

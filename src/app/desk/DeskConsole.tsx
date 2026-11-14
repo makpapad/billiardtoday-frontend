@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DeskLivePublisher, type DeskLiveState } from "@/lib/deskLive";
+import {
+  DeskMatchControls,
+  emptyDeskTools,
+  type DeskToolsValue,
+} from "@/components/desk/DeskMatchControls";
 import "./desk-console.css";
 
 /* ------------------------------------------------------------------ */
@@ -54,6 +59,8 @@ type TableState = {
   history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
   /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
   detail: InningEntry[];
+  /** Ρολόι βολών + timeouts: ό,τι δείχνει εδώ πάει ζωντανά στο Live. */
+  tools: DeskToolsValue;
 };
 
 /** Ίσες στεκιές στο τέλος: η τελευταία αλλαγή σειράς χρεώνει στεκιά σε όποιον
@@ -91,6 +98,7 @@ function emptyTable(no: number): TableState {
     targetPoints: null,
     equalInnings: false,
     detail: [],
+    tools: { ...emptyDeskTools },
   };
 }
 
@@ -153,7 +161,14 @@ export default function DeskConsole({
       if (!raw) return;
       const saved = JSON.parse(raw) as { tables?: TableState[]; selected?: number };
       if (Array.isArray(saved.tables) && saved.tables.some((t) => t?.sessionId)) {
-        setTables(saved.tables.map((t) => ({ ...t, history: [] })));
+        setTables(
+          saved.tables.map((t) => ({
+            ...t,
+            history: [],
+            /* Παλιά αποθηκευμένα τραπέζια δεν έχουν `tools`. */
+            tools: { ...emptyDeskTools, ...(t?.tools ?? {}) },
+          })),
+        );
         if (saved.selected) setSelected(saved.selected);
       }
       /*
@@ -213,9 +228,55 @@ export default function DeskConsole({
       liveRuns,
       inningsDetail: table.detail,
       active: table.active,
+      /* Ρολόι: κρυφό όταν δεν είναι αναμμένο (0), αλλιώς ό,τι έμεινε. */
+      totalBlocks: table.tools.clockVisible ? table.tools.clockTotal : 0,
+      progress: table.tools.clockVisible
+        ? Math.max(0, table.tools.clockTotal - table.tools.clockRemaining)
+        : 0,
+      timeoutsUsed: [table.tools.timeoutsA, table.tools.timeoutsB],
+      maxTimeouts: [
+        table.tools.timeoutsVisible ? table.tools.timeoutsMax : 0,
+        table.tools.timeoutsVisible ? table.tools.timeoutsMax : 0,
+      ],
     };
     live.current?.send(state);
   }, []);
+
+  const tablesRef = useRef<TableState[]>([]);
+  useEffect(() => {
+    tablesRef.current = tables;
+  }, [tables]);
+
+  /** Ρολόι/timeouts: ίδιο μονοπάτι με το σκορ — γράφεται και φεύγει στο Live. */
+  const updateTools = useCallback(
+    (patch: Partial<DeskToolsValue>) => {
+      const table = tablesRef.current.find((t) => t.no === selected);
+      if (!table) return;
+      const next: TableState = { ...table, tools: { ...table.tools, ...patch } };
+      setTables((prev) => prev.map((t) => (t.no === selected ? next : t)));
+      publishLive(next);
+    },
+    [selected, publishLive],
+  );
+
+  /* Κάθε δευτερόλεπτο: κατεβάζει το ρολόι όσων τρέχουν και το στέλνει στο Live. */
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const changed = tablesRef.current
+        .filter((t) => t.tools?.clockVisible && t.tools?.clockRunning)
+        .map((t) => {
+          const remaining = Math.max(0, t.tools.clockRemaining - 1);
+          return {
+            ...t,
+            tools: { ...t.tools, clockRemaining: remaining, clockRunning: remaining > 0 },
+          };
+        });
+      if (changed.length === 0) return;
+      setTables((prev) => prev.map((t) => changed.find((row) => row.no === t.no) ?? t));
+      changed.forEach((t) => publishLive(t));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [publishLive]);
 
   const event = useMemo(
     () => schedule.events?.find((ev) => ev.documentId === eventId) || null,
@@ -714,9 +775,7 @@ export default function DeskConsole({
                     >
                       {table.liveOn ? "LIVE ●" : "LIVE"}
                     </button>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelected(table.no); }}>
-                      Χειριστήριο
-                    </button>
+
                     <button type="button" className="save" onClick={(e) => { e.stopPropagation(); setSelected(table.no); endGame(); }}>
                       {table.finished ? "Κλειστό" : "End game"}
                     </button>
@@ -842,23 +901,11 @@ export default function DeskConsole({
               {current?.paused ? "Resume table" : "Pause table"}
             </button>
           </div>
-          <div className="log">
-            <h4>LAST ENTRIES</h4>
-            <div>
-              {log.length === 0 ? (
-                <div>
-                  No entries yet <em>—</em>
-                </div>
-              ) : (
-                log.map((row, i) => (
-                  <div key={`${row.at}-${i}`}>
-                    {row.text}
-                    <em>{row.at}</em>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <DeskMatchControls
+            value={current?.tools ?? emptyDeskTools}
+            onChange={updateTools}
+            disabled={!current?.sessionId || Boolean(current?.finished)}
+          />
           <div className="hint">
             type the run + <span className="kbd">⏎</span> to enter · <span className="kbd">U</span> undo ·{" "}
             <span className="kbd">Space</span> inning without points
