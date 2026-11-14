@@ -159,6 +159,70 @@ const buildParticipantPlayerSnapshot = (
     }
 }
 
+/**
+ * Οι αγώνες/κατατάξεις της Strapi δεν επιστρέφουν `photo_main` (το `/matches` γυρίζει
+ * ολόκληρο τον αθλητή αλλά χωρίς media). Μία κλήση ανά σελίδα φέρνει τις φωτογραφίες
+ * και τις κολλάει πάνω στους αθλητές του payload, ώστε οι κατατάξεις να δείχνουν φωτό.
+ */
+const attachPlayerPhotos = async (
+    event: Record<string, unknown>,
+    headers: Record<string, string>,
+): Promise<void> => {
+    const players = new Map<string, Record<string, unknown>>()
+    const register = (value: unknown) => {
+        const player = asObject(value)
+        if (!player) return
+        const documentId = typeof player.documentId === 'string' ? player.documentId : null
+        if (!documentId) return
+        if (player.photo_main) return
+        players.set(documentId, player)
+    }
+
+    asArray(event.event_stages).forEach((stage) => {
+        asArray(stage.groups).forEach((match) => {
+            register(match.player1)
+            register(match.player2)
+        })
+        asArray(stage.results).forEach((row) => register(row.player))
+    })
+    asArray(event.results_final).forEach((row) => register(row.player))
+
+    if (players.size === 0) return
+
+    const ids = Array.from(players.keys())
+    const photoByDocumentId = new Map<string, unknown>()
+    for (let index = 0; index < ids.length; index += 80) {
+        const chunk = ids.slice(index, index + 80)
+        const query = new URLSearchParams()
+        chunk.forEach((documentId, position) => {
+            query.set(`filters[documentId][$in][${position}]`, documentId)
+        })
+        query.set('fields[0]', 'documentId')
+        query.set('populate[photo_main][fields][0]', 'url')
+        query.set('pagination[pageSize]', String(chunk.length))
+        try {
+            const response = await fetch(`${STRAPI_URL}/api/bt-players?${query.toString()}`, {
+                cache: 'no-store',
+                headers,
+            })
+            if (!response.ok) continue
+            const payload = (await response.json().catch(() => null)) as { data?: unknown[] } | null
+            asArray(payload?.data).forEach((row) => {
+                const documentId = typeof row.documentId === 'string' ? row.documentId : null
+                if (!documentId || !row.photo_main) return
+                photoByDocumentId.set(documentId, row.photo_main)
+            })
+        } catch {
+            return
+        }
+    }
+
+    photoByDocumentId.forEach((photo, documentId) => {
+        const player = players.get(documentId)
+        if (player) player.photo_main = photo
+    })
+}
+
 const resolveClubTournamentDocumentId = (value: string): string | null => {
     const trimmed = String(value || '').trim()
     if (trimmed.startsWith('club-tournament:')) {
@@ -1454,6 +1518,8 @@ export async function GET(
                           .map((participant) => buildParticipantPlayerSnapshot(participant))
                           .filter((player): player is Record<string, unknown> => Boolean(player))
                     : []
+
+                await attachPlayerPhotos(event, headers)
 
                 payload.data = {
                     ...event,
