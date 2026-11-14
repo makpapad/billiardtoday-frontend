@@ -1387,13 +1387,6 @@ function getGroupPreviewPlayers(
   group: StageMatchGroup,
   playerSeedByDocumentId?: Map<string, number>,
 ) {
-  /*
-   * Αν ο όμιλος έχει έστω ένα αποτέλεσμα, η σειρά που μετράει είναι η ΚΑΤΑΤΑΞΗ —
-   * η θέση φύλλου («ΑΘΛΗΤΗΣ 1/2/3») ισχύει μόνο όσο ο όμιλος είναι άπαιχτος.
-   */
-  const groupHasResult = group.matches.some(
-    (match) => match.top.outcome !== null || match.bottom.outcome !== null,
-  );
   return Array.from(
     new Map(
       group.matches
@@ -1414,10 +1407,8 @@ function getGroupPreviewPlayers(
      * δηλαδή αλφαβητικά. Αν η εφαρμογή έχει στείλει θέση, κερδίζει αυτή — και στα δύο ονόματα χρειάζεται,
      * αλλιώς πάμε στα seeds/επώνυμο όπως πριν (τουρνουά εκτός εφαρμογής, παλιά δεδομένα).
      */
-    const leftDraw =
-      !groupHasResult && typeof left.drawPosition === "number" ? left.drawPosition : null;
-    const rightDraw =
-      !groupHasResult && typeof right.drawPosition === "number" ? right.drawPosition : null;
+    const leftDraw = typeof left.drawPosition === "number" ? left.drawPosition : null;
+    const rightDraw = typeof right.drawPosition === "number" ? right.drawPosition : null;
     if (leftDraw !== null && rightDraw !== null && leftDraw !== rightDraw) {
       return leftDraw - rightDraw;
     }

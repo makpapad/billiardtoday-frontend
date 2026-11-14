@@ -908,20 +908,10 @@ const fetchStageMatches = async (
 const attachDrawPositionsToStages = (data: Record<string, unknown>): void => {
     for (const stage of asArray(data.event_stages)) {
         const matches = asArray(stage.groups)
-        // Μόλις ένας όμιλος έχει έστω ένα αποτέλεσμα, η σειρά του είναι η ΚΑΤΑΤΑΞΗ —
-        // εκεί δεν στέλνουμε θέση φύλλου, αλλιώς θα την πατούσε.
-        const playedGroups = new Set<number>()
+        // Η προεπισκόπηση της κάρτας γράφει «Player 1/2/3» — δηλαδή τη ΘΕΣΗ ΦΥΛΛΟΥ,
+        // όπως τη δήλωσε ο διοργανωτής, ανεξάρτητα από το αν ο όμιλος έχει παίξει.
+        // Η κατάταξη με τους πόντους εμφανίζεται χωριστά στον πίνακα του ομίλου.
         for (const match of matches) {
-            const played = ['player1_points', 'player2_points', 'player1_innings', 'player2_innings'].some(
-                (field) => (toNumber(match[field]) ?? 0) > 0,
-            )
-            if (!played) continue
-            playedGroups.add(toNumber(match.number) ?? toNumber(match.group_number) ?? 1)
-        }
-
-        for (const match of matches) {
-            const groupNumber = toNumber(match.number) ?? toNumber(match.group_number) ?? 1
-            if (playedGroups.has(groupNumber)) continue
             for (const [side, field] of [
                 ['player1', 'player1_draw_position'],
                 ['player2', 'player2_draw_position'],
