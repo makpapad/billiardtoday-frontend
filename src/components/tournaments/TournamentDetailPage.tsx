@@ -8024,25 +8024,6 @@ export function TournamentDetailPage({
                       onOpenLiveVideos={(_sessionId, origin) =>
                         handleOpenLiveVideos(session, origin)
                       }
-                      topLeftControl={
-                        expandedLiveSessionIds.has(session.sessionId) ? (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              toggleGroupPopover(session.sessionId);
-                            }}
-                            className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold text-white/85 shadow-sm ${
-                              groupPopoverBySessionId.has(session.sessionId)
-                                ? "border-white/20 bg-slate-900/35"
-                                : "border-white/10 bg-slate-900/18 opacity-55"
-                            }`}
-                          >
-                            Groups
-                          </button>
-                        ) : null
-                      }
                     />
                   </div>
                 </div>
