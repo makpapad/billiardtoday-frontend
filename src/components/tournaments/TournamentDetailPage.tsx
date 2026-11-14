@@ -7877,7 +7877,8 @@ export function TournamentDetailPage({
             Waiting for live scores...
           </div>
         ) : liveCards.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          /* Μία κάρτα ανά σειρά σε κινητό (και σε οριζόντια οθόνη)· δύο στήλες από lg. */
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {liveCards.map((session) => {
               const state = (session.state ?? {}) as any;
               const tableLabel = resolveLiveSessionTableLabel(session, timetableSlots);
