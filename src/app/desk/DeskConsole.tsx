@@ -22,6 +22,26 @@ export type Schedule = {
   tournament: { documentId: string; title?: string | null; startDate?: string | null; endDate?: string | null };
   events: DeskEvent[];
 };
+/** Ανοιχτός αγώνας όπως τον επιστρέφει το desk API (για «Συνέχεια»). */
+export type OpenTable = {
+  sessionId: string;
+  screenIdentifier?: string | null;
+  tableNumber?: number | null;
+  status?: string | null;
+  isPublic?: boolean;
+  brMatchId?: string | null;
+  brMatchDocumentId?: string | null;
+  matchNumber?: number | null;
+  eventStageId?: string | null;
+  eventTitle?: string | null;
+  stageTitle?: string | null;
+  targetPoints?: number | null;
+  equalInnings?: boolean;
+  players?: Array<{ name?: string | null; points?: number; innings?: number; hr?: number; run?: number }>;
+  claim?: { assignmentId?: number | null; displayName?: string | null; deviceId?: string | null; at?: number | null } | null;
+  updatedAt?: string | null;
+};
+
 export type Match = {
   documentId: string;
   matchNumber?: number | null;
@@ -59,7 +79,8 @@ type TableState = {
   targetPoints: number | null;
   equalInnings: boolean;
   openedAt: number | null;
-  history: Array<{ p1: Side; p2: Side; active: 0 | 1 }>;
+  /** Κάθε βήμα κρατά ΟΛΗ την κατάσταση (και στεκιές/ρολόι), ώστε το Undo να γυρνά πίσω σωστά. */
+  history: Array<{ p1: Side; p2: Side; active: 0 | 1; detail?: InningEntry[]; tools?: DeskToolsValue }>;
   /** Φύλλο αγώνα: το σερί κάθε παίκτη ανά στεκιά (όπως στο χάρτινο φύλλο). */
   detail: InningEntry[];
   /** Ρολόι βολών + timeouts: ό,τι δείχνει εδώ πάει ζωντανά στο Live. */
@@ -158,6 +179,28 @@ export default function DeskConsole({
   const [error, setError] = useState<string | null>(null);
   const saveTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
+  /*
+   * Κάθε συσκευή έχει το δικό της αναγνωριστικό: το «Συνέχεια» γράφει ποιος
+   * κρατά το τραπέζι τώρα, και η προηγούμενη συσκευή κλειδώνει (δεν ξαναγράφει
+   * σκορ κατά λάθος).
+   */
+  const deviceId = useRef<string>("");
+  useEffect(() => {
+    try {
+      let id = window.localStorage.getItem("desk.device.v1");
+      if (!id) {
+        id = `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+        window.localStorage.setItem("desk.device.v1", id);
+      }
+      deviceId.current = id;
+    } catch {
+      deviceId.current = `d${Date.now().toString(36)}`;
+    }
+  }, []);
+
+  const [openList, setOpenList] = useState<OpenTable[]>([]);
+  const [resumeOpen, setResumeOpen] = useState(false);
+
   /* Τα ανοιχτά τραπέζια δεν χάνονται με ανανέωση σελίδας. */
   useEffect(() => {
     try {
@@ -168,7 +211,7 @@ export default function DeskConsole({
         setTables(
           saved.tables.map((t) => ({
             ...t,
-            history: [],
+            history: Array.isArray(t?.history) ? t.history : [],
             /* Παλιά αποθηκευμένα τραπέζια δεν έχουν `tools`. */
             tools: { ...emptyDeskTools, ...(t?.tools ?? {}) },
           })),
@@ -202,7 +245,8 @@ export default function DeskConsole({
     try {
       const payload = {
         selected,
-        tables: tables.map((t) => ({ ...t, history: [], saving: false, buffer: "" })),
+        /* Το history αποθηκεύεται: αλλιώς μετά από refresh/reload το Undo ήταν νεκρό. */
+        tables: tables.map((t) => ({ ...t, history: t.history.slice(0, 30), saving: false, buffer: "" })),
       };
       window.localStorage.setItem("desk.tables.v1", JSON.stringify(payload));
     } catch {
@@ -302,6 +346,92 @@ export default function DeskConsole({
       .catch(() => setMatches([]));
   }, [stageId, token]);
 
+  /* --- ανοιχτοί αγώνες: «Συνέχεια» από άλλη συσκευή --- */
+  const fetchOpen = useCallback(async () => {
+    try {
+      const res = await api<{ data: OpenTable[] }>("/api/desk/tables", token);
+      const rows = Array.isArray(res?.data) ? res.data : [];
+      setOpenList(rows);
+      return rows;
+    } catch {
+      return [] as OpenTable[];
+    }
+  }, [token]);
+
+  useEffect(() => {
+    void fetchOpen().then((rows) => {
+      if (rows.length === 0) return;
+      /* Άνοιξε από άλλη συσκευή ή μετά από κλείσιμο: δείξε αμέσως τι συνεχίζεται. */
+      const local = new Set(tablesRef.current.map((t) => t.sessionId).filter(Boolean) as string[]);
+      if (rows.some((row) => !local.has(row.sessionId))) setResumeOpen(true);
+    });
+  }, [fetchOpen]);
+
+  /**
+   * Παίρνει το τραπέζι στην τρέχουσα συσκευή και φορτώνει το σκορ από τη βάση.
+   * Όποιος το επιλέξει τελευταίος συνεχίζει· η προηγούμενη συσκευή κλειδώνει.
+   */
+  const resumeTable = useCallback(
+    async (row: OpenTable) => {
+      setError(null);
+      try {
+        await api(`/api/desk/tables/${encodeURIComponent(row.sessionId)}/claim`, token, {
+          method: "POST",
+          body: JSON.stringify({ deviceId: deviceId.current }),
+        });
+        const players = Array.isArray(row.players) ? row.players : [];
+        const first = players[0] ?? {};
+        const second = players[1] ?? {};
+        const tableNo = Number(row.tableNumber) || Math.max(0, ...tables.map((t) => t.no)) + 1;
+        const hydrated: TableState = {
+          ...emptyTable(tableNo),
+          match: {
+            documentId: String(row.brMatchDocumentId || row.brMatchId || row.sessionId),
+            matchNumber: row.matchNumber ?? null,
+            player1: first.name ?? "",
+            player2: second.name ?? "",
+          },
+          p1: {
+            points: Number(first.points) || 0,
+            run: 0,
+            hr: Number(first.hr) || 0,
+            hr2: 0,
+            innings: Number(first.innings) || 1,
+          },
+          p2: {
+            points: Number(second.points) || 0,
+            run: 0,
+            hr: Number(second.hr) || 0,
+            hr2: 0,
+            innings: Number(second.innings) || 0,
+          },
+          sessionId: row.sessionId,
+          screenId: row.screenIdentifier ?? null,
+          mode: "direct",
+          online: true,
+          liveOn: row.isPublic === true,
+          sides: [1, 2],
+          targetPoints: row.targetPoints ?? null,
+          equalInnings: row.equalInnings === true,
+          openedAt: Date.now(),
+          history: [],
+        };
+        setTables((prev) =>
+          prev.some((t) => t.no === tableNo)
+            ? prev.map((t) => (t.no === tableNo ? hydrated : t))
+            : [...prev, hydrated],
+        );
+        setSelected(tableNo);
+        setResumeOpen(false);
+        pushLog(`T${tableNo} · συνέχεια: ${first.name} – ${second.name} (${first.points ?? 0}-${second.points ?? 0})`);
+        publishLive(hydrated);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Ο αγώνας δεν συνεχίστηκε");
+      }
+    },
+    [token, tables, pushLog, publishLive],
+  );
+
   /* σκορ: αποστολή με debounce ανά τραπέζι */
   const pushScore = useCallback(
     (next: TableState, finish = false) => {
@@ -317,6 +447,7 @@ export default function DeskConsole({
           await api(`/api/desk/tables/${encodeURIComponent(next.sessionId as string)}/score`, token, {
             method: "POST",
             body: JSON.stringify({
+              deviceId: deviceId.current,
               players: [
                 { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
                 { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
@@ -329,6 +460,12 @@ export default function DeskConsole({
         } catch (err) {
           const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
           setError(message);
+          /* Το τραπέζι συνεχίζεται αλλού: δεν σβήνουμε τίποτα — πατάει «Συνέχεια» για να το πάρει πίσω. */
+          if (/άλλη συσκευή/i.test(message)) {
+            void fetchOpen();
+            setTables((prev) => prev.map((t) => (t.no === next.no ? { ...t, saving: false, paused: true } : t)));
+            return;
+          }
           /* Η session σβήστηκε (π.χ. καθάρισμα από το admin): ελευθερώνουμε το τραπέζι. */
           if (/δεν βρέθηκε/i.test(message)) {
             setTables((prev) => prev.map((t) => (t.no === next.no ? emptyTable(next.no) : t)));
@@ -338,7 +475,7 @@ export default function DeskConsole({
         }
       }, 250);
     },
-    [token, publishLive],
+    [token, publishLive, fetchOpen],
   );
 
   /** Ό,τι γράφεται στο πληκτρολόγιο φαίνεται ζωντανά στο Live (liveRun), όπως στη φυσική οθόνη. */
@@ -361,9 +498,15 @@ export default function DeskConsole({
   const withHistory = (table: TableState): TableState => ({
     ...table,
     history: [
-      { p1: { ...table.p1 }, p2: { ...table.p2 }, active: table.active },
+      {
+        p1: { ...table.p1 },
+        p2: { ...table.p2 },
+        active: table.active,
+        detail: table.detail.map((row) => ({ ...row })),
+        tools: { ...table.tools },
+      },
       ...table.history,
-    ].slice(0, 20),
+    ].slice(0, 30),
   });
 
   /* --- άνοιγμα αγώνα σε τραπέζι --- */
@@ -395,7 +538,7 @@ export default function DeskConsole({
         const sessionId = opened.data.sessionId;
         await api(`/api/desk/tables/${encodeURIComponent(sessionId)}/claim`, token, {
           method: "POST",
-          body: JSON.stringify({}),
+          body: JSON.stringify({ deviceId: deviceId.current }),
         });
         setTables((prev) =>
           prev.map((t) =>
@@ -544,6 +687,8 @@ export default function DeskConsole({
       p1: last.p1,
       p2: last.p2,
       active: last.active,
+      detail: last.detail ? last.detail.map((row) => ({ ...row })) : current.detail,
+      tools: last.tools ? { ...last.tools } : current.tools,
       buffer: "",
       history: rest,
     };
@@ -649,6 +794,16 @@ export default function DeskConsole({
         </button>
         <button type="button" className="ghost" onClick={onLogout}>
           Έξοδος
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            void fetchOpen();
+            setResumeOpen(true);
+          }}
+        >
+          Ανοιχτοί αγώνες{openList.length ? ` (${openList.length})` : ""}
         </button>
         <button type="button" className="primary" onClick={() => setPublicOpen(true)}>
           Public view
@@ -1006,6 +1161,58 @@ export default function DeskConsole({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ανοιχτοί αγώνες — «Συνέχεια» από άλλη συσκευή */}
+      <div className={`overlay${resumeOpen ? " on" : ""}`}>
+        <div className="ov-top">
+          <h2>Συνέχεια αγώνα</h2>
+          <span>Διάλεξε αγώνα — συνεχίζει από εδώ, με το σκορ που είναι στη βάση</span>
+          <div style={{ flex: 1 }} />
+          <button type="button" className="ghost" onClick={() => setResumeOpen(false)}>
+            Close
+          </button>
+        </div>
+        <div className="ov-grid">
+          {openList.length === 0 ? (
+            <div className="ov-card">
+              <div className="h">Κανένας ανοιχτός αγώνας</div>
+            </div>
+          ) : (
+            openList.map((row) => {
+              const p1 = row.players?.[0];
+              const p2 = row.players?.[1];
+              const mine = row.claim?.deviceId && row.claim.deviceId === deviceId.current;
+              return (
+                <div key={row.sessionId} className="ov-card">
+                  <div className="h">
+                    TABLE {row.tableNumber ?? "—"} · {p1?.name ?? "—"} – {p2?.name ?? "—"}
+                  </div>
+                  <div className="ov-row">
+                    <span className="n">{p1?.name ?? "—"}</span>
+                    <span className="i">{p1?.innings ?? 0}</span>
+                    <span className="s">{p1?.points ?? 0}</span>
+                  </div>
+                  <div className="ov-row">
+                    <span className="n">{p2?.name ?? "—"}</span>
+                    <span className="i">{p2?.innings ?? 0}</span>
+                    <span className="s">{p2?.points ?? 0}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderTop: "1px solid #131b26" }}>
+                    <span style={{ fontSize: 11, color: "#6b7787" }}>
+                      {row.status === "in_progress" ? "LIVE" : "προετοιμασία"}
+                      {row.isPublic ? " ●" : ""} · {mine ? "αυτή η συσκευή" : row.claim?.displayName ?? "ελεύθερο"}
+                    </span>
+                    <button type="button" className="primary" style={{ marginLeft: "auto" }} onClick={() => void resumeTable(row)}>
+                      Συνέχεια
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        <div className="ov-foot">Όποιος επιλέξει τελευταίος συνεχίζει — η άλλη συσκευή κλειδώνει.</div>
       </div>
 
       {/* δημόσια προβολή */}

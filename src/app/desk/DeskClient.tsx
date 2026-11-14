@@ -55,7 +55,7 @@ type TableState = {
   finished: boolean;
   saving: boolean;
   detail: InningEntry[];
-  history: Array<{ p1: Side; p2: Side; active: 0 | 1; detail: InningEntry[] }>;
+  history: Array<{ p1: Side; p2: Side; active: 0 | 1; detail: InningEntry[]; tools?: DeskToolsValue }>;
   /** Το Live γράφει μόνο όταν ανάψει. */
   liveOn: boolean;
   /** Ποια πλευρά του ΑΓΩΝΑ είναι ο κάθε παίκτης (1/2) — αλλάζει με το Swap. */
@@ -204,6 +204,21 @@ export default function DeskClient() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /* Αναγνωριστικό συσκευής: «όποιος το επιλέξει τελευταίος» κρατά το τραπέζι. */
+  const deviceIdRef = useRef<string>("");
+  useEffect(() => {
+    try {
+      let id = window.localStorage.getItem("desk.device.v1");
+      if (!id) {
+        id = `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+        window.localStorage.setItem("desk.device.v1", id);
+      }
+      deviceIdRef.current = id;
+    } catch {
+      deviceIdRef.current = `d${Date.now().toString(36)}`;
+    }
+  }, []);
+
   /* --- σύνδεση με κωδικό --- */
   const login = useCallback(async () => {
     const clean = code.trim().toUpperCase();
@@ -291,8 +306,8 @@ export default function DeskClient() {
       counters.set(key, next);
       return { match, seq: next };
     });
-    /* Μόνο ό,τι δεν έχει παιχτεί και δεν παίζεται ήδη σε τραπέζι. */
-    return numbered.filter(({ match }) => !match.openOn && !match.done);
+    /* Ό,τι δεν έχει παιχτεί· οι αγώνες που παίζονται τώρα εμφανίζονται ως «ΣΥΝΕΧΕΙΑ». */
+    return numbered.filter(({ match }) => !match.done);
   }, [matches]);
 
   const currentEvent = useMemo(
@@ -335,7 +350,7 @@ export default function DeskClient() {
         const sessionId = opened.data.sessionId;
         await api(`/api/desk/tables/${encodeURIComponent(sessionId)}/claim`, token, {
           method: "POST",
-          body: JSON.stringify({}),
+          body: JSON.stringify({ deviceId: deviceIdRef.current }),
         });
 
         const openedTable: TableState = {
@@ -362,6 +377,39 @@ export default function DeskClient() {
           saving: false,
           error: null,
         };
+
+        /*
+         * Ο αγώνας ήταν ήδη ανοιχτός (άλλη συσκευή / έκλεισε ο υπολογιστής):
+         * φέρνουμε το σκορ που είναι στη βάση αντί να ξεκινήσουμε από 0-0.
+         */
+        try {
+          const list = await api<{ data: Array<{ sessionId: string; isPublic?: boolean; players?: Array<{ points?: number; innings?: number; hr?: number; name?: string | null }> }> }>(
+            "/api/desk/tables",
+            token,
+          );
+          const row = (list?.data ?? []).find((item) => item.sessionId === sessionId);
+          const p1row = row?.players?.[0];
+          const p2row = row?.players?.[1];
+          if (row && ((p1row?.points ?? 0) > 0 || (p2row?.points ?? 0) > 0 || (p1row?.innings ?? 0) > 1)) {
+            openedTable.p1 = {
+              points: Number(p1row?.points) || 0,
+              run: 0,
+              hr: Number(p1row?.hr) || 0,
+              hr2: 0,
+              innings: Number(p1row?.innings) || 1,
+            };
+            openedTable.p2 = {
+              points: Number(p2row?.points) || 0,
+              run: 0,
+              hr: Number(p2row?.hr) || 0,
+              hr2: 0,
+              innings: Number(p2row?.innings) || 0,
+            };
+            openedTable.liveOn = row.isPublic === true;
+          }
+        } catch {
+          /* χωρίς σκορ από τη βάση μένει η φρέσκια αρχική κατάσταση */
+        }
         setTable(openedTable);
         setActiveId(sessionId);
         setTableNo(tableNo + 1);
@@ -497,9 +545,15 @@ export default function DeskClient() {
       return {
         ...next,
         history: [
-          { p1: { ...table.p1 }, p2: { ...table.p2 }, active: table.active, detail: table.detail },
+          {
+            p1: { ...table.p1 },
+            p2: { ...table.p2 },
+            active: table.active,
+            detail: table.detail.map((row) => ({ ...row })),
+            tools: { ...table.tools },
+          },
           ...table.history,
-        ].slice(0, 20),
+        ].slice(0, 30),
       };
     },
     [table],
@@ -544,6 +598,7 @@ export default function DeskClient() {
           await api(`/api/desk/tables/${encodeURIComponent(next.sessionId)}/score`, token, {
             method: "POST",
             body: JSON.stringify({
+              deviceId: deviceIdRef.current,
               players: [
                 { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
                 { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
@@ -576,6 +631,7 @@ export default function DeskClient() {
       p2: last.p2,
       active: last.active,
       detail: last.detail,
+      tools: last.tools ? { ...last.tools } : table.tools,
       buffer: "",
       history: rest,
     });
@@ -981,6 +1037,7 @@ export default function DeskClient() {
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500">
                     {matchLabel(match, seq)}
+                    {match.openOn ? <span className="ml-2 text-amber-400">· ΠΑΙΖΕΤΑΙ (τραπέζι {match.openOn})</span> : null}
                   </p>
                   <p className="text-sm">
                     {playerName(match, 1)} <span className="text-slate-500">vs</span>{" "}
@@ -991,9 +1048,11 @@ export default function DeskClient() {
                   type="button"
                   onClick={() => void openTable(match)}
                   disabled={busy}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${
+                    match.openOn ? "bg-amber-600" : "bg-emerald-600"
+                  }`}
                 >
-                  Άνοιγμα
+                  {match.openOn ? "Συνέχεια" : "Άνοιγμα"}
                 </button>
               </div>
             ))

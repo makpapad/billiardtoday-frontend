@@ -1322,14 +1322,30 @@ const mergeLiveSessions = (
       existing.state?.playerAName ?? existing.player1Name ?? null;
     const existingPlayerBName =
       existing.state?.playerBName ?? existing.player2Name ?? null;
-    const authoritativePlayerAName = preferText(
-      existing.state?.playerAName ?? existing.player1Name,
-      session.state?.playerAName ?? session.player1Name,
-    );
-    const authoritativePlayerBName = preferText(
-      existing.state?.playerBName ?? existing.player2Name,
-      session.state?.playerBName ?? session.player2Name,
-    );
+    /*
+     * Εικονική οθόνη desk: το WS κουβαλά και τη σειρά μετά το Swap. Αν κρατούσαμε
+     * τα ονόματα του API (σταθερή σειρά πλευρών), το σκορ/σερί θα πήγαινε στον
+     * άλλο παίκτη — «το swap δεν μεταφέρει πόντους και run».
+     */
+    const deskScreenKey = /^DESK-/i.test(String(key));
+    const authoritativePlayerAName = deskScreenKey
+      ? preferText(
+          session.state?.playerAName ?? session.player1Name,
+          existing.state?.playerAName ?? existing.player1Name,
+        )
+      : preferText(
+          existing.state?.playerAName ?? existing.player1Name,
+          session.state?.playerAName ?? session.player1Name,
+        );
+    const authoritativePlayerBName = deskScreenKey
+      ? preferText(
+          session.state?.playerBName ?? session.player2Name,
+          existing.state?.playerBName ?? existing.player2Name,
+        )
+      : preferText(
+          existing.state?.playerBName ?? existing.player2Name,
+          session.state?.playerBName ?? session.player2Name,
+        );
     const authoritativePlayerACountry = preferText(
       existing.state?.playerACountry,
       session.state?.playerACountry,
