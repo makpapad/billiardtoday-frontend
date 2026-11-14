@@ -6,6 +6,7 @@ import {
   DeskMatchControls,
   DeskToolsToggle,
   emptyDeskTools,
+  tickTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
 
@@ -479,14 +480,9 @@ export default function DeskClient() {
     const id = window.setInterval(() => {
       const currentTable = tableRef.current;
       if (!currentTable?.tools?.clockVisible || !currentTable.tools.clockRunning) return;
-      const remaining = Math.max(0, currentTable.tools.clockRemaining - 1);
       const next: TableState = {
         ...currentTable,
-        tools: {
-          ...currentTable.tools,
-          clockRemaining: remaining,
-          clockRunning: remaining > 0,
-        },
+        tools: tickTools(currentTable.tools, currentTable.active),
       };
       setTable(next);
       publishLive(next);

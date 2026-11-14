@@ -35,6 +35,28 @@ type Props = {
   disabled?: boolean;
 };
 
+/**
+ * Ένα δευτερόλεπτο ρολογιού. Όταν συμπληρωθούν τα 40″ ΔΕΝ σταματά: καίγεται ένα
+ * timeout του παίκτη που έχει τη σειρά (γίνεται γκρι) και το ρολόι ξαναξεκινά από
+ * 40″. Μόνο όταν δεν μένει κανένα timeout μένει στο 0 και σβήνει.
+ */
+export function tickTools(tools: DeskToolsValue, active: 0 | 1): DeskToolsValue {
+  if (!tools.clockVisible || !tools.clockRunning) return tools;
+  const remaining = Math.max(0, tools.clockRemaining - 1);
+  if (remaining > 0) return { ...tools, clockRemaining: remaining };
+  const key = active === 0 ? "timeoutsA" : "timeoutsB";
+  const used = active === 0 ? tools.timeoutsA : tools.timeoutsB;
+  if (used < tools.timeoutsMax) {
+    return {
+      ...tools,
+      [key]: used + 1,
+      clockRemaining: tools.clockTotal,
+      clockRunning: true,
+    };
+  }
+  return { ...tools, clockRemaining: 0, clockRunning: false };
+}
+
 const BTN =
   "rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-200 transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-35";
 const BTN_ON =
@@ -160,15 +182,15 @@ export function DeskMatchControls({
         </span>
         {(["A", "B"] as const).map((side) => {
           const used = side === "A" ? value.timeoutsA : value.timeoutsB;
-          const key = side === "A" ? "timeoutsA" : "timeoutsB";
           return (
             <span key={side} className="flex items-center gap-1">
               <span className="text-[11px] font-bold text-slate-400">{side}</span>
+              {/* Τα «+ / −» αλλάζουν ΠΟΣΑ timeouts δικαιούται — τα γεμάτα γίνονται πράσινα. */}
               <button
                 type="button"
                 className={BTN}
-                disabled={disabled || used <= 0}
-                onClick={() => onChange({ [key]: Math.max(0, used - 1) })}
+                disabled={disabled || value.timeoutsMax <= used || value.timeoutsMax <= 0}
+                onClick={() => onChange({ timeoutsMax: Math.max(used, value.timeoutsMax - 1) })}
               >
                 −
               </button>
@@ -178,8 +200,8 @@ export function DeskMatchControls({
               <button
                 type="button"
                 className={BTN}
-                disabled={disabled || used >= value.timeoutsMax}
-                onClick={() => onChange({ [key]: Math.min(value.timeoutsMax, used + 1) })}
+                disabled={disabled || value.timeoutsMax >= 9}
+                onClick={() => onChange({ timeoutsMax: value.timeoutsMax + 1 })}
               >
                 +
               </button>

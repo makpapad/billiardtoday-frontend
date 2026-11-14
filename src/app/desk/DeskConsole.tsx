@@ -6,6 +6,7 @@ import {
   DeskMatchControls,
   DeskToolsToggle,
   emptyDeskTools,
+  tickTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
 import "./desk-console.css";
@@ -265,13 +266,7 @@ export default function DeskConsole({
     const id = window.setInterval(() => {
       const changed = tablesRef.current
         .filter((t) => t.tools?.clockVisible && t.tools?.clockRunning)
-        .map((t) => {
-          const remaining = Math.max(0, t.tools.clockRemaining - 1);
-          return {
-            ...t,
-            tools: { ...t.tools, clockRemaining: remaining, clockRunning: remaining > 0 },
-          };
-        });
+        .map((t) => ({ ...t, tools: tickTools(t.tools, t.active) }));
       if (changed.length === 0) return;
       setTables((prev) => prev.map((t) => changed.find((row) => row.no === t.no) ?? t));
       changed.forEach((t) => publishLive(t));
