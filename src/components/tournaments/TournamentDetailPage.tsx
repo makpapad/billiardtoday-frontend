@@ -1295,6 +1295,18 @@ const mergeLiveSessions = (
       merged.set(key, session);
       continue;
     }
+    /*
+     * Το relay κρατά το ΤΕΛΕΥΤΑΙΟ μήνυμα ανά οθόνη και το ξαναστέλνει σε κάθε
+     * νέο client. Όταν στο ίδιο τραπέζι άνοιξε ΝΕΟΣ αγώνας, αυτό το παλιό
+     * μήνυμα (άλλη session) ζωγράφιζε το σκορ του προηγούμενου αγώνα πάνω στον
+     * νέο — «το 2ο ξεκίνησε από 2-0». Ίδιο sessionId = ίδιος αγώνας· αλλιώτικο
+     * σημαίνει παλιό μήνυμα, άρα κερδίζει ό,τι λέει το API.
+     */
+    const existingSessionId = String(existing.sessionId ?? existing.documentId ?? "").trim();
+    const incomingSessionId = String(session.sessionId ?? session.documentId ?? "").trim();
+    if (existingSessionId && incomingSessionId && existingSessionId !== incomingSessionId) {
+      continue;
+    }
     const existingIsRunning =
       Boolean(existing.state?.isRunning) ||
       existing.sessionStatus === "in_progress";
@@ -2947,6 +2959,13 @@ export function TournamentDetailPage({
             return;
           }
 
+          /* Ζωντανή εικόνα (score:update) που κρατάμε ήδη για την ίδια session/οθόνη. */
+          const liveSnapshot =
+            wsLiveSessions.find((entry) => entry.sessionId === lifecycleSessionId) ??
+            (lifecycleScreenId
+              ? wsLiveSessions.find((entry) => entry.screenId === lifecycleScreenId)
+              : undefined);
+
           upsertLiveSession({
             id: lifecycleSessionId || lifecycleScreenId || "unknown-session",
             documentId:
@@ -3045,8 +3064,40 @@ export function TournamentDetailPage({
                     ? sessionObj.player2PhotoMainUrl
                     : null,
               progress: Number(sessionObj.progress ?? 0) || 0,
-              totalBlocks: 40,
+              /* Χωρίς πραγματικό ρολόι βολών ΔΕΝ στέλνουμε 40: το Live ζωγράφιζε
+                 μπάρα χρόνου (κόκκινη, στο 0) που αναβόσβηνε σε κάθε μήνυμα. */
+              totalBlocks:
+                Number(sessionObj.totalBlocks ?? sessionObj.total_blocks ?? 0) || 0,
               isRunning: lifecycleStatus === "in_progress",
+              /*
+               * Το SESSION_UPDATED είναι κανάλι lifecycle, όχι σκορ: φτάνει σε
+               * κάθε εγγραφή/cron με ό,τι πρόλαβε το τελευταίο POST. Γράφοντας
+               * από πάνω στο ζωντανό μήνυμα, το σερί «ανεβοκατέβαινε» και οι
+               * μπάρες χρόνου αναβόσβηναν για λίγο. Αν κρατάμε ήδη ζωντανή
+               * εικόνα για την ίδια session, μένουν τα νούμερα εκείνης.
+               */
+              ...(liveSnapshot?.state
+                ? {
+                    scoreA: liveSnapshot.state.scoreA,
+                    scoreB: liveSnapshot.state.scoreB,
+                    inningsA: liveSnapshot.state.inningsA,
+                    inningsB: liveSnapshot.state.inningsB,
+                    inningsCount: liveSnapshot.state.inningsCount,
+                    bestRunA: liveSnapshot.state.bestRunA,
+                    bestRunB: liveSnapshot.state.bestRunB,
+                    bestRun2A: liveSnapshot.state.bestRun2A,
+                    bestRun2B: liveSnapshot.state.bestRun2B,
+                    runA: liveSnapshot.state.runA,
+                    runB: liveSnapshot.state.runB,
+                    liveRunA: liveSnapshot.state.liveRunA,
+                    liveRunB: liveSnapshot.state.liveRunB,
+                    current: liveSnapshot.state.current,
+                    progress: liveSnapshot.state.progress,
+                    totalBlocks: liveSnapshot.state.totalBlocks,
+                    isRunning:
+                      liveSnapshot.state.isRunning ?? lifecycleStatus === "in_progress",
+                  }
+                : {}),
               tournamentName:
                 typeof sessionObj.eventTitle === "string"
                   ? sessionObj.eventTitle

@@ -315,6 +315,19 @@ export default function DeskConsole({
           method: "POST",
           body: JSON.stringify({}),
         });
+        /*
+         * Ο αγώνας ΔΕΝ δημοσιεύεται με το άνοιγμα — μόνο με το κουμπί LIVE.
+         * Το Strapi δημιουργεί τη session `isPublic: true` (status in_progress),
+         * άρα το Live την έδειχνε αμέσως· και επειδή το relay κρατά το τελευταίο
+         * μήνυμα ανά ΟΘΟΝΗ, μια νέα session στο ίδιο τραπέζι εμφανιζόταν με το
+         * σκορ του προηγούμενου αγώνα (π.χ. 2-0) μέχρι να σταλεί νέο μήνυμα.
+         */
+        await api(`/api/desk/tables/${encodeURIComponent(sessionId)}/visibility`, token, {
+          method: "POST",
+          body: JSON.stringify({ isPublic: false }),
+        }).catch(() => {
+          /* αν αποτύχει, το Live θα δείξει τον αγώνα με το πρώτο γράψιμο */
+        });
         setTables((prev) =>
           prev.map((t) =>
             t.no === tableNo
