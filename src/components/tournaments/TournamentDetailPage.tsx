@@ -1295,18 +1295,6 @@ const mergeLiveSessions = (
       merged.set(key, session);
       continue;
     }
-    /*
-     * Το relay κρατά το ΤΕΛΕΥΤΑΙΟ μήνυμα ανά οθόνη και το ξαναστέλνει σε κάθε
-     * νέο client. Όταν στο ίδιο τραπέζι άνοιξε ΝΕΟΣ αγώνας, αυτό το παλιό
-     * μήνυμα (άλλη session) ζωγράφιζε το σκορ του προηγούμενου αγώνα πάνω στον
-     * νέο — «το 2ο ξεκίνησε από 2-0». Ίδιο sessionId = ίδιος αγώνας· αλλιώτικο
-     * σημαίνει παλιό μήνυμα, άρα κερδίζει ό,τι λέει το API.
-     */
-    const existingSessionId = String(existing.sessionId ?? existing.documentId ?? "").trim();
-    const incomingSessionId = String(session.sessionId ?? session.documentId ?? "").trim();
-    if (existingSessionId && incomingSessionId && existingSessionId !== incomingSessionId) {
-      continue;
-    }
     const existingIsRunning =
       Boolean(existing.state?.isRunning) ||
       existing.sessionStatus === "in_progress";
@@ -2941,6 +2929,20 @@ export function TournamentDetailPage({
                 "",
             ).trim() || null;
 
+          /* Παλιό lifecycle μήνυμα άλλης session στην ίδια οθόνη: δεν αγγίζει τη νέα. */
+          const apiSessionForLifecycleScreen = eventLiveSessions.find(
+            (entry) =>
+              String(entry.screenIdentifier ?? entry.screenId ?? "").trim() ===
+              lifecycleScreenId,
+          );
+          if (
+            apiSessionForLifecycleScreen &&
+            lifecycleSessionId &&
+            String(apiSessionForLifecycleScreen.sessionId ?? "").trim() !== lifecycleSessionId
+          ) {
+            return;
+          }
+
           if (
             payload.ended === true ||
             lifecycleStatus === "finished" ||
@@ -3149,6 +3151,23 @@ export function TournamentDetailPage({
           payload.sessionId ?? payload.screenId ?? "",
         ).trim();
         const screenId = String(payload.screenId ?? "").trim();
+        /*
+         * Το relay κρατά το ΤΕΛΕΥΤΑΙΟ μήνυμα ανά οθόνη και το ξαναστέλνει σε κάθε
+         * νέο επισκέπτη. Όταν στο ίδιο τραπέζι άνοιξε ΝΕΟΣ αγώνας, αυτό το μήνυμα
+         * ζωγράφιζε το σκορ του προηγούμενου («το 2ο ξεκίνησε από 2-0»). Αν το API
+         * ξέρει άλλη session για την ίδια οθόνη, το μήνυμα είναι παλιό → αγνοείται.
+         */
+        const apiSessionForScreen = eventLiveSessions.find(
+          (entry) =>
+            String(entry.screenIdentifier ?? entry.screenId ?? "").trim() === screenId,
+        );
+        if (
+          apiSessionForScreen &&
+          sessionId &&
+          String(apiSessionForScreen.sessionId ?? "").trim() !== sessionId
+        ) {
+          return;
+        }
         const existingSession =
           wsLiveSessions.find((entry) => entry.screenId === screenId) ??
           wsLiveSessions.find((entry) => entry.sessionId === sessionId);
