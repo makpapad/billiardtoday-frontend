@@ -2084,6 +2084,31 @@ export function TournamentDetailPage({
     EventLiveSession[]
   >([]);
   const [wsLiveSessions, setWsLiveSessions] = useState<EventLiveSession[]>([]);
+  /*
+   * Το API φρεσκάρει τη λίστα κάθε 10″. Τα WebSockets ΔΕΝ πρέπει να ξαναχτίζονται
+   * τότε: κάθε επανασύνδεση ξαναπαίρνει το αποθηκευμένο μήνυμα του relay (μπορεί να
+   * είναι της προηγούμενης μπάλας) και το σερί/τα στατιστικά αναβόσβηναν ανά 10″.
+   * Η λίστα διαβάζεται από ref· εξάρτηση μένει μόνο το σταθερό κλειδί των οθονών.
+   */
+  const eventLiveSessionsRef = useRef<EventLiveSession[]>([]);
+  const eventLiveScreenIdsKey = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          eventLiveSessions
+            .map((session) =>
+              String(session.screenId || session.screenIdentifier || "").trim(),
+            )
+            .filter((value) => value.length > 0),
+        ),
+      )
+        .sort()
+        .join("|"),
+    [eventLiveSessions],
+  );
+  useEffect(() => {
+    eventLiveSessionsRef.current = eventLiveSessions;
+  }, [eventLiveSessions]);
   const [displayEventLiveSessions, setDisplayEventLiveSessions] = useState<
     EventLiveSession[]
   >([]);
@@ -2942,7 +2967,7 @@ export function TournamentDetailPage({
             ).trim() || null;
 
           /* Παλιό lifecycle μήνυμα άλλης session στην ίδια οθόνη: δεν αγγίζει τη νέα. */
-          const apiSessionForLifecycleScreen = eventLiveSessions.find(
+          const apiSessionForLifecycleScreen = eventLiveSessionsRef.current.find(
             (entry) =>
               String(entry.screenIdentifier ?? entry.screenId ?? "").trim() ===
               lifecycleScreenId,
@@ -3169,7 +3194,7 @@ export function TournamentDetailPage({
          * ζωγράφιζε το σκορ του προηγούμενου («το 2ο ξεκίνησε από 2-0»). Αν το API
          * ξέρει άλλη session για την ίδια οθόνη, το μήνυμα είναι παλιό → αγνοείται.
          */
-        const apiSessionForScreen = eventLiveSessions.find(
+        const apiSessionForScreen = eventLiveSessionsRef.current.find(
           (entry) =>
             String(entry.screenIdentifier ?? entry.screenId ?? "").trim() === screenId,
         );
@@ -3299,20 +3324,14 @@ export function TournamentDetailPage({
     return () => {
       socket.close();
     };
-  }, [applyLiveScoreDelayPayload, derivedClubDocumentId, eventLiveSessions]);
+    /* ΟΧΙ `eventLiveSessions` εδώ: το 10″ poll ξανάχτιζε το socket και το relay
+       ξανάπαιζε το αποθηκευμένο μήνυμα (σερί/στατιστικά να αναβοσβήνουν). */
+  }, [applyLiveScoreDelayPayload, derivedClubDocumentId]);
 
   useEffect(() => {
-    const screenIds = Array.from(
-      new Set(
-        eventLiveSessions
-          .map((session) =>
-            String(
-              session.screenId || session.screenIdentifier || "",
-            ).trim(),
-          )
-          .filter((value) => value.length > 0),
-      ),
-    );
+    const screenIds = eventLiveScreenIdsKey
+      ? eventLiveScreenIdsKey.split("|")
+      : [];
 
     const nextKey = screenIds.slice().sort().join("|");
     if (!nextKey) {
@@ -3344,7 +3363,7 @@ export function TournamentDetailPage({
           ) as WsTournamentPayload;
           if (applyLiveScoreDelayPayload(payload)) return;
           const baseSession =
-            eventLiveSessions.find(
+            eventLiveSessionsRef.current.find(
               (entry) =>
                 String(
                   entry.screenId || entry.screenIdentifier || "",
@@ -4090,7 +4109,8 @@ export function TournamentDetailPage({
     return () => {
       sockets.forEach((socket) => socket.close());
     };
-  }, [applyLiveScoreDelayPayload, derivedClubDocumentId, eventLiveSessions]);
+    /* Μόνο το κλειδί των οθονών: όχι το 10″ poll (βλ. παραπάνω). */
+  }, [applyLiveScoreDelayPayload, derivedClubDocumentId, eventLiveScreenIdsKey]);
 
   useEffect(() => {
     if (activeView !== "live" || !highlightedLiveSessionId) return;
