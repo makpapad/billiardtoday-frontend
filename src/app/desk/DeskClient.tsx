@@ -273,13 +273,16 @@ export default function DeskClient() {
 
   const numberedMatches = useMemo(() => {
     const counters = new Map<number, number>();
-    /* Ό,τι παίζεται ήδη σε τραπέζι δεν ξαναεμφανίζεται στη λίστα. */
-    return matches.filter((match) => !match.openOn).map((match) => {
+    /* Σταθερή αρίθμηση ανά όμιλο (1..n σε όλους τους αγώνες) — κρύβοντας παιγμένους
+       δεν πρέπει να αλλάζει το «Αγώνας Y» των υπολοίπων. */
+    const numbered = matches.map((match) => {
       const key = Number(match.groupNumber ?? 0);
       const next = (counters.get(key) ?? 0) + 1;
       counters.set(key, next);
       return { match, seq: next };
     });
+    /* Μόνο ό,τι δεν έχει παιχτεί και δεν παίζεται ήδη σε τραπέζι. */
+    return numbered.filter(({ match }) => !match.openOn && !match.done);
   }, [matches]);
 
   const currentEvent = useMemo(
@@ -904,6 +907,10 @@ export default function DeskClient() {
         <div className="mt-4 space-y-2">
           {matches.length === 0 ? (
             <p className="text-xs text-slate-500">Δεν υπάρχουν αγώνες σε αυτή τη φάση.</p>
+          ) : numberedMatches.length === 0 ? (
+            <p className="text-xs text-slate-500">
+              Δεν έμεινε άπαιχτος αγώνας — όλοι έχουν παιχτεί ή βρίσκονται σε τραπέζι.
+            </p>
           ) : (
             numberedMatches.map(({ match, seq }) => (
               <div

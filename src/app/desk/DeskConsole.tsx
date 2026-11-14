@@ -897,29 +897,45 @@ export default function DeskConsole({
           <div className="picker-list">
             {(() => {
               const counters = new Map<number, number>();
-              /* Ό,τι έχει ήδη ανοίξει σε τραπέζι δεν ξαναεμφανίζεται. */
-              const playable = matches.filter((match) => !match.openOn);
-              return playable.map((match) => {
+              /* Η αρίθμηση μέσα στον όμιλο μένει σταθερή (1..n σε ΟΛΟΥΣ τους αγώνες),
+                 αλλιώς κρύβοντας παιγμένους αλλάζει το «Αγώνας Y» των υπόλοιπων. */
+              const numbered = matches.map((match) => {
                 const key = Number(match.groupNumber ?? 0);
                 const seq = (counters.get(key) ?? 0) + 1;
                 counters.set(key, seq);
+                return { match, seq };
+              });
+              /* Μόνο ό,τι δεν έχει παιχτεί και δεν παίζεται τώρα σε τραπέζι. */
+              const playable = numbered.filter(
+                ({ match }) => !match.openOn && !match.done,
+              );
+              if (playable.length === 0) {
                 return (
-                  <div
-                    key={match.documentId}
-                    className="mrow"
-                    onClick={() => pickForTable && void openMatch(pickForTable, match, seq)}
-                  >
-                    <div className="g">{match.groupNumber ? `GRP ${match.groupNumber}` : "—"}</div>
+                  <div className="mrow">
+                    <div className="g">—</div>
                     <div className="p">
-                      {match.player1} <span style={{ color: "#8b98a9" }}>vs</span> {match.player2}
-                      <small>{matchTitle(match, seq)}</small>
+                      Δεν έμεινε άπαιχτος αγώνας σε αυτή τη φάση
+                      <small>Όλοι έχουν παιχτεί ή βρίσκονται σε τραπέζι</small>
                     </div>
-                    <button type="button" className="pickbtn">
-                      Open
-                    </button>
                   </div>
                 );
-              });
+              }
+              return playable.map(({ match, seq }) => (
+                <div
+                  key={match.documentId}
+                  className="mrow"
+                  onClick={() => pickForTable && void openMatch(pickForTable, match, seq)}
+                >
+                  <div className="g">{match.groupNumber ? `GRP ${match.groupNumber}` : "—"}</div>
+                  <div className="p">
+                    {match.player1} <span style={{ color: "#8b98a9" }}>vs</span> {match.player2}
+                    <small>{matchTitle(match, seq)}</small>
+                  </div>
+                  <button type="button" className="pickbtn">
+                    Open
+                  </button>
+                </div>
+              ));
             })()}
           </div>
         </div>
