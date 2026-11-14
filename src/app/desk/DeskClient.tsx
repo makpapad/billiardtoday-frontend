@@ -397,14 +397,14 @@ export default function DeskClient() {
           if (row && ((p1row?.points ?? 0) > 0 || (p2row?.points ?? 0) > 0 || (p1row?.innings ?? 0) > 1)) {
             openedTable.p1 = {
               points: Number(p1row?.points) || 0,
-              run: 0,
+              run: Number(p1row?.run) || 0,
               hr: Number(p1row?.hr) || 0,
               hr2: 0,
               innings: Number(p1row?.innings) || 1,
             };
             openedTable.p2 = {
               points: Number(p2row?.points) || 0,
-              run: 0,
+              run: Number(p2row?.run) || 0,
               hr: Number(p2row?.hr) || 0,
               hr2: 0,
               innings: Number(p2row?.innings) || 0,

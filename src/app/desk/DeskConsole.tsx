@@ -482,14 +482,15 @@ export default function DeskConsole({
           },
           p1: {
             points: Number(first.points) || 0,
-            run: 0,
+            /* Το σερί που δεν έχει περαστεί ακόμη στους πόντους έρχεται κι αυτό. */
+            run: Number(first.run) || 0,
             hr: Number(first.hr) || 0,
             hr2: 0,
             innings: Number(first.innings) || 1,
           },
           p2: {
             points: Number(second.points) || 0,
-            run: 0,
+            run: Number(second.run) || 0,
             hr: Number(second.hr) || 0,
             hr2: 0,
             innings: Number(second.innings) || 0,
