@@ -381,7 +381,7 @@ export function LiveScoreBoardCard({
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
     return (
-      <div className="w-7 h-7 rounded-full overflow-hidden border border-white/50 shadow-inner bg-black/20 flex items-center justify-center">
+      <div className="w-[26px] h-[26px] rounded-full overflow-hidden border border-white/50 shadow-inner bg-black/20 flex items-center justify-center">
         {flagSrc ? (
           <img
             src={flagSrc}
