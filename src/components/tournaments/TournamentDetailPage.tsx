@@ -942,7 +942,7 @@ function mergeDelayedEventLiveSession(
   };
 }
 const EVENT_FALLBACK_POLL_MS = 60000;
-const LIVE_SESSIONS_FALLBACK_POLL_MS = 30000;
+const LIVE_SESSIONS_FALLBACK_POLL_MS = 10000;
 
 const withEntityField = (
   entity: unknown,
@@ -1342,6 +1342,41 @@ const mergeLiveSessions = (
       existing.state?.playerBPhotoMainUrl,
       session.state?.playerBPhotoMainUrl,
     );
+    /*
+     * Πρόοδος = ό,τι μόνο μεγαλώνει όσο παίζεται ο αγώνας. Το μήνυμα του desk
+     * (WS) φτάνει ακαριαία, το API κάθε λίγα δευτερόλεπτα — αλλά αν το WS
+     * «πάγωσε» σε παλιότερη εικόνα (ο χειριστής σταμάτησε να γράφει σε αυτό το
+     * τραπέζι, ή έκλεισε το LIVE), η κάρτα έδειχνε για πάντα το παλιό σκορ
+     * (π.χ. 2-0 ενώ η βάση είχε 3-2). Κανόνας:
+     *   - το WS κερδίζει ΜΟΝΟ όταν δείχνει ότι γράφεται κάτι τώρα (liveRun > 0),
+     *   - αλλιώς κερδίζει όποιος έχει μεγαλύτερη πρόοδο,
+     *   - σε ισοπαλία μένει το WS (άμεση ενημέρωση, χωρίς καθυστέρηση).
+     */
+    const progressOf = (item: EventLiveSession) =>
+      (Number(item.state?.inningsCount ?? item.state?.inningsA ?? 0) || 0) * 1000 +
+      (Number(item.state?.scoreA ?? 0) || 0) +
+      (Number(item.state?.scoreB ?? 0) || 0);
+    const wsIsTyping =
+      (Number(session.state?.liveRunA ?? 0) || 0) > 0 ||
+      (Number(session.state?.liveRunB ?? 0) || 0) > 0;
+    const apiIsAhead = !wsIsTyping && progressOf(existing) > progressOf(session);
+    const authoritativeNumbers = apiIsAhead
+      ? {
+          scoreA: existing.state?.scoreA,
+          scoreB: existing.state?.scoreB,
+          inningsA: existing.state?.inningsA,
+          inningsB: existing.state?.inningsB,
+          inningsCount: existing.state?.inningsCount,
+          runA: existing.state?.runA,
+          runB: existing.state?.runB,
+          liveRunA: existing.state?.liveRunA,
+          liveRunB: existing.state?.liveRunB,
+          bestRunA: existing.state?.bestRunA,
+          bestRunB: existing.state?.bestRunB,
+          bestRun2A: existing.state?.bestRun2A,
+          bestRun2B: existing.state?.bestRun2B,
+        }
+      : {};
     merged.set(key, {
       ...existing,
       ...session,
@@ -1360,6 +1395,7 @@ const mergeLiveSessions = (
       state: {
         ...existing.state,
         ...session.state,
+        ...authoritativeNumbers,
         liveVideos: normalizeLiveVideoEntries(
           session.state?.liveVideos ?? session.liveVideos ?? existing.state?.liveVideos ?? existing.liveVideos,
         ),
