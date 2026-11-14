@@ -434,6 +434,7 @@ const compareClubRuntimeStandingRows = (
             : 0
     if (averageA !== averageB) return averageB - averageA
 
+    // ΣΕΙΡΑ ΙΣΟΒΑΘΜΙΑΣ: μ.ός → σερί 1 → σερί 2 → (καλύτερο μ.ός αγώνα, τελευταίο).
     if (options.bestAverageBeforeHighRun) {
         const bestAverageDiff = (toNumber(b.best_average) ?? 0) - (toNumber(a.best_average) ?? 0)
         if (bestAverageDiff !== 0) return bestAverageDiff
@@ -442,11 +443,11 @@ const compareClubRuntimeStandingRows = (
     const highRunDiff = (toNumber(b.high_run) ?? 0) - (toNumber(a.high_run) ?? 0)
     if (highRunDiff !== 0) return highRunDiff
 
-    const bestAverageDiff = (toNumber(b.best_average) ?? 0) - (toNumber(a.best_average) ?? 0)
-    if (bestAverageDiff !== 0) return bestAverageDiff
-
     const highRun2Diff = (toNumber(b.high_run_2) ?? 0) - (toNumber(a.high_run_2) ?? 0)
     if (highRun2Diff !== 0) return highRun2Diff
+
+    const bestAverageDiff = (toNumber(b.best_average) ?? 0) - (toNumber(a.best_average) ?? 0)
+    if (bestAverageDiff !== 0) return bestAverageDiff
 
     return (toNumber(b.points) ?? 0) - (toNumber(a.points) ?? 0)
 }
