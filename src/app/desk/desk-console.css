@@ -124,6 +124,12 @@
   .bt-desk .timer{font-family:'Bebas Neue',sans-serif; font-size:14px; color:var(--muted); letter-spacing:.08em; min-width:42px}
   .bt-desk .cfoot button{padding:5px 8px; font-size:11px}
   .bt-desk .cfoot .save{margin-left:auto; background:var(--accent-dim); border-color:#1d5c36; color:#86efac; font-weight:700}
+  .bt-desk .cfoot .leave{border-color:#334155; color:#94a3b8}
+  /* Κλειδωμένο τραπέζι: ο αγώνας συνεχίζεται σε άλλη συσκευή — τα κουμπιά σβήνουν. */
+  .bt-desk .lockedbar{display:flex; align-items:center; gap:8px; margin:8px 14px 0; padding:8px 10px;
+        border:1px solid #7f1d1d; background:#2b0f12; color:#fecaca; border-radius:6px; font-size:11.5px}
+  .bt-desk .lockedbar button{margin-left:auto; padding:5px 8px; font-size:11px}
+  .bt-desk .keys button:disabled, .bt-desk .quick button:disabled{opacity:.35; cursor:not-allowed}
 
   .bt-desk .winner{position:absolute; inset:0; background:#0a0d12ee; display:flex; flex-direction:column;
           align-items:center; justify-content:center; gap:4px; backdrop-filter:blur(2px)}

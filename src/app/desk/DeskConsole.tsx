@@ -39,6 +39,8 @@ export type OpenTable = {
   equalInnings?: boolean;
   players?: Array<{ name?: string | null; points?: number; innings?: number; hr?: number; run?: number }>;
   claim?: { assignmentId?: number | null; displayName?: string | null; deviceId?: string | null; at?: number | null } | null;
+  /** Σειρά παικτών (Swap) και ποιος έχει τη σειρά, όπως τα άφησε το προηγούμενο desk. */
+  view?: { order?: number[] | null; active?: number | null } | null;
   updatedAt?: string | null;
 };
 
@@ -65,6 +67,8 @@ type TableState = {
   mode: "direct" | "screen";
   online: boolean;
   paused: boolean;
+  /** Το τραπέζι το συνέχισε άλλη συσκευή: κλειδώνει μέχρι να το ξαναπάρουμε. */
+  locked?: boolean;
   finished: boolean;
   saving: boolean;
   active: 0 | 1;
@@ -109,6 +113,7 @@ function emptyTable(no: number): TableState {
     mode: "direct",
     online: false,
     paused: false,
+    locked: false,
     finished: false,
     saving: false,
     active: 0,
@@ -299,7 +304,7 @@ export default function DeskConsole({
   const updateTools = useCallback(
     (patch: Partial<DeskToolsValue>) => {
       const table = tablesRef.current.find((t) => t.no === selected);
-      if (!table) return;
+      if (!table || table.locked) return;
       const next: TableState = { ...table, tools: { ...table.tools, ...patch } };
       setTables((prev) => prev.map((t) => (t.no === selected ? next : t)));
       publishLive(next);
@@ -311,7 +316,7 @@ export default function DeskConsole({
   useEffect(() => {
     const id = window.setInterval(() => {
       const changed = tablesRef.current
-        .filter((t) => t.tools?.clockVisible && t.tools?.clockRunning)
+        .filter((t) => !t.locked && t.tools?.clockVisible && t.tools?.clockRunning)
         .map((t) => ({ ...t, tools: tickTools(t.tools, t.active) }));
       if (changed.length === 0) return;
       setTables((prev) => prev.map((t) => changed.find((row) => row.no === t.no) ?? t));
@@ -372,8 +377,12 @@ export default function DeskConsole({
         if (!table.sessionId || !table.match) return table;
         const row = rows.find((item) => item.sessionId === table.sessionId);
         if (!row) return table;
-        const first = row.players?.[0];
-        const second = row.players?.[1];
+        /* Το API έχει σταθερή σειρά πλευρών· η σειρά του desk (Swap) έρχεται στο `view`. */
+        const order = Array.isArray(row.view?.order) && row.view.order.length === 2 ? row.view.order : [1, 2];
+        const canonical = row.players ?? [];
+        const first = order[0] === 2 ? canonical[1] : canonical[0];
+        const second = order[0] === 2 ? canonical[0] : canonical[1];
+        const sameOrder = (order[0] === 2 ? 2 : 1) === table.sides[0];
         const same =
           (Number(first?.points) || 0) === table.p1.points &&
           (Number(second?.points) || 0) === table.p2.points &&
@@ -381,9 +390,23 @@ export default function DeskConsole({
           (Number(second?.innings) || 0) === table.p2.innings &&
           (Number(first?.hr) || 0) === table.p1.hr &&
           (Number(second?.hr) || 0) === table.p2.hr;
-        if (same) return table;
+        /* Το κρατά άλλη συσκευή → κλειδώνει (τα κουμπιά σβήνουν) μέχρι να το ξαναπάρουμε. */
+        const claimDevice = row.claim?.deviceId ?? null;
+        const locked = Boolean(claimDevice && deviceId.current && claimDevice !== deviceId.current);
+        if (same && sameOrder && locked === Boolean(table.locked)) return table;
         return {
           ...table,
+          locked,
+          /* Η άλλη συσκευή έκανε Swap: παίρνουμε τη δική της σειρά. */
+          sides: (order[0] === 2 ? [2, 1] : [1, 2]) as [1 | 2, 1 | 2],
+          active: sameOrder ? table.active : Number(row.view?.active) === 1 ? 1 : 0,
+          match: sameOrder
+            ? table.match
+            : {
+                ...table.match,
+                player1: first?.name ?? table.match.player1,
+                player2: second?.name ?? table.match.player2,
+              },
           p1: {
             points: Number(first?.points) || 0,
             run: Number(first?.run) || 0,
@@ -412,13 +435,21 @@ export default function DeskConsole({
       const local = new Set(tablesRef.current.map((t) => t.sessionId).filter(Boolean) as string[]);
       if (rows.some((row) => !local.has(row.sessionId))) setResumeOpen(true);
     });
-    /* Γυρνώντας στην καρτέλα του desk: φέρε ό,τι γράφτηκε στο μεταξύ. */
-    const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
+    /*
+     * Μόλις το desk πάρει focus (γύρισμα καρτέλας, κλικ στο παράθυρο) ξαναρωτά
+     * τη βάση: φέρνει ό,τι γράφτηκε αλλού και κλειδώνει το τραπέζι αν το πήρε
+     * άλλη συσκευή.
+     */
+    const onFocus = () => {
+      if (document.visibilityState === "hidden") return;
       void fetchOpen().then((rows) => adoptFromApi(rows));
     };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [fetchOpen, adoptFromApi]);
 
   /**
@@ -434,8 +465,12 @@ export default function DeskConsole({
           body: JSON.stringify({ deviceId: deviceId.current }),
         });
         const players = Array.isArray(row.players) ? row.players : [];
-        const first = players[0] ?? {};
-        const second = players[1] ?? {};
+        /*
+         * Το API κρατά τους παίκτες σε σταθερή σειρά πλευρών. Το προηγούμενο desk
+         * μπορεί να είχε κάνει Swap — παίρνουμε τη δική του σειρά και τον ενεργό.
+         */
+        const order = Array.isArray(row.view?.order) && row.view?.order.length === 2 ? row.view.order : [1, 2];
+        const [first, second] = order[0] === 2 ? [players[1] ?? {}, players[0] ?? {}] : [players[0] ?? {}, players[1] ?? {}];
         const tableNo = Number(row.tableNumber) || Math.max(0, ...tables.map((t) => t.no)) + 1;
         const hydrated: TableState = {
           ...emptyTable(tableNo),
@@ -464,7 +499,8 @@ export default function DeskConsole({
           mode: "direct",
           online: true,
           liveOn: row.isPublic === true,
-          sides: [1, 2],
+          sides: (order[0] === 2 ? [2, 1] : [1, 2]) as [1 | 2, 1 | 2],
+          active: Number(row.view?.active) === 1 ? 1 : 0,
           targetPoints: row.targetPoints ?? null,
           equalInnings: row.equalInnings === true,
           openedAt: Date.now(),
@@ -502,6 +538,8 @@ export default function DeskConsole({
             method: "POST",
             body: JSON.stringify({
               deviceId: deviceId.current,
+              /* Θέση παικτών/ενεργός όπως τα βλέπει το desk — για «Συνέχεια» αλλού. */
+              view: { order: next.sides, active: next.active },
               players: [
                 { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
                 { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
@@ -514,10 +552,15 @@ export default function DeskConsole({
         } catch (err) {
           const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
           setError(message);
-          /* Το τραπέζι συνεχίζεται αλλού: δεν σβήνουμε τίποτα — πατάει «Συνέχεια» για να το πάρει πίσω. */
+          /*
+           * Το τραπέζι συνεχίζεται αλλού: κλειδώνει η οθόνη (τα κουμπιά σβήνουν)
+           * και δεν σβήνεται τίποτα — «Πάρε τον έλεγχο» ή refresh το επαναφέρει.
+           */
           if (/άλλη συσκευή/i.test(message)) {
-            void fetchOpen();
-            setTables((prev) => prev.map((t) => (t.no === next.no ? { ...t, saving: false, paused: true } : t)));
+            void fetchOpen().then((rows) => adoptFromApi(rows));
+            setTables((prev) =>
+              prev.map((t) => (t.no === next.no ? { ...t, saving: false, locked: true } : t)),
+            );
             return;
           }
           /* Η session σβήστηκε (π.χ. καθάρισμα από το admin): ελευθερώνουμε το τραπέζι. */
@@ -681,7 +724,7 @@ export default function DeskConsole({
   /** +N πόντοι στον ενεργό παίκτη — αντί για αριθμητικό πληκτρολόγιο. */
   const addPoints = useCallback(
     (n: number) => {
-      if (!current?.sessionId || current.finished) return;
+      if (!current?.sessionId || current.finished || current.locked) return;
       const key = current.active === 0 ? "p1" : "p2";
       const side = current[key];
       const next = withHistory({
@@ -697,7 +740,7 @@ export default function DeskConsole({
 
   /** Αλλαγή πλευρών: τα ονόματα, τα σκορ και το φύλλο ακολουθούν. */
   const swapPlayers = useCallback(() => {
-    if (!current?.match || current.finished) return;
+    if (!current?.match || current.finished || current.locked) return;
     const next = withHistory({
       ...current,
       match: {
@@ -734,7 +777,7 @@ export default function DeskConsole({
   }, [current, pushScore, pushLog, withHistory]);
 
   const undo = useCallback(() => {
-    if (!current?.sessionId || current.history.length === 0) return;
+    if (!current?.sessionId || current.history.length === 0 || current.locked) return;
     const [last, ...rest] = current.history;
     const next: TableState = {
       ...current,
@@ -783,10 +826,30 @@ export default function DeskConsole({
     [tables, token],
   );
 
+  /** Παίρνει πίσω το τραπέζι από άλλη συσκευή (ίδιος κωδικός, τελευταίος κερδίζει). */
+  const takeControl = useCallback(
+    async (no: number) => {
+      const table = tablesRef.current.find((t) => t.no === no);
+      if (!table?.sessionId) return;
+      try {
+        await api(`/api/desk/tables/${encodeURIComponent(table.sessionId)}/claim`, token, {
+          method: "POST",
+          body: JSON.stringify({ deviceId: deviceId.current }),
+        });
+        setTables((prev) => prev.map((t) => (t.no === no ? { ...t, locked: false } : t)));
+        pushLog(`T${no} · πήρε τον έλεγχο`);
+        void fetchOpen();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Ο έλεγχος δεν ανακτήθηκε");
+      }
+    },
+    [token, pushLog, fetchOpen],
+  );
+
   /* πληκτρολόγιο: 0-9, Enter, Space, U */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!current?.sessionId) return;
+      if (!current?.sessionId || current.locked) return;
       if (/^[0-9]$/.test(e.key)) {
         updateBuffer((value) => value + e.key);
         return;
@@ -1005,6 +1068,18 @@ export default function DeskConsole({
                     <button type="button" className="save" onClick={(e) => { e.stopPropagation(); setSelected(table.no); endGame(); }}>
                       {table.finished ? "Κλειστό" : "End game"}
                     </button>
+                    {/* Αφήνει το τραπέζι σε αυτή τη συσκευή· ο αγώνας μένει ανοιχτός για «Συνέχεια» αλλού. */}
+                    <button
+                      type="button"
+                      className="leave"
+                      title="Αφήνει το τραπέζι — ο αγώνας μένει ανοιχτός για συνέχεια από άλλη συσκευή"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void closeTable(table.no);
+                      }}
+                    >
+                      Άφησε
+                    </button>
                   </div>
 
                   {table.finished ? (
@@ -1056,43 +1131,56 @@ export default function DeskConsole({
             </div>
           </div>
           <div className="keys">
-            {[1, 3, 5].map((n) => (
+              {[1, 3, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => addPoints(n)}
+                  disabled={!current?.sessionId || Boolean(current?.finished) || Boolean(current?.locked)}
+                >
+                  +{n}
+                </button>
+              ))}
               <button
-                key={n}
                 type="button"
-                onClick={() => addPoints(n)}
-                disabled={!current?.sessionId || Boolean(current?.finished)}
+                className="enter"
+                onClick={() => commitTurn()}
+                disabled={!current?.sessionId || Boolean(current?.finished) || Boolean(current?.locked)}
               >
-                +{n}
+                ENTER ⏎
               </button>
-            ))}
-            <button type="button" className="enter" onClick={() => commitTurn()}>
-              ENTER ⏎
-            </button>
-          </div>
-          <div className="quick">
-            <button type="button" id="qUndo" onClick={undo}>
-              Undo (U)
-            </button>
-            <button type="button" id="qSwap" onClick={swapPlayers}>
-              Swap players
-            </button>
-            <div id="qClock">
-              <DeskToolsToggle
-                value={current?.tools ?? emptyDeskTools}
-                onChange={updateTools}
-                disabled={!current?.sessionId || Boolean(current?.finished)}
-              />
             </div>
-          </div>
+            <div className="quick">
+              <button type="button" id="qUndo" onClick={undo} disabled={Boolean(current?.locked)}>
+                Undo (U)
+              </button>
+              <button type="button" id="qSwap" onClick={swapPlayers} disabled={Boolean(current?.locked)}>
+                Swap players
+              </button>
+              <div id="qClock">
+                <DeskToolsToggle
+                  value={current?.tools ?? emptyDeskTools}
+                  onChange={updateTools}
+                  disabled={!current?.sessionId || Boolean(current?.finished) || Boolean(current?.locked)}
+                />
+              </div>
+            </div>
           <div className="matchtools">
             <DeskMatchControls
               value={current?.tools ?? emptyDeskTools}
               onChange={updateTools}
-              disabled={!current?.sessionId || Boolean(current?.finished)}
+              disabled={!current?.sessionId || Boolean(current?.finished) || Boolean(current?.locked)}
               hideMaster
             />
           </div>
+          {current?.locked ? (
+            <div className="lockedbar">
+              <b>Κλειδωμένο</b> — ο αγώνας συνεχίζεται σε άλλη συσκευή.
+              <button type="button" className="ghost" onClick={() => void takeControl(current.no)}>
+                Πάρε τον έλεγχο
+              </button>
+            </div>
+          ) : null}
           <div className="hint">
             <span className="kbd">+1/+3/+5</span> πόντοι · <span className="kbd">⏎</span> τέλος στεκιάς ·{" "}
             <span className="kbd">U</span> undo

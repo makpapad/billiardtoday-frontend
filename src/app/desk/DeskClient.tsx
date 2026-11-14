@@ -64,6 +64,8 @@ type TableState = {
   targetPoints: number | null;
   equalInnings: boolean;
   error: string | null;
+  /** Το τραπέζι συνεχίζεται σε άλλη συσκευή: τα κουμπιά σβήνουν. */
+  locked?: boolean;
   /** Ρολόι βολών + timeouts: ό,τι δείχνει εδώ πάει ζωντανά στο Live. */
   tools: DeskToolsValue;
 };
@@ -383,13 +385,15 @@ export default function DeskClient() {
          * φέρνουμε το σκορ που είναι στη βάση αντί να ξεκινήσουμε από 0-0.
          */
         try {
-          const list = await api<{ data: Array<{ sessionId: string; isPublic?: boolean; players?: Array<{ points?: number; innings?: number; hr?: number; name?: string | null }> }> }>(
+          const list = await api<{ data: Array<{ sessionId: string; isPublic?: boolean; view?: { order?: number[] | null; active?: number | null } | null; players?: Array<{ points?: number; innings?: number; hr?: number; name?: string | null }> }> }>(
             "/api/desk/tables",
             token,
           );
           const row = (list?.data ?? []).find((item) => item.sessionId === sessionId);
-          const p1row = row?.players?.[0];
-          const p2row = row?.players?.[1];
+          const order = Array.isArray(row?.view?.order) && row?.view?.order?.length === 2 ? (row?.view?.order as number[]) : [1, 2];
+          const canonical = row?.players ?? [];
+          const p1row = order[0] === 2 ? canonical[1] : canonical[0];
+          const p2row = order[0] === 2 ? canonical[0] : canonical[1];
           if (row && ((p1row?.points ?? 0) > 0 || (p2row?.points ?? 0) > 0 || (p1row?.innings ?? 0) > 1)) {
             openedTable.p1 = {
               points: Number(p1row?.points) || 0,
@@ -407,6 +411,12 @@ export default function DeskClient() {
             };
             openedTable.liveOn = row.isPublic === true;
           }
+          /* Ο προηγούμενος μπορεί να είχε κάνει Swap: ίδια σειρά και ίδιος ενεργός. */
+          if (row && order[0] === 2) {
+            openedTable.names = [openedTable.names[1], openedTable.names[0]];
+            openedTable.sides = [2, 1];
+          }
+          if (row) openedTable.active = Number(row.view?.active) === 1 ? 1 : 0;
         } catch {
           /* χωρίς σκορ από τη βάση μένει η φρέσκια αρχική κατάσταση */
         }
@@ -590,6 +600,8 @@ export default function DeskClient() {
   const pushScore = useCallback(
     (next: TableState, finish = false) => {
       if (!token) return;
+      /* Κλειδωμένο σε άλλη συσκευή: καμία αλλαγή, κανένα μήνυμα προς τα έξω. */
+      if (table?.locked) return;
       publishLive(next);
       setTable({ ...next, saving: true });
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -599,6 +611,8 @@ export default function DeskClient() {
             method: "POST",
             body: JSON.stringify({
               deviceId: deviceIdRef.current,
+              /* Θέση παικτών/ενεργός όπως τα βλέπει το κινητό — για «Συνέχεια» αλλού. */
+              view: { order: next.sides, active: next.active },
               players: [
                 { side: next.sides[0], points: next.p1.points, innings: next.p1.innings, highRun: next.p1.hr, run: next.p1.run, liveRun: next.active === 0 ? Number(next.buffer || 0) : 0 },
                 { side: next.sides[1], points: next.p2.points, innings: next.p2.innings, highRun: next.p2.hr, run: next.p2.run, liveRun: next.active === 1 ? Number(next.buffer || 0) : 0 },
@@ -615,11 +629,15 @@ export default function DeskClient() {
             setTable(null);
             return;
           }
+          if (/άλλη συσκευή/i.test(message)) {
+            setTable((prev) => (prev ? { ...prev, saving: false, error: message, locked: true } : prev));
+            return;
+          }
           setTable((prev) => (prev ? { ...prev, saving: false, error: message } : prev));
         }
       }, 250);
     },
-    [token, publishLive],
+    [token, publishLive, table?.locked],
   );
 
   const undo = useCallback(() => {
@@ -873,7 +891,8 @@ export default function DeskClient() {
                 key={n}
                 type="button"
                 onClick={() => addPoints(n)}
-                className="rounded-xl border border-emerald-600 bg-emerald-600/20 py-4 text-lg font-bold text-emerald-300 active:bg-emerald-600/30"
+                disabled={Boolean(table.locked)}
+                className="rounded-xl border border-emerald-600 bg-emerald-600/20 py-4 text-lg font-bold text-emerald-300 active:bg-emerald-600/30 disabled:opacity-35"
               >
                 +{n}
               </button>
@@ -884,11 +903,17 @@ export default function DeskClient() {
             <button
               type="button"
               onClick={() => commitTurn()}
-              className="w-full rounded-xl bg-emerald-600 py-4 text-sm font-semibold text-white active:bg-emerald-700"
+              disabled={Boolean(table.locked)}
+              className="w-full rounded-xl bg-emerald-600 py-4 text-sm font-semibold text-white active:bg-emerald-700 disabled:opacity-35"
             >
               Enter inning
             </button>
           </div>
+          {table.locked ? (
+            <p className="mt-2 rounded-xl border border-rose-800 bg-rose-950/60 px-3 py-2 text-xs text-rose-200">
+              Κλειδωμένο — ο αγώνας συνεχίζεται σε άλλη συσκευή. Βγες και ξαναμπές για να το πάρεις πίσω.
+            </p>
+          ) : null}
 
           <div className="mt-2 grid grid-cols-3 gap-2">
             <button
