@@ -897,86 +897,6 @@ const fetchStageMatches = async (
     }
 }
 
-
-/** Σειρά φύλλου: πρώτη εμφάνιση αθλητή στα δεδομένα του ομίλου. */
-const drawSheetOrderFromMatches = (
-    matches: Record<string, unknown>[],
-): Map<number, Map<string, number>> => {
-    const byGroup = new Map<number, Map<string, number>>()
-    for (const match of matches) {
-        const groupNumber = toNumber(match.number) ?? toNumber(match.group_number) ?? 1
-        const order = byGroup.get(groupNumber) ?? new Map<string, number>()
-        for (const side of [match.player1, match.player2]) {
-            const player = asObject(side)
-            const docId =
-                typeof player?.documentId === 'string' && player.documentId.trim().length > 0
-                    ? player.documentId.trim()
-                    : typeof player?.id === 'string' && player.id.trim().length > 0
-                      ? player.id.trim()
-                      : null
-            if (docId && !order.has(docId)) order.set(docId, order.size + 1)
-        }
-        byGroup.set(groupNumber, order)
-    }
-    return byGroup
-}
-
-const matchHasResult = (match: Record<string, unknown>): boolean =>
-    ['player1_points', 'player2_points', 'player1_innings', 'player2_innings'].some(
-        (field) => (toNumber(match[field]) ?? 0) > 0,
-    )
-
-/**
- * ΣΕΙΡΑ ΦΥΛΛΟΥ ΑΝΤΙ ΑΛΦΑΒΗΤΙΚΗΣ (εμφάνιση μόνο, δεν γράφει τίποτα στη βάση).
- *
- * Όσο ένας όμιλος δεν έχει παίξει, το Strapi στέλνει θέσεις που κατέληξαν αλφαβητικές
- * (τελευταίο κριτήριο ισοπαλίας το επώνυμο). Η σειρά που βλέπει ο κόσμος πρέπει να είναι
- * του φύλλου: 1ος/2ος/3ος όπως τους δημοσίευσε η εφαρμογή (πρώτη εμφάνιση στους αγώνες).
- * Μόλις μπει αποτέλεσμα, δεν αγγίζουμε τίποτα — ισχύει κανονικά η κατάταξη.
- */
-const applyDrawSheetOrderToStages = (data: Record<string, unknown>): void => {
-    const stages = asArray(data.event_stages)
-    for (const stage of stages) {
-        const results = asArray(stage.results)
-        const matches = asArray(stage.groups)
-        if (results.length === 0 || matches.length === 0) continue
-        if (matches.some((match) => matchHasResult(match))) continue
-
-        const order = drawSheetOrderFromMatches(matches)
-        if (order.size === 0) continue
-
-        const rankOf = (row: Record<string, unknown>): number => {
-            const groupNumber = toNumber(row.group_number) ?? 1
-            const player = asObject(row.player)
-            const docId =
-                typeof player?.documentId === 'string' ? player.documentId : null
-            const groupOrder = order.get(groupNumber)
-            const derived = docId && groupOrder ? groupOrder.get(docId) : undefined
-            if (derived !== undefined) return derived
-            return 1000 + (toNumber(row.group_position) ?? 0)
-        }
-
-        const sorted = [...results].sort((a, b) => {
-            const groupDiff = (toNumber(a.group_number) ?? 1) - (toNumber(b.group_number) ?? 1)
-            if (groupDiff !== 0) return groupDiff
-            return rankOf(a) - rankOf(b)
-        })
-
-        const nextPosition = new Map<number, number>()
-        stage.results = sorted.map((row) => {
-            const groupNumber = toNumber(row.group_number) ?? 1
-            const position = (nextPosition.get(groupNumber) ?? 0) + 1
-            nextPosition.set(groupNumber, position)
-            const rank = rankOf(row)
-            return {
-                ...row,
-                group_position: position,
-                drawPosition: rank < 1000 ? rank : null,
-            }
-        })
-    }
-}
-
 const playerRankingKey = (row: Record<string, unknown>): string | null => {
     const player = asObject(row.player)
     const playerDocumentId =
@@ -1655,10 +1575,6 @@ export async function GET(
                 }
             }
 
-            // Σειρά φύλλου αντί αλφαβητικής, για ομίλους που δεν έχουν παίξει ακόμα.
-            if (payload.data) {
-                applyDrawSheetOrderToStages(payload.data as Record<string, unknown>)
-            }
             writeCachedEventPayload(documentId, payload)
             return NextResponse.json(payload, { status: 200 })
         } catch {
