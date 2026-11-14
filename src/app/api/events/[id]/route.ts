@@ -168,14 +168,18 @@ const attachPlayerPhotos = async (
     event: Record<string, unknown>,
     headers: Record<string, string>,
 ): Promise<void> => {
-    const players = new Map<string, Record<string, unknown>>()
+    // Ο ίδιος αθλητής εμφανίζεται σε πολλούς αγώνες ως διαφορετικό αντικείμενο,
+    // γι' αυτό κρατάμε όλες τις αναφορές ανά documentId.
+    const players = new Map<string, Record<string, unknown>[]>()
     const register = (value: unknown) => {
         const player = asObject(value)
         if (!player) return
         const documentId = typeof player.documentId === 'string' ? player.documentId : null
         if (!documentId) return
         if (player.photo_main) return
-        players.set(documentId, player)
+        const bucket = players.get(documentId)
+        if (bucket) bucket.push(player)
+        else players.set(documentId, [player])
     }
 
     asArray(event.event_stages).forEach((stage) => {
@@ -218,8 +222,9 @@ const attachPlayerPhotos = async (
     }
 
     photoByDocumentId.forEach((photo, documentId) => {
-        const player = players.get(documentId)
-        if (player) player.photo_main = photo
+        players.get(documentId)?.forEach((player) => {
+            player.photo_main = photo
+        })
     })
 }
 
