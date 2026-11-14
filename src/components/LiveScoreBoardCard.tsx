@@ -381,12 +381,12 @@ export function LiveScoreBoardCard({
     const iso = resolveCountryCode(country)?.toLowerCase();
     const flagSrc = iso ? `https://flagcdn.com/w40/${iso}.png` : null;
     return (
-      <div className="w-10 h-6 rounded-[5px] overflow-hidden border border-white/40 shadow-inner bg-black/20 flex items-center justify-center">
+      <div className="w-7 h-7 rounded-full overflow-hidden border border-white/50 shadow-inner bg-black/20 flex items-center justify-center">
         {flagSrc ? (
           <img
             src={flagSrc}
             alt={country ?? "flag"}
-            className="w-full h-full object-cover"
+            className="w-full h-full rounded-full object-cover"
             loading="eager"
             fetchPriority="high"
             referrerPolicy="no-referrer"
