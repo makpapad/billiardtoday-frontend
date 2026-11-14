@@ -358,14 +358,68 @@ export default function DeskConsole({
     }
   }, [token]);
 
+  /**
+   * Παίρνει το σκορ από τη βάση για τα τραπέζια που έχουν ήδη session τοπικά.
+   * Η βάση είναι η αλήθεια: αν ο αγώνας προχώρησε από άλλη συσκευή (ή έμεινε
+   * πίσω ένα POST), το desk δείχνει ό,τι είναι γραμμένο, όχι την παλιά εικόνα.
+   */
+  const adoptFromApi = useCallback((rows: OpenTable[]) => {
+    if (rows.length === 0) return;
+    /* Αν κάποιο σκορ είναι στον δρόμο (debounce), μη το πατήσεις με παλιότερη εικόνα. */
+    if (tablesRef.current.some((t) => t.saving)) return;
+    setTables((prev) =>
+      prev.map((table) => {
+        if (!table.sessionId || !table.match) return table;
+        const row = rows.find((item) => item.sessionId === table.sessionId);
+        if (!row) return table;
+        const first = row.players?.[0];
+        const second = row.players?.[1];
+        const same =
+          (Number(first?.points) || 0) === table.p1.points &&
+          (Number(second?.points) || 0) === table.p2.points &&
+          (Number(first?.innings) || 0) === table.p1.innings &&
+          (Number(second?.innings) || 0) === table.p2.innings &&
+          (Number(first?.hr) || 0) === table.p1.hr &&
+          (Number(second?.hr) || 0) === table.p2.hr;
+        if (same) return table;
+        return {
+          ...table,
+          p1: {
+            points: Number(first?.points) || 0,
+            run: Number(first?.run) || 0,
+            hr: Number(first?.hr) || 0,
+            hr2: table.p1.hr2,
+            innings: Number(first?.innings) || table.p1.innings,
+          },
+          p2: {
+            points: Number(second?.points) || 0,
+            run: Number(second?.run) || 0,
+            hr: Number(second?.hr) || 0,
+            hr2: table.p2.hr2,
+            innings: Number(second?.innings) || table.p2.innings,
+          },
+          liveOn: row.isPublic === true ? true : table.liveOn,
+        };
+      }),
+    );
+  }, []);
+
   useEffect(() => {
     void fetchOpen().then((rows) => {
       if (rows.length === 0) return;
+      adoptFromApi(rows);
       /* Άνοιξε από άλλη συσκευή ή μετά από κλείσιμο: δείξε αμέσως τι συνεχίζεται. */
       const local = new Set(tablesRef.current.map((t) => t.sessionId).filter(Boolean) as string[]);
       if (rows.some((row) => !local.has(row.sessionId))) setResumeOpen(true);
     });
-  }, [fetchOpen]);
+    /* Γυρνώντας στην καρτέλα του desk: φέρε ό,τι γράφτηκε στο μεταξύ. */
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      void fetchOpen().then((rows) => adoptFromApi(rows));
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchOpen, adoptFromApi]);
 
   /**
    * Παίρνει το τραπέζι στην τρέχουσα συσκευή και φορτώνει το σκορ από τη βάση.
