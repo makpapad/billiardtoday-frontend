@@ -42,8 +42,10 @@
   /* ---------- layout ---------- */
   .bt-desk .body{flex:1; display:flex; min-height:0}
   .bt-desk .tables{flex:1; padding:14px; overflow:auto}
-  .bt-desk .grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start}
-  .bt-desk .gridlen-1{grid-template-columns:minmax(0,1fr); max-width:660px}
+  /* Το πλέγμα γεμίζει ΟΛΟ τον διαθέσιμο χώρο: 1 τραπέζι όλο, 2 μισό-μισό, 3-4 τεταρτημόρια. */
+  .bt-desk .grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-auto-rows:minmax(0,1fr); align-content:stretch; min-height:100%}
+  .bt-desk .gridlen-1{grid-template-columns:minmax(0,1fr)}
   .bt-desk .gridlen-5, .bt-desk .gridlen-6{grid-template-columns:repeat(3,minmax(0,1fr))}
   .bt-desk .gridlen-7, .bt-desk .gridlen-8{grid-template-columns:repeat(4,minmax(0,1fr))}
   @media (max-width:1180px){.gridlen-5,.gridlen-6,.gridlen-7,.gridlen-8{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -73,7 +75,9 @@
   .bt-desk .chip.pause{background:#2e2408; color:#fbbf24; border:1px solid #5c4410}
   .bt-desk .chip.done{background:#1b2431; color:var(--muted); border:1px solid var(--line)}
 
-  .bt-desk .prow{display:grid; grid-template-columns:14px 1fr auto; align-items:center; gap:8px; padding:8px 11px; position:relative}
+  /* Οι γραμμές παικτών μοιράζονται το ύψος της κάρτας (1 τραπέζι = γεμάτη οθόνη). */
+  .bt-desk .prow{display:grid; grid-template-columns:14px 1fr auto; align-items:center; gap:8px;
+        padding:8px 11px; position:relative; flex:1 1 0; min-height:0; align-content:center}
   .bt-desk .prow + .prow{border-top:1px solid #161d29}
   .bt-desk .prow.act{background:linear-gradient(90deg,#22c55e14,#22c55e00)}
   .bt-desk .bar{width:3px; height:26px; border-radius:2px; background:#25313f}
@@ -152,7 +156,8 @@
 
   /* ---------- άδειο τραπέζι ---------- */
   .bt-desk .emptycard{border-style:dashed}
-  .bt-desk .emptybody{display:flex; flex-direction:column; align-items:center; gap:9px; padding:22px 12px; color:var(--muted); font-size:12px}
+  .bt-desk .emptybody{display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:9px; padding:22px 12px; color:var(--muted); font-size:12px; flex:1}
   .bt-desk .pickbtn{background:#0f2e1b; border-color:#1d5c36; color:#86efac; font-weight:700; padding:8px 14px}
 
   /* ---------- επιλογή αγώνα ---------- */
@@ -195,7 +200,8 @@
   @media (max-width:900px){
     .bt-desk .body{flex-direction:column}
     .bt-desk .desk{width:auto; flex:0 0 auto; border-left:none; border-top:1px solid var(--line); max-height:52%}
-    .bt-desk .grid{grid-template-columns:1fr}
+    /* Στενή οθόνη: κάθε κάρτα στο φυσικό της ύψος, όχι μοιρασμένο. */
+    .bt-desk .grid{grid-template-columns:1fr; grid-auto-rows:auto; align-content:start; min-height:0}
   }
   .bt-desk .mockbadge{display:none}
 
