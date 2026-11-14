@@ -654,6 +654,17 @@ export default function DeskClient() {
     pushScore(withHistory(next));
   }, [table, pushScore]);
 
+  /** +N πόντοι στον ενεργό παίκτη — αντί για αριθμητικό πληκτρολόγιο. */
+  const addPoints = useCallback(
+    (n: number) => {
+      if (!table || table.finished) return;
+      const key = table.active === 0 ? "p1" : "p2";
+      const side = table[key];
+      pushScore(withHistory({ ...table, [key]: { ...side, run: side.run + n }, buffer: "" }));
+    },
+    [table, pushScore, withHistory],
+  );
+
   const pressDigit = useCallback(
     (digit: string) => {
       if (!table || table.finished) return;
@@ -790,46 +801,25 @@ export default function DeskClient() {
           </div>
 
           <div className="mt-3 grid grid-cols-3 gap-2">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map((d) => (
+            {[1, 3, 5].map((n) => (
               <button
-                key={d}
+                key={n}
                 type="button"
-                onClick={() => pressDigit(d)}
-                className="rounded-xl border border-slate-700 bg-slate-900 py-4 font-mono text-xl font-semibold active:bg-slate-800"
+                onClick={() => addPoints(n)}
+                className="rounded-xl border border-emerald-600 bg-emerald-600/20 py-4 text-lg font-bold text-emerald-300 active:bg-emerald-600/30"
               >
-                {d}
+                +{n}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={() => setTable({ ...table, buffer: table.buffer.slice(0, -1) })}
-              className="rounded-xl border border-slate-700 bg-slate-900 py-4 text-sm active:bg-slate-800"
-            >
-              ⌫
-            </button>
-            <button
-              type="button"
-              onClick={addPoint}
-              className="rounded-xl border border-emerald-600 bg-emerald-600/20 py-4 text-sm font-semibold text-emerald-300 active:bg-emerald-600/30"
-            >
-              +1
-            </button>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2">
             <button
               type="button"
               onClick={() => commitTurn()}
-              className="rounded-xl bg-emerald-600 py-4 text-sm font-semibold text-white active:bg-emerald-700"
+              className="w-full rounded-xl bg-emerald-600 py-4 text-sm font-semibold text-white active:bg-emerald-700"
             >
               Enter inning
-            </button>
-            <button
-              type="button"
-              onClick={() => commitTurn()}
-              className="rounded-xl border border-slate-600 bg-slate-800 py-4 text-sm font-semibold active:bg-slate-700"
-            >
-              End inning (0)
             </button>
           </div>
 

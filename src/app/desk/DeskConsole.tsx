@@ -480,6 +480,46 @@ export default function DeskConsole({
     pushScore(next);
   }, [current, pendingRun, withHistory, closeTurn, pushScore, pushLog]);
 
+  /** +N πόντοι στον ενεργό παίκτη — αντί για αριθμητικό πληκτρολόγιο. */
+  const addPoints = useCallback(
+    (n: number) => {
+      if (!current?.sessionId || current.finished) return;
+      const key = current.active === 0 ? "p1" : "p2";
+      const side = current[key];
+      const next = withHistory({
+        ...current,
+        [key]: { ...side, run: side.run + n },
+        buffer: "",
+      });
+      pushScore(next);
+    },
+    [current, pushScore, withHistory],
+  );
+
+  /** Αλλαγή πλευρών: τα ονόματα, τα σκορ και το φύλλο ακολουθούν. */
+  const swapPlayers = useCallback(() => {
+    if (!current?.match || current.finished) return;
+    const next = withHistory({
+      ...current,
+      match: {
+        ...current.match,
+        player1: current.match.player2,
+        player2: current.match.player1,
+      },
+      p1: current.p2,
+      p2: current.p1,
+      sides: [current.sides[1], current.sides[0]] as [1 | 2, 1 | 2],
+      active: (current.active === 0 ? 1 : 0) as 0 | 1,
+      detail: current.detail.map((row) => ({
+        inning: row.inning,
+        player1: row.player2,
+        player2: row.player1,
+      })),
+      buffer: "",
+    });
+    pushScore(next);
+  }, [current, pushScore, withHistory]);
+
   const addPoint = useCallback(() => {
     if (!current?.sessionId || current.finished) return;
     const key = current.active === 0 ? "p1" : "p2";
@@ -632,10 +672,7 @@ export default function DeskConsole({
                         <span className="chip done">EMPTY</span>
                       </div>
                       <div className="chead-sub">
-                        <span className="sid">DIRECT · no screen</span>
-                        <span className="lbl2" style={{ marginLeft: "auto" }}>
-                          source
-                        </span>
+                        <span className="sid">no screen</span>
                       </div>
                     </div>
                     <div className="emptybody">
@@ -668,33 +705,12 @@ export default function DeskConsole({
                     <div className="chead-main">
                       <span className="tno">TABLE {table.no}</span>
                       <span className="cmeta">{matchTitle(table.match)}</span>
-                      <span className={`chip ${chip}`}>{chipText}</span>
                     </div>
                     <div className="chead-sub">
                       <span className="sid">
                         <span className={`dotg${table.online ? "" : " off"}`} />
                         {table.screenId || "no screen"}
                       </span>
-                      <span className="lbl2" style={{ marginLeft: "auto" }}>
-                        source
-                      </span>
-                      <div className="seg locked">
-                        <button type="button" disabled className={table.mode === "screen" ? "on" : ""}>
-                          Screen
-                        </button>
-                        <button
-                          type="button"
-                          disabled
-                          className={table.mode === "direct" ? "on direct" : ""}
-                        >
-                          Direct
-                        </button>
-                      </div>
-                    </div>
-                    <div className="modehint">
-                      {hasScreens
-                        ? "locked — the screen owns the points; the desk only sends commands"
-                        : "direct — the desk writes the live score"}
                     </div>
                   </div>
 
@@ -814,7 +830,7 @@ export default function DeskConsole({
 
         <aside className="desk">
           <div className="desk-head">
-            <div className="k">QUICK ENTRY</div>
+            <div className="k">{operatorName}</div>
             <div className="t">Table {current?.no}</div>
             <div className="p">{activeName || "—"}</div>
             <div className="src">{current?.match ? `${matchTitle(current.match)} · ${current.screenId || ""}` : "—"}</div>
@@ -864,41 +880,29 @@ export default function DeskConsole({
             </button>
           </div>
           <div className="keys">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((k) => (
+            {[1, 3, 5].map((n) => (
               <button
-                key={k}
+                key={n}
                 type="button"
-                onClick={() => updateBuffer((value) => value + k)}
+                onClick={() => addPoints(n)}
+                disabled={!current?.sessionId || Boolean(current?.finished)}
               >
-                {k}
+                +{n}
               </button>
             ))}
-            <button
-              type="button"
-              className="del"
-              onClick={() => updateBuffer((value) => value.slice(0, -1))}
-            >
-              ⌫
-            </button>
-            <button
-              type="button"
-              onClick={() => updateBuffer((value) => value + "0")}
-            >
-              0
-            </button>
             <button type="button" className="enter" onClick={() => commitTurn()}>
               ENTER ⏎
             </button>
           </div>
           <div className="quick">
-            <button type="button" id="qVoid" onClick={() => commitTurn()}>
-              Inning without points (Space)
-            </button>
             <button type="button" id="qUndo" onClick={undo}>
               Undo (U)
             </button>
             <button type="button" id="qPause" onClick={togglePause}>
               {current?.paused ? "Resume table" : "Pause table"}
+            </button>
+            <button type="button" id="qSwap" onClick={swapPlayers}>
+              Swap players
             </button>
           </div>
           <div className="matchtools">
