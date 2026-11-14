@@ -1360,6 +1360,13 @@ const mergeLiveSessions = (
       (Number(session.state?.liveRunA ?? 0) || 0) > 0 ||
       (Number(session.state?.liveRunB ?? 0) || 0) > 0;
     const apiIsAhead = !wsIsTyping && progressOf(existing) > progressOf(session);
+    /*
+     * `run`/`liveRun` ΔΕΝ παίρνονται από το API: είναι η κατάσταση του σερί
+     * που γράφεται ΕΚΕΙΝΗ τη στιγμή στο desk και τη στέλνει το WS. Στη βάση
+     * μένει ό,τι πρόλαβε το τελευταίο POST, οπότε διαβάζοντάς το από εκεί η
+     * κάρτα έδειχνε σερί που δεν έγραφε κανείς (ή το έχανε μόλις το API
+     * ερχόταν «μπροστά»). Το σερί το κρατάει πάντα το τελευταίο μήνυμα.
+     */
     const authoritativeNumbers = apiIsAhead
       ? {
           scoreA: existing.state?.scoreA,
@@ -1367,10 +1374,6 @@ const mergeLiveSessions = (
           inningsA: existing.state?.inningsA,
           inningsB: existing.state?.inningsB,
           inningsCount: existing.state?.inningsCount,
-          runA: existing.state?.runA,
-          runB: existing.state?.runB,
-          liveRunA: existing.state?.liveRunA,
-          liveRunB: existing.state?.liveRunB,
           bestRunA: existing.state?.bestRunA,
           bestRunB: existing.state?.bestRunB,
           bestRun2A: existing.state?.bestRun2A,

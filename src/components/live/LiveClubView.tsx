@@ -601,21 +601,12 @@ function resolveDisplayLiveRuns(
     return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
   }
 
-  const prevScoreA = toFiniteNumber(existing.scoreA) ?? 0;
-  const prevScoreB = toFiniteNumber(existing.scoreB) ?? 0;
-  const nextScoreA = toFiniteNumber(incoming.scoreA) ?? prevScoreA;
-  const nextScoreB = toFiniteNumber(incoming.scoreB) ?? prevScoreB;
-
-  const deltaA = Math.max(0, nextScoreA - prevScoreA);
-  const deltaB = Math.max(0, nextScoreB - prevScoreB);
-
-  if (previousCurrent === "A" && deltaA > 0) {
-    return { liveRunA: deltaA, liveRunB: 0 };
-  }
-  if (previousCurrent === "B" && deltaB > 0) {
-    return { liveRunA: 0, liveRunB: deltaB };
-  }
-
+  /*
+   * ΠΟΤΕ μην «κατασκευάσεις» σερί από τη διαφορά του σκορ: κάθε αύξηση σκορ
+   * εμφάνιζε προσωρινό τρέχον σερί που το έσβηνε το επόμενο μήνυμα, άρα το run
+   * ανέβαινε και κατέβαινε χωρίς να γράψει κανείς. Το σερί έρχεται ΜΟΝΟ ως
+   * liveRun από το μήνυμα του desk.
+   */
   return { liveRunA: incomingLiveRunA, liveRunB: incomingLiveRunB };
 }
 
