@@ -1081,6 +1081,33 @@ const fetchAutomaticFinalResultsPreview = async (
     return rows.length > 0 ? rows : null
 }
 
+/**
+ * Μνήμη διεργασίας: το ίδιο assembled payload για 60΄΄. Η cache των `fetch` γλιτώνει
+ * τις κλήσεις στη Strapi, αλλά η συγχώνευση εκατοντάδων αγώνων ξανατρέχει σε κάθε
+ * επίσκεψη (~0,7΄΄). Εδώ κρατάμε το ΕΤΟΙΜΟ αποτέλεσμα, με όριο εγγραφών για ασφάλεια.
+ */
+const EVENT_PAYLOAD_TTL_MS = 60_000
+const EVENT_PAYLOAD_MAX_ENTRIES = 40
+const eventPayloadCache = new Map<string, { at: number; payload: unknown }>()
+
+const readCachedEventPayload = (documentId: string) => {
+    const entry = eventPayloadCache.get(documentId)
+    if (!entry) return null
+    if (Date.now() - entry.at > EVENT_PAYLOAD_TTL_MS) {
+        eventPayloadCache.delete(documentId)
+        return null
+    }
+    return entry.payload
+}
+
+const writeCachedEventPayload = (documentId: string, payload: unknown) => {
+    if (eventPayloadCache.size >= EVENT_PAYLOAD_MAX_ENTRIES) {
+        const oldest = eventPayloadCache.keys().next().value
+        if (oldest) eventPayloadCache.delete(oldest)
+    }
+    eventPayloadCache.set(documentId, { at: Date.now(), payload })
+}
+
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -1088,6 +1115,11 @@ export async function GET(
     try {
         const params = await context.params
         const documentId = params.id
+
+        const cachedPayload = readCachedEventPayload(documentId)
+        if (cachedPayload) {
+            return NextResponse.json(cachedPayload, { status: 200 })
+        }
 
         const buildQueryParams = () => {
             const queryParams = new URLSearchParams()
@@ -1542,6 +1574,7 @@ export async function GET(
                 }
             }
 
+            writeCachedEventPayload(documentId, payload)
             return NextResponse.json(payload, { status: 200 })
         } catch {
             console.error('[events.id][GET] Non-JSON upstream payload:', text.slice(0, 400))
