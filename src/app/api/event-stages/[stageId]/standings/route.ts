@@ -34,6 +34,7 @@ const fetchStoredStageResults = async (stageId: string): Promise<Record<string, 
     url.searchParams.set('populate[player][fields][1]', 'documentId')
     url.searchParams.set('populate[player][fields][2]', 'full_name_en')
     url.searchParams.set('populate[player][fields][3]', 'country')
+    url.searchParams.set('populate[player][populate][photo_main][fields][0]', 'url')
     url.searchParams.set('fields[0]', 'match_points')
     url.searchParams.set('fields[1]', 'points')
     url.searchParams.set('fields[2]', 'innings')
@@ -342,7 +343,7 @@ const fetchDirectStageStandings = async (
     round: string | null,
     mode: string | null,
 ): Promise<Response> => {
-    const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`
+    const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country&populate[player][populate][photo_main][fields][0]=url`
     const direct = new URL(directUrl)
     if (round) direct.searchParams.set('round', round)
     if (mode) direct.searchParams.set('mode', mode)
@@ -356,7 +357,7 @@ const fetchDirectStageStandings = async (
             const first = Array.isArray(resolvePayload?.data) ? resolvePayload.data[0] : null
             const numericId = first?.id
             if (numericId !== undefined && numericId !== null) {
-                const fallbackUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country`)
+                const fallbackUrl = new URL(`${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(String(numericId))}/standings?populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country&populate[player][populate][photo_main][fields][0]=url`)
                 if (round) fallbackUrl.searchParams.set('round', round)
                 if (mode) fallbackUrl.searchParams.set('mode', mode)
                 res = await fetchWithOptionalAuth(fallbackUrl.toString())

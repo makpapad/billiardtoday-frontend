@@ -16,6 +16,7 @@ import type { EntryStageInfo, EntryTierRule } from "./entryHelpers";
 import { entryTierFromSeed, lookupEntryStageForPlayer } from "./entryHelpers";
 import { readArtisticSetSummary } from "./artisticSets";
 import { getCountryCode, getCountryFlagCdnUrl, getCountryLabel } from "@/lib/countryFlags";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 export const toNumber = (value: unknown): number | null => {
   if (typeof value === "number" && !Number.isNaN(value)) return value;
@@ -97,6 +98,7 @@ export const normalizePlayer = (
   nativeName: string | null;
   country: string | null;
   documentId: string | null;
+  photoUrl: string | null;
 } => {
   const source =
     player && typeof player === "object" && (player as { data?: unknown }).data
@@ -134,6 +136,15 @@ export const normalizePlayer = (
         ? parseInt(rawId, 10)
         : null;
 
+  const photoRaw = (normalized as { photo_main?: unknown }).photo_main;
+  const photoObject =
+    photoRaw && typeof photoRaw === "object" && "url" in (photoRaw as Record<string, unknown>)
+      ? (photoRaw as { url?: unknown })
+      : null;
+  const photoUrl = resolveMediaUrl(
+    typeof photoObject?.url === "string" ? photoObject.url : null,
+  );
+
   return {
     id: numericId && !Number.isNaN(numericId) ? numericId : null,
     name,
@@ -141,6 +152,7 @@ export const normalizePlayer = (
     nativeName: (preferNative ? nameEn : nativeName) || null,
     country,
     documentId: normalized.documentId ?? null,
+    photoUrl,
   };
 };
 
@@ -217,6 +229,7 @@ export const normalizeGroup = (
       name: player1.name,
       nativeName: player1.nativeName,
       country: player1.country,
+      photoUrl: player1.photoUrl,
       documentId: player1.documentId,
       points: toNumber(normalized.player1_points),
       matchPoints:
@@ -234,6 +247,7 @@ export const normalizeGroup = (
       name: player2.name,
       nativeName: player2.nativeName,
       country: player2.country,
+      photoUrl: player2.photoUrl,
       documentId: player2.documentId,
       points: toNumber(normalized.player2_points),
       matchPoints:
@@ -289,6 +303,7 @@ export const normalizeResult = (
     playerName: player.name,
     playerNativeName: player.nativeName ?? null,
     playerCountry: player.country ?? null,
+    playerPhotoUrl: player.photoUrl ?? null,
     matchPoints: toNumber(normalized.match_points),
     points: toNumber(normalized.points),
     innings: toNumber(normalized.innings),
@@ -323,6 +338,7 @@ export const normalizeFinalResult = (
     playerDocumentId: player.documentId ?? null,
     playerName: player.name,
     playerCountry: player.country ?? null,
+    playerPhotoUrl: player.photoUrl ?? null,
     matchPoints: toNumber((normalized as typeof normalized & { match_points?: unknown }).match_points),
     bestAverage: toNumber(normalized.best_average),
     bestGame: toNumber((normalized as typeof normalized & { best_game?: unknown }).best_game),
@@ -907,6 +923,7 @@ export const buildGroupStandings = (
                     playerName: entry.player.name,
                     playerNativeName: entry.player.nativeName ?? null,
                     playerCountry: entry.player.country ?? null,
+                    playerPhotoUrl: entry.player.photoUrl ?? null,
                     record: { wins: 0, draws: 0, losses: 0 },
                     totalMatchPoints: 0,
                     totalPoints: 0,

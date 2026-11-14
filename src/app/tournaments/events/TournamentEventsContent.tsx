@@ -354,6 +354,7 @@ function PlayerNameWithFlag({
   name,
   nativeName,
   country,
+  photoUrl,
   highlight = false,
   showNativeName = true,
   truncateName = false,
@@ -361,6 +362,8 @@ function PlayerNameWithFlag({
   name: string;
   nativeName?: string | null;
   country?: string | null;
+  /** Φωτογραφία αθλητή — δείχνεται δίπλα στη σημαία όταν υπάρχει. */
+  photoUrl?: string | null;
   highlight?: boolean;
   showNativeName?: boolean;
   /** Clip a too-long name with an ellipsis instead of pushing the cell wider
@@ -370,6 +373,15 @@ function PlayerNameWithFlag({
   const flagSrc = getCountryFlagCdnUrl(country ?? null, 40);
   return (
     <div className={clsx("flex items-start gap-2 leading-tight", truncateName && "min-w-0")}>
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={name || ""}
+          className="h-7 w-7 shrink-0 rounded-full border border-gray-200 object-cover dark:border-gray-700"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      ) : null}
       {flagSrc ? (
         <img
           src={flagSrc}
@@ -3067,6 +3079,7 @@ function StageRankingTable({
                         className="min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                       >
                         <PlayerNameWithFlag
+                          photoUrl={result.playerPhotoUrl ?? null}
                           name={result.playerName || "Unknown"}
                           nativeName={result.playerNativeName}
                           country={result.playerCountry}
@@ -3076,6 +3089,7 @@ function StageRankingTable({
                       </Link>
                     ) : (
                       <PlayerNameWithFlag
+                        photoUrl={result.playerPhotoUrl ?? null}
                         name={result.playerName || "Unknown"}
                         nativeName={result.playerNativeName}
                         country={result.playerCountry}
@@ -6397,15 +6411,17 @@ export function TournamentEventsContent({
                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                                       >
                                         <PlayerNameWithFlag
+                                          photoUrl={result.playerPhotoUrl ?? null}
                                           name={result.playerName || "Unknown"}
                                           country={result.playerCountry}
                                         />
                                       </Link>
                                     ) : (
                                       <PlayerNameWithFlag
+                                        photoUrl={result.playerPhotoUrl ?? null}
                                         name={result.playerName || "Unknown"}
                                         country={result.playerCountry}
-                                      />
+                                        />
                                     )}
                                   </td>
                                   <td className="px-4 py-3 text-center">

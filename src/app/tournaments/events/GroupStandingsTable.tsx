@@ -81,6 +81,15 @@ export default function GroupStandingsTable({
 
                         const playerCell = (
                             <div className="flex items-center gap-2 leading-tight">
+                                {player.playerPhotoUrl ? (
+                                    <img
+                                        src={player.playerPhotoUrl}
+                                        alt={player.playerName || ''}
+                                        className="h-7 w-7 shrink-0 rounded-full border border-gray-200 object-cover dark:border-gray-700"
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer"
+                                    />
+                                ) : null}
                                 {flagSrc ? (
                                     <img
                                         src={flagSrc}

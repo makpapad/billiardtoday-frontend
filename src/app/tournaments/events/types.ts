@@ -187,6 +187,8 @@ export type NormalizedGroupPlayer = {
   nativeName: string | null;
   country: string | null;
   documentId: string | null;
+  /** Φωτογραφία αθλητή (Strapi `photo_main`), όταν υπάρχει. */
+  photoUrl?: string | null;
   points: number | null;
   matchPoints: number | null;
   innings: number | null;
@@ -227,6 +229,8 @@ export type NormalizedStageResult = {
   playerName: string;
   playerNativeName: string | null;
   playerCountry: string | null;
+  /** Φωτογραφία αθλητή (Strapi `photo_main`), όταν υπάρχει. */
+  playerPhotoUrl?: string | null;
   matchPoints: number | null;
   points: number | null;
   innings: number | null;
@@ -253,6 +257,8 @@ export type NormalizedFinalResult = {
   playerDocumentId: string | null;
   playerName: string;
   playerCountry: string | null;
+  /** Φωτογραφία αθλητή (Strapi `photo_main`), όταν υπάρχει. */
+  playerPhotoUrl?: string | null;
   matchPoints: number | null;
   bestAverage: number | null;
   bestGame: number | null;
@@ -339,6 +345,8 @@ export type GroupStanding = {
   playerName: string;
   playerNativeName: string | null;
   playerCountry: string | null;
+  /** Φωτογραφία αθλητή (Strapi `photo_main`), όταν υπάρχει. */
+  playerPhotoUrl?: string | null;
   /** Player's documentId (Strapi UID) for cross-referencing with entry stage data */
   playerDocumentId?: string;
   record: PlayerRecord;
