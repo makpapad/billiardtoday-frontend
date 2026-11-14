@@ -206,7 +206,8 @@ const attachPlayerPhotos = async (
         query.set('pagination[pageSize]', String(chunk.length))
         try {
             const response = await fetch(`${STRAPI_URL}/api/bt-players?${query.toString()}`, {
-                cache: 'no-store',
+                // Οι φωτογραφίες αλλάζουν σπάνια: 1 ώρα cache.
+                next: { revalidate: 3600, tags: ['players-photos'] },
                 headers,
             })
             if (!response.ok) continue
@@ -812,7 +813,7 @@ const fetchStageStandings = async (
         'populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country'
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?${standingsQuery}`
     let res = await fetch(directUrl, {
-        cache: 'no-store',
+        next: { revalidate: 60, tags: [`event-stage:${stageId}`] },
         headers,
     })
 
@@ -860,7 +861,7 @@ const fetchStageMatches = async (
 ): Promise<Record<string, unknown>[] | null> => {
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/matches`
     let res = await fetch(directUrl, {
-        cache: 'no-store',
+        next: { revalidate: 60, tags: [`event-stage:${stageId}`] },
         headers,
     })
 
@@ -1304,7 +1305,9 @@ export async function GET(
         let queryParams = buildQueryParams()
         let url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
         let res = await fetch(url, {
-            cache: 'no-store',
+            // Cache δεδομένων (όχι σελίδας): ίδιο payload για όλους τους επισκέπτες.
+            // 60΄΄ σημαίνει το πολύ 1 κλήση/λεπτό αντί για 1 ανά επίσκεψη· bust με tag.
+            next: { revalidate: 60, tags: [`event:${documentId}`] },
             headers,
         })
 
