@@ -475,7 +475,7 @@ export function LiveScoreBoardCard({
       <div
         className={`self-stretch rounded-md leading-none text-center flex items-center justify-center ${
           compact ? "min-w-[26px] px-1" : dense ? "min-w-[20px] px-1" : "min-w-[32px] px-1.5"
-        } ${isActive ? "bg-slate-900 text-white" : "opacity-0 pointer-events-none"}`}
+        } ${isActive ? "bg-red-600 text-white" : "opacity-0 pointer-events-none"}`}
         aria-hidden={!isActive}
       >
         <div
