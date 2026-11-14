@@ -68,3 +68,10 @@ __pycache__/
 # logs από tsc batches (παράγονται από scripts ελέγχου)
 .tsc-dates.log
 .tsc-groups.log
+
+# τοπικά scratch/προσωρινά
+.hermes-tmp*/
+scratch_cuescore/
+curl.err
+fed*.json
+team.html
