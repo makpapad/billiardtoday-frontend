@@ -1,0 +1,848 @@
+npm notice run billiardtoday-frontend@1.0.0 build
+npm notice run next build
+   ▲ Next.js 15.0.7
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/app/building-your-application/configuring/eslint#migrating-existing-config
+
+./src/app/account/complete-profile/page.tsx
+16:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/account/friendly/page.tsx
+521:15  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/app/account/mockup/page.tsx
+301:16  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/app/account/page.tsx
+549:15  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+888:17  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/app/account/tournaments/page.tsx
+304:15  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/app/account-access/claim/complete/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/claim/start/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/create/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/device/recover/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/device-link/complete/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/devices/revoke/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/email-check/resend/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/friendly-matches/create/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/friendly-matches/delete/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/friendly-matches/update/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/friendly-recordings/delete/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/login/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/phone-verification/complete/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/phone-verification/start/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/profile/route.ts
+12:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:11  Warning: Empty block statement.  no-empty
+
+./src/app/account-access/social/login/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/account-access/claim/complete/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/account-access/claim/start/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/account-access/create/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/account-access/email-check/resend/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/account-access/login/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/admin/player-enrollment-requests/[id]/approve/route.ts
+10:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+13:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/admin/player-enrollment-requests/[id]/reject/route.ts
+10:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+13:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/clubs/[clubId]/sessions/route.ts
+47:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/contact/route.ts
+49:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/debug/strapi-runtime/route.ts
+30:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/events/[id]/final-results/route.ts
+289:13  Warning: The value assigned to 'payload' is not used in subsequent statements.  no-useless-assignment
+
+./src/app/api/events/[id]/route.ts
+105:7  Warning: 'looksLikeHtmlError' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1218:13  Warning: 'queryParams' is never reassigned. Use 'const' instead.  prefer-const
+1219:13  Warning: 'url' is never reassigned. Use 'const' instead.  prefer-const
+1220:13  Warning: 'res' is never reassigned. Use 'const' instead.  prefer-const
+1225:13  Warning: 'text' is never reassigned. Use 'const' instead.  prefer-const
+
+./src/app/api/me/devices/route.ts
+30:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+33:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/og/tournament/[slug]/route.tsx
+615:7  Warning: 'pad2' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+704:47  Warning: 'height' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+785:7  Warning: 'rightSide' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+810:13  Warning: 'textAlign' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/player-account/claim/complete/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/claim/start/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/create/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/email-check/resend/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/email-verification/resend/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/login/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/register/route.ts
+7:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-account/verify-email/resend/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/claim/route.ts
+16:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/enrollment-request/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/friendly-recordings/request-start/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/friendly-recordings/request-stop/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/register/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/resolve/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/player-devices/revoke-current/route.ts
+8:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:11  Warning: Empty block statement.  no-empty
+
+./src/app/api/players/handicap-recommendation/route.ts
+31:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+127:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+139:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/players/search/route.ts
+13:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+104:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/players/[id]/history/route.ts
+309:13  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any').
+312:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+335:19  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any').
+
+./src/app/api/scoreboard/session-by-id/[sessionId]/route.ts
+24:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/scoreboards/route.ts
+30:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/scoreboards/[id]/events/route.ts
+25:7  Warning: The value assigned to 'body' is not used in subsequent statements.  no-useless-assignment
+
+./src/app/api/stats/player-rankings/route.ts
+12:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+32:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+185:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+185:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+187:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/stats/tournament-comparison/route.ts
+11:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+184:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:73  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+205:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+208:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+209:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+210:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+211:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/tournaments/[eventId]/external-live-tables/route.ts
+245:13  Warning: 'time' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/tournaments/[eventId]/live-sessions/route.ts
+102:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/embed/rankings/ceb/page.tsx
+39:13  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+39:13  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+39:13  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+39:13  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+./src/app/me/page.tsx
+55:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/players/[id]/PlayerProfileClient.tsx
+1254:32  Warning: Unsafe usage of ReturnStatement.  no-unsafe-finally
+1265:9  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+1695:11  Warning: 'overallBestAverageFromWins' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1714:11  Warning: 'overallDraws' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2215:30  Warning: Unexpected constant truthiness on the left-hand side of a `&&` expression.  no-constant-binary-expression
+2215:30  Warning: Unexpected constant truthiness on the left-hand side of a `&&` expression.  no-constant-binary-expression
+
+./src/app/rankings/btr/methodology/page.tsx
+3:28  Warning: 'SectionHeading' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/stats/player-rankings/page.tsx
+78:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/stats/tournament-comparison/page.tsx
+159:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/test/de-bracket-64/page.tsx
+126:9  Warning: Do not use an `<a>` element to navigate to `/jouet/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+127:9  Warning: Do not use an `<a>` element to navigate to `/jouet/tournaments/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+./src/app/test/de-bracket-64-custom/CustomFlowchartClient.tsx
+102:7  Warning: 'COLUMN_GAP' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+237:10  Warning: 'buildConnectorPath' is defined but never used.  @typescript-eslint/no-unused-vars
+404:10  Warning: 'buildSingleConnectorPath' is defined but never used.  @typescript-eslint/no-unused-vars
+853:9  Warning: Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+853:9  Warning: Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+./src/app/tournaments/events/BiathlonTables.tsx
+647:39  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/tournaments/events/draw/DoubleElimDrawPage.tsx
+35:7  Warning: 'BASE_MATCH_GAP' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/tournaments/events/entryHelpers.ts
+1:37  Warning: 'NormalizedGroupPlayer' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/tournaments/events/ShareMenuButton.tsx
+180:5  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+
+./src/app/tournaments/events/TournamentEventsContent.tsx
+2038:7  Warning: 'LONGONI_U21_2026_FINAL_STANDINGS_ORDER' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2261:3  Warning: 'embedded' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2556:9  Warning: 'bracketPhaseScore' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2557:9  Warning: 'bracketAverage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2558:9  Warning: 'bracketBestAverage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2559:9  Warning: 'bracketHighRun' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2560:9  Warning: 'bracketPoints' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2561:9  Warning: 'bracketInnings' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2562:9  Warning: 'bracketMatchPoints' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2563:9  Warning: 'bracketPlayerName' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+3345:3  Warning: 'onStageSelect' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+4196:13  Warning: 'bracketPhaseScore' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4197:13  Warning: 'bracketAverage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4198:13  Warning: 'bracketBestAverage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4199:13  Warning: 'bracketHighRun' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4200:13  Warning: 'bracketPoints' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4201:13  Warning: 'bracketInnings' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4202:13  Warning: 'bracketMatchPoints' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+4203:13  Warning: 'bracketPlayerName' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+5419:20  Warning: 'matchIndex' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/tournaments/events/utils.ts
+2:3  Warning: 'StrapiEventStage' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/tournaments/[slug]/page.tsx
+5:10  Warning: 'TournamentResultsSection' is defined but never used.  @typescript-eslint/no-unused-vars
+102:19  Warning: 'seoStages' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/account/PrivateAccountShell.tsx
+15:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/cms/CmsPageShell.tsx
+204:13  Warning: 'badgeSize' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+484:9  Warning: 'headerMenu' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+486:9  Warning: 'footerMenu' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+494:9  Warning: 'footerMutedClass' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+496:9  Warning: 'footerLabelClass' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+498:9  Warning: 'footerChipClass' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/cms/CmsSectionRenderer.tsx
+26:7  Warning: 'resolveContentContainer' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+109:7  Warning: 'resolveSectionTitleClass' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+133:7  Warning: 'resolveHeroTitleClass' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/live/LiveClubView.tsx
+182:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+205:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+215:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+226:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+245:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+268:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+280:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+281:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+286:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+333:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+367:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+369:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+414:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+749:13  Warning: Empty block statement.  no-empty
+759:13  Warning: Empty block statement.  no-empty
+798:15  Warning: Empty block statement.  no-empty
+854:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+855:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+856:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+858:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+859:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+860:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+911:15  Warning: Empty block statement.  no-empty
+916:15  Warning: Empty block statement.  no-empty
+954:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+954:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+954:95  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+958:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+959:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+960:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+961:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+962:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+963:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+967:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+968:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+969:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+970:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+971:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+972:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+976:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+977:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+981:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+982:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+984:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+985:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1008:13  Warning: Empty block statement.  no-empty
+1061:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1068:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1158:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1160:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1162:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1163:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1171:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1173:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1175:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1176:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1248:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1596:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1597:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1639:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1643:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1654:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1655:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1656:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1666:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1667:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1668:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1694:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1696:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1698:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1699:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1706:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1708:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1710:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1711:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1826:15  Warning: Empty block statement.  no-empty
+1864:19  Warning: Empty block statement.  no-empty
+1874:17  Warning: Empty block statement.  no-empty
+2410:69  Warning: Unnecessary escape character: \-.  no-useless-escape
+
+./src/components/live/LiveVideoDrawer.tsx
+662:9  Warning: 'clearAll' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/LiveScoreBoardCard.tsx
+77:3  Warning: 'gameDurationSeconds' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+368:9  Warning: 'timerCritical' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+369:9  Warning: 'timerActive' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+588:9  Warning: 'formatHHMM' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/LiveScoreDisplay.tsx
+4:10  Warning: 'LiveScoreState' is defined but never used.  @typescript-eslint/no-unused-vars
+17:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/overlay/ObsOverlayClient.tsx
+191:61  Warning: Unnecessary escape character: \-.  no-useless-escape
+777:17  Warning: Empty block statement.  no-empty
+801:15  Warning: Empty block statement.  no-empty
+879:9  Warning: 'activeSide' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1634:9  Warning: 'displayLeftName' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1635:9  Warning: 'displayRightName' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1898:10  Warning: 'OverlayMiniStat' is defined but never used.  @typescript-eslint/no-unused-vars
+2063:10  Warning: 'PortraitBadge' is defined but never used.  @typescript-eslint/no-unused-vars
+2065:3  Warning: 'countryCode' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2089:10  Warning: 'FlagOnly' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/overlay/TemplateFiveOverlay.tsx
+56:61  Warning: Unnecessary escape character: \-.  no-useless-escape
+
+./src/components/presence/PresenceDashboard.tsx
+88:24  Warning: Unsafe usage of ReturnStatement.  no-unsafe-finally
+
+./src/components/public/CebPdfRankingContent.tsx
+52:15  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+52:15  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+52:15  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+52:15  Warning: Do not use an `<a>` element to navigate to `/embed/rankings/ceb/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+./src/components/public/CebRankingContent.tsx
+457:29  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/components/public/FederationPageTabs.tsx
+49:5  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+
+./src/components/public/HandicapToolContent.tsx
+168:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/public/PlayersDirectoryContent.tsx
+43:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+77:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/public/UmbRankingContent.tsx
+356:29  Warning: Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element').
+
+./src/components/scoreboards/ScoreboardsMonitorPage.tsx
+37:10  Warning: 'formatRelativeTime' is defined but never used.  @typescript-eslint/no-unused-vars
+96:24  Warning: 'lastUpdate' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+225:24  Warning: Unsafe usage of ReturnStatement.  no-unsafe-finally
+
+./src/components/teamTournaments/TeamMatchBlock.tsx
+21:8  Warning: 'TeamMatchSet' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/teamTournaments/TeamStatisticsPanel.tsx
+9:10  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/tournaments/TournamentDetailPage.tsx
+42:3  Warning: 'formatDateForTable' is defined but never used.  @typescript-eslint/no-unused-vars
+44:3  Warning: 'formatRecord' is defined but never used.  @typescript-eslint/no-unused-vars
+361:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+424:7  Warning: 'formatParticipantStatus' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+549:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+550:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+556:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+557:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+558:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+569:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+611:3  Warning: 'locale' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1366:7  Warning: 'formatDate' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1945:10  Warning: 'hoveredGroupSessionId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+1984:13  Warning: Empty block statement.  no-empty
+1994:13  Warning: Empty block statement.  no-empty
+3814:9  Warning: 'activeLiveScreens' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+3823:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4048:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4061:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4098:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4106:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4148:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4340:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4577:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+4623:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+5844:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+6582:14  Warning: Unexpected constant truthiness on the left-hand side of a `&&` expression.  no-constant-binary-expression
+7313:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/tournaments/TournamentListSection.tsx
+176:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useLiveScore.ts
+261:11  Warning: 'hooks' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+267:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/api.ts
+165:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+187:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/docs-client.ts
+76:33  Warning: Unnecessary escape character: \/.  no-useless-escape
+
+./src/lib/docs.ts
+147:33  Warning: Unnecessary escape character: \/.  no-useless-escape
+
+./src/lib/federationPortal.ts
+123:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+144:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/handicapRecommendation.ts
+9:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+174:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+176:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+188:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+201:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+249:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+271:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+317:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/liveSessions.ts
+4:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+57:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:5  Warning: The value assigned to 'index' is not used in subsequent statements.  no-useless-assignment
+
+./src/lib/player-account-auth.ts
+423:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+434:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/tournamentListing.ts
+20:9  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+66:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+112:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+143:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+143:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+267:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+268:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+272:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+281:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+351:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+415:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+429:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+440:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/tournamentPublication.ts
+16:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/trusted-device.ts
+35:11  Warning: Empty block statement.  no-empty
+43:11  Warning: Empty block statement.  no-empty
+61:11  Warning: Empty block statement.  no-empty
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/building-your-application/configuring/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/21) ...
+   Generating static pages (5/21) 
+   Generating static pages (10/21) 
+   Generating static pages (15/21) 
+ ✓ Generating static pages (21/21)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                   Size     First Load JS
+┌ ƒ /                                                         1.86 kB         111 kB
+├ ƒ /_not-found                                               905 B           101 kB
+├ ƒ /[...slug]                                                1.84 kB         119 kB
+├ ƒ /account                                                  8.04 kB         129 kB
+├ ƒ /account-access/auth-options                              426 B           101 kB
+├ ƒ /account-access/claim                                     426 B           101 kB
+├ ƒ /account-access/claim/complete                            426 B           101 kB
+├ ƒ /account-access/claim/start                               426 B           101 kB
+├ ƒ /account-access/create                                    426 B           101 kB
+├ ƒ /account-access/dashboard                                 426 B           101 kB
+├ ƒ /account-access/device-link/complete                      426 B           101 kB
+├ ƒ /account-access/device-link/start                         426 B           101 kB
+├ ƒ /account-access/device/recover                            426 B           101 kB
+├ ƒ /account-access/devices                                   426 B           101 kB
+├ ƒ /account-access/devices/revoke                            426 B           101 kB
+├ ƒ /account-access/email-check                               426 B           101 kB
+├ ƒ /account-access/email-check/resend                        426 B           101 kB
+├ ƒ /account-access/enrollment-preview                        426 B           101 kB
+├ ƒ /account-access/forgot-password                           426 B           101 kB
+├ ƒ /account-access/friendly-matches                          426 B           101 kB
+├ ƒ /account-access/friendly-matches/create                   426 B           101 kB
+├ ƒ /account-access/friendly-matches/delete                   426 B           101 kB
+├ ƒ /account-access/friendly-matches/update                   426 B           101 kB
+├ ƒ /account-access/friendly-recordings                       426 B           101 kB
+├ ƒ /account-access/friendly-recordings/[recordingId]/events  426 B           101 kB
+├ ƒ /account-access/friendly-recordings/[recordingId]/video   426 B           101 kB
+├ ƒ /account-access/friendly-recordings/delete                426 B           101 kB
+├ ƒ /account-access/login                                     426 B           101 kB
+├ ƒ /account-access/me                                        426 B           101 kB
+├ ƒ /account-access/phone-verification/complete               426 B           101 kB
+├ ƒ /account-access/phone-verification/start                  426 B           101 kB
+├ ƒ /account-access/profile                                   426 B           101 kB
+├ ƒ /account-access/reset-password                            426 B           101 kB
+├ ƒ /account-access/security                                  426 B           101 kB
+├ ƒ /account-access/social/login                              426 B           101 kB
+├ ƒ /account-access/tournaments                               426 B           101 kB
+├ ƒ /account/complete-profile                                 4.78 kB         116 kB
+├ ƒ /account/devices                                          3.16 kB         119 kB
+├ ƒ /account/forgot-password                                  1.11 kB         113 kB
+├ ƒ /account/friendly                                         8.13 kB         129 kB
+├ ƒ /account/friendly/videos/[recordingId]                    5.58 kB         272 kB
+├ ƒ /account/mockup                                           212 B           110 kB
+├ ƒ /account/reset-password                                   1.33 kB         113 kB
+├ ƒ /account/security                                         4.33 kB         120 kB
+├ ƒ /account/tournaments                                      6.1 kB          127 kB
+├ ƒ /account/verify-email                                     212 B           110 kB
+├ ƒ /admin/player-accounts/[id]/dashboard                     2.38 kB         112 kB
+├ ƒ /admin/player-enrollment-requests                         3.06 kB         103 kB
+├ ƒ /api/account-access/claim                                 426 B           101 kB
+├ ƒ /api/account-access/claim/complete                        426 B           101 kB
+├ ƒ /api/account-access/claim/start                           426 B           101 kB
+├ ƒ /api/account-access/create                                426 B           101 kB
+├ ƒ /api/account-access/email-check                           426 B           101 kB
+├ ƒ /api/account-access/email-check/resend                    426 B           101 kB
+├ ƒ /api/account-access/login                                 426 B           101 kB
+├ ƒ /api/account-access/me                                    426 B           101 kB
+├ ƒ /api/admin/player-accounts/[id]/dashboard                 426 B           101 kB
+├ ƒ /api/admin/player-enrollment-requests                     426 B           101 kB
+├ ƒ /api/admin/player-enrollment-requests/[id]/approve        426 B           101 kB
+├ ƒ /api/admin/player-enrollment-requests/[id]/history        426 B           101 kB
+├ ƒ /api/admin/player-enrollment-requests/[id]/reject         426 B           101 kB
+├ ƒ /api/admin/tournament/live-screens                        426 B           101 kB
+├ ƒ /api/admin/tournament/players                             426 B           101 kB
+├ ƒ /api/clubs/[clubId]/sessions                              426 B           101 kB
+├ ƒ /api/contact                                              426 B           101 kB
+├ ƒ /api/debug/strapi-runtime                                 426 B           101 kB
+├ ƒ /api/event-stages/[stageId]/matches                       426 B           101 kB
+├ ƒ /api/event-stages/[stageId]/standings                     426 B           101 kB
+├ ƒ /api/events/[id]                                          426 B           101 kB
+├ ƒ /api/events/[id]/final-results                            426 B           101 kB
+├ ƒ /api/federation-access/edition                            426 B           101 kB
+├ ƒ /api/federation-access/login                              426 B           101 kB
+├ ƒ /api/federation-access/me                                 426 B           101 kB
+├ ƒ /api/federation-access/players                            426 B           101 kB
+├ ƒ /api/federation-access/rows/check                         426 B           101 kB
+├ ƒ /api/federation-access/submissions                        426 B           101 kB
+├ ƒ /api/federation-access/submissions/withdraw               426 B           101 kB
+├ ƒ /api/me/devices                                           426 B           101 kB
+├ ƒ /api/me/friendly-matches                                  426 B           101 kB
+├ ƒ /api/og/tournament/[slug]                                 1.36 kB         102 kB
+├ ƒ /api/player-account/claim                                 426 B           101 kB
+├ ƒ /api/player-account/claim/complete                        426 B           101 kB
+├ ƒ /api/player-account/claim/start                           426 B           101 kB
+├ ƒ /api/player-account/create                                426 B           101 kB
+├ ƒ /api/player-account/email-check                           426 B           101 kB
+├ ƒ /api/player-account/email-check/resend                    426 B           101 kB
+├ ƒ /api/player-account/email-verification                    426 B           101 kB
+├ ƒ /api/player-account/email-verification/resend             426 B           101 kB
+├ ƒ /api/player-account/login                                 426 B           101 kB
+├ ƒ /api/player-account/me                                    426 B           101 kB
+├ ƒ /api/player-account/register                              426 B           101 kB
+├ ƒ /api/player-account/verify-email                          426 B           101 kB
+├ ƒ /api/player-account/verify-email/resend                   426 B           101 kB
+├ ƒ /api/player-devices/claim                                 426 B           101 kB
+├ ƒ /api/player-devices/enrollment-request                    426 B           101 kB
+├ ƒ /api/player-devices/friendly-recordings/request-start     426 B           101 kB
+├ ƒ /api/player-devices/friendly-recordings/request-stop      426 B           101 kB
+├ ƒ /api/player-devices/register                              426 B           101 kB
+├ ƒ /api/player-devices/resolve                               426 B           101 kB
+├ ƒ /api/player-devices/revoke-current                        426 B           101 kB
+├ ƒ /api/players/[id]/history                                 426 B           101 kB
+├ ƒ /api/players/[id]/team-history                            426 B           101 kB
+├ ƒ /api/players/[id]/years                                   426 B           101 kB
+├ ƒ /api/players/handicap-recommendation                      426 B           101 kB
+├ ƒ /api/players/lookup                                       426 B           101 kB
+├ ƒ /api/players/search                                       426 B           101 kB
+├ ƒ /api/presence                                             426 B           101 kB
+├ ƒ /api/rankings/btr                                         426 B           101 kB
+├ ƒ /api/rankings/ceb/pdf                                     426 B           101 kB
+├ ƒ /api/rankings/series-index                                426 B           101 kB
+├ ƒ /api/rankings/umb/pdf                                     426 B           101 kB
+├ ƒ /api/scoreboard/screens                                   426 B           101 kB
+├ ƒ /api/scoreboard/screens/[screenIdentifier]/sessions       426 B           101 kB
+├ ƒ /api/scoreboard/screens/by-identifier/[screenIdentifier]  426 B           101 kB
+├ ƒ /api/scoreboard/screens/by-overlay-slug/[overlaySlug]     426 B           101 kB
+├ ƒ /api/scoreboard/session-by-id/[sessionId]                 426 B           101 kB
+├ ƒ /api/scoreboards                                          426 B           101 kB
+├ ƒ /api/scoreboards/[id]/events                              426 B           101 kB
+├ ƒ /api/stats/player-rankings                                426 B           101 kB
+├ ƒ /api/stats/tournament-comparison                          426 B           101 kB
+├ ƒ /api/team-tournaments                                     426 B           101 kB
+├ ƒ /api/tournaments                                          426 B           101 kB
+├ ƒ /api/tournaments/[eventId]/external-live-tables           426 B           101 kB
+├ ƒ /api/tournaments/[eventId]/live-sessions                  426 B           101 kB
+├ ƒ /claim                                                    2.27 kB         105 kB
+├ ƒ /clubs                                                    1.44 kB         111 kB
+├ ƒ /clubs/[slug]                                             197 B           117 kB
+├ ƒ /contact                                                  5.56 kB         115 kB
+├ ƒ /cookie-policy                                            1.86 kB         111 kB
+├ ƒ /docs                                                     1.02 kB         101 kB
+├ ƒ /docs/[...slug]                                           1.02 kB         101 kB
+├ ƒ /embed/clubs                                              1.44 kB         111 kB
+├ ƒ /embed/clubs/[slug]                                       197 B           117 kB
+├ ƒ /embed/federations                                        212 B           110 kB
+├ ƒ /embed/federations/[id]                                   204 B           129 kB
+├ ƒ /embed/live                                               212 B           110 kB
+├ ƒ /embed/live/[clubId]                                      2.11 kB         407 kB
+├ ƒ /embed/overlay                                            150 B           232 kB
+├ ƒ /embed/overlay/[screen]                                   151 B           232 kB
+├ ƒ /embed/page/[slug]                                        1.84 kB         119 kB
+├ ƒ /embed/players/[id]                                       185 B           230 kB
+├ ƒ /embed/rankings                                           212 B           110 kB
+├ ƒ /embed/rankings/[slug]                                    212 B           110 kB
+├ ƒ /embed/rankings/ceb                                       882 B           116 kB
+├ ƒ /embed/rankings/ceb/[slug]                                433 B           124 kB
+├ ƒ /embed/rankings/ceb/[slug]/[edition]                      211 B           124 kB
+├ ƒ /embed/tournaments                                        1.84 kB         119 kB
+├ ƒ /embed/tournaments/[slug]                                 1.05 kB         526 kB
+├ ƒ /embed/tournaments/events                                 1.21 kB         180 kB
+├ ƒ /enroll                                                   2.21 kB         103 kB
+├ ƒ /event-data/[eventId]                                     426 B           101 kB
+├ ƒ /federation                                               426 B           101 kB
+├ ƒ /federation/login                                         2.46 kB         112 kB
+├ ƒ /federation/preview                                       6.12 kB         106 kB
+├ ƒ /federation/submissions                                   3.05 kB         113 kB
+├ ƒ /federation/submit                                        6.46 kB         116 kB
+├ ƒ /federations                                              212 B           110 kB
+├ ƒ /federations/[id]                                         1.1 kB          130 kB
+├ ƒ /handicap                                                 8.25 kB         118 kB
+├ ○ /icon.png                                                 0 B                0 B
+├ ƒ /link-device                                              1.54 kB         113 kB
+├ ƒ /live                                                     1.84 kB         119 kB
+├ ƒ /live-overlay                                             997 B           252 kB
+├ ƒ /live/[clubId]                                            3.44 kB         425 kB
+├ ƒ /live/remote                                              3.61 kB         113 kB
+├ ƒ /live/remote/control                                      3.37 kB         113 kB
+├ ƒ /manual                                                   1.86 kB         111 kB
+├ ƒ /me                                                       4.38 kB         105 kB
+├ ƒ /news                                                     1.84 kB         119 kB
+├ ƒ /news/[slug]                                              1.84 kB         119 kB
+├ ƒ /players                                                  5 kB            114 kB
+├ ƒ /players/[id]                                             573 B           240 kB
+├ ƒ /presence                                                 3.18 kB         120 kB
+├ ƒ /privacy-policy                                           1.86 kB         111 kB
+├ ƒ /rankings                                                 212 B           110 kB
+├ ƒ /rankings/[slug]                                          212 B           110 kB
+├ ƒ /rankings/btr                                             6.18 kB         116 kB
+├ ƒ /rankings/btr/methodology                                 212 B           110 kB
+├ ƒ /rankings/ceb                                             882 B           116 kB
+├ ● /rankings/ceb/[slug]                                      433 B           124 kB
+├   ├ /rankings/ceb/3c-ladies
+├   ├ /rankings/ceb/artistic-individual
+├   ├ /rankings/ceb/cadre-472
+├   └ [+4 more paths]
+├ ƒ /rankings/ceb/3c-individual                               211 B           124 kB
+├ ● /rankings/ceb/3c-individual/[edition]                     211 B           124 kB
+├   └ /rankings/ceb/3c-individual/16-2026
+├ ƒ /rankings/umb                                             189 B           115 kB
+├ ƒ /rankings/umb/3c-individual                               147 B           124 kB
+├ ● /rankings/umb/3c-individual/[edition]                     147 B           124 kB
+├   ├ /rankings/umb/3c-individual/09-2026
+├   ├ /rankings/umb/3c-individual/05-2026
+├   ├ /rankings/umb/3c-individual/04-2026
+├   └ /rankings/umb/3c-individual/03-2026
+├ ○ /robots.txt                                               0 B                0 B
+├ ƒ /scoreboards                                              5.44 kB         122 kB
+├ ƒ /sitemap.xml                                              0 B                0 B
+├ ƒ /stats                                                    426 B           101 kB
+├ ƒ /stats/player-rankings                                    3.38 kB         113 kB
+├ ƒ /stats/tournament-comparison                              4.96 kB         222 kB
+├ ƒ /teams                                                    426 B           101 kB
+├ ƒ /teams/[slug]                                             426 B           101 kB
+├ ƒ /terms-of-service                                         1.86 kB         111 kB
+├ ƒ /test                                                     361 B           101 kB
+├ ƒ /test/de-bracket-64                                       6.52 kB         107 kB
+├ ƒ /test/de-bracket-64-custom                                143 B           125 kB
+├ ƒ /test/live-overlay                                        997 B           252 kB
+├ ƒ /tournaments                                              1.81 kB         119 kB
+├ ƒ /tournaments/[slug]                                       1.86 kB         533 kB
+├ ƒ /tournaments/[slug]/flowchart                             143 B           125 kB
+├ ƒ /tournaments/events                                       1.21 kB         180 kB
+├ ƒ /tournaments/events/draw                                  3.8 kB          120 kB
+├ ƒ /tournaments/live                                         3.62 kB         104 kB
+├ ƒ /tournaments/live/soop                                    2.88 kB         112 kB
+├ ƒ /tournaments/team                                         212 B           110 kB
+└ ƒ /tournaments/team/[slug]                                  21.5 kB         136 kB
++ First Load JS shared by all                                 100 kB
+  ├ chunks/1517-1af7958086ab3112.js                           45.9 kB
+  ├ chunks/4bd1b696-88606e4a1f6e711b.js                       52.5 kB
+  └ other shared chunks (total)                               1.97 kB
+
+
+ƒ Middleware                                                  32.2 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

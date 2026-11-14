@@ -21,7 +21,10 @@ import {
   type LiveVideoDrawerSession,
 } from "@/components/live/LiveVideoDrawer";
 import type { LiveSessionItem } from "@/components/live/types";
-import { TournamentEventsContent } from "@/app/tournaments/events/TournamentEventsContent";
+import {
+  TournamentEventsContent,
+  formatDeclaredWallClockInViewerZone,
+} from "@/app/tournaments/events/TournamentEventsContent";
 import type { RankingSeriesData } from "@/lib/rankings";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import type { TournamentEventSummary } from "@/lib/tournaments";
@@ -7341,6 +7344,13 @@ export function TournamentDetailPage({
                     <tbody>
                       {visibleTimetableSlots.map((slot) => {
                         const shiftedDateTime =
+                          formatDeclaredWallClockInViewerZone(
+                            slot.date,
+                            slot.time,
+                            venueTimezoneName ?? eventTimezoneName,
+                            effectiveTimezoneOffset ?? 180,
+                            effectiveTimezoneName,
+                          ) ??
                           declaredWallClock(slot.date, slot.time) ??
                           formatDateTimeWithOffset(
                             slot.dateTime,
@@ -7526,6 +7536,7 @@ export function TournamentDetailPage({
             preferredMatchParam={effectiveMatchParam}
             timezoneOffsetMinutes={effectiveTimezoneOffset ?? 180}
             timezoneName={effectiveTimezoneName}
+            venueTimezoneName={venueTimezoneName ?? eventTimezoneName}
             timezoneOptions={timezoneOptions}
             onTimezoneChange={handleTimezoneChange}
             onStageSelect={(stageDocumentId) => {

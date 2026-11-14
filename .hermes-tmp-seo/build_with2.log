@@ -1,0 +1,13 @@
+npm notice run billiardtoday-frontend@1.0.0 build
+npm notice run next build
+   ▲ Next.js 15.0.7
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+
+> Build error occurred
+Error: Jest worker encountered 1 child process exceptions, exceeding retry limit
+    at ChildProcessWorker.initialize (D:\Projects\5-billiardtoday-frontend\node_modules\next\dist\compiled\jest-worker\index.js:1:11580)
+    at ChildProcessWorker._onExit (D:\Projects\5-billiardtoday-frontend\node_modules\next\dist\compiled\jest-worker\index.js:1:12545) {
+  type: 'WorkerError'
+}

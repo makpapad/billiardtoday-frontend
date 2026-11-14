@@ -1,0 +1,2065 @@
+{
+ "summary": {
+  "site": "https://billiardtoday.com",
+  "checked_at": "2026-10-28T10:05:23+00:00",
+  "checked_at_local": "2026-10-28T12:05:23+02:00",
+  "sitemap_urls": 3798,
+  "checked": 40,
+  "seconds": 54.1,
+  "workers": 2,
+  "min_interval": 1.0,
+  "max_pages": 40,
+  "requests_made": 43,
+  "allow_heavy": false,
+  "skipped_groups": {
+   "clubs": 64,
+   "players": 3272,
+   "rankings": 15
+  },
+  "time_budget_hit": false
+ },
+ "sitemap": {
+  "total": 3798,
+  "duplicates": 0,
+  "groups": {
+   "players": 3272,
+   "tournaments": 410,
+   "clubs": 64,
+   "federations": 27,
+   "rankings": 15,
+   "news": 4,
+   "(root)": 1,
+   "cookie-policy": 1,
+   "live": 1,
+   "manual": 1,
+   "privacy-policy": 1,
+   "terms-of-service": 1
+  },
+  "runs": [
+   {
+    "attempt": 1,
+    "status": 200,
+    "ms": 2370,
+    "bytes": 707255,
+    "locs": 3798,
+    "sitemapindex": false,
+    "sha256_16": "a70a97eab3c1502f",
+    "error": null
+   },
+   {
+    "attempt": 2,
+    "status": 200,
+    "ms": 954,
+    "bytes": 707255,
+    "locs": 3798,
+    "sitemapindex": false,
+    "sha256_16": "a70a97eab3c1502f",
+    "error": null
+   }
+  ],
+  "stable": true
+ },
+ "truncation": {
+  "sitemap_bytes": 707255,
+  "locs_full": 3798,
+  "locs_at_400kb": 2216,
+  "lost_pct": 41.7
+ },
+ "findings": {
+  "status_counts": {
+   "200": 40
+  },
+  "not_200": [],
+  "fetch_failures": [],
+  "redirects": [
+   {
+    "from": "https://billiardtoday.com/tournaments/cadre-712-cceb-15--cadre-71-2-2017",
+    "to": "https://billiardtoday.com/tournaments/cadre-71-2-2017"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/eoaa-2026-2027-three-cushion-master-league-1--master-league-1o-toyrnoya-2026-2027-2026",
+    "to": "https://billiardtoday.com/tournaments/master-league-1o-toyrnoya-2026-2027-2026"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-1-cushion-cceb-350--european-championship-1-cushion-2023",
+    "to": "https://billiardtoday.com/tournaments/european-championship-1-cushion-2023"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-358--european-championship-3-cushion-individual-2023",
+    "to": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2023"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-408--european-championship-3-cushion-individual-2024",
+    "to": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2024"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-cceb-296--european-championship-3-cushion-individual-u21-2022",
+    "to": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-2022"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+    "to": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21-2026"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17--european-championship-3-cushion-u17-2026",
+    "to": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17-2026"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-352--european-championship-artistic-individual-2023",
+    "to": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-2023"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/tournament-107--3rd-division-3c-second-round-2018",
+    "to": "https://billiardtoday.com/tournaments/3rd-division-3c-second-round-2018"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/tournament-181--a-division-3c-2023",
+    "to": "https://billiardtoday.com/tournaments/a-division-3c-2023"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/tournament-191--3c-d-division-2024",
+    "to": "https://billiardtoday.com/tournaments/3c-d-division-2024"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/tournament-194--libre-c-div-2nd-2024",
+    "to": "https://billiardtoday.com/tournaments/libre-c-div-2nd-2024"
+   },
+   {
+    "from": "https://billiardtoday.com/tournaments/tournament-199--3c-b-division-2024",
+    "to": "https://billiardtoday.com/tournaments/3c-b-division-2024"
+   }
+  ],
+  "missing_title": [],
+  "title_too_short": [
+   {
+    "url": "https://billiardtoday.com/",
+    "len": 14,
+    "title": "Billiard Today"
+   }
+  ],
+  "title_too_long": [
+   {
+    "url": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+    "len": 67,
+    "title": "Fédération Luxembourgeoise des Amateurs de Billard | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+    "len": 62,
+    "title": "Federazione Italiana Sport Biliardo e Bowling | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+    "len": 84,
+    "title": "Ankara World Cup 2026: Cho Beats Jaspers 50-49 | BilliardToday News | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+    "len": 87,
+    "title": "LONGONI NEXT GEN Grand Prix U21 2026 Athens Recap | BilliardToday News | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+    "len": 79,
+    "title": "Porto / Matosinhos World Cup 2026 Preview | BilliardToday News | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-358--european-championship-3-cushion-individual-2023",
+    "len": 64,
+    "title": "European Championship 3-Cushion Individual 2023 | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-408--european-championship-3-cushion-individual-2024",
+    "len": 64,
+    "title": "European Championship 3-Cushion Individual 2024 | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-cceb-296--european-championship-3-cushion-individual-u21-2022",
+    "len": 68,
+    "title": "European Championship 3-Cushion Individual U21 2022 | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+    "len": 72,
+    "title": "European Championship 3-Cushion National Teams U21 2026 | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-352--european-championship-artistic-individual-2023",
+    "len": 63,
+    "title": "European Championship Artistic Individual 2023 | Billiard Today"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026",
+    "len": 66,
+    "title": "European Championship Biathlon National Teams U21 | Billiard Today"
+   }
+  ],
+  "missing_description": [],
+  "description_too_long": [
+   {
+    "url": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+    "len": 172,
+    "description": "Fédération Luxembourgeoise des Amateurs de Billard profile in Strassen, Luxembourg, with official billiard tournaments, clubs, and federation information on Billiard Today."
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+    "len": 180,
+    "description": "European Championship 3-Cushion National Teams U21 2026 brings together three-cushion competition from August 4, 2026 - August 9, 2026 at Town Hall of Salamina in Salamina, Greece."
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17--european-championship-3-cushion-u17-2026",
+    "len": 165,
+    "description": "European Championship 3-Cushion U17 2026 brings together three-cushion competition from August 4, 2026 - August 9, 2026 at Town Hall of Salamina in Salamina, Greece."
+   }
+  ],
+  "duplicate_titles": {},
+  "duplicate_descriptions": {
+   "Tournament Rules\n\nMain page of the Antalya Championships.": 3,
+   "Tournament Rules": 2
+  },
+  "missing_canonical": [],
+  "canonical_mismatch": [
+   {
+    "url": "https://billiardtoday.com/tournaments",
+    "canonical": "https://billiardtoday.com",
+    "final": "https://billiardtoday.com/tournaments"
+   }
+  ],
+  "noindex": [],
+  "lang_counts": {
+   "en": 40
+  },
+  "missing_hreflang": [
+   {
+    "url": "https://billiardtoday.com/",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/cookie-policy",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/croatian-billiard-association",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/den-danske-billard-union",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federation-francaise-de-billard",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/hellenic-billiard-union",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/live",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/manual",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/news",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/privacy-policy",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/terms-of-service",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/cadre-712-cceb-15--cadre-71-2-2017",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/eoaa-2026-2027-three-cushion-master-league-1--master-league-1o-toyrnoya-2026-2027-2026",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-1-cushion-cceb-350--european-championship-1-cushion-2023",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-358--european-championship-3-cushion-individual-2023",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-408--european-championship-3-cushion-individual-2024",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-cceb-296--european-championship-3-cushion-individual-u21-2022",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17--european-championship-3-cushion-u17-2026",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-352--european-championship-artistic-individual-2023",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/team/diasyllogiko-v-katigoria-2025-2026-2025",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-107--3rd-division-3c-second-round-2018",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-181--a-division-3c-2023",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-191--3c-d-division-2024",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-194--libre-c-div-2nd-2024",
+    "lang": "en"
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-199--3c-b-division-2024",
+    "lang": "en"
+   }
+  ],
+  "hreflang_values": {},
+  "h1_problems": [
+   {
+    "url": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+    "h1_count": 0,
+    "h1": null
+   },
+   {
+    "url": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+    "h1_count": 0,
+    "h1": null
+   },
+   {
+    "url": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+    "h1_count": 0,
+    "h1": null
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments",
+    "h1_count": 0,
+    "h1": null
+   }
+  ],
+  "no_jsonld": [
+   "https://billiardtoday.com/",
+   "https://billiardtoday.com/cookie-policy",
+   "https://billiardtoday.com/federations",
+   "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+   "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+   "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+   "https://billiardtoday.com/federations/croatian-billiard-association",
+   "https://billiardtoday.com/federations/den-danske-billard-union",
+   "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+   "https://billiardtoday.com/federations/federation-francaise-de-billard",
+   "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+   "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+   "https://billiardtoday.com/federations/hellenic-billiard-union",
+   "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+   "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+   "https://billiardtoday.com/live",
+   "https://billiardtoday.com/manual",
+   "https://billiardtoday.com/news",
+   "https://billiardtoday.com/privacy-policy",
+   "https://billiardtoday.com/terms-of-service",
+   "https://billiardtoday.com/tournaments",
+   "https://billiardtoday.com/tournaments/team/diasyllogiko-v-katigoria-2025-2026-2025",
+   "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026"
+  ],
+  "jsonld_broken": [],
+  "jsonld_types": {
+   "Article": 3,
+   "BreadcrumbList": 14,
+   "ListItem": 14,
+   "Organization": 14,
+   "SportsEvent": 14,
+   "Place": 2,
+   "PostalAddress": 2
+  },
+  "no_internal_links": [],
+  "missing_og_title": [],
+  "missing_og_description": [],
+  "missing_og_image": [],
+  "thin_html": [
+   {
+    "url": "https://billiardtoday.com/tournaments",
+    "text_chars": 643,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/hellenic-billiard-union",
+    "text_chars": 924,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/croatian-billiard-association",
+    "text_chars": 949,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+    "text_chars": 949,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/den-danske-billard-union",
+    "text_chars": 957,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+    "text_chars": 985,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+    "text_chars": 988,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federation-francaise-de-billard",
+    "text_chars": 990,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+    "text_chars": 995,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+    "text_chars": 1005,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+    "text_chars": 1033,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+    "text_chars": 1036,
+    "player_links": 0
+   },
+   {
+    "url": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+    "text_chars": 1039,
+    "player_links": 0
+   }
+  ],
+  "heavy_html": [],
+  "slow_pages": [
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-191--3c-d-division-2024",
+    "ms": 3591,
+    "html_kb": 124
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/eoaa-2026-2027-three-cushion-master-league-1--master-league-1o-toyrnoya-2026-2027-2026",
+    "ms": 3562,
+    "html_kb": 51
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-194--libre-c-div-2nd-2024",
+    "ms": 3426,
+    "html_kb": 77
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/tournament-181--a-division-3c-2023",
+    "ms": 3364,
+    "html_kb": 107
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+    "ms": 3314,
+    "html_kb": 69
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-1-cushion-cceb-350--european-championship-1-cushion-2023",
+    "ms": 3290,
+    "html_kb": 93
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17--european-championship-3-cushion-u17-2026",
+    "ms": 3221,
+    "html_kb": 59
+   },
+   {
+    "url": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-352--european-championship-artistic-individual-2023",
+    "ms": 3030,
+    "html_kb": 94
+   }
+  ],
+  "latency": {
+   "n": 40,
+   "median_ms": 760,
+   "p95_ms": 3426,
+   "max_ms": 3591
+  },
+  "sitemap_total": 3798,
+  "coverage_pct": 1.05
+ },
+ "limitations": [
+  "Χωρίς JavaScript: μετριέται μόνο το server-rendered HTML (client-side αλλαγές, lazy content, υδάτωση δεν αξιολογούνται).",
+  "Δείγμα, όχι πλήρης σάρωση: 40 από 3798 URLs (1.05%).",
+  "Οι ομάδες /players/, /rankings/, /clubs/ εξαιρέθηκαν λόγω κόστους στη Strapi (/api/bt-players/participations-by 5.8-8.7s ανά σελίδα) — δεν ελέγχθηκαν σε αυτό το τρέξιμο.",
+  "Δεν ελέγχθηκαν: Core Web Vitals (LCP/CLS/INP), κινητή φιλικότητα, TLS/HTTPS chain, εικόνες (alt/βάρος), βάθος εσωτερικού link graph, διπλό περιεχόμενο πέραν title/description.",
+  "Έλεγχος HTTP status σε ΟΛΟ το sitemap δεν έγινε (μόνο στις 40 σελίδες του δείγματος).",
+  "Το ms είναι συνολικός χρόνος λήψης από το μηχάνημα ελέγχου (όχι TTFB server-side)."
+ ],
+ "pages": [
+  {
+   "url": "https://billiardtoday.com/",
+   "group": "(root)",
+   "status": 200,
+   "final": "https://billiardtoday.com/",
+   "redirected": false,
+   "ms": 473,
+   "html_kb": 87,
+   "text_chars": 5140,
+   "title": "Billiard Today",
+   "title_len": 14,
+   "description": "Digital scoreboard and tournament management platform for billiard clubs, academies and federations.",
+   "description_len": 100,
+   "canonical": "https://billiardtoday.com",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Live scoreboards, tournament control and public billiard pages in one platform.",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 39,
+   "unique_internal_links": 28,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 88713,
+   "attempts": [
+    473
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/cookie-policy",
+   "group": "cookie-policy",
+   "status": 200,
+   "final": "https://billiardtoday.com/cookie-policy",
+   "redirected": false,
+   "ms": 452,
+   "html_kb": 32,
+   "text_chars": 2135,
+   "title": "Cookie Policy | Billiard Today",
+   "title_len": 30,
+   "description": "How Billiard Today uses cookies and similar browser storage.",
+   "description_len": 60,
+   "canonical": "https://billiardtoday.com/cookie-policy",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Cookie Policy",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 32778,
+   "attempts": [
+    452
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations",
+   "redirected": false,
+   "ms": 648,
+   "html_kb": 75,
+   "text_chars": 2646,
+   "title": "Federations | Billiard Today",
+   "title_len": 28,
+   "description": "Browse billiard federations and organizers with public profiles, clubs, and official tournament pages.",
+   "description_len": 102,
+   "canonical": "https://billiardtoday.com/federations",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Organizers",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 54,
+   "unique_internal_links": 48,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 77022,
+   "attempts": [
+    648
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+   "redirected": false,
+   "ms": 784,
+   "html_kb": 38,
+   "text_chars": 985,
+   "title": "Billard Sportverband Österreich | Billiard Today",
+   "title_len": 48,
+   "description": "Billard Sportverband Österreich profile in Wien, Austria, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 146,
+   "canonical": "https://billiardtoday.com/federations/billard-sportverband-osterreich",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Billard Sportverband Österreich",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 38985,
+   "attempts": [
+    784
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+   "redirected": false,
+   "ms": 791,
+   "html_kb": 38,
+   "text_chars": 988,
+   "title": "Českomoravský billiardový svaz | Billiard Today",
+   "title_len": 47,
+   "description": "Českomoravský billiardový svaz profile in Praha 6, Czech Republic, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 155,
+   "canonical": "https://billiardtoday.com/federations/ceskomoravsky-billiardovy-svaz",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Českomoravský billiardový svaz",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 39092,
+   "attempts": [
+    791
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+   "redirected": false,
+   "ms": 2526,
+   "html_kb": 64,
+   "text_chars": 1033,
+   "title": "Confédération Européenne de Billard | Billiard Today",
+   "title_len": 52,
+   "description": "Confédération Européenne de Billard profile in EU, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 139,
+   "canonical": "https://billiardtoday.com/federations/confederation-europeenne-de-billard",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Confédération Européenne de Billard",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 30,
+   "unique_internal_links": 25,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 65667,
+   "attempts": [
+    2526
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/croatian-billiard-association",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/croatian-billiard-association",
+   "redirected": false,
+   "ms": 1402,
+   "html_kb": 35,
+   "text_chars": 949,
+   "title": "Croatian Billiard Association | Billiard Today",
+   "title_len": 46,
+   "description": "Croatian Billiard Association profile in Zagreb, Croatia, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 146,
+   "canonical": "https://billiardtoday.com/federations/croatian-billiard-association",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Croatian Billiard Association",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 35479,
+   "attempts": [
+    1402
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/den-danske-billard-union",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/den-danske-billard-union",
+   "redirected": false,
+   "ms": 650,
+   "html_kb": 38,
+   "text_chars": 957,
+   "title": "Den Danske Billard Union | Billiard Today",
+   "title_len": 41,
+   "description": "Den Danske Billard Union profile in Bröndby, Denmark, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 142,
+   "canonical": "https://billiardtoday.com/federations/den-danske-billard-union",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Den Danske Billard Union",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 38864,
+   "attempts": [
+    650
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+   "redirected": false,
+   "ms": 504,
+   "html_kb": 35,
+   "text_chars": 949,
+   "title": "Federata Shqiptare e Bilardos | Billiard Today",
+   "title_len": 46,
+   "description": "Federata Shqiptare e Bilardos profile in Albania, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 138,
+   "canonical": "https://billiardtoday.com/federations/federata-shqiptare-e-bilardos",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Federata Shqiptare e Bilardos",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 35431,
+   "attempts": [
+    504
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/federation-francaise-de-billard",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/federation-francaise-de-billard",
+   "redirected": false,
+   "ms": 468,
+   "html_kb": 40,
+   "text_chars": 990,
+   "title": "Fédération Française de Billard (FFB) | Billiard Today",
+   "title_len": 54,
+   "description": "Fédération Française de Billard profile in VICHY CEDEX, France, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 152,
+   "canonical": "https://billiardtoday.com/federations/federation-francaise-de-billard",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Fédération Française de Billard",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 40736,
+   "attempts": [
+    468
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+   "redirected": false,
+   "ms": 587,
+   "html_kb": 35,
+   "text_chars": 1036,
+   "title": "Fédération Luxembourgeoise des Amateurs de Billard | Billiard Today",
+   "title_len": 67,
+   "description": "Fédération Luxembourgeoise des Amateurs de Billard profile in Strassen, Luxembourg, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 172,
+   "canonical": "https://billiardtoday.com/federations/federation-luxembourgeoise-des-amateurs-de-billard",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Fédération Luxembourgeoise des Amateurs de Billard",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 36073,
+   "attempts": [
+    587
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+   "redirected": false,
+   "ms": 689,
+   "html_kb": 42,
+   "text_chars": 1039,
+   "title": "Federazione Italiana Sport Biliardo e Bowling | Billiard Today",
+   "title_len": 62,
+   "description": "Federazione Italiana Sport Biliardo e Bowling profile in MILANO, Italy, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 160,
+   "canonical": "https://billiardtoday.com/federations/federazione-italiana-sport-biliardo-e-bowling",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Federazione Italiana Sport Biliardo e Bowling",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 42851,
+   "attempts": [
+    689
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/hellenic-billiard-union",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/hellenic-billiard-union",
+   "redirected": false,
+   "ms": 559,
+   "html_kb": 34,
+   "text_chars": 924,
+   "title": "Hellenic Billiard Union | Billiard Today",
+   "title_len": 40,
+   "description": "Hellenic Billiard Union profile in Greece, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 131,
+   "canonical": "https://billiardtoday.com/federations/hellenic-billiard-union",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Hellenic Billiard Union",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 35302,
+   "attempts": [
+    559
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+   "redirected": false,
+   "ms": 525,
+   "html_kb": 39,
+   "text_chars": 1005,
+   "title": "Koninklijke Nederlandse Biljartbond | Billiard Today",
+   "title_len": 52,
+   "description": "Koninklijke Nederlandse Biljartbond profile in Nieuwegein, Netherlands, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 160,
+   "canonical": "https://billiardtoday.com/federations/koninklijke-nederlandse-biljartbond",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Koninklijke Nederlandse Biljartbond",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 39947,
+   "attempts": [
+    525
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+   "group": "federations",
+   "status": 200,
+   "final": "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+   "redirected": false,
+   "ms": 610,
+   "html_kb": 40,
+   "text_chars": 995,
+   "title": "Real Federacion Española de Billar | Billiard Today",
+   "title_len": 51,
+   "description": "Real Federacion Española de Billar profile in MADRID, Spain, with official billiard tournaments, clubs, and federation information on Billiard Today.",
+   "description_len": 149,
+   "canonical": "https://billiardtoday.com/federations/real-federacion-espanola-de-billar",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Real Federacion Española de Billar",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 40817,
+   "attempts": [
+    610
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/live",
+   "group": "live",
+   "status": 200,
+   "final": "https://billiardtoday.com/live",
+   "redirected": false,
+   "ms": 622,
+   "html_kb": 143,
+   "text_chars": 6081,
+   "title": "Live | Billiard Today",
+   "title_len": 21,
+   "description": "Open live billiard scoreboard hubs and follow active or pending club sessions in real time.",
+   "description_len": 91,
+   "canonical": "https://billiardtoday.com/live",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Live scoreboard hubs",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 159,
+   "unique_internal_links": 154,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 146733,
+   "attempts": [
+    622
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/manual",
+   "group": "manual",
+   "status": 200,
+   "final": "https://billiardtoday.com/manual",
+   "redirected": false,
+   "ms": 727,
+   "html_kb": 30,
+   "text_chars": 1863,
+   "title": "Platform Manual | Billiard Today",
+   "title_len": 32,
+   "description": "Starting point for the Billiard Today admin and scoreboard manuals.",
+   "description_len": 67,
+   "canonical": "https://billiardtoday.com/manual",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Platform Manual",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 30914,
+   "attempts": [
+    727
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/news",
+   "group": "news",
+   "status": 200,
+   "final": "https://billiardtoday.com/news",
+   "redirected": false,
+   "ms": 499,
+   "html_kb": 33,
+   "text_chars": 1387,
+   "title": "BilliardToday News | Billiard Today",
+   "title_len": 35,
+   "description": "Latest billiard news, tournament updates, ranking stories, and event coverage from BilliardToday.",
+   "description_len": 97,
+   "canonical": "https://billiardtoday.com/news",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "BilliardToday News",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 35,
+   "unique_internal_links": 27,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 34038,
+   "attempts": [
+    499
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+   "group": "news",
+   "status": 200,
+   "final": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+   "redirected": false,
+   "ms": 506,
+   "html_kb": 45,
+   "text_chars": 6499,
+   "title": "Ankara World Cup 2026: Cho Beats Jaspers 50-49 | BilliardToday News | Billiard Today",
+   "title_len": 84,
+   "description": "A recap of the World Cup 3-Cushion Ankara 2026: venue, schedule, favorites, results, streaming, rankings, and the road to Porto.",
+   "description_len": 128,
+   "canonical": "https://billiardtoday.com/news/ankara-world-cup-2026-cho-jaspers-recap",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 0,
+   "h1": null,
+   "jsonld_types": [
+    "Article"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 34,
+   "unique_internal_links": 26,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 45984,
+   "attempts": [
+    506
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+   "group": "news",
+   "status": 200,
+   "final": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+   "redirected": false,
+   "ms": 737,
+   "html_kb": 57,
+   "text_chars": 4532,
+   "title": "LONGONI NEXT GEN Grand Prix U21 2026 Athens Recap | BilliardToday News | Billiard Today",
+   "title_len": 87,
+   "description": "BilliardToday and CEB organized the LONGONI NEXT GEN Grand Prix 3-Cushion U21 in Athens. Marcos Morales won the title at Koralli B.C.",
+   "description_len": 133,
+   "canonical": "https://billiardtoday.com/news/longoni-next-gen-grand-prix-u21-2026-athens-recap",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 0,
+   "h1": null,
+   "jsonld_types": [
+    "Article"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 45,
+   "unique_internal_links": 33,
+   "player_links": 8,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 57953,
+   "attempts": [
+    737
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+   "group": "news",
+   "status": 200,
+   "final": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+   "redirected": false,
+   "ms": 454,
+   "html_kb": 48,
+   "text_chars": 4872,
+   "title": "Porto / Matosinhos World Cup 2026 Preview | BilliardToday News | Billiard Today",
+   "title_len": 79,
+   "description": "The UMB World Cup 3-Cushion comes to Porto / Matosinhos from 12 to 18 July 2026. Dates, venue, players to watch, schedule and links to follow the event.",
+   "description_len": 152,
+   "canonical": "https://billiardtoday.com/news/porto-matosinhos-world-cup-2026-preview",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 0,
+   "h1": null,
+   "jsonld_types": [
+    "Article"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 53,
+   "unique_internal_links": 42,
+   "player_links": 16,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 49031,
+   "attempts": [
+    454
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/privacy-policy",
+   "group": "privacy-policy",
+   "status": 200,
+   "final": "https://billiardtoday.com/privacy-policy",
+   "redirected": false,
+   "ms": 471,
+   "html_kb": 34,
+   "text_chars": 2647,
+   "title": "Privacy Policy | Billiard Today",
+   "title_len": 31,
+   "description": "How Billiard Today handles account, tournament and platform data.",
+   "description_len": 65,
+   "canonical": "https://billiardtoday.com/privacy-policy",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Privacy Policy",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 34507,
+   "attempts": [
+    471
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/terms-of-service",
+   "group": "terms-of-service",
+   "status": 200,
+   "final": "https://billiardtoday.com/terms-of-service",
+   "redirected": false,
+   "ms": 424,
+   "html_kb": 34,
+   "text_chars": 2620,
+   "title": "Terms of Service | Billiard Today",
+   "title_len": 33,
+   "description": "Core terms for using Billiard Today public pages, accounts, admin tools and scoreboards.",
+   "description_len": 88,
+   "canonical": "https://billiardtoday.com/terms-of-service",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Terms of Service",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 34621,
+   "attempts": [
+    424
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments",
+   "redirected": false,
+   "ms": 401,
+   "html_kb": 29,
+   "text_chars": 643,
+   "title": "Billiard Today | Billiard Today",
+   "title_len": 31,
+   "description": "Billiard tournaments, results, rankings, clubs, players, and CMS-managed content.",
+   "description_len": 81,
+   "canonical": "https://billiardtoday.com",
+   "canonical_mismatch": true,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 0,
+   "h1": null,
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 29,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 29663,
+   "attempts": [
+    401
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/cadre-712-cceb-15--cadre-71-2-2017",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/cadre-71-2-2017",
+   "redirected": true,
+   "ms": 2097,
+   "html_kb": 92,
+   "text_chars": 2596,
+   "title": "Cadre 71/2 2017 | Billiard Today",
+   "title_len": 32,
+   "description": "http://www.eurobillard.org/fileadmin/regelwerk/en/C3_4_5_eng.pdf",
+   "description_len": 64,
+   "canonical": "https://billiardtoday.com/tournaments/cadre-71-2-2017",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Cadre 71/2",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 54,
+   "unique_internal_links": 48,
+   "player_links": 24,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 94699,
+   "attempts": [
+    2097
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/eoaa-2026-2027-three-cushion-master-league-1--master-league-1o-toyrnoya-2026-2027-2026",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/master-league-1o-toyrnoya-2026-2027-2026",
+   "redirected": true,
+   "ms": 3562,
+   "html_kb": 51,
+   "text_chars": 1725,
+   "title": "Master League - 1ο Τουρνουά 2026-2027 2026 | Billiard Today",
+   "title_len": 59,
+   "description": "Master League - 1ο Τουρνουά 2026-2027 2026 brings together three-cushion competition from October 29, 2026 - November 17, 2026.",
+   "description_len": 127,
+   "canonical": "https://billiardtoday.com/tournaments/master-league-1o-toyrnoya-2026-2027-2026",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Master League - 1ο Τουρνουά 2026-2027",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 31,
+   "unique_internal_links": 25,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 52506,
+   "attempts": [
+    3562
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-1-cushion-cceb-350--european-championship-1-cushion-2023",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-1-cushion-2023",
+   "redirected": true,
+   "ms": 3290,
+   "html_kb": 93,
+   "text_chars": 2693,
+   "title": "European Championship 1-Cushion 2023 | Billiard Today",
+   "title_len": 53,
+   "description": "Tournament Rules\n\nMain page of the Antalya Championships.",
+   "description_len": 57,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-1-cushion-2023",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 1-Cushion",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 54,
+   "unique_internal_links": 48,
+   "player_links": 24,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 95668,
+   "attempts": [
+    3290
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-358--european-championship-3-cushion-individual-2023",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2023",
+   "redirected": true,
+   "ms": 2132,
+   "html_kb": 122,
+   "text_chars": 3352,
+   "title": "European Championship 3-Cushion Individual 2023 | Billiard Today",
+   "title_len": 64,
+   "description": "Tournament Rules\n\nMain page of the Antalya Championships.",
+   "description_len": 57,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2023",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 3-Cushion Individual",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 70,
+   "unique_internal_links": 64,
+   "player_links": 40,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 125317,
+   "attempts": [
+    2132
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-cceb-408--european-championship-3-cushion-individual-2024",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2024",
+   "redirected": true,
+   "ms": 2312,
+   "html_kb": 122,
+   "text_chars": 3330,
+   "title": "European Championship 3-Cushion Individual 2024 | Billiard Today",
+   "title_len": 64,
+   "description": "Tournament Rules",
+   "description_len": 16,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-2024",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 3-Cushion Individual",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 70,
+   "unique_internal_links": 64,
+   "player_links": 40,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 124772,
+   "attempts": [
+    2312
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-cceb-296--european-championship-3-cushion-individual-u21-2022",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-2022",
+   "redirected": true,
+   "ms": 2801,
+   "html_kb": 87,
+   "text_chars": 2595,
+   "title": "European Championship 3-Cushion Individual U21 2022 | Billiard Today",
+   "title_len": 68,
+   "description": "Tournament Rules",
+   "description_len": 16,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-3-cushion-individual-u21-2022",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 3-Cushion Individual U21",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 50,
+   "unique_internal_links": 44,
+   "player_links": 20,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 88740,
+   "attempts": [
+    2801
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21--european-championship-3-cushion-national-teams-u21-2026",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21-2026",
+   "redirected": true,
+   "ms": 3314,
+   "html_kb": 69,
+   "text_chars": 2221,
+   "title": "European Championship 3-Cushion National Teams U21 2026 | Billiard Today",
+   "title_len": 72,
+   "description": "European Championship 3-Cushion National Teams U21 2026 brings together three-cushion competition from August 4, 2026 - August 9, 2026 at Town Hall of Salamina in Salamina, Greece.",
+   "description_len": 180,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-3-cushion-national-teams-u21-2026",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 3-Cushion National Teams U21",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "Place",
+    "PostalAddress",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 30,
+   "unique_internal_links": 24,
+   "player_links": 0,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 70592,
+   "attempts": [
+    3314
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17--european-championship-3-cushion-u17-2026",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17-2026",
+   "redirected": true,
+   "ms": 3221,
+   "html_kb": 59,
+   "text_chars": 2243,
+   "title": "European Championship 3-Cushion U17 2026 | Billiard Today",
+   "title_len": 57,
+   "description": "European Championship 3-Cushion U17 2026 brings together three-cushion competition from August 4, 2026 - August 9, 2026 at Town Hall of Salamina in Salamina, Greece.",
+   "description_len": 165,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-3-cushion-u17-2026",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship 3-Cushion U17",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "Place",
+    "PostalAddress",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 46,
+   "unique_internal_links": 40,
+   "player_links": 16,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 60802,
+   "attempts": [
+    3221
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-cceb-352--european-championship-artistic-individual-2023",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-2023",
+   "redirected": true,
+   "ms": 3030,
+   "html_kb": 94,
+   "text_chars": 2762,
+   "title": "European Championship Artistic Individual 2023 | Billiard Today",
+   "title_len": 63,
+   "description": "Tournament Rules\n\nMain page of the Antalya Championships.",
+   "description_len": 57,
+   "canonical": "https://billiardtoday.com/tournaments/european-championship-artistic-individual-2023",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship Artistic Individual",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 54,
+   "unique_internal_links": 48,
+   "player_links": 24,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 96328,
+   "attempts": [
+    3030
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/team/diasyllogiko-v-katigoria-2025-2026-2025",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/team/diasyllogiko-v-katigoria-2025-2026-2025",
+   "redirected": false,
+   "ms": 1895,
+   "html_kb": 145,
+   "text_chars": 1966,
+   "title": "Διασυλλογικό Β Κατηγορία 2025 - 2026 | Billiard Today",
+   "title_len": 53,
+   "description": "Team tournament Διασυλλογικό Β Κατηγορία 2025 - 2026 — Β Κατηγοία: groups, matches, and standings.",
+   "description_len": 98,
+   "canonical": "https://billiardtoday.com/tournaments/team/diasyllogiko-v-katigoria-2025-2026-2025",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "Διασυλλογικό Β Κατηγορία 2025 - 2026",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 44,
+   "unique_internal_links": 39,
+   "player_links": 15,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 148760,
+   "attempts": [
+    1895
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026",
+   "redirected": false,
+   "ms": 1293,
+   "html_kb": 106,
+   "text_chars": 2035,
+   "title": "European Championship Biathlon National Teams U21 | Billiard Today",
+   "title_len": 66,
+   "description": "Team tournament European Championship Biathlon National Teams U21 — 2025-2026: groups, matches, and standings.",
+   "description_len": 110,
+   "canonical": "https://billiardtoday.com/tournaments/team/european-championship-biathlon-national-teams-u21-2026",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "European Championship Biathlon National Teams U21",
+   "jsonld_types": [],
+   "jsonld_broken": 0,
+   "internal_links": 66,
+   "unique_internal_links": 61,
+   "player_links": 37,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 109040,
+   "attempts": [
+    1293
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/tournament-107--3rd-division-3c-second-round-2018",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/3rd-division-3c-second-round-2018",
+   "redirected": true,
+   "ms": 2384,
+   "html_kb": 124,
+   "text_chars": 3458,
+   "title": "3rd Division 3c second round 2018 | Billiard Today",
+   "title_len": 50,
+   "description": "3rd Division 3c second round 2018 brings together three-cushion competition from February 4, 2018 - February 10, 2018.",
+   "description_len": 118,
+   "canonical": "https://billiardtoday.com/tournaments/3rd-division-3c-second-round-2018",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "3rd Division 3c second round 2018",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 70,
+   "unique_internal_links": 64,
+   "player_links": 40,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 127163,
+   "attempts": [
+    2384
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/tournament-181--a-division-3c-2023",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/a-division-3c-2023",
+   "redirected": true,
+   "ms": 3364,
+   "html_kb": 107,
+   "text_chars": 2955,
+   "title": "A Division 3c 2023 | Billiard Today",
+   "title_len": 35,
+   "description": "A Division 3c 2023 brings together three-cushion competition from July 5, 2023 - July 12, 2023.",
+   "description_len": 95,
+   "canonical": "https://billiardtoday.com/tournaments/a-division-3c-2023",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "A Division 3c",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 61,
+   "unique_internal_links": 55,
+   "player_links": 31,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 109440,
+   "attempts": [
+    3364
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/tournament-191--3c-d-division-2024",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/3c-d-division-2024",
+   "redirected": true,
+   "ms": 3591,
+   "html_kb": 124,
+   "text_chars": 3363,
+   "title": "3c D Division 2024 | Billiard Today",
+   "title_len": 35,
+   "description": "3c D Division 2024 brings together three-cushion competition from January 2, 2024 - January 22, 2024.",
+   "description_len": 101,
+   "canonical": "https://billiardtoday.com/tournaments/3c-d-division-2024",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "3c D Division",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 70,
+   "unique_internal_links": 64,
+   "player_links": 40,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 126653,
+   "attempts": [
+    3591
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/tournament-194--libre-c-div-2nd-2024",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/libre-c-div-2nd-2024",
+   "redirected": true,
+   "ms": 3426,
+   "html_kb": 77,
+   "text_chars": 2217,
+   "title": "LIBRE C DIV 2nd 2024 | Billiard Today",
+   "title_len": 37,
+   "description": "LIBRE C DIV 2nd 2024 brings together libre competition from January 24, 2024 - January 26, 2024.",
+   "description_len": 96,
+   "canonical": "https://billiardtoday.com/tournaments/libre-c-div-2nd-2024",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "LIBRE C DIV 2nd",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 45,
+   "unique_internal_links": 39,
+   "player_links": 15,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 79039,
+   "attempts": [
+    3426
+   ]
+  },
+  {
+   "url": "https://billiardtoday.com/tournaments/tournament-199--3c-b-division-2024",
+   "group": "tournaments",
+   "status": 200,
+   "final": "https://billiardtoday.com/tournaments/3c-b-division-2024",
+   "redirected": true,
+   "ms": 2846,
+   "html_kb": 123,
+   "text_chars": 3312,
+   "title": "3C B DIVISION 2024 | Billiard Today",
+   "title_len": 35,
+   "description": "3C B DIVISION 2024 brings together three-cushion competition from March 2, 2024 - March 13, 2024.",
+   "description_len": 97,
+   "canonical": "https://billiardtoday.com/tournaments/3c-b-division-2024",
+   "canonical_mismatch": false,
+   "robots": null,
+   "noindex": false,
+   "lang": "en",
+   "hreflang": [],
+   "h1_count": 1,
+   "h1": "3C B DIVISION",
+   "jsonld_types": [
+    "BreadcrumbList",
+    "ListItem",
+    "Organization",
+    "SportsEvent"
+   ],
+   "jsonld_broken": 0,
+   "internal_links": 70,
+   "unique_internal_links": 64,
+   "player_links": 40,
+   "og_image": true,
+   "og_title": true,
+   "og_description": true,
+   "error": null,
+   "bytes": 126317,
+   "attempts": [
+    2846
+   ]
+  }
+ ]
+}

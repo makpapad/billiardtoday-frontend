@@ -1,0 +1,66 @@
+npm notice run billiardtoday-frontend@1.0.0 dev
+npm notice run next dev -p 3022
+   ▲ Next.js 15.0.7
+   - Local:        http://localhost:3022
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 11.4s
+ ○ Compiling /tournaments/[slug] ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled /tournaments/[slug] in 62.3s (1787 modules)
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 90531ms
+ ✓ Compiled in 4.8s (853 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1334ms (1229 modules)
+ ○ Compiling /api/tournaments ...
+ GET / 200 in 2406ms
+ ✓ Compiled /api/tournaments in 801ms (1249 modules)
+ ✓ Compiled /tournaments/[slug] in 396ms (992 modules)
+ GET /api/tournaments?page=2&pageSize=100 200 in 1449ms
+ GET /api/tournaments?page=4&pageSize=100 200 in 1908ms
+ GET /api/tournaments?page=3&pageSize=100 200 in 1935ms
+ GET /api/tournaments?page=1&pageSize=100 200 in 1971ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 2661ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 752ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 408ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 598ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 459ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 613ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 519ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 541ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 787ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 431ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 541ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 1604ms
+ ○ Compiling /[...slug] ...
+ ✓ Compiled /[...slug] in 2.2s (1839 modules)
+ GET /_next/static/css/app/layout.css?v=1793649401829 404 in 3541ms
+ ✓ Compiled /icon.png in 483ms (999 modules)
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 3533ms
+ GET /_next/static/css/app/layout.css?v=1793649445936 404 in 293ms
+ GET /icon.png?d8ce51b785056121 200 in 108ms
+ GET /tournaments/european-championship-cushion-u25-2026 404 in 1154ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 955ms
+ GET /_next/static/css/app/layout.css?v=1793649492079 404 in 153ms
+ GET /icon.png?d8ce51b785056121 200 in 148ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 1272ms
+ GET /_next/static/css/app/layout.css?v=1793649506307 404 in 289ms
+ GET /icon.png?d8ce51b785056121 200 in 160ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 981ms
+ GET /_next/static/css/app/layout.css?v=1793649529663 404 in 217ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 1681ms
+ GET /_next/static/css/app/layout.css?v=1793649532701 404 in 551ms
+ GET /_next/static/chunks/main-app.js?v=1793649532701 404 in 1226ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 591ms
+ GET /_next/static/chunks/app/layout.js 404 in 499ms
+ GET /_next/static/chunks/app/tournaments/%5Bslug%5D/page.js 404 in 496ms
+ GET /icon.png?d8ce51b785056121 200 in 409ms
+ ✓ Compiled in 4.1s (1811 modules)
+ GET /_next/static/css/app/layout.css?v=1793649556218 404 in 311ms
+ GET /tournaments/world-cup-3-cushion-yanggu-2026 200 in 5291ms
+ GET /icon.png?d8ce51b785056121 200 in 337ms
+[?25h

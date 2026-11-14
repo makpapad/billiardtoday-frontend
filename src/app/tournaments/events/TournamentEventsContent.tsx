@@ -273,6 +273,8 @@ type TournamentEventsContentProps = {
   preferredMatchParam?: string | null;
   timezoneOffsetMinutes?: number | null;
   timezoneName?: string | null;
+  /** Ζώνη του τόπου διεξαγωγής (π.χ. Europe/Athens): ερμηνεύει το ρολόι διοργανωτή. */
+  venueTimezoneName?: string | null;
   timezoneOptions?: Array<{
     label: string;
     options: Array<{ value: string; label: string }>;
@@ -1838,6 +1840,68 @@ function declaredWallClock(
   const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!day || !/^\d{2}:\d{2}$/.test(hhmm)) return null;
   return { date: `${day[3]}/${day[2]}/${day[1]}`, time: hhmm };
+}
+
+/** Offset (ms) μιας IANA ζώνης σε μια δεδομένη στιγμή — DST-aware. */
+function zoneOffsetMs(utcMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(utcMs));
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return (
+    Date.UTC(
+      part("year"),
+      part("month") - 1,
+      part("day"),
+      part("hour"),
+      part("minute"),
+      part("second"),
+    ) - utcMs
+  );
+}
+
+/**
+ * Ρολόι διοργανωτή (η ώρα που δήλωσε ο άνθρωπος στο admin) = τοπική ώρα του τόπου
+ * διεξαγωγής. Τη μετατρέπουμε σε UTC με βάση τη ζώνη του τόπου και μετά στη ζώνη
+ * που διάλεξε ο επισκέπτης — έτσι «Ελλάδα» δείχνει ακριβώς ό,τι δηλώθηκε, ενώ
+ * άλλη ζώνη δείχνει τη σωστή τοπική ώρα αντί να μένει καρφωμένη.
+ * Χωρίς γνωστή ζώνη τόπου επιστρέφει `null` (καλείται η παλιά συμπεριφορά).
+ */
+export function formatDeclaredWallClockInViewerZone(
+  date: string | null | undefined,
+  time: string | null | undefined,
+  venueTimeZone: string | null | undefined,
+  offsetMinutes: number | null | undefined,
+  timeZoneName?: string | null,
+): { date: string; time: string } | null {
+  const iso = String(date ?? "").trim().slice(0, 10);
+  const hhmm = String(time ?? "").trim().slice(0, 5);
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!day || !/^\d{2}:\d{2}$/.test(hhmm)) return null;
+  const zone = typeof venueTimeZone === "string" ? venueTimeZone.trim() : "";
+  if (!zone) return null;
+
+  const [year, month, dayOfMonth] = [Number(day[1]), Number(day[2]), Number(day[3])];
+  const [hour, minute] = [Number(hhmm.slice(0, 2)), Number(hhmm.slice(3, 5))];
+  const guessMs = Date.UTC(year, month - 1, dayOfMonth, hour, minute);
+  let utcMs = guessMs - zoneOffsetMs(guessMs, zone);
+  // Δεύτερος γύρος: αν η στιγμή πέφτει κοντά σε αλλαγή ώρας (DST), το offset
+  // της πραγματικής στιγμής μπορεί να διαφέρει από της αρχικής εκτίμησης.
+  const refined = guessMs - zoneOffsetMs(utcMs, zone);
+  if (refined !== utcMs) utcMs = refined;
+
+  return formatDateTimeWithOffset(
+    new Date(utcMs).toISOString(),
+    offsetMinutes,
+    timeZoneName,
+  );
 }
 
 function formatDateTimeWithOffset(
@@ -3423,6 +3487,7 @@ export function TournamentEventsContent({
   preferredMatchParam: preferredMatchParamOverride = undefined,
   timezoneOffsetMinutes = null,
   timezoneName = null,
+  venueTimezoneName = null,
   timezoneOptions = [],
   onTimezoneChange,
   onStageSelect,
@@ -6561,6 +6626,13 @@ export function TournamentEventsContent({
                               {filteredTimetableSlots.map((slot) => {
                                 const parsedDateTime = slot.dateTime ? new Date(slot.dateTime) : null;
                                 const shiftedSlotDateTime =
+                                  formatDeclaredWallClockInViewerZone(
+                                    slot.date,
+                                    slot.time,
+                                    venueTimezoneName,
+                                    timezoneOffsetMinutes,
+                                    timezoneName,
+                                  ) ??
                                   declaredWallClock(slot.date, slot.time) ??
                                   formatDateTimeWithOffset(
                                     slot.dateTime,

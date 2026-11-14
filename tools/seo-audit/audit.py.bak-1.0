@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+"""
+Τεχνικός έλεγχος SEO (read-only) — τραβάει το sitemap, δειγματοληπτεί σελίδες
+και μετράει ό,τι βλέπει ο crawler στο HTML (χωρίς JS).
+
+Χρήση:
+  python audit.py --site https://billiardtoday.com --out reports --max-tournaments 60 --max-players 40
+Γράφει: reports/<timestamp>-audit.json  και  reports/<timestamp>-audit.md
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import re
+import sys
+import time
+from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlparse, urlsplit, urlunsplit
+from urllib.request import Request, urlopen
+
+UA = "BilliardToday-SEO-Audit/1.0 (read-only internal audit)"
+CHUNK = 400_000
+
+TAG = re.compile(r"<[^>]+>")
+SCRIPT = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.S | re.I)
+TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.S | re.I)
+META = re.compile(r"<meta\b[^>]*>", re.I)
+LINK = re.compile(r"<link\b[^>]*>", re.I)
+ANCHOR = re.compile(r"<a\b[^>]*href=[\"']([^\"']+)[\"']", re.I)
+H1 = re.compile(r"<h1\b[^>]*>(.*?)</h1>", re.S | re.I)
+JSONLD = re.compile(r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(.*?)</script>", re.S | re.I)
+HTML_LANG = re.compile(r"<html\b[^>]*\blang=[\"']([^\"']+)[\"']", re.I)
+
+
+def attr(tag: str, name: str) -> str | None:
+    m = re.search(rf"\b{name}\s*=\s*[\"']([^\"']*)[\"']", tag, re.I)
+    return m.group(1).strip() if m else None
+
+
+def encode_url(url: str) -> str:
+    """Οι διευθύνσεις του sitemap έχουν και μη-ASCII (π.χ. 'é') — το urllib θέλει percent-encoding."""
+    parts = urlsplit(url)
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        quote(parts.path, safe="/%"),
+        quote(parts.query, safe="=&%?+"),
+        "",
+    ))
+
+
+def fetch(url: str, timeout: int = 25) -> dict:
+    t0 = time.time()
+    target = encode_url(url)
+    req = Request(target, headers={"User-Agent": UA, "Accept": "text/html,*/*"})
+    try:
+        with urlopen(req, timeout=timeout) as resp:
+            raw = resp.read(CHUNK)
+            return {
+                "url": url,
+                "status": resp.status,
+                "final": resp.geturl(),
+                "bytes": len(raw),
+                "ms": int((time.time() - t0) * 1000),
+                "html": raw.decode("utf-8", "ignore"),
+            }
+    except HTTPError as exc:
+        return {"url": url, "status": exc.code, "final": url, "bytes": 0,
+                "ms": int((time.time() - t0) * 1000), "html": "", "error": str(exc)}
+    except (URLError, TimeoutError, OSError) as exc:
+        return {"url": url, "status": 0, "final": url, "bytes": 0,
+                "ms": int((time.time() - t0) * 1000), "html": "", "error": str(exc)}
+
+
+def analyse(page: dict, site_host: str) -> dict:
+    html = page["html"]
+    body = SCRIPT.sub(" ", html)
+    text = TAG.sub(" ", body)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    title_m = TITLE.search(html)
+    title = re.sub(r"\s+", " ", TAG.sub(" ", title_m.group(1))).strip() if title_m else None
+
+    desc = canonical = robots = og_image = None
+    for tag in META.findall(html):
+        name = (attr(tag, "name") or attr(tag, "property") or "").lower()
+        if name == "description" and desc is None:
+            desc = attr(tag, "content")
+        elif name == "robots" and robots is None:
+            robots = attr(tag, "content")
+        elif name == "og:image" and og_image is None:
+            og_image = attr(tag, "content")
+    for tag in LINK.findall(html):
+        if (attr(tag, "rel") or "").lower() == "canonical":
+            canonical = attr(tag, "href")
+            break
+
+    hrefs = ANCHOR.findall(html)
+    internal = [h for h in hrefs if h.startswith("/") or site_host in h]
+    player_links = {h for h in hrefs if "/players/" in h}
+
+    ld_types: list[str] = []
+    for block in JSONLD.findall(html):
+        try:
+            data = json.loads(block.strip())
+        except Exception:
+            ld_types.append("(invalid json)")
+            continue
+        for node in (data if isinstance(data, list) else [data]):
+            if isinstance(node, dict) and "@type" in node:
+                t = node["@type"]
+                ld_types.extend(t if isinstance(t, list) else [t])
+
+    h1s = [re.sub(r"\s+", " ", TAG.sub(" ", h)).strip() for h in H1.findall(html)]
+    lang_m = HTML_LANG.search(html)
+
+    return {
+        "url": page["url"],
+        "status": page["status"],
+        "final": page["final"],
+        "redirected": page["final"].rstrip("/") != page["url"].rstrip("/"),
+        "ms": page["ms"],
+        "html_kb": round(page["bytes"] / 1024),
+        "text_chars": len(text),
+        "title": title,
+        "title_len": len(title) if title else 0,
+        "description": desc,
+        "description_len": len(desc) if desc else 0,
+        "canonical": canonical,
+        "robots": robots,
+        "noindex": bool(robots and "noindex" in robots.lower()),
+        "lang": lang_m.group(1) if lang_m else None,
+        "h1_count": len(h1s),
+        "h1": h1s[0] if h1s else None,
+        "jsonld_types": sorted(set(ld_types)),
+        "internal_links": len(internal),
+        "player_links": len(player_links),
+        "og_image": bool(og_image),
+        "error": page.get("error"),
+    }
+
+
+def load_sitemap(site: str) -> list[str]:
+    urls: list[str] = []
+    for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"):
+        page = fetch(site + path)
+        if page["status"] != 200:
+            continue
+        locs = re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", page["html"])
+        if not locs:
+            continue
+        if "<sitemapindex" in page["html"]:
+            for sub in locs[:20]:
+                subpage = fetch(sub)
+                urls.extend(re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", subpage["html"]))
+        else:
+            urls.extend(locs)
+        break
+    return sorted(set(urls))
+
+
+def pick(urls: list[str], site: str, caps: dict, seed: int) -> list[str]:
+    rnd = random.Random(seed)
+    groups: dict[str, list[str]] = defaultdict(list)
+    for url in urls:
+        path = urlparse(url).path.strip("/")
+        head = path.split("/")[0] if path else ""
+        groups[head or "(root)"].append(url)
+
+    chosen: list[str] = [f"{site}/", f"{site}/tournaments", f"{site}/players", f"{site}/clubs"]
+    for head, members in sorted(groups.items()):
+        cap = caps.get(head, caps.get("*", 20))
+        sample = rnd.sample(members, min(cap, len(members))) if len(members) > cap else members
+        chosen.extend(sample)
+    return sorted(set(chosen))
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--site", default="https://billiardtoday.com")
+    ap.add_argument("--out", default="reports")
+    ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--max-tournaments", type=int, default=60)
+    ap.add_argument("--max-players", type=int, default=40)
+    ap.add_argument("--seed", type=int, default=7)
+    args = ap.parse_args()
+
+    site = args.site.rstrip("/")
+    host = urlparse(site).netloc
+    started = time.time()
+
+    sitemap_urls = load_sitemap(site)
+    caps = {
+        "tournaments": args.max_tournaments,
+        "players": args.max_players,
+        "clubs": 40,
+        "federations": 25,
+        "rankings": 30,
+        "*": 15,
+    }
+    targets = pick(sitemap_urls, site, caps, args.seed)
+
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        pages = list(pool.map(fetch, targets))
+    rows = [analyse(p, host) for p in pages]
+
+    agg = {
+        "site": site,
+        "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "sitemap_urls": len(sitemap_urls),
+        "checked": len(rows),
+        "seconds": round(time.time() - started, 1),
+    }
+    by_status = Counter(r["status"] for r in rows)
+    titles = Counter(r["title"] for r in rows if r["title"])
+    descs = Counter(r["description"] for r in rows if r["description"])
+    findings = {
+        "status_counts": dict(by_status),
+        "broken_or_error": [r["url"] for r in rows if r["status"] != 200],
+        "redirects": [{"from": r["url"], "to": r["final"]} for r in rows if r["redirected"]],
+        "missing_title": [r["url"] for r in rows if not r["title"]],
+        "missing_description": [r["url"] for r in rows if not r["description"]],
+        "duplicate_titles": {t: n for t, n in titles.items() if n > 1},
+        "duplicate_descriptions": {d[:90]: n for d, n in descs.items() if n > 1},
+        "missing_canonical": [r["url"] for r in rows if not r["canonical"]],
+        "noindex": [r["url"] for r in rows if r["noindex"]],
+        "lang_counts": dict(Counter(r["lang"] for r in rows)),
+        "h1_problems": [{"url": r["url"], "h1_count": r["h1_count"]} for r in rows if r["h1_count"] != 1],
+        "no_jsonld": [r["url"] for r in rows if not r["jsonld_types"]],
+        "jsonld_types": dict(Counter(t for r in rows for t in r["jsonld_types"])),
+        "thin_html": sorted(
+            [{"url": r["url"], "text_chars": r["text_chars"], "player_links": r["player_links"]} for r in rows if r["text_chars"] < 1200],
+            key=lambda x: x["text_chars"],
+        )[:40],
+        "no_player_links": [r["url"] for r in rows if r["player_links"] == 0],
+        "slow_pages": sorted(
+            [{"url": r["url"], "ms": r["ms"], "html_kb": r["html_kb"]} for r in rows if r["ms"] > 1500],
+            key=lambda x: -x["ms"],
+        )[:20],
+        "heavy_html": sorted(
+            [{"url": r["url"], "html_kb": r["html_kb"]} for r in rows if r["html_kb"] > 200],
+            key=lambda x: -x["html_kb"],
+        )[:15],
+    }
+
+    report = {"summary": agg, "findings": findings, "pages": rows}
+    from pathlib import Path
+    outdir = Path(args.out)
+    outdir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M")
+    (outdir / f"{stamp}-audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    lines = [
+        f"# Τεχνικός έλεγχος SEO — {site}",
+        "",
+        f"- Έλεγχος: {agg['checked_at']} · σελίδες: {agg['checked']} · sitemap URLs: {agg['sitemap_urls']} · {agg['seconds']}s",
+        "",
+        "## Σύνοψη",
+        "",
+        "| Έλεγχος | Πλήθος |",
+        "|---|---|",
+        f"| HTTP != 200 | {len(findings['broken_or_error'])} |",
+        f"| Redirects | {len(findings['redirects'])} |",
+        f"| Χωρίς title | {len(findings['missing_title'])} |",
+        f"| Χωρίς meta description | {len(findings['missing_description'])} |",
+        f"| Διπλά titles | {len(findings['duplicate_titles'])} |",
+        f"| Χωρίς canonical | {len(findings['missing_canonical'])} |",
+        f"| noindex | {len(findings['noindex'])} |",
+        f"| H1 != 1 | {len(findings['h1_problems'])} |",
+        f"| Χωρίς JSON-LD | {len(findings['no_jsonld'])} |",
+        f"| Λεπτό HTML (<1200 χαρ. κειμένου) | {len(findings['thin_html'])} |",
+        f"| Χωρίς link σε προφίλ αθλητή | {len(findings['no_player_links'])} |",
+        "",
+        f"- Γλώσσα html: {findings['lang_counts']}",
+        f"- JSON-LD τύποι: {findings['jsonld_types']}",
+        f"- HTTP: {findings['status_counts']}",
+        "",
+        "## Λεπτό HTML (δείγματα)",
+        "",
+        "| Σελίδα | Χαρακτήρες κειμένου | Links αθλητών |",
+        "|---|---|---|",
+    ]
+    for row in findings["thin_html"][:15]:
+        lines.append(f"| {row['url']} | {row['text_chars']} | {row['player_links']} |")
+    lines += ["", "## Διπλά titles", ""]
+    for t, n in list(findings["duplicate_titles"].items())[:15]:
+        lines.append(f"- ({n}×) {t}")
+    lines += ["", "## Πιο αργές σελίδες", "", "| Σελίδα | ms | HTML KB |", "|---|---|---|"]
+    for row in findings["slow_pages"][:10]:
+        lines.append(f"| {row['url']} | {row['ms']} | {row['html_kb']} |")
+    (outdir / f"{stamp}-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(json.dumps({**agg, "report": str(outdir / f'{stamp}-audit.md')}, ensure_ascii=False, indent=1))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
