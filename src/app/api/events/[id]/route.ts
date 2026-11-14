@@ -897,6 +897,33 @@ const fetchStageMatches = async (
     }
 }
 
+/**
+ * ΘΕΣΗ ΦΥΛΛΟΥ («ΑΘΛΗΤΗΣ 1/2/3») ΣΤΟΥΣ ΑΓΩΝΕΣ ΤΟΥ ΟΜΙΛΟΥ.
+ *
+ * Η Strapi κρατά `player1_draw_position` / `player2_draw_position`, αλλά το normalized
+ * payload δεν τα περνούσε στους παίκτες — με αποτέλεσμα η κάρτα του ομίλου να πέφτει
+ * στο επώνυμο, δηλαδή αλφαβητικά. Εδώ τα εκθέτουμε ως `drawPosition`.
+ * Τιμή μόνο όταν υπάρχει· δεν εφευρίσκουμε σειρά.
+ */
+const attachDrawPositionsToStages = (data: Record<string, unknown>): void => {
+    for (const stage of asArray(data.event_stages)) {
+        for (const match of asArray(stage.groups)) {
+            for (const [side, field] of [
+                ['player1', 'player1_draw_position'],
+                ['player2', 'player2_draw_position'],
+            ] as const) {
+                const player = asObject(match[side])
+                if (!player) continue
+                const raw = match[field] ?? player.drawPosition
+                const position = toNumber(raw)
+                if (position === null || position <= 0) continue
+                if (player.drawPosition === position) continue
+                match[side] = { ...player, drawPosition: position }
+            }
+        }
+    }
+}
+
 const playerRankingKey = (row: Record<string, unknown>): string | null => {
     const player = asObject(row.player)
     const playerDocumentId =
@@ -1575,6 +1602,10 @@ export async function GET(
                 }
             }
 
+            // Θέση φύλλου στους παίκτες των αγώνων (η κάρτα ομίλου τη χρειάζεται).
+            if (payload.data) {
+                attachDrawPositionsToStages(payload.data as Record<string, unknown>)
+            }
             writeCachedEventPayload(documentId, payload)
             return NextResponse.json(payload, { status: 200 })
         } catch {
