@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SERVER_API_URL } from "@/lib/api";
+import { purgeEventPayloadCache } from "@/lib/eventPayloadCache";
 
 /**
  * Κοινό πέρασμα προς το Event Desk / club portal στο Strapi.
@@ -32,6 +33,12 @@ export async function forwardToDeskApi(
       { error: { status: 502, message: "Το σύστημα δεν απάντησε — δοκιμάστε ξανά" } },
       { status: 502 },
     );
+  }
+
+  // Κάθε εγγραφή του desk (άνοιγμα τραπεζιού, claim, σκορ) καθαρίζει το cached
+  // payload του event, ώστε η αλλαγή να φανεί στην πρώτη επόμενη φόρτωση σελίδας.
+  if (method === "POST" && res.ok) {
+    purgeEventPayloadCache()
   }
 
   const text = await res.text();

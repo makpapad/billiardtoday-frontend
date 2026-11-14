@@ -1,4 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
+import {
+    readCachedEventPayload,
+    writeCachedEventPayload,
+} from "@/lib/eventPayloadCache"
 import { getServerEnv } from '@/lib/serverEnv'
 
 export const runtime = 'nodejs'
@@ -813,7 +817,10 @@ const fetchStageStandings = async (
         'populate[player][fields][0]=full_name&populate[player][fields][1]=documentId&populate[player][fields][2]=full_name_en&populate[player][fields][3]=country'
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/standings?${standingsQuery}`
     let res = await fetch(directUrl, {
-        next: { revalidate: 15, tags: [`event-stage:${stageId}`] },
+        // Φρέσκο δεδομένο: το caching γίνεται ΠΑΝΩ από αυτό (έτοιμο payload,
+        // το οποίο καθαρίζεται μόλις γράψει το desk/admin) — έτσι μια αλλαγή
+        // φαίνεται αμέσως, όχι μετά από 15΄΄.
+        cache: 'no-store' as RequestCache,
         headers,
     })
 
@@ -861,7 +868,10 @@ const fetchStageMatches = async (
 ): Promise<Record<string, unknown>[] | null> => {
     const directUrl = `${STRAPI_URL}/api/bt-event-stages/${encodeURIComponent(stageId)}/matches`
     let res = await fetch(directUrl, {
-        next: { revalidate: 15, tags: [`event-stage:${stageId}`] },
+        // Φρέσκο δεδομένο: το caching γίνεται ΠΑΝΩ από αυτό (έτοιμο payload,
+        // το οποίο καθαρίζεται μόλις γράψει το desk/admin) — έτσι μια αλλαγή
+        // φαίνεται αμέσως, όχι μετά από 15΄΄.
+        cache: 'no-store' as RequestCache,
         headers,
     })
 
@@ -1113,31 +1123,10 @@ const fetchAutomaticFinalResultsPreview = async (
 }
 
 /**
- * Μνήμη διεργασίας: το ίδιο assembled payload για 60΄΄. Η cache των `fetch` γλιτώνει
- * τις κλήσεις στη Strapi, αλλά η συγχώνευση εκατοντάδων αγώνων ξανατρέχει σε κάθε
- * επίσκεψη (~0,7΄΄). Εδώ κρατάμε το ΕΤΟΙΜΟ αποτέλεσμα, με όριο εγγραφών για ασφάλεια.
+ * Μνήμη διεργασίας για το έτοιμο payload — βλ. `@/lib/eventPayloadCache`.
+ * Οι εγγραφές (desk/admin/scoreboard) καθαρίζουν την cache, ώστε μια αλλαγή να
+ * φαίνεται αμέσως και όχι μετά από 15΄΄.
  */
-const EVENT_PAYLOAD_TTL_MS = 15_000
-const EVENT_PAYLOAD_MAX_ENTRIES = 40
-const eventPayloadCache = new Map<string, { at: number; payload: unknown }>()
-
-const readCachedEventPayload = (documentId: string) => {
-    const entry = eventPayloadCache.get(documentId)
-    if (!entry) return null
-    if (Date.now() - entry.at > EVENT_PAYLOAD_TTL_MS) {
-        eventPayloadCache.delete(documentId)
-        return null
-    }
-    return entry.payload
-}
-
-const writeCachedEventPayload = (documentId: string, payload: unknown) => {
-    if (eventPayloadCache.size >= EVENT_PAYLOAD_MAX_ENTRIES) {
-        const oldest = eventPayloadCache.keys().next().value
-        if (oldest) eventPayloadCache.delete(oldest)
-    }
-    eventPayloadCache.set(documentId, { at: Date.now(), payload })
-}
 
 export async function GET(
     req: NextRequest,
@@ -1368,10 +1357,9 @@ export async function GET(
         let queryParams = buildQueryParams()
         let url = `${STRAPI_URL}/api/bt-events/${documentId}?${queryParams.toString()}`
         let res = await fetch(url, {
-            // Cache δεδομένων (όχι σελίδας): ίδιο payload για όλους τους επισκέπτες.
-            // 15΄΄ = το αργότερο 15 δευτερόλεπτα πίσω από μια αλλαγή σε πίνακες/αγώνες,
-            // πολύ λιγότερες κλήσεις από 1 ανά επίσκεψη· bust με tag.
-            next: { revalidate: 15, tags: [`event:${documentId}`] },
+            // Φρέσκο δεδομένο σε κάθε χτίσιμο payload· η εξυπηρέτηση των επισκεπτών
+            // γίνεται από το in-memory cache, που καθαρίζεται με τις εγγραφές.
+            cache: 'no-store' as RequestCache,
             headers,
         })
 
