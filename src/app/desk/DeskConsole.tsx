@@ -37,6 +37,8 @@ export type OpenTable = {
   stageTitle?: string | null;
   targetPoints?: number | null;
   equalInnings?: boolean;
+  player1Country?: string | null;
+  player2Country?: string | null;
   players?: Array<{ name?: string | null; points?: number; innings?: number; hr?: number; run?: number }>;
   claim?: { assignmentId?: number | null; displayName?: string | null; deviceId?: string | null; at?: number | null } | null;
   /** Σειρά παικτών (Swap) και ποιος έχει τη σειρά, όπως τα άφησε το προηγούμενο desk. */
@@ -51,6 +53,9 @@ export type Match = {
   groupLabel?: string | null;
   player1?: string | null;
   player2?: string | null;
+  /** Χώρα παικτών (για τη σημαία στο Live). */
+  player1Country?: string | null;
+  player2Country?: string | null;
   done?: boolean;
   /** Σε ποιο τραπέζι παίζεται τώρα (null/undefined = ελεύθερος). */
   openOn?: string | null;
@@ -274,6 +279,8 @@ export default function DeskConsole({
       sessionId: table.sessionId,
       clubId: null,
       names: [table.match.player1 || "Player A", table.match.player2 || "Player B"],
+      /* Η σημαία στο Live έρχεται από εδώ (το desk ξέρει τις χώρες από το πρόγραμμα). */
+      countries: [table.match.player1Country ?? null, table.match.player2Country ?? null],
       points: [table.p1.points, table.p2.points],
       innings: [table.p1.innings, table.p2.innings],
       highRuns: [table.p1.hr, table.p2.hr],
@@ -479,6 +486,9 @@ export default function DeskConsole({
             matchNumber: row.matchNumber ?? null,
             player1: first.name ?? "",
             player2: second.name ?? "",
+            /* Με Swap η σειρά των χωρών ακολουθεί τους παίκτες. */
+            player1Country: order[0] === 2 ? row.player2Country ?? null : row.player1Country ?? null,
+            player2Country: order[0] === 2 ? row.player1Country ?? null : row.player2Country ?? null,
           },
           p1: {
             points: Number(first.points) || 0,
@@ -627,7 +637,10 @@ export default function DeskConsole({
             brMatchId: match.documentId,
             brMatchDocumentId: match.documentId,
             tableNumber: tableNo,
-            players: [{ name: match.player1 }, { name: match.player2 }],
+            players: [
+              { name: match.player1, country: match.player1Country ?? null },
+              { name: match.player2, country: match.player2Country ?? null },
+            ],
             eventTitle: event?.title || null,
             stageTitle: stage?.title || null,
             matchNumber: match.matchNumber ?? seq ?? null,
@@ -748,6 +761,8 @@ export default function DeskConsole({
         ...current.match,
         player1: current.match.player2,
         player2: current.match.player1,
+        player1Country: current.match.player2Country ?? null,
+        player2Country: current.match.player1Country ?? null,
       },
       p1: current.p2,
       p2: current.p1,

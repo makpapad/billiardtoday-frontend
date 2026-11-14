@@ -32,6 +32,8 @@ export type DeskLiveState = {
   clubId?: string | null;
   clubName?: string | null;
   names: [string, string];
+  /** Χώρα κάθε παίκτη (για τη σημαία στην κάρτα του Live). */
+  countries?: Array<string | null>;
   points: [number, number];
   innings: [number, number];
   highRuns: [number, number];
@@ -137,6 +139,7 @@ export class DeskLivePublisher {
         {
           id: 1,
           name: state.names[0],
+          country: state.countries?.[0] ?? null,
           points: state.points[0],
           run: state.runs?.[0] ?? 0,
           innings: state.innings[0],
@@ -148,6 +151,7 @@ export class DeskLivePublisher {
         {
           id: 2,
           name: state.names[1],
+          country: state.countries?.[1] ?? null,
           points: state.points[1],
           run: state.runs?.[1] ?? 0,
           innings: state.innings[1],
