@@ -1272,6 +1272,7 @@ const createGroupPopoverData = (
 const mergeLiveSessions = (
   primary: EventLiveSession[],
   secondary: EventLiveSession[],
+  options?: { sessionStrict?: boolean },
 ) => {
   const preferText = (
     nextValue: string | null | undefined,
@@ -1294,6 +1295,17 @@ const mergeLiveSessions = (
     if (!existing) {
       merged.set(key, session);
       continue;
+    }
+    /*
+     * Εικονικές οθόνες του desk (DESK-…): μία οθόνη = ένας αγώνας κάθε φορά.
+     * Το relay ξαναστέλνει το τελευταίο μήνυμα της οθόνης, που μπορεί να ανήκει
+     * σε ΣΒΗΣΜΕΝΗ session του προηγούμενου αγώνα — και ζωγράφιζε το σκορ του
+     * πάνω στον νέο. Όταν τα sessionIds διαφέρουν, κερδίζει το API.
+     */
+    if (options?.sessionStrict && /^DESK-/i.test(String(key))) {
+      const existingId = String(existing.sessionId ?? existing.documentId ?? "").trim();
+      const incomingId = String(session.sessionId ?? session.documentId ?? "").trim();
+      if (existingId && incomingId && existingId !== incomingId) continue;
     }
     const existingIsRunning =
       Boolean(existing.state?.isRunning) ||
@@ -4193,6 +4205,7 @@ export function TournamentDetailPage({
       mergeLiveSessions(
         filteredWsLiveSessionsByPair,
         filteredEventLiveSessions,
+        { sessionStrict: true },
       ),
     [filteredEventLiveSessions, filteredWsLiveSessionsByPair],
   );
@@ -4200,6 +4213,32 @@ export function TournamentDetailPage({
   useEffect(() => {
     mergedEventLiveSessionsRef.current = mergedEventLiveSessions;
   }, [mergedEventLiveSessions]);
+
+  /*
+   * Καθάρισμα παλιών ζωντανών μηνυμάτων: το relay κρατά το τελευταίο μήνυμα ανά
+   * οθόνη, άρα με το που ανοίγει νέος αγώνας στο ίδιο τραπέζι φτάνει μήνυμα της
+   * ΣΒΗΣΜΕΝΗΣ session (πριν προλάβει να φορτώσει το API). Μόλις το API ξέρει τη
+   * σωστή session για την οθόνη, το παλιό στοιχείο φεύγει.
+   */
+  useEffect(() => {
+    if (eventLiveSessions.length === 0) return;
+    setWsLiveSessions((prev) => {
+      const next = prev.filter((entry) => {
+        const screen = String(entry.screenIdentifier ?? entry.screenId ?? "").trim();
+        if (!/^DESK-/i.test(screen)) return true;
+        const apiSession = eventLiveSessions.find(
+          (item) =>
+            String(item.screenIdentifier ?? item.screenId ?? "").trim() === screen,
+        );
+        if (!apiSession) return true;
+        const apiId = String(apiSession.sessionId ?? apiSession.documentId ?? "").trim();
+        const entryId = String(entry.sessionId ?? entry.documentId ?? "").trim();
+        if (!apiId || !entryId) return true;
+        return apiId === entryId;
+      });
+      return next.length === prev.length ? prev : next;
+    });
+  }, [eventLiveSessions]);
 
   useEffect(() => {
     const now = Date.now();
