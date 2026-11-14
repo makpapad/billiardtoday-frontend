@@ -144,7 +144,8 @@ export default function DeskConsole({
   operatorName: string;
   onLogout: () => void;
 }) {
-  const [tables, setTables] = useState<TableState[]>([1, 2, 3, 4].map(emptyTable));
+  /* Ξεκινά με ΕΝΑ τραπέζι — τα υπόλοιπα μπαίνουν με «+ Table» μόνο αν χρειαστούν. */
+  const [tables, setTables] = useState<TableState[]>(() => [emptyTable(1)]);
   const [selected, setSelected] = useState(1);
 
   const [log, setLog] = useState<Array<{ text: string; at: string }>>([]);
@@ -641,7 +642,7 @@ export default function DeskConsole({
           <span className={error ? "dot off" : "dot"} /> <span>{error ? "Σφάλμα" : "Συγχρονισμένο"}</span>
         </div>
         <div className="pill">
-          <span>{tables.length}</span> tables
+          <span>{tables.length}</span> {tables.length === 1 ? "table" : "tables"}
         </div>
         <button type="button" className="ghost" onClick={addTable} disabled={tables.length >= MAX_TABLES}>
           + Table
@@ -884,8 +885,8 @@ export default function DeskConsole({
             />
           </div>
           <div className="hint">
-            type the run + <span className="kbd">⏎</span> to enter · <span className="kbd">U</span> undo ·{" "}
-            <span className="kbd">Space</span> inning without points
+            <span className="kbd">+1/+3/+5</span> πόντοι · <span className="kbd">⏎</span> τέλος στεκιάς ·{" "}
+            <span className="kbd">U</span> undo
           </div>
         </aside>
       </div>
