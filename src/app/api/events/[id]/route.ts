@@ -1519,8 +1519,6 @@ export async function GET(
                           .filter((player): player is Record<string, unknown> => Boolean(player))
                     : []
 
-                await attachPlayerPhotos(event, headers)
-
                 payload.data = {
                     ...event,
                     final_standings_published:
@@ -1528,6 +1526,11 @@ export async function GET(
                     event_stages: stages,
                     results_final: enrichedFinalResults,
                     ...(registeredPlayers.length > 0 ? { players: registeredPlayers } : {}),
+                }
+                // Οι φωτογραφίες μπαίνουν στο ΤΕΛΙΚΟ payload (μετά το merge των live αγώνων),
+                // αλλιώς χάνονται πάνω στους νέους player objects.
+                if (payload.data) {
+                    await attachPlayerPhotos(payload.data as Record<string, unknown>, headers)
                 }
             }
 
