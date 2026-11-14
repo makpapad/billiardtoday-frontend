@@ -3310,12 +3310,20 @@ export function TournamentDetailPage({
               typeof playerB.country === "string" ? playerB.country : null,
             progress: Number(payload.progress ?? 0) || 0,
             /*
-             * Το desk (screenId DESK-…) δεν έχει ρολόι βολών. Με σταθερό 40 η
-             * μπάρα εμφανιζόταν στο μήνυμα και εξαφανιζόταν στο refresh κάθε 20"
-             * (flash). Οι φυσικές οθόνες κρατούν τη συμπεριφορά τους.
+             * Το ρολόι το ορίζει η ΠΗΓΗ: το desk το ανάβει/σβήνει (totalBlocks 0 = κρυφό),
+             * οι φυσικές οθόνες στέλνουν 40 όπως πριν. Σταθερό 40 εδώ έσβηνε την μπάρα
+             * του desk κάθε φορά που περνούσε μήνυμα από αυτό το socket.
              */
-            totalBlocks: /^DESK-/i.test(screenId) ? 0 : 40,
+            totalBlocks: Number(
+              payload.totalBlocks ??
+                (String(screenId || "").trim() ? 40 : 0),
+            ) || 0,
             isRunning: Boolean(payload.isRunning),
+            /* Timeouts: ό,τι στέλνει η πηγή (το desk τα ανάβει/σβήνει, 0 = κρυφά). */
+            timeoutsA: Number(playerA.timeoutsUsed ?? 0) || 0,
+            timeoutsB: Number(playerB.timeoutsUsed ?? 0) || 0,
+            maxTimeoutsA: Number(playerA.maxTimeouts ?? 0) || 0,
+            maxTimeoutsB: Number(playerB.maxTimeouts ?? 0) || 0,
             inningsDetail: liveInningsDetail,
             current,
           },

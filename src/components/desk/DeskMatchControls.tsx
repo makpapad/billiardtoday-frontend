@@ -154,7 +154,18 @@ export function DeskMatchControls({ value, onChange, disabled = false }: Props) 
             type="button"
             className={`${BTN} ml-auto`}
             disabled={disabled}
-            onClick={() => onChange({ timeoutsVisible: true })}
+            onClick={() =>
+              /* Timeouts χωρίς ρολόι δεν έχουν νόημα: ανάβουν μαζί. */
+              onChange({
+                timeoutsVisible: true,
+                clockVisible: true,
+                clockRemaining: value.clockVisible
+                  ? remaining > 0
+                    ? remaining
+                    : value.clockTotal
+                  : value.clockTotal,
+              })
+            }
           >
             Ενεργοποίηση
           </button>
