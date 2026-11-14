@@ -309,6 +309,80 @@ const buildComputedGroupStandings = (matches: Record<string, unknown>[]): Record
         .map((row, index) => ({ ...row, final_position: index + 1 }))
 }
 
+
+const playerDocIdOf = (value: unknown): string | null => {
+    const player = asObject(value)
+    return toText(player?.documentId) ?? toText(player?.id) ?? null
+}
+
+/**
+ * ΣΕΙΡΑ ΦΥΛΛΟΥ ΟΤΑΝ Ο ΟΜΙΛΟΣ ΔΕΝ ΕΧΕΙ ΠΑΙΧΤΕΙ.
+ *
+ * Οι αποθηκευμένες γραμμές (bt-stage-result) έρχονται με `group_position` που, χωρίς
+ * αγωνιστικά δεδομένα, βγαίνει αλφαβητικά. Η σειρά όμως που έχει σημασία είναι του
+ * φύλλου. Τη διαβάζουμε από τη σειρά με την οποία η εφαρμογή δημοσίευσε τους αγώνες
+ * του ομίλου (1ος/2ος αγώνας): πρώτη εμφάνιση αθλητή = θέση 1, μετά 2, 3…
+ * Αγγίζουμε ΜΟΝΟ ομίλους χωρίς κανένα αποτέλεσμα· σε όμιλο που έχει παιχτεί έστω ένας
+ * αγώνας ισχύει κανονικά η κατάταξη.
+ */
+const applyDerivedDrawOrder = (
+    rows: Record<string, unknown>[],
+    matches: Record<string, unknown>[] | null,
+): Record<string, unknown>[] => {
+    if (!Array.isArray(matches) || matches.length === 0) return rows
+
+    const ordered = matches
+        .map((match, index) => ({ match, index }))
+        .sort((a, b) => {
+            const slotA = toFiniteNumber(a.match.slot_order, Number.POSITIVE_INFINITY)
+            const slotB = toFiniteNumber(b.match.slot_order, Number.POSITIVE_INFINITY)
+            if (slotA !== slotB) return slotA - slotB
+            const numberA = toFiniteNumber(a.match.match_number, Number.POSITIVE_INFINITY)
+            const numberB = toFiniteNumber(b.match.match_number, Number.POSITIVE_INFINITY)
+            if (numberA !== numberB) return numberA - numberB
+            return a.index - b.index
+        })
+
+    const playedGroups = new Set<number>()
+    const appearance = new Map<number, Map<string, number>>()
+
+    for (const { match } of ordered) {
+        const groupNumber = Math.max(toFiniteNumber(match.number, 1), 1)
+        if (hasMatchResult(match)) playedGroups.add(groupNumber)
+        const order = appearance.get(groupNumber) ?? new Map<string, number>()
+        for (const side of [match.player1, match.player2]) {
+            const docId = playerDocIdOf(side)
+            if (docId && !order.has(docId)) order.set(docId, order.size + 1)
+        }
+        appearance.set(groupNumber, order)
+    }
+
+    const rank = (row: Record<string, unknown>): number => {
+        const groupNumber = Math.max(toFiniteNumber(row.group_number, 1), 1)
+        if (playedGroups.has(groupNumber)) return toFiniteNumber(row.group_position, 9999)
+        const docId = toText(asObject(row.player)?.documentId) ?? toText(asObject(row.player)?.id)
+        const order = appearance.get(groupNumber)
+        const derived = docId && order ? order.get(docId) : undefined
+        if (derived !== undefined) return derived
+        return 1000 + toFiniteNumber(row.group_position, 9999)
+    }
+
+    const sorted = [...rows].sort((a, b) => {
+        const groupDiff = toFiniteNumber(a.group_number, 1) - toFiniteNumber(b.group_number, 1)
+        if (groupDiff !== 0) return groupDiff
+        return rank(a) - rank(b)
+    })
+
+    const nextPosition = new Map<number, number>()
+    return sorted.map((row) => {
+        const groupNumber = Math.max(toFiniteNumber(row.group_number, 1), 1)
+        if (playedGroups.has(groupNumber)) return row
+        const position = (nextPosition.get(groupNumber) ?? 0) + 1
+        nextPosition.set(groupNumber, position)
+        return { ...row, group_position: position }
+    })
+}
+
 const isKnockoutStageType = (value: unknown): boolean => {
     if (typeof value !== 'string') return false
     const normalized = value.toLowerCase()
@@ -555,11 +629,14 @@ export async function GET(
             // είναι κατάταξη — προχώρα στη computed κατάταξη από τους αγώνες, αλλιώς
             // ο πίνακας ΚΑΤΑΤΑΞΗΣ αδειάζει μόλις ο client φορτώσει αυτή τη φάση.
             if (storedResults && hasMeaningfulStoredResults(storedResults)) {
+                // Σειρά φύλλου για όσους ομίλους δεν έχουν παίξει (αντί αλφαβητικά).
+                const matchesForOrder = await fetchStageMatches(stageId)
+                const orderedResults = applyDerivedDrawOrder(storedResults, matchesForOrder)
                 return NextResponse.json({
                     source: 'stored-results',
-                    results: storedResults,
-                    standings: storedResults,
-                    overallRankings: storedResults,
+                    results: orderedResults,
+                    standings: orderedResults,
+                    overallRankings: orderedResults,
                 })
             }
 
