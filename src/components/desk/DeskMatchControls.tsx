@@ -57,6 +57,12 @@ export function tickTools(tools: DeskToolsValue, active: 0 | 1): DeskToolsValue 
   return { ...tools, clockRemaining: 0, clockRunning: false };
 }
 
+/** Γράφτηκε πόντος: το ρολόι γυρνά στα 40″ και περιμένει (δεν ξεκινά μόνο του). */
+export function resetClockAfterPoint(tools: DeskToolsValue): DeskToolsValue {
+  if (!tools.clockVisible) return tools;
+  return { ...tools, clockRemaining: tools.clockTotal, clockRunning: false };
+}
+
 const BTN =
   "rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-200 transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-35";
 const BTN_ON =
@@ -162,13 +168,11 @@ export function DeskMatchControls({
           <button
             type="button"
             className={BTN}
-            disabled={disabled || !value.clockVisible}
+            disabled={off}
             onClick={() =>
-              onChange({
-                clockVisible: false,
-                clockRunning: false,
-                clockRemaining: value.clockTotal,
-              })
+              /* Μηδενίζει στα 40″ και παγώνει — η μπάρα μένει στο Live.
+                 Για να φύγει τελείως, σβήνει το «Χρόνος ON». */
+              onChange({ clockRunning: false, clockRemaining: value.clockTotal })
             }
           >
             Stop

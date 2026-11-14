@@ -6,6 +6,7 @@ import {
   DeskMatchControls,
   DeskToolsToggle,
   emptyDeskTools,
+  resetClockAfterPoint,
   tickTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
@@ -471,7 +472,10 @@ export default function DeskConsole({
   const commitTurn = useCallback(() => {
     if (!current?.sessionId || current.finished) return;
     const run = pendingRun(current);
-    const next = withHistory(closeTurn(current, run));
+    const next = withHistory({
+      ...closeTurn(current, run),
+      tools: resetClockAfterPoint(current.tools),
+    });
     pushLog(`T${current.no} · ${run} πόντοι στο σκορ — αλλαγή σειράς`);
     pushScore(next);
   }, [current, pendingRun, withHistory, closeTurn, pushScore, pushLog]);
@@ -486,6 +490,7 @@ export default function DeskConsole({
         ...current,
         [key]: { ...side, run: side.run + n },
         buffer: "",
+        tools: resetClockAfterPoint(current.tools),
       });
       pushScore(next);
     },

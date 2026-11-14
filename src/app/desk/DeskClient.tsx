@@ -6,6 +6,7 @@ import {
   DeskMatchControls,
   DeskToolsToggle,
   emptyDeskTools,
+  resetClockAfterPoint,
   tickTools,
   type DeskToolsValue,
 } from "@/components/desk/DeskMatchControls";
@@ -635,7 +636,12 @@ export default function DeskClient() {
 
   const commitTurn = useCallback(() => {
     if (!table || table.finished) return;
-    pushScore(withHistory(closeTurn(table, pendingRun(table))));
+    pushScore(
+      withHistory({
+        ...closeTurn(table, pendingRun(table)),
+        tools: resetClockAfterPoint(table.tools),
+      }),
+    );
   }, [table, pendingRun, closeTurn, pushScore, withHistory]);
 
   const addPoint = useCallback(() => {
@@ -657,7 +663,14 @@ export default function DeskClient() {
       if (!table || table.finished) return;
       const key = table.active === 0 ? "p1" : "p2";
       const side = table[key];
-      pushScore(withHistory({ ...table, [key]: { ...side, run: side.run + n }, buffer: "" }));
+      pushScore(
+        withHistory({
+          ...table,
+          [key]: { ...side, run: side.run + n },
+          buffer: "",
+          tools: resetClockAfterPoint(table.tools),
+        }),
+      );
     },
     [table, pushScore, withHistory],
   );
