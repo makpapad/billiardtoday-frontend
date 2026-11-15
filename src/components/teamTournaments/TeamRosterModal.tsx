@@ -12,29 +12,46 @@ import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { playerProfileHref, pickPlayerName, type NameVariant } from "@/lib/playerNameVariant";
 import type { TeamRosterMember } from "@/lib/teamTournaments";
+import {
+  teamTournamentLabels,
+  type LabelLocale,
+  type TeamTournamentLabels,
+} from "@/lib/teamTournamentLabels";
 
 type Props = {
   teamName: string;
   members: TeamRosterMember[];
   nameVariant?: NameVariant;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
   onClose: () => void;
 };
 
+const isCaptain = (member: TeamRosterMember): boolean =>
+  Boolean(member.isCaptain) || member.role === "captain";
+
 /** captain → Αρχηγός · substitute → Αναπλ. · player → Αθλητής (ο κανόνας). */
-const roleLabel = (member: TeamRosterMember): string => {
-  if (member.isCaptain || member.role === "captain") return "Αρχηγός";
-  if (member.role === "substitute") return "Αναπλ.";
-  return "Αθλητής";
+const roleLabel = (member: TeamRosterMember, labels: TeamTournamentLabels): string => {
+  if (isCaptain(member)) return labels.roleCaptain;
+  if (member.role === "substitute") return labels.roleSubstitute;
+  return labels.rolePlayer;
 };
 
 const sortMembers = (members: TeamRosterMember[], variant: NameVariant): TeamRosterMember[] =>
   [...members].sort((a, b) => {
-    const captainDiff = Number(roleLabel(b) === "Αρχηγός") - Number(roleLabel(a) === "Αρχηγός");
+    const captainDiff = Number(isCaptain(b)) - Number(isCaptain(a));
     if (captainDiff) return captainDiff;
     return pickPlayerName(a, variant).localeCompare(pickPlayerName(b, variant), "el");
   });
 
-export function TeamRosterModal({ teamName, members, nameVariant = "international", onClose }: Props) {
+export function TeamRosterModal({
+  teamName,
+  members,
+  nameVariant = "international",
+  labelLocale,
+  onClose,
+}: Props) {
+  const labels = teamTournamentLabels(labelLocale);
   const ranked = useMemo(() => sortMembers(members, nameVariant), [members, nameVariant]);
 
   useEffect(() => {
@@ -49,7 +66,7 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Αθλητές ${teamName}`}
+      aria-label={labels.playersModalLabel(teamName)}
       className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-2 sm:items-center sm:p-4"
       onClick={onClose}
     >
@@ -61,13 +78,13 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-slate-950">{teamName}</h3>
             <p className="mt-0.5 text-[11.5px] text-slate-500">
-              {ranked.length} {ranked.length === 1 ? "αθλητής" : "αθλητές"} στη δήλωση της ομάδας
+              {labels.rosterSummary(ranked.length)}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Κλείσιμο"
+            aria-label={labels.close}
             className="ml-auto shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-[12px] font-bold text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
           >
             ✕
@@ -77,19 +94,19 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
         <div className="min-h-0 overflow-auto">
           {ranked.length === 0 ? (
             <p className="px-5 py-6 text-[13px] text-slate-500">
-              Δεν υπάρχει δηλωμένο ρόστερ για αυτή την ομάδα.
+              {labels.rosterEmpty}
             </p>
           ) : (
             <table className="w-full border-collapse text-[12.5px]">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
                   <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                  <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayer}</th>
                   <th
-                    title="Ρόλος στη δήλωση: αρχηγός, αναπληρωματικός ή αθλητής"
+                    title={labels.tipRole}
                     className="w-24 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]"
                   >
-                    Ρόλος
+                    {labels.colRole}
                   </th>
                 </tr>
               </thead>
@@ -97,7 +114,7 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
                 {ranked.map((member, index) => {
                   const name = pickPlayerName(member, nameVariant) || "—";
                   const href = playerProfileHref({ id: member.id, documentId: member.documentId }, name);
-                  const role = roleLabel(member);
+                  const role = roleLabel(member, labels);
                   return (
                     <tr key={member.documentId ?? `${name}-${index}`} className="border-t border-slate-100">
                       <td className="px-2 py-2 text-center text-slate-400">{index + 1}</td>
@@ -123,7 +140,7 @@ export function TeamRosterModal({ teamName, members, nameVariant = "internationa
         </div>
 
         <div className="border-t border-slate-200 px-5 py-2 text-[11px] text-slate-500">
-          Όσοι δηλώθηκαν στην ομάδα — ανεξάρτητα από το αν έχουν παίξει αγώνα. Άνοιγμα προφίλ με κλικ στο όνομα.
+          {labels.rosterFooter}
         </div>
       </div>
     </div>

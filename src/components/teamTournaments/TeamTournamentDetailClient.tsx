@@ -23,6 +23,7 @@ import { dataSourceCreditFor } from "@/lib/dataSource";
 import { TeamTimetablePanel } from "@/components/teamTournaments/TeamTimetablePanel";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
+import { teamTournamentLabels, type LabelLocale } from "@/lib/teamTournamentLabels";
 
 type Props = {
   detail: TeamTournamentDetail | null;
@@ -100,13 +101,17 @@ function GroupStandingsTable({
   rows,
   biathlon = false,
   qualifyingSpots = 0,
+  labelLocale,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
   biathlon?: boolean;
   /** Πόσες θέσεις του ομίλου περνούν στην τελική φάση (0 = χωρίς σήμανση). */
   qualifyingSpots?: number;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 }) {
+  const labels = teamTournamentLabels(labelLocale);
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
@@ -154,7 +159,7 @@ function GroupStandingsTable({
                 {qualifyingSpots > 0 && index < qualifyingSpots ? (
                   <span
                     className="ml-1 text-[10px] text-emerald-600 dark:text-emerald-400"
-                    title={`Περνά στην τελική φάση (θέση ${index + 1} από ${qualifyingSpots})`}
+                    title={labels.qualifiesTip(index + 1, qualifyingSpots)}
                   >
                     ✔
                   </span>
@@ -217,7 +222,7 @@ function GroupStandingsTable({
       </table>
       {qualifyingSpots > 0 ? (
         <p className="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-          Οι {qualifyingSpots} πρώτοι προκρίνονται στην τελική φάση.
+          {labels.qualifyingNote(qualifyingSpots)}
         </p>
       ) : null}
     </div>
@@ -639,6 +644,9 @@ export function TeamTournamentDetailClient({
   const standingsByGroup = detail?.standingsByGroup ?? {};
   const rosters = detail?.rosters ?? {};
   const biathlon = summary?.config?.mode === "biathlon";
+  /** Γλώσσα ετικετών της διοργάνωσης — από το summary, ίδιο πέρασμα με το `nameVariant`. */
+  const labelLocale = summary?.labelLocale;
+  const labels = teamTournamentLabels(labelLocale);
   /**
    * Ο διοργανωτής του hero: στα ομαδικά δεν υπάρχει πάντα event summary (τα πρωταθλήματα
    * της ΕΟΑΑ δεν κρέμονται από bt-event), οπότε πέφτουμε στη διοργανώτρια ομοσπονδία του
@@ -692,7 +700,7 @@ export function TeamTournamentDetailClient({
     const end = eventSummary?.endDate ?? matchesSchedule?.end;
     if (!start && !end) return null;
     const format = (value: string) =>
-      new Date(value).toLocaleDateString("el-GR", {
+      new Date(value).toLocaleDateString(labels.dateLocale, {
         day: "2-digit",
         month: "long",
         year: "numeric",
@@ -702,7 +710,7 @@ export function TeamTournamentDetailClient({
       return sameDay ? format(start) : `${format(start)} - ${format(end)}`;
     }
     return format(start ?? end ?? "");
-  }, [eventSummary, matchesSchedule]);
+  }, [eventSummary, labels.dateLocale, matchesSchedule]);
 
   // Οι μάρκες φάσεων: τα στάδια του event όταν υπάρχουν, αλλιώς Qualifications /
   // Final Round (όπως τα έδειχνε πάντα η σελίδα) ώστε να μη χάνεται η εναλλαγή.
@@ -870,7 +878,7 @@ export function TeamTournamentDetailClient({
                   {/* Σήμανση τύπου: ξεχωρίζει με μια ματιά τα ομαδικά από τα ατομικά τουρνουά. */}
                   <div className="pt-1">
                     <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10.5px] font-extrabold tracking-[0.22em] text-white/90">
-                      ΟΜΑΔΙΚΟ
+                      {labels.teamBadge}
                     </span>
                   </div>
                 </div>
@@ -1076,6 +1084,7 @@ export function TeamTournamentDetailClient({
                 group={group}
                 biathlon={biathlon}
                 qualifyingSpots={qualifyingSpots}
+                labelLocale={labelLocale}
                 rows={resolveStandingRows(
                   group,
                   standingsByGroup[group.groupKey] ?? [],
@@ -1127,12 +1136,13 @@ export function TeamTournamentDetailClient({
             matches={matches}
             groupCount={sortedGroups.length}
             nameVariant={summary?.nameVariant ?? "international"}
+            labelLocale={labelLocale}
           />
         ) : null}
 
         {/* Time Table — μία κάρτα ανά αγωνιστική, με πρόοδο και φίλτρο ομίλου. */}
         {panel === "timetable" ? (
-          <TeamTimetablePanel matches={matches} groups={sortedGroups} />
+          <TeamTimetablePanel matches={matches} groups={sortedGroups} labelLocale={labelLocale} />
         ) : null}
 
         {/* Final standings — ίδιος πίνακας με την καρτέλα Ranking του Final Round. */}
@@ -1173,7 +1183,7 @@ export function TeamTournamentDetailClient({
                         <button
                           type="button"
                           onClick={() => setRosterTeam(team)}
-                          title="Άνοιγμα των αθλητών της ομάδας"
+                          title={labels.openTeamPlayers}
                           className="text-left text-sky-700 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-900"
                         >
                           {team.name}
@@ -1245,6 +1255,7 @@ export function TeamTournamentDetailClient({
             teamName={rosterTeam.name}
             members={rosterTeam.documentId ? rosters[rosterTeam.documentId] ?? [] : []}
             nameVariant={summary?.nameVariant ?? "international"}
+            labelLocale={labelLocale}
             onClose={() => setRosterTeam(null)}
           />
         ) : null}

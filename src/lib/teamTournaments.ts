@@ -13,6 +13,8 @@ import {
   type NameVariant,
   type PlayerNamePair,
 } from "@/lib/playerNameVariant";
+import type { LabelLocale } from "@/lib/teamTournamentLabels";
+import { getCountryCode } from "@/lib/countryFlags";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,6 +28,8 @@ export type TeamTournamentFederation = {
   href: string | null;
   logoUrl: string | null;
   level: string | null;
+  /** Χώρα της ομοσπονδίας (`Greece`, `Netherlands`…) — κρίνει και τη γλώσσα των ετικετών. */
+  country: string | null;
 };
 
 export type TeamTournamentSummary = {
@@ -54,6 +58,11 @@ export type TeamTournamentSummary = {
   federation: TeamTournamentFederation | null;
   /** national → εθνικό όνομα· διεθνείς διοργανώσεις → International Name. */
   nameVariant: NameVariant;
+  /**
+   * Γλώσσα των ετικετών της σελίδας: `config.labelLocale` αν υπάρχει, αλλιώς από τη χώρα
+   * της ομοσπονδίας (GR → `el`, οποιαδήποτε άλλη → `en`).
+   */
+  labelLocale: LabelLocale;
 };
 
 export type TeamEntity = {
@@ -311,6 +320,32 @@ const resolveNameVariant = (
   return nameVariantForFederationLevel(federationLevel);
 };
 
+/**
+ * Γλώσσα των ετικετών της σελίδας (ίδια λογική με το `nameVariant`).
+ *
+ * `config.labelLocale` (`"en"` | `"el"`, case-insensitive) υπεργράφει τον κανόνα — π.χ. μια
+ * ελληνική ομοσπονδία που δημοσιεύει διεθνές πρωτάθλημα. Αλλιώς: χώρα GR → ελληνικά,
+ * οποιαδήποτε άλλη → αγγλικά. Οι ελληνικές διοργανώσεις δεν στέλνουν το πεδίο, άρα μένουν
+ * στην ίδια ελληνική σελίδα που έβγαζαν πάντα.
+ *
+ * Σειρά προτεραιότητας χώρας: πρώτα το `country_code` του ίδιου του team-tournament (η χώρα
+ * της διοργάνωσης, default GR — είναι και το μόνο που φτάνει στη λίστα, όπου ο δημόσιος
+ * ρόλος δεν βλέπει τη σχέση federation), και μετά η χώρα της ομοσπονδίας. Έτσι το
+ * «European Championship …» της ΕΟΑΑ (country_code GR, federation CEB) μένει ελληνικό, ενώ
+ * το ολλανδικό Kozoom League (NL) βγαίνει αγγλικό.
+ */
+export const resolveLabelLocale = (
+  config: Record<string, unknown>,
+  countryCode: string | null,
+  federationCountry: string | null,
+): LabelLocale => {
+  const override = readString(config.labelLocale)?.toLowerCase();
+  if (override === "en" || override === "el") return override;
+  const code =
+    readString(countryCode)?.toUpperCase() ?? getCountryCode(federationCountry) ?? null;
+  return code === "GR" ? "el" : "en";
+};
+
 const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | null => {
   const entity = flatten(raw);
   const title = readString(entity.title);
@@ -334,7 +369,9 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
   const federationDocumentId = readString(federation.documentId);
   const federationLogo = flatten(federation.logo);
   const federationName = readString(federation.name);
+  const federationCountry = readString(federation.country);
   const federationTarget = federationSlug ?? federationDocumentId;
+  const countryCode = readString(entity.country_code);
 
   return {
     documentId: readString(entity.documentId) || "",
@@ -342,7 +379,7 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
     teamSize: toNumber(entity.team_size),
     divisionName: readString(entity.division_name),
     formatType: readString(entity.format_type),
-    countryCode: readString(entity.country_code),
+    countryCode,
     season,
     gameType,
     config,
@@ -359,9 +396,11 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
             href: federationTarget ? `/federations/${federationTarget}` : null,
             logoUrl: readString(federationLogo.url),
             level: federationLevel,
+            country: federationCountry,
           }
         : null,
     nameVariant: resolveNameVariant(config, federationLevel),
+    labelLocale: resolveLabelLocale(config, countryCode, federationCountry),
   };
 };
 
@@ -371,6 +410,7 @@ export const fetchTeamTournaments = async (): Promise<TeamTournamentSummary[]> =
   params.append("populate[federation][fields][1]", "name");
   params.append("populate[federation][fields][2]", "slug");
   params.append("populate[federation][fields][3]", "documentId");
+  params.append("populate[federation][fields][4]", "country");
   params.append("populate[federation][populate][logo][fields][0]", "url");
   params.set("pagination[pageSize]", "100");
   params.set("sort[0]", "title:asc");
@@ -430,6 +470,7 @@ const FEDERATION_SUMMARY_PARAMS = [
   "populate[federation][fields][1]=name",
   "populate[federation][fields][2]=slug",
   "populate[federation][fields][3]=documentId",
+  "populate[federation][fields][4]=country",
   "populate[federation][populate][logo][fields][0]=url",
 ].join("&");
 

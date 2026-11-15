@@ -13,12 +13,15 @@ import type { NormalizedTeamMatch } from "@/lib/teamTournaments";
 import { buildTeamTournamentStats, type TeamStatRow } from "@/lib/teamTournamentStats";
 import { playerProfileHref, type NameVariant } from "@/lib/playerNameVariant";
 import { TeamPlayersModal, avgText } from "@/components/teamTournaments/TeamPlayersModal";
+import { teamTournamentLabels, type LabelLocale } from "@/lib/teamTournamentLabels";
 
 type Props = {
   matches: NormalizedTeamMatch[];
   groupCount: number;
   /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
   nameVariant?: NameVariant;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 };
 
 const GroupPill = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
@@ -41,7 +44,9 @@ export function TeamStatisticsPanel({
   matches,
   groupCount,
   nameVariant = "international",
+  labelLocale,
 }: Props) {
+  const labels = teamTournamentLabels(labelLocale);
   const stats = useMemo(
     () => buildTeamTournamentStats(matches, nameVariant),
     [matches, nameVariant],
@@ -63,22 +68,23 @@ export function TeamStatisticsPanel({
       <div className="rounded-[26px] border border-slate-200 bg-white px-5 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-950">Στατιστικά</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950">{labels.statisticsTitle}</h2>
             <p className="mt-1 text-[12.5px] text-slate-500">
-              Από <strong className="text-slate-800">{stats.playedMatches}</strong> καταχωρημένες
-              συναντήσεις ({stats.scheduledMatches} στο πρόγραμμα)
-              {groupCount > 1 ? <> · {groupCount} όμιλοι</> : null}. Όλα βγαίνουν ζωντανά από τους
-              αγώνες.
+              {labels.statisticsRecordsPrefix}{" "}
+              <strong className="text-slate-800">{stats.playedMatches}</strong>
+              {labels.statisticsRecordsSuffix(stats.scheduledMatches)}
+              {groupCount > 1 ? <> {labels.groupCountSuffix(groupCount)}</> : null}.{' '}
+              {labels.statisticsLive}
             </p>
           </div>
           {groupKeys.length > 1 ? (
             <div className="flex flex-wrap gap-1.5">
               <GroupPill active={scope === "all"} onClick={() => setScope("all")}>
-                Όλοι οι όμιλοι
+                {labels.allGroups}
               </GroupPill>
               {groupKeys.map((key) => (
                 <GroupPill key={key} active={scope === key} onClick={() => setScope(key)}>
-                  {key.replace(/^GROUP-?/i, "Όμιλος ")}
+                  {labels.groupPillLabel(key)}
                 </GroupPill>
               ))}
             </div>
@@ -88,31 +94,30 @@ export function TeamStatisticsPanel({
 
       {stats.playedMatches === 0 ? (
         <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
-          Δεν υπάρχει καταχωρημένο αποτέλεσμα ακόμη — τα στατιστικά εμφανίζονται μόλις μπει ο
-          πρώτος αγώνας.
+          {labels.statsEmpty}
         </div>
       ) : (
         <>
           <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
             <div className="border-b border-slate-200 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              Αθλητές
+              {labels.playersSection}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[12.5px]">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500">
                     <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
-                    <th title="Αγώνες που έπαιξε" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΑΓΩΝΕΣ</th>
-                    <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                    <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Καλύτερος μέσος όρος αγώνα" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Best</th>
-                    <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
-                    <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
-                    <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayer}</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
+                    <th title={labels.tipMatchesPlayed} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colGames}</th>
+                    <th title={labels.tipPointsCaroms} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPointsShort}</th>
+                    <th title={labels.tipInnings} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colInningsShort}</th>
+                    <th title={labels.tipAvgFormula} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+                    <th title={labels.tipBest} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colBest}</th>
+                    <th title={labels.tipWins} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colWinsShort}</th>
+                    <th title={labels.tipDraws} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDraws}</th>
+                    <th title={labels.tipLosses} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colLossesShort}</th>
+                    <th title={labels.tipRun} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colRunShort}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,21 +156,21 @@ export function TeamStatisticsPanel({
           </div>
           <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
             <div className="border-b border-slate-200 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              Ομαδικά
+              {labels.teamsSection}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[12.5px]">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500">
                     <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
-                    <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
-                    <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                    <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Διαφορά επιμέρους: ΕΠ+ − ΕΠ−" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Δ</th>
-                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
-                    <th title="Βαθμοί" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
+                    <th title={labels.tipMatches} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colGamesShort}</th>
+                    <th title={labels.tipPointsCaroms} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPointsShort}</th>
+                    <th title={labels.tipInnings} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colInningsShort}</th>
+                    <th title={labels.tipAvgFormula} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+                    <th title={labels.tipDiffBoards} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDiff}</th>
+                    <th title={labels.tipRun} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colRunShort}</th>
+                    <th title={labels.tipPts} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPtsShort}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -177,7 +182,7 @@ export function TeamStatisticsPanel({
                           type="button"
                           onClick={() => setSelectedTeam(row)}
                           className="text-left text-sky-700 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-900"
-                          title="Άνοιγμα των αθλητών της ομάδας"
+                          title={labels.openTeamPlayers}
                         >
                           {row.teamName}
                         </button>
@@ -207,6 +212,7 @@ export function TeamStatisticsPanel({
           players={stats.players.filter(
             (row) => row.groupKey === selectedTeam.groupKey && row.teamName === selectedTeam.teamName,
           )}
+          labelLocale={labelLocale}
           onClose={() => setSelectedTeam(null)}
         />
       ) : null}

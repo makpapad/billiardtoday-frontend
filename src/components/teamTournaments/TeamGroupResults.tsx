@@ -31,12 +31,17 @@ import {
   type TeamTournamentStats,
 } from "@/lib/teamTournamentStats";
 import { TeamPlayersModal } from "@/components/teamTournaments/TeamPlayersModal";
+import {
+  teamTournamentLabels,
+  type LabelLocale,
+  type TeamTournamentLabels,
+} from "@/lib/teamTournamentLabels";
 
-const formatDate = (value: string | null): string | null => {
+const formatDate = (value: string | null, locale: string): string | null => {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("el-GR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
 const avgText = (value: number): string => (value > 0 ? value.toFixed(3) : "—");
@@ -52,11 +57,15 @@ const matchKeyOf = (match: NormalizedTeamMatch): string =>
 const RoundHighlightsStrip = ({
   highlights,
   onOpenMatch,
+  labelLocale,
 }: {
   highlights: RoundHighlights;
   /** Κλικ σε κουτάκι → άνοιγμα της γραμμής του αγώνα όπου βγήκε το ρεκόρ. */
   onOpenMatch?: (matchKey: string) => void;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 }) => {
+  const labels = teamTournamentLabels(labelLocale);
   const { bestTeam, bestPlayer, bestRun } = highlights;
   if (!bestTeam && !bestPlayer && !bestRun) return null;
 
@@ -76,8 +85,8 @@ const RoundHighlightsStrip = ({
     bestTeam && {
       key: "team",
       matchKey: bestTeam.matchKey,
-      label: "ΟΜΑΔΑ ΜΕ ΤΟΝ ΚΑΛΥΤΕΡΟ Μ.Ο.",
-      title: "Η ομάδα με τον μεγαλύτερο μέσο όρο στην αγωνιστική — κλικ για τον αγώνα της",
+      label: labels.bestTeamLabel,
+      title: labels.bestTeamTip,
       name: bestTeam.name,
       sub: null,
       value: avgText(bestTeam.avg),
@@ -86,8 +95,8 @@ const RoundHighlightsStrip = ({
     bestPlayer && {
       key: "player",
       matchKey: bestPlayer.matchKey,
-      label: "ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ",
-      title: "Ο μεγαλύτερος μέσος όρος (πόντοι ÷ στεκιές) της αγωνιστικής — κλικ για τον αγώνα του",
+      label: labels.bestPlayerLabel,
+      title: labels.bestPlayerTip,
       name: bestPlayer.name,
       sub: bestPlayer.teamName,
       value: avgText(bestPlayer.avg),
@@ -96,8 +105,8 @@ const RoundHighlightsStrip = ({
     bestRun && {
       key: "run",
       matchKey: bestRun.matchKey,
-      label: "ΚΑΛΥΤΕΡΟ ΣΕΡΙ",
-      title: "Το μεγαλύτερο σέρι (σειρά πόντων) της αγωνιστικής — κλικ για τον αγώνα",
+      label: labels.bestRunLabel,
+      title: labels.bestRunTip,
       name: bestRun.name,
       sub: bestRun.teamName,
       value: String(bestRun.run),
@@ -159,6 +168,7 @@ export function GroupStandingsPanel({
   highlightedTeamIds,
   qualifyingSpots = 4,
   stats = null,
+  labelLocale,
 }: {
   group: TeamGroup;
   rows: ComputedStandingRow[];
@@ -176,7 +186,10 @@ export function GroupStandingsPanel({
    * ΠΡΟΣΩΡΙΝΟ: Α1/Α2 → οι 4 πρώτοι (μέχρι να οριστεί από τη διοργάνωση).
    */
   qualifyingSpots?: number;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 }) {
+  const labels: TeamTournamentLabels = teamTournamentLabels(labelLocale);
   /** Η ομάδα της οποίας οι αθλητές δείχνονται σε modal (null = κλειστό). */
   const [selectedTeam, setSelectedTeam] = useState<TeamStatRow | null>(null);
 
@@ -201,24 +214,24 @@ export function GroupStandingsPanel({
     <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:flex lg:max-h-[calc(100vh-200px)] lg:flex-col">
       <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
         <h3 className="text-[15px] font-semibold tracking-tight text-slate-950">
-          {group.title || `Όμιλος ${group.groupKey}`}
+          {group.title || labels.groupName(group.groupKey)}
         </h3>
-        <span className="text-[11px] text-slate-500">Βαθμολογία ομίλου</span>
+        <span className="text-[11px] text-slate-500">{labels.standingsTitle}</span>
       </div>
       <div className="min-h-0 overflow-x-auto lg:flex-1 lg:overflow-y-auto">
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
             <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
               <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-              <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΜΑΔΑ</th>
-              <th title="Αγώνες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Α</th>
-              <th title="Νίκες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
-              <th title="Ισοπαλίες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ι</th>
-              <th title="Ήττες" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-              <th title="Επιμέρους πόντοι αγώνων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Επιμ.</th>
-              <th title="Διαφορά αγώνων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Διαφ.</th>
-              <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-              <th title="Βαθμοί" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Βαθ.</th>
+              <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
+              <th title={labels.tipMatches} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayedShort}</th>
+              <th title={labels.tipWins} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colWinsShort}</th>
+              <th title={labels.tipDraws} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDrawsShort}</th>
+              <th title={labels.tipLosses} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colLossesShort}</th>
+              <th title={labels.tipBoards} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colBoardsShort}</th>
+              <th title={labels.tipDiff} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDiffShort}</th>
+              <th title={labels.tipAvg} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+              <th title={labels.tipPts} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPtsShort}</th>
             </tr>
           </thead>
           <tbody>
@@ -260,7 +273,7 @@ export function GroupStandingsPanel({
                     {teamStats ? (
                       <button
                         type="button"
-                        title={`Στατιστικά αθλητών: ${row.teamName}`}
+                        title={labels.teamStatsTip(row.teamName)}
                         onClick={() => setSelectedTeam(teamStats)}
                         className="cursor-pointer text-left underline decoration-slate-300 decoration-dotted underline-offset-[3px] transition hover:text-sky-700 hover:decoration-sky-500 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
                       >
@@ -289,13 +302,14 @@ export function GroupStandingsPanel({
         </table>
       </div>
       <div className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500">
-        Οι {qualifyingSpots} πρώτοι προκρίνονται στην τελική φάση.
+        {labels.qualifyingNote(qualifyingSpots)}
       </div>
 
       {selectedTeam ? (
         <TeamPlayersModal
           team={selectedTeam}
           players={playersOf(selectedTeam)}
+          labelLocale={labelLocale}
           onClose={() => setSelectedTeam(null)}
         />
       ) : null}
@@ -316,6 +330,7 @@ function GroupBox({
   matches: NormalizedTeamMatch[];
   summary: TeamTournamentSummary | null;
 }) {
+  const labels = teamTournamentLabels(summary?.labelLocale);
   const [open, setOpen] = useState(false);
   const played = matches.filter(isCompletedMatch).length;
 
@@ -331,7 +346,7 @@ function GroupBox({
       >
         <span className="text-[12px] font-bold text-slate-900">{title}</span>
         <span className="text-[11px] font-semibold text-slate-500">
-          {played}/{matches.length} αγώνες
+          {labels.matchProgress(played, matches.length)}
         </span>
         <span
           className={clsx(
@@ -378,6 +393,9 @@ export function TeamGroupResults({
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
+  /** Γλώσσα ετικετών — από το summary, ίδιο πέρασμα με το `nameVariant`. */
+  const labelLocale = summary?.labelLocale;
+  const labels: TeamTournamentLabels = teamTournamentLabels(labelLocale);
   const biathlon = summary?.config?.mode === "biathlon";
   /** Αγώνας που ζητήθηκε από τα «καλύτερα της αγωνιστικής» — token ώστε να ξανανοίγει. */
   const [revealTarget, setRevealTarget] = useState<{ key: string; token: number } | null>(null);
@@ -418,7 +436,9 @@ export function TeamGroupResults({
         const played = all.filter(isCompletedMatch).length;
         const dates = Array.from(
           new Set(
-            all.map((match) => formatDate(match.matchDate)).filter((v): v is string => Boolean(v)),
+            all
+              .map((match) => formatDate(match.matchDate, labels.dateLocale))
+              .filter((v): v is string => Boolean(v)),
           ),
         );
         return {
@@ -436,7 +456,7 @@ export function TeamGroupResults({
             .sort((a, b) => a.groupKey.localeCompare(b.groupKey, undefined, { numeric: true })),
         };
       });
-  }, [matchesByGroupKey, visibleGroups]);
+  }, [labels.dateLocale, matchesByGroupKey, visibleGroups]);
 
   /** Προεπιλογή: η τελευταία παιγμένη αγωνιστική — αλλιώς η πρώτη του προγράμματος. */
   const defaultRound = useMemo(() => {
@@ -585,7 +605,7 @@ export function TeamGroupResults({
         {rounds.length > 0 ? (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5">
             <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-500">
-              ΑΓΩΝΙΣΤΙΚΕΣ
+              {labels.roundsLabel}
             </span>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               {rounds.map((entry) => {
@@ -598,8 +618,8 @@ export function TeamGroupResults({
                     onClick={() => setSelectedRound(entry.round)}
                     title={
                       entry.hasResults
-                        ? `Αγωνιστική ${entry.round} — έχει παιχτεί (${entry.played}/${entry.total} αγώνες)`
-                        : `Αγωνιστική ${entry.round} — δεν έχει παιχτεί ακόμη`
+                        ? labels.roundTipPlayed(entry.round, entry.played, entry.total)
+                        : labels.roundTipNotPlayed(entry.round)
                     }
                     className={clsx(
                       "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11.5px] font-extrabold tabular-nums transition",
@@ -621,7 +641,7 @@ export function TeamGroupResults({
 
         {rounds.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
-            Δεν υπάρχουν ακόμη αποτελέσματα. Οι αγώνες εμφανίζονται μόλις καταχωρηθούν.
+            {labels.noResultsYet}
           </div>
         ) : (
           rounds
@@ -640,18 +660,18 @@ export function TeamGroupResults({
                   section, αλλιώς το sticky δεν δουλεύει. */}
               <header className="sticky top-[89px] z-20 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-t-[18px] border-b border-slate-950/15 bg-[#ffc000] px-4 py-2.5 text-[12.5px] font-extrabold uppercase tracking-[0.06em] text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.14)] lg:top-[104px]">
                 <span className="inline-flex items-center rounded-md bg-slate-950 px-2 py-0.5 text-[11.5px] font-extrabold tracking-[0.08em] text-[#ffc000]">
-                  Αγωνιστική {entry.round}
+                  {labels.roundName(entry.round)}
                 </span>
                 {entry.dateLabel ? (
                   <span className="font-semibold text-slate-900/80">{entry.dateLabel}</span>
                 ) : null}
                 {!entry.hasResults ? (
                   <span className="rounded-full bg-white/70 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-slate-700">
-                    ΔΕΝ ΕΧΕΙ ΠΑΙΧΤΕΙ
+                    {labels.notPlayedBadge}
                   </span>
                 ) : null}
                 <span className="ml-auto rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.08em] text-white">
-                  {entry.total} {entry.total === 1 ? "αγώνας" : "αγώνες"}
+                  {entry.total} {labels.matchNoun(entry.total)}
                 </span>
               </header>
 
@@ -662,7 +682,7 @@ export function TeamGroupResults({
                     return (
                       <GroupBox
                         key={bucket.groupKey}
-                        title={group?.title || `Όμιλος ${bucket.groupKey.replace(/^GROUP-?/i, "")}`}
+                        title={group?.title || labels.groupName(bucket.groupKey.replace(/^GROUP-?/i, ""))}
                         matches={bucket.matches}
                         summary={summary}
                       />
@@ -687,7 +707,11 @@ export function TeamGroupResults({
                   ))}
                 </div>
               )}
-              <RoundHighlightsStrip highlights={highlights} onOpenMatch={revealMatch} />
+              <RoundHighlightsStrip
+                highlights={highlights}
+                onOpenMatch={revealMatch}
+                labelLocale={labelLocale}
+              />
             </section>
             );
           })
@@ -710,7 +734,7 @@ export function TeamGroupResults({
                     : "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-800"
                 }
               >
-                {item.title || `Όμιλος ${item.groupKey}`}
+                {item.title || labels.groupName(item.groupKey)}
               </button>
             ))}
           </div>
@@ -725,6 +749,7 @@ export function TeamGroupResults({
             highlightedTeamIds={highlightedTeamIds}
             qualifyingSpots={qualifyingSpots}
             stats={stats}
+            labelLocale={labelLocale}
           />
         ))}
       </div>

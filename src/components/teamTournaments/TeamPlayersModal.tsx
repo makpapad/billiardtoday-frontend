@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { playerProfileHref } from "@/lib/playerNameVariant";
 import type { PlayerStatRow, TeamStatRow } from "@/lib/teamTournamentStats";
+import { teamTournamentLabels, type LabelLocale } from "@/lib/teamTournamentLabels";
 
 export const avgText = (value: number): string => (value > 0 ? value.toFixed(3).replace(".", ",") : "—");
 
@@ -39,11 +40,15 @@ export function TeamPlayersModal({
   team,
   players,
   onClose,
+  labelLocale,
 }: {
   team: TeamStatRow;
   players: PlayerStatRow[];
   onClose: () => void;
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 }) {
+  const labels = teamTournamentLabels(labelLocale);
   const ranked = useMemo(() => rankTeamPlayers(players), [players]);
 
   useEffect(() => {
@@ -60,7 +65,7 @@ export function TeamPlayersModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Αθλητές ${team.teamName}`}
+      aria-label={labels.playersModalLabel(team.teamName)}
       className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-2 sm:items-center sm:p-4"
       onClick={onClose}
     >
@@ -72,15 +77,19 @@ export function TeamPlayersModal({
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-slate-950">{team.teamName}</h3>
             <p className="mt-0.5 text-[11.5px] text-slate-500">
-              {ranked.length} {ranked.length === 1 ? "αθλητής" : "αθλητές"} · {team.played}{" "}
-              {team.played === 1 ? "αγώνας" : "αγώνες"} ·{" "}
-              {team.caroms} πόντοι · {avgText(team.avg)} Μ.Ο. · {team.leaguePoints} βαθμοί
+              {labels.playersSummary({
+                players: ranked.length,
+                matches: team.played,
+                caroms: team.caroms,
+                avg: avgText(team.avg),
+                points: team.leaguePoints,
+              })}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Κλείσιμο"
+            aria-label={labels.close}
             className="ml-auto shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-[12px] font-bold text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
           >
             ✕
@@ -91,16 +100,16 @@ export function TeamPlayersModal({
             <thead>
               <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
                 <th className="w-8 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
-                <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΑΘΛΗΤΗΣ</th>
-                <th title="Αγώνες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Αγ</th>
-                <th title="Πόντοι (καραμπόλες)" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Π</th>
-                <th title="Στεκιές" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                <th title="Μέσος όρος: Π ÷ ΣΤ" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                <th title="Καλύτερος μέσος όρος αγώνα" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Best</th>
-                <th title="Νίκες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Ν</th>
-                <th title="Ισοπαλίες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΙΣ</th>
-                <th title="Ήττες" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Η</th>
-                <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
+                <th className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayer}</th>
+                <th title={labels.tipMatches} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colGamesShort}</th>
+                <th title={labels.tipPointsCaroms} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPointsShort}</th>
+                <th title={labels.tipInnings} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colInningsShort}</th>
+                <th title={labels.tipAvgFormula} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+                <th title={labels.tipBest} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colBest}</th>
+                <th title={labels.tipWins} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colWinsShort}</th>
+                <th title={labels.tipDraws} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDraws}</th>
+                <th title={labels.tipLosses} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colLossesShort}</th>
+                <th title={labels.tipRun} className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colRunShort}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +140,7 @@ export function TeamPlayersModal({
           </table>
         </div>
         <div className="border-t border-slate-200 px-5 py-2 text-[11px] text-slate-500">
-          Κατάταξη με Μ.Ο. αγώνα (μετά νίκες, μεγαλύτερο σέρι). Άνοιγμα προφίλ με κλικ στο όνομα.
+          {labels.playersModalFooter}
         </div>
       </div>
     </div>,

@@ -11,12 +11,13 @@
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import type { NormalizedTeamMatch, TeamGroup } from "@/lib/teamTournaments";
+import { teamTournamentLabels, type LabelLocale } from "@/lib/teamTournamentLabels";
 
-const formatDate = (value: string | null): string | null => {
+const formatDate = (value: string | null, locale: string): string | null => {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("el-GR", {
+  return date.toLocaleDateString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -31,15 +32,19 @@ const isPlayed = (match: NormalizedTeamMatch): boolean =>
 export function TeamTimetablePanel({
   matches,
   groups,
+  labelLocale,
 }: {
   matches: NormalizedTeamMatch[];
   groups: TeamGroup[];
+  /** Γλώσσα ετικετών της διοργάνωσης (προεπιλογή: ελληνικά). */
+  labelLocale?: LabelLocale;
 }) {
+  const labels = teamTournamentLabels(labelLocale);
   const [scope, setScope] = useState<string>("all");
 
   const groupLabel = (key: string): string => {
     const group = groups.find((item) => item.groupKey === key);
-    return group?.title || `Όμιλος ${key.replace(/^GROUP-?/i, "")}`;
+    return group?.title || labels.groupName(key.replace(/^GROUP-?/i, ""));
   };
 
   const groupKeys = useMemo(
@@ -64,7 +69,11 @@ export function TeamTimetablePanel({
     const entries = Array.from(byRound.entries()).map(([key, list]) => {
       const [stage, roundRaw] = key.split("|");
       const dates = Array.from(
-        new Set(list.map((match) => formatDate(match.matchDate)).filter((v): v is string => Boolean(v))),
+        new Set(
+          list
+            .map((match) => formatDate(match.matchDate, labels.dateLocale))
+            .filter((v): v is string => Boolean(v)),
+        ),
       );
       const played = list.filter(isPlayed).length;
       return {
@@ -87,7 +96,7 @@ export function TeamTimetablePanel({
     });
 
     return entries;
-  }, [filtered]);
+  }, [filtered, labels.dateLocale]);
 
   const nextKey = rounds.find((entry) => !entry.complete)?.key ?? null;
   const playedTotal = matches.filter(isPlayed).length;
@@ -97,11 +106,10 @@ export function TeamTimetablePanel({
       <div className="rounded-[26px] border border-slate-200 bg-white px-5 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-950">Πρόγραμμα</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950">{labels.scheduleTitle}</h2>
             <p className="mt-1 text-[12.5px] text-slate-500">
-              {rounds.length} αγωνιστικές · {playedTotal} από {matches.length} ζευγάρια έχουν
-              παιχτεί
-              {scope === "all" && groupKeys.length > 1 ? <> · {groupKeys.length} όμιλοι</> : null}
+              {labels.scheduleSummary(rounds.length, playedTotal, matches.length)}
+              {scope === "all" && groupKeys.length > 1 ? <> {labels.groupCountSuffix(groupKeys.length)}</> : null}
             </p>
           </div>
           {groupKeys.length > 1 ? (
@@ -117,7 +125,7 @@ export function TeamTimetablePanel({
                     : "border-slate-200 bg-white text-slate-500 hover:text-slate-800",
                 )}
               >
-                Όλοι οι όμιλοι
+                {labels.allGroups}
               </button>
               {groupKeys.map((key) => (
                 <button
@@ -142,7 +150,7 @@ export function TeamTimetablePanel({
 
       {rounds.length === 0 ? (
         <div className="rounded-[18px] border border-dashed border-slate-300 bg-white p-4 text-[13px] text-slate-500">
-          Το πρόγραμμα θα εμφανιστεί μόλις δημοσιευτούν οι αγώνες.
+          {labels.scheduleEmpty}
         </div>
       ) : (
         <div className="grid items-start gap-3.5 xl:grid-cols-2">
@@ -156,20 +164,20 @@ export function TeamTimetablePanel({
             >
               <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
                 <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-slate-900">
-                  {entry.stage === "ko" ? "Final Round" : `Αγωνιστική ${entry.round}`}
+                  {entry.stage === "ko" ? labels.finalRound : labels.roundName(entry.round)}
                 </span>
                 {entry.dateLabel ? (
                   <span className="text-[11.5px] font-semibold text-slate-500">{entry.dateLabel}</span>
                 ) : (
-                  <span className="text-[11.5px] font-semibold text-amber-600">Ημερομηνία: —</span>
+                  <span className="text-[11.5px] font-semibold text-amber-600">{labels.dateMissing}</span>
                 )}
                 {entry.key === nextKey ? (
                   <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-[0.1em] text-white">
-                    Επόμενη
+                    {labels.nextBadge}
                   </span>
                 ) : null}
                 <span className="ml-auto text-[11px] font-semibold text-slate-500">
-                  {entry.played}/{entry.total} αγώνες
+                  {labels.matchProgress(entry.played, entry.total)}
                 </span>
               </header>
               <ul className="divide-y divide-slate-100">

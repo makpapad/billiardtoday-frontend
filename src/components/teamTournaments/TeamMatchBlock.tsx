@@ -27,14 +27,18 @@ import {
   playerProfileHref,
   type NameVariant,
 } from "@/lib/playerNameVariant";
+import {
+  teamTournamentLabels,
+  type TeamTournamentLabels,
+} from "@/lib/teamTournamentLabels";
 
 /** Ελληνικό δεκαδικό κόμμα στους μέσους όρους (0,300 αντί για 0.300). */
 const comma = (value: string): string => value.replace(".", ",");
 
-const statusLabel = (status: string): string => {
+const statusLabel = (status: string, labels: TeamTournamentLabels): string => {
   const key = String(status ?? "").toLowerCase();
-  if (key === "completed") return "Ολοκληρωμένη";
-  if (key === "scheduled") return "Προγραμματισμένη";
+  if (key === "completed") return labels.statusCompleted;
+  if (key === "scheduled") return labels.statusScheduled;
   return status || "—";
 };
 
@@ -105,14 +109,16 @@ export function TeamMatchRow({
   const fixtureOnly = !completed;
   const biathlon = summary?.config?.mode === "biathlon";
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
+  /** Γλώσσα ετικετών της διοργάνωσης — από το summary, ίδιο πέρασμα με το `nameVariant`. */
+  const labels = teamTournamentLabels(summary?.labelLocale);
   /** Οι ενδείξεις που παίρνει ο αθλητής αυτής της πλευράς (καλύτερος παίκτης / καλύτερο σέρι). */
   const marksForPlayer = (player: TeamSetPlayer | null): string[] => {
     const key = playerIdentityKey(player, nameVariant);
     if (!key) return [];
     const marks: string[] = [];
-    if (roundMarks?.bestPlayer?.playerKey === key) marks.push("ΚΑΛΥΤΕΡΟΣ ΠΑΙΚΤΗΣ");
+    if (roundMarks?.bestPlayer?.playerKey === key) marks.push(labels.markBestPlayer);
     if (roundMarks?.bestRun?.playerKey === key && roundMarks.bestRun.run > 0) {
-      marks.push(`ΣΕΡΙ ${roundMarks.bestRun.run}`);
+      marks.push(labels.markRun(roundMarks.bestRun.run));
     }
     return marks;
   };
@@ -233,7 +239,7 @@ export function TeamMatchRow({
         </span>
         {!completed ? (
           <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
-            {statusLabel(match.status)}
+            {statusLabel(match.status, labels)}
           </span>
         ) : null}
         {fixtureOnly ? null : (
@@ -255,14 +261,14 @@ export function TeamMatchRow({
               <thead>
                 <tr className="bg-[#94dcf8] text-slate-950">
                   <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em]">
-                    ΟΜΑΔΑ
+                    {labels.colTeam}
                   </th>
-                  <th title="Πόντοι" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Π</th>
-                  <th title="Στεκιές" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΤ</th>
-                  <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">ΣΕΡΙ</th>
-                  <th title="Επιμέρους πόντοι αγώνων" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Επιμ.</th>
-                  <th title="Μέσος όρος" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Μ.Ο.</th>
-                  <th title="Βαθμοί ομάδας" className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">Βαθ.</th>
+                  <th title={labels.tipPoints} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colPointsShort}</th>
+                  <th title={labels.tipInnings} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colInningsShort}</th>
+                  <th title={labels.tipRun} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colRunShort}</th>
+                  <th title={labels.tipBoards} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colBoardsShort}</th>
+                  <th title={labels.tipAvg} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colAvgShort}</th>
+                  <th title={labels.tipTeamPts} className="px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em]">{labels.colPtsShort}</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,7 +298,7 @@ export function TeamMatchRow({
                       )}
                     >
                       {team.name}
-                      {bestAvgTeam ? markChip("ΚΑΛΥΤΕΡΟΣ Μ.Ο.") : null}
+                      {bestAvgTeam ? markChip(labels.markBestAvg) : null}
                     </th>
                     <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.points : "—"}</td>
                     <td className="px-2 py-1.5 text-center text-slate-700">{completed && !matchForfeit ? team.innings : "—"}</td>
@@ -318,17 +324,17 @@ export function TeamMatchRow({
               <table className="w-full border-collapse text-[11.8px]">
                 <thead>
                   <tr className="bg-[#f7c7ac] text-slate-950">
-                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
-                    <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th className="px-2.5 py-1.5 text-right text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
-                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΠΟΝΤΟΙ</th>
+                    <th title={labels.tipRun} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colRunShort}</th>
+                    <th title={labels.tipAvg} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+                    <th title={labels.tipInnings} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colInningsShort}</th>
+                    <th className="px-2.5 py-1.5 text-right text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colName}</th>
+                    <th title={labels.tipPoints} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPoints}</th>
                     <th className="w-2" />
-                    <th title="Πόντοι" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΠΟΝΤΟΙ</th>
-                    <th className="px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">ΟΝΟΜΑ</th>
-                    <th title="Στεκιές" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΤ</th>
-                    <th title="Μέσος όρος" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">Μ.Ο.</th>
-                    <th title="Σέρι — η μεγαλύτερη σειρά πόντων" className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">ΣΕΡΙ</th>
+                    <th title={labels.tipPoints} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPoints}</th>
+                    <th className="px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colName}</th>
+                    <th title={labels.tipInnings} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colInningsShort}</th>
+                    <th title={labels.tipAvg} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+                    <th title={labels.tipRun} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colRunShort}</th>
                   </tr>
                 </thead>
                 <tbody>
