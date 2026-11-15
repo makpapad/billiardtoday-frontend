@@ -2162,8 +2162,12 @@ export function TournamentDetailPage({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const nextStage = new URLSearchParams(window.location.search).get("stage");
-    setStageFromLocation(nextStage);
+    const searchParams = new URLSearchParams(window.location.search);
+    setStageFromLocation(searchParams.get("stage"));
+    /* Deep link: ?view=live ανοίγει κατευθείαν τις ζωντανές κάρτες. */
+    if (searchParams.get("view") === "live") {
+      setActiveView("live");
+    }
   }, []);
 
   useEffect(() => {
