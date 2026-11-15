@@ -740,7 +740,7 @@ const LiveSessionsContent = ({
           gap: 24,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 790 }}>
+        <div style={{ display: "flex", flexDirection: "column", maxWidth: 900 }}>
           <span
             style={{
               display: "flex",
