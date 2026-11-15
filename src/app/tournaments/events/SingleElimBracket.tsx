@@ -5,6 +5,13 @@ import { getCountryFlagCdnUrl } from '@/lib/countryFlags'
 
 export type BracketMatchView = {
     id: string
+    /**
+     * Strapi documentId του αγώνα — χρειάζεται για την κάρτα share
+     * (`/api/og/match/<event>/<matchDocumentId>`), γιατί το `id` του bracket
+     * είναι το numeric id και η κάρτα ψάχνει με documentId.
+     */
+    matchDocumentId?: string | null
+
     player1: string
     player2: string
     player1Country?: string | null

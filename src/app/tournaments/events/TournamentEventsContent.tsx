@@ -5778,6 +5778,11 @@ export function TournamentEventsContent({
 
           return {
             id: String((m as { id?: unknown }).id ?? ""),
+            matchDocumentId:
+              typeof (m as { documentId?: unknown }).documentId === "string" &&
+              (m as { documentId: string }).documentId.trim()
+                ? (m as { documentId: string }).documentId.trim()
+                : null,
             player1: p1.name || "",
             player2: p2.name || "",
             player1Country: p1.country,
@@ -5888,6 +5893,42 @@ export function TournamentEventsContent({
   const selectedBracketDetailsGridClass = selectedBracketShowsTieBreak
     ? "grid min-w-[860px] grid-cols-[minmax(180px,1.6fr)_repeat(8,minmax(56px,0.75fr))] items-center gap-3"
     : "grid min-w-[800px] grid-cols-[minmax(180px,1.6fr)_repeat(7,minmax(56px,0.75fr))] items-center gap-3";
+
+  /**
+   * Κάρτα share του αγώνα του bracket — ίδια εικόνα με τους αγώνες των ομίλων
+   * (`/api/og/match/<event>/<matchDocumentId>`). Χρειάζεται το documentId του
+   * αγώνα· χωρίς αυτό (ή όταν οι παίκτες είναι ακόμα placeholders) δεν
+   * εμφανίζεται κουμπί share.
+   */
+  const selectedBracketShareHref = (() => {
+    const eventDocumentId =
+      typeof eventData?.data?.documentId === "string"
+        ? eventData.data.documentId
+        : null;
+    const matchDocumentId =
+      selectedBracketMatch?.match.matchDocumentId ?? null;
+    if (!eventDocumentId || !matchDocumentId) return null;
+    if (
+      !selectedBracketMatch?.match.player1 ||
+      !selectedBracketMatch.match.player2
+    ) {
+      return null;
+    }
+    return `/api/og/match/${encodeURIComponent(eventDocumentId)}/${encodeURIComponent(
+      matchDocumentId,
+    )}?match=${encodeURIComponent(matchDocumentId)}`;
+  })();
+
+  const selectedBracketMatchDateLabel = (() => {
+    const iso = selectedBracketMatch?.match.date ?? null;
+    if (!iso) return null;
+    const shifted = formatDateTimeWithOffset(
+      iso,
+      timezoneOffsetMinutes,
+      timezoneName,
+    );
+    return shifted ? `${shifted.date}, ${shifted.time}` : null;
+  })();
 
   const activeBracketIncomingMatchNumbers = useMemo(() => {
     const incoming = new Map<string, number[]>();
@@ -9339,22 +9380,34 @@ export function TournamentEventsContent({
             className="w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-              <div>
+            <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+              <div className="min-w-0">
                 <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Match Details
                 </div>
                 <div className="text-xs uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
                   {selectedBracketMatch.roundLabel}
                 </div>
+                {selectedBracketMatchDateLabel ? (
+                  <div className="mt-1 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    {selectedBracketMatchDateLabel}
+                  </div>
+                ) : null}
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedBracketMatchId(null)}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-              >
-                Close
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <ShareMenuButton
+                  shareHref={selectedBracketShareHref}
+                  downloadName="billiardtoday-match.png"
+                  variant="light"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedBracketMatchId(null)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto p-5">
               {isBiathlonEvent(eventData) ? (
@@ -9503,25 +9556,6 @@ export function TournamentEventsContent({
               </div>
               </div>
               )}
-              <div className="mt-4 border-t border-gray-100 pt-3 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
-                {selectedBracketMatch.match.date
-                  ? (() => {
-                      const shifted = formatDateTimeWithOffset(
-                        selectedBracketMatch.match.date,
-                        timezoneOffsetMinutes,
-                        timezoneName,
-                      );
-                      return `Date: ${shifted ? `${shifted.date}, ${shifted.time}` : new Date(selectedBracketMatch.match.date).toLocaleString("el-GR", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}`;
-                    })()
-                  : "Date: -"}
-              </div>
             </div>
           </div>
         </div>

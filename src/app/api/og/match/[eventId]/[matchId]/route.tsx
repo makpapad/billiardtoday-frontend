@@ -75,6 +75,8 @@ type MatchView = {
   eventTitle: string;
   stageTitle: string;
   groupLabel: string;
+  /** Γύρος bracket (R16 / QF / SF / FINAL) — το KO δεν έχει group label. */
+  roundLabel: string;
   matchNumber: number | null;
   targetPoints: number | null;
   dateTime: string | null;
@@ -103,6 +105,21 @@ const formatMatchDateTime = (value: string | null): string | null => {
     hour12: false,
   }).format(date);
   return `${day} · ${time}`;
+};
+
+/** Μόνο η ημερομηνία αγώνα (η ώρα εξαρτάται από τη ζώνη του επισκέπτη). */
+const formatMatchDay = (value: string | null): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Brussels",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  })
+    .format(date)
+    .toUpperCase();
 };
 
 const buildPlayer = (raw: any, prefix: "player1" | "player2"): PlayerView => {
@@ -156,6 +173,7 @@ const findMatch = (event: any, matchId: string): MatchView | null => {
         text(stage?.title) ||
         (text(stage?.stage_type) ? text(stage.stage_type).toUpperCase() : ""),
       groupLabel: text(hit?.group_label),
+      roundLabel: text(hit?.round).toUpperCase(),
       matchNumber: toNumber(hit?.match_number),
       targetPoints:
         toNumber(stage?.target_points) || toNumber(event?.target_points) || null,
@@ -238,9 +256,18 @@ export async function GET(
     match.targetPoints ? `first to ${formatNumber(match.targetPoints)} points` : null,
   ].filter(Boolean) as string[];
 
-  const chip = [match.groupLabel, match.matchNumber ? `Match ${match.matchNumber}` : null]
+  // Οι όμιλοι δείχνουν το group label, το bracket τον γύρο (R16 / QF / FINAL).
+  const chip = [
+    match.groupLabel || match.roundLabel,
+    match.matchNumber ? `Match ${match.matchNumber}` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
+  // Η κάρτα πριν τον αγώνα δείχνει ημερομηνία+ώρα· μετά το αποτέλεσμα δείχνει
+  // μόνο την ημερομηνία, ώστε να μη μπερδεύει η ζώνη ώρας του επισκέπτη.
+  const dateLabel = match.hasResult
+    ? formatMatchDay(match.dateTime)
+    : formatMatchDateTime(match.dateTime);
 
   const statsRows = [
     { label: match.player1.name, ...match.player1 },
@@ -383,14 +410,35 @@ export async function GET(
             <div
               style={{
                 display: "flex",
-                fontSize: s(26),
-                fontWeight: 800,
-                letterSpacing: s(2),
-                color: "rgba(255,255,255,0.8)",
+                flexDirection: "column",
+                gap: s(8),
                 maxWidth: s(760),
               }}
             >
-              {match.eventTitle}
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: s(26),
+                  fontWeight: 800,
+                  letterSpacing: s(2),
+                  color: "rgba(255,255,255,0.8)",
+                }}
+              >
+                {match.eventTitle}
+              </div>
+              {dateLabel && match.hasResult ? (
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(19),
+                    fontWeight: 700,
+                    letterSpacing: s(1.6),
+                    color: "rgba(255,255,255,0.55)",
+                  }}
+                >
+                  {dateLabel}
+                </div>
+              ) : null}
             </div>
             {chip ? (
               <div
@@ -695,7 +743,9 @@ export async function GET(
             color: "rgba(255,255,255,0.6)",
           }}
         >
-          {subtitleBits.join(" · ")}
+          {[...subtitleBits, match.hasResult ? dateLabel : null]
+            .filter(Boolean)
+            .join(" · ")}
         </div>
 
         {/* statistics — μόνο όταν υπάρχει αποτέλεσμα */}
