@@ -698,7 +698,9 @@ export const isForfeitBoard = (set: TeamMatchSet): boolean => {
   if (result !== "home_win" && result !== "away_win") return false;
   const home = set.homePoints ?? 0;
   const away = set.awayPoints ?? 0;
-  return home === 0 && away === 0 && !set.homePlayer && !set.awayPlayer;
+  // Αρκεί Ο ΕΝΑΣ να λείπει: στην Πορτογαλία η απουσία δηλώνεται ως board 0-0 με
+  // όνομα «FC» στη μία πλευρά, οπότε το παλιό «λείπουν και οι δύο» το έριχνε έξω.
+  return home === 0 && away === 0 && (!set.homePlayer || !set.awayPlayer);
 };
 
 /** Board χωρίς νούμερα αθλητών: 2-0 στον παρόντα, 8-0 στην ομάδα στους 4 αγώνες. */
@@ -866,8 +868,12 @@ export const fetchTeamMatches = async (
 
 export const computeStandingsByGroup = (
   matches: NormalizedTeamMatch[],
-  opts?: { biathlon?: boolean },
+  opts?: { biathlon?: boolean; points?: { win?: number; draw?: number; loss?: number } },
 ): Record<string, ComputedStandingRow[]> => {
+  // Σχήμα βαθμών: default 2/1/0, override από το config της διοργάνωσης (FPB = 3/2/1).
+  const winPts = Number.isFinite(Number(opts?.points?.win)) ? Number(opts?.points?.win) : 2;
+  const drawPts = Number.isFinite(Number(opts?.points?.draw)) ? Number(opts?.points?.draw) : 1;
+  const lossPts = Number.isFinite(Number(opts?.points?.loss)) ? Number(opts?.points?.loss) : 0;
   const byGroup = new Map<string, Map<string, ComputedStandingRow>>();
 
   const ensure = (
@@ -944,20 +950,38 @@ export const computeStandingsByGroup = (
     home.highestRun = Math.max(home.highestRun, m.computed.homeHighRun);
     away.highestRun = Math.max(away.highestRun, m.computed.awayHighRun);
 
-    // League points (2/1/0) — biathlon uses TOT-based match points.
-    if (homePts === awayPts) {
+    // League points — biathlon: TOT-based (2/1/0)· αλλιώς board points με το σχήμα
+    // της διοργάνωσης (default 2/1/0, FPB 3/2/1 όπου και η ήττα δίνει βαθμό).
+    if (opts?.biathlon) {
+      if (homePts === awayPts) {
+        home.draws += 1;
+        away.draws += 1;
+        home.leaguePoints += 1;
+        away.leaguePoints += 1;
+      } else if (homePts > awayPts) {
+        home.wins += 1;
+        away.losses += 1;
+        home.leaguePoints += 2;
+      } else {
+        away.wins += 1;
+        home.losses += 1;
+        away.leaguePoints += 2;
+      }
+    } else if (homeFrames === awayFrames) {
       home.draws += 1;
       away.draws += 1;
-      home.leaguePoints += 1;
-      away.leaguePoints += 1;
-    } else if (homePts > awayPts) {
+      home.leaguePoints += drawPts;
+      away.leaguePoints += drawPts;
+    } else if (homeFrames > awayFrames) {
       home.wins += 1;
       away.losses += 1;
-      home.leaguePoints += 2;
+      home.leaguePoints += winPts;
+      away.leaguePoints += lossPts;
     } else {
       away.wins += 1;
       home.losses += 1;
-      away.leaguePoints += 2;
+      away.leaguePoints += winPts;
+      home.leaguePoints += lossPts;
     }
   });
 
@@ -1031,7 +1055,10 @@ export const fetchTeamTournamentDetail = async (
     summary: { ...summary, teamCount: teamIds.size },
     groups,
     matches,
-    standingsByGroup: computeStandingsByGroup(matches, { biathlon }),
+    standingsByGroup: computeStandingsByGroup(matches, {
+      biathlon,
+      points: summary.config?.points as { win?: number; draw?: number; loss?: number } | undefined,
+    }),
     rosters,
   };
 };
