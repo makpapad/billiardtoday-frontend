@@ -610,9 +610,11 @@ type LiveOgSession = Awaited<ReturnType<typeof fetchEventLiveSessions>>[number];
 const LiveSessionCard = ({
   session,
   width,
+  nameMax,
 }: {
   session: LiveOgSession;
   width: number;
+  nameMax: number;
 }) => {
   const state = session.state ?? ({} as LiveOgSession["state"]);
   const tableLabel = state.tableName ? `TABLE ${state.tableName}` : "LIVE TABLE";
@@ -638,7 +640,7 @@ const LiveSessionCard = ({
           letterSpacing: -0.2,
         }}
       >
-        {truncate(name || "—", 26)}
+        {truncate(name || "—", nameMax)}
       </span>
       <span
         style={{
@@ -817,6 +819,7 @@ const LiveSessionsContent = ({
             key={session.sessionId || session.id}
             session={session}
             width={cardWidth}
+            nameMax={twoColumns ? 19 : 30}
           />
         ))}
       </div>
