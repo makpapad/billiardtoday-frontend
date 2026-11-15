@@ -636,7 +636,7 @@ const LiveSessionCard = ({
           display: "flex",
           fontSize: 22,
           fontWeight: current ? 800 : 600,
-          color: current ? "#ffffff" : "rgba(255, 255, 255, 0.74)",
+          color: current ? "#0b2545" : "#334155",
           letterSpacing: -0.2,
         }}
       >
@@ -647,7 +647,7 @@ const LiveSessionCard = ({
           display: "flex",
           fontSize: 30,
           fontWeight: 800,
-          color: current ? "#5eead4" : "rgba(255, 255, 255, 0.82)",
+          color: current ? "#1d4ed8" : "#64748b",
           minWidth: 46,
           justifyContent: "flex-end",
         }}
@@ -664,9 +664,11 @@ const LiveSessionCard = ({
         flexDirection: "column",
         width,
         padding: "12px 18px 14px",
-        borderRadius: 20,
-        background: "rgba(7, 17, 31, 0.78)",
-        border: "1px solid rgba(255, 255, 255, 0.18)",
+        borderRadius: 18,
+        background: "#ffffff",
+        border: "1px solid #dbeafe",
+        borderLeft: "6px solid #2563eb",
+        boxShadow: "0 12px 26px rgba(30, 64, 175, 0.12)",
       }}
     >
       <div
@@ -682,8 +684,8 @@ const LiveSessionCard = ({
             display: "flex",
             fontSize: 15,
             fontWeight: 800,
-            letterSpacing: 1.4,
-            color: "rgba(255, 255, 255, 0.86)",
+            letterSpacing: 1.6,
+            color: "#1d4ed8",
           }}
         >
           {truncate(tableLabel, 22)}
@@ -693,8 +695,8 @@ const LiveSessionCard = ({
             style={{
               display: "flex",
               fontSize: 14,
-              fontWeight: 600,
-              color: "rgba(255, 255, 255, 0.58)",
+              fontWeight: 700,
+              color: "#64748b",
             }}
           >
             {truncate(contextLabel, 24)}
@@ -738,13 +740,23 @@ const LiveSessionsContent = ({
           width: "100%",
         }}
       >
-        <img
-          src={BRAND_LOGO_URL}
-          alt=""
-          width={150}
-          height={52}
-          style={{ width: 150, height: 52, objectFit: "contain" }}
-        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "10px 16px",
+            borderRadius: 16,
+            background: "#0b2545",
+          }}
+        >
+          <img
+            src={BRAND_LOGO_URL}
+            alt=""
+            width={140}
+            height={46}
+            style={{ width: 140, height: 46, objectFit: "contain" }}
+          />
+        </div>
         <div
           style={{
             display: "flex",
@@ -752,8 +764,8 @@ const LiveSessionsContent = ({
             gap: 10,
             padding: "9px 18px",
             borderRadius: 999,
-            background: "rgba(220, 38, 38, 0.92)",
-            border: "1px solid rgba(255, 255, 255, 0.24)",
+            background: "#dc2626",
+            boxShadow: "0 8px 20px rgba(220, 38, 38, 0.24)",
           }}
         >
           <span
@@ -770,7 +782,7 @@ const LiveSessionsContent = ({
               display: "flex",
               fontSize: 19,
               fontWeight: 800,
-              letterSpacing: 1.6,
+              letterSpacing: 1.8,
               color: "#ffffff",
             }}
           >
@@ -779,7 +791,7 @@ const LiveSessionsContent = ({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 12 }}>
         <span
           style={{
             display: "flex",
@@ -787,8 +799,7 @@ const LiveSessionsContent = ({
             lineHeight: 1.08,
             fontWeight: 800,
             letterSpacing: -0.6,
-            color: "#ffffff",
-            textShadow: "0 14px 34px rgba(0, 0, 0, 0.3)",
+            color: "#0b2545",
           }}
         >
           {truncate(title, 104)}
@@ -798,8 +809,8 @@ const LiveSessionsContent = ({
             display: "flex",
             marginTop: 4,
             fontSize: 17,
-            fontWeight: 600,
-            color: "rgba(255, 255, 255, 0.72)",
+            fontWeight: 700,
+            color: "#1d4ed8",
           }}
         >
           {`${sessions.length} live ${sessions.length === 1 ? "match" : "matches"} right now`}
@@ -1889,18 +1900,14 @@ export async function GET(
     liveSessions.length > 0 ? (
       <div style={scaleWrapStyle}>
       <div style={rootStyle}>
-        <img
-          src={BACKGROUND_IMAGE_URL}
-          alt=""
-          width={1200}
-          height={630}
+        {/* Ανοιχτόχρωμο φόντο (το μπλε των ομίλων) — όχι σκοτεινή φωτογραφία. */}
+        <div
           style={{
             position: "absolute",
             inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            opacity: 0.42,
+            display: "flex",
+            background:
+              "linear-gradient(135deg, #f6faff 0%, #e4efff 42%, #dbeafe 72%, #cfe3ff 100%), radial-gradient(circle at 88% 12%, rgba(37, 99, 235, 0.16), transparent 42%)",
           }}
         />
         <div
@@ -1909,7 +1916,7 @@ export async function GET(
             inset: 0,
             display: "flex",
             background:
-              "linear-gradient(90deg, rgba(7, 17, 31, 0.97) 0%, rgba(7, 17, 31, 0.86) 46%, rgba(7, 17, 31, 0.42) 100%), radial-gradient(circle at 84% 20%, rgba(45, 212, 191, 0.26), transparent 30%)",
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(219, 234, 254, 0.36) 100%)",
           }}
         />
         <LiveSessionsContent title={title} sessions={liveSessions} />
