@@ -734,24 +734,37 @@ const LiveSessionsContent = ({
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
           width: "100%",
+          gap: 24,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <img
-            src={BRAND_LOGO_URL}
-            alt=""
-            width={150}
-            height={52}
-            style={{ width: 150, height: 52, objectFit: "contain" }}
-          />
+        <div style={{ display: "flex", flexDirection: "column", maxWidth: 790 }}>
+          <span
+            style={{
+              display: "flex",
+              fontSize: title.length > 62 ? 32 : 38,
+              lineHeight: 1.08,
+              fontWeight: 800,
+              letterSpacing: -0.6,
+              color: "#ffffff",
+              textShadow: "0 14px 34px rgba(0, 0, 0, 0.34)",
+            }}
+          >
+            {truncate(title, 104)}
+          </span>
+          <span
+            style={{
+              display: "flex",
+              marginTop: 4,
+              fontSize: 17,
+              fontWeight: 700,
+              color: "rgba(255, 255, 255, 0.72)",
+            }}
+          >
+            {`${sessions.length} live ${sessions.length === 1 ? "match" : "matches"} right now`}
+          </span>
         </div>
         <div
           style={{
@@ -787,33 +800,6 @@ const LiveSessionsContent = ({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 12 }}>
-        <span
-          style={{
-            display: "flex",
-            fontSize: title.length > 62 ? 32 : 38,
-            lineHeight: 1.08,
-            fontWeight: 800,
-            letterSpacing: -0.6,
-            color: "#ffffff",
-            textShadow: "0 14px 34px rgba(0, 0, 0, 0.34)",
-          }}
-        >
-          {truncate(title, 104)}
-        </span>
-        <span
-          style={{
-            display: "flex",
-            marginTop: 4,
-            fontSize: 17,
-            fontWeight: 700,
-            color: "rgba(255, 255, 255, 0.72)",
-          }}
-        >
-          {`${sessions.length} live ${sessions.length === 1 ? "match" : "matches"} right now`}
-        </span>
-      </div>
-
       <div
         style={{
           display: "flex",
@@ -830,6 +816,37 @@ const LiveSessionsContent = ({
             nameMax={twoColumns ? 19 : 30}
           />
         ))}
+      </div>
+
+      <div style={{ display: "flex", flex: 1 }} />
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          borderTop: "1px solid rgba(255, 255, 255, 0.18)",
+          paddingTop: 18,
+          marginTop: 14,
+        }}
+      >
+        <span
+          style={{
+            display: "flex",
+            fontSize: 24,
+            fontWeight: 700,
+            letterSpacing: 2,
+            color: "rgba(255, 255, 255, 0.6)",
+          }}
+        >
+          BILLIARD TODAY
+        </span>
+        <img
+          src={BRAND_LOGO_URL}
+          alt=""
+          width={230}
+          style={{ width: 230, objectFit: "contain", opacity: 0.95 }}
+        />
       </div>
     </div>
   );
