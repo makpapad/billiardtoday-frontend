@@ -60,11 +60,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     matchParam,
   );
 
+  const viewParam =
+    typeof resolvedSearchParams.view === "string" ? resolvedSearchParams.view : null;
+  const liveToken =
+    typeof resolvedSearchParams.t === "string" ? resolvedSearchParams.t : null;
+
   return buildTournamentShareMetadata(summary, {
     stage: stageParam,
     group: groupParam,
     match: matchParam,
     matchVersion,
+    // `?view=live` → η κάρτα δείχνει τις ανοιχτές σειρές τη στιγμή του scrape.
+    live: viewParam === "live",
+    liveToken,
   });
 }
 

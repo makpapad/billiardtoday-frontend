@@ -17,6 +17,8 @@ const TOURNAMENT_OG_IMAGE_VERSION = "jpeg-20261105";
 const TOURNAMENT_GROUP_OG_VERSION = "v11-jpeg-20261105";
 /** Bump όταν αλλάζει η σχεδίαση της κάρτας αγώνα. */
 const TOURNAMENT_MATCH_OG_VERSION = "v9-date-20261115";
+/** Σταθερό fallback version για τη live κάρτα όταν δεν δίνεται token. */
+const TOURNAMENT_LIVE_OG_VERSION = "live-20261115";
 
 export function buildTournamentShareMetadata(
   summary: TournamentEventSummary | null,
@@ -28,6 +30,14 @@ export function buildTournamentShareMetadata(
     group?: string | null;
     /** Match document id — η κάρτα του συγκεκριμένου αγώνα ως og:image. */
     match?: string | null;
+    /**
+     * Live context (`?view=live`): το og:image δείχνει τις ανοιχτές σειρές
+     * τη στιγμή του scrape. Το `liveToken` (συνήθως ώρα δημοσίευσης) κάνει το
+     * URL της κάρτας — και το og:url — μοναδικό, ώστε το Facebook να κάνει
+     * νέο scrape αντί να δείχνει παλιά προεπισκόπηση.
+     */
+    live?: boolean;
+    liveToken?: string | null;
     /**
      * Αποτύπωμα του αποτελέσματος (π.χ. «25-18»). Μπαίνει στο URL της κάρτας ώστε
      * μόλις καταχωρηθεί/αλλάξει σκορ να αλλάξει και το URL και το Facebook να
@@ -61,20 +71,26 @@ export function buildTournamentShareMetadata(
         ? `?stage=${encodeURIComponent(contextStage ?? "")}`
         : "";
   const matchContext = (options?.match ?? "").trim() || null;
+  const liveToken = (options?.liveToken ?? "").trim() || null;
+  const hasLiveContext = Boolean(options?.live) && !matchContext && !hasGroupContext;
   const shareUrl = matchContext
     ? `${path}?match=${encodeURIComponent(matchContext)}`
-    : `${path}${contextQuery}`;
+    : hasLiveContext
+      ? `${path}?view=live${liveToken ? `&t=${encodeURIComponent(liveToken)}` : ""}`
+      : `${path}${contextQuery}`;
   const ogImagePath = matchContext
     ? `/api/og/match/${encodeURIComponent(summary.documentId)}/${encodeURIComponent(matchContext)}?format=wide&v=${TOURNAMENT_MATCH_OG_VERSION}${
         options?.matchVersion
           ? `&r=${encodeURIComponent(options.matchVersion)}`
           : ""
       }`
-    : slug === LONGONI_U21_SLUG
+    : slug === LONGONI_U21_SLUG && !hasLiveContext
       ? LONGONI_U21_OG_IMAGE
-      : contextQuery
-        ? `/api/og/tournament/${encodeURIComponent(slug)}${contextQuery}&v=${TOURNAMENT_GROUP_OG_VERSION}`
-        : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
+      : hasLiveContext
+        ? `/api/og/tournament/${encodeURIComponent(slug)}?live=1${liveToken ? `&v=${encodeURIComponent(liveToken)}` : `&v=${TOURNAMENT_LIVE_OG_VERSION}`}`
+        : contextQuery
+          ? `/api/og/tournament/${encodeURIComponent(slug)}${contextQuery}&v=${TOURNAMENT_GROUP_OG_VERSION}`
+          : `/api/og/tournament/${encodeURIComponent(slug)}?v=${TOURNAMENT_OG_IMAGE_VERSION}`;
   const socialImage = buildOpenGraphImage({
     url: ogImagePath,
     width: 1200,

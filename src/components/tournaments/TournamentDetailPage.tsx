@@ -2167,6 +2167,24 @@ export function TournamentDetailPage({
     /* Deep link: ?view=live ανοίγει κατευθείαν τις ζωντανές κάρτες. */
     if (searchParams.get("view") === "live") {
       setActiveView("live");
+      /**
+       * Μοναδικό token ανά άνοιγμα (`t=ddHHMM`): το Facebook κρατά την
+       * προεπισκόπηση ανά URL, οπότε ένα φρέσκο URL = φρέσκο scrape = κάρτα με
+       * τα σκορ της στιγμής που το μοιράζεσαι. Δεν αλλάζει τη σελίδα (το `t`
+       * μόνο στο og:image / og:url χρησιμοποιείται).
+       */
+      const now = new Date();
+      const two = (value: number) => String(value).padStart(2, "0");
+      const stamp = `${two(now.getDate())}${two(now.getHours())}${two(now.getMinutes())}`;
+      const nextParams = new URLSearchParams(window.location.search);
+      if (nextParams.get("t") !== stamp) {
+        nextParams.set("t", stamp);
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}?${nextParams.toString()}`,
+        );
+      }
     }
   }, []);
 

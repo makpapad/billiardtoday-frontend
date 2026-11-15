@@ -449,6 +449,34 @@ export async function fetchScoreboardSessionRows(statuses: string[]) {
   return Array.isArray(json?.data) ? json.data : [];
 }
 
+/**
+ * Ανοιχτές (in_progress) σειρές μιας διοργάνωσης, κανονικοποιημένες όπως τις
+ * βλέπει το `/live`. Χρησιμοποιείται από την κάρτα og:image (`?live=1`).
+ */
+export async function fetchEventLiveSessions(eventId: string) {
+  if (!eventId) return [];
+  const params = new URLSearchParams();
+  params.set("eventId", eventId);
+  params.set("status", "in_progress");
+  params.set("pageSize", "100");
+  params.set("sort", "updatedAt:desc");
+
+  const response = await fetchWithTlsFallback(
+    `${API_URL}/api/scoreboard/sessions?${params.toString()}`,
+    { cache: "no-store", headers: buildHeaders() },
+  );
+
+  if (response.status === 404) return [];
+  if (!response.ok) return [];
+
+  const json = await parseJsonSafe(response);
+  const rows: UnknownRecord[] = Array.isArray(json?.data) ? json.data : [];
+  return rows
+    .map(normalizeLiveSessionRow)
+    .filter((session) => session.isPublic !== false)
+    .filter((session) => Boolean(session.state?.playerAName || session.state?.playerBName));
+}
+
 export async function fetchScoreboardSessionById(sessionId: string, token?: string | null) {
   const headers = buildHeaders();
   if (token) headers.Authorization = `Bearer ${token}`;

@@ -25,6 +25,7 @@ import type {
   NormalizedGroupMatch,
 } from "@/app/tournaments/events/types";
 import { getCountryFlagCdnUrl } from "@/lib/countryFlags";
+import { fetchEventLiveSessions } from "@/lib/liveSessions";
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -595,6 +596,229 @@ const StatsContent = ({
 
       <div style={{ display: "flex", flexDirection: "column", marginTop: 12 }}>
         <StatTable rows={rows} />
+      </div>
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Live card — οι ανοιχτές σειρές τη στιγμή του scrape (og?live=1)      */
+/* ------------------------------------------------------------------ */
+
+type LiveOgSession = Awaited<ReturnType<typeof fetchEventLiveSessions>>[number];
+
+const LiveSessionCard = ({
+  session,
+  width,
+}: {
+  session: LiveOgSession;
+  width: number;
+}) => {
+  const state = session.state ?? ({} as LiveOgSession["state"]);
+  const tableLabel = state.tableName ? `TABLE ${state.tableName}` : "LIVE TABLE";
+  const contextLabel =
+    state.groupName || state.stageName || session.clubName || "";
+
+  const row = (name: string, score: number, current: boolean) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 14,
+        marginTop: 6,
+      }}
+    >
+      <span
+        style={{
+          display: "flex",
+          fontSize: 22,
+          fontWeight: current ? 800 : 600,
+          color: current ? "#ffffff" : "rgba(255, 255, 255, 0.74)",
+          letterSpacing: -0.2,
+        }}
+      >
+        {truncate(name || "—", 26)}
+      </span>
+      <span
+        style={{
+          display: "flex",
+          fontSize: 30,
+          fontWeight: 800,
+          color: current ? "#5eead4" : "rgba(255, 255, 255, 0.82)",
+          minWidth: 46,
+          justifyContent: "flex-end",
+        }}
+      >
+        {String(score)}
+      </span>
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width,
+        padding: "12px 18px 14px",
+        borderRadius: 20,
+        background: "rgba(7, 17, 31, 0.78)",
+        border: "1px solid rgba(255, 255, 255, 0.18)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <span
+          style={{
+            display: "flex",
+            fontSize: 15,
+            fontWeight: 800,
+            letterSpacing: 1.4,
+            color: "rgba(255, 255, 255, 0.86)",
+          }}
+        >
+          {truncate(tableLabel, 22)}
+        </span>
+        {contextLabel ? (
+          <span
+            style={{
+              display: "flex",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "rgba(255, 255, 255, 0.58)",
+            }}
+          >
+            {truncate(contextLabel, 24)}
+          </span>
+        ) : null}
+      </div>
+      {row(String(state.playerAName ?? ""), Number(state.scoreA ?? 0), state.current === "A")}
+      {row(String(state.playerBName ?? ""), Number(state.scoreB ?? 0), state.current === "B")}
+    </div>
+  );
+};
+
+const LiveSessionsContent = ({
+  title,
+  sessions,
+}: {
+  title: string;
+  sessions: LiveOgSession[];
+}) => {
+  const shown = sessions.slice(0, 4);
+  const twoColumns = shown.length > 2;
+  const cardWidth = twoColumns ? 522 : 1088;
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        zIndex: 2,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "30px 56px 24px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <img
+          src={BRAND_LOGO_URL}
+          alt=""
+          width={150}
+          height={52}
+          style={{ width: 150, height: 52, objectFit: "contain" }}
+        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "9px 18px",
+            borderRadius: 999,
+            background: "rgba(220, 38, 38, 0.92)",
+            border: "1px solid rgba(255, 255, 255, 0.24)",
+          }}
+        >
+          <span
+            style={{
+              display: "flex",
+              width: 11,
+              height: 11,
+              borderRadius: 999,
+              background: "#ffffff",
+            }}
+          />
+          <span
+            style={{
+              display: "flex",
+              fontSize: 19,
+              fontWeight: 800,
+              letterSpacing: 1.6,
+              color: "#ffffff",
+            }}
+          >
+            LIVE
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
+        <span
+          style={{
+            display: "flex",
+            fontSize: title.length > 62 ? 32 : 38,
+            lineHeight: 1.08,
+            fontWeight: 800,
+            letterSpacing: -0.6,
+            color: "#ffffff",
+            textShadow: "0 14px 34px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          {truncate(title, 104)}
+        </span>
+        <span
+          style={{
+            display: "flex",
+            marginTop: 4,
+            fontSize: 17,
+            fontWeight: 600,
+            color: "rgba(255, 255, 255, 0.72)",
+          }}
+        >
+          {`${sessions.length} live ${sessions.length === 1 ? "match" : "matches"} right now`}
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 14,
+          marginTop: 16,
+        }}
+      >
+        {shown.map((session) => (
+          <LiveSessionCard
+            key={session.sessionId || session.id}
+            session={session}
+            width={cardWidth}
+          />
+        ))}
       </div>
     </div>
   );
@@ -1431,11 +1655,17 @@ export async function GET(
   const requestUrl = new URL(request.url);
   const preferredStageDocumentId = requestUrl.searchParams.get("stage");
   const groupParam = requestUrl.searchParams.get("group");
+  /**
+   * `?live=1` → κάρτα με τις ανοιχτές σειρές ΤΗ ΣΤΙΓΜΗ του scrape. Δεν περνάει
+   * από τον δίσκο-cache (15′), αλλιώς θα έδειχνε παγωμένα σκορ.
+   */
+  const liveParam = requestUrl.searchParams.get("live");
+  const wantsLive = Boolean(liveParam) && liveParam !== "0";
 
   // Serve a cached render (if any) before doing any data fetching — the 2x
   // satori render is the expensive step.
   const pngCacheKey = `${requestUrl.pathname}?${requestUrl.searchParams.toString()}`;
-  const cachedRender = readPngCache(pngCacheKey);
+  const cachedRender = wantsLive ? null : readPngCache(pngCacheKey);
   if (cachedRender) {
     return new Response(cachedRender.data, {
       headers: {
@@ -1443,6 +1673,13 @@ export async function GET(
         "Cache-Control": "public, max-age=900, s-maxage=900",
       },
     });
+  }
+
+  let liveSessions: Awaited<ReturnType<typeof fetchEventLiveSessions>> = [];
+  if (wantsLive) {
+    const liveStart = Date.now();
+    liveSessions = await fetchEventLiveSessions(summary.documentId).catch(() => []);
+    console.log("[og] live sessions:", liveSessions.length, Date.now() - liveStart, "ms");
   }
 
   let statsRows: StageCountryStatRow[] = [];
@@ -1646,7 +1883,36 @@ export async function GET(
   );
 
   const imageResponse = new ImageResponse(
-    groupStandings.length > 0 && groupStage ? (
+    liveSessions.length > 0 ? (
+      <div style={scaleWrapStyle}>
+      <div style={rootStyle}>
+        <img
+          src={BACKGROUND_IMAGE_URL}
+          alt=""
+          width={1200}
+          height={630}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.42,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            background:
+              "linear-gradient(90deg, rgba(7, 17, 31, 0.97) 0%, rgba(7, 17, 31, 0.86) 46%, rgba(7, 17, 31, 0.42) 100%), radial-gradient(circle at 84% 20%, rgba(45, 212, 191, 0.26), transparent 30%)",
+          }}
+        />
+        <LiveSessionsContent title={title} sessions={liveSessions} />
+      </div>
+      </div>
+    ) : groupStandings.length > 0 && groupStage ? (
       <div style={scaleWrapStyle}>
       <div style={rootStyle}>
         <img
@@ -1767,11 +2033,16 @@ export async function GET(
   }
   const optimized = outBuffer !== pngBuffer;
   const contentType = optimized ? "image/jpeg" : "image/png";
-  writePngCache(pngCacheKey, contentType, outBuffer);
+  if (!wantsLive) {
+    writePngCache(pngCacheKey, contentType, outBuffer);
+  }
   return new Response(outBuffer, {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=900, s-maxage=900",
+      // Η live κάρτα δεν πρέπει να «κολλήσει»: φρέσκο render ανά scrape.
+      "Cache-Control": wantsLive
+        ? "public, max-age=0, s-maxage=30, must-revalidate"
+        : "public, max-age=900, s-maxage=900",
     },
   });
 }
