@@ -1785,6 +1785,13 @@ export async function GET(
     fontFamily: "Arial, Helvetica, sans-serif",
   };
 
+  const liveRootStyle = {
+    ...rootStyle,
+    background:
+      "linear-gradient(135deg, #f7fbff 0%, #e6f0ff 40%, #dbeafe 74%, #cfe3ff 100%)",
+    color: "#0b2545",
+  };
+
   const dateLabel = buildTournamentDateRangeLabel(
     summary.startDate,
     summary.endDate,
@@ -1899,26 +1906,7 @@ export async function GET(
   const imageResponse = new ImageResponse(
     liveSessions.length > 0 ? (
       <div style={scaleWrapStyle}>
-      <div style={rootStyle}>
-        {/* Ανοιχτόχρωμο φόντο (το μπλε των ομίλων) — όχι σκοτεινή φωτογραφία. */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            background:
-              "linear-gradient(135deg, #f6faff 0%, #e4efff 42%, #dbeafe 72%, #cfe3ff 100%), radial-gradient(circle at 88% 12%, rgba(37, 99, 235, 0.16), transparent 42%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            background:
-              "linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(219, 234, 254, 0.36) 100%)",
-          }}
-        />
+      <div style={liveRootStyle}>
         <LiveSessionsContent title={title} sessions={liveSessions} />
       </div>
       </div>
