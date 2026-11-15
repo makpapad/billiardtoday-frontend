@@ -294,6 +294,23 @@ export const slugifyTeamTournamentSlug = (value: string): string =>
 // Team tournament summary
 // ---------------------------------------------------------------------------
 
+/**
+ * Γλώσσα ονομάτων αθλητών για τη διοργάνωση.
+ *
+ * `config.nameVariant` (`"international"` | `"national"`) υπεργράφει τον κανόνα του
+ * federation level — χρειάζεται όταν μια εθνική ομοσπονδία διοργανώνει πρωτάθλημα που
+ * δημοσιεύεται σε αγγλόφωνη σελίδα (π.χ. KNBB Kozoom League). Οι ελληνικές διοργανώσεις
+ * δεν στέλνουν το πεδίο, άρα μένουν στον κανόνα `nameVariantForFederationLevel`.
+ */
+const resolveNameVariant = (
+  config: Record<string, unknown>,
+  federationLevel: string | null,
+): NameVariant => {
+  const override = readString(config.nameVariant)?.toLowerCase();
+  if (override === "international" || override === "national") return override;
+  return nameVariantForFederationLevel(federationLevel);
+};
+
 const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | null => {
   const entity = flatten(raw);
   const title = readString(entity.title);
@@ -344,7 +361,7 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
             level: federationLevel,
           }
         : null,
-    nameVariant: nameVariantForFederationLevel(federationLevel),
+    nameVariant: resolveNameVariant(config, federationLevel),
   };
 };
 
