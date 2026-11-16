@@ -100,7 +100,7 @@
   .bt-desk .chip.done{background:#1b2431; color:var(--muted); border:1px solid var(--line)}
 
   /* Οι γραμμές παικτών μοιράζονται το ύψος της κάρτας (1 τραπέζι = γεμάτη οθόνη). */
-  .bt-desk .prow{display:grid; grid-template-columns:14px 1fr auto auto; align-items:center; gap:8px;
+  .bt-desk .prow{display:grid; grid-template-columns:14px 1fr auto; align-items:center; gap:8px;
         padding:8px 11px; position:relative; flex:1 1 0; min-height:0; align-content:center}
   .bt-desk .prow + .prow{border-top:1px solid #161d29}
   .bt-desk .prow.act{background:linear-gradient(90deg,#22c55e14,#22c55e00)}
@@ -120,7 +120,7 @@
            border:1px solid var(--line); border-radius:5px; padding:2px 5px}
   .bt-desk .prow.act .run{color:#86efac; border-color:#1d5c36; background:#0f2e1b}
   /* Χειριστήριο ανά παίκτη: +1 / ET πάνω στη γραμμή του. */
-  .bt-desk .pctl{display:flex; align-items:center; gap:5px}
+  .bt-desk .pctl{display:flex; align-items:center; gap:5px; margin-top:5px}
   .bt-desk .pbtn{min-width:34px; padding:6px 7px; font-family:'Bebas Neue',sans-serif; font-size:15px;
         letter-spacing:.06em; border-radius:6px; border:1px solid #334155; background:#131b25; color:#e2e8f0;
         cursor:pointer; line-height:1}

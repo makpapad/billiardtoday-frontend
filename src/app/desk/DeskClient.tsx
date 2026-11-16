@@ -959,16 +959,16 @@ export default function DeskClient() {
                     isActive ? "border-emerald-500 bg-emerald-500/10" : "border-slate-700 bg-slate-900"
                   }`}
                 >
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="block truncate text-sm font-medium">{name}</span>
+                      <span className="font-mono text-2xl font-bold">{side.points}</span>
+                    </span>
                     <span className="block text-[11px] text-slate-400">
                       Inn {side.innings} · HR {side.hr}
                     </span>
-                  </span>
-                  <span className="flex items-center gap-3 font-mono">
-                    <span className="text-2xl font-bold">{side.points}</span>
-                    {/* Χειριστήριο ανά παίκτη: +1 και ET (End Turn). */}
-                    <span className="flex items-center gap-1">
+                    {/* Χειριστήριο ανά παίκτη: +1 και ET (End Turn) — κάτω από τα στατιστικά του. */}
+                    <span className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
                         title={`+1 πόντος — ${name}`}
@@ -977,7 +977,7 @@ export default function DeskClient() {
                           e.stopPropagation();
                           addPointFor(idx);
                         }}
-                        className="min-w-[34px] rounded-lg border border-slate-600 bg-slate-800 px-2 py-2 text-sm font-bold text-slate-100 disabled:opacity-35"
+                        className="min-w-[44px] rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm font-bold text-slate-100 disabled:opacity-35"
                       >
                         +1
                       </button>
@@ -989,7 +989,7 @@ export default function DeskClient() {
                           e.stopPropagation();
                           endTurnFor(idx);
                         }}
-                        className="min-w-[34px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-2 py-2 text-sm font-bold text-emerald-300 disabled:opacity-35"
+                        className="min-w-[44px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-3 py-2 text-sm font-bold text-emerald-300 disabled:opacity-35"
                       >
                         ET
                       </button>

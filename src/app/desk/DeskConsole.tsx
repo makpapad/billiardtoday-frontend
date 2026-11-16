@@ -942,7 +942,15 @@ export default function DeskConsole({
       }
       stopLive(table);
       pushLog(`T${no} · αγώνας βγήκε από το τραπέζι`);
-      setTables((prev) => prev.map((t) => (t.no === no ? emptyTable(no) : t)));
+      /*
+       * Φεύγει ΚΑΙ το κουτί, όχι μόνο ο αγώνας μέσα του. Αν είναι το τελευταίο
+       * τραπέζι, μένει ένα άδειο κουτί — αλλιώς η κονσόλα θα έμενε κενή.
+       */
+      setTables((prev) => {
+        const rest = prev.filter((t) => t.no !== no);
+        return rest.length > 0 ? rest : [emptyTable(no)];
+      });
+      setSelected((prev) => (prev === no ? (tables.find((t) => t.no !== no)?.no ?? no) : prev));
       void loadMatches();
     },
     [tables, token, stopLive, pushLog, loadMatches],
@@ -1148,39 +1156,39 @@ export default function DeskConsole({
                               <span>HR</span>
                             </div>
                           </div>
+                          {/* Χειριστήριο ανά παίκτη: +1 και ET (End Turn) — κάτω από τα στατιστικά του. */}
+                          <div className="pctl">
+                            <button
+                              type="button"
+                              className="pbtn"
+                              title={`+1 πόντος — ${name}`}
+                              disabled={Boolean(table.finished) || Boolean(table.locked)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addPointFor(table.no, idx);
+                              }}
+                            >
+                              +1
+                            </button>
+                            <button
+                              type="button"
+                              className="pbtn et"
+                              title={`ET — τέλος στεκιάς ${name}`}
+                              disabled={Boolean(table.finished) || Boolean(table.locked)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                endTurnFor(table.no, idx);
+                              }}
+                            >
+                              ET
+                            </button>
+                          </div>
                         </div>
                         <div className="sc">
                           <span className="pts">{side.points}</span>
                           <span className="run">
                             {table.active === idx && !table.finished ? pendingRun(table) : side.run}
                           </span>
-                        </div>
-                        {/* Χειριστήριο ανά παίκτη: +1 πόντος και ET (End Turn) — χωρίς να αλλάζεις σειρά πρώτα. */}
-                        <div className="pctl">
-                          <button
-                            type="button"
-                            className="pbtn"
-                            title={`+1 πόντος — ${name}`}
-                            disabled={Boolean(table.finished) || Boolean(table.locked)}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addPointFor(table.no, idx);
-                            }}
-                          >
-                            +1
-                          </button>
-                          <button
-                            type="button"
-                            className="pbtn et"
-                            title={`ET — τέλος στεκιάς ${name}`}
-                            disabled={Boolean(table.finished) || Boolean(table.locked)}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              endTurnFor(table.no, idx);
-                            }}
-                          >
-                            ET
-                          </button>
                         </div>
                       </div>
                     );
