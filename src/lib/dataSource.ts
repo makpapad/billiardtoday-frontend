@@ -35,3 +35,36 @@ export const dataSourceCreditFor = (
   identity: { slug?: string | null; documentId?: string | null } | null | undefined,
 ): DataSourceCredit | null =>
   isEoaaFederation(identity) ? THREE_CUSHION_GR_CREDIT : null;
+
+/**
+ * Ένδειξη πηγής από τον **επίσημο ιστότοπο της ίδιας της ομοσπονδίας** (π.χ. `billard-union.net`
+ * για τη DBU, `fpbilhar.pt` για την FPB). Χρησιμοποιείται στα ομαδικά, όπου τα αποτελέσματα
+ * συλλέγονται από τη σελίδα του διοργανωτή.
+ *
+ * Η ΕΟΑΑ κρατά το `3Cushion.gr` (από εκεί έρχονται τα δεδομένα της, όχι από το eoaa.org.gr).
+ */
+export const federationWebsiteCredit = (
+  federation:
+    | {
+        slug?: string | null;
+        documentId?: string | null;
+        website?: string | null;
+      }
+    | null
+    | undefined,
+): DataSourceCredit | null => {
+  const eoaa = dataSourceCreditFor(federation ?? null);
+  if (eoaa) return eoaa;
+
+  const website = String(federation?.website ?? "").trim();
+  if (!website) return null;
+
+  try {
+    const url = new URL(website);
+    const host = url.hostname.replace(/^www\./i, "");
+    if (!host) return null;
+    return { label: host, href: website };
+  } catch {
+    return null;
+  }
+};

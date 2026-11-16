@@ -30,6 +30,8 @@ export type TeamTournamentFederation = {
   level: string | null;
   /** Χώρα της ομοσπονδίας (`Greece`, `Netherlands`…) — κρίνει και τη γλώσσα των ετικετών. */
   country: string | null;
+  /** Επίσημος ιστότοπος της ομοσπονδίας — η ένδειξη «Source …» κάτω από τα αποτελέσματα. */
+  website: string | null;
 };
 
 export type TeamTournamentSummary = {
@@ -397,6 +399,7 @@ const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | n
             logoUrl: readString(federationLogo.url),
             level: federationLevel,
             country: federationCountry,
+            website: readString(federation.website) || null,
           }
         : null,
     nameVariant: resolveNameVariant(config, federationLevel),
@@ -411,6 +414,7 @@ export const fetchTeamTournaments = async (): Promise<TeamTournamentSummary[]> =
   params.append("populate[federation][fields][2]", "slug");
   params.append("populate[federation][fields][3]", "documentId");
   params.append("populate[federation][fields][4]", "country");
+  params.append("populate[federation][fields][5]", "website");
   params.append("populate[federation][populate][logo][fields][0]", "url");
   params.set("pagination[pageSize]", "100");
   params.set("sort[0]", "title:asc");
@@ -471,6 +475,7 @@ const FEDERATION_SUMMARY_PARAMS = [
   "populate[federation][fields][2]=slug",
   "populate[federation][fields][3]=documentId",
   "populate[federation][fields][4]=country",
+  "populate[federation][fields][5]=website",
   "populate[federation][populate][logo][fields][0]=url",
 ].join("&");
 

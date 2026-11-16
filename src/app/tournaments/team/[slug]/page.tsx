@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamTournamentDetailClient } from "@/components/teamTournaments/TeamTournamentDetailClient";
+import { TeamTournamentDataNote } from "@/components/teamTournaments/TeamTournamentDataNote";
 import { TeamTournamentSeoSection } from "@/components/public/TeamTournamentSeoSection";
+import { federationWebsiteCredit } from "@/lib/dataSource";
 import {
   buildTeamTournamentSlug,
   fetchTeamTournamentDetail,
@@ -59,6 +61,15 @@ export default async function TeamTournamentPage({ params }: Props) {
         canonicalSlug={canonicalSlug}
         slugIsCanonical={isCanonical}
       />
+      {/* Σημείωση μεθοδολογίας: κάτω από τα αποτελέσματα, πάνω από το SEO block. */}
+      <div className="px-4 pb-2">
+        <div className="mx-auto max-w-6xl">
+          <TeamTournamentDataNote
+            source={federationWebsiteCredit(detail?.summary?.federation ?? summary.federation)}
+            locale={detail?.summary?.labelLocale ?? summary.labelLocale}
+          />
+        </div>
+      </div>
       {/* Server-rendered ομάδες/ρόστερ: το tabbed UI δεν έβγαζε αθλητές στο HTML. */}
       {detail ? <TeamTournamentSeoSection detail={detail} /> : null}
     </>
