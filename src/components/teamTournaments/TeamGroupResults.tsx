@@ -221,7 +221,7 @@ export function GroupStandingsPanel({
       <div className="min-h-0 overflow-x-auto lg:flex-1 lg:overflow-y-auto">
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-slate-50">
+            <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:whitespace-nowrap [&>th]:bg-slate-50">
               <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
               <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
               <th title={labels.tipMatches} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayedShort}</th>
@@ -602,7 +602,7 @@ export function TeamGroupResults({
   }, [activeMatchKey, teamIdsByKey]);
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)]">
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)]">
       <div ref={listRef} className="flex min-w-0 flex-col gap-3.5">
         {rounds.length > 0 ? (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5">
