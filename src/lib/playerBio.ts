@@ -7,31 +7,47 @@
  */
 import type { PublicPlayerProfileSummary, PublicPlayerGameStats } from "@/lib/publicSiteData";
 import type { PlayerHistoryParticipation } from "@/lib/playerHistoryServer";
+import { getCountryLabel } from "@/lib/countryFlags";
+
+/** «1st» / «1» / «3rd» → 1 / 2 / 3· ό,τι άλλο (4th, 10th, «Disqualified») → null. */
+function parsePlacement(position: string | null): 1 | 2 | 3 | null {
+  if (!position) return null;
+  const digits = position.match(/\d+/)?.[0];
+  if (!digits) return null;
+  const value = Number.parseInt(digits, 10);
+  return value === 1 || value === 2 || value === 3 ? (value as 1 | 2 | 3) : null;
+}
+
+/** Ο τίτλος συχνά περιέχει ήδη τη χρονιά («… Lier 2026») — μη τη γράφουμε δύο φορές. */
+function labelWithYear(tournament: string, year: number | null): string {
+  if (!year) return tournament;
+  return tournament.includes(String(year)) ? tournament : `${tournament} (${year})`;
+}
 
 function formatPositions(items: PlayerHistoryParticipation[]): string {
   const tops = items
-    .filter((item) => item.position && /^[1-3]$/.test(item.position.replace(/\D/g, "")))
     .map((item) => ({
-      position: item.position,
+      place: parsePlacement(item.position),
       tournament: item.tournament,
       year: item.year,
     }))
+    .filter((entry): entry is { place: 1 | 2 | 3; tournament: string; year: number | null } =>
+      entry.place !== null,
+    )
     .slice(0, 5);
 
   if (tops.length === 0) return "";
 
   if (tops.length === 1) {
-    const place = tops[0]!.position;
-    const verb =
-      place === "1" ? "winner" : place === "2" ? "runner-up" : "3rd place";
-    return `His best tournament result was ${verb} at ${tops[0]!.tournament}${tops[0]!.year ? ` (${tops[0]!.year})` : ""}.`;
+    const { place, tournament, year } = tops[0]!;
+    const noun = place === 1 ? "winner" : place === 2 ? "runner-up" : "third";
+    return `His best tournament result was ${noun} at ${labelWithYear(tournament, year)}.`;
   }
 
-  const parts = tops.map((t) => {
-    const place = t.position;
+  const parts = tops.map(({ place, tournament, year }) => {
     const verb =
-      place === "1" ? "won" : place === "2" ? "was runner-up at" : "placed 3rd at";
-    return `${verb} ${t.tournament}${t.year ? ` (${t.year})` : ""}`;
+      place === 1 ? "won" : place === 2 ? "was runner-up at" : "placed third at";
+    return `${verb} ${labelWithYear(tournament, year)}`;
   });
 
   const allParts = parts;
@@ -60,7 +76,9 @@ export function buildPlayerBio(
   const sentences: string[] = [];
 
   // 1. Ταυτότητα
-  const location = [city, country].filter(Boolean).join(", ");
+  // Η χώρα έρχεται ως κωδικός ISO («KR») — στο κείμενο θέλουμε «South Korea».
+  const countryName = country ? (getCountryLabel(country) ?? country) : null;
+  const location = [city, countryName].filter(Boolean).join(", ");
   const origin = location ? ` from ${location}` : "";
   // Αν η χώρα είναι όνομα (π.χ. "Sweden", "Italy") αντί για επίθετο ("Swedish", "Italian"),
   // ή κωδικός ISO (π.χ. "GR", "NL"), μετατρέπουμε.
