@@ -816,6 +816,30 @@ export default function DeskConsole({
     [pushScore, pushLog],
   );
 
+  /** −1 από το σερί του παίκτη που πατήθηκε (ο σκορ δεν αγγίζεται). */
+  const removePointFor = useCallback(
+    (no: number, index: 0 | 1) => {
+      const table = tablesRef.current.find((t) => t.no === no);
+      if (!table?.sessionId || table.finished || table.locked) return;
+      const key = index === 0 ? "p1" : "p2";
+      const side = table[key];
+      const typed = Math.max(0, Math.trunc(Number(table.buffer) || 0));
+      const base = table.buffer !== "" ? typed : side.run;
+      const next = withHistory({
+        ...table,
+        active: index,
+        [key]: { ...side, run: Math.max(0, base - 1) },
+        buffer: "",
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushLog(
+        `T${no} · −1 ${(index === 0 ? table.match?.player1 : table.match?.player2) || `Player ${index + 1}`}`,
+      );
+      pushScore(next);
+    },
+    [pushScore, pushLog],
+  );
+
   /** ET (End Turn) του παίκτη που πατήθηκε: κλείνει τη στεκιά του και αλλάζει σειρά. */
   const endTurnFor = useCallback(
     (no: number, index: 0 | 1) => {
@@ -848,8 +872,13 @@ export default function DeskConsole({
         player1Country: current.match.player2Country ?? null,
         player2Country: current.match.player1Country ?? null,
       },
-      p1: current.p2,
-      p2: current.p1,
+      /*
+       * Το σκορ/HR/φύλλο ακολουθούν τον παίκτη, αλλά το ΣΕΡΙ και η ΣΤΕΚΙΑ μένουν
+       * στη θέση τους: όποιος ξεκινά πρώτος κρατά `innings = 1` και το σερί που
+       * γράφεται τώρα δεν μετακομίζει στον άλλο με ένα swap.
+       */
+      p1: { ...current.p2, run: current.p1.run, innings: current.p1.innings },
+      p2: { ...current.p1, run: current.p2.run, innings: current.p2.innings },
       sides: [current.sides[1], current.sides[0]] as [1 | 2, 1 | 2],
       active: (current.active === 0 ? 1 : 0) as 0 | 1,
       detail: current.detail.map((row) => ({
@@ -1201,6 +1230,18 @@ export default function DeskConsole({
                             <button
                               type="button"
                               className="pbtn"
+                              title={`−1 από το σερί — ${name}`}
+                              disabled={Boolean(table.finished) || Boolean(table.locked)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removePointFor(table.no, idx);
+                              }}
+                            >
+                              −1
+                            </button>
+                            <button
+                              type="button"
+                              className="pbtn"
                               title={`+1 πόντος — ${name}`}
                               disabled={Boolean(table.finished) || Boolean(table.locked)}
                               onClick={(e) => {
@@ -1210,18 +1251,20 @@ export default function DeskConsole({
                             >
                               +1
                             </button>
-                            <button
-                              type="button"
-                              className="pbtn et"
-                              title={`ET — τέλος στεκιάς ${name}`}
-                              disabled={Boolean(table.finished) || Boolean(table.locked)}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                endTurnFor(table.no, idx);
-                              }}
-                            >
-                              ET
-                            </button>
+                            {table.active === idx && !table.finished ? (
+                              <button
+                                type="button"
+                                className="pbtn et"
+                                title={`ET — τέλος στεκιάς ${name}`}
+                                disabled={Boolean(table.locked)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  endTurnFor(table.no, idx);
+                                }}
+                              >
+                                ET
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                         <div className="sc">

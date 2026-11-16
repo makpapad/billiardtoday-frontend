@@ -680,8 +680,12 @@ export default function DeskClient() {
     const next: TableState = {
       ...table,
       names: [table.names[1], table.names[0]],
-      p1: table.p2,
-      p2: table.p1,
+      /*
+       * Σκορ/HR/φύλλο ακολουθούν τον παίκτη· το ΣΕΡΙ και η ΣΤΕΚΙΑ μένουν στη θέση
+       * τους (ο πρώτος κρατά `innings = 1` και το σερί δεν μετακομίζει με το swap).
+       */
+      p1: { ...table.p2, run: table.p1.run, innings: table.p1.innings },
+      p2: { ...table.p1, run: table.p2.run, innings: table.p2.innings },
       sides: [table.sides[1], table.sides[0]],
       active: table.active === 0 ? 1 : 0,
       detail: table.detail.map((row) => ({
@@ -813,6 +817,26 @@ export default function DeskClient() {
         ...table,
         active: index,
         [key]: { ...side, run: side.run + 1 },
+        buffer: "",
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushScore(next);
+    },
+    [table, pushScore, withHistory],
+  );
+
+  /** −1 από το σερί του παίκτη (ο σκορ δεν αγγίζεται). */
+  const removePointFor = useCallback(
+    (index: 0 | 1) => {
+      if (!table || table.finished) return;
+      const key = index === 0 ? "p1" : "p2";
+      const side = table[key];
+      const typed = Math.max(0, Math.trunc(Number(table.buffer) || 0));
+      const base = table.buffer !== "" ? typed : side.run;
+      const next = withHistory({
+        ...table,
+        active: index,
+        [key]: { ...side, run: Math.max(0, base - 1) },
         buffer: "",
         tools: resetClockAfterPoint(table.tools),
       });
@@ -971,6 +995,18 @@ export default function DeskClient() {
                     <span className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
+                        title={`−1 από το σερί — ${name}`}
+                        disabled={Boolean(table.finished)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removePointFor(idx);
+                        }}
+                        className="min-w-[44px] rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm font-bold text-slate-100 disabled:opacity-35"
+                      >
+                        −1
+                      </button>
+                      <button
+                        type="button"
                         title={`+1 πόντος — ${name}`}
                         disabled={Boolean(table.finished)}
                         onClick={(e) => {
@@ -981,18 +1017,19 @@ export default function DeskClient() {
                       >
                         +1
                       </button>
-                      <button
-                        type="button"
-                        title={`ET — τέλος στεκιάς ${name}`}
-                        disabled={Boolean(table.finished)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          endTurnFor(idx);
-                        }}
-                        className="min-w-[44px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-3 py-2 text-sm font-bold text-emerald-300 disabled:opacity-35"
-                      >
-                        ET
-                      </button>
+                      {table.active === idx && !table.finished ? (
+                        <button
+                          type="button"
+                          title={`ET — τέλος στεκιάς ${name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            endTurnFor(idx);
+                          }}
+                          className="min-w-[44px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-3 py-2 text-sm font-bold text-emerald-300"
+                        >
+                          ET
+                        </button>
+                      ) : null}
                     </span>
                   </span>
                 </div>
