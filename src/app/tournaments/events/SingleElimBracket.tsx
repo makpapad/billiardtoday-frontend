@@ -489,6 +489,9 @@ export default function SingleElimBracket({
                                     flexDirection: 'column',
                                     gap: 3,
                                     minWidth: 0,
+                                    flex: 1,
+                                    alignItems: 'center',
+                                    textAlign: 'center',
                                 }}
                             >
                                 {brandTitle ? (
@@ -497,7 +500,7 @@ export default function SingleElimBracket({
                                             fontSize: 20,
                                             fontWeight: 700,
                                             letterSpacing: '0.04em',
-                                            textTransform: 'uppercase',
+                                            fontVariantCaps: 'small-caps',
                                             lineHeight: '22px',
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
