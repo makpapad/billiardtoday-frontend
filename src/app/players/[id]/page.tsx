@@ -4,9 +4,11 @@ import { PlayerInstantSummary } from "./PlayerInstantSummary";
 import { CebPlayerRankingCard } from "@/components/public/CebPlayerRankingCard";
 import { UmbPlayerRankingCard } from "@/components/public/UmbPlayerRankingCard";
 import { PlayerArchiveSection } from "@/components/public/PlayerArchiveSection";
+import { PlayerTeamArchiveSection } from "@/components/public/PlayerTeamArchiveSection";
 import { readCebPlayerRankings } from "@/lib/cebRankingData";
 import { readUmbPlayerRanking } from "@/lib/umbRankingData";
 import { getPlayerHistoryForServer } from "@/lib/playerHistoryServer";
+import { getPlayerTeamHistoryForServer } from "@/lib/playerTeamHistoryServer";
 import { getPublicPlayerProfileSummary } from "@/lib/publicSiteData";
 import { buildPlayerBio } from "@/lib/playerBio";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/socialMetadata";
@@ -92,6 +94,12 @@ export default async function PlayerProfilePage({ params }: Props) {
   // Server-rendered αρχείο αγώνων: το ιστορικό φόρτωνε μόνο client-side, άρα το
   // HTML είχε ~1.500 χαρακτήρες και τίποτα από αγώνες/αντιπάλους/σκορ.
   const history = await getPlayerHistoryForServer(id, 200);
+  // Ομαδικό ιστορικό: ΜΟΝΟ όταν λείπει το ατομικό. Οι αθλητές που αγωνίζονται
+  // αποκλειστικά σε ομαδικά πρωταθλήματα έβγαιναν με ~119 λέξεις και το
+  // «Loading detailed tournament history…» — κενή σελίδα για τη Google.
+  const teamHistory =
+    !history || history.items.length === 0 ? await getPlayerTeamHistoryForServer(id) : null;
+  const teamMatches = teamHistory?.matches ?? [];
 
   return (
     <>
@@ -132,6 +140,9 @@ export default async function PlayerProfilePage({ params }: Props) {
           totalCount={history.totalCount}
           playerLabel={summary?.seoName ?? "Player"}
         />
+      ) : null}
+      {teamMatches.length > 0 ? (
+        <PlayerTeamArchiveSection matches={teamMatches} playerLabel={summary?.seoName ?? "Player"} />
       ) : null}
       <PlayerProfileClient hasServerSummary={Boolean(summary)} />
     </>
