@@ -956,6 +956,20 @@ export default function DeskConsole({
     [tables, token, stopLive, pushLog, loadMatches],
   );
 
+  /** Αφαίρεση ΚΕΝΟΥ κουτιού από το πλέγμα (όσα κι αν είναι — δεν υπάρχει όριο). */
+  const removeTable = useCallback(
+    (no: number) => {
+      setTables((prev) => {
+        const rest = prev.filter((t) => t.no !== no);
+        return rest.length > 0 ? rest : [emptyTable(no)];
+      });
+      setSelected((prev) =>
+        prev === no ? (tables.find((t) => t.no !== no)?.no ?? no) : prev,
+      );
+    },
+    [tables],
+  );
+
   /** Αφήνει το τραπέζι όπως είναι (μετά το end game) — μόνο τοπικό καθάρισμα. */
   const closeTable = useCallback(
     async (no: number) => {
@@ -1129,6 +1143,20 @@ export default function DeskConsole({
                     <div className="chead-main">
                       <span className="tno">TABLE {table.no}</span>
                       <span className="cmeta">{matchTitle(table.match)}</span>
+                      {/* Κενό κουτί: φεύγει με ένα × (όσα κουτιά κι αν έχουν μπει). */}
+                      {table.match ? null : (
+                        <button
+                          type="button"
+                          className="rmtable"
+                          title={`Αφαίρεση κουτιού ${table.no}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeTable(table.no);
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                     <div className="chead-sub">
                       <span className="sid">
@@ -1246,7 +1274,7 @@ export default function DeskConsole({
                     <button type="button" className="save" onClick={(e) => { e.stopPropagation(); setSelected(table.no); endGame(); }}>
                       {table.finished ? "Κλειστό" : "End game"}
                     </button>
-                    {table.finished ? null : (
+                    {table.finished || !table.match ? null : (
                       /* «Βγάλε» = σβήνει το session: το box κλείνει, ο αγώνας ξαναγυρνά στη λίστα. */
                       <button
                         type="button"

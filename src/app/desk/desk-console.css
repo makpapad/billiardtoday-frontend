@@ -81,6 +81,11 @@
   .bt-desk .card.sel{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 8px 26px -14px #22c55e88}
   .bt-desk .chead{display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:7px 11px; border-bottom:1px solid var(--line); background:var(--panel2)}
   .bt-desk .chead-main{display:flex; align-items:center; gap:8px}
+  /* × για αφαίρεση κενού κουτιού — μικρό, δεξιά, χωρίς να πιάνει χώρο από τον τίτλο. */
+  .bt-desk .rmtable{margin-left:auto; flex:0 0 auto; width:20px; height:20px; display:grid; place-items:center;
+        border-radius:5px; border:1px solid #33415533; background:transparent; color:#64748b;
+        font-size:15px; line-height:1; cursor:pointer}
+  .bt-desk .rmtable:hover{color:#f87171; border-color:#7f1d1d; background:#1f1216}
   .bt-desk .chead-sub{display:flex; align-items:center; gap:7px; font-size:9.5px; color:var(--muted); letter-spacing:.04em}
   .bt-desk .sid{display:inline-flex; align-items:center; gap:5px; font-family:ui-monospace,monospace; font-size:9.5px}
   .bt-desk .dotg{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px #22c55e22}
