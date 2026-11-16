@@ -287,16 +287,25 @@ export default function DeskClient() {
   }, [token]);
 
   /* --- αγώνες του stage --- */
-  useEffect(() => {
-    if (!stageId) {
+  const loadMatches = useCallback(async () => {
+    if (!stageId || !token) {
       setMatches([]);
       return;
     }
-    if (!token) return;
-    api<{ data: Match[] }>(`/api/desk/matches?stageId=${encodeURIComponent(stageId)}`, token)
-      .then((res) => setMatches(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => setMatches([]));
+    try {
+      const res = await api<{ data: Match[] }>(
+        `/api/desk/matches?stageId=${encodeURIComponent(stageId)}`,
+        token,
+      );
+      setMatches(Array.isArray(res?.data) ? res.data : []);
+    } catch {
+      setMatches([]);
+    }
   }, [stageId, token]);
+
+  useEffect(() => {
+    void loadMatches();
+  }, [loadMatches]);
 
   const numberedMatches = useMemo(() => {
     const counters = new Map<number, number>();
@@ -449,9 +458,13 @@ export default function DeskClient() {
       const raw = window.localStorage.getItem(TABLES_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as { tables?: TableState[]; activeId?: string | null };
-      if (Array.isArray(parsed?.tables) && parsed.tables.length > 0) {
+      /* Τελειωμένος αγώνας δεν ξαναζωντανεύει μετά από reload (το End game τον καθάρισε). */
+      const savedTables = Array.isArray(parsed?.tables)
+        ? parsed.tables.filter((row) => !row?.finished)
+        : [];
+      if (savedTables.length > 0) {
         setTables(
-          parsed.tables.map((row) => ({
+          savedTables.map((row) => ({
             ...row,
             saving: false,
             buffer: "",
@@ -459,13 +472,14 @@ export default function DeskClient() {
             tools: { ...emptyDeskTools, ...(row?.tools ?? {}) },
           })),
         );
-        setActiveId(parsed.activeId || parsed.tables[0].id);
-        setTableNo(Math.max(...parsed.tables.map((row) => Number(row.tableNo) || 1)) + 1);
+        const keepActive = savedTables.some((row) => row.id === parsed.activeId);
+        setActiveId(keepActive ? (parsed.activeId as string) : savedTables[0].id);
+        setTableNo(Math.max(...savedTables.map((row) => Number(row.tableNo) || 1)) + 1);
         /*
          * Το τραπέζι ισχύει μόνο όσο υπάρχει η session· αν σβήστηκε στο μεταξύ
          * (καθάρισμα από το admin) φεύγει, αλλιώς ο αγώνας δεν ξαναμπαίνει.
          */
-        parsed.tables
+        savedTables
           .filter((row) => row?.sessionId)
           .forEach((row) => {
             void api(`/api/desk/tables/${encodeURIComponent(String(row.sessionId))}/claim`, token, {
@@ -513,8 +527,8 @@ export default function DeskClient() {
         : 0,
       timeoutsUsed: [next.tools.timeoutsA, next.tools.timeoutsB],
       maxTimeouts: [
-        next.tools.timeoutsVisible ? next.tools.timeoutsMax : 0,
-        next.tools.timeoutsVisible ? next.tools.timeoutsMax : 0,
+        next.tools.timeoutsVisible ? next.tools.timeoutsMaxA : 0,
+        next.tools.timeoutsVisible ? next.tools.timeoutsMaxB : 0,
       ],
     });
   }, []);
@@ -621,6 +635,12 @@ export default function DeskClient() {
               finish,
             }),
           });
+          if (finish) {
+            /* Ο αγώνας έκλεισε: το τραπέζι φεύγει από τη λίστα, έτοιμο για τον επόμενο. */
+            setTable(null);
+            setActiveId(null);
+            return;
+          }
           setTable((prev) => (prev ? { ...prev, saving: false, error: null } : prev));
         } catch (err) {
           const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
@@ -637,7 +657,7 @@ export default function DeskClient() {
         }
       }, 250);
     },
-    [token, publishLive, table?.locked],
+    [token, publishLive, table?.locked, setTable],
   );
 
   const undo = useCallback(() => {
@@ -669,6 +689,14 @@ export default function DeskClient() {
         player1: row.player2,
         player2: row.player1,
       })),
+      /* Τα timeouts ανήκουν στον ΠΑΙΚΤΗ: με το swap αλλάζουν πλευρά μαζί του. */
+      tools: {
+        ...table.tools,
+        timeoutsA: table.tools.timeoutsB,
+        timeoutsB: table.tools.timeoutsA,
+        timeoutsMaxA: table.tools.timeoutsMaxB,
+        timeoutsMaxB: table.tools.timeoutsMaxA,
+      },
       buffer: "",
     };
     pushScore(withHistory(next));
@@ -763,7 +791,82 @@ export default function DeskClient() {
     if (!table || table.finished) return;
     const next: TableState = equalizeInnings({ ...table, finished: true, buffer: "" });
     pushScore(next, true);
+    /* Το παιχνίδι φεύγει από το Live αμέσως — το session μένει ως ιστορικό. */
+    live.current?.stop({
+      screenId: next.screenIdentifier,
+      sessionId: next.sessionId,
+      names: [next.names[0] || "Player A", next.names[1] || "Player B"],
+      points: [next.p1.points, next.p2.points],
+      innings: [next.p1.innings, next.p2.innings],
+      highRuns: [next.p1.hr, next.p2.hr],
+      active: next.active,
+    });
   }, [table, pushScore]);
+
+  /** +1 στον παίκτη που πατήθηκε — γίνεται ενεργός μαζί (χειριστήριο στη γραμμή του). */
+  const addPointFor = useCallback(
+    (index: 0 | 1) => {
+      if (!table || table.finished) return;
+      const key = index === 0 ? "p1" : "p2";
+      const side = table[key];
+      const next = withHistory({
+        ...table,
+        active: index,
+        [key]: { ...side, run: side.run + 1 },
+        buffer: "",
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushScore(next);
+    },
+    [table, pushScore, withHistory],
+  );
+
+  /** ET (End Turn) του παίκτη που πατήθηκε: κλείνει η στεκιά του και αλλάζει σειρά. */
+  const endTurnFor = useCallback(
+    (index: 0 | 1) => {
+      if (!table || table.finished) return;
+      const run =
+        index === table.active ? pendingRun(table) : index === 0 ? table.p1.run : table.p2.run;
+      const base: TableState = { ...table, active: index };
+      const next = withHistory({
+        ...closeTurn(base, run),
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushScore(next);
+    },
+    [table, pushScore, withHistory, closeTurn, pendingRun],
+  );
+
+  /**
+   * «Βγάλε»: σβήνει το session — το τραπέζι κλείνει και ο αγώνας ξαναγυρνά στη
+   * λίστα. Το παλιό «Άφησε» έκανε μόνο release και άφηνε τον αγώνα «ανοιχτό».
+   */
+  const removeMatch = useCallback(async () => {
+    if (!table || !token) return;
+    const removedId = table.sessionId;
+    try {
+      await api(`/api/desk/tables/${encodeURIComponent(removedId)}/cancel`, token, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ο αγώνας δεν αφαιρέθηκε");
+      return;
+    }
+    live.current?.stop({
+      screenId: table.screenIdentifier,
+      sessionId: removedId,
+      names: [table.names[0] || "Player A", table.names[1] || "Player B"],
+      points: [table.p1.points, table.p2.points],
+      innings: [table.p1.innings, table.p2.innings],
+      highRuns: [table.p1.hr, table.p2.hr],
+      active: table.active,
+    });
+    const rest = tables.filter((row) => row.id !== removedId);
+    setTable(null);
+    setActiveId(rest.length > 0 ? rest[0].id : null);
+    void loadMatches();
+  }, [table, tables, token, loadMatches, setTable]);
 
   const closeTable = useCallback(async () => {
     if (!table || !token) return;
@@ -847,22 +950,52 @@ export default function DeskClient() {
               const name = table.names[idx] || (idx === 0 ? "Παίκτης 1" : "Παίκτης 2");
               const isActive = table.active === idx;
               return (
-                <button
+                <div
                   key={idx}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setTable({ ...table, active: idx })}
-                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-3 text-left ${
                     isActive ? "border-emerald-500 bg-emerald-500/10" : "border-slate-700 bg-slate-900"
                   }`}
                 >
-                  <span className="text-sm font-medium">{name}</span>
-                  <span className="flex items-baseline gap-3 font-mono">
-                    <span className="text-2xl font-bold">{side.points}</span>
-                    <span className="text-[11px] text-slate-400">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{name}</span>
+                    <span className="block text-[11px] text-slate-400">
                       Inn {side.innings} · HR {side.hr}
                     </span>
                   </span>
-                </button>
+                  <span className="flex items-center gap-3 font-mono">
+                    <span className="text-2xl font-bold">{side.points}</span>
+                    {/* Χειριστήριο ανά παίκτη: +1 και ET (End Turn). */}
+                    <span className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        title={`+1 πόντος — ${name}`}
+                        disabled={Boolean(table.finished)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addPointFor(idx);
+                        }}
+                        className="min-w-[34px] rounded-lg border border-slate-600 bg-slate-800 px-2 py-2 text-sm font-bold text-slate-100 disabled:opacity-35"
+                      >
+                        +1
+                      </button>
+                      <button
+                        type="button"
+                        title={`ET — τέλος στεκιάς ${name}`}
+                        disabled={Boolean(table.finished)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          endTurnFor(idx);
+                        }}
+                        className="min-w-[34px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-2 py-2 text-sm font-bold text-emerald-300 disabled:opacity-35"
+                      >
+                        ET
+                      </button>
+                    </span>
+                  </span>
+                </div>
               );
             })}
           </div>
@@ -963,8 +1096,12 @@ export default function DeskClient() {
 
           <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
             <span>{table.saving ? "Αποστολή…" : table.error ? table.error : "Συγχρονισμένο"}</span>
-            <button type="button" onClick={() => void closeTable()} className="underline">
-              {table.finished ? "Κλείσιμο τραπεζιού" : "Άφησε το τραπέζι"}
+            <button
+              type="button"
+              onClick={() => (table.finished ? void closeTable() : void removeMatch())}
+              className="underline"
+            >
+              {table.finished ? "Κλείσιμο τραπεζιού" : "Βγάλε το παιχνίδι"}
             </button>
           </div>
         </div>

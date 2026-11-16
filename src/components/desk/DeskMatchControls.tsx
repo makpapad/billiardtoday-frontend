@@ -15,7 +15,9 @@ export type DeskToolsValue = {
   timeoutsVisible: boolean;
   timeoutsA: number;
   timeoutsB: number;
-  timeoutsMax: number;
+  /** Πόσα δικαιούται ο κάθε παίκτης — ρυθμίζονται ΑΝΕΞΑΡΤΗΤΑ με +/−. */
+  timeoutsMaxA: number;
+  timeoutsMaxB: number;
 };
 
 export const emptyDeskTools: DeskToolsValue = {
@@ -26,7 +28,8 @@ export const emptyDeskTools: DeskToolsValue = {
   timeoutsVisible: false,
   timeoutsA: 0,
   timeoutsB: 0,
-  timeoutsMax: 3,
+  timeoutsMaxA: 3,
+  timeoutsMaxB: 3,
 };
 
 type Props = {
@@ -46,7 +49,8 @@ export function tickTools(tools: DeskToolsValue, active: 0 | 1): DeskToolsValue 
   if (remaining > 0) return { ...tools, clockRemaining: remaining };
   const key = active === 0 ? "timeoutsA" : "timeoutsB";
   const used = active === 0 ? tools.timeoutsA : tools.timeoutsB;
-  if (used < tools.timeoutsMax) {
+  const max = active === 0 ? tools.timeoutsMaxA : tools.timeoutsMaxB;
+  if (used < max) {
     return {
       ...tools,
       [key]: used + 1,
@@ -186,28 +190,42 @@ export function DeskMatchControls({
         </span>
         {(["A", "B"] as const).map((side) => {
           const used = side === "A" ? value.timeoutsA : value.timeoutsB;
+          const max = side === "A" ? value.timeoutsMaxA : value.timeoutsMaxB;
+          const maxKey = side === "A" ? "timeoutsMaxA" : "timeoutsMaxB";
+          const usedKey = side === "A" ? "timeoutsA" : "timeoutsB";
           return (
             <span key={side} className="flex items-center gap-1">
               <span className="text-[11px] font-bold text-slate-400">{side}</span>
-              {/* Τα «+ / −» αλλάζουν ΠΟΣΑ timeouts δικαιούται — τα γεμάτα γίνονται πράσινα. */}
+              {/* Τα «+ / −» αλλάζουν ΠΟΣΑ timeouts δικαιούται Ο ΠΑΙΚΤΗΣ — ανεξάρτητα ανά πλευρά. */}
               <button
                 type="button"
                 className={BTN}
-                disabled={disabled || value.timeoutsMax <= used || value.timeoutsMax <= 0}
-                onClick={() => onChange({ timeoutsMax: Math.max(used, value.timeoutsMax - 1) })}
+                disabled={disabled || max <= used || max <= 0}
+                onClick={() => onChange({ [maxKey]: Math.max(used, max - 1) })}
               >
                 −
               </button>
               <b className="min-w-[26px] text-center text-[12px] tabular-nums text-slate-100">
-                {used}/{value.timeoutsMax}
+                {used}/{max}
               </b>
               <button
                 type="button"
                 className={BTN}
-                disabled={disabled || value.timeoutsMax >= 9}
-                onClick={() => onChange({ timeoutsMax: value.timeoutsMax + 1 })}
+                disabled={disabled || max >= 9}
+                onClick={() => onChange({ [maxKey]: max + 1 })}
               >
                 +
+              </button>
+              {/* Επιστροφή ΚΑΜΕΝΟΥ timeout: αν πρόλαβε να μηδενίσει το ρολόι, ο χειριστής
+                  το γυρνάει πίσω με ένα πάτημα (ορατό κουμπί, όχι κρυφή χειρονομία). */}
+              <button
+                type="button"
+                className={BTN}
+                title="Επιστροφή καμένου timeout"
+                disabled={disabled || used <= 0}
+                onClick={() => onChange({ [usedKey]: Math.max(0, used - 1) })}
+              >
+                ↺
               </button>
             </span>
           );

@@ -8,6 +8,17 @@ export const fetchCache = "default-no-store";
 
 type RawSession = Record<string, unknown>;
 
+/* Κλειστά sessions: δεν ανήκουν στο Live ό,τι κι αν λέει το `isPublic`. */
+const TERMINAL_SESSION_STATUSES = new Set([
+  "finished",
+  "ended",
+  "closed",
+  "completed",
+  "complete",
+  "cancelled",
+  "canceled",
+]);
+
 const asString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -100,8 +111,19 @@ export async function GET(
     const rows = Array.isArray(json?.data) ? json.data : [];
     const normalized = rows
       .map((row: RawSession) => normalizeSession(row))
-      /* Ό,τι έκλεισε ο χειριστής από το desk δεν εμφανίζεται στο Live. */
-      .filter((row: Record<string, unknown>) => row.isPublic !== false);
+      /*
+       * Ό,τι έκλεισε ο χειριστής από το desk δεν εμφανίζεται στο Live.
+       * `End game` γράφει `finished` αλλά δεν σβήνει το session (κρατά το τελικό
+       * σκορ ως ιστορικό), άρα το status πρέπει να κόβεται κι εδώ — αλλιώς η
+       * κάρτα του τελειωμένου αγώνα ξαναγυρνά σε κάθε φόρτωση της λίστας.
+       */
+      .filter(
+        (row: Record<string, unknown>) =>
+          row.isPublic !== false &&
+          !TERMINAL_SESSION_STATUSES.has(
+            String(row.sessionStatus ?? "").trim().toLowerCase(),
+          ),
+      );
     return NextResponse.json({ data: normalized });
   } catch (error: any) {
     return NextResponse.json(

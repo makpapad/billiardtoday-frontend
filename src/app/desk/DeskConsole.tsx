@@ -218,15 +218,23 @@ export default function DeskConsole({
       if (!raw) return;
       const saved = JSON.parse(raw) as { tables?: TableState[]; selected?: number };
       if (Array.isArray(saved.tables) && saved.tables.some((t) => t?.sessionId)) {
-        setTables(
-          saved.tables.map((t) => ({
+        /*
+         * Τελειωμένος αγώνας δεν ξαναζωντανεύει μετά από reload: το `End game`
+         * καθαρίζει το τραπέζι στη βάση, άρα το `DONE` του localStorage είναι φάντασμα.
+         */
+        const restored = saved.tables
+          .filter((t) => !t?.finished)
+          .map((t) => ({
             ...t,
             history: Array.isArray(t?.history) ? t.history : [],
             /* Παλιά αποθηκευμένα τραπέζια δεν έχουν `tools`. */
             tools: { ...emptyDeskTools, ...(t?.tools ?? {}) },
-          })),
-        );
-        if (saved.selected) setSelected(saved.selected);
+          }));
+        setTables(restored.length > 0 ? restored : [emptyTable(1)]);
+        const selectedNo = restored.some((t) => t.no === saved.selected)
+          ? Number(saved.selected)
+          : restored[0]?.no ?? 1;
+        setSelected(selectedNo);
       }
       /*
        * Το τραπέζι ισχύει μόνο όσο υπάρχει η session. Αν σβήστηκε στο μεταξύ
@@ -294,12 +302,31 @@ export default function DeskConsole({
         ? Math.max(0, table.tools.clockTotal - table.tools.clockRemaining)
         : 0,
       timeoutsUsed: [table.tools.timeoutsA, table.tools.timeoutsB],
+      /* Δικαίωμα ΑΝΑ ΠΑΙΚΤΗ — κάθε πλευρά ρυθμίζεται χωριστά στο desk. */
       maxTimeouts: [
-        table.tools.timeoutsVisible ? table.tools.timeoutsMax : 0,
-        table.tools.timeoutsVisible ? table.tools.timeoutsMax : 0,
+        table.tools.timeoutsVisible ? table.tools.timeoutsMaxA : 0,
+        table.tools.timeoutsVisible ? table.tools.timeoutsMaxB : 0,
       ],
     };
     live.current?.send(state);
+  }, []);
+
+  /**
+   * Κλείνει τον αγώνα και στο Live (`ended`) — το session μένει ως ιστορικό,
+   * δεν σβήνεται. Χωρίς αυτό το relay κρατά το τελευταίο `score:update` και η
+   * κάρτα ξαναεμφανίζεται μόλις κάνει reconnect το Live tab.
+   */
+  const stopLive = useCallback((table: TableState) => {
+    if (!table.sessionId || !table.screenId) return;
+    live.current?.stop({
+      screenId: table.screenId,
+      sessionId: table.sessionId,
+      names: [table.match?.player1 || "Player A", table.match?.player2 || "Player B"],
+      points: [table.p1.points, table.p2.points],
+      innings: [table.p1.innings, table.p2.innings],
+      highRuns: [table.p1.hr, table.p2.hr],
+      active: table.active,
+    });
   }, []);
 
   const tablesRef = useRef<TableState[]>([]);
@@ -348,15 +375,25 @@ export default function DeskConsole({
   }, []);
 
   /* αγώνες της φάσης */
-  useEffect(() => {
+  const loadMatches = useCallback(async () => {
     if (!stageId) {
       setMatches([]);
       return;
     }
-    api<{ data: Match[] }>(`/api/desk/matches?stageId=${encodeURIComponent(stageId)}`, token)
-      .then((res) => setMatches(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => setMatches([]));
+    try {
+      const res = await api<{ data: Match[] }>(
+        `/api/desk/matches?stageId=${encodeURIComponent(stageId)}`,
+        token,
+      );
+      setMatches(Array.isArray(res?.data) ? res.data : []);
+    } catch {
+      setMatches([]);
+    }
   }, [stageId, token]);
+
+  useEffect(() => {
+    void loadMatches();
+  }, [loadMatches]);
 
   /* --- ανοιχτοί αγώνες: «Συνέχεια» από άλλη συσκευή --- */
   const fetchOpen = useCallback(async () => {
@@ -559,6 +596,11 @@ export default function DeskConsole({
               finish,
             }),
           });
+          if (finish) {
+            /* Ο αγώνας έκλεισε: το τραπέζι ελευθερώνεται για τον επόμενο. */
+            setTables((prev) => prev.map((t) => (t.no === next.no ? emptyTable(next.no) : t)));
+            return;
+          }
           setTables((prev) => prev.map((t) => (t.no === next.no ? { ...t, saving: false } : t)));
         } catch (err) {
           const message = err instanceof Error ? err.message : "Το σκορ δεν στάλθηκε";
@@ -752,6 +794,48 @@ export default function DeskConsole({
     [current, pushScore, withHistory],
   );
 
+  /** +1 στον παίκτη που πατήθηκε — γίνεται ενεργός μαζί (χειριστήριο πάνω στη γραμμή). */
+  const addPointFor = useCallback(
+    (no: number, index: 0 | 1) => {
+      const table = tablesRef.current.find((t) => t.no === no);
+      if (!table?.sessionId || table.finished || table.locked) return;
+      const key = index === 0 ? "p1" : "p2";
+      const side = table[key];
+      const next = withHistory({
+        ...table,
+        active: index,
+        [key]: { ...side, run: side.run + 1 },
+        buffer: "",
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushLog(
+        `T${no} · +1 ${(index === 0 ? table.match?.player1 : table.match?.player2) || `Player ${index + 1}`}`,
+      );
+      pushScore(next);
+    },
+    [pushScore, pushLog],
+  );
+
+  /** ET (End Turn) του παίκτη που πατήθηκε: κλείνει τη στεκιά του και αλλάζει σειρά. */
+  const endTurnFor = useCallback(
+    (no: number, index: 0 | 1) => {
+      const table = tablesRef.current.find((t) => t.no === no);
+      if (!table?.sessionId || table.finished || table.locked) return;
+      const run =
+        index === table.active ? pendingRun(table) : index === 0 ? table.p1.run : table.p2.run;
+      const base: TableState = { ...table, active: index };
+      const next = withHistory({
+        ...closeTurn(base, run),
+        tools: resetClockAfterPoint(table.tools),
+      });
+      pushLog(
+        `T${no} · ET ${(index === 0 ? table.match?.player1 : table.match?.player2) || `Player ${index + 1}`} — ${run} πόντοι`,
+      );
+      pushScore(next);
+    },
+    [pushScore, pushLog, closeTurn, pendingRun],
+  );
+
   /** Αλλαγή πλευρών: τα ονόματα, τα σκορ και το φύλλο ακολουθούν. */
   const swapPlayers = useCallback(() => {
     if (!current?.match || current.finished || current.locked) return;
@@ -773,6 +857,14 @@ export default function DeskConsole({
         player1: row.player2,
         player2: row.player1,
       })),
+      /* Τα timeouts ανήκουν στον ΠΑΙΚΤΗ: με το swap αλλάζουν πλευρά μαζί του. */
+      tools: {
+        ...current.tools,
+        timeoutsA: current.tools.timeoutsB,
+        timeoutsB: current.tools.timeoutsA,
+        timeoutsMaxA: current.tools.timeoutsMaxB,
+        timeoutsMaxB: current.tools.timeoutsMaxA,
+      },
       buffer: "",
     });
     pushScore(next);
@@ -820,8 +912,43 @@ export default function DeskConsole({
     const next: TableState = equalizeInnings({ ...current, finished: true, buffer: "", saving: true });
     pushLog(`T${current.no} · τέλος αγώνα`);
     pushScore(next, true);
-  }, [current, pushScore, pushLog]);
+    /* Το παιχνίδι φεύγει από το Live αμέσως (το τραπέζι καθαρίζει όταν γραφτεί). */
+    stopLive(next);
+  }, [current, pushScore, pushLog, stopLive]);
 
+  /**
+   * «Βγάλε»: αφαιρεί τον αγώνα από το τραπέζι ΟΡΙΣΤΙΚΑ — σβήνει το session στη
+   * βάση, οπότε (α) το box κλείνει, (β) ο αγώνας ξαναγυρνά στη λίστα, (γ) φεύγει
+   * από το Live. Το παλιό «Άφησε» έκανε μόνο release: το session έμενε
+   * `in_progress`, άρα ο αγώνας ήταν «ανοιχτός» για πάντα (ο χειριστής δεν
+   * μπορούσε ούτε να τον ξαναβάλει ούτε να τον βγάλει).
+   */
+  const removeMatch = useCallback(
+    async (no: number) => {
+      const table = tables.find((t) => t.no === no);
+      if (!table?.sessionId) {
+        setTables((prev) => prev.map((t) => (t.no === no ? emptyTable(no) : t)));
+        return;
+      }
+      try {
+        await api(`/api/desk/tables/${encodeURIComponent(table.sessionId)}/cancel`, token, {
+          method: "POST",
+          body: JSON.stringify({}),
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Ο αγώνας δεν αφαιρέθηκε";
+        setError(message);
+        return;
+      }
+      stopLive(table);
+      pushLog(`T${no} · αγώνας βγήκε από το τραπέζι`);
+      setTables((prev) => prev.map((t) => (t.no === no ? emptyTable(no) : t)));
+      void loadMatches();
+    },
+    [tables, token, stopLive, pushLog, loadMatches],
+  );
+
+  /** Αφήνει το τραπέζι όπως είναι (μετά το end game) — μόνο τοπικό καθάρισμα. */
   const closeTable = useCallback(
     async (no: number) => {
       const table = tables.find((t) => t.no === no);
@@ -1028,6 +1155,33 @@ export default function DeskConsole({
                             {table.active === idx && !table.finished ? pendingRun(table) : side.run}
                           </span>
                         </div>
+                        {/* Χειριστήριο ανά παίκτη: +1 πόντος και ET (End Turn) — χωρίς να αλλάζεις σειρά πρώτα. */}
+                        <div className="pctl">
+                          <button
+                            type="button"
+                            className="pbtn"
+                            title={`+1 πόντος — ${name}`}
+                            disabled={Boolean(table.finished) || Boolean(table.locked)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addPointFor(table.no, idx);
+                            }}
+                          >
+                            +1
+                          </button>
+                          <button
+                            type="button"
+                            className="pbtn et"
+                            title={`ET — τέλος στεκιάς ${name}`}
+                            disabled={Boolean(table.finished) || Boolean(table.locked)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              endTurnFor(table.no, idx);
+                            }}
+                          >
+                            ET
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1084,18 +1238,20 @@ export default function DeskConsole({
                     <button type="button" className="save" onClick={(e) => { e.stopPropagation(); setSelected(table.no); endGame(); }}>
                       {table.finished ? "Κλειστό" : "End game"}
                     </button>
-                    {/* Αφήνει το τραπέζι σε αυτή τη συσκευή· ο αγώνας μένει ανοιχτός για «Συνέχεια» αλλού. */}
-                    <button
-                      type="button"
-                      className="leave"
-                      title="Αφήνει το τραπέζι — ο αγώνας μένει ανοιχτός για συνέχεια από άλλη συσκευή"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void closeTable(table.no);
-                      }}
-                    >
-                      Άφησε
-                    </button>
+                    {table.finished ? null : (
+                      /* «Βγάλε» = σβήνει το session: το box κλείνει, ο αγώνας ξαναγυρνά στη λίστα. */
+                      <button
+                        type="button"
+                        className="leave"
+                        title="Βγάζει τον αγώνα από το τραπέζι — ξαναγυρνά στη λίστα"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void removeMatch(table.no);
+                        }}
+                      >
+                        Βγάλε
+                      </button>
+                    )}
                   </div>
 
                   {table.finished ? (
