@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
-import { DataSourceCredit } from "@/components/DataSourceCredit";
+import { DataMethodologyNote } from "@/components/public/DataMethodologyNote";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import { TournamentFollowButton } from "@/components/tournaments/TournamentFollowButton";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
@@ -29,7 +29,7 @@ import type { RankingSeriesData } from "@/lib/rankings";
 import { resolveMediaUrl as resolveConfiguredMediaUrl } from "@/lib/mediaUrl";
 import type { TournamentEventSummary } from "@/lib/tournaments";
 import { buildTournamentHref, buildTournamentSlug } from "@/lib/tournaments";
-import { dataSourceCreditFor } from "@/lib/dataSource";
+import { federationWebsiteCredit } from "@/lib/dataSource";
 import type {
   EventApiResponse,
   GroupStanding,
@@ -1878,9 +1878,6 @@ export function TournamentDetailPage({
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
   const organizerName = summary.organizerName ?? null;
-  // Ένδειξη πηγής δεδομένων (π.χ. «Source 3Cushion.gr» για τις διοργανώσεις της ΕΟΑΑ):
-  // μπαίνει ακριβώς κάτω από τα αποτελέσματα, πάνω από το Tournament Overview.
-  const dataSourceCredit = dataSourceCreditFor({ slug: summary.organizerFederationSlug });
   // Το λογότυπο του διοργανωτή είναι σύνδεσμος προς την αρχική της ομοσπονδίας/συλλόγου
   // (όταν ξέρουμε ποιος διοργανώνει) — μία φορά ορίζεται, δύο φορές τυπώνεται.
   const organizerLogo = organizerLogoUrl ? (
@@ -8360,9 +8357,15 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-2">
         {mainContent}
       </div>
-      {dataSourceCredit ? (
-        <DataSourceCredit source={dataSourceCredit} className="mt-4" />
-      ) : null}
+      <div className="mt-4">
+        <DataMethodologyNote
+          source={federationWebsiteCredit({
+            slug: summary.organizerFederationSlug,
+            website: summary.organizerWebsite,
+          })}
+          locale={/hellenic/i.test(summary.organizerFederationSlug ?? "") ? "el" : "en"}
+        />
+      </div>
       {showFobAds ? (
         <TournamentAdsStrip
           ads={futureOfBilliardsAds}

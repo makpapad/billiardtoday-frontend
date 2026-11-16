@@ -17,9 +17,9 @@ const COPY: Record<LabelLocale, Copy> = {
   en: {
     title: "Data & methodology.",
     body:
-      "BilliardToday publishes the match data only — caroms, innings, high runs (HR1 and HR2) and the fixture " +
-      "schedule — collected from the official websites of the organising federations once they have been " +
-      "announced. Standings, qualification places, averages and every other derived figure are calculated by " +
+      "BilliardToday collects the match data only — caroms, innings, high runs (HR1 and HR2) and the fixture " +
+      "schedule — from the official websites of the organising federations, after they have been announced. " +
+      "Standings, qualification places, averages, various stats and every other derived figure are calculated by " +
       "BilliardToday's own engine, in accordance with the official regulations published by each federation. " +
       "Where a figure differs from the organiser's own page, the organiser's official publication prevails.",
     sourceLabel: "Source",
@@ -27,9 +27,9 @@ const COPY: Record<LabelLocale, Copy> = {
   el: {
     title: "Δεδομένα & μεθοδολογία.",
     body:
-      "Το BilliardToday δημοσιεύει μόνο τα δεδομένα των αγώνων — καραμπόλες, στεκιές, σερί (HR1 και HR2) και " +
-      "το πρόγραμμα των αγώνων — τα οποία συλλέγει από τους επίσημους ιστότοπους των διοργανωτών, μετά την " +
-      "ανακοίνωσή τους. Οι κατατάξεις, οι προκριθέντες, οι μέσοι όροι και κάθε άλλο παράγωγο μέγεθος " +
+      "Το BilliardToday συλλέγει μόνο τα δεδομένα των αγώνων — καραμπόλες, στεκιές, σερί (HR1 και HR2) και " +
+      "το πρόγραμμα των αγώνων — από τους επίσημους ιστότοπους των διοργανωτών, μετά την ανακοίνωσή τους. " +
+      "Οι κατατάξεις, οι προκριθέντες, οι μέσοι όροι, τα διάφορα στατιστικά και κάθε άλλο παράγωγο μέγεθος " +
       "υπολογίζονται από το σύστημα του BilliardToday, σύμφωνα με τους επίσημους κανονισμούς που έχει " +
       "δημοσιεύσει η εκάστοτε ομοσπονδία. Όπου ένα μέγεθος διαφέρει από τη σελίδα του διοργανωτή, " +
       "υπερισχύει η επίσημη δημοσίευσή του.",
@@ -38,11 +38,11 @@ const COPY: Record<LabelLocale, Copy> = {
 };
 
 /**
- * Μικρή σημείωση μεθοδολογίας κάτω από τα αποτελέσματα ομαδικής διοργάνωσης, πάνω από το SEO block —
- * αριστερά το κείμενο, δεξιά η πηγή (ο επίσημος ιστότοπος της διοργανώτριας ομοσπονδίας), όπως η
- * ένδειξη «Source 3Cushion.gr» στη σελίδα των Masters.
+ * Σημείωση μεθοδολογίας κάτω από τα αποτελέσματα διοργάνωσης (ομαδικής ή ατομικής), πάνω από το SEO
+ * block: αριστερά το κείμενο, δεξιά η πηγή (ο επίσημος ιστότοπος της διοργανώτριας ομοσπονδίας), όπως
+ * η ένδειξη «Source 3Cushion.gr» στη σελίδα των Masters.
  */
-export function TeamTournamentDataNote({ source, locale, className }: Props) {
+export function DataMethodologyNote({ source, locale, className }: Props) {
   const copy = COPY[locale] ?? COPY.en;
 
   return (

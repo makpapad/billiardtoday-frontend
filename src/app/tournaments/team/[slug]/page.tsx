@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamTournamentDetailClient } from "@/components/teamTournaments/TeamTournamentDetailClient";
-import { TeamTournamentDataNote } from "@/components/teamTournaments/TeamTournamentDataNote";
+import { DataMethodologyNote } from "@/components/public/DataMethodologyNote";
 import { TeamTournamentSeoSection } from "@/components/public/TeamTournamentSeoSection";
 import { federationWebsiteCredit } from "@/lib/dataSource";
 import {
@@ -64,7 +64,7 @@ export default async function TeamTournamentPage({ params }: Props) {
       {/* Σημείωση μεθοδολογίας: κάτω από τα αποτελέσματα, πάνω από το SEO block. */}
       <div className="px-4 pb-2">
         <div className="mx-auto max-w-6xl">
-          <TeamTournamentDataNote
+          <DataMethodologyNote
             source={federationWebsiteCredit(detail?.summary?.federation ?? summary.federation)}
             locale={detail?.summary?.labelLocale ?? summary.labelLocale}
           />

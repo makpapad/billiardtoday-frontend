@@ -35,6 +35,11 @@ export type TournamentEventSummary = {
    */
   organizerFederationSlug: string | null;
   /**
+   * Ο επίσημος ιστότοπος της διοργανώτριας ομοσπονδίας — η ένδειξη «Source …» κάτω από τα
+   * αποτελέσματα. `null` όταν διοργανώνει σύλλογος ή όταν η ομοσπονδία δεν έχει website.
+   */
+  organizerWebsite: string | null;
+  /**
    * Όνομα διοργανωτή για εμφάνιση (π.χ. tooltip «Back to …») — η ομοσπονδία όταν
    * διοργανώνει ομοσπονδία, αλλιώς ο σύλλογος. ΠΟΤΕ το όνομα του αρχείου λογότυπου.
    */
@@ -394,6 +399,7 @@ const normalizeClubTournamentSummary = (
     venueCountry: null,
     organizerType: "club",
     organizerFederationSlug: null,
+    organizerWebsite: null,
     organizerName:
       readString(clubSource.name) ?? readString(clubSource.title) ?? null,
     organizerLogoUrl: readString(clubLogoSource.url),
@@ -634,6 +640,7 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][populate][organizer_federation][fields][1]", "slug");
       params.set("populate[tournament][populate][organizer_federation][fields][2]", "documentId");
       params.set("populate[tournament][populate][organizer_federation][fields][3]", "level");
+      params.set("populate[tournament][populate][organizer_federation][fields][4]", "website");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][0]", "url");
       params.set("populate[tournament][populate][organizer_federation][populate][logo][fields][1]", "name");
       params.set("populate[tournament][populate][series_entries][sort][0]", "order:asc");
@@ -751,6 +758,11 @@ const fetchTournamentEventSummaryById = async (
       organizerType === "federation"
         ? (readString((organizerFederationSource as Record<string, unknown>).slug) ??
           readString((federationSource as Record<string, unknown>).slug))
+        : null,
+    organizerWebsite:
+      organizerType === "federation"
+        ? (readString((organizerFederationSource as Record<string, unknown>).website) ??
+          readString((federationSource as Record<string, unknown>).website))
         : null,
     organizerName:
       organizerType === "federation"
