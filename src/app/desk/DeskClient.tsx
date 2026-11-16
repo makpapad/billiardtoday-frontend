@@ -164,6 +164,24 @@ function equalizeInnings<T extends { p1: { innings: number }; p2: { innings: num
 /* Σελίδα                                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * «Έχει ξεκινήσει ο αγώνας»: πρώτος πόντος/σερί/HR ή γραμμή στο φύλλο →
+ * το `Swap` κλειδώνει (αλλαγή πλευρών μόνο πριν την πρώτη βολή).
+ */
+function matchStarted(table: TableState | null | undefined): boolean {
+  if (!table) return false;
+  const { p1, p2 } = table;
+  return (
+    p1.points > 0 ||
+    p2.points > 0 ||
+    p1.run > 0 ||
+    p2.run > 0 ||
+    p1.hr > 0 ||
+    p2.hr > 0 ||
+    table.detail.length > 0
+  );
+}
+
 export default function DeskClient() {
   const [token, setToken] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -677,6 +695,8 @@ export default function DeskClient() {
 
   const swapPlayers = useCallback(() => {
     if (!table || table.finished) return;
+    /* Μετά την έναρξη το swap κλειδώνει. */
+    if (matchStarted(table)) return;
     const next: TableState = {
       ...table,
       names: [table.names[1], table.names[0]],
@@ -687,7 +707,7 @@ export default function DeskClient() {
       p1: { ...table.p2, run: table.p1.run, innings: table.p1.innings },
       p2: { ...table.p1, run: table.p2.run, innings: table.p2.innings },
       sides: [table.sides[1], table.sides[0]],
-      active: table.active === 0 ? 1 : 0,
+      /* Η σειρά μένει στη θέση (δεν ακολουθεί τον παίκτη), όπως σερί και στεκιά. */
       detail: table.detail.map((row) => ({
         inning: row.inning,
         player1: row.player2,
@@ -1108,7 +1128,12 @@ export default function DeskClient() {
             <button
               type="button"
               onClick={swapPlayers}
-              disabled={table.finished}
+              title={
+                matchStarted(table)
+                  ? "Ο αγώνας έχει ξεκινήσει — το swap κλειδώνει"
+                  : "Αλλαγή πλευρών πριν την έναρξη"
+              }
+              disabled={table.finished || matchStarted(table)}
               className="rounded-xl border border-slate-700 bg-slate-900 py-3 text-[11px] uppercase tracking-wider text-slate-300 disabled:opacity-40"
             >
               Swap

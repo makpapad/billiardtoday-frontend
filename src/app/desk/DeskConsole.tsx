@@ -109,6 +109,25 @@ function equalizeInnings<T extends { p1: { innings: number }; p2: { innings: num
 
 const MAX_TABLES = 8;
 
+/**
+ * «Έχει ξεκινήσει ο αγώνας»: μόλις μπει πρώτος πόντος / σερί / HR ή γραφτεί
+ * γραμμή στο φύλλο αγώνα, το `swap players` κλειδώνει (η αλλαγή πλευρών έχει
+ * νόημα μόνο πριν την πρώτη βολή).
+ */
+function matchStarted(table: TableState | null | undefined): boolean {
+  if (!table) return false;
+  const { p1, p2 } = table;
+  return (
+    p1.points > 0 ||
+    p2.points > 0 ||
+    p1.run > 0 ||
+    p2.run > 0 ||
+    p1.hr > 0 ||
+    p2.hr > 0 ||
+    table.detail.length > 0
+  );
+}
+
 function emptyTable(no: number): TableState {
   return {
     no,
@@ -863,6 +882,8 @@ export default function DeskConsole({
   /** Αλλαγή πλευρών: τα ονόματα, τα σκορ και το φύλλο ακολουθούν. */
   const swapPlayers = useCallback(() => {
     if (!current?.match || current.finished || current.locked) return;
+    /* Μετά την έναρξη (πρώτος πόντος/σερί/στεκιά) το swap κλειδώνει. */
+    if (matchStarted(current)) return;
     const next = withHistory({
       ...current,
       match: {
@@ -880,7 +901,7 @@ export default function DeskConsole({
       p1: { ...current.p2, run: current.p1.run, innings: current.p1.innings },
       p2: { ...current.p1, run: current.p2.run, innings: current.p2.innings },
       sides: [current.sides[1], current.sides[0]] as [1 | 2, 1 | 2],
-      active: (current.active === 0 ? 1 : 0) as 0 | 1,
+      /* Η σειρά ΔΕΝ ακολουθεί τον παίκτη: μένει στη θέση, όπως το σερί και η στεκιά. */
       detail: current.detail.map((row) => ({
         inning: row.inning,
         player1: row.player2,
@@ -1417,7 +1438,17 @@ export default function DeskConsole({
               <button type="button" id="qUndo" onClick={undo} disabled={Boolean(current?.locked)}>
                 Undo (U)
               </button>
-              <button type="button" id="qSwap" onClick={swapPlayers} disabled={Boolean(current?.locked)}>
+              <button
+                type="button"
+                id="qSwap"
+                onClick={swapPlayers}
+                title={
+                  matchStarted(current)
+                    ? "Ο αγώνας έχει ξεκινήσει — το swap κλειδώνει"
+                    : "Αλλαγή πλευρών πριν την έναρξη"
+                }
+                disabled={Boolean(current?.locked) || matchStarted(current)}
+              >
                 Swap players
               </button>
               <div id="qClock">
