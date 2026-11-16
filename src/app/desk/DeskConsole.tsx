@@ -1108,6 +1108,18 @@ export default function DeskConsole({
                       <div className="chead-main">
                         <span className="tno">TABLE {table.no}</span>
                         <span className="chip done">EMPTY</span>
+                        {/* Κενό κουτί: φεύγει με ένα × (όσα κουτιά κι αν έχουν μπει). */}
+                        <button
+                          type="button"
+                          className="rmtable"
+                          title={`Αφαίρεση κουτιού ${table.no}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeTable(table.no);
+                          }}
+                        >
+                          ×
+                        </button>
                       </div>
                       <div className="chead-sub">
                         <span className="sid">no screen</span>
