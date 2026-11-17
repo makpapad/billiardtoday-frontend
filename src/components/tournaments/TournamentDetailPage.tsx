@@ -211,9 +211,14 @@ type TimetablePhaseTab = {
   firstSlotIndex: number;
 };
 
+// Ίδιο σύνολο με το utils (`BRACKET_STAGE_TYPES_SET`). Το «brackets» είναι ο
+// τύπος που γράφει ο generator των φάσεων πυραμίδας: χωρίς αυτό το round
+// dropdown έδειχνε επιλογή αλλά το αίτημα πήγαινε πάντα χωρίς `?round`.
 const isBracketStageType = (stageType: string | null | undefined) =>
   stageType === "single_elimination" ||
   stageType === "double_elimination" ||
+  stageType === "brackets" ||
+  stageType === "bracket" ||
   stageType === "knockout";
 
 const getStageRankingRoundParam = (
