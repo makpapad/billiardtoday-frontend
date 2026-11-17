@@ -2141,7 +2141,6 @@ function compareBracketRankedResults<T>(
     compareNullableNumbersDesc(a.bracketHighRun, b.bracketHighRun) ||
     compareNullableNumbersDesc(a.bracketPoints, b.bracketPoints) ||
     compareNullableNumbersAsc(a.bracketInnings, b.bracketInnings) ||
-    compareNullableNumbersDesc(a.bracketMatchPoints, b.bracketMatchPoints) ||
     a.bracketPlayerName.localeCompare(b.bracketPlayerName)
   );
 }
@@ -2724,6 +2723,9 @@ function StageRankingTable({
     eventRulesetKey,
   ]);
   const showStageGroupColumns = !isBracketStage(stage) && !isPlacementStage(stage);
+  // Στην πυραμίδα (ΚΟ) τα match points δεν μετράνε στην κατάταξη, άρα δεν
+  // εμφανίζονται κιόλας: μπερδεύουν (ένα 40-40 δίνει 1 MP στον χαμένο).
+  const showMatchPointsColumn = !isBracketStage(stage);
   const fivePins = isFivePinsRuleset(eventRulesetKey) || fivePinsProp;
   const showGroupColumn =
     showStageGroupColumns &&
@@ -3025,7 +3027,9 @@ function StageRankingTable({
                   Pos
                 </th>
               )}
-              <th className="px-4 py-3 text-center font-semibold">MP</th>
+              {showMatchPointsColumn && (
+                <th className="px-4 py-3 text-center font-semibold">MP</th>
+              )}
               <th className="px-4 py-3 text-center font-semibold">
                 {fivePins ? "P+" : "Points"}
               </th>
@@ -3218,9 +3222,11 @@ function StageRankingTable({
                     {formatNumberValue(result.groupPosition)}
                   </td>
                 )}
-                <td className="px-4 py-3 text-center">
-                  {formatNumberValue(result.matchPoints)}
-                </td>
+                {showMatchPointsColumn && (
+                  <td className="px-4 py-3 text-center">
+                    {formatNumberValue(result.matchPoints)}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-center">
                   {formatNumberValue(result.points)}
                 </td>
