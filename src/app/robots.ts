@@ -41,7 +41,8 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    // Δύο αρχεία: το κύριο (γεμάτες σελίδες) και το sitemap-players (όλοι οι αθλητές).
+    sitemap: [`${siteUrl}/sitemap-index.xml`, `${siteUrl}/sitemap.xml`],
     host: siteUrl,
   };
 }
