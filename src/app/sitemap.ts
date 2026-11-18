@@ -49,6 +49,29 @@ const toLastModified = (value?: string | null): Date | undefined => {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
+/**
+ * Πότε άλλαξε το ΠΡΟΤΥΠΟ της σελίδας, όχι το record.
+ *
+ * Όταν προσθέτουμε ουσιαστικό περιεχόμενο σε ένα template (π.χ. βιογραφικό + 200
+ * αγώνες στις σελίδες αθλητών), η σελίδα άλλαξε πραγματικά — αλλά το `updatedAt`
+ * του record μένει στο παλιό. Η Google διαβάζει το lastmod, βλέπει «δεν άλλαξε από
+ * τον Οκτώβριο» και δεν ξανασαρώνει: οι σελίδες μένουν κολλημένες σε παλιά
+ * ετυμηγορία («Alternate page with proper canonical tag», ανιχνευμένες 5 μήνες πριν).
+ *
+ * Ανεβάζουμε την ημερομηνία ΜΟΝΟ όταν αλλάζει το πρότυπο — ποτέ αυθαίρετα σήμερα.
+ */
+const TEMPLATE_REVISION_PLAYERS = new Date("2026-11-16T00:00:00Z");
+const TEMPLATE_REVISION_CLUBS = new Date("2026-11-16T00:00:00Z");
+const TEMPLATE_REVISION_FEDERATIONS = new Date("2026-11-10T00:00:00Z");
+
+const withTemplateRevision = (
+  value: string | null | undefined,
+  revision: Date,
+): Date => {
+  const record = toLastModified(value);
+  return record && record > revision ? record : revision;
+};
+
 type SitemapEntryOptions = Pick<
   MetadataRoute.Sitemap[number],
   "changeFrequency" | "priority"
@@ -167,14 +190,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       sitemapEntry(`/clubs/${club.slug}`, {
         changeFrequency: "weekly",
         priority: 0.7,
-        lastModified: toLastModified(club.updatedAt),
+        lastModified: withTemplateRevision(club.updatedAt, TEMPLATE_REVISION_CLUBS),
       }),
     ),
     ...federations.map((federation) =>
       sitemapEntry(`/federations/${federation.slug}`, {
         changeFrequency: "weekly",
         priority: 0.7,
-        lastModified: toLastModified(federation.updatedAt),
+        lastModified: withTemplateRevision(
+          federation.updatedAt,
+          TEMPLATE_REVISION_FEDERATIONS,
+        ),
       }),
     ),
     // Αθλητές: ΟΛΟΙ όσοι έχουν έστω έναν αγώνα. Εκτός μένουν μόνο τα προφίλ με ΜΗΔΕΝ
@@ -191,7 +217,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         sitemapEntry(player.href, {
           changeFrequency: "monthly",
           priority: 0.6,
-          lastModified: toLastModified(player.updatedAt),
+          lastModified: withTemplateRevision(player.updatedAt, TEMPLATE_REVISION_PLAYERS),
         }),
       ),
     ...publicEvents
