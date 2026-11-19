@@ -22,15 +22,15 @@ const playerHref = (row: PlayerStatRow): string | null =>
   playerProfileHref({ id: row.playerId, documentId: row.documentId }, row.name);
 
 /**
- * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → νίκες → μεγαλύτερο σέρι → αγώνες.
- * (Με ίδιο αριθμό αγώνων κερδίζει ο μέσος όρος, όπως στα φύλλα αγώνα.)
+ * Κατάταξη αθλητών μέσα στην ομάδα: Μ.Ο. → σερί → νίκες → αγώνες.
+ * (Σε ισοβαθμία Μ.Ο. κερδίζει το μεγαλύτερο σέρι, μετά οι νίκες.)
  */
 const rankTeamPlayers = (rows: PlayerStatRow[]): PlayerStatRow[] =>
   [...rows].sort(
     (a, b) =>
       b.avg - a.avg ||
-      b.wins - a.wins ||
       b.series - a.series ||
+      b.wins - a.wins ||
       b.games - a.games ||
       a.name.localeCompare(b.name, "el"),
   );

@@ -219,12 +219,13 @@ export const buildTeamTournamentStats = (
     row.avg = row.innings > 0 ? row.caroms / row.innings : 0;
   });
   playerList.sort(
-    (a, b) =>
-      b.avg - a.avg ||
-      b.best - a.best ||
-      b.wins - a.wins ||
-      a.name.localeCompare(b.name, "el"),
-  );
+      (a, b) =>
+        b.avg - a.avg ||
+        b.series - a.series ||
+        b.best - a.best ||
+        b.wins - a.wins ||
+        a.name.localeCompare(b.name, "el"),
+    );
 
   return {
     playedMatches,
@@ -258,6 +259,8 @@ export type RoundBestPlayer = {
   teamName: string;
   caroms: number;
   innings: number;
+  /** Μεγαλύτερο σερί — 2ο κριτήριο σε ισοβαθμία Μ.Ο. */
+  series: number;
   avg: number;
 };
 
@@ -281,7 +284,8 @@ export type RoundHighlights = {
 /**
  * Τα τρία «καλύτερα» μιας αγωνιστικής, από τους ολοκληρωμένους αγώνες της:
  *  - **καλύτερη ομάδα**: ο μεγαλύτερος Μ.Ο. της αγωνιστικής (ισοπαλία → μεγαλύτερη διαφορά επιμέρους),
- *  - **καλύτερος παίκτης**: ο μεγαλύτερος Μ.Ο. (πόντοι ÷ στεκιές) της αγωνιστικής,
+ *  - **καλύτερος παίκτης**: ο μεγαλύτερος Μ.Ο. (πόντοι ÷ στεκιές) της αγωνιστικής· σε ισοβαθμία
+ *    κρίνει το **σερί** (μεγαλύτερο high run), μετά οι πόντοι,
  *  - **καλύτερο σέρι**: η μεγαλύτερο σέρι (high run) της αγωνιστικής.
  * Άνευ αγώνα boards (2-0 χωρίς νούμερα) δεν μετράνε σε Μ.Ο./σέρι
  */
@@ -311,8 +315,10 @@ export const buildRoundHighlights = (
     documentId: string | null;
     teamName: string;
     caroms: number;
-    innings: number;
-  };
+        innings: number;
+        /** Μεγαλύτερο σερί του αθλητή — 2ο κριτήριο σε ισοβαθμία Μ.Ο. */
+        series: number;
+      };
 
   const teamAgg = new Map<string, TeamAgg>();
   const playerAgg = new Map<string, PlayerAgg>();
@@ -380,11 +386,13 @@ export const buildRoundHighlights = (
                 teamName: side.teamName,
                 caroms: 0,
                 innings: 0,
+                series: 0,
               };
               playerAgg.set(key, row);
             }
             row.caroms += side.points;
             row.innings += side.innings;
+            row.series = Math.max(row.series, side.highRun);
           }
         }
         if (side.highRun > 0) {
@@ -435,10 +443,14 @@ export const buildRoundHighlights = (
     const avg = row.innings > 0 ? row.caroms / row.innings : 0;
     if (avg <= 0) continue;
     const candidate: RoundBestPlayer = { ...row, avg };
+    // Κριτήρια: μεγαλύτερος Μ.Ο. → σε ισοβαθμία το ΣΕΡΙ (high run) → μετά οι πόντοι.
     if (
       !bestPlayer ||
       candidate.avg > bestPlayer.avg ||
-      (candidate.avg === bestPlayer.avg && candidate.caroms > bestPlayer.caroms)
+      (candidate.avg === bestPlayer.avg && candidate.series > bestPlayer.series) ||
+      (candidate.avg === bestPlayer.avg &&
+        candidate.series === bestPlayer.series &&
+        candidate.caroms > bestPlayer.caroms)
     ) {
       bestPlayer = candidate;
     }
