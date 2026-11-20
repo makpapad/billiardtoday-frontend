@@ -258,6 +258,103 @@ export const getTournamentSeoStages = async (
   return [];
 };
 
+/**
+ * Σύνολα ανά φάση για το γράφημα μέσου όρου (καραμπόλες ÷ στεκιές).
+ *
+ * ΓΙΑΤΙ ΞΕΧΩΡΙΣΤΟ QUERY: το `getTournamentSeoStages` κόβει τους αγώνες κάθε φάσης
+ * στις 200 γραμμές για να μη φουσκώσει το HTML των πινάκων. Ένα σύνολο υπολογισμένο
+ * πάνω σε κομμένη λίστα θα έβγαζε λάθος μέσο όρο — σιωπηλά. Εδώ ζητάμε ΜΟΝΟ τα
+ * τέσσερα αριθμητικά πεδία (χωρίς ονόματα/χώρες αθλητών), άρα το payload μένει
+ * μικρό ακόμη και με εκατοντάδες αγώνες, και το σύνολο είναι πλήρες.
+ *
+ * ΜΕΤΡΑΕΙ ΜΟΝΟ ΔΗΜΟΣΙΕΥΜΕΝΑ: γραμμή χωρίς στεκιές (ή με 0) δεν μπαίνει στο
+ * άθροισμα, αλλιώς οι καραμπόλες θα διαιρούνταν με στεκιές που δεν παίχτηκαν.
+ */
+export type TournamentStageTotal = {
+  key: string;
+  title: string;
+  order: number | null;
+  caroms: number;
+  innings: number;
+  matches: number;
+};
+
+export const getTournamentStageTotals = async (
+  eventDocumentId: string,
+): Promise<TournamentStageTotal[]> => {
+  const documentId = String(eventDocumentId || "").trim();
+  if (!documentId) return [];
+
+  const params = new URLSearchParams();
+  params.set("fields[0]", "documentId");
+  params.set("populate[event_stages][fields][0]", "title");
+  params.set("populate[event_stages][fields][1]", "order");
+  params.set("populate[event_stages][fields][2]", "documentId");
+  ["player1_points", "player2_points", "player1_innings", "player2_innings"].forEach(
+    (field, index) => {
+      params.set(`populate[event_stages][populate][groups][fields][${index}]`, field);
+    },
+  );
+
+  const headers: HeadersInit = STRAPI_API_TOKEN
+    ? { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+    : {};
+
+  for (const base of STRAPI_BASES.slice(0, SEO_MAX_ATTEMPTS)) {
+    try {
+      const response = await fetch(
+        `${base.replace(/\/$/, "")}/api/bt-events/${encodeURIComponent(documentId)}?${params.toString()}`,
+        {
+          headers,
+          next: { revalidate: 300 },
+          signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
+        },
+      );
+      if (!response.ok) continue;
+
+      const payload = (await response.json().catch(() => null)) as { data?: unknown } | null;
+      const entity = readRecord(payload?.data);
+      if (!entity) continue;
+
+      const totals: TournamentStageTotal[] = [];
+      for (const rawStage of toArray(entity.event_stages)) {
+        let caroms = 0;
+        let innings = 0;
+        let matches = 0;
+        for (const raw of toArray(rawStage.groups)) {
+          let counted = false;
+          for (const side of ["player1", "player2"] as const) {
+            const points = readNumber(raw[`${side}_points`]);
+            const stageInnings = readNumber(raw[`${side}_innings`]);
+            if (points === null || stageInnings === null || stageInnings <= 0) continue;
+            caroms += points;
+            innings += stageInnings;
+            counted = true;
+          }
+          if (counted) matches += 1;
+        }
+        totals.push({
+          key:
+            readString(rawStage.documentId) ||
+            readString(rawStage.title) ||
+            `stage-${totals.length}`,
+          title: readString(rawStage.title) || `Stage ${totals.length + 1}`,
+          order: readNumber(rawStage.order),
+          caroms,
+          innings,
+          matches,
+        });
+      }
+
+      return totals;
+    } catch {
+      // δοκίμασε το επόμενο base url
+    }
+  }
+
+  return [];
+};
+
 export const getTournamentSeoData = async (
   eventDocumentId: string,
   options?: { standingsLimit?: number; participantLimit?: number },

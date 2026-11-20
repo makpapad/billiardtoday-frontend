@@ -90,6 +90,9 @@ type Props = {
   /** Server-rendered περιεχόμενο (τελική κατάταξη + συμμετέχοντες) που μπαίνει ΜΕΣΑ
    * στο «Tournament Overview» — ένα ανοιγόμενο σημείο αντί για δύο κουτιά. */
   seoSection?: ReactNode;
+  /** Server-rendered γράφημα μέσου όρου ανά φάση: ζει ΕΞΩ από το ανοιγόμενο
+   *  «Tournament Overview» ώστε να φαίνεται με την πρώτη ματιά (χωρίς κλικ). */
+  stageChart?: ReactNode;
   /** Server-rendered «Tournament news»: ζει ΕΞΩ από το ανοιγόμενο «Tournament Overview»
    *  (ορατό χωρίς κλικ), γιατί το κουμπί 📰 του hero δείχνει με anchor στο #tournament-news. */
   newsSection?: ReactNode;
@@ -1821,6 +1824,7 @@ export function TournamentDetailPage({
   preferredGroupParam = null,
   preferredMatchParam = null,
   seoSection = null,
+  stageChart = null,
   newsSection = null,
   relatedNewsCount = 0,
 }: Props) {
@@ -8385,6 +8389,7 @@ export function TournamentDetailPage({
           showPoweredBy={false}
         />
       ) : null}
+      {stageChart ? <section className="mt-8">{stageChart}</section> : null}
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">
           <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">

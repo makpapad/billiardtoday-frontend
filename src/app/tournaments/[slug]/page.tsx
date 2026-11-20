@@ -3,12 +3,15 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
 import { TournamentSeoSection } from "@/components/public/TournamentSeoSection";
 import { TournamentResultsSection } from "@/components/public/TournamentResultsSection";
+import { TournamentStageAverageChart } from "@/components/public/TournamentStageAverageChart";
 import { TournamentNewsSection } from "@/components/public/TournamentNewsSection";
 import { findNewsArticlesForTournament } from "@/lib/cms/news";
 import {
   getTournamentSeoData,
   getTournamentSeoStages,
+  getTournamentStageTotals,
   type TournamentSeoStage,
+  type TournamentStageTotal,
 } from "@/lib/tournamentSeoServer";
 import { CmsPageShell } from "@/components/cms/CmsPageShell";
 import { getCmsAppearance, getCmsSiteSettings } from "@/lib/cms/strapi";
@@ -142,9 +145,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   // Παράλληλα (Promise.all) τα αποτελέσματα ανά φάση: οι καρτέλες MATCHES/RANKING
   // ζωγραφίζονται με κλικ, άρα στο HTML δεν υπήρχε κανένας αγώνας. Ξεχωριστό query,
   // ώστε αποτυχία του ενός να μη ρίχνει το άλλο.
-  const [seoData, seoStages, relatedNews] = await Promise.all([
+  const [seoData, seoStages, stageTotals, relatedNews] = await Promise.all([
     getTournamentSeoData(summary.documentId),
     getTournamentSeoStages(summary.documentId).catch(() => [] as TournamentSeoStage[]),
+    // Σύνολα ανά φάση για το γράφημα μέσου όρου: ξεχωριστό, ελαφρύ query (μόνο
+    // points/innings) ώστε το σύνολο να είναι πλήρες και όχι κομμένο στις 200
+    // γραμμές των πινάκων αγώνων.
+    getTournamentStageTotals(summary.documentId).catch(() => [] as TournamentStageTotal[]),
     // Άρθρα που ανήκουν σε αυτή τη διοργάνωση: πρώτα η σχέση `page.tournament` (ό,τι
     // διαλέγει ο χειριστής στο admin), μετά τα παλιά άρθρα που απλώς αναφέρουν το
     // `/tournaments/<slug>` στο κείμενό τους — ένωση, ώστε κανένα να μη χαθεί.
@@ -182,6 +189,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             : null
         }
         relatedNewsCount={relatedNews.length}
+        stageChart={
+          <TournamentStageAverageChart stages={stageTotals} title={summary.title} />
+        }
         seoSection={
           <>
             {seoData ? <TournamentSeoSection data={seoData} /> : null}
