@@ -79,15 +79,22 @@ const threeCushionPoints = (row: ComputedStandingRow): number => row.caromPoints
 const pointsRatio = (row: ComputedStandingRow): number =>
   row.pointsAgainst > 0 ? row.pointsFor / row.pointsAgainst : row.pointsFor;
 
-/** CEB qualification ranking (biathlon C/27): MP → pos in group → P+/P− ratio → points diff. */
+/**
+ * Κατάταξη πρόκρισης (όλοι οι όμιλοι μαζί).
+ *
+ * ΣΕΙΡΑ: **πρώτα η θέση μέσα στον όμιλο** — όλοι οι πρώτοι των ομίλων, μετά όλοι οι
+ * δεύτεροι, μετά οι τρίτοι κ.ο.κ. — και μόνο μέσα στην ίδια θέση κρίνουν οι βαθμοί,
+ * ο λόγος P+/P− και η διαφορά. Αλλιώς μια ομάδα με πολλούς βαθμούς σε αδύναμο όμιλο
+ * περνούσε πάνω από τον πρώτο άλλου ομίλου και η λίστα δεν ήταν «1οι, 2οι, 3οι…».
+ */
 const compareQualificationRows = (
   a: ComputedStandingRow & { groupPos?: number },
   b: ComputedStandingRow & { groupPos?: number },
 ): number => {
-  if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
   const pa = a.groupPos ?? 0;
   const pb = b.groupPos ?? 0;
   if (pa !== pb) return pa - pb;
+  if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
   const rb = pointsRatio(b);
   const ra = pointsRatio(a);
   if (rb !== ra) return rb - ra;
@@ -232,10 +239,13 @@ function QualificationRankingTable({
   rows,
   groups,
   biathlon = false,
+  qualifyingSpots = 0,
 }: {
-  rows: ComputedStandingRow[];
+  rows: (ComputedStandingRow & { groupPos?: number })[];
   groups: TeamGroup[];
   biathlon?: boolean;
+  /** Πόσες θέσεις κάθε ομίλου προκρίνονται (0 = καμία σήμανση). */
+  qualifyingSpots?: number;
 }) {
   const groupKeyByTeamId = useMemo(() => {
     const map = new Map<number, string>();
@@ -286,7 +296,8 @@ function QualificationRankingTable({
               row.teamId !== null
                 ? (groupKeyByTeamId.get(row.teamId) ?? "-")
                 : "-";
-            const qualified = index < 8;
+            const qualified =
+              qualifyingSpots > 0 && (row.groupPos ?? Number.POSITIVE_INFINITY) <= qualifyingSpots;
             return (
               <tr
                 key={row.key}
@@ -1093,6 +1104,7 @@ export function TeamTournamentDetailClient({
                 rows={allStandingRows}
                 groups={groups}
                 biathlon={biathlon}
+                qualifyingSpots={qualifyingSpots}
               />
             ) : null}
           </div>
