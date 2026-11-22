@@ -67,6 +67,9 @@ export type TeamTournamentSummary = {
   labelLocale: LabelLocale;
 };
 
+/** Κριτήριο ισοβαθμίας κατάταξης ομίλου (`config.tiebreak` της διοργάνωσης). */
+export type TiebreakMode = "diff" | "points";
+
 export type TeamEntity = {
   id: number | null;
   documentId: string | null;
@@ -347,6 +350,21 @@ export const resolveLabelLocale = (
     readString(countryCode)?.toUpperCase() ?? getCountryCode(federationCountry) ?? null;
   return code === "GR" ? "el" : "en";
 };
+
+/**
+ * Κριτήριο ισοβαθμίας της κατάταξης ομίλου — το ορίζει η διοργάνωση, όχι εμείς.
+ *
+ * `config.tiebreak` (`"diff"` | `"points"`, case-insensitive):
+ * - `"diff"` (προεπιλογή, όταν λείπει) → βαθμοί → διαφορά πόντων → Μ.Ο. → σερί (DBU/FPB/ΕΟΑΑ).
+ * - `"points"` → βαθμοί → σύνολο πόντων (PP / framesFor) → Μ.Ο. → σερί (KNBB Kozoom League).
+ *
+ * Μην αλλάξεις το default: η γερμανική και η πορτογαλική κατάταξη ταιριάζουν 100% με
+ * το diff-first σχήμα.
+ */
+export const resolveTiebreakMode = (
+  config: Record<string, unknown> | null | undefined,
+): TiebreakMode =>
+  String(readString(config?.tiebreak) ?? "").toLowerCase() === "points" ? "points" : "diff";
 
 const normalizeTeamTournamentSummary = (raw: unknown): TeamTournamentSummary | null => {
   const entity = flatten(raw);
@@ -873,12 +891,17 @@ export const fetchTeamMatches = async (
 
 export const computeStandingsByGroup = (
   matches: NormalizedTeamMatch[],
-  opts?: { biathlon?: boolean; points?: { win?: number; draw?: number; loss?: number } },
+  opts?: {
+    biathlon?: boolean;
+    points?: { win?: number; draw?: number; loss?: number };
+    tiebreak?: TiebreakMode;
+  },
 ): Record<string, ComputedStandingRow[]> => {
   // Σχήμα βαθμών: default 2/1/0, override από το config της διοργάνωσης (FPB = 3/2/1).
   const winPts = Number.isFinite(Number(opts?.points?.win)) ? Number(opts?.points?.win) : 2;
   const drawPts = Number.isFinite(Number(opts?.points?.draw)) ? Number(opts?.points?.draw) : 1;
   const lossPts = Number.isFinite(Number(opts?.points?.loss)) ? Number(opts?.points?.loss) : 0;
+  const tiebreak = opts?.tiebreak === "points" ? "points" : "diff";
   const byGroup = new Map<string, Map<string, ComputedStandingRow>>();
 
   const ensure = (
@@ -1006,9 +1029,10 @@ export const computeStandingsByGroup = (
             ? r.pointsFor / r.inningsFor
             : 0;
     });
-    // Tie-break:
-    // - standard league: points, frame diff, average, high run (same as Strapi)
-    // - biathlon (C/27): MP → direct → P+/P- (points avg) → points diff
+    // Ισοβαθμία:
+    // - πρότυπο πρωτάθλημα: βαθμοί → διαφορά πόντων → Μ.Ο. → σερί (ίδιο με τη Strapi)
+    // - `config.tiebreak = "points"` (KNBB): βαθμοί → σύνολο πόντων (PP) → Μ.Ο. → σερί
+    // - biathlon (C/27): MP → direct → P+/P- (Μ.Ο. πόντων) → διαφορά πόντων
     list.sort((a, b) => {
       if (b.leaguePoints !== a.leaguePoints) return b.leaguePoints - a.leaguePoints;
       if (opts?.biathlon) {
@@ -1020,7 +1044,12 @@ export const computeStandingsByGroup = (
         if (db !== da) return db - da;
         return b.highestRun - a.highestRun;
       }
-      if (b.frameDiff !== a.frameDiff) return b.frameDiff - a.frameDiff;
+      // Ισοβαθμία πόντων: η KNBB κρίνει με το σύνολο πόντων (PP / framesFor), οι άλλες με τη διαφορά.
+      if (tiebreak === "points") {
+        if (b.framesFor !== a.framesFor) return b.framesFor - a.framesFor;
+      } else if (b.frameDiff !== a.frameDiff) {
+        return b.frameDiff - a.frameDiff;
+      }
       if (b.avg !== a.avg) return b.avg - a.avg;
       return b.highestRun - a.highestRun;
     });
@@ -1063,6 +1092,7 @@ export const fetchTeamTournamentDetail = async (
     standingsByGroup: computeStandingsByGroup(matches, {
       biathlon,
       points: summary.config?.points as { win?: number; draw?: number; loss?: number } | undefined,
+      tiebreak: resolveTiebreakMode(summary.config),
     }),
     rosters,
   };
