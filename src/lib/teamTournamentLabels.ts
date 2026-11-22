@@ -104,6 +104,7 @@ const el = {
   overallStandingsNote:
     "Σειρά: θέση στον όμιλο (1οι, 2οι, 3οι…), μετά βαθμοί → διαφορά → Μ.Ο.",
   colGroupShort: "Όμιλος",
+  colPositionShort: "Θέση ομ.",
   qualifiesTip: (position: number, spots: number) =>
     `Περνά στην τελική φάση (θέση ${position} από ${spots})`,
   teamStatsTip: (team: string) => `Στατιστικά αθλητών: ${team}`,
@@ -237,6 +238,7 @@ const en: TeamTournamentLabels = {
   overallStandings: "Overall ranking",
   overallStandingsNote: "Order: position in group (1st, 2nd, 3rd…), then points → diff → avg.",
   colGroupShort: "Group",
+  colPositionShort: "Pos.",
   qualifiesTip: (position: number, spots: number) =>
     `Advances to the Final Round (position ${position} of ${spots})`,
   teamStatsTip: (team: string) => `Player stats: ${team}`,
