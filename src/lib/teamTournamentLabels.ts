@@ -101,10 +101,12 @@ const el = {
   qualifyingNote: (spots: number) => `Οι ${spots} πρώτοι προκρίνονται στην τελική φάση.`,
   /** Καρτελίτσα δίπλα στους ομίλους: όλοι οι όμιλοι σε έναν πίνακα. */
   overallStandings: "Γενική κατάταξη",
+  /** Σύντομη ετικέτα για την καρτελίτσα δίπλα στους ομίλους (ο τίτλος του πίνακα μένει πλήρης). */
+  overallStandingsChip: "Γεν. Κατάταξη",
+  /** Ακόμη πιο σύντομη, όταν τα chips ομίλων πιάνουν όλο το πλάτος (κινητό). */
+  overallStandingsShort: "Κατάταξη",
   overallStandingsNote:
     "Σειρά: θέση στον όμιλο (1οι, 2οι, 3οι…), μετά βαθμοί → διαφορά → Μ.Ο.",
-  colGroupShort: "Όμιλος",
-  colPositionShort: "Θέση ομ.",
   qualifiesTip: (position: number, spots: number) =>
     `Περνά στην τελική φάση (θέση ${position} από ${spots})`,
   teamStatsTip: (team: string) => `Στατιστικά αθλητών: ${team}`,
@@ -236,9 +238,9 @@ const en: TeamTournamentLabels = {
   standingsTitle: "Group standings",
   qualifyingNote: (spots: number) => `Top ${spots} advance to the Final Round.`,
   overallStandings: "Overall ranking",
+  overallStandingsChip: "Overall",
+  overallStandingsShort: "Ranking",
   overallStandingsNote: "Order: position in group (1st, 2nd, 3rd…), then points → diff → avg.",
-  colGroupShort: "Group",
-  colPositionShort: "Pos.",
   qualifiesTip: (position: number, spots: number) =>
     `Advances to the Final Round (position ${position} of ${spots})`,
   teamStatsTip: (team: string) => `Player stats: ${team}`,

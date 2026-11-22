@@ -364,8 +364,6 @@ function OverallStandingsPanel({
             <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:whitespace-nowrap [&>th]:bg-slate-50">
               <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
               <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
-              <th className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colGroupShort}</th>
-              <th title={labels.overallStandingsNote} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPositionShort}</th>
               <th title={labels.tipMatches} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayedShort}</th>
               <th title={labels.tipWins} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colWinsShort}</th>
               <th title={labels.tipDraws} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDrawsShort}</th>
@@ -378,20 +376,14 @@ function OverallStandingsPanel({
           </thead>
           <tbody>
             {sorted.map((entry, index) => {
-              const { row, group, position } = entry;
+              const { row } = entry;
               const diff = row.framesFor - row.framesAgainst;
               return (
-                <tr key={`${group.groupKey}-${row.key}`} className="border-t border-slate-100">
+                <tr key={`${entry.group.groupKey}-${row.key}`} className="border-t border-slate-100">
                   <td className="px-2 py-1.5 text-center text-slate-400">{index + 1}</td>
                   <th scope="row" className="max-w-[190px] px-2 py-1.5 text-left text-[12px] font-bold leading-tight text-slate-900">
                     {row.teamName}
                   </th>
-                  <td className="whitespace-nowrap px-1.5 py-1.5 text-center text-[11px] font-semibold text-slate-500">
-                    {group.title || labels.groupName(group.groupKey)}
-                  </td>
-                  <td title={labels.overallStandingsNote} className="px-1.5 py-1.5 text-center text-[11px] font-semibold text-slate-500">
-                    {position}ος
-                  </td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.matchesPlayed}</td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.wins}</td>
                   <td className="px-1.5 py-1.5 text-center text-slate-600">{row.draws}</td>
@@ -851,7 +843,8 @@ export function TeamGroupResults({
                   : "rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
               }
             >
-              {labels.overallStandings}
+              <span className="hidden sm:inline">{labels.overallStandingsChip}</span>
+              <span className="sm:hidden">{labels.overallStandingsShort}</span>
             </button>
           </div>
         ) : null}
