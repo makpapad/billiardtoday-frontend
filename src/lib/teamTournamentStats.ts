@@ -11,6 +11,7 @@ import {
   isForfeitBoard,
   type NormalizedTeamMatch,
   type TeamGroup,
+  type TiebreakMode,
 } from "@/lib/teamTournaments";
 import {
   pickPlayerName,
@@ -74,6 +75,8 @@ export const buildTeamTournamentStats = (
    * τις ίδιες γραμμές — αλλιώς οι ομάδες χωρίς αγώνα έλειπαν και η σειρά φαινόταν άλλη.
    */
   groups?: TeamGroup[],
+  /** Κριτήριο ισοβαθμίας της διοργάνωσης: diff (προεπιλογή) ή points (σύνολο PP — KNBB). */
+  tiebreak: TiebreakMode = "diff",
 ): TeamTournamentStats => {
   const teams = new Map<string, TeamStatRow>();
   const players = new Map<string, PlayerStatRow>();
@@ -224,7 +227,7 @@ export const buildTeamTournamentStats = (
     // Κριτήρια βαθμολογίας (ίδια με τον πίνακα ομίλου): βαθμοί → διαφορά boards → Μ.Ο. → όνομα.
     const standingOrder = (a: TeamStatRow, b: TeamStatRow): number =>
       b.leaguePoints - a.leaguePoints ||
-      b.boardDiff - a.boardDiff ||
+      (tiebreak === "points" ? b.boardFor - a.boardFor : b.boardDiff - a.boardDiff) ||
       b.avg - a.avg ||
       a.teamName.localeCompare(b.teamName, "el");
 

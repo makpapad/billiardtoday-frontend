@@ -9,7 +9,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import type { NormalizedTeamMatch, TeamGroup } from "@/lib/teamTournaments";
+import {
+  resolveTiebreakMode,
+  type NormalizedTeamMatch,
+  type TeamGroup,
+  type TeamTournamentSummary,
+} from "@/lib/teamTournaments";
 import { buildTeamTournamentStats, type TeamStatRow } from "@/lib/teamTournamentStats";
 import { playerProfileHref, type NameVariant } from "@/lib/playerNameVariant";
 import { TeamPlayersModal, avgText } from "@/components/teamTournaments/TeamPlayersModal";
@@ -19,6 +24,8 @@ type Props = {
   matches: NormalizedTeamMatch[];
   /** Δηλωμένες ομάδες ανά όμιλο — στα Στατιστικά μπαίνουν και όσες δεν έχουν παίξει. */
   groups?: TeamGroup[];
+  /** Διοργάνωση — από εδώ βγαίνει το κριτήριο ισοβαθμίας (config.tiebreak). */
+  summary?: TeamTournamentSummary | null;
   groupCount: number;
   /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
   nameVariant?: NameVariant;
@@ -45,14 +52,17 @@ const GroupPill = ({ active, onClick, children }: { active: boolean; onClick: ()
 export function TeamStatisticsPanel({
   matches,
   groups,
+  summary,
   groupCount,
   nameVariant = "international",
   labelLocale,
 }: Props) {
   const labels = teamTournamentLabels(labelLocale);
+  /** Κριτήριο ισοβαθμίας της διοργάνωσης — ίδιο με τον πίνακα ομίλου και τη γενική κατάταξη. */
+  const tiebreak = resolveTiebreakMode(summary?.config);
   const stats = useMemo(
-    () => buildTeamTournamentStats(matches, nameVariant, groups),
-    [matches, nameVariant, groups],
+    () => buildTeamTournamentStats(matches, nameVariant, groups, tiebreak),
+    [matches, nameVariant, groups, tiebreak],
   );
   const groupKeys = useMemo(
     () => Array.from(new Set(stats.teams.map((row) => row.groupKey))).sort(),

@@ -15,11 +15,12 @@ import {
   TeamMatchRow,
   isCompletedMatch,
 } from "@/components/teamTournaments/TeamMatchBlock";
-import type {
-  ComputedStandingRow,
-  NormalizedTeamMatch,
-  TeamGroup,
-  TeamTournamentSummary,
+import {
+  resolveTiebreakMode,
+  type ComputedStandingRow,
+  type NormalizedTeamMatch,
+  type TeamGroup,
+  type TeamTournamentSummary,
 } from "@/lib/teamTournaments";
 import type { NameVariant } from "@/lib/playerNameVariant";
 import {
@@ -483,6 +484,8 @@ export function TeamGroupResults({
 }) {
   const multiGroup = groups.length > 1;
   const nameVariant: NameVariant = summary?.nameVariant ?? "international";
+  /** Κριτήριο ισοβαθμίας της διοργάνωσης (diff / points) — ίδιο με τον πίνακα ομίλου. */
+  const tiebreak = resolveTiebreakMode(summary?.config);
   /** Γλώσσα ετικετών — από το summary, ίδιο πέρασμα με το `nameVariant`. */
   const labelLocale = summary?.labelLocale;
   const labels: TeamTournamentLabels = teamTournamentLabels(labelLocale);
@@ -675,8 +678,13 @@ export function TeamGroupResults({
 
   /** Στατιστικά όλων των αγώνων — ίδια πηγή με την καρτέλα «Στατιστικά» του ομαδικού. */
   const stats = useMemo(
-    () => buildTeamTournamentStats(Array.from(matchesByGroupKey.values()).flat(), nameVariant, groups),
-    [matchesByGroupKey, nameVariant],
+    () => buildTeamTournamentStats(
+      Array.from(matchesByGroupKey.values()).flat(),
+      nameVariant,
+      groups,
+      tiebreak,
+    ),
+    [matchesByGroupKey, nameVariant, groups, tiebreak],
   );
 
   const highlightedTeams = useMemo(() => {
