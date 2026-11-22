@@ -320,6 +320,98 @@ export function GroupStandingsPanel({
 }
 
 /* ------------------------------------------------------------------ */
+/* Γενική κατάταξη — καρτελίτσα δίπλα στους ομίλους                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Όλοι οι όμιλοι σε έναν πίνακα: πρώτο κριτήριο η **θέση στον όμιλο** (1οι όλων των ομίλων,
+ * μετά 2οι, μετά 3οι…), ύστερα τα κριτήρια της βαθμολογίας (βαθμοί → διαφορά → Μ.Ο.).
+ * Ίδια λογική με τη «ΓΕΝΙΚΗ ΚΑΤΑΤΑΞΗ» των επίσημων εγγράφων της ομοσπονδίας.
+ */
+function OverallStandingsPanel({
+  groups,
+  standingsForGroup,
+  labels,
+}: {
+  groups: TeamGroup[];
+  standingsForGroup: (group: TeamGroup) => ComputedStandingRow[];
+  labels: TeamTournamentLabels;
+}) {
+  const entries = groups.flatMap((group) =>
+    standingsForGroup(group).map((row, index) => ({ group, row, position: index + 1 })),
+  );
+  const sorted = entries.slice().sort((a, b) => {
+    if (a.position !== b.position) return a.position - b.position;
+    if (b.row.leaguePoints !== a.row.leaguePoints) return b.row.leaguePoints - a.row.leaguePoints;
+    const diffA = a.row.framesFor - a.row.framesAgainst;
+    const diffB = b.row.framesFor - b.row.framesAgainst;
+    if (diffB !== diffA) return diffB - diffA;
+    if (b.row.avg !== a.row.avg) return b.row.avg - a.row.avg;
+    return a.row.teamName.localeCompare(b.row.teamName, labels.dateLocale);
+  });
+
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white lg:max-h-[calc(100vh-200px)] lg:flex lg:flex-col">
+      <div className="flex items-baseline justify-between border-b border-slate-200 px-4 pb-2.5 pt-3.5">
+        <h3 className="text-[15px] font-semibold tracking-tight text-slate-950">
+          {labels.overallStandings}
+        </h3>
+        <span className="text-[11px] text-slate-500">{labels.standingsTitle}</span>
+      </div>
+      <div className="min-h-0 overflow-x-auto lg:flex-1 lg:overflow-y-auto">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr className="bg-slate-50 text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:whitespace-nowrap [&>th]:bg-slate-50">
+              <th className="w-7 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">#</th>
+              <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colTeam}</th>
+              <th className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colGroupShort}</th>
+              <th title={labels.tipMatches} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPlayedShort}</th>
+              <th title={labels.tipWins} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colWinsShort}</th>
+              <th title={labels.tipDraws} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDrawsShort}</th>
+              <th title={labels.tipLosses} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colLossesShort}</th>
+              <th title={labels.tipBoards} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colBoardsShort}</th>
+              <th title={labels.tipDiff} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colDiffShort}</th>
+              <th title={labels.tipAvg} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colAvgShort}</th>
+              <th title={labels.tipPts} className="px-1.5 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.06em]">{labels.colPtsShort}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((entry, index) => {
+              const { row, group, position } = entry;
+              const diff = row.framesFor - row.framesAgainst;
+              return (
+                <tr key={`${group.groupKey}-${row.key}`} className="border-t border-slate-100">
+                  <td className="px-2 py-1.5 text-center text-slate-400">{index + 1}</td>
+                  <th scope="row" className="max-w-[190px] px-2 py-1.5 text-left text-[12px] font-bold leading-tight text-slate-900">
+                    {row.teamName}
+                  </th>
+                  <td className="px-1.5 py-1.5 text-center text-[11px] font-semibold text-slate-500" title={labels.groupName(group.groupKey)}>
+                    {position}.
+                  </td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{row.matchesPlayed}</td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{row.wins}</td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{row.draws}</td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{row.losses}</td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">
+                    {row.framesFor} – {row.framesAgainst}
+                  </td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{diff > 0 ? `+${diff}` : diff}</td>
+                  <td className="px-1.5 py-1.5 text-center text-slate-600">{avgText(row.avg)}</td>
+                  <td className="px-1.5 py-1.5 text-center font-extrabold text-slate-900">{row.leaguePoints}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500">
+        {labels.overallStandingsNote}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Box ομίλου μέσα στο box της αγωνιστικής                             */
 /* ------------------------------------------------------------------ */
 
@@ -405,6 +497,8 @@ export function TeamGroupResults({
   const listRef = useRef<HTMLDivElement | null>(null);
   /** Ο αγώνας στην κορυφή της λίστας τώρα (κάτω από τις κολλημένες κεφαλίδες). */
   const [activeMatchKey, setActiveMatchKey] = useState<string | null>(null);
+  /** Καρτελίτσα «Γενική κατάταξη»: όλοι οι όμιλοι σε έναν πίνακα (πρώτο κριτήριο η θέση ομίλου). */
+  const [showOverall, setShowOverall] = useState(false);
 
   const visibleGroups = useMemo(
     () =>
@@ -728,10 +822,13 @@ export function TeamGroupResults({
               <button
                 key={item.documentId || item.groupKey}
                 type="button"
-                onClick={() => onSelectGroup(item.groupKey)}
-                aria-pressed={item.groupKey === activeGroupKey}
+                onClick={() => {
+                  setShowOverall(false);
+                  onSelectGroup(item.groupKey);
+                }}
+                aria-pressed={!showOverall && item.groupKey === activeGroupKey}
                 className={
-                  item.groupKey === activeGroupKey
+                  !showOverall && item.groupKey === activeGroupKey
                     ? "rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-bold text-white transition"
                     : "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-800"
                 }
@@ -739,21 +836,42 @@ export function TeamGroupResults({
                 {item.title || labels.groupName(item.groupKey)}
               </button>
             ))}
+            {/* Γενική κατάταξη: όλοι οι όμιλοι μαζί — θέση ομίλου πρώτα (1οι, 2οι, 3οι…). */}
+            <button
+              type="button"
+              onClick={() => setShowOverall(true)}
+              aria-pressed={showOverall}
+              className={
+                showOverall
+                  ? "rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition"
+                  : "rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+              }
+            >
+              {labels.overallStandings}
+            </button>
           </div>
         ) : null}
 
-        {visibleGroups.map((group) => (
-          <GroupStandingsPanel
-            key={group.documentId || group.groupKey}
-            group={group}
-            rows={standingsForGroup(group)}
-            highlightedTeams={highlightedTeams}
-            highlightedTeamIds={highlightedTeamIds}
-            qualifyingSpots={qualifyingSpots}
-            stats={stats}
-            labelLocale={labelLocale}
+        {showOverall && multiGroup ? (
+          <OverallStandingsPanel
+            groups={groups}
+            standingsForGroup={standingsForGroup}
+            labels={labels}
           />
-        ))}
+        ) : (
+          visibleGroups.map((group) => (
+            <GroupStandingsPanel
+              key={group.documentId || group.groupKey}
+              group={group}
+              rows={standingsForGroup(group)}
+              highlightedTeams={highlightedTeams}
+              highlightedTeamIds={highlightedTeamIds}
+              qualifyingSpots={qualifyingSpots}
+              stats={stats}
+              labelLocale={labelLocale}
+            />
+          ))
+        )}
       </div>
     </div>
   );
