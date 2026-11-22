@@ -10,6 +10,7 @@ import {
   boardPointsOf,
   isForfeitBoard,
   type NormalizedTeamMatch,
+  type TeamGroup,
 } from "@/lib/teamTournaments";
 import {
   pickPlayerName,
@@ -67,6 +68,12 @@ export const buildTeamTournamentStats = (
   matches: NormalizedTeamMatch[],
   /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
   nameVariant: NameVariant = "international",
+  /**
+   * Δηλωμένες ομάδες ανά όμιλο. Όταν δίνονται, μπαίνουν στη λίστα και όσες δεν έχουν
+   * παίξει ακόμα (Αγ 0, όλα μηδέν), ώστε τα Στατιστικά και η Γενική Κατάταξη να έχουν
+   * τις ίδιες γραμμές — αλλιώς οι ομάδες χωρίς αγώνα έλειπαν και η σειρά φαινόταν άλλη.
+   */
+  groups?: TeamGroup[],
 ): TeamTournamentStats => {
   const teams = new Map<string, TeamStatRow>();
   const players = new Map<string, PlayerStatRow>();
@@ -201,7 +208,15 @@ export const buildTeamTournamentStats = (
     });
   });
 
-  const teamList = [...teams.values()];
+    // Δηλωμένες ομάδες που δεν έχουν παίξει ακόμη: μπαίνουν με μηδενικά, όπως στον πίνακα
+    // ομίλου, για να μη λείπουν γραμμές από τα Στατιστικά.
+    groups?.forEach((group) => {
+      group.teams?.forEach((team) => {
+        teamRow(team.name, group.groupKey);
+      });
+    });
+
+    const teamList = [...teams.values()];
     teamList.forEach((row) => {
       row.avg = row.innings > 0 ? row.caroms / row.innings : 0;
       row.boardDiff = row.boardFor - row.boardAgainst;

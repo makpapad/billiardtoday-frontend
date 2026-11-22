@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import type { NormalizedTeamMatch } from "@/lib/teamTournaments";
+import type { NormalizedTeamMatch, TeamGroup } from "@/lib/teamTournaments";
 import { buildTeamTournamentStats, type TeamStatRow } from "@/lib/teamTournamentStats";
 import { playerProfileHref, type NameVariant } from "@/lib/playerNameVariant";
 import { TeamPlayersModal, avgText } from "@/components/teamTournaments/TeamPlayersModal";
@@ -17,6 +17,8 @@ import { teamTournamentLabels, type LabelLocale } from "@/lib/teamTournamentLabe
 
 type Props = {
   matches: NormalizedTeamMatch[];
+  /** Δηλωμένες ομάδες ανά όμιλο — στα Στατιστικά μπαίνουν και όσες δεν έχουν παίξει. */
+  groups?: TeamGroup[];
   groupCount: number;
   /** national → εθνικά ονόματα· international (προεπιλογή) → International Name. */
   nameVariant?: NameVariant;
@@ -42,14 +44,15 @@ const GroupPill = ({ active, onClick, children }: { active: boolean; onClick: ()
 
 export function TeamStatisticsPanel({
   matches,
+  groups,
   groupCount,
   nameVariant = "international",
   labelLocale,
 }: Props) {
   const labels = teamTournamentLabels(labelLocale);
   const stats = useMemo(
-    () => buildTeamTournamentStats(matches, nameVariant),
-    [matches, nameVariant],
+    () => buildTeamTournamentStats(matches, nameVariant, groups),
+    [matches, nameVariant, groups],
   );
   const groupKeys = useMemo(
     () => Array.from(new Set(stats.teams.map((row) => row.groupKey))).sort(),

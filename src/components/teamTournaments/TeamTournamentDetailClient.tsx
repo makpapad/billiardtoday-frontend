@@ -1141,6 +1141,7 @@ export function TeamTournamentDetailClient({
         {panel === "stats" ? (
           <TeamStatisticsPanel
             matches={matches}
+            groups={sortedGroups}
             groupCount={sortedGroups.length}
             nameVariant={summary?.nameVariant ?? "international"}
             labelLocale={labelLocale}

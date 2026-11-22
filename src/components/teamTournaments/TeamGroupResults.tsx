@@ -675,7 +675,7 @@ export function TeamGroupResults({
 
   /** Στατιστικά όλων των αγώνων — ίδια πηγή με την καρτέλα «Στατιστικά» του ομαδικού. */
   const stats = useMemo(
-    () => buildTeamTournamentStats(Array.from(matchesByGroupKey.values()).flat(), nameVariant),
+    () => buildTeamTournamentStats(Array.from(matchesByGroupKey.values()).flat(), nameVariant, groups),
     [matchesByGroupKey, nameVariant],
   );
 
