@@ -202,17 +202,40 @@ export const buildTeamTournamentStats = (
   });
 
   const teamList = [...teams.values()];
-  teamList.forEach((row) => {
-    row.avg = row.innings > 0 ? row.caroms / row.innings : 0;
-    row.boardDiff = row.boardFor - row.boardAgainst;
-  });
-  teamList.sort(
-    (a, b) =>
+    teamList.forEach((row) => {
+      row.avg = row.innings > 0 ? row.caroms / row.innings : 0;
+      row.boardDiff = row.boardFor - row.boardAgainst;
+    });
+    // Κριτήρια βαθμολογίας (ίδια με τον πίνακα ομίλου): βαθμοί → διαφορά boards → Μ.Ο. → όνομα.
+    const standingOrder = (a: TeamStatRow, b: TeamStatRow): number =>
       b.leaguePoints - a.leaguePoints ||
       b.boardDiff - a.boardDiff ||
       b.avg - a.avg ||
-      a.teamName.localeCompare(b.teamName, "el"),
-  );
+      a.teamName.localeCompare(b.teamName, "el");
+
+    // ΠΡΩΤΟ κριτήριο της συνολικής κατάταξης είναι η ΘΕΣΗ ΣΤΟΝ ΟΜΙΛΟ: 1οι όλων των ομίλων,
+    // μετά οι 2οι, μετά οι 3οι κ.ο.κ. (ίδια λογική με τις γραμμές πρόκρισης ανά θέση ομίλου).
+    // Μέσα στην ίδια θέση συγκρίνονται με τα κριτήρια της βαθμολογίας.
+    const rankInGroup = new Map<string, number>();
+    const rowsByGroup = new Map<string, TeamStatRow[]>();
+    teamList.forEach((row) => {
+      const bucket = rowsByGroup.get(row.groupKey);
+      if (bucket) bucket.push(row);
+      else rowsByGroup.set(row.groupKey, [row]);
+    });
+    rowsByGroup.forEach((rows) => {
+      rows
+        .slice()
+        .sort(standingOrder)
+        .forEach((row, index) => rankInGroup.set(`${row.groupKey}|${row.teamName}`, index + 1));
+    });
+
+    teamList.sort((a, b) => {
+      const rankA = rankInGroup.get(`${a.groupKey}|${a.teamName}`) ?? 0;
+      const rankB = rankInGroup.get(`${b.groupKey}|${b.teamName}`) ?? 0;
+      if (rankA !== rankB) return rankA - rankB;
+      return standingOrder(a, b);
+    });
 
   const playerList = [...players.values()];
   playerList.forEach((row) => {
