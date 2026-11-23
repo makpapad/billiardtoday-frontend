@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const ALLOWED_HOSTS = new Set([
     'app.billiardtoday.com',
+    'cdn.billiardtoday.com',
     'billiardtoday.com',
     'www.billiardtoday.com',
 ])
