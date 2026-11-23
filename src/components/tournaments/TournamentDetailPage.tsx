@@ -8171,11 +8171,34 @@ export function TournamentDetailPage({
 
   /* Χορηγοί: πεδίο `footer_sponsors` του event (Admin → Tournament → Events →
      Sponsors). Λωρίδα λογοτύπων πριν το «Data & methodology». */
+  /* Σύνδεσμοι χορηγών: `footer_sponsors_links` = [{ id, url }]. Ταιριάζουμε με
+     media id, documentId ή — σαν εναλλακτικό — με το url του λογοτύπου. */
+  const footerSponsorLinks = (() => {
+    const map = new Map<string, string>();
+    const rawLinks = eventData?.data?.footer_sponsors_links;
+    const entries = Array.isArray(rawLinks) ? rawLinks : [];
+    entries.forEach((entry) => {
+      if (!entry || typeof entry !== "object") return;
+      const record = entry as Record<string, unknown>;
+      const target = typeof record.url === "string" ? record.url.trim() : "";
+      if (!target) return;
+      const idValue = record.id;
+      if (typeof idValue === "number" && Number.isFinite(idValue)) {
+        map.set(`id:${idValue}`, target);
+      } else if (typeof idValue === "string" && idValue.trim()) {
+        const trimmed = idValue.trim();
+        if (/^\d+$/.test(trimmed)) map.set(`id:${Number(trimmed)}`, target);
+        map.set(`doc:${trimmed}`, target);
+      }
+    });
+    return map;
+  })();
+
   const footerSponsors = (() => {
     const raw = eventData?.data?.footer_sponsors;
     const entries = Array.isArray(raw) ? raw : raw ? [raw] : [];
     const seen = new Set<string>();
-    const logos: Array<{ key: string; url: string; alt: string }> = [];
+    const logos: Array<{ key: string; url: string; alt: string; link: string | null }> = [];
     entries.forEach((entry, index) => {
       const url = normalizeMediaUrl(entry);
       if (!url || seen.has(url)) return;
@@ -8194,7 +8217,24 @@ export function TournamentDetailPage({
           : "";
       const name =
         typeof attributes.name === "string" ? attributes.name.trim() : "";
-      logos.push({ key: `${url}-${index}`, url, alt: altText || name });
+      const rawId = node.id ?? attributes.id;
+      const mediaId =
+        typeof rawId === "number"
+          ? rawId
+          : typeof rawId === "string" && /^\d+$/.test(rawId.trim())
+            ? Number(rawId.trim())
+            : null;
+      const documentId =
+        typeof attributes.documentId === "string"
+          ? attributes.documentId.trim()
+          : typeof node.documentId === "string"
+            ? node.documentId.trim()
+            : "";
+      const link =
+        (mediaId !== null ? footerSponsorLinks.get(`id:${mediaId}`) : undefined) ??
+        (documentId ? footerSponsorLinks.get(`doc:${documentId}`) : undefined) ??
+        null;
+      logos.push({ key: `${url}-${index}`, url, alt: altText || name, link });
     });
     return logos;
   })();
@@ -8492,15 +8532,32 @@ export function TournamentDetailPage({
       {footerSponsors.length > 0 ? (
         <section className="mt-6 border-t border-slate-200 pt-6">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-            {footerSponsors.map((logo) => (
-              <img
-                key={logo.key}
-                src={logo.url}
-                alt={logo.alt}
-                loading="lazy"
-                className="h-9 w-auto max-w-[150px] object-contain opacity-75 transition hover:opacity-100 md:h-11"
-              />
-            ))}
+            {footerSponsors.map((logo) =>
+              logo.link ? (
+                <a
+                  key={logo.key}
+                  href={logo.link}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="inline-flex items-center justify-center"
+                >
+                  <img
+                    src={logo.url}
+                    alt={logo.alt}
+                    loading="lazy"
+                    className="h-9 w-auto max-w-[150px] object-contain opacity-75 transition hover:opacity-100 md:h-11"
+                  />
+                </a>
+              ) : (
+                <img
+                  key={logo.key}
+                  src={logo.url}
+                  alt={logo.alt}
+                  loading="lazy"
+                  className="h-9 w-auto max-w-[150px] object-contain opacity-75 transition hover:opacity-100 md:h-11"
+                />
+              ),
+            )}
           </div>
         </section>
       ) : null}

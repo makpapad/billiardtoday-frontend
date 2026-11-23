@@ -604,6 +604,27 @@ const buildClubTournamentEventPayload = async (
     queryParams.set('fields[5]', 'game_type')
     queryParams.set('fields[6]', 'format_definition')
     queryParams.set('fields[7]', 'tournament_status')
+    // Hero poster + sponsor strip: same fields as bt-event, so a club/federation
+    // tournament renders exactly like an event page.
+    queryParams.set('fields[8]', 'hero_image_opacity')
+    queryParams.set('fields[9]', 'hero_image_zoom')
+    queryParams.set('fields[10]', 'hero_image_focal_x')
+    queryParams.set('fields[11]', 'hero_image_focal_y')
+    queryParams.set('fields[12]', 'footer_sponsors_links')
+    queryParams.set('populate[hero_image][fields][0]', 'name')
+    queryParams.set('populate[hero_image][fields][1]', 'url')
+    queryParams.set('populate[hero_image][fields][2]', 'alternativeText')
+    queryParams.set('populate[hero_image][fields][3]', 'caption')
+    queryParams.set('populate[hero_image][fields][4]', 'formats')
+    queryParams.set('populate[hero_image][fields][5]', 'documentId')
+    queryParams.set('populate[hero_image][fields][6]', 'mime')
+    queryParams.set('populate[footer_sponsors][fields][0]', 'name')
+    queryParams.set('populate[footer_sponsors][fields][1]', 'url')
+    queryParams.set('populate[footer_sponsors][fields][2]', 'alternativeText')
+    queryParams.set('populate[footer_sponsors][fields][3]', 'caption')
+    queryParams.set('populate[footer_sponsors][fields][4]', 'formats')
+    queryParams.set('populate[footer_sponsors][fields][5]', 'documentId')
+    queryParams.set('populate[footer_sponsors][fields][6]', 'mime')
 
     const url = `${STRAPI_URL}/api/tournaments?${queryParams.toString()}`
     const res = await fetch(url, {
@@ -668,6 +689,21 @@ const buildClubTournamentEventPayload = async (
             game_type: readString(tournament.game_type),
             final_standings_published: true,
             final_standings_published_at: null,
+            // Hero poster (crop/opacity) + sponsor strip, identical shape to the
+            // bt-event payload so TournamentDetailPage needs no special case.
+            hero_image: tournament.hero_image ?? null,
+            hero_image_opacity: tournament.hero_image_opacity ?? null,
+            hero_image_zoom: tournament.hero_image_zoom ?? null,
+            hero_image_focal_x: tournament.hero_image_focal_x ?? null,
+            hero_image_focal_y: tournament.hero_image_focal_y ?? null,
+            footer_sponsors: Array.isArray(tournament.footer_sponsors)
+                ? tournament.footer_sponsors
+                : tournament.footer_sponsors
+                  ? [tournament.footer_sponsors]
+                  : [],
+            footer_sponsors_links: Array.isArray(tournament.footer_sponsors_links)
+                ? tournament.footer_sponsors_links
+                : [],
             event_stages: stages,
             results_final: [],
             timetable_slots: [],
@@ -1321,6 +1357,7 @@ export async function GET(
             queryParams.set('fields[14]', 'hero_image_zoom')
             queryParams.set('fields[15]', 'hero_image_focal_x')
             queryParams.set('fields[16]', 'hero_image_focal_y')
+            queryParams.set('fields[17]', 'footer_sponsors_links')
             queryParams.set('populate[gallery_images][fields][0]', 'name')
             queryParams.set('populate[gallery_images][fields][1]', 'url')
             queryParams.set('populate[gallery_images][fields][2]', 'alternativeText')
