@@ -5349,6 +5349,28 @@ export function TournamentDetailPage({
       ? flatGalleryImages[selectedGalleryImageIndex]
       : null;
 
+  /* Κατέβασμα εικόνας: τα media είναι σε άλλο origin, άρα το `download` του <a>
+     δεν δουλεύει — περνάμε από το /api/download που το σερβίρει ως attachment. */
+  const buildGalleryDownloadHref = (
+    url: string | null | undefined,
+    name?: string | null,
+  ): string | null => {
+    if (!url) return null;
+    const params = new URLSearchParams({ url });
+    if (name && name.trim()) params.set("name", name.trim());
+    return `/api/download?${params.toString()}`;
+  };
+  const isPosterGallerySection =
+    Boolean(activeGallerySection) &&
+    (activeGallerySection?.key === "poster" ||
+      (activeGallerySection?.title ?? "").trim().toUpperCase() === "POSTER");
+  const posterDownloadHref = isPosterGallerySection
+    ? buildGalleryDownloadHref(
+        activeGallerySection?.images[0]?.originalUrl,
+        activeGallerySection?.images[0]?.name,
+      )
+    : null;
+
   useEffect(() => {
     if (gallerySections.length === 0) {
       setActiveGallerySectionKey(null);
@@ -6923,8 +6945,18 @@ export function TournamentDetailPage({
                         </div>
                       ) : null}
                     </div>
-                    <div className="rounded-full bg-slate-100 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:justify-self-end">
-                      {activeGallerySection.videos.length} videos / {activeGallerySection.images.length} photos
+                    <div className="flex flex-wrap items-center justify-center gap-2 md:justify-self-end">
+                      {posterDownloadHref ? (
+                        <a
+                          href={posterDownloadHref}
+                          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800"
+                        >
+                          Download poster
+                        </a>
+                      ) : null}
+                      <div className="rounded-full bg-slate-100 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {activeGallerySection.videos.length} videos / {activeGallerySection.images.length} photos
+                      </div>
                     </div>
                   </div>
                   <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
@@ -7397,14 +7429,32 @@ export function TournamentDetailPage({
                     </div>
                   ) : null}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGalleryImageIndex(null)}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xl font-semibold text-white transition hover:bg-white/10"
-                  aria-label="Close fullscreen image"
-                >
-                  X
-                </button>
+                <div className="flex items-center gap-2">
+                  {buildGalleryDownloadHref(
+                    selectedGalleryImage.originalUrl,
+                    selectedGalleryImage.name,
+                  ) ? (
+                    <a
+                      href={
+                        buildGalleryDownloadHref(
+                          selectedGalleryImage.originalUrl,
+                          selectedGalleryImage.name,
+                        ) as string
+                      }
+                      className="inline-flex h-11 items-center rounded-full border border-white/15 bg-white/5 px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-white/10"
+                    >
+                      Download
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGalleryImageIndex(null)}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xl font-semibold text-white transition hover:bg-white/10"
+                    aria-label="Close fullscreen image"
+                  >
+                    X
+                  </button>
+                </div>
               </div>
               <div className="relative flex min-h-[60vh] items-center justify-center bg-black">
                 {flatGalleryImages.length > 1 ? (
@@ -8093,13 +8143,15 @@ export function TournamentDetailPage({
 
   // Στο κινητό η σειρά εικονιδίων (Live / Tournament / …) πάει ΚΑΤΩ από την
   // κάρτα πληροφοριών· από `lg` και πάνω μένει μέσα στην πρώτη στήλη όπως πριν.
-  /* ΔΟΚΙΜΑΣΤΙΚΟ: αφίσα διοργάνωσης ως φόντο στο hero (αριστερό μέρος, σκοτεινή με
-     διαφάνεια ώστε να μένουν ευανάγνωστοι οι τίτλοι). Κλειδί = documentId του event,
-     αρχείο στο /public. Αν καθιερωθεί, μεταφέρεται σε πεδίο εικόνας στο Strapi. */
+  /* Αφίσα hero: πρώτα το πεδίο `hero_image` του event (Admin → Tournament → Events →
+     Hero Poster), αλλιώς ο παλιός δοκιμαστικός χάρτης ανά event. */
   const HERO_POSTER_BY_EVENT: Record<string, string> = {
     l7ow3d4pxvgdryw1gdaoz0ul: "/tournaments/carom-cafe-fall-classic-2026.jpg",
   };
-  const heroPosterUrl = HERO_POSTER_BY_EVENT[summary.documentId] ?? null;
+  const heroPosterUrl =
+    normalizeMediaUrl(eventData?.data?.hero_image) ??
+    HERO_POSTER_BY_EVENT[summary.documentId] ??
+    null;
 
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
@@ -8189,7 +8241,7 @@ export function TournamentDetailPage({
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div
-              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-55 lg:w-[62%]"
+              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-[0.47] lg:w-[62%]"
               style={{ backgroundImage: `url(${heroPosterUrl})` }}
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.86)_0%,rgba(15,23,42,0.55)_32%,rgba(15,23,42,0.14)_60%,rgba(15,23,42,0)_100%)]" />

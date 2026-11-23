@@ -1324,6 +1324,16 @@ export async function GET(
             queryParams.set('populate[gallery_images][fields][5]', 'documentId')
             queryParams.set('populate[gallery_images][fields][6]', 'mime')
 
+            // Αφίσα hero (μία εικόνα ανά διοργάνωση) — τη διαχειρίζεται το admin
+            // (Tournament → Events → Hero Poster).
+            queryParams.set('populate[hero_image][fields][0]', 'name')
+            queryParams.set('populate[hero_image][fields][1]', 'url')
+            queryParams.set('populate[hero_image][fields][2]', 'alternativeText')
+            queryParams.set('populate[hero_image][fields][3]', 'caption')
+            queryParams.set('populate[hero_image][fields][4]', 'formats')
+            queryParams.set('populate[hero_image][fields][5]', 'documentId')
+            queryParams.set('populate[hero_image][fields][6]', 'mime')
+
             queryParams.set('populate[gallery_video_files][fields][0]', 'name')
             queryParams.set('populate[gallery_video_files][fields][1]', 'url')
             queryParams.set('populate[gallery_video_files][fields][2]', 'alternativeText')
