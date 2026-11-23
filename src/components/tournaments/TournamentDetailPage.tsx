@@ -8154,7 +8154,7 @@ export function TournamentDetailPage({
     : 47;
   const heroPosterZoomValue = Number(eventData?.data?.hero_image_zoom ?? 100);
   const heroPosterZoom = Number.isFinite(heroPosterZoomValue)
-    ? Math.min(400, Math.max(100, heroPosterZoomValue))
+    ? Math.min(400, Math.max(25, heroPosterZoomValue))
     : 100;
   const heroPosterFocalXValue = Number(
     eventData?.data?.hero_image_focal_x ?? 50,
@@ -8257,9 +8257,11 @@ export function TournamentDetailPage({
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div
-              className="absolute inset-0 w-full bg-cover"
+              className="absolute inset-0 w-full"
               style={{
                 backgroundImage: `url(${heroPosterUrl})`,
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
                 backgroundPosition: `${heroPosterFocalX}% ${heroPosterFocalY}%`,
                 transform: `scale(${heroPosterZoom / 100})`,
                 transformOrigin: `${heroPosterFocalX}% ${heroPosterFocalY}%`,
