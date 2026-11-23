@@ -8143,15 +8143,9 @@ export function TournamentDetailPage({
 
   // Στο κινητό η σειρά εικονιδίων (Live / Tournament / …) πάει ΚΑΤΩ από την
   // κάρτα πληροφοριών· από `lg` και πάνω μένει μέσα στην πρώτη στήλη όπως πριν.
-  /* Αφίσα hero: πρώτα το πεδίο `hero_image` του event (Admin → Tournament → Events →
-     Hero Poster), αλλιώς ο παλιός δοκιμαστικός χάρτης ανά event. */
-  const HERO_POSTER_BY_EVENT: Record<string, string> = {
-    l7ow3d4pxvgdryw1gdaoz0ul: "/tournaments/carom-cafe-fall-classic-2026.jpg",
-  };
-  const heroPosterUrl =
-    normalizeMediaUrl(eventData?.data?.hero_image) ??
-    HERO_POSTER_BY_EVENT[summary.documentId] ??
-    null;
+  /* Αφίσα hero: πεδίο `hero_image` του event (Admin → Tournament → Events →
+     Hero Poster). Χωρίς hardcoded χάρτη — κάθε διοργάνωση τη ρυθμίζει μόνη της. */
+  const heroPosterUrl = normalizeMediaUrl(eventData?.data?.hero_image) ?? null;
 
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
