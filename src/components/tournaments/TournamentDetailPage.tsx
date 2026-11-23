@@ -8093,6 +8093,14 @@ export function TournamentDetailPage({
 
   // Στο κινητό η σειρά εικονιδίων (Live / Tournament / …) πάει ΚΑΤΩ από την
   // κάρτα πληροφοριών· από `lg` και πάνω μένει μέσα στην πρώτη στήλη όπως πριν.
+  /* ΔΟΚΙΜΑΣΤΙΚΟ: αφίσα διοργάνωσης ως φόντο στο hero (αριστερό μέρος, σκοτεινή με
+     διαφάνεια ώστε να μένουν ευανάγνωστοι οι τίτλοι). Κλειδί = documentId του event,
+     αρχείο στο /public. Αν καθιερωθεί, μεταφέρεται σε πεδίο εικόνας στο Strapi. */
+  const HERO_POSTER_BY_EVENT: Record<string, string> = {
+    l7ow3d4pxvgdryw1gdaoz0ul: "/tournaments/carom-cafe-fall-classic-2026.jpg",
+  };
+  const heroPosterUrl = HERO_POSTER_BY_EVENT[summary.documentId] ?? null;
+
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
       <HeroMenuButton
@@ -8177,8 +8185,17 @@ export function TournamentDetailPage({
       className="mx-auto w-full px-1 py-8 sm:px-6"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
-      <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
-        <div className="grid gap-8 px-1 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
+      <section className="relative overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
+        {heroPosterUrl ? (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div
+              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-40 lg:w-[62%]"
+              style={{ backgroundImage: `url(${heroPosterUrl})` }}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.88)_0%,rgba(15,23,42,0.66)_34%,rgba(15,23,42,0.22)_60%,rgba(15,23,42,0)_100%)]" />
+          </div>
+        ) : null}
+        <div className="relative grid gap-8 px-1 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
           <div className="min-w-0 flex flex-col justify-between gap-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
