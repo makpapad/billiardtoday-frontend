@@ -8189,10 +8189,10 @@ export function TournamentDetailPage({
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div
-              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-40 lg:w-[62%]"
+              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-55 lg:w-[62%]"
               style={{ backgroundImage: `url(${heroPosterUrl})` }}
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.88)_0%,rgba(15,23,42,0.66)_34%,rgba(15,23,42,0.22)_60%,rgba(15,23,42,0)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.86)_0%,rgba(15,23,42,0.55)_32%,rgba(15,23,42,0.14)_60%,rgba(15,23,42,0)_100%)]" />
           </div>
         ) : null}
         <div className="relative grid gap-8 px-1 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
