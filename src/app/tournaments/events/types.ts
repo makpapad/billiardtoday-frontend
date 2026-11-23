@@ -148,6 +148,7 @@ export type StrapiEvent = {
   timetable_config?: TimetableConfig | null;
   gallery_images?: unknown;
   hero_image?: unknown;
+  hero_image_opacity?: unknown;
   gallery_video_files?: unknown;
   gallery_videos?: unknown;
   gallery_sections?: unknown;

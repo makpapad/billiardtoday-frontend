@@ -8146,6 +8146,12 @@ export function TournamentDetailPage({
   /* Αφίσα hero: πεδίο `hero_image` του event (Admin → Tournament → Events →
      Hero Poster). Χωρίς hardcoded χάρτη — κάθε διοργάνωση τη ρυθμίζει μόνη της. */
   const heroPosterUrl = normalizeMediaUrl(eventData?.data?.hero_image) ?? null;
+  const heroPosterOpacityValue = Number(
+    eventData?.data?.hero_image_opacity ?? 47,
+  );
+  const heroPosterOpacity = Number.isFinite(heroPosterOpacityValue)
+    ? Math.min(100, Math.max(5, heroPosterOpacityValue))
+    : 47;
 
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
@@ -8235,8 +8241,11 @@ export function TournamentDetailPage({
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div
-              className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-[0.47] lg:w-[62%]"
-              style={{ backgroundImage: `url(${heroPosterUrl})` }}
+              className="absolute inset-0 w-full bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${heroPosterUrl})`,
+                opacity: heroPosterOpacity / 100,
+              }}
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.86)_0%,rgba(15,23,42,0.55)_32%,rgba(15,23,42,0.14)_60%,rgba(15,23,42,0)_100%)]" />
           </div>
