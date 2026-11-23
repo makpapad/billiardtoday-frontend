@@ -8171,8 +8171,8 @@ export function TournamentDetailPage({
 
   /* Χορηγοί: πεδίο `footer_sponsors` του event (Admin → Tournament → Events →
      Sponsors). Λωρίδα λογοτύπων πριν το «Data & methodology». */
-  /* Σύνδεσμοι χορηγών: `footer_sponsors_links` = [{ id, url }]. Ταιριάζουμε με
-     media id, documentId ή — σαν εναλλακτικό — με το url του λογοτύπου. */
+  /* Sponsor links: `footer_sponsors_links` = [{ id, url }]. Matched by media id,
+     documentId or — as a fallback — by the logo url. */
   const footerSponsorLinks = (() => {
     const map = new Map<string, string>();
     const rawLinks = eventData?.data?.footer_sponsors_links;
