@@ -149,6 +149,9 @@ export type StrapiEvent = {
   gallery_images?: unknown;
   hero_image?: unknown;
   hero_image_opacity?: unknown;
+  hero_image_zoom?: unknown;
+  hero_image_focal_x?: unknown;
+  hero_image_focal_y?: unknown;
   gallery_video_files?: unknown;
   gallery_videos?: unknown;
   gallery_sections?: unknown;

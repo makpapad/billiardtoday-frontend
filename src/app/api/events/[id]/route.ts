@@ -1316,8 +1316,11 @@ export async function GET(
             queryParams.set('fields[10]', 'ruleset_config')
             queryParams.set('fields[11]', 'final_standings_published')
             queryParams.set('fields[12]', 'final_standings_published_at')
-            // Διαφάνεια αφίσας hero (Admin → Events → Hero Poster).
+            // Διαφάνεια + crop (zoom/εστία) αφίσας hero (Admin → Events → Hero Poster).
             queryParams.set('fields[13]', 'hero_image_opacity')
+            queryParams.set('fields[14]', 'hero_image_zoom')
+            queryParams.set('fields[15]', 'hero_image_focal_x')
+            queryParams.set('fields[16]', 'hero_image_focal_y')
             queryParams.set('populate[gallery_images][fields][0]', 'name')
             queryParams.set('populate[gallery_images][fields][1]', 'url')
             queryParams.set('populate[gallery_images][fields][2]', 'alternativeText')

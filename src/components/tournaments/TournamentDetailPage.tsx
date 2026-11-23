@@ -8152,6 +8152,22 @@ export function TournamentDetailPage({
   const heroPosterOpacity = Number.isFinite(heroPosterOpacityValue)
     ? Math.min(100, Math.max(5, heroPosterOpacityValue))
     : 47;
+  const heroPosterZoomValue = Number(eventData?.data?.hero_image_zoom ?? 100);
+  const heroPosterZoom = Number.isFinite(heroPosterZoomValue)
+    ? Math.min(400, Math.max(100, heroPosterZoomValue))
+    : 100;
+  const heroPosterFocalXValue = Number(
+    eventData?.data?.hero_image_focal_x ?? 50,
+  );
+  const heroPosterFocalX = Number.isFinite(heroPosterFocalXValue)
+    ? Math.min(100, Math.max(0, heroPosterFocalXValue))
+    : 50;
+  const heroPosterFocalYValue = Number(
+    eventData?.data?.hero_image_focal_y ?? 50,
+  );
+  const heroPosterFocalY = Number.isFinite(heroPosterFocalYValue)
+    ? Math.min(100, Math.max(0, heroPosterFocalYValue))
+    : 50;
 
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
@@ -8241,9 +8257,12 @@ export function TournamentDetailPage({
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div
-              className="absolute inset-0 w-full bg-cover bg-center"
+              className="absolute inset-0 w-full bg-cover"
               style={{
                 backgroundImage: `url(${heroPosterUrl})`,
+                backgroundPosition: `${heroPosterFocalX}% ${heroPosterFocalY}%`,
+                transform: `scale(${heroPosterZoom / 100})`,
+                transformOrigin: `${heroPosterFocalX}% ${heroPosterFocalY}%`,
                 opacity: heroPosterOpacity / 100,
               }}
             />
