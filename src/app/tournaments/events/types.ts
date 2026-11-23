@@ -147,6 +147,7 @@ export type StrapiEvent = {
   end_date?: string | null;
   timetable_config?: TimetableConfig | null;
   gallery_images?: unknown;
+  footer_sponsors?: unknown;
   hero_image?: unknown;
   hero_image_opacity?: unknown;
   hero_image_zoom?: unknown;

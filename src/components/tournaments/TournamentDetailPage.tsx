@@ -8169,6 +8169,36 @@ export function TournamentDetailPage({
     ? Math.min(100, Math.max(0, heroPosterFocalYValue))
     : 50;
 
+  /* Χορηγοί: πεδίο `footer_sponsors` του event (Admin → Tournament → Events →
+     Sponsors). Λωρίδα λογοτύπων πριν το «Data & methodology». */
+  const footerSponsors = (() => {
+    const raw = eventData?.data?.footer_sponsors;
+    const entries = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    const seen = new Set<string>();
+    const logos: Array<{ key: string; url: string; alt: string }> = [];
+    entries.forEach((entry, index) => {
+      const url = normalizeMediaUrl(entry);
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      const node =
+        entry && typeof entry === "object"
+          ? (entry as Record<string, unknown>)
+          : {};
+      const attributes =
+        node.attributes && typeof node.attributes === "object"
+          ? (node.attributes as Record<string, unknown>)
+          : node;
+      const altText =
+        typeof attributes.alternativeText === "string"
+          ? attributes.alternativeText.trim()
+          : "";
+      const name =
+        typeof attributes.name === "string" ? attributes.name.trim() : "";
+      logos.push({ key: `${url}-${index}`, url, alt: altText || name });
+    });
+    return logos;
+  })();
+
   const heroMenuRow = (
     <div className="flex max-w-full flex-nowrap items-center gap-2">
       <HeroMenuButton
@@ -8459,6 +8489,21 @@ export function TournamentDetailPage({
       <div ref={tournamentContentRef} className="mt-2">
         {mainContent}
       </div>
+      {footerSponsors.length > 0 ? (
+        <section className="mt-6 border-t border-slate-200 pt-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            {footerSponsors.map((logo) => (
+              <img
+                key={logo.key}
+                src={logo.url}
+                alt={logo.alt}
+                loading="lazy"
+                className="h-9 w-auto max-w-[150px] object-contain opacity-75 transition hover:opacity-100 md:h-11"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
       <div className="mt-4">
         <DataMethodologyNote
           source={federationWebsiteCredit({

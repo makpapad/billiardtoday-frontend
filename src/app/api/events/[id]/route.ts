@@ -1328,6 +1328,14 @@ export async function GET(
             queryParams.set('populate[gallery_images][fields][4]', 'formats')
             queryParams.set('populate[gallery_images][fields][5]', 'documentId')
             queryParams.set('populate[gallery_images][fields][6]', 'mime')
+            // Λογότυπα χορηγών στο κάτω μέρος της σελίδας (Admin → Events → Sponsors).
+            queryParams.set('populate[footer_sponsors][fields][0]', 'name')
+            queryParams.set('populate[footer_sponsors][fields][1]', 'url')
+            queryParams.set('populate[footer_sponsors][fields][2]', 'alternativeText')
+            queryParams.set('populate[footer_sponsors][fields][3]', 'caption')
+            queryParams.set('populate[footer_sponsors][fields][4]', 'formats')
+            queryParams.set('populate[footer_sponsors][fields][5]', 'documentId')
+            queryParams.set('populate[footer_sponsors][fields][6]', 'mime')
 
             // Αφίσα hero (μία εικόνα ανά διοργάνωση) — τη διαχειρίζεται το admin
             // (Tournament → Events → Hero Poster).
