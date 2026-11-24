@@ -156,6 +156,8 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
     const [selectedDiscipline, setSelectedDiscipline] = useState('all')
     const [selectedSeason, setSelectedSeason] = useState('all')
     const [selectedTeam, setSelectedTeam] = useState('all')
+    // Ποια κάρτα διοργάνωσης είναι ανοιχτή — ίδια λογική με το ατομικό ιστορικό (μία τη φορά).
+    const [expandedTournamentKey, setExpandedTournamentKey] = useState<string | null>(null)
 
     useEffect(() => {
         let cancelled = false
@@ -336,13 +338,22 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
                             <div className="space-y-6">
                                 {seasonBlock.tournaments.map((tournament) => {
                                     const stats = summarize(tournament.rows)
+                                    // Κλειδί ταυτοποίησης της κάρτας — χρησιμοποιείται και για το key και για το expanded state.
+                                    const blockKey = `${seasonBlock.season}-${tournament.title}-${tournament.rows[0]?.groupKey || ''}`
                                     return (
                                         <div
-                                            key={`${seasonBlock.season}-${tournament.title}-${tournament.rows[0]?.groupKey || ''}`}
+                                            key={blockKey}
                                             className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                                         >
                                             {/* Κεφαλίδα διοργάνωσης — ίδιο σχήμα με το ατομικό */}
-                                            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                                            <div
+                                                className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white cursor-pointer select-none transition-opacity hover:opacity-90"
+                                                onClick={() =>
+                                                    setExpandedTournamentKey((prev) =>
+                                                        prev === blockKey ? null : blockKey,
+                                                    )
+                                                }
+                                            >
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div>
                                                         <h3 className="text-2xl font-bold flex items-center gap-2">
@@ -354,6 +365,7 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="inline-flex items-center gap-2 hover:text-blue-100 transition-colors"
+                                                                onClick={(e) => e.stopPropagation()}
                                                             >
                                                                 <span>
                                                                     {
@@ -402,6 +414,19 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
                                                                 'players.profile.teamHistory.games',
                                                             )}
                                                         </div>
+                                                        {/* Chevron που γυρίζει όταν ανοίγει η κάρτα — ίδιο με το ατομικό */}
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className={`mx-auto mt-1 h-4 w-4 transition-transform ${expandedTournamentKey === blockKey ? 'rotate-180' : ''}`}
+                                                            aria-hidden="true"
+                                                        >
+                                                            <path d="m6 9 6 6 6-6" />
+                                                        </svg>
                                                     </div>
                                                 </div>
 
@@ -461,8 +486,9 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
                                                 </div>
                                             </div>
 
-                                            {/* Αγώνες — ίδιες γραμμές με το ατομικό */}
-                                            <div className="p-6 bg-white dark:bg-gray-800">
+                                            {/* Αγώνες — ίδιες γραμμές με το ατομικό, εμφανίζονται μόνο όταν η κάρτα είναι ανοιχτή */}
+                                            {expandedTournamentKey === blockKey && (
+                                            <div className="border-t border-white/20 p-6 bg-white dark:bg-gray-800">
                                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                                                     {t(
                                                         'players.profile.history.tournament.detailsTitle',
@@ -595,6 +621,7 @@ export default function PlayerTeamHistory({ playerId }: { playerId: string }) {
                                                     )}
                                                 </div>
                                             </div>
+                                            )}
                                         </div>
                                     )
                                 })}

@@ -134,17 +134,27 @@ export default async function PlayerProfilePage({ params }: Props) {
       {umbRanking ? (
         <UmbPlayerRankingCard ranking={umbRanking} playerLabel={summary?.seoName ?? null} />
       ) : null}
-      {history && history.items.length > 0 ? (
-        <PlayerArchiveSection
-          items={history.items}
-          totalCount={history.totalCount}
-          playerLabel={summary?.seoName ?? "Player"}
-        />
-      ) : null}
-      {teamMatches.length > 0 ? (
-        <PlayerTeamArchiveSection matches={teamMatches} playerLabel={summary?.seoName ?? "Player"} />
-      ) : null}
-      <PlayerProfileClient hasServerSummary={Boolean(summary)} />
+      {/* Server-rendered «Tournament archive & match results»: περνιούνται ως slot
+          στο client component ώστε να αποδίδονται ΚΑΤΩ από όλο το προφίλ (στατιστικά,
+          κατατάξεις, ιστορικό) και αμέσως πριν τη σημείωση για τα κεντρικά δεδομένα.
+          Το περιεχόμενο παραμένει server-rendered στο HTML (SEO), αλλάζει μόνο η θέση. */}
+      <PlayerProfileClient
+        hasServerSummary={Boolean(summary)}
+        archiveSlot={
+          <>
+            {history && history.items.length > 0 ? (
+              <PlayerArchiveSection
+                items={history.items}
+                totalCount={history.totalCount}
+                playerLabel={summary?.seoName ?? "Player"}
+              />
+            ) : null}
+            {teamMatches.length > 0 ? (
+              <PlayerTeamArchiveSection matches={teamMatches} playerLabel={summary?.seoName ?? "Player"} />
+            ) : null}
+          </>
+        }
+      />
     </>
   );
 }

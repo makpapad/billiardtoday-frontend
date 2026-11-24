@@ -1,7 +1,7 @@
 "use client"
 
 import PlayerTeamHistory from "@/components/players/PlayerTeamHistory"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, type ReactNode } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import { getCountryFlagPath, getCountryLabel } from "@/lib/countryFlags"
 import { getGameTypeLabel, normalizeGameTypeOrFallback, type GameType } from "@/lib/gameTypes"
@@ -710,10 +710,16 @@ const getCareerStatsEventCount = (
 
 type PlayerProfileClientProps = {
     hasServerSummary?: boolean
+    // Server-rendered «Tournament archive & match results» section(ς) που περνούν
+    // από τη σελίδα ως slot, ώστε να αποδίδονται ΚΑΤΩ από όλο το προφίλ (στατιστικά,
+    // κατατάξεις, ιστορικό) και αμέσως πριν τη σημείωση για τα κεντρικά δεδομένα.
+    // Παραμένει προαιρετικό: το embed/page.tsx καλεί το component χωρίς props.
+    archiveSlot?: ReactNode
 }
 
 export default function PlayerProfileClient({
     hasServerSummary = false,
+    archiveSlot,
 }: PlayerProfileClientProps) {
     const params = useParams()
     const pathname = usePathname()
@@ -3578,6 +3584,11 @@ export default function PlayerProfileClient({
                         <PlayerTeamHistory playerId={playerId} />
                     )}
                 </div>
+
+                {/* Server-rendered αρχείο αγώνων: αποδίδεται εδώ (κάτω από όλο το
+                    προφίλ) και αμέσως πριν τη σημείωση, ώστε το SEO περιεχόμενο
+                    (διοργανώσεις/αντίπαλοι/σκορ) να μένει στο HTML αλλά στο τέλος. */}
+                {archiveSlot}
 
                 {/* Note about data */}
                 <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
