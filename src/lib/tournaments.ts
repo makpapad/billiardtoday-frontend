@@ -52,6 +52,12 @@ export type TournamentEventSummary = {
   title: string;
   description: string | null;
   season: number | null;
+  /**
+   * Ελεύθερο κείμενο για τη σεζόν («2026-2027»), από το `tournament.season_label`.
+   * Ο αριθμός `season` μένει η πηγή του URL — αυτό είναι ΜΟΝΟ για εμφάνιση, ώστε
+   * μια σεζόν που καλύπτει δύο χρόνια να γράφεται σωστά.
+   */
+  seasonLabel: string | null;
   startDate: string | null;
   endDate: string | null;
   gameType: string | null;
@@ -429,6 +435,7 @@ const normalizeClubTournamentSummary = (
     title,
     description: readString(tournament.description),
     season: readDateYear(startDate),
+    seasonLabel: readString(tournament.season_label),
     startDate,
     endDate,
     gameType: readString(tournament.game_type),
@@ -797,6 +804,7 @@ const fetchTournamentEventSummaryById = async (
     title: readString(event.title) || "Tournament Event",
     description: readString((tournamentSource as Record<string, unknown>).description),
     season: toNumber(event.season),
+    seasonLabel: readString((tournamentSource as Record<string, unknown>).season_label),
     startDate: tournamentStartDate ?? readString(event.start_date),
     endDate: tournamentEndDate ?? readString(event.end_date),
     gameType: readString(event.game_type),

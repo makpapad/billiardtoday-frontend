@@ -4,13 +4,54 @@ import { toPlainText } from "@/lib/richText";
 const cleanText = (value: string | null | undefined) =>
   String(value || "").trim() || "";
 
+/**
+ * ΠΡΟΣΩΡΙΝΟ — σεζόν γραμμένη στον κώδικα.
+ *
+ * Μέχρι να μπει το πεδίο «Season label» στο panel, οι διορθώσεις σεζόν ζουν εδώ.
+ * Κλειδί = το slug της διοργάνωσης στο Strapi (είναι ίδιο με το δημόσιο URL).
+ * Μόλις υπάρχει το πεδίο στη βάση, σβήνεται η καταχώριση και μένει το
+ * `summary.seasonLabel` — μην προσθέτεις δεύτερη πηγή.
+ */
+const SEASON_LABEL_OVERRIDES: Record<string, string> = {
+  "longoni-next-gen-grand-prix-3-cushion-u21-bottrop-2026": "2026-2027",
+};
+
+/**
+ * Η σεζόν όπως πρέπει να ΕΜΦΑΝΙΖΕΤΑΙ: το `season_label` της διοργάνωσης όταν
+ * υπάρχει («2026-2027»), αλλιώς ο αριθμός `season` («2026»).
+ *
+ * Ο αριθμός μένει η πηγή του URL (`buildTournamentSlug`) — αυτό εδώ είναι ΜΟΝΟ
+ * κείμενο. Μια σεζόν που καλύπτει δύο χρόνια δεν χωράει σε ακέραιο.
+ */
+export const resolveTournamentSeasonLabel = (
+  summary: TournamentEventSummary,
+): string => {
+  const label = cleanText(summary.seasonLabel);
+  if (label) return label;
+
+  for (const key of [
+    summary.tournamentSlug,
+    summary.canonicalId,
+    summary.documentId,
+  ]) {
+    const override = SEASON_LABEL_OVERRIDES[cleanText(key)];
+    if (override) return override;
+  }
+
+  return typeof summary.season === "number" && Number.isFinite(summary.season)
+    ? String(summary.season)
+    : "";
+};
+
 export const appendSeasonIfMissing = (
   title: string,
-  season?: number | null,
+  season?: number | string | null,
 ) => {
   const cleanTitle = cleanText(title);
   const cleanSeason =
-    typeof season === "number" && Number.isFinite(season) ? String(season) : "";
+    typeof season === "number" && Number.isFinite(season)
+      ? String(season)
+      : cleanText(typeof season === "string" ? season : "");
 
   if (!cleanTitle || !cleanSeason) return cleanTitle;
   return new RegExp(`(?:^|[\\s\\-(),/])${cleanSeason}$`).test(cleanTitle)
@@ -19,7 +60,7 @@ export const appendSeasonIfMissing = (
 };
 
 export const buildTournamentTitle = (summary: TournamentEventSummary) =>
-  appendSeasonIfMissing(summary.title, summary.season);
+  appendSeasonIfMissing(summary.title, resolveTournamentSeasonLabel(summary) || null);
 
 /**
  * Τίτλος για το <title>/og:title ΜΟΝΟ — όχι για το περιεχόμενο της σελίδας.
@@ -54,7 +95,10 @@ const trimToWord = (value: string, max: number) => {
 };
 
 export const buildTournamentSeoTitle = (summary: TournamentEventSummary) => {
-  const base = appendSeasonIfMissing(summary.title, summary.season);
+  const base = appendSeasonIfMissing(
+    summary.title,
+    resolveTournamentSeasonLabel(summary) || null,
+  );
   if (!base) return base;
 
   const budget = SEO_TITLE_MAX - SITE_TITLE_SUFFIX.length;

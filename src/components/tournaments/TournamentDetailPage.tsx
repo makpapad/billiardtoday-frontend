@@ -80,6 +80,7 @@ import {
   buildTournamentTitle,
   buildTournamentVenueLabel,
   formatTournamentDate,
+  resolveTournamentSeasonLabel,
 } from "@/lib/tournamentSeo";
 import { isNationalFederationLevel } from "@/lib/playerNameVariant";
 import { dayInWindows, extractDateSearch, isoDayOf } from "@/lib/dateSearch";
@@ -6881,7 +6882,7 @@ export function TournamentDetailPage({
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 { label: "Tournament", value: summary.title || "-" },
-                { label: "Season", value: summary.season ? String(summary.season) : "-" },
+                { label: "Season", value: resolveTournamentSeasonLabel(summary) || "-" },
                 { label: "Game type", value: summary.gameType || "-" },
                 { label: "Schedule", value: scheduleLabel || "To be announced" },
                 { label: "Venue", value: summary.venueName || summary.clubName || "-" },
@@ -8403,7 +8404,9 @@ export function TournamentDetailPage({
           <div className="min-w-0 flex flex-col justify-between gap-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-                {summary.season ? <span>Season {summary.season}</span> : null}
+                {resolveTournamentSeasonLabel(summary) ? (
+                  <span>Season {resolveTournamentSeasonLabel(summary)}</span>
+                ) : null}
                 {summary.gameType ? <span>{summary.gameType}</span> : null}
               </div>
               <div className="space-y-3">
