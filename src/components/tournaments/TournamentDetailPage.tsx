@@ -1839,6 +1839,19 @@ export function TournamentDetailPage({
 }: Props) {
   const hasInfoDescription =
     typeof summary.description === "string" && summary.description.trim().length > 0;
+  /**
+   * Το Info tab ανοίγει όταν υπάρχει ΟΤΙΔΗΠΟΤΕ να δείξει: περιγραφή, δομημένες
+   * ενότητες (event_info) ή έστω χώρος για χάρτη. Χωρίς αυτό, ένα τουρνουά με
+   * συμπληρωμένο event_info αλλά χωρίς description έκρυβε το εικονίδιο.
+   */
+  const hasInfoContent =
+    hasInfoDescription ||
+    (summary.eventInfo?.sections.length ?? 0) > 0 ||
+    Boolean(
+      summary.venueAddress?.trim() ||
+        summary.venueName?.trim() ||
+        summary.venueCity?.trim(),
+    );
 
   const fullPageHref = buildTournamentHref(
     "",
@@ -8342,7 +8355,7 @@ export function TournamentDetailPage({
           setActiveView("tournament");
         }}
       />
-      {hasInfoDescription ? (
+      {hasInfoContent ? (
         <HeroMenuButton
           label="Info"
           iconSrc="/icons%20webp/info.webp"
