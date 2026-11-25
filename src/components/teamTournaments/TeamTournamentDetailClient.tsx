@@ -8,6 +8,10 @@ import { Trophy, Users } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
 import {
+  HeroMenuHelpProvider,
+  HeroMenuHelpStrip,
+} from "@/components/tournaments/HeroMenuHelp";
+import {
   type ComputedStandingRow,
   type NormalizedTeamMatch,
   type TeamEntity,
@@ -843,7 +847,8 @@ export function TeamTournamentDetailClient({
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
       <div className="flex flex-col gap-6">
-        <section className="overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
+        <HeroMenuHelpProvider>
+        <section className="relative overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1.62fr)_minmax(290px,0.78fr)] lg:px-10 lg:py-10">
             <div className="min-w-0 flex flex-col justify-between gap-8">
               <div className="space-y-5">
@@ -1037,7 +1042,9 @@ export function TeamTournamentDetailClient({
               </div>
             </div>
           </div>
+          <HeroMenuHelpStrip />
         </section>
+        </HeroMenuHelpProvider>
 
         <BackButton fallbackHref="/tournaments/team" />
 

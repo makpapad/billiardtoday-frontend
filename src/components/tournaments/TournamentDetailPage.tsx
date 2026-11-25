@@ -9,6 +9,10 @@ import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { DataMethodologyNote } from "@/components/public/DataMethodologyNote";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
+import {
+  HeroMenuHelpProvider,
+  HeroMenuHelpStrip,
+} from "@/components/tournaments/HeroMenuHelp";
 import { TournamentFollowButton } from "@/components/tournaments/TournamentFollowButton";
 import { LiveScoreBoardCard } from "@/components/LiveScoreBoardCard";
 import {
@@ -8323,6 +8327,7 @@ export function TournamentDetailPage({
       className="mx-auto w-full px-1 py-8 sm:px-6"
       style={{ maxWidth: "var(--bt-page-width, 1280px)" }}
     >
+      <HeroMenuHelpProvider>
       <section className="relative overflow-hidden rounded-[32px] border border-black/5 bg-[linear-gradient(135deg,#0f172a_0%,#12263f_45%,#1d4ed8_100%)] text-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
         {heroPosterUrl ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -8522,7 +8527,9 @@ export function TournamentDetailPage({
             {heroMenuRow}
           </div>
         </div>
+        <HeroMenuHelpStrip />
       </section>
+      </HeroMenuHelpProvider>
 
       <BackButton fallbackHref="/tournaments" className="mt-4" />
 

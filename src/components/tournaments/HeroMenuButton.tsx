@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { useHeroMenuHelp } from "./HeroMenuHelp";
+
 /**
  * Το κουμπί-εικονίδιο του hero ενός τουρνουά (Live / Tournament / Time Table /
  * Final standings / Photo gallery / Participants / Info). Ζει ξεχωριστά ώστε το
@@ -30,6 +32,9 @@ export function HeroMenuButton({
   href,
   badge,
 }: HeroMenuButtonProps) {
+  // Η εξήγηση εμφανίζεται στη λωρίδα του hero (HeroMenuHelpStrip) — το κλικ
+  // εδώ ανοίγει κανονικά την καρτέλα.
+  const help = useHeroMenuHelp();
   const className = `group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
     active
       ? "border-white/70 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
@@ -63,19 +68,29 @@ export function HeroMenuButton({
           {badge}
         </span>
       ) : null}
-      <span className="pointer-events-none absolute -bottom-11 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(15,23,42,0.38)] group-hover:block group-focus-visible:block">
-        {label}
-      </span>
     </>
   );
+
+  // Το παλιό hover κουτάκι και το `title` του browser βγαίνουν όταν υπάρχει η
+  // λωρίδα εξήγησης — αλλιώς θα εμφανίζονταν δύο tooltips μαζί. Χωρίς provider
+  // (π.χ. σελίδες που δεν έχουν μπει ακόμη) μένει το `title` όπως πριν.
+  const hoverProps = help
+    ? {
+        onMouseEnter: () => help.show(label),
+        onMouseLeave: () => help.hide(),
+        onFocus: () => help.show(label),
+        onBlur: () => help.hide(),
+      }
+    : {};
 
   if (href) {
     return (
       <Link
         href={href}
-        title={label}
+        title={help ? undefined : label}
         aria-label={label}
         className={className}
+        {...hoverProps}
       >
         {content}
       </Link>
@@ -86,9 +101,10 @@ export function HeroMenuButton({
     <button
       type="button"
       onClick={onClick}
-      title={label}
+      title={help ? undefined : label}
       aria-label={label}
       className={className}
+      {...hoverProps}
     >
       {content}
     </button>
