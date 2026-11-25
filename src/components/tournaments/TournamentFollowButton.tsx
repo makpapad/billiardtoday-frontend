@@ -11,6 +11,7 @@ import {
   type IosPushHint,
   type PushSubscriptionPayload,
 } from "@/lib/webPush";
+import { useHeroMenuHelp } from "@/components/tournaments/HeroMenuHelp";
 
 /**
  * «Follow this tournament» — κουμπί στο hero της διοργάνωσης + φόρμα εγγραφής.
@@ -69,15 +70,22 @@ export function TournamentFollowButton({
 }: TournamentFollowButtonProps) {
   const [open, setOpen] = useState(false);
   const [following, setFollowing] = useState(false);
+  // Η εξήγηση εμφανίζεται στην ίδια λωρίδα με τα εικονίδια του hero.
+  const help = useHeroMenuHelp();
+  const helpLabel = "Tournament alerts";
 
   return (
     <>
       <button
         type="button"
-        title={following ? "You follow this tournament" : "Follow this tournament"}
-        aria-label={following ? "You follow this tournament" : "Follow this tournament"}
+        title={help ? undefined : following ? "You follow this tournament" : "Follow this tournament"}
+        aria-label={helpLabel}
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
+        onMouseEnter={() => help?.show(helpLabel)}
+        onMouseLeave={() => help?.hide()}
+        onFocus={() => help?.show(helpLabel)}
+        onBlur={() => help?.hide()}
         className={`group relative inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] border transition duration-200 sm:h-[62px] sm:w-[62px] ${
           following
             ? "border-white/70 bg-white text-[#0284C7] shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
@@ -89,9 +97,6 @@ export function TournamentFollowButton({
         ) : (
           <Bell aria-hidden className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.7} />
         )}
-        <span className="pointer-events-none absolute -bottom-11 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(15,23,42,0.38)] group-hover:block group-focus-visible:block">
-          {following ? "Following" : "Follow"}
-        </span>
       </button>
 
       {open ? (

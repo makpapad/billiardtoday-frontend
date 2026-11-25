@@ -894,8 +894,10 @@ export function TeamTournamentDetailClient({
                   </div>
                 </div>
               </div>
-              <div className="w-full overflow-hidden pb-1">
-                <div className="flex max-w-full flex-nowrap items-center gap-2">
+              <div className="w-full overflow-hidden pb-1 lg:overflow-visible">
+                <div className="relative flex w-full max-w-full flex-nowrap items-center gap-2 lg:w-fit">
+                  {/* Κεντραρισμένο ως προς τα εικονίδια, ακριβώς από κάτω τους. */}
+                  <HeroMenuHelpStrip placement="row" />
                   <HeroMenuButton
                     label="Tournament"
                     iconSrc="/icons%20webp/Tournament1.webp"

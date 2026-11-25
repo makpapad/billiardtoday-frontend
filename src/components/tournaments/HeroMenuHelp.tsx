@@ -34,6 +34,8 @@ export const HERO_MENU_HELP: Record<string, string> = {
   Statistics: "Team and player statistics for the tournament",
   News: "Articles about this tournament",
   Info: "Venue, format and general information",
+  "Tournament alerts":
+    "Email or push alerts for the draw, daily recap, final standings and your next match",
 };
 
 type HeroMenuHelpValue = {
@@ -86,17 +88,32 @@ export function useHeroMenuHelp() {
   return useContext(HeroMenuHelpContext);
 }
 
-export function HeroMenuHelpStrip({ className = "" }: { className?: string }) {
+export function HeroMenuHelpStrip({
+  placement = "section",
+  className = "",
+}: {
+  /**
+   * `row` = μέσα στη σειρά των εικονιδίων (κεντράρεται ως προς τα εικονίδια).
+   * `section` = κάτω άκρο του hero (κεντράρεται ως προς την κάρτα).
+   */
+  placement?: "section" | "row";
+  className?: string;
+}) {
   const ctx = useHeroMenuHelp();
   const label = ctx?.hovered ?? null;
   const text = label ? HERO_MENU_HELP[label] ?? null : null;
 
+  const position =
+    placement === "row"
+      ? "left-1/2 top-full mt-1.5 w-max max-w-[calc(100vw-24px)] -translate-x-1/2"
+      : "inset-x-1 bottom-1.5 sm:inset-x-6 sm:bottom-2 lg:inset-x-10";
+
   return (
     <div
       aria-live="polite"
-      className={`pointer-events-none absolute inset-x-1 bottom-1.5 z-30 transition-opacity duration-150 sm:inset-x-6 sm:bottom-2 lg:inset-x-10 ${
-        text ? "opacity-100" : "opacity-0"
-      } ${className}`}
+      className={`pointer-events-none absolute z-30 transition-opacity duration-150 ${
+        placement === "row" ? "hidden justify-center lg:flex" : "flex justify-center"
+      } ${position} ${text ? "opacity-100" : "opacity-0"} ${className}`}
     >
       <div className="flex w-fit max-w-full items-center gap-2 rounded-lg border border-white/10 bg-slate-950/85 px-2.5 py-1 text-[11px] leading-tight text-white/85 shadow-[0_10px_26px_rgba(15,23,42,0.32)] backdrop-blur-sm">
         <span className="whitespace-nowrap font-semibold uppercase tracking-[0.16em] text-white">

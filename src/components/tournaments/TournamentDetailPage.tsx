@@ -8244,7 +8244,9 @@ export function TournamentDetailPage({
   })();
 
   const heroMenuRow = (
-    <div className="flex max-w-full flex-nowrap items-center gap-2">
+    <div className="relative flex w-full max-w-full flex-nowrap items-center gap-2 lg:w-fit">
+      {/* Κεντραρισμένο ως προς τα εικονίδια, ακριβώς από κάτω τους. */}
+      <HeroMenuHelpStrip placement="row" />
       <HeroMenuButton
         label="Live"
         iconSrc="/icons%20webp/live3.webp"
@@ -8376,7 +8378,7 @@ export function TournamentDetailPage({
                 </p>
               </div>
             </div>
-            <div className="hidden w-full overflow-hidden pb-1 lg:block">
+            <div className="hidden w-full overflow-hidden pb-1 lg:block lg:overflow-visible">
               {heroMenuRow}
             </div>
           </div>
@@ -8527,7 +8529,6 @@ export function TournamentDetailPage({
             {heroMenuRow}
           </div>
         </div>
-        <HeroMenuHelpStrip />
       </section>
       </HeroMenuHelpProvider>
 
