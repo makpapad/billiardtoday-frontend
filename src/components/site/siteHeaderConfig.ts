@@ -38,7 +38,7 @@ export const SITE_HEADER_NAV_ITEMS: SiteHeaderNavItem[] = [
     iconClassName: "h-10 w-10 rounded-full object-cover shadow-[0_0_10px_rgba(255,255,255,0.18)] blur-[0.2px]",
   },
   {
-    label: "UMB",
+    label: "W.C.",
     href: "/federations/union-mondiale-de-billard",
     iconSrc: "/img/logo/wc.png",
     iconAlt: "World Cups logo",
