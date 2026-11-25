@@ -9,6 +9,7 @@ import { ArrowUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { DataMethodologyNote } from "@/components/public/DataMethodologyNote";
 import { HeroMenuButton } from "@/components/tournaments/HeroMenuButton";
+import { TournamentInfoPanel } from "@/components/tournaments/TournamentInfoPanel";
 import {
   HeroMenuHelpProvider,
   HeroMenuHelpStrip,
@@ -97,11 +98,15 @@ type Props = {
   /** Server-rendered γράφημα μέσου όρου ανά φάση: ζει ΕΞΩ από το ανοιγόμενο
    *  «Tournament Overview» ώστε να φαίνεται με την πρώτη ματιά (χωρίς κλικ). */
   stageChart?: ReactNode;
-  /** Server-rendered «Tournament news»: ζει ΕΞΩ από το ανοιγόμενο «Tournament Overview»
-   *  (ορατό χωρίς κλικ), γιατί το κουμπί 📰 του hero δείχνει με anchor στο #tournament-news. */
+  /**
+   * Server-rendered «Tournament news»: τα άρθρα της διοργάνωσης με την ΙΔΙΑ κάρτα
+   * που έχει το `/news`. Μπαίνει στην καρτέλα 📰 News (panel mode `news`), όχι κάτω
+   * από κάθε καρτέλα. Μένει πάντα στο DOM (κρυμμένο με `hidden` όταν η καρτέλα δεν
+   * είναι ενεργή) ώστε ο crawler να βλέπει τους συνδέσμους προς τα άρθρα.
+   */
   newsSection?: ReactNode;
   /** Πόσα άρθρα αναφέρουν τη διοργάνωση. >0 → εμφανίζεται το 📰 κουμπί στο hero
-   *  που πάει στο server-rendered τμήμα «Tournament news» (#tournament-news). */
+   *  που ανοίγει την καρτέλα «Tournament news». */
   relatedNewsCount?: number;
 };
 
@@ -1865,6 +1870,20 @@ export function TournamentDetailPage({
   );
   const venueLabel = buildTournamentVenueLabel(summary);
   const locationLabel = buildTournamentLocationLabel(summary);
+  // Το όνομα του χώρου ως σύνδεσμος προς τον χάρτη (Google Maps). Αν το venue
+  // δεν έχει αποθηκευμένο link, φτιάχνεται από τη διεύθυνση/όνομα+πόλη+χώρα.
+  const venueMapHref = useMemo(() => {
+    const stored = summary.venueMapUrl?.trim();
+    if (stored) return stored;
+    const query =
+      summary.venueAddress?.trim() ||
+      [summary.venueName, summary.venueCity, summary.venueCountry]
+        .map((part) => part?.trim())
+        .filter(Boolean)
+        .join(", ");
+    if (!query) return null;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  }, [summary.venueAddress, summary.venueCity, summary.venueCountry, summary.venueMapUrl, summary.venueName]);
   const rankingSeriesHref = summary.rankingSeriesSlug
     ? `${embedded ? "/embed" : ""}/rankings/${summary.rankingSeriesSlug}`
     : null;
@@ -1876,10 +1895,15 @@ export function TournamentDetailPage({
   const overviewFacts = useMemo(
     () =>
       [
-        { label: "Game type", value: summary.gameType || "Billiards" },
-        { label: "Dates", value: scheduleLabel || "To be announced" },
-        { label: "Venue", value: venueLabel || locationLabel || "To be announced" },
-        { label: "Series", value: summary.rankingSeriesTitle || "Independent event" },
+        { label: "Game type", value: summary.gameType || "Billiards", href: null as string | null },
+        { label: "Dates", value: scheduleLabel || "To be announced", href: null as string | null },
+        {
+          label: "Venue",
+          value: venueLabel || locationLabel || "To be announced",
+          // Το όνομα του χώρου πάει στον χάρτη — ίδιο link με το «Open in Google Maps» του Info.
+          href: venueLabel ? venueMapHref : null,
+        },
+        { label: "Series", value: summary.rankingSeriesTitle || "Independent event", href: null as string | null },
       ].filter((item) => item.value),
     [
       locationLabel,
@@ -1887,6 +1911,7 @@ export function TournamentDetailPage({
       summary.gameType,
       summary.rankingSeriesTitle,
       venueLabel,
+      venueMapHref,
     ],
   );
   const organizerLogoUrl = resolveMediaUrl(summary.organizerLogoUrl);
@@ -2011,7 +2036,7 @@ export function TournamentDetailPage({
     "tournament",
   );
   const [tournamentPanelMode, setTournamentPanelMode] = useState<
-    "stages" | "finals" | "gallery" | "timetable" | "participants" | "info"
+    "stages" | "finals" | "gallery" | "timetable" | "participants" | "info" | "news"
   >("stages");
   const [timetableViewMode, setTimetableViewMode] = useState<
     "matches" | "training"
@@ -2056,10 +2081,11 @@ export function TournamentDetailPage({
    */
   const panelFromQuery = useMemo(() => {
     const raw = (searchParams?.get("panel") ?? searchParams?.get("tab") ?? "").toLowerCase();
-    const allowed = ["stages", "finals", "gallery", "timetable", "participants", "info"] as const;
+    const allowed = ["stages", "finals", "gallery", "timetable", "participants", "info", "news"] as const;
     if (raw === "results" || raw === "matches") return "stages" as const;
     if (raw === "standings" || raw === "ranking") return "finals" as const;
     if (raw === "schedule" || raw === "programme" || raw === "program") return "timetable" as const;
+    if (raw === "articles") return "news" as const;
     return (allowed as readonly string[]).includes(raw)
       ? (raw as (typeof allowed)[number])
       : null;
@@ -6837,6 +6863,8 @@ export function TournamentDetailPage({
                 </div>
               </div>
             ) : null}
+            {/* Χάρτης τοποθεσίας + δομημένες πληροφορίες (event_info) — πάνω από τα πεδία. */}
+            <TournamentInfoPanel summary={summary} />
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 { label: "Tournament", value: summary.title || "-" },
@@ -7823,6 +7851,12 @@ export function TournamentDetailPage({
             )}
           </div>
         </section>
+      ) : tournamentPanelMode === "news" ? (
+        /* Η καρτέλα News αποδίδεται έξω από το `mainContent` (βλ. `newsPanel` παρακάτω):
+           έτσι μένει στο HTML και όταν η καρτέλα είναι κλειστή, ώστε ο crawler να
+           βλέπει τους συνδέσμους προς τα άρθρα. Εδώ σταματά η αλυσίδα για να μη
+           ζωγραφιστεί από κάτω το TournamentEventsContent. */
+        null
       ) : (
         <TournamentEventsContent
             key={`${summary.documentId}:${selectedStageDocumentId ?? "default"}:${overviewMode === "ranks" ? koRankingRound : "matches"}`}
@@ -8286,13 +8320,17 @@ export function TournamentDetailPage({
       />
       {relatedNewsCount > 0 ? (
         /* Άρθρα για τη διοργάνωση: emoji αντί εικονιδίου (δεν υπάρχει news icon στο
-           /icons webp) — ίδιο μέγεθος/πλαίσιο με τα υπόλοιπα κουμπιά του hero. */
+           /icons webp) — ίδιο μέγεθος/πλαίσιο με τα υπόλοιπα κουμπιά του hero.
+           Ανοίγει ΚΑΡΤΕΛΑ (όπως τα υπόλοιπα), όχι anchor — η λίστα δεν ζει πια κάτω
+           από κάθε καρτέλα. */
         <HeroMenuButton
           label="News"
           emoji="📰"
-          active={false}
-          onClick={() => undefined}
-          href="#tournament-news"
+          active={activeView === "tournament" && tournamentPanelMode === "news"}
+          onClick={() => {
+            setTournamentPanelMode("news");
+            setActiveView("tournament");
+          }}
         />
       ) : null}
       <HeroMenuButton
@@ -8536,6 +8574,39 @@ export function TournamentDetailPage({
 
       <div ref={tournamentContentRef} className="mt-2">
         {mainContent}
+        {/* Γράφημα μέσου όρου ανά φάση: φαίνεται ΜΟΝΟ στην καρτέλα «Final standings»
+            (γενική κατάταξη), αλλά μένει στο HTML (κρυμμένο) ώστε να το βλέπει ο
+            crawler — ίδια λογική με την καρτέλα News. */}
+        {stageChart ? (
+          <section
+            hidden={tournamentPanelMode !== "finals"}
+            className="mt-8"
+          >
+            {stageChart}
+          </section>
+        ) : null}
+        {/* Καρτέλα News: πάντα στο HTML (κρυμμένη όταν δεν είναι ενεργή) ώστε οι
+            σύνδεσμοι προς τα άρθρα να υπάρχουν για τον crawler. */}
+        {newsSection ? (
+          <section
+            hidden={
+              !(activeView === "tournament" && tournamentPanelMode === "news")
+            }
+            className="rounded-[32px] border border-slate-200 bg-white p-3 shadow-[0_22px_80px_rgba(15,23,42,0.08)] sm:p-8"
+          >
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Tournament news
+                </div>
+                <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                  Articles about {tournamentTitle}
+                </h2>
+              </div>
+              {newsSection}
+            </div>
+          </section>
+        ) : null}
       </div>
       {footerSponsors.length > 0 ? (
         <section className="mt-6 border-t border-slate-200 pt-6">
@@ -8592,7 +8663,6 @@ export function TournamentDetailPage({
           showPoweredBy={false}
         />
       ) : null}
-      {stageChart ? <section className="mt-8">{stageChart}</section> : null}
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">
           <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
@@ -8613,7 +8683,19 @@ export function TournamentDetailPage({
                   key={item.label}
                   className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600"
                 >
-                  {item.label}: {item.value}
+                  {item.label}:{" "}
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline decoration-slate-300 underline-offset-2 transition hover:text-slate-950 hover:decoration-slate-500"
+                    >
+                      {item.value}
+                    </a>
+                  ) : (
+                    item.value
+                  )}
                 </span>
               ))}
               <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition group-open:bg-slate-950 group-open:text-white">
@@ -8666,7 +8748,18 @@ export function TournamentDetailPage({
                       {item.label}
                     </div>
                     <div className="mt-2 text-sm font-semibold text-slate-950">
-                      {item.value}
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline decoration-slate-300 underline-offset-2 transition hover:text-blue-700 hover:decoration-blue-400"
+                        >
+                          {item.value}
+                        </a>
+                      ) : (
+                        item.value
+                      )}
                     </div>
                   </div>
                 ))}
@@ -8681,9 +8774,6 @@ export function TournamentDetailPage({
           </div>
         </details>
       </section>
-      {/* Άρθρα που αναφέρουν τη διοργάνωση: ορατά χωρίς κλικ, ώστε το κουμπί 📰 του hero
-          να έχει πού να οδηγήσει και ο crawler να βλέπει το link και προς τις δύο κατευθύνσεις. */}
-      {newsSection}
       {showTournamentAds ? <TournamentAdsStrip /> : null}
       {showBackToTopButton ? (
         <button

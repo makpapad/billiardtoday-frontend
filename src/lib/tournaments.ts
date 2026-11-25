@@ -8,6 +8,42 @@ export type TournamentEventStageSummary = {
   stageType: string | null;
 };
 
+/**
+ * Δομημένη πληροφορία διοργάνωσης (Info tab): ενότητες με τίτλο και γραμμές.
+ * Έρχεται από το πεδίο `event_info` του tournament στη Strapi — ό,τι δεν είναι
+ * έγκυρο αγνοείται, ώστε ένα λάθος JSON να μη σπάσει τη σελίδα.
+ */
+export type TournamentEventInfoSection = {
+  title: string;
+  lines: string[];
+};
+
+export type TournamentEventInfo = {
+  sections: TournamentEventInfoSection[];
+};
+
+const readEventInfo = (value: unknown): TournamentEventInfo | null => {
+  if (!value || typeof value !== "object") return null;
+  const rawSections = (value as { sections?: unknown }).sections;
+  if (!Array.isArray(rawSections)) return null;
+
+  const sections: TournamentEventInfoSection[] = [];
+  for (const rawSection of rawSections) {
+    if (!rawSection || typeof rawSection !== "object") continue;
+    const title = readString((rawSection as { title?: unknown }).title);
+    const rawLines = (rawSection as { lines?: unknown }).lines;
+    const lines = Array.isArray(rawLines)
+      ? rawLines
+          .map((line) => readString(line))
+          .filter((line): line is string => Boolean(line))
+      : [];
+    if (!title && lines.length === 0) continue;
+    sections.push({ title: title ?? "", lines });
+  }
+
+  return sections.length > 0 ? { sections } : null;
+};
+
 export type TournamentEventSummary = {
   documentId: string;
   source?: "bt_event" | "club_tournament";
@@ -28,6 +64,16 @@ export type TournamentEventSummary = {
   venueName: string | null;
   venueCity: string | null;
   venueCountry: string | null;
+  /** Διεύθυνση venue (οδός + ΤΚ) — βάση για τον ενσωματωμένο χάρτη στο Info. */
+  venueAddress: string | null;
+  /** Δημόσιο Google Maps link του venue (κουμπί «Open in Google Maps»). */
+  venueMapUrl: string | null;
+  /**
+   * Δομημένο Info: `{ sections: [{ title, lines: [] }] }`. Ό,τι γράφεται εδώ
+   * εμφανίζεται ως κάρτες κάτω από τον χάρτη — χωρίς αυτό, το Info δείχνει
+   * μόνο τα πεδία της βάσης.
+   */
+  eventInfo: TournamentEventInfo | null;
   organizerType: string | null;
   /**
    * Το slug της ομοσπονδίας που διοργανώνει (όταν διοργανώνει ομοσπονδία) — για την
@@ -397,6 +443,9 @@ const normalizeClubTournamentSummary = (
     venueName: null,
     venueCity: null,
     venueCountry: null,
+    venueAddress: null,
+    venueMapUrl: null,
+    eventInfo: readEventInfo(tournament.event_info),
     organizerType: "club",
     organizerFederationSlug: null,
     organizerWebsite: null,
@@ -441,6 +490,12 @@ const fetchClubTournamentSummaryBySlug = async (
   params.set("fields[6]", "description");
   params.set("fields[7]", "category");
   params.set("fields[8]", "format_definition");
+  params.set("fields[9]", "event_info");
+  params.set("populate[venue][fields][0]", "name");
+  params.set("populate[venue][fields][1]", "city");
+  params.set("populate[venue][fields][2]", "country");
+  params.set("populate[venue][fields][3]", "address");
+  params.set("populate[venue][fields][4]", "map_url");
   params.set("populate[club][fields][0]", "documentId");
   params.set("populate[club][fields][1]", "name");
   params.set("populate[club][fields][2]", "city");
@@ -615,6 +670,9 @@ const fetchTournamentEventSummaryById = async (
       params.set("populate[tournament][fields][2]", "startDate");
       params.set("populate[tournament][fields][3]", "endDate");
       params.set("populate[tournament][fields][4]", "description");
+      params.set("populate[tournament][fields][10]", "event_info");
+      params.set("populate[tournament][populate][venue][fields][3]", "address");
+      params.set("populate[tournament][populate][venue][fields][4]", "map_url");
       params.set("populate[tournament][fields][5]", "category");
       params.set("populate[tournament][fields][6]", "slug");
       params.set("populate[tournament][fields][7]", "ruleset_key");
@@ -753,6 +811,9 @@ const fetchTournamentEventSummaryById = async (
     venueName: readString((venueSource as Record<string, unknown>).name),
     venueCity: readString((venueSource as Record<string, unknown>).city),
     venueCountry: readString((venueSource as Record<string, unknown>).country),
+    venueAddress: readString((venueSource as Record<string, unknown>).address),
+    venueMapUrl: readString((venueSource as Record<string, unknown>).map_url),
+    eventInfo: readEventInfo((tournamentSource as Record<string, unknown>).event_info),
     organizerType,
     organizerFederationSlug:
       organizerType === "federation"

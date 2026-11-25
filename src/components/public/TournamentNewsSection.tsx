@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RichDescription } from "@/components/tournaments/RichDescription";
 import type { NewsArticleSummary } from "@/lib/cms/news";
 
 /**
@@ -8,51 +9,69 @@ import type { NewsArticleSummary } from "@/lib/cms/news";
  * καμία αμοιβαία διαδρομή για τον crawler ούτε για τον αναγνώστη. Η λίστα έρχεται
  * έτοιμη από τον server (`findNewsArticlesForTournament`) και μπαίνει στο HTML,
  * όχι με fetch στον browser. Αν δεν υπάρχει άρθρο, το τμήμα δεν αποδίδεται καθόλου.
+ *
+ * ΙΔΙΑ ΚΑΡΤΑ ΜΕ ΤΟ /news: φωτογραφία, ημερομηνία, τίτλος, σύνοψη, «Read article» —
+ * ίδιο markup και ίδια κλάση grid, ώστε το ίδιο άρθρο να μη δείχνει σαν άλλο
+ * πράγμα ανάλογα με το πού το βλέπεις. Η κάρτα ΔΕΝ έχει δικό της περίγραμμα
+ * (χρησιμοποιεί το panel του τουρνουά που την περιβάλλει), γι' αυτό και δεν
+ * επαναλαμβάνει `<section>`/`<h2>`.
  */
 export function TournamentNewsSection({
   articles,
-  title = "Tournament news",
 }: {
   articles: NewsArticleSummary[];
-  title?: string;
 }) {
   if (!articles.length) return null;
 
   return (
-    <section id="tournament-news" className="mt-10 scroll-mt-28">
-      <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-        {articles.map((article) => (
-          <li key={article.slug}>
+    <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      {articles.map((article) => (
+        <article key={article.slug} className="border border-slate-300 bg-white">
+          {article.coverImage?.url ? (
+            <img
+              src={article.coverImage.url}
+              alt={article.coverImage.alternativeText || article.title}
+              loading="lazy"
+              className="h-52 w-full object-cover"
+            />
+          ) : null}
+          <div className="p-6">
+            {formatArticleDate(article.publishedAt || article.updatedAt) ? (
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {formatArticleDate(article.publishedAt || article.updatedAt)}
+              </div>
+            ) : null}
+            <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-950">
+              <Link href={`/news/${article.slug}`} className="hover:underline">
+                {article.title}
+              </Link>
+            </h3>
+            {article.summary ? (
+              <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-600">
+                <RichDescription value={article.summary} />
+              </p>
+            ) : null}
             <Link
               href={`/news/${article.slug}`}
-              className="flex h-full flex-col gap-2 rounded-[20px] border border-slate-200 bg-white p-4 transition hover:border-sky-300 hover:shadow-[0_14px_40px_rgba(15,23,42,0.08)]"
+              className="mt-6 inline-flex text-sm font-semibold text-red-700 hover:underline"
             >
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-                {formatArticleDate(article.publishedAt)}
-              </span>
-              <span className="text-sm font-semibold leading-6 text-slate-900">
-                {article.title}
-              </span>
-              {article.summary ? (
-                <span className="text-sm leading-6 text-slate-600">{article.summary}</span>
-              ) : null}
+              Read article
             </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 
+/** Ίδια μορφή ημερομηνίας με τη λίστα του /news (`25 November 2026`). */
 const formatArticleDate = (value?: string | null): string => {
-  if (!value) return "News";
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "News";
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "long",
     year: "numeric",
-    timeZone: "Europe/Athens",
   }).format(date);
 };
