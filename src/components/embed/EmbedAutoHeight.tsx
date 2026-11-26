@@ -25,12 +25,19 @@ export function EmbedAutoHeight() {
     let debounce: number | undefined;
 
     const measure = () => {
-      const raw = Math.ceil(
-        Math.max(
-          document.documentElement?.scrollHeight ?? 0,
-          document.body?.scrollHeight ?? 0,
-        ),
-      );
+      // Μετράμε το τέλος της αναφοράς «Powered by» — είναι πάντα το τελευταίο
+      // ορατό στοιχείο της σελίδας. Το συνολικό ύψος του document δεν είναι
+      // αξιόπιστο: κάποιες σελίδες έχουν αόρατα τμήματα στο τέλος (κρυφά
+      // πάνελ, αποστάσεις), που θα άφηναν μεγάλο κενό μέσα στο πλαίσιο.
+      const marker = document.querySelector("[data-bt-attribution]");
+      const raw = marker
+        ? Math.ceil(marker.getBoundingClientRect().bottom + window.scrollY)
+        : Math.ceil(
+            Math.max(
+              document.documentElement?.scrollHeight ?? 0,
+              document.body?.scrollHeight ?? 0,
+            ),
+          );
       // Όριο ασφαλείας: αν κάτι μετρηθεί παράλογα ψηλά, δεν σπρώχνουμε το πλαίσιο.
       const height = Math.min(raw, 12000);
       // Ανοχή 4px: αποφεύγει συνεχές «τρέμουλο» από υποπίξελ διαφορές.

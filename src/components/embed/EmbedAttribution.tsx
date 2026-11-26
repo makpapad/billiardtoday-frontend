@@ -21,6 +21,7 @@ export function EmbedAttribution() {
 
   return (
     <div
+      data-bt-attribution=""
       style={{
         display: "flex",
         justifyContent: "flex-end",
