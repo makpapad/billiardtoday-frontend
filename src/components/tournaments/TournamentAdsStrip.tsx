@@ -70,7 +70,7 @@ export const futureOfBilliardsAds: TournamentAd[] = [
 export function TournamentAdsStrip({
   ads = tournamentAds,
   className = "mt-10",
-  showPoweredBy = true,
+  showPoweredBy = false,
 }: {
   ads?: TournamentAd[];
   className?: string;
