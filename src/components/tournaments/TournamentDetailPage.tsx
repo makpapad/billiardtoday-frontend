@@ -8679,6 +8679,7 @@ export function TournamentDetailPage({
           showPoweredBy={false}
         />
       ) : null}
+      {!embedded ? (
       <section className="mt-8">
         <details className="group rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_80px_rgba(15,23,42,0.08)]">
           <summary className="flex cursor-pointer list-none flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
@@ -8790,6 +8791,7 @@ export function TournamentDetailPage({
           </div>
         </details>
       </section>
+      ) : null}
       {showTournamentAds ? <TournamentAdsStrip /> : null}
       {showBackToTopButton ? (
         <button
