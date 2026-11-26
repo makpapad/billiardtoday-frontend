@@ -7,6 +7,8 @@ type Props = {
   children: ReactNode;
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
+
 export function EmbedPageFrame({ appearance, children }: Props) {
   return (
     <div
