@@ -18,7 +18,8 @@ export default function EmbedLayout({ children }: { children: ReactNode }) {
         dangerouslySetInnerHTML={{
           __html:
             "html,body{min-height:0!important;height:auto!important}" +
-            '[class*="min-h-screen"]{min-height:0!important}',
+            '[class*="min-h-screen"]{min-height:0!important}' +
+            '[class*="h-screen"]{height:auto!important;max-height:none!important}',
         }}
       />
       {children}
