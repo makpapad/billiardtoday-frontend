@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com";
 
 /**
@@ -7,9 +11,14 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://billiardtoday.com"
  * περιεχόμενό μας στη δική του σελίδα. Χωρίς σύνδεσμο επιστροφής, η Google βλέπει
  * το περιεχόμενο αλλά ποτέ την πηγή — και χάνονται σύνδεσμοι που ήδη κερδίζουμε.
  *
- * Δεν μπαίνει στα overlays (τηλεοπτική προβολή), όπου δεν χωράει τίποτα επιπλέον.
+ * Δεν μπαίνει στα overlays (τηλεοπτική προβολή). Ο έλεγχος γίνεται εδώ, όχι σε
+ * layout: τα nested layouts στο Next ΣΥΝΘΕΤΟΝΤΑΙ, άρα ένα child layout δεν αφαιρεί
+ * ό,τι πρόσθεσε το γονικό.
  */
 export function EmbedAttribution() {
+  const pathname = usePathname() || "";
+  if (pathname.startsWith("/embed/overlay")) return null;
+
   return (
     <div
       style={{
