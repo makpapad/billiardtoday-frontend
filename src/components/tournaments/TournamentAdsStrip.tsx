@@ -79,6 +79,9 @@ export function TournamentAdsStrip({
   // Με λίγους χορηγούς (π.χ. 4) η σειρά κεντράρεται αντί να απλώνεται σε 6 στήλες.
   const centered = ads.length <= 4;
 
+  // Χωρίς χορηγούς και χωρίς badge, η λωρίδα θα έμενε κενό πλαίσιο — δεν την σχεδιάζουμε καθόλου.
+  if (ads.length === 0 && !showPoweredBy) return null;
+
   return (
     <section className={`${className} bg-white/95 py-6`.trim()}>
       <div className="mx-auto w-full px-1 sm:px-6" style={{ maxWidth: "var(--bt-page-width, 1280px)" }}>
