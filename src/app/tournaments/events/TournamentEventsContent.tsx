@@ -6273,7 +6273,10 @@ export function TournamentEventsContent({
             )}
           {eventInfo &&
             (eventStages.length > 0 ||
-              showVisiblePublishedFinalResults) && (
+              showVisiblePublishedFinalResults) &&
+            /* Στην ενσωματωμένη προβολή ο επιλογέας φάσης κρύβεται· αν η ενεργή φάση
+               δεν έχει περιεχόμενο, η κάρτα θα έμενε άδειο πλαίσιο. */
+            (!embedded || eventStages.some((stage) => stage.id === activeStageId)) && (
               <div className="flex flex-col gap-4">
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 sm:p-4 shadow-sm">
                   {showEventHeader ? (
