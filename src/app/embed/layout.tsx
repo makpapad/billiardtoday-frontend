@@ -11,6 +11,16 @@ import { EmbedAutoHeight } from "@/components/embed/EmbedAutoHeight";
 export default function EmbedLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      {/* Στα embeds δεν θέλουμε ύψη 100vh: μέσα σε iframe θα έσπρωχναν το πλαίσιο
+          να μεγαλώνει σε κύκλο (όσο ψηλώνει το πλαίσιο, τόσο ψηλώνει το 100vh).
+          Το πραγματικό ύψος το δίνει το EmbedAutoHeight. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            "html,body{min-height:0!important;height:auto!important}" +
+            '[class*="min-h-screen"]{min-height:0!important}',
+        }}
+      />
       {children}
       <EmbedAttribution />
       <EmbedAutoHeight />

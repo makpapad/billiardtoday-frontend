@@ -25,12 +25,14 @@ export function EmbedAutoHeight() {
     let debounce: number | undefined;
 
     const measure = () => {
-      const height = Math.ceil(
+      const raw = Math.ceil(
         Math.max(
           document.documentElement?.scrollHeight ?? 0,
           document.body?.scrollHeight ?? 0,
         ),
       );
+      // Όριο ασφαλείας: αν κάτι μετρηθεί παράλογα ψηλά, δεν σπρώχνουμε το πλαίσιο.
+      const height = Math.min(raw, 12000);
       // Ανοχή 4px: αποφεύγει συνεχές «τρέμουλο» από υποπίξελ διαφορές.
       if (height > 0 && Math.abs(height - lastHeight) > 4) {
         lastHeight = height;
