@@ -8658,15 +8658,20 @@ export function TournamentDetailPage({
           </div>
         </section>
       ) : null}
-      <div className="mt-4">
-        <DataMethodologyNote
-          source={federationWebsiteCredit({
-            slug: summary.organizerFederationSlug,
-            website: summary.organizerWebsite,
-          })}
-          locale={/hellenic/i.test(summary.organizerFederationSlug ?? "") ? "el" : "en"}
-        />
-      </div>
+      {/* Η σημείωση «Data & methodology» ζει ΜΟΝΟ στη δημόσια σελίδα. Μέσα σε
+          iframe (σύλλογος/ομοσπονδία) είναι νομικό/μεθοδολογικό κείμενο που
+          τραβά την προσοχή από τα σκορ και δεν ζητήθηκε από τον οικοδεσπότη. */}
+      {!embedded ? (
+        <div className="mt-4">
+          <DataMethodologyNote
+            source={federationWebsiteCredit({
+              slug: summary.organizerFederationSlug,
+              website: summary.organizerWebsite,
+            })}
+            locale={/hellenic/i.test(summary.organizerFederationSlug ?? "") ? "el" : "en"}
+          />
+        </div>
+      ) : null}
       {showFobAds ? (
         <TournamentAdsStrip
           ads={futureOfBilliardsAds}
