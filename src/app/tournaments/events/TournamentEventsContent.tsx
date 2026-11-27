@@ -1738,6 +1738,36 @@ function formatDateTimeForMatchCell(
 }
 
 /**
+ * Ώρα αγώνα στο πίνακα ομίλων, στη ζώνη που διάλεξε ο χρήστης.
+ *
+ * ΓΙΑΤΙ ΞΕΧΩΡΙΣΤΗ: το `match.dateTime` έρχεται συχνά ως «τοπική ώρα γηπέδου»
+ * (`2026-11-27T10:30`, χωρίς Z). Το `formatDateTimeWithOffset` τέτοια τιμή την
+ * επιστρέφει ΩΣ ΕΧΕΙ — άρα άλλαζε το dropdown και η ώρα δεν κινούνταν ποτέ.
+ * Εδώ η ώρα διαβάζεται ως ώρα της διοργάνωσης και μετατρέπεται στη ζώνη του χρήστη,
+ * με την ίδια λογική (και το ίδιο DST χειρισμό) όπως το πρόγραμμα.
+ */
+function formatMatchDateTimeInViewerZone(
+  value: string | null,
+  venueTimeZone?: string | null,
+  offsetMinutes?: number | null,
+  timeZoneName?: string | null,
+): string {
+  if (!value) return "-";
+  const wall = NAIVE_WALL_CLOCK.exec(value.trim());
+  if (wall) {
+    const converted = formatDeclaredWallClockInViewerZone(
+      `${wall[1]}-${wall[2]}-${wall[3]}`,
+      `${wall[4]}:${wall[5]}`,
+      venueTimeZone,
+      offsetMinutes,
+      timeZoneName,
+    );
+    if (converted) return `${converted.date}\n${converted.time}`;
+  }
+  return formatDateTimeForMatchCell(value, offsetMinutes, timeZoneName);
+}
+
+/**
  * ΗΜΕΡΑ του αγώνα σαν 'YYYY-MM-DD', στη ζώνη του τουρνουά.
  *
  * Ίδια λογική με το `formatDateTimeWithOffset` (ίδια ζώνη, ίδια DST συμπεριφορά), ώστε το
@@ -7325,8 +7355,9 @@ export function TournamentEventsContent({
                                                                 </div>
                                                                 <div className="whitespace-pre-line text-right text-[11px] text-slate-500 dark:text-slate-400">
                                                                   {match.dateTime
-                                                                    ? formatDateTimeForMatchCell(
+                                                                    ? formatMatchDateTimeInViewerZone(
                                                                         match.dateTime,
+                                                                        venueTimezoneName,
                                                                         timezoneOffsetMinutes,
                                                                         timezoneName,
                                                                       )
@@ -9024,8 +9055,9 @@ export function TournamentEventsContent({
                                                                     ) : (
                                                                       <div className="flex min-h-[72px] items-center justify-center">
                                                                         <span className="whitespace-pre-line text-center">
-                                                                          {formatDateTimeForMatchCell(
+                                                                          {formatMatchDateTimeInViewerZone(
                                                                             match.dateTime,
+                                                                            venueTimezoneName,
                                                                             timezoneOffsetMinutes,
                                                                             timezoneName,
                                                                           )}
