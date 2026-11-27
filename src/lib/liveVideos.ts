@@ -61,8 +61,14 @@ export function extractYouTubeVideoId(value: unknown): string | null {
       if (watchId && YOUTUBE_ID_PATTERN.test(watchId)) return watchId;
 
       const pathSegments = url.pathname.split("/").filter(Boolean);
+      /* `embed/`, `shorts/`, `live/` και `v/` κρύβουν το id στο δεύτερο τμήμα:
+         το `youtube.com/live/<id>` είναι η διεύθυνση που δίνει το YouTube για
+         ζωντανή μετάδοση, άρα δεν γίνεται να λείπει. */
       const embedId =
-        pathSegments[0] === "embed" || pathSegments[0] === "shorts"
+        pathSegments[0] === "embed" ||
+        pathSegments[0] === "shorts" ||
+        pathSegments[0] === "live" ||
+        pathSegments[0] === "v"
           ? pathSegments[1] ?? ""
           : "";
       if (YOUTUBE_ID_PATTERN.test(embedId)) return embedId;

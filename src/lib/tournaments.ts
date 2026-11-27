@@ -1,3 +1,5 @@
+import { extractYouTubeVideoId } from "@/lib/liveVideos";
+
 export type TournamentEventStageSummary = {
   documentId: string;
   title: string;
@@ -190,7 +192,9 @@ const readString = (value: unknown): string | null => {
   return cleaned || null;
 };
 
-const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => {
+const LIVE_WALL_PATHS = new Set(["/tournaments/live/soop", "/tournaments/live/youtube"]);
+
+export const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => {
   const config =
     timetableConfig && typeof timetableConfig === "object" && !Array.isArray(timetableConfig)
       ? (timetableConfig as Record<string, unknown>)
@@ -212,15 +216,36 @@ const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => 
   const href = readString(liveButton.href);
   if (!href) return null;
 
+  /* Ήδη κανονικοποιημένο από τον admin (SOOP ή YouTube wall). */
   if (href.startsWith("/tournaments/live/soop?")) return href;
+  if (href.startsWith("/tournaments/live/youtube?")) return href;
 
   try {
     const parsed = new URL(href);
-    if (parsed.hostname === "billiardtoday.com" && parsed.pathname === "/tournaments/live/soop") {
+    if (parsed.hostname === "billiardtoday.com" && LIVE_WALL_PATHS.has(parsed.pathname)) {
       return `${parsed.pathname}${parsed.search}`;
     }
   } catch {
-    return null;
+    /* Δεν είναι απόλυτο URL — δοκιμάζουμε YouTube παρακάτω. */
+  }
+
+  /*
+   * YouTube: ένα ή περισσότερα links (χωρισμένα με κόμμα/κενό/νέα γραμμή) ή
+   * σκέτα video IDs. Το πολύ 4, όπως το multiview του SOOP. Ο admin σώζει ήδη
+   * κανονικοποιημένη διαδρομή, αλλά το κάθε event μπορεί να έχει παλιά τιμή.
+   */
+  const videoIds = Array.from(
+    new Set(
+      href
+        .split(/[\s,;]+/)
+        .map((entry) => extractYouTubeVideoId(entry))
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ).slice(0, 4);
+  if (videoIds.length > 0) {
+    /* Πάνω από ένα βίντεο → ανοίγει ο τοίχος (multiview), όπως το SOOP. */
+    const suffix = videoIds.length > 1 ? "&view=multiview" : "";
+    return `/tournaments/live/youtube?videos=${videoIds.join(",")}${suffix}`;
   }
 
   return null;

@@ -488,7 +488,9 @@ const appendReturnToLiveHref = (href: string | null, returnPath: string | null) 
   if (!href || !returnPath) return href;
   try {
     const url = new URL(href, "https://billiardtoday.com");
-    if (url.pathname !== "/tournaments/live/soop") return href;
+    if (url.pathname !== "/tournaments/live/soop" && url.pathname !== "/tournaments/live/youtube") {
+      return href;
+    }
     url.searchParams.set("returnTo", returnPath);
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
