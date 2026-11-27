@@ -4,8 +4,9 @@ import { EmbedAutoHeight } from "@/components/embed/EmbedAutoHeight";
 
 /**
  * Ενσωματώσεις (widgets) που δείχνουν οι σύλλογοι/ομοσπονδίες στις δικές τους σελίδες.
- * Εδώ μπαίνει η αναφορά «Powered by Billiard Today» — μία φορά, για όλες τις διαδρομές.
- * Το /embed/overlay έχει δικό του layout και δεν την περιλαμβάνει.
+ * Εδώ μένει ΜΟΝΟ το σημείο μέτρησης ύψους (`EmbedAttribution` = αόρατο div): η
+ * αναφορά «Powered by» τη δείχνει η φιλοξενούσα σελίδα, έξω από το πλαίσιο, ώστε να
+ * μη διπλασιάζεται. Το /embed/overlay έχει δικό του layout.
  * Το EmbedAutoHeight ενημερώνει τη φιλοξενούσα σελίδα για το ύψος του περιεχομένου.
  */
 export default function EmbedLayout({ children }: { children: ReactNode }) {
