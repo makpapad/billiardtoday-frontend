@@ -484,11 +484,17 @@ const buildParticipantSearchHaystack = (row: TournamentParticipantRow) =>
     foldSearchText(row.country),
   ].join(" | ");
 
+/**
+ * Δέχεται και τις διαδρομές με πρόθεμα `/embed` — μέσα στο πλαίσιο το «Live video»
+ * ανοίγει το `/embed/tournaments/live/youtube` και το `returnTo` πρέπει να μπει κι εκεί.
+ */
+const LIVE_WALL_PATH_PATTERN = /^\/(?:embed\/)?tournaments\/live\/(?:soop|youtube)$/;
+
 const appendReturnToLiveHref = (href: string | null, returnPath: string | null) => {
   if (!href || !returnPath) return href;
   try {
     const url = new URL(href, "https://billiardtoday.com");
-    if (url.pathname !== "/tournaments/live/soop" && url.pathname !== "/tournaments/live/youtube") {
+    if (!LIVE_WALL_PATH_PATTERN.test(url.pathname)) {
       return href;
     }
     url.searchParams.set("returnTo", returnPath);
@@ -1871,9 +1877,21 @@ export function TournamentDetailPage({
   const externalLiveTablesHrefRaw =
     summary.externalLiveTablesHref ??
     buildExternalLiveTablesHref(summary.documentId, { table: 1 });
+  // Μέσα στο πλαίσιο το «Live video» ανοίγει τη ΔΙΚΗ ΤΟΥ διαδρομή (/embed/...), αλλιώς
+  // θα φόρτωνε τη δημόσια σελίδα με header/μενού/footer μέσα στο iframe. Και το
+  // «Back to event» επιστρέφει στο /embed/tournaments/<slug>, δηλαδή μέσα στο πλαίσιο.
+  const liveReturnPath = tournamentContextSlug
+    ? embedded
+      ? `/embed/tournaments/${tournamentContextSlug}`
+      : `/tournaments/${tournamentContextSlug}`
+    : null;
+  const embeddedLiveTablesHrefRaw =
+    embedded && externalLiveTablesHrefRaw
+      ? externalLiveTablesHrefRaw.replace(/^\/tournaments\/live\//, "/embed/tournaments/live/")
+      : externalLiveTablesHrefRaw;
   const externalLiveTablesHref = appendReturnToLiveHref(
-    externalLiveTablesHrefRaw,
-    tournamentContextSlug ? `/tournaments/${tournamentContextSlug}` : null,
+    embeddedLiveTablesHrefRaw,
+    liveReturnPath,
   );
   const [browserLocale, setBrowserLocale] = useState<string | null>(null);
   const [stageFromLocation, setStageFromLocation] = useState<string | null>(null);
