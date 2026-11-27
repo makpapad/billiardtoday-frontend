@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BilliardToday — Homepage (snooker-style / UMB skeleton)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0d10;        /* near-black, warm */
+    --ink2:#14181d;
+    --ink3:#1d232a;
+    --paper:#ffffff;
+    --paper2:#f4f4f2;     /* off-white, slightly warm like newsprint */
+    --line:#e3e3df;
+    --line-d:#262d35;
+    --tx:#12161a;
+    --tx2:#5a636d;
+    --tx3:#8b939c;
+    --acc:#e11d2e;        /* snooker red — swap for BT cyan with one variable */
+    --acc-ink:#ffffff;
+    --live:#e11d2e;
+    --good:#0f7a4f;
+    --disp:"Barlow Condensed",ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+    --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--tx);font-family:var(--body);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .wrap{width:min(1200px,100% - 44px);margin-inline:auto}
+  .disp{font-family:var(--disp);text-transform:uppercase;letter-spacing:.01em;font-weight:700;line-height:.98}
+  .kicker{font-family:var(--disp);text-transform:uppercase;letter-spacing:.16em;font-size:12.5px;font-weight:600}
+
+  /* ================= top bar ================= */
+  .topbar{border-bottom:1px solid var(--line);font-size:12px;color:var(--tx3)}
+  .topbar .wrap{display:flex;gap:18px;align-items:center;height:36px}
+  .topbar .sp{margin-left:auto}
+  .topbar b{color:var(--tx2);font-weight:600}
+
+  header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);
+         backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .hrow{display:flex;align-items:center;gap:30px;height:76px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mark{width:34px;height:34px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none}
+  .brand .mark span{width:9px;height:9px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 4px rgba(255,255,255,.16)}
+  .brand .wm{font-family:var(--disp);text-transform:uppercase;font-size:22px;font-weight:700;letter-spacing:.01em;line-height:1}
+  .brand .wm i{font-style:normal;color:var(--acc)}
+  .brand .sub{display:block;font-family:var(--body);font-size:9.5px;letter-spacing:.19em;color:var(--tx3);
+              text-transform:uppercase;margin-top:3px;font-weight:600}
+  nav.main{display:flex;gap:26px;margin-left:6px}
+  nav.main a{font-family:var(--disp);text-transform:uppercase;font-size:16.5px;font-weight:600;
+             letter-spacing:.045em;padding:28px 0;border-bottom:3px solid transparent;color:var(--tx2)}
+  nav.main a:hover{color:var(--tx)}
+  nav.main a.on{color:var(--tx);border-bottom-color:var(--acc)}
+  .hact{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--tx2)}
+  .icobtn:hover{border-color:var(--tx3);color:var(--tx)}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);text-transform:uppercase;
+       letter-spacing:.07em;font-size:14.5px;font-weight:700;padding:11px 18px;border-radius:3px}
+  .btn-red{background:var(--acc);color:#fff}
+  .btn-red:hover{background:#c4152a}
+  .btn-ghost{border:1px solid var(--line);color:var(--tx)}
+  .btn-ghost:hover{border-color:var(--tx3)}
+
+  /* ================= hero ================= */
+  .hero{padding:34px 0 0}
+  .hero-grid{display:grid;grid-template-columns:1.55fr .85fr;gap:26px;align-items:stretch}
+
+  .lead{position:relative;background:var(--ink);color:#fff;overflow:hidden;border-radius:4px;min-height:430px;
+        display:flex;flex-direction:column;justify-content:flex-end}
+  .lead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62;
+            transition:transform .6s ease,opacity .3s}
+  .lead:hover img{transform:scale(1.03);opacity:.7}
+  .lead::after{content:"";position:absolute;inset:0;
+               background:linear-gradient(180deg,rgba(11,13,16,.15) 0%,rgba(11,13,16,.55) 55%,rgba(11,13,16,.94) 100%)}
+  .lead .body{position:relative;z-index:2;padding:30px 32px 32px}
+  .tag{display:inline-flex;align-items:center;gap:7px;background:var(--acc);color:#fff;
+       font-family:var(--disp);text-transform:uppercase;letter-spacing:.13em;font-size:11.5px;font-weight:700;
+       padding:5px 10px;border-radius:2px}
+  .lead h1{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:clamp(30px,3.5vw,46px);
+           line-height:.99;letter-spacing:.005em;margin:14px 0 0;max-width:19ch;text-wrap:balance}
+  .lead p{margin:12px 0 0;color:#c9ced4;font-size:14.5px;max-width:44ch}
+  .lead .meta{margin-top:16px;font-size:12px;color:#8f979f;display:flex;gap:14px;flex-wrap:wrap}
+
+  .quicks{display:grid;gap:12px}
+  .qcard{position:relative;border-radius:4px;overflow:hidden;background:var(--ink2);color:#fff;
+         display:flex;flex-direction:column;justify-content:flex-end;padding:16px 18px;min-height:132px}
+  .qcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;transition:transform .5s}
+  .qcard:hover img{transform:scale(1.04)}
+  .qcard::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,13,16,.1),rgba(11,13,16,.82))}
+  .qcard .lab{position:relative;z-index:2;font-family:var(--disp);text-transform:uppercase;
+              letter-spacing:.15em;font-size:11px;font-weight:700;color:#ffd2d6}
+  .qcard .val{position:relative;z-index:2;font-family:var(--disp);text-transform:uppercase;
+              font-size:20px;font-weight:700;line-height:1.05;margin-top:5px;letter-spacing:.01em}
+  .qcard .sm{position:relative;z-index:2;font-size:11.5px;color:#b9c0c7;margin-top:5px}
+
+  /* ================= credibility strip ================= */
+  .strip{margin-top:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+         background:var(--paper2)}
+  .strip .wrap{display:flex;align-items:center;gap:28px;padding:14px 0;flex-wrap:wrap}
+  .strip .lbl{font-family:var(--disp);text-transform:uppercase;letter-spacing:.16em;font-size:11px;
+              color:var(--tx3);font-weight:600}
+  .strip .orgs{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .strip .org{font-family:var(--disp);text-transform:uppercase;font-size:16px;font-weight:700;
+              letter-spacing:.06em;color:var(--tx2);opacity:.85}
+  .strip .org b{color:var(--acc)}
+  .strip .more{margin-left:auto;font-size:12.5px;color:var(--tx2);font-weight:600}
+
+  /* ================= section heads ================= */
+  section{padding:40px 0}
+  .shead{display:flex;align-items:center;gap:16px;margin-bottom:18px;border-bottom:2px solid var(--ink);padding-bottom:10px}
+  .shead h2{margin:0;font-family:var(--disp);text-transform:uppercase;font-size:23px;font-weight:700;letter-spacing:.02em}
+  .shead .rule{flex:1;height:1px;background:var(--line)}
+  .shead a{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;
+           font-weight:600;color:var(--tx2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .shead a:hover{color:var(--acc)}
+
+  /* ================= match cards ================= */
+  .matches{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .mcard{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--paper);
+         display:flex;flex-direction:column}
+  .mcard .mh{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--ink);color:#fff;
+             font-family:var(--disp);text-transform:uppercase;letter-spacing:.13em;font-size:11px;font-weight:700}
+  .mcard .mh .d{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:p 2.4s infinite}
+  .mcard .mh .when{margin-left:auto;color:#a7aeb6;letter-spacing:.06em}
+  @keyframes p{0%,100%{box-shadow:0 0 0 0 rgba(225,29,46,.6)}50%{box-shadow:0 0 0 5px rgba(225,29,46,0)}}
+  @media (prefers-reduced-motion:reduce){.mcard .mh .d{animation:none}}
+  .mcard .mb{padding:16px 16px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .mcard .ttl{font-size:15.5px;font-weight:600;line-height:1.32;letter-spacing:-.005em}
+  .mcard .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+  .pill{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;
+        font-weight:700;padding:3px 7px;border-radius:2px;background:var(--paper2);color:var(--tx2);border:1px solid var(--line)}
+  .pill.red{background:#fdecee;color:#a8121f;border-color:#f6cdd2}
+  .mcard .go{margin-top:12px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;
+             font-size:12.5px;font-weight:700;color:var(--acc)}
+
+  /* ================= news ================= */
+  .news{display:grid;grid-template-columns:1.25fr 1fr;gap:28px}
+  .feat .im{aspect-ratio:16/9;overflow:hidden;border-radius:4px;background:var(--ink2)}
+  .feat .im img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+  .feat:hover .im img{transform:scale(1.03)}
+  .feat h3{font-family:var(--disp);text-transform:uppercase;font-size:26px;font-weight:700;
+           line-height:1.06;margin:13px 0 0;letter-spacing:.01em}
+  .feat:hover h3{color:var(--acc)}
+  .feat p{margin:9px 0 0;color:var(--tx2);font-size:14.5px;max-width:56ch}
+  .feat .m{margin-top:10px;font-size:12px;color:var(--tx3)}
+  .nlist{display:grid;gap:1px;background:var(--line)}
+  .nitem{display:grid;grid-template-columns:96px 1fr;gap:14px;background:var(--paper);padding:12px 0}
+  .nitem .im{width:96px;height:66px;overflow:hidden;border-radius:3px;background:var(--paper2)}
+  .nitem .im img{width:100%;height:100%;object-fit:cover}
+  .nitem .k{font-family:var(--disp);text-transform:uppercase;letter-spacing:.13em;font-size:10.5px;
+            font-weight:700;color:var(--acc)}
+  .nitem h4{margin:4px 0 0;font-size:14.5px;line-height:1.3;font-weight:600;letter-spacing:-.005em}
+  .nitem:hover h4{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:2px}
+  .nitem .m{font-size:11.5px;color:var(--tx3);margin-top:4px}
+
+  /* ================= ranking ================= */
+  .rank-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:start}
+  .rt{width:100%;border-collapse:collapse;font-size:14.5px}
+  .rt th{font-family:var(--disp);text-transform:uppercase;letter-spacing:.12em;font-size:11px;
+         color:var(--tx3);font-weight:700;text-align:left;padding:0 10px 9px;border-bottom:1px solid var(--line)}
+  .rt td{padding:11px 10px;border-bottom:1px solid var(--line)}
+  .rt tr:hover td{background:var(--paper2)}
+  .rt .pos{width:34px;color:var(--tx3);font-family:var(--disp);font-size:15px;font-weight:700}
+  .rt .nm{font-weight:600}
+  .rt .cc{font-family:var(--disp);font-size:11.5px;letter-spacing:.1em;color:var(--tx3);margin-left:8px}
+  .rt .v{text-align:right;font-weight:700}
+  .rt .mm{text-align:right;color:var(--tx3);font-size:12.5px}
+  .note{background:var(--paper2);border:1px solid var(--line);border-radius:4px;padding:20px}
+  .note h3{margin:0;font-family:var(--disp);text-transform:uppercase;font-size:19px;letter-spacing:.02em}
+  .note p{margin:8px 0 0;font-size:13.5px;color:var(--tx2)}
+  .note .big{margin-top:16px;display:flex;align-items:baseline;gap:10px}
+  .note .big b{font-family:var(--disp);font-size:44px;line-height:1;letter-spacing:.01em}
+  .note .big span{font-size:12px;color:var(--tx3);max-width:16ch;line-height:1.3}
+
+  /* ================= platform ================= */
+  .plat{background:var(--ink);color:#fff;border-radius:4px;padding:34px;display:grid;
+        grid-template-columns:1fr auto;gap:28px;align-items:center}
+  .plat .kicker{color:#ff9aa4}
+  .plat h3{margin:9px 0 0;font-family:var(--disp);text-transform:uppercase;font-size:30px;
+           line-height:1.03;letter-spacing:.01em;max-width:24ch}
+  .plat p{margin:11px 0 0;color:#b3bac1;font-size:14px;max-width:56ch}
+  .plat .btn{background:#fff;color:var(--ink)}
+  .plat .btn:hover{background:#e8e8e6}
+
+  footer{border-top:1px solid var(--line);margin-top:44px;padding:30px 0 46px;font-size:12.5px;color:var(--tx3)}
+  .frow{display:flex;flex-wrap:wrap;gap:22px;align-items:center}
+  .frow nav{display:flex;gap:20px;margin-left:auto;font-family:var(--disp);text-transform:uppercase;
+            letter-spacing:.09em;font-size:12.5px;font-weight:600;color:var(--tx2)}
+  .frow nav a:hover{color:var(--acc)}
+
+  @media (max-width:1000px){
+    .hero-grid{grid-template-columns:1fr}
+    .quicks{grid-template-columns:repeat(3,1fr)}
+    .news{grid-template-columns:1fr}
+    .rank-wrap{grid-template-columns:1fr}
+    .matches{grid-template-columns:1fr}
+    nav.main{display:none}
+  }
+  @media (max-width:640px){
+    .quicks{grid-template-columns:1fr}
+    .plat{grid-template-columns:1fr}
+    .lead{min-height:360px}
+    .lead .body{padding:22px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ top bar ============ -->
+<div class="topbar">
+  <div class="wrap">
+    <span><b>CEB</b> member federation data</span>
+    <span class="sp"></span>
+    <span>Friday 27 November 2026</span>
+    <span>·</span>
+    <span>2 events live</span>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hrow">
+    <a class="brand" href="#">
+      <span class="mark"><span></span></span>
+      <span>
+        <span class="wm">Billiard<i>Today</i></span>
+        <span class="sub">Carom · Results · Rankings</span>
+      </span>
+    </a>
+    <nav class="main">
+      <a class="on" href="#">Home</a>
+      <a href="#">Tournaments</a>
+      <a href="#">Live</a>
+      <a href="#">Rankings</a>
+      <a href="#">Players</a>
+      <a href="#">News</a>
+    </nav>
+    <div class="hact">
+      <span class="icobtn" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <a class="btn btn-red" href="#">For clubs</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ hero ============ -->
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+
+        <a class="lead" href="#">
+          <img src="https://cdn.billiardtoday.com/uploads/ankara_world_cup_2026_umb_3bf78641ef.jpg" alt="">
+          <div class="body">
+            <span class="tag">World Cup · Ankara</span>
+            <h1>Cho wins a 50–49 classic</h1>
+            <p>Myung Woo Cho takes the Ankara World Cup final on the last point — the closest
+               finish of the 2026 circuit so far.</p>
+            <div class="meta">
+              <span>3-Cushion</span><span>UMB World Cup</span><span>Full recap</span>
+            </div>
+          </div>
+        </a>
+
+        <div class="quicks">
+          <a class="qcard" href="#">
+            <img src="https://cdn.billiardtoday.com/uploads/world_cup_3_cushion_yanggu_2026_umb_70a8a691c5.jpg" alt="">
+            <span class="lab">Live now</span>
+            <span class="val">2 events on the tables</span>
+            <span class="sm">League 3 · Bottrop U21</span>
+          </a>
+
+          <a class="qcard" href="#">
+            <img src="https://cdn.billiardtoday.com/uploads/uk_U2_Mp_P2_61fe8cc6a0.jpg" alt="">
+            <span class="lab">Ranking</span>
+            <span class="val">BTR · 2,745 players</span>
+            <span class="sm">1. CHO Myung Woo 1890.4</span>
+          </a>
+
+          <a class="qcard" href="#">
+            <img src="https://cdn.billiardtoday.com/uploads/leca_da_palmeira_matosinhos_b132942586.jpg" alt="">
+            <span class="lab">Next up</span>
+            <span class="val">Madrid · 5–7 Feb 2027</span>
+            <span class="sm">LONGONI NEXT GEN U21</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ credibility strip ============ -->
+  <div class="strip">
+    <div class="wrap">
+      <span class="lbl">Official data from</span>
+      <div class="orgs">
+        <span class="org">UMB <b>·</b> World Cups</span>
+        <span class="org">CEB <b>·</b> European events</span>
+        <span class="org">16 <b>·</b> member federations</span>
+        <span class="org">2,745 <b>·</b> ranked players</span>
+      </div>
+      <a class="more" href="#">How the data works →</a>
+    </div>
+  </div>
+
+  <!-- ============ live / upcoming ============ -->
+  <section>
+    <div class="wrap">
+      <div class="shead">
+        <h2>On the tables</h2><span class="rule"></span>
+        <a href="#">All tournaments
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="matches">
+        <a class="mcard" href="#">
+          <div class="mh"><span class="d"></span>Live <span class="when">22–27 Nov</span></div>
+          <div class="mb">
+            <div class="ttl">League 3 — 1st Tournament 2026-2027</div>
+            <div class="tags"><span class="pill red">Live</span><span class="pill">3-Cushion</span><span class="pill">Team league</span></div>
+            <span class="go">Follow →</span>
+          </div>
+        </a>
+
+        <a class="mcard" href="#">
+          <div class="mh"><span class="d"></span>Live <span class="when">27–29 Nov</span></div>
+          <div class="mb">
+            <div class="ttl">LONGONI NEXT GEN Grand Prix U21 — Bottrop</div>
+            <div class="tags"><span class="pill red">Live</span><span class="pill">CEB youth</span><span class="pill">24 players</span></div>
+            <span class="go">Follow →</span>
+          </div>
+        </a>
+
+        <a class="mcard" href="#">
+          <div class="mh">Upcoming <span class="when">24–29 Mar 2027</span></div>
+          <div class="mb">
+            <div class="ttl">European Championship 3-Cushion U21 — Salamina 2027</div>
+            <div class="tags"><span class="pill">CEB</span><span class="pill">3-Cushion</span></div>
+            <span class="go">Event page →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ news ============ -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="shead">
+        <h2>News</h2><span class="rule"></span>
+        <a href="#">All news
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="news">
+        <a class="feat" href="#">
+          <div class="im"><img src="https://cdn.billiardtoday.com/uploads/ankara_world_cup_2026_umb_3bf78641ef.jpg" alt=""></div>
+          <h3>Ankara World Cup 2026: Myung Woo Cho wins a 50-49 classic</h3>
+          <p>The world number one edges Dick Jaspers on the final point of a final that went
+             to the last inning — and takes his fourth World Cup of the season.</p>
+          <div class="m">World Cup · 3-Cushion</div>
+        </a>
+
+        <div class="nlist">
+          <a class="nitem" href="#">
+            <span class="im"><img src="https://cdn.billiardtoday.com/uploads/uk_U2_Mp_P2_61fe8cc6a0.jpg" alt=""></span>
+            <span>
+              <span class="k">CEB youth</span>
+              <h4>The Future of Billiards 2026 in Pulderbos: 22 U25 players from eight nations</h4>
+              <span class="m">Pulderbos, Belgium</span>
+            </span>
+          </a>
+          <a class="nitem" href="#">
+            <span class="im"><img src="https://cdn.billiardtoday.com/uploads/world_cup_3_cushion_yanggu_2026_umb_70a8a691c5.jpg" alt=""></span>
+            <span>
+              <span class="k">World Cup</span>
+              <h4>Yanggu 2026: PPPQ round complete, a 12-run sets the pace</h4>
+              <span class="m">Yanggu, Korea</span>
+            </span>
+          </a>
+          <a class="nitem" href="#">
+            <span class="im"><img src="https://cdn.billiardtoday.com/uploads/leca_da_palmeira_matosinhos_b132942586.jpg" alt=""></span>
+            <span>
+              <span class="k">Preview</span>
+              <h4>Porto / Matosinhos World Cup 2026: what to know before it starts</h4>
+              <span class="m">Matosinhos, Portugal</span>
+            </span>
+          </a>
+          <a class="nitem" href="#">
+            <span class="im"><img src="https://cdn.billiardtoday.com/uploads/IMG_3868_a0015c6d95.jpeg" alt=""></span>
+            <span>
+              <span class="k">CEB youth</span>
+              <h4>LONGONI NEXT GEN Grand Prix U21 2026: Athens recap</h4>
+              <span class="m">Athens, Greece</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ranking ============ -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="shead">
+        <h2>BTR rating</h2><span class="rule"></span>
+        <a href="#">Full ranking
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="rank-wrap">
+        <table class="rt">
+          <thead>
+            <tr><th>#</th><th>Player</th><th style="text-align:right">BTR</th><th style="text-align:right">Matches</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="pos">1</td><td><span class="nm">CHO Myung Woo</span><span class="cc">KR</span></td><td class="v">1890.4</td><td class="mm">333</td></tr>
+            <tr><td class="pos">2</td><td><span class="nm">JASPERS Dick</span><span class="cc">NL</span></td><td class="v">1808.8</td><td class="mm">407</td></tr>
+            <tr><td class="pos">3</td><td><span class="nm">ZANETTI Marco</span><span class="cc">IT</span></td><td class="v">1788.8</td><td class="mm">350</td></tr>
+            <tr><td class="pos">4</td><td><span class="nm">MERCKX Eddy</span><span class="cc">BE</span></td><td class="v">1787.0</td><td class="mm">372</td></tr>
+            <tr><td class="pos">5</td><td><span class="nm">BAO Phuong Vinh</span><span class="cc">VN</span></td><td class="v">1786.8</td><td class="mm">160</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <h3>Every match counts</h3>
+          <p>The BTR rating is recalculated after every published match — not once a season.
+             Win or lose, your number moves.</p>
+          <div class="big">
+            <b>2,745</b>
+            <span>players currently rated</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ platform ============ -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="plat">
+        <div>
+          <span class="kicker">For clubs and federations</span>
+          <h3>Put your tables on this page.</h3>
+          <p>A scoreboard for every table, results published the moment the match ends,
+             and an event page your players will share.</p>
+        </div>
+        <a class="btn" href="#">Set up an event</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap frow">
+    <span>© 2026 BilliardToday</span>
+    <nav>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

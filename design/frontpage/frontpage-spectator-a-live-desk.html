@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BilliardToday — Concept A · Live Desk</title>
+<style>
+  :root{
+    --ink:#020617; --ink2:#0f172a; --ink3:#1e293b; --line:#1e293b;
+    --tx:#e2e8f0; --tx-dim:#94a3b8; --tx-soft:#64748b;
+    --cy:#22d3ee; --cy2:#06b6d4; --cy3:#0e7490; --cy-pale:#cffafe;
+    --live:#ef4444; --good:#047857;
+    --page:#ffffff; --paper:#f8fafc;
+    --r:14px;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ink);color:var(--tx);font-family:var(--sans);line-height:1.5;
+       font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1180px,100% - 40px);margin-inline:auto}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:20;background:rgba(2,6,23,.86);
+         backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,41,59,.9)}
+  .hrow{display:flex;align-items:center;gap:28px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:17px}
+  .brand svg{display:block}
+  nav{display:flex;gap:22px;font-size:14px;color:var(--tx-dim);margin-left:auto}
+  nav a{position:relative;padding:6px 0}
+  nav a:hover{color:#fff}
+  nav a[aria-current] {color:#fff}
+  nav a[aria-current]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--cy);border-radius:2px}
+  .h-cta{font-size:13px;font-weight:600;color:var(--ink);background:var(--cy);
+         padding:9px 15px;border-radius:10px;white-space:nowrap}
+  .h-cta:hover{background:#67e8f9}
+
+  /* ---------- hero ---------- */
+  .hero{padding:74px 0 44px;border-bottom:1px solid rgba(30,41,59,.7)}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;
+        letter-spacing:.02em;color:#fecaca;background:rgba(239,68,68,.1);
+        border:1px solid rgba(239,68,68,.28);padding:6px 12px;border-radius:999px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--live);
+       box-shadow:0 0 0 0 rgba(239,68,68,.6);animation:p 2.4s infinite}
+  @keyframes p{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+  h1{font-size:clamp(34px,5.2vw,62px);line-height:1.02;letter-spacing:-.035em;
+     margin:20px 0 0;font-weight:700;max-width:17ch}
+  h1 em{font-style:normal;color:var(--cy)}
+  .dek{color:var(--tx-dim);font-size:17px;max-width:56ch;margin:18px 0 0}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;
+       padding:12px 18px;border-radius:11px;border:1px solid transparent}
+  .btn-1{background:var(--cy);color:#020617}
+  .btn-1:hover{background:#67e8f9}
+  .btn-2{border-color:var(--line);color:var(--tx);background:rgba(255,255,255,.03)}
+  .btn-2:hover{background:rgba(255,255,255,.07)}
+
+  /* ---------- section chrome ---------- */
+  section{padding:56px 0;border-bottom:1px solid rgba(30,41,59,.7)}
+  .shead{display:flex;align-items:baseline;gap:14px;margin-bottom:24px}
+  .shead h2{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+            color:var(--tx-soft);margin:0}
+  .shead .more{margin-left:auto;font-size:13px;color:var(--tx-dim);display:inline-flex;align-items:center;gap:6px}
+  .shead .more:hover{color:var(--cy)}
+
+  /* ---------- live rows ---------- */
+  .live-list{display:grid;gap:12px}
+  .lrow{display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:22px;
+        background:linear-gradient(90deg,rgba(30,41,59,.72),rgba(15,23,42,.5));
+        border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;
+        transition:border-color .18s,transform .18s}
+  .lrow:hover{border-color:#334155;transform:translateY(-1px)}
+  .ldate{font-size:12px;line-height:1.35;color:var(--tx-dim)}
+  .ldate b{display:block;font-size:17px;color:#fff;letter-spacing:-.02em}
+  .ltitle{font-size:16.5px;font-weight:600;letter-spacing:-.015em;color:#fff}
+  .lmeta{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:600;letter-spacing:.02em;padding:3px 9px;border-radius:6px;
+        background:rgba(148,163,184,.12);color:var(--tx-dim);border:1px solid rgba(148,163,184,.14)}
+  .chip-live{background:rgba(239,68,68,.12);color:#fca5a5;border-color:rgba(239,68,68,.3)}
+  .chip-cy{background:rgba(34,211,238,.1);color:var(--cy);border-color:rgba(34,211,238,.25)}
+  .go{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
+      display:grid;place-items:center;color:var(--tx-dim)}
+  .lrow:hover .go{border-color:var(--cy);color:var(--cy)}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+         border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .stat{background:var(--ink2);padding:22px 20px}
+  .stat b{display:block;font-size:clamp(26px,3.4vw,38px);font-weight:700;letter-spacing:-.035em;
+          color:#fff;line-height:1}
+  .stat span{display:block;margin-top:9px;font-size:12.5px;color:var(--tx-soft);line-height:1.4}
+
+  /* ---------- results ---------- */
+  .res-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+  .feat{background:var(--ink2);border:1px solid var(--line);border-radius:18px;padding:26px}
+  .feat .kick{font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--cy)}
+  .feat h3{margin:10px 0 0;font-size:25px;letter-spacing:-.028em;line-height:1.15;color:#fff}
+  .feat .sub{margin-top:8px;font-size:13.5px;color:var(--tx-dim)}
+  .split{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+         margin-top:22px;border-radius:12px;overflow:hidden}
+  .split div{background:rgba(2,6,23,.5);padding:14px 16px}
+  .split b{display:block;font-size:22px;letter-spacing:-.03em;color:#fff;line-height:1}
+  .split span{display:block;font-size:11px;color:var(--tx-soft);margin-top:6px;letter-spacing:.02em}
+  .rlist{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .rlist a{background:var(--ink2);padding:15px 18px;display:grid;
+           grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .rlist a:hover{background:#131f36}
+  .rlist .t{font-size:14.5px;font-weight:600;color:var(--tx);letter-spacing:-.01em}
+  .rlist .d{font-size:12px;color:var(--tx-soft);margin-top:4px}
+
+  /* ---------- ranking table ---------- */
+  .rt{width:100%;border-collapse:collapse;font-size:14.5px}
+  .rt th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--tx-soft);font-weight:600;padding:0 12px 10px;border-bottom:1px solid var(--line)}
+  .rt td{padding:13px 12px;border-bottom:1px solid rgba(30,41,59,.55)}
+  .rt tr:last-child td{border-bottom:0}
+  .rt tbody tr:hover td{background:rgba(34,211,238,.045)}
+  .rt .pos{color:var(--tx-soft);width:38px}
+  .rt .nm{font-weight:600;color:#fff}
+  .rt .cc{font-size:11.5px;color:var(--tx-dim);letter-spacing:.06em}
+  .rt .v{text-align:right;font-weight:600;color:var(--cy)}
+  .rt .m{text-align:right;color:var(--tx-soft);font-size:13px}
+
+  /* ---------- platform strip ---------- */
+  .strip{background:linear-gradient(120deg,#0e7490,#06b6d4);border-radius:20px;
+         padding:34px;display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center;color:#020617}
+  .strip h3{margin:0;font-size:26px;letter-spacing:-.03em;line-height:1.15;max-width:26ch}
+  .strip p{margin:10px 0 0;font-size:14px;color:rgba(2,6,23,.75);max-width:52ch}
+  .strip .btn{background:#020617;color:#fff;white-space:nowrap}
+  .strip .btn:hover{background:#0f172a}
+
+  footer{padding:44px 0 56px;color:var(--tx-soft);font-size:13px}
+  .frow{display:flex;flex-wrap:wrap;gap:28px;align-items:center}
+  .frow nav{gap:20px;font-size:13px;margin-left:auto}
+
+  @media (max-width:900px){
+    nav{display:none}
+    .res-grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .strip{grid-template-columns:1fr}
+    .lrow{grid-template-columns:70px 1fr;gap:14px}
+    .lrow .go{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hrow">
+    <a class="brand" href="#">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2" stroke="#22d3ee" stroke-width="1.6"/>
+        <circle cx="12" cy="12" r="4.2" stroke="#e2e8f0" stroke-width="1.4"/>
+        <circle cx="12" cy="12" r="1.3" fill="#22d3ee"/>
+      </svg>
+      BilliardToday
+    </a>
+    <nav>
+      <a href="#" aria-current="page">Home</a>
+      <a href="#">Tournaments</a>
+      <a href="#">Live</a>
+      <a href="#">Rankings</a>
+      <a href="#">Players</a>
+      <a href="#">News</a>
+    </nav>
+    <a class="h-cta" href="#">For clubs</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" style="border-bottom:1px solid rgba(30,41,59,.7)">
+    <div class="wrap">
+      <span class="pill"><span class="dot"></span> 2 events on the tables right now</span>
+      <h1>Every carom match, <em>on one board</em>.</h1>
+      <p class="dek">Live scores, the full tournament calendar and the BTR rating — for players,
+         fans and federations. No spreadsheets, no scattered results pages.</p>
+      <div class="hero-actions">
+        <a class="btn btn-1" href="#live">Watch what is live
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-2" href="#ranking">BTR ranking</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE ============ -->
+  <section id="live">
+    <div class="wrap">
+      <div class="shead">
+        <h2>On the tables now</h2>
+        <a class="more" href="#">All tournaments
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="live-list">
+        <a class="lrow" href="#">
+          <div class="ldate"><b>22–27</b>Nov 2026</div>
+          <div>
+            <div class="ltitle">League 3 — 1st Tournament 2026-2027</div>
+            <div class="lmeta">
+              <span class="chip chip-live">Live</span>
+              <span class="chip">3-Cushion</span>
+              <span class="chip">Team league</span>
+            </div>
+          </div>
+          <span class="go" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+
+        <a class="lrow" href="#">
+          <div class="ldate"><b>27–29</b>Nov 2026</div>
+          <div>
+            <div class="ltitle">LONGONI NEXT GEN Grand Prix 3-Cushion U21 — Bottrop</div>
+            <div class="lmeta">
+              <span class="chip chip-live">Live</span>
+              <span class="chip">3-Cushion</span>
+              <span class="chip chip-cy">CEB youth</span>
+            </div>
+          </div>
+          <span class="go" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NUMBERS ============ -->
+  <section>
+    <div class="wrap">
+      <div class="shead"><h2>The sport in numbers</h2></div>
+      <div class="stats">
+        <div class="stat"><b class="num">2,745</b><span>Players with a BTR rating</span></div>
+        <div class="stat"><b class="num">55</b><span>Players at the Carom Café Fall Classic</span></div>
+        <div class="stat"><b class="num">249</b><span>Matches played there, in three stages</span></div>
+        <div class="stat"><b class="num">1.506</b><span>Best stage average of the event</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS + CALENDAR ============ -->
+  <section>
+    <div class="wrap">
+      <div class="shead">
+        <h2>Latest results</h2>
+        <a class="more" href="#">All results
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="res-grid">
+        <a class="feat" href="#">
+          <div class="kick">Finished · 18–22 November</div>
+          <h3>Carom Café Fall Classic 2026</h3>
+          <div class="sub">Full standings, stage-by-stage averages and every match, published.</div>
+          <div class="split">
+            <div><b class="num">182</b><span>Qualifications</span></div>
+            <div><b class="num">60</b><span>Finals 1st phase</span></div>
+            <div><b class="num">7</b><span>Knockout</span></div>
+          </div>
+        </a>
+
+        <div class="rlist">
+          <a href="#"><div><div class="t">The future of Billiards 2026 — Pulderbos</div><div class="d">4–8 Nov 2026 · 3-Cushion</div></div></a>
+          <a href="#"><div><div class="t">World Cup 3-Cushion, Yanggu 2026</div><div class="d">2–8 Nov 2026 · UMB</div></div></a>
+          <a href="#"><div><div class="t">Master League — 1st Tournament 2026-2027</div><div class="d">29 Oct – 17 Nov 2026 · Team league</div></div></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RANKING ============ -->
+  <section id="ranking">
+    <div class="wrap">
+      <div class="shead">
+        <h2>BTR rating — top five</h2>
+        <a class="more" href="#">All 2,745 players
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <table class="rt">
+        <thead>
+          <tr>
+            <th>#</th><th>Player</th><th style="text-align:right">BTR</th><th style="text-align:right">Matches</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="pos num">1</td><td><span class="nm">CHO Myung Woo</span> <span class="cc">KR</span></td><td class="v num">1890.4</td><td class="m num">333</td></tr>
+          <tr><td class="pos num">2</td><td><span class="nm">JASPERS Dick</span> <span class="cc">NL</span></td><td class="v num">1808.8</td><td class="m num">407</td></tr>
+          <tr><td class="pos num">3</td><td><span class="nm">ZANETTI Marco</span> <span class="cc">IT</span></td><td class="v num">1788.8</td><td class="m num">350</td></tr>
+          <tr><td class="pos num">4</td><td><span class="nm">MERCKX Eddy</span> <span class="cc">BE</span></td><td class="v num">1787.0</td><td class="m num">372</td></tr>
+          <tr><td class="pos num">5</td><td><span class="nm">BAO Phuong Vinh</span> <span class="cc">VN</span></td><td class="v num">1786.8</td><td class="m num">160</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ NEXT ============ -->
+  <section>
+    <div class="wrap">
+      <div class="shead"><h2>Next on the calendar</h2></div>
+      <div class="live-list">
+        <a class="lrow" href="#">
+          <div class="ldate"><b>5–7</b>Feb 2027</div>
+          <div>
+            <div class="ltitle">LONGONI NEXT GEN Grand Prix 3-Cushion U21 — Madrid</div>
+            <div class="lmeta"><span class="chip chip-cy">CEB youth</span><span class="chip">3-Cushion</span></div>
+          </div>
+          <span class="go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+        <a class="lrow" href="#">
+          <div class="ldate"><b>24–29</b>Mar 2027</div>
+          <div>
+            <div class="ltitle">European Championship 3-Cushion U21 — Salamina 2027</div>
+            <div class="lmeta"><span class="chip chip-cy">CEB</span><span class="chip">3-Cushion</span></div>
+          </div>
+          <span class="go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PLATFORM ============ -->
+  <section style="border-bottom:0">
+    <div class="wrap">
+      <div class="strip">
+        <div>
+          <h3>Run your own event on this board.</h3>
+          <p>Scoreboards for every table, automatic publishing of results, and the event page your players will share.</p>
+        </div>
+        <a class="btn" href="#">For clubs and federations</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap frow">
+    <span>© 2026 BilliardToday</span>
+    <nav>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

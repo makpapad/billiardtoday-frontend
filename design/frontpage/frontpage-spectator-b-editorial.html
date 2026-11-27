@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BilliardToday — Concept B · Editorial</title>
+<style>
+  :root{
+    --ink:#020617; --deep:#0f172a; --slate:#1e293b;
+    --tx:#0f172a; --tx2:#475569; --tx3:#94a3b8;
+    --cy:#0891b2; --cy-l:#22d3ee; --cy-pale:#cffafe;
+    --line:#e2e8f0; --paper:#f8fafc; --white:#fff;
+    --live:#dc2626; --good:#047857;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--white);color:var(--tx);font-family:var(--sans);
+       line-height:1.55;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1120px,100% - 44px);margin-inline:auto}
+
+  header{border-bottom:1px solid var(--line)}
+  .hrow{display:flex;align-items:center;height:72px;gap:30px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.03em}
+  nav{display:flex;gap:24px;margin-left:auto;font-size:14px;color:var(--tx2)}
+  nav a:hover{color:var(--ink)}
+  nav a.on{color:var(--ink);font-weight:600}
+  .sub-link{font-size:13.5px;font-weight:600;color:var(--cy);border-bottom:1.5px solid rgba(8,145,178,.3);padding-bottom:2px}
+  .sub-link:hover{border-color:var(--cy)}
+
+  /* ---- hero story ---- */
+  .hero{padding:52px 0 54px;border-bottom:1px solid var(--line)}
+  .kick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;font-weight:700;
+        letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+  .kick .live{display:inline-flex;align-items:center;gap:7px;color:var(--live)}
+  .kick .live i{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block;
+                animation:p 2.4s infinite}
+  @keyframes p{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+  @media (prefers-reduced-motion:reduce){.kick .live i{animation:none}}
+  h1{font-size:clamp(32px,4.9vw,58px);line-height:1.04;letter-spacing:-.04em;font-weight:800;
+     margin:18px 0 0;max-width:20ch;text-wrap:balance}
+  h1 span{color:var(--cy)}
+  .dek{font-size:17.5px;color:var(--tx2);max-width:60ch;margin:18px 0 0;line-height:1.6}
+  .byline{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:26px;
+          font-size:13px;color:var(--tx3)}
+  .byline b{color:var(--ink);font-weight:600}
+  .cta-row{display:flex;flex-wrap:wrap;gap:11px;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:650;
+       padding:12px 17px;border-radius:9px}
+  .btn-solid{background:var(--ink);color:#fff}
+  .btn-solid:hover{background:var(--deep)}
+  .btn-line{border:1px solid var(--line);color:var(--ink);background:var(--white)}
+  .btn-line:hover{border-color:#cbd5e1;background:var(--paper)}
+
+  section{padding:46px 0}
+  .shead{display:flex;align-items:baseline;gap:16px;margin-bottom:20px}
+  .shead h2{margin:0;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
+  .shead a{margin-left:auto;font-size:13px;color:var(--tx2);font-weight:550}
+  .shead a:hover{color:var(--cy)}
+
+  /* ---- calendar rows ---- */
+  .cal{border-top:1px solid var(--line)}
+  .crow{display:grid;grid-template-columns:112px 1fr auto;gap:20px;align-items:center;
+        padding:17px 4px;border-bottom:1px solid var(--line);transition:background .15s}
+  .crow:hover{background:var(--paper)}
+  .cwhen{font-size:12.5px;color:var(--tx2);line-height:1.3}
+  .cwhen b{display:block;font-size:15px;color:var(--ink);letter-spacing:-.01em;font-weight:700}
+  .ctitle{font-size:16px;font-weight:600;letter-spacing:-.015em;line-height:1.3}
+  .ctags{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
+  .tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+       padding:3px 8px;border-radius:5px;background:#f1f5f9;color:var(--tx2)}
+  .tag.live{background:#fef2f2;color:#b91c1c}
+  .tag.ceb{background:var(--cy-pale);color:#0e7490}
+  .arrow{color:#cbd5e1}
+  .crow:hover .arrow{color:var(--cy)}
+
+  /* ---- dark number band ---- */
+  .band{background:var(--ink);color:#e2e8f0;border-radius:22px;padding:40px 38px;margin:0}
+  .band .shead h2{color:#64748b}
+  .band-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:34px;margin-top:8px}
+  .band-grid b{display:block;font-size:clamp(28px,3.6vw,42px);line-height:1;font-weight:700;
+               letter-spacing:-.04em;color:#fff}
+  .band-grid b i{font-style:normal;color:var(--cy-l);font-size:.55em;letter-spacing:0;margin-left:3px}
+  .band-grid span{display:block;margin-top:10px;font-size:12.5px;color:#94a3b8;line-height:1.45}
+  .band-note{margin:26px 0 0;padding-top:20px;border-top:1px solid #1e293b;
+             font-size:12.5px;color:#64748b}
+
+  /* ---- result feature ---- */
+  .split2{display:grid;grid-template-columns:1.1fr .9fr;gap:38px;align-items:start}
+  .rfeat h3{margin:0;font-size:27px;letter-spacing:-.03em;line-height:1.15;font-weight:750}
+  .rfeat .when{font-size:13px;color:var(--tx3);margin-top:9px}
+  .rfeat p{margin:14px 0 0;font-size:15px;color:var(--tx2);max-width:46ch}
+  .stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+  .stages div{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:var(--paper)}
+  .stages b{display:block;font-size:21px;letter-spacing:-.03em;line-height:1;color:var(--ink)}
+  .stages span{display:block;font-size:11px;color:var(--tx3);margin-top:6px}
+  .rlist{border-top:1px solid var(--line)}
+  .rlist a{display:block;padding:14px 2px;border-bottom:1px solid var(--line)}
+  .rlist .t{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+  .rlist .d{font-size:12px;color:var(--tx3);margin-top:3px}
+  .rlist a:hover .t{color:var(--cy)}
+
+  /* ---- ranking ---- */
+  .rank{display:grid;border-top:1px solid var(--line)}
+  .rrow{display:grid;grid-template-columns:34px 1fr 92px 74px;gap:14px;align-items:center;
+        padding:13px 4px;border-bottom:1px solid var(--line);font-size:15px}
+  .rrow .p{color:var(--tx3);font-size:13px;font-weight:600}
+  .rrow .n{font-weight:600;letter-spacing:-.012em}
+  .rrow .n i{font-style:normal;font-size:11px;color:var(--tx3);letter-spacing:.07em;margin-left:7px}
+  .rrow .v{text-align:right;font-weight:700;color:var(--cy)}
+  .rrow .mm{text-align:right;color:var(--tx3);font-size:13px}
+  .rrow:hover{background:var(--paper)}
+
+  /* ---- news ---- */
+  .news{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .ncard{border-top:2px solid var(--ink);padding-top:14px}
+  .ncard .k{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cy)}
+  .ncard h3{margin:9px 0 0;font-size:17px;line-height:1.32;letter-spacing:-.02em;font-weight:650}
+  .ncard:hover h3{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+
+  /* ---- closing ---- */
+  .closing{margin-top:10px;border:1px solid var(--line);border-radius:20px;padding:30px;
+           display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;background:var(--paper)}
+  .closing h3{margin:0;font-size:22px;letter-spacing:-.028em;line-height:1.2;max-width:28ch}
+  .closing p{margin:9px 0 0;font-size:13.5px;color:var(--tx2);max-width:56ch}
+
+  footer{border-top:1px solid var(--line);margin-top:52px;padding:30px 0 44px;
+         font-size:13px;color:var(--tx3)}
+  .frow{display:flex;flex-wrap:wrap;gap:24px;align-items:center}
+  .frow nav{gap:20px;font-size:13px;margin-left:auto}
+
+  @media (max-width:920px){
+    nav{display:none}
+    .split2{grid-template-columns:1fr;gap:26px}
+    .band-grid{grid-template-columns:repeat(2,1fr);gap:26px}
+    .news{grid-template-columns:1fr}
+    .crow{grid-template-columns:92px 1fr}
+    .crow .arrow{display:none}
+    .rrow{grid-template-columns:28px 1fr 78px}
+    .rrow .mm{display:none}
+    .closing{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hrow">
+    <a class="brand" href="#">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2" stroke="#0891b2" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="4.2" stroke="#0f172a" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="1.3" fill="#0891b2"/>
+      </svg>
+      BilliardToday
+    </a>
+    <nav>
+      <a class="on" href="#">Home</a>
+      <a href="#">Tournaments</a>
+      <a href="#">Rankings</a>
+      <a href="#">Players</a>
+      <a href="#">News</a>
+    </nav>
+    <a class="sub-link" href="#">For clubs</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ======== HERO ======== -->
+  <section class="hero" style="padding-top:46px">
+    <div class="wrap">
+      <div class="kick">
+        <span class="live"><i></i> Live now</span>
+        <span>Bottrop, Germany</span>
+        <span>27–29 November 2026</span>
+      </div>
+
+      <h1>The U21 circuit lands in Bottrop — <span>and the tables are already busy</span></h1>
+
+      <p class="dek">Twenty-four players, one Grand Prix weekend and a live board that updates
+        with every carom. Follow the matches, the averages and the standings while they happen.</p>
+
+      <div class="byline">
+        <span><b>3-Cushion</b> · CEB youth</span>
+        <span>·</span>
+        <span>Second event live this week</span>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-solid" href="#">Open the live board
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-line" href="#">Full calendar</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== CALENDAR ======== -->
+  <section>
+    <div class="wrap">
+      <div class="shead">
+        <h2>What is on</h2>
+        <a href="#">All tournaments →</a>
+      </div>
+
+      <div class="cal">
+        <a class="crow" href="#">
+          <div class="cwhen"><b>22–27 Nov</b>2026</div>
+          <div>
+            <div class="ctitle">League 3 — 1st Tournament 2026-2027</div>
+            <div class="ctags"><span class="tag live">Live</span><span class="tag">3-Cushion</span><span class="tag">Team league</span></div>
+          </div>
+          <span class="arrow" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+
+        <a class="crow" href="#">
+          <div class="cwhen"><b>27–29 Nov</b>2026</div>
+          <div>
+            <div class="ctitle">LONGONI NEXT GEN Grand Prix 3-Cushion U21 — Bottrop</div>
+            <div class="ctags"><span class="tag live">Live</span><span class="tag ceb">CEB youth</span><span class="tag">3-Cushion</span></div>
+          </div>
+          <span class="arrow" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+
+        <a class="crow" href="#">
+          <div class="cwhen"><b>5–7 Feb</b>2027</div>
+          <div>
+            <div class="ctitle">LONGONI NEXT GEN Grand Prix 3-Cushion U21 — Madrid</div>
+            <div class="ctags"><span class="tag ceb">CEB youth</span><span class="tag">3-Cushion</span></div>
+          </div>
+          <span class="arrow" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+
+        <a class="crow" href="#">
+          <div class="cwhen"><b>24–29 Mar</b>2027</div>
+          <div>
+            <div class="ctitle">European Championship 3-Cushion U21 — Salamina 2027</div>
+            <div class="ctags"><span class="tag ceb">CEB</span><span class="tag">3-Cushion</span></div>
+          </div>
+          <span class="arrow" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== NUMBERS ======== -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="band">
+        <div class="shead"><h2 style="color:#64748b">The sport in numbers</h2></div>
+        <div class="band-grid">
+          <div><b class="num">2,745</b><span>Players carrying a BTR rating</span></div>
+          <div><b class="num">55</b><span>Players in the last big open</span></div>
+          <div><b class="num">249</b><span>Matches published from it</span></div>
+          <div><b class="num">1.506</b><span>Best stage average</span></div>
+        </div>
+        <p class="band-note">Carom Café Fall Classic 2026 · 18–22 November · three stages, every match recorded.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== RESULTS ======== -->
+  <section style="padding-top:34px">
+    <div class="wrap">
+      <div class="shead">
+        <h2>Latest results</h2>
+        <a href="#">All results →</a>
+      </div>
+
+      <div class="split2">
+        <a class="rfeat" href="#">
+          <h3>Carom Café Fall Classic 2026</h3>
+          <div class="when">18–22 November 2026 · 3-Cushion</div>
+          <p>Fifty-five players, three stages and a published average for every one of them.
+             Standings, qualification places and the knockout path are all on the event page.</p>
+          <div class="stages">
+            <div><b class="num">182</b><span>Qualification matches</span></div>
+            <div><b class="num">60</b><span>Finals 1st phase</span></div>
+            <div><b class="num">7</b><span>Knockout</span></div>
+          </div>
+        </a>
+
+        <div class="rlist">
+          <a href="#"><div class="t">The future of Billiards 2026 — Pulderbos</div><div class="d">4–8 Nov 2026 · 3-Cushion</div></a>
+          <a href="#"><div class="t">World Cup 3-Cushion, Yanggu 2026</div><div class="d">2–8 Nov 2026 · UMB</div></a>
+          <a href="#"><div class="t">Master League — 1st Tournament 2026-2027</div><div class="d">29 Oct – 17 Nov 2026 · Team league</div></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== RANKING ======== -->
+  <section style="padding-top:34px">
+    <div class="wrap">
+      <div class="shead">
+        <h2>BTR rating — top five</h2>
+        <a href="#">All 2,745 players →</a>
+      </div>
+
+      <div class="rank">
+        <div class="rrow"><span class="p num">1</span><span class="n">CHO Myung Woo <i>KR</i></span><span class="v num">1890.4</span><span class="mm num">333 matches</span></div>
+        <div class="rrow"><span class="p num">2</span><span class="n">JASPERS Dick <i>NL</i></span><span class="v num">1808.8</span><span class="mm num">407 matches</span></div>
+        <div class="rrow"><span class="p num">3</span><span class="n">ZANETTI Marco <i>IT</i></span><span class="v num">1788.8</span><span class="mm num">350 matches</span></div>
+        <div class="rrow"><span class="p num">4</span><span class="n">MERCKX Eddy <i>BE</i></span><span class="v num">1787.0</span><span class="mm num">372 matches</span></div>
+        <div class="rrow"><span class="p num">5</span><span class="n">BAO Phuong Vinh <i>VN</i></span><span class="v num">1786.8</span><span class="mm num">160 matches</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== NEWS ======== -->
+  <section style="padding-top:34px">
+    <div class="wrap">
+      <div class="shead">
+        <h2>News and knowledge</h2>
+        <a href="#">All news →</a>
+      </div>
+      <div class="news">
+        <a class="ncard" href="#"><div class="k">Rules</div><h3>How a 3-cushion match is scored, inning by inning</h3></a>
+        <a class="ncard" href="#"><div class="k">Disciplines</div><h3>The five games on one scoreboard: carom, pool, snooker, 5-pins, artistic</h3></a>
+        <a class="ncard" href="#"><div class="k">Ranking</div><h3>What the BTR rating measures — and what it does not</h3></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== CLOSING ======== -->
+  <section style="padding-top:10px">
+    <div class="wrap">
+      <div class="closing">
+        <div>
+          <h3>Your club's event can be on this page next week.</h3>
+          <p>Scoreboards for every table, results published as the match ends, and an event page your players will share.</p>
+        </div>
+        <a class="btn btn-solid" href="#">Set up an event</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap frow">
+    <span>© 2026 BilliardToday</span>
+    <nav>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
