@@ -8,5 +8,6 @@ export default function YoutubeLiveLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AppSiteShell>{children}</AppSiteShell>;
+  // Ο τοίχος βίντεο θέλει όλο το ύψος της οθόνης σε desktop (βλ. AppSiteShell).
+  return <AppSiteShell fitViewport>{children}</AppSiteShell>;
 }
