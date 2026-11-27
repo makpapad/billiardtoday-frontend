@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { TournamentDetailPage } from "@/components/tournaments/TournamentDetailPage";
-import { getCmsPageWidth } from "@/lib/cms/layout";
+import { getCmsEmbedPageWidth } from "@/lib/cms/layout";
 import { getCmsAppearance } from "@/lib/cms/strapi";
 import { getRankingSeriesData } from "@/lib/rankings";
 import { buildTournamentSlug, resolveTournamentEventSummary } from "@/lib/tournaments";
@@ -52,7 +52,7 @@ export default async function EmbedTournamentPage({ params, searchParams }: Prop
       className="min-h-screen"
       style={
         {
-          ["--bt-page-width" as string]: getCmsPageWidth(appearance),
+          ["--bt-page-width" as string]: getCmsEmbedPageWidth(appearance),
           background: "#ffffff",
           color: appearance.tokens.text,
           fontFamily: appearance.tokens.bodyFont,
