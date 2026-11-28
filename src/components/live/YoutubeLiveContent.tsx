@@ -280,6 +280,20 @@ export function YoutubeLiveContent({
                   </button>
                 )
               ) : null}
+              {/* Λογότυπο ΜΟΝΟ στη δική μας σελίδα (`fitViewport`), ποτέ στο embed:
+                  μικρή κάρτα με στρογγυλεμένες άκρες στο κέντρο, πάνω από τα βίντεο.
+                  Το λογότυπο είναι λευκό σε διαφανές PNG, γι' αυτό χρειάζεται σκούρο φόντο
+                  για να φαίνεται πάνω σε οτιδήποτε παίζει. `pointer-events-none` ώστε να μη
+                  μπλοκάρει κλικ στα βίντεο. */}
+              {isFullscreen && fitViewport ? (
+                <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-black/70 px-4 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.65)] backdrop-blur-sm">
+                  <img
+                    src="/logo-billiardtoday.png"
+                    alt="BilliardToday"
+                    className="h-auto w-[clamp(88px,8vw,132px)] object-contain"
+                  />
+                </div>
+              ) : null}
               <div
                 className={
                   isFullscreen
