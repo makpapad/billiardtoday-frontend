@@ -257,7 +257,7 @@ export function YoutubeLiveContent({
                        αυτό, μέσα στο iframe (όπου δεν υπάρχει το `fit` των `lg:` κλάσεων) το grid
                        κρατούσε ύψος aspect-video και ξεπερνούσε την οθόνη: στην τηλεόραση /
                        προτζέκτορα κόβονταν τα κάτω βίντεο. */
-                    "fixed inset-0 z-[60] flex h-screen w-screen flex-col items-stretch overflow-hidden bg-black p-2"
+                    "fixed inset-0 z-[60] flex h-screen w-screen flex-col items-stretch overflow-hidden bg-black p-2 supports-[height:100dvh]:h-[100dvh] supports-[height:100dvh]:w-[100dvw]"
                   : `relative w-full bg-black p-0${fit("lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}`
               }
             >
@@ -275,7 +275,16 @@ export function YoutubeLiveContent({
               <div
                 className={
                   isFullscreen
-                    ? "grid h-full min-h-0 w-full auto-rows-fr grid-cols-1 gap-2 overflow-hidden sm:grid-cols-2"
+                    ? /*
+                       ΣΤΑΘΕΡΟ 2×2: χωρίς media query (`sm:`/`lg:`) και χωρίς `auto-rows-fr`,
+                       γιατί σε τηλεόραση/προτζέκτορα το CSS πλάτος μπορεί να είναι μικρό
+                       (dpr/zoom) και το grid γινόταν μία στήλη — φαινόταν «ένα τραπέζι».
+                       Με `grid-cols-2 grid-rows-2` τα 4 βίντεο χωράνε πάντα· με 3 γεμίζουν
+                       τα 3 κελιά, με 2 μένει μία σειρά.
+                    */
+                    videoIds.length >= 3
+                      ? "grid h-full min-h-0 w-full grid-cols-2 grid-rows-2 gap-2 overflow-hidden"
+                      : "grid h-full min-h-0 w-full grid-cols-2 grid-rows-1 gap-2 overflow-hidden"
                     : `grid w-full gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`
                 }
               >
