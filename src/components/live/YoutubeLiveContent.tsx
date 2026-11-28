@@ -288,13 +288,8 @@ export function YoutubeLiveContent({
                         : fit("lg:flex lg:min-h-0 lg:flex-col")
                     }`}
                   >
-                    {/* Στο fullscreen η ετικέτα «Video N» κόβεται: τρώει ύψος και στην
-                        TV δεν προσθέτει τίποτα — η σειρά των βίντεο είναι ίδια. */}
-                    {isFullscreen ? null : (
-                      <div className={`border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold${fit("lg:shrink-0 lg:py-1")}`}>
-                        Video {index + 1}
-                      </div>
-                    )}
+                    {/* Χωρίς ετικέτα «Video N» πάνω από κάθε βίντεο (απόφαση Maki):
+                        τρώει ύψος, και η σειρά των βίντεο είναι σταθερή. */}
                     <div
                       className={
                         isFullscreen
