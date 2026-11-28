@@ -139,7 +139,7 @@ export function YoutubeLiveContent({
   const backButtonClassName =
     "inline-flex h-9 items-center rounded border border-white/10 bg-neutral-900 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800 focus:border-cyan-300";
   const fullscreenBackButtonClassName =
-    "absolute left-4 top-12 z-30 hidden rounded border border-white/15 bg-black/80 px-3 py-2 text-sm font-semibold text-white shadow-2xl transition hover:bg-neutral-900 fullscreen:inline-flex";
+    "absolute left-3 top-3 z-30 inline-flex rounded border border-white/15 bg-black/70 px-3 py-2 text-sm font-semibold text-white shadow-2xl transition hover:bg-neutral-900";
 
   /**
    * Οι κλάσεις που «κλειδώνουν» τη σελίδα στο ύψος της οθόνης μπαίνουν μόνο στη
@@ -250,33 +250,58 @@ export function YoutubeLiveContent({
           {isMultiview ? (
             <div
               ref={multiviewRef}
-              className={`relative w-full bg-black p-0 fullscreen:flex fullscreen:h-screen fullscreen:flex-col fullscreen:items-stretch fullscreen:overflow-hidden fullscreen:p-3${fit("lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}`}>
-              {returnHref ? (
-                <Link href={returnHref} className={fullscreenBackButtonClassName}>
-                  Back to event
-                </Link>
-              ) : (
-                <button type="button" onClick={handleBackFallback} className={fullscreenBackButtonClassName}>
-                  Back
-                </button>
-              )}
-              {/*
-                `fullscreen:auto-rows-fr`: στο fullscreen οι σειρές μοιράζονται ΑΚΡΙΒΩΣ το
-                διαθέσιμο ύψος. Χωρίς αυτό οι σειρές παίρνουν το φυσικό ύψος των βίντεο
-                (aspect) και το grid ξεπερνά την οθόνη — στην τηλεόραση/προτζέκτορα
-                κόβονταν τα κάτω βίντεο. Το `lg:` σκέλος αφορά τη δημόσια σελίδα, το
-                `fullscreen:` δουλεύει και μέσα στο iframe (το embed δεν έχει `fit`).
-              */}
-              <div className={`grid w-full gap-3 fullscreen:h-full fullscreen:min-h-0 fullscreen:auto-rows-fr fullscreen:overflow-hidden fullscreen:gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`}>
+              className={
+                isFullscreen
+                  ? /* Το `fullscreen:` variant ΔΕΝ υπάρχει στο Tailwind 3.4 (0 κανόνες `:fullscreen`
+                       στο built CSS), άρα η διάταξη του fullscreen χτίζεται από το state. Χωρίς
+                       αυτό, μέσα στο iframe (όπου δεν υπάρχει το `fit` των `lg:` κλάσεων) το grid
+                       κρατούσε ύψος aspect-video και ξεπερνούσε την οθόνη: στην τηλεόραση /
+                       προτζέκτορα κόβονταν τα κάτω βίντεο. */
+                    "fixed inset-0 z-[60] flex h-screen w-screen flex-col items-stretch overflow-hidden bg-black p-2"
+                  : `relative w-full bg-black p-0${fit("lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}`
+              }
+            >
+              {isFullscreen ? (
+                returnHref ? (
+                  <Link href={returnHref} className={fullscreenBackButtonClassName}>
+                    Back to event
+                  </Link>
+                ) : (
+                  <button type="button" onClick={handleBackFallback} className={fullscreenBackButtonClassName}>
+                    Back
+                  </button>
+                )
+              ) : null}
+              <div
+                className={
+                  isFullscreen
+                    ? "grid h-full min-h-0 w-full auto-rows-fr grid-cols-1 gap-2 overflow-hidden sm:grid-cols-2"
+                    : `grid w-full gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`
+                }
+              >
                 {videoIds.map((videoId, index) => (
                   <div
                     key={`${videoId}-${index}`}
-                    className={`overflow-hidden border border-white/10 bg-black fullscreen:flex fullscreen:min-h-0 fullscreen:flex-col${fit("lg:flex lg:min-h-0 lg:flex-col")}`}
+                    className={`overflow-hidden border border-white/10 bg-black${
+                      isFullscreen
+                        ? " flex min-h-0 flex-col"
+                        : fit("lg:flex lg:min-h-0 lg:flex-col")
+                    }`}
                   >
-                    <div className={`border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold fullscreen:shrink-0 fullscreen:py-1${fit("lg:shrink-0 lg:py-1")}`}>
-                      Video {index + 1}
-                    </div>
-                    <div className={`aspect-video w-full fullscreen:min-h-0 fullscreen:flex-1 fullscreen:aspect-auto${fit("lg:relative lg:min-h-0 lg:flex-1 lg:aspect-auto")}`}>
+                    {/* Στο fullscreen η ετικέτα «Video N» κόβεται: τρώει ύψος και στην
+                        TV δεν προσθέτει τίποτα — η σειρά των βίντεο είναι ίδια. */}
+                    {isFullscreen ? null : (
+                      <div className={`border-b border-white/10 bg-neutral-950 px-3 py-2 text-sm font-semibold${fit("lg:shrink-0 lg:py-1")}`}>
+                        Video {index + 1}
+                      </div>
+                    )}
+                    <div
+                      className={
+                        isFullscreen
+                          ? "min-h-0 flex-1 bg-black"
+                          : `aspect-video w-full${fit("lg:relative lg:min-h-0 lg:flex-1 lg:aspect-auto")}`
+                      }
+                    >
                       <iframe
                         src={embedUrlFor(videoId, true)}
                         title={`YouTube live video ${index + 1}`}
