@@ -310,14 +310,18 @@ export function YoutubeLiveContent({
                     <div
                       className={
                         isFullscreen
-                          ? "min-h-0 flex-1 bg-black"
+                          ? /* `relative`: το iframe μέσα είναι `absolute inset-0` στη δημόσια
+                               σελίδα (`fit`). Χωρίς το `relative` εδώ, το containing block γινόταν
+                               το πλαίσιο του fullscreen και τα 4 iframe στοιβάζονταν το ένα πάνω
+                               στο άλλο — φαινόταν μόνο το τελευταίο (κάτω δεξιά). */
+                            "relative min-h-0 flex-1 bg-black"
                           : `aspect-video w-full${fit("lg:relative lg:min-h-0 lg:flex-1 lg:aspect-auto")}`
                       }
                     >
                       <iframe
                         src={embedUrlFor(videoId, true)}
                         title={`YouTube live video ${index + 1}`}
-                        className={`h-full w-full${fit("lg:absolute lg:inset-0")}`}
+                        className={`h-full w-full${isFullscreen ? "" : fit("lg:absolute lg:inset-0")}`}
                         allowFullScreen
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       />
