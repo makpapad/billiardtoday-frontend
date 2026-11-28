@@ -9,6 +9,10 @@
  *
  * URL: `/tournaments/live/youtube?videos=<id1>,<id2>,<id3>,<id4>&view=multiview`
  *      `&video=2` για μονή προβολή, `&returnTo=/tournaments/<slug>` για το «Back».
+ *
+ * `liveVideoIds` (server-side, μόνο στο embed): τα ΤΡΕΧΟΝΤΑ βίντεο της διοργάνωσης
+ * που βρήκε η σελίδα από το `returnTo`. Υπερισχύουν του `videos=` επειδή το
+ * `videos=` μέσα σε iframe τρίτης σελίδας μένει «παγωμένο» στην ημέρα που γράφτηκε.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -53,7 +57,14 @@ const normalizeReturnHref = (value: string | null | undefined) => {
   return href;
 };
 
-export function YoutubeLiveContent({ fitViewport = true }: { fitViewport?: boolean }) {
+export function YoutubeLiveContent({
+  fitViewport = true,
+  liveVideoIds,
+}: {
+  fitViewport?: boolean;
+  /** Βίντεο από τον server (embed): υπερισχύουν του `videos=` του URL. */
+  liveVideoIds?: string[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -61,9 +72,13 @@ export function YoutubeLiveContent({ fitViewport = true }: { fitViewport?: boole
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const returnHref = normalizeReturnHref(searchParams.get("returnTo"));
+  const serverVideoIds = useMemo(
+    () => (liveVideoIds && liveVideoIds.length > 0 ? liveVideoIds : null),
+    [liveVideoIds],
+  );
   const videoIds = useMemo(
-    () => parseVideoIds(searchParams.get("videos")),
-    [searchParams],
+    () => serverVideoIds ?? parseVideoIds(searchParams.get("videos")),
+    [serverVideoIds, searchParams],
   );
   const requestedView = searchParams.get("view")?.toLowerCase() || "";
   const isMultiview =

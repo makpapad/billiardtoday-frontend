@@ -194,6 +194,23 @@ const readString = (value: unknown): string | null => {
 
 const LIVE_WALL_PATHS = new Set(["/tournaments/live/soop", "/tournaments/live/youtube"]);
 
+/**
+ * Το slug της διοργάνωσης από το `returnTo` του τοίχου βίντεο.
+ *
+ * Το «Live video» μέσα σε πλαίσιο τρίτης σελίδας (π.χ. eurobillard.org) κρατά στο
+ * `returnTo` τη σελίδα της διοργάνωσης. Από εκεί βγαίνει ΠΟΙΑ διοργάνωση είναι ο
+ * τοίχος, ώστε τα βίντεο να διαβάζονται κάθε φορά από τη Strapi και όχι από το
+ * `videos=` που «κλείδωσε» το iframe την ημέρα που στήθηκε η σελίδα.
+ */
+const LIVE_WALL_RETURN_PATTERN = /^\/(?:embed\/)?tournaments\/([a-z0-9-]{2,})(?:[?#].*)?$/i;
+
+export const readTournamentSlugFromLiveReturnTo = (value: unknown): string | null => {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw) return null;
+  const match = raw.match(LIVE_WALL_RETURN_PATTERN);
+  return match ? match[1].toLowerCase() : null;
+};
+
 export const readExternalLiveTablesHref = (timetableConfig: unknown): string | null => {
   const config =
     timetableConfig && typeof timetableConfig === "object" && !Array.isArray(timetableConfig)
@@ -987,3 +1004,45 @@ export const resolveTournamentEventSummary = async (
 export const getTournamentEventSummary = async (
   documentId: string,
 ): Promise<TournamentEventSummary | null> => fetchTournamentEventSummaryById(documentId);
+
+/**
+ * Τα ΤΡΕΧΟΝΤΑ YouTube IDs του «Live video» μιας διοργάνωσης — από το
+ * `timetable_config.externalResultSync.liveButton.href` που γράφει ο admin.
+ * `[]` όταν το κουμπί είναι κλειστό, λείπει, ή δείχνει αλλού (π.χ. SOOP).
+ */
+const parseLiveWallVideoIds = (href: string | null): string[] => {
+  if (!href) return [];
+  const queryStart = href.indexOf("?");
+  if (queryStart === -1) return [];
+  const videos = new URLSearchParams(href.slice(queryStart + 1)).get("videos") ?? "";
+  return Array.from(
+    new Set(
+      videos
+        .split(",")
+        .map((entry) => extractYouTubeVideoId(entry.trim()))
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ).slice(0, 4);
+};
+
+/**
+ * Μνήμη 20 δευτ. ανά διοργάνωση: το iframe της ομοσπονδίας φορτώνει συχνά και η
+ * αναζήτηση slug → event διαβάζει λίστα events από τη Strapi. Η καθυστέρηση
+ * ανανέωσης μένει κάτω από μισό λεπτό, που είναι το ζητούμενο για ζωντανά links.
+ */
+const LIVE_WALL_IDS_TTL_MS = 20_000;
+const liveWallIdsMemo = new Map<string, { ids: string[]; expiresAt: number }>();
+
+export const resolveLiveWallVideoIds = async (returnTo: unknown): Promise<string[]> => {
+  const slug = readTournamentSlugFromLiveReturnTo(returnTo);
+  if (!slug) return [];
+
+  const now = Date.now();
+  const memo = liveWallIdsMemo.get(slug);
+  if (memo && memo.expiresAt > now) return memo.ids;
+
+  const summary = await resolveTournamentEventSummary(slug).catch(() => null);
+  const ids = parseLiveWallVideoIds(summary?.externalLiveTablesHref ?? null);
+  liveWallIdsMemo.set(slug, { ids, expiresAt: now + LIVE_WALL_IDS_TTL_MS });
+  return ids;
+};
