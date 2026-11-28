@@ -250,7 +250,7 @@ export function YoutubeLiveContent({
           {isMultiview ? (
             <div
               ref={multiviewRef}
-              className={`relative w-full bg-black p-0 fullscreen:flex fullscreen:h-screen fullscreen:items-start fullscreen:p-3${fit("lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}`}>
+              className={`relative w-full bg-black p-0 fullscreen:flex fullscreen:h-screen fullscreen:flex-col fullscreen:items-stretch fullscreen:overflow-hidden fullscreen:p-3${fit("lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}`}>
               {returnHref ? (
                 <Link href={returnHref} className={fullscreenBackButtonClassName}>
                   Back to event
@@ -260,7 +260,14 @@ export function YoutubeLiveContent({
                   Back
                 </button>
               )}
-              <div className={`grid w-full gap-3 fullscreen:h-full fullscreen:gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`}>
+              {/*
+                `fullscreen:auto-rows-fr`: στο fullscreen οι σειρές μοιράζονται ΑΚΡΙΒΩΣ το
+                διαθέσιμο ύψος. Χωρίς αυτό οι σειρές παίρνουν το φυσικό ύψος των βίντεο
+                (aspect) και το grid ξεπερνά την οθόνη — στην τηλεόραση/προτζέκτορα
+                κόβονταν τα κάτω βίντεο. Το `lg:` σκέλος αφορά τη δημόσια σελίδα, το
+                `fullscreen:` δουλεύει και μέσα στο iframe (το embed δεν έχει `fit`).
+              */}
+              <div className={`grid w-full gap-3 fullscreen:h-full fullscreen:min-h-0 fullscreen:auto-rows-fr fullscreen:overflow-hidden fullscreen:gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`}>
                 {videoIds.map((videoId, index) => (
                   <div
                     key={`${videoId}-${index}`}
