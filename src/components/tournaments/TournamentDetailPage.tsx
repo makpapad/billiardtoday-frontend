@@ -787,7 +787,9 @@ function GroupTooltip({
                     {formatNumberValue(match.top.player.highRun)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.top.player.highRun2)}
+                    {Number(match.top.player.highRun2) > 0
+                      ? formatNumberValue(match.top.player.highRun2)
+                      : "–"}
                   </td>
                 </tr>
                 <tr
@@ -826,7 +828,9 @@ function GroupTooltip({
                     {formatNumberValue(match.bottom.player.highRun)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    {formatNumberValue(match.bottom.player.highRun2)}
+                    {Number(match.bottom.player.highRun2) > 0
+                      ? formatNumberValue(match.bottom.player.highRun2)
+                      : "–"}
                   </td>
                 </tr>
               </>
