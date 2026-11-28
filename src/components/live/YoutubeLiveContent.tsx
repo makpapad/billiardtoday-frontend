@@ -81,10 +81,18 @@ export function YoutubeLiveContent({
     [serverVideoIds, searchParams],
   );
   const requestedView = searchParams.get("view")?.toLowerCase() || "";
+  /**
+   * Χωρίς `view` το URL ΔΕΝ σημαίνει «μονή προβολή»: η μονή προβολή δηλώνεται με
+   * `video=<ν>`. Όταν υπάρχουν 2+ βίντεο και δεν έχει ζητηθεί κάτι, ανοίγουμε
+   * multiview — αλλιώς μια παλιά/σύντομη διεύθυνση (π.χ. σελιδοδείκτης στην TV)
+   * έδειχνε ένα μόνο τραπέζι και φαινόταν σαν να χάθηκαν τα άλλα.
+   */
+  const explicitSingle = searchParams.get("video") !== null;
   const isMultiview =
     searchParams.get("multiview") === "1" ||
     requestedView === "multi" ||
-    requestedView === "multiview";
+    requestedView === "multiview" ||
+    (requestedView === "" && !explicitSingle && videoIds.length > 1);
   const slot = normalizeSlot(searchParams.get("video"));
   const singleVideoId = videoIds[slot - 1] ?? videoIds[0] ?? null;
 
@@ -285,7 +293,7 @@ export function YoutubeLiveContent({
                     videoIds.length >= 3
                       ? "grid h-full min-h-0 w-full grid-cols-2 grid-rows-2 gap-2 overflow-hidden"
                       : "grid h-full min-h-0 w-full grid-cols-2 grid-rows-1 gap-2 overflow-hidden"
-                    : `grid w-full gap-3 lg:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`
+                    : `grid w-full grid-cols-1 gap-3 sm:grid-cols-2${fit("lg:min-h-0 lg:flex-1 lg:auto-rows-fr")}`
                 }
               >
                 {videoIds.map((videoId, index) => (
